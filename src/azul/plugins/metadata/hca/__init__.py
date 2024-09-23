@@ -1,9 +1,7 @@
-from collections.abc import (
-    Iterable,
-    Sequence,
-)
 from typing import (
+    Iterable,
     Optional,
+    Sequence,
     TYPE_CHECKING,
     Type,
 )

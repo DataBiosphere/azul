@@ -2,9 +2,6 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from collections.abc import (
-    Sequence,
-)
 import datetime
 import logging
 import time
@@ -12,6 +9,7 @@ from typing import (
     AbstractSet,
     Callable,
     Optional,
+    Sequence,
     Type,
     TypeVar,
 )

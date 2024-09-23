@@ -2,11 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Iterable,
-    Mapping,
-    Sequence,
-)
 from enum import (
     Enum,
 )
@@ -18,7 +13,10 @@ from typing import (
     AbstractSet,
     ClassVar,
     Generic,
+    Iterable,
+    Mapping,
     Optional,
+    Sequence,
     TYPE_CHECKING,
     Type,
     TypeVar,

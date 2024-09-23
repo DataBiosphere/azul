@@ -1,13 +1,13 @@
 from collections import (
     defaultdict,
 )
-from collections.abc import (
-    Mapping,
-    Sequence,
-)
 from itertools import (
     chain,
     product,
+)
+from typing import (
+    Mapping,
+    Sequence,
 )
 
 from azul.collections import (

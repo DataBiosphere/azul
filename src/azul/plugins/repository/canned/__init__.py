@@ -7,9 +7,6 @@ area, and should not be used to create catalogs on a deployment. It can however
 be used with the `can_bundle.py` script to create a local canned bundle from the
 files in the canned staging area.
 """
-from collections.abc import (
-    Sequence,
-)
 from dataclasses import (
     dataclass,
 )
@@ -24,6 +21,7 @@ import time
 from typing import (
     AbstractSet,
     Optional,
+    Sequence,
     Type,
 )
 

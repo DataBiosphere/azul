@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Iterator,
-)
 from itertools import (
     product,
 )
@@ -16,6 +13,7 @@ from threading import (
 from typing import (
     ClassVar,
     Generic,
+    Iterator,
     Optional,
     Type,
     TypeVar,
