@@ -15,6 +15,7 @@ from typing import (
     Generic,
     Iterator,
     Optional,
+    Self,
     Type,
     TypeVar,
     TypedDict,
@@ -92,7 +93,7 @@ class Prefix:
                'Invalid common prefix and partition length', self)
 
     @classmethod
-    def parse(cls, prefix: str) -> 'Prefix':
+    def parse(cls, prefix: str) -> Self:
         """
         >>> Prefix.parse('aa/1')
         Prefix(common='aa', partition=1)

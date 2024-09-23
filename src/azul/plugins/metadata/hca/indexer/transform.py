@@ -22,6 +22,7 @@ from typing import (
     Mapping,
     Optional,
     Protocol,
+    Self,
     Type,
     TypeVar,
     Union,
@@ -395,14 +396,14 @@ class Submitter(SubmitterBase, Enum):
         self.by_id[id] = self
 
     @classmethod
-    def for_id(cls, submitter_id: str) -> Optional['Submitter']:
+    def for_id(cls, submitter_id: str) -> Optional[Self]:
         try:
             return cls.by_id[submitter_id]
         except KeyError:
             return None
 
     @classmethod
-    def for_file(cls, file: api.File) -> Optional['Submitter']:
+    def for_file(cls, file: api.File) -> Optional[Self]:
         if file.file_source is None:
             if (
                 # The DCP/2 system design specification mistakenly required that
