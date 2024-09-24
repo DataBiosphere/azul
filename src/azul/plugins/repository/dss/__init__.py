@@ -2,6 +2,7 @@ import logging
 import time
 from typing import (
     AbstractSet,
+    NoReturn,
     Sequence,
 )
 import urllib
@@ -128,15 +129,11 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
     def list_bundles(self,
                      source: DSSSourceRef,
                      prefix: str
-                     ) -> list[DSSBundleFQID]:
+                     ) -> NoReturn:
         assert False, 'DSS is EOL'
-        # noinspection PyUnreachableCode
-        return []
 
-    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> DSSBundle:
+    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> NoReturn:
         assert False, 'DSS is EOL'
-        # noinspection PyUnreachableCode
-        return DSSBundle(fqid=bundle_fqid, manifest={}, metadata={}, links={})
 
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {
