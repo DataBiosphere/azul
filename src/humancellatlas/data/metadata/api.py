@@ -138,8 +138,9 @@ class Entity:
         return s if s is None else self._datetime(s)
 
     @property
-    def address(self):
-        return self.schema_name + '@' + str(self.document_id)
+    def ref(self) -> EntityReference:
+        return EntityReference(entity_type=self.schema_name,
+                               entity_id=str(self.document_id))
 
     @property
     def schema_name(self):
@@ -202,9 +203,10 @@ class LinkedEntity(Entity, metaclass=ABCMeta):
 class LinkError(RuntimeError):
 
     def __init__(self, entity: LinkedEntity, other_entity: Entity, forward: bool) -> None:
-        super().__init__(entity.address +
-                         ' cannot ' + ('reference ' if forward else 'be referenced by ') +
-                         other_entity.address)
+        super().__init__(
+            f'{entity.ref} cannot {"reference" if forward else "be referenced by"} '
+            f'{other_entity.ref}'
+        )
 
 
 L = TypeVar('L', bound=LinkedEntity)
