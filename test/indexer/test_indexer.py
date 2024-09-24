@@ -396,10 +396,10 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         entity = next(e for e in tallies_1.keys() if e.entity_type != 'bundles')
         tallies_1.pop(entity)
 
-        entity_contents = one(
-            metadata
+        replica_ref, entity_contents = one(
+            (parsed_ref, metadata)
             for ref, metadata in bundle.metadata.items()
-            if EntityReference.parse(ref).entity_id == entity.entity_id
+            if (parsed_ref := EntityReference.parse(ref)).entity_id == entity.entity_id
         )
         coordinates = [
             ContributionCoordinates(
@@ -411,7 +411,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         if config.enable_replicas:
             coordinates.append(
                 ReplicaCoordinates(
-                    entity=entity,
+                    entity=replica_ref,
                     content_hash=json_hash(entity_contents).hexdigest()
                 ).with_catalog(self.catalog)
             )

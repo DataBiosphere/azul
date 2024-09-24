@@ -458,8 +458,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     api_bundle: api.Bundle
 
     def replica_type(self, entity: EntityReference) -> str:
-        api_entity = self.api_bundle.entities[UUID(entity.entity_id)]
-        return api_entity.schema_name
+        return entity.entity_type
 
     @classmethod
     def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
@@ -502,17 +501,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                      entity: api.Entity | DatedEntity,
                      hub_ids: list[EntityID]
                      ) -> Transform:
-        entity_ref = EntityReference(entity_id=str(entity.document_id),
-                                     entity_type=self.entity_type())
+        contrib_ref = EntityReference(entity_id=str(entity.document_id),
+                                      entity_type=self.entity_type())
         if not config.enable_replicas:
             replica = None
         elif self.entity_type() == 'bundles':
             links = self.bundle.links
-            replica = self._replica(links, entity_ref, hub_ids)
+            replica = self._replica(links, self.api_bundle.ref, hub_ids)
         else:
             assert isinstance(entity, api.Entity), entity
-            replica = self._replica(entity.json, entity_ref, hub_ids)
-        return self._contribution(contribution, entity_ref), replica
+            replica = self._replica(entity.json, entity.ref, hub_ids)
+        return self._contribution(contribution, contrib_ref), replica
 
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,
@@ -1740,10 +1739,6 @@ class BundleTransformer(SingletonTransformer):
 
     def _singleton_entity(self) -> DatedEntity:
         return BundleAsEntity(self.api_bundle)
-
-    def replica_type(self, entity: EntityReference) -> str:
-        assert entity.entity_type == self.entity_type(), entity
-        return 'links'
 
     @classmethod
     def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:

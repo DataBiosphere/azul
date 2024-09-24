@@ -1044,6 +1044,10 @@ class Bundle:
                 if isinstance(f, SequenceFile)
                 and any(ps.is_sequencing_process() for ps in f.from_processes.values())]
 
+    @property
+    def ref(self) -> EntityReference:
+        return EntityReference(entity_type='links', entity_id=str(self.uuid))
+
 
 entity_types = {
     # Biomaterials
