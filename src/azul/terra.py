@@ -211,7 +211,7 @@ class TDRSourceSpec(SourceSpec):
         )
 
 
-class SourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
+class TDRSourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):
     pass
 
 
@@ -400,28 +400,32 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
-    # FIXME: Eliminate azul.terra.TDRClient.TDRSource
-    #        https://github.com/DataBiosphere/azul/issues/5524
-    @attrs.frozen(kw_only=True)
-    class TDRSource:
-        project: str
-        id: str
-        location: str
-
     @cache
-    def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
+    def lookup_source(self, source_spec: TDRSourceSpec) -> str:
+        """
+        Validate that the repository's reported values for the snapshot's Google
+        project name and storage location match our expectations, and return the
+        snapshot's UUID.
+        """
         source = self._lookup_source(source_spec)
+        actual_project = source['dataProject']
+        require(actual_project == source_spec.subdomain,
+                'Actual Google project of TDR source differs from configured one',
+                actual_project, source_spec.subdomain)
         storage = one(
-            storage
-            for dataset in (s['dataset'] for s in source['source'])
-            for storage in dataset['storage']
-            if storage['cloudResource'] == 'bigquery'
+            resource
+            for resource in source['storage']
+            if resource['cloudResource'] == 'bigquery'
         )
-        return self.TDRSource(project=source['dataProject'],
-                              id=source['id'],
-                              location=storage['region'])
+        actual_location = storage['region']
+        # Uppercase is standard for multi-regions in the documentation but TDR
+        # returns 'us' in lowercase
+        require(actual_location.lower() == config.tdr_source_location.lower(),
+                'Actual storage location of TDR source differs from configured one',
+                actual_location, config.tdr_source_location)
+        return source['id']
 
-    def _retrieve_source(self, source: SourceRef) -> MutableJSON:
+    def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
         response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
@@ -438,8 +442,7 @@ class TDRClient(SAMClient):
         if total == 0:
             raise self._insufficient_access(str(endpoint))
         elif total == 1:
-            source_id = one(response['items'])['id']
-            return self._retrieve_source(SourceRef(id=source_id, spec=source))
+            return one(response['items'])
         else:
             raise TerraNameConflictException(endpoint, source.name, response)
 
@@ -632,7 +635,7 @@ class TDRClient(SAMClient):
     def drs_client(self) -> DRSClient:
         return DRSClient(http_client=self._http_client)
 
-    def get_duos(self, source: SourceRef) -> Optional[MutableJSON]:
+    def get_duos(self, source: TDRSourceRef) -> Optional[MutableJSON]:
         response = self._retrieve_source(source)
         try:
             duos_id = response['duosFirecloudGroup']['duosId']

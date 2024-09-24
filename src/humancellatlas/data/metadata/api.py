@@ -292,6 +292,7 @@ class Project(Entity):
     supplementary_links: OrderedSet[str]
     estimated_cell_count: int | None
     bionetworks: OrderedSet[Bionetwork]
+    data_use_restriction: str | None
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
@@ -317,6 +318,7 @@ class Project(Entity):
         self.bionetworks = OrderedSet(Bionetwork(**bionetwork)
                                       for bionetwork in content.get('hca_bionetworks', ())
                                       if bionetwork)
+        self.data_use_restriction = content.get('data_use_restriction')
 
     def _accessions(self, namespace: str) -> set[str]:
         return {a.accession for a in self.accessions if a.namespace == namespace}
