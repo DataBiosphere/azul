@@ -73,6 +73,9 @@ from azul.indexer.document import (
 from azul.logging import (
     configure_app_logging,
 )
+from azul.maintenance import (
+    MaintenanceService,
+)
 from azul.openapi import (
     application_json,
     format_description as fd,
@@ -868,6 +871,44 @@ def get_integrations():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
                     body=json.dumps(body))
+
+
+@app.route(
+    '/maintenance/schedule',
+    methods=['GET'],
+    cors=True,
+    method_spec={
+        'summary': 'A maintenance schedule as an JSON object',
+        'tags': ['Auxiliary'],
+        'responses': {
+            '200': {
+                'description': fd('''
+                    This object may be hanceforth refered to as "the schedule"
+                    or `schedule`.
+                    The `start` time of an event is its `actual_start` if set,
+                    or its `planned_start` otherwise. The `end` time of an event
+                    is its `actual_end` if set, or its `start` plus
+                    `planned_duration` otherwise. All events in the schedule are
+                    sorted by their `start` time. No two events have the same
+                    `start` time. Each event defines an interval
+                    `[e.start, e.end)` and there is no overlap between these
+                     intervals.
+
+                     A pending event is one where `actual_start` is absent. An
+                     active event is one where `actual_start` is present but
+                     `actual_end` is absent. There can be at most one active
+                     event.
+                ''')
+            }
+        }
+    }
+)
+def get_maintenance_schedule():
+    service = MaintenanceService()
+    schedule = service.get_schedule.to_json()
+    return Response(status_code=200,
+                    headers={'content-type': 'application/json'},
+                    body=json.dumps(schedule))
 
 
 @app.route(
