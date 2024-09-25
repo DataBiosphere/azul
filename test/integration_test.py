@@ -2054,6 +2054,8 @@ class ResponseHeadersTest(AzulTestCase):
                         response = requests.get(str(endpoint / path))
                         response.raise_for_status()
                         expected = AzulChaliceApp.security_headers | expected_headers
+                        # FIXME: Add a CSP header with a nonce value to text/html responses
+                        #        https://github.com/DataBiosphere/azul-private/issues/6
                         if path in ['/', '/oauth2_redirect']:
                             del expected['Content-Security-Policy']
                         self.assertIsSubset(expected.items(), response.headers.items())

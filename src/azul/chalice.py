@@ -215,6 +215,8 @@ class AzulChaliceApp(Chalice):
         """
         response = get_response(event)
         response.headers.update(self.security_headers)
+        # FIXME: Add a CSP header with a nonce value to text/html responses
+        #        https://github.com/DataBiosphere/azul-private/issues/6
         if response.headers.get('Content-Type') == 'text/html':
             del response.headers['Content-Security-Policy']
         view_function = self.routes[event.path][event.method].view_function
