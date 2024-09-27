@@ -1521,8 +1521,6 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     aggregate_file_names.add(one(files)['name'])
                 else:
                     for file in files:
-                        # FIXME: need for one() is odd, file_format is a group field
-                        #        https://github.com/DataBiosphere/azul/issues/612
                         if qualifier == 'bundles':
                             if file['file_format'] == 'matrix':
                                 entities_with_matrix_files.add(hit['_source']['entity_id'])
