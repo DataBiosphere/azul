@@ -265,6 +265,11 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     def test_orphans(self):
         bundle = self._load_canned_bundle(self.replica_bundle())
         self._index_bundle(bundle)
+        dataset_entity_id = one(
+            ref.entity_id
+            for ref in bundle.orphans
+            if ref.entity_type == 'anvil_dataset'
+        )
         expected = bundle.orphans if config.enable_replicas else {}
         actual = {}
         hits = self._get_all_hits()
@@ -272,7 +277,7 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
             qualifier, doc_type = self._parse_index_name(hit)
             self.assertEqual(DocumentType.replica, doc_type)
             source = hit['_source']
-            self.assertEqual(source['hub_ids'], [])
+            self.assertEqual(source['hub_ids'], [dataset_entity_id])
             ref = EntityReference(entity_type=source['replica_type'],
                                   entity_id=source['entity_id'])
             actual[ref] = source['contents']
