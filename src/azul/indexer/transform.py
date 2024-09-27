@@ -133,6 +133,7 @@ class Transformer(metaclass=ABCMeta):
     def _replica(self,
                  entity: EntityReference,
                  *,
+                 root_hub: EntityID,
                  file_hub: EntityID | None,
                  ) -> Replica:
         replica_type, contents = self._replicate(entity)
@@ -144,7 +145,7 @@ class Transformer(metaclass=ABCMeta):
                        contents=contents,
                        # The other hubs will be added when the indexer
                        # consolidates duplicate replicas.
-                       hub_ids=alist(file_hub))
+                       hub_ids=alist(file_hub, root_hub))
 
     @classmethod
     @abstractmethod
