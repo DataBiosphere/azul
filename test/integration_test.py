@@ -147,9 +147,6 @@ from azul.plugins import (
 from azul.plugins.metadata.anvil.bundle import (
     Link,
 )
-from azul.plugins.repository.tdr import (
-    TDRSourceRef,
-)
 from azul.plugins.repository.tdr_anvil import (
     BundleEntityType,
     TDRAnvilBundleFQID,
@@ -171,6 +168,7 @@ from azul.strings import (
 from azul.terra import (
     ServiceAccountCredentialsProvider,
     TDRClient,
+    TDRSourceRef,
     TDRSourceSpec,
     UserCredentialsProvider,
 )
