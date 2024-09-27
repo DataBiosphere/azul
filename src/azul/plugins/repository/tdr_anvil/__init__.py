@@ -72,7 +72,7 @@ MutableKeysByType = dict[EntityType, set[Key]]
 KeyLinks = set[KeyLink]
 
 
-class BundleEntityType(Enum):
+class BundleType(Enum):
     """
     AnVIL snapshots have no inherent notion of a "bundle". When indexing these
     snapshots, we dynamically construct bundles by selecting individual entities
@@ -110,26 +110,22 @@ class BundleEntityType(Enum):
     dataset fields during aggregation. This bundle contains only a single
     dataset entity with only the `description` field populated.
     """
-    primary: EntityType = 'biosample'
-    supplementary: EntityType = 'file'
-    duos: EntityType = 'dataset'
-
-    @property
-    def table_name(self) -> str:
-        return f'anvil_{self.value}'
+    primary = 'anvil_biosample'
+    supplementary = 'anvil_file'
+    duos = 'anvil_dataset'
 
 
 class TDRAnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
-    entity_type: str
+    table_name: str
 
 
 @attrs.frozen(kw_only=True)
 class TDRAnvilBundleFQID(TDRBundleFQID):
-    entity_type: BundleEntityType = attrs.field(converter=BundleEntityType)
+    table_name: str
 
     def to_json(self) -> TDRAnvilBundleFQIDJSON:
         return dict(super().to_json(),
-                    entity_type=self.entity_type.value)
+                    table_name=self.table_name)
 
 
 class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
@@ -176,10 +172,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
     def _count_subgraphs(self, source: TDRSourceSpec) -> int:
         rows = self._run_sql(f'''
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source, BundleEntityType.primary.table_name))}
+            FROM {backtick(self._full_table_name(source, BundleType.primary.value))}
             UNION ALL
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source, BundleEntityType.supplementary.table_name))}
+            FROM {backtick(self._full_table_name(source, BundleType.supplementary.value))}
             WHERE is_supplementary
         ''')
         return sum(row['count'] for row in rows)
@@ -189,24 +185,24 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       prefix: str
                       ) -> list[TDRAnvilBundleFQID]:
         spec = source.spec
-        primary = BundleEntityType.primary
-        supplementary = BundleEntityType.supplementary
-        duos = BundleEntityType.duos
+        primary = BundleType.primary.value
+        supplementary = BundleType.supplementary.value
+        duos = BundleType.duos.value
         rows = list(self._run_sql(f'''
-            SELECT datarepo_row_id, {primary.value!r} AS entity_type
-            FROM {backtick(self._full_table_name(spec, primary.table_name))}
+            SELECT datarepo_row_id, {primary!r} AS table_name
+            FROM {backtick(self._full_table_name(spec, primary))}
             WHERE STARTS_WITH(datarepo_row_id, '{prefix}')
             UNION ALL
-            SELECT datarepo_row_id, {supplementary.value!r} AS entity_type
-            FROM {backtick(self._full_table_name(spec, supplementary.table_name))} AS supp
+            SELECT datarepo_row_id, {supplementary!r} AS table_name
+            FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
             WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{prefix}')
         ''' + (
             ''
             if config.duos_service_url is None else
             f'''
             UNION ALL
-            SELECT datarepo_row_id, {duos.value!r} AS entity_type
-            FROM {backtick(self._full_table_name(spec, duos.table_name))}
+            SELECT datarepo_row_id, {duos!r} AS table_name
+            FROM {backtick(self._full_table_name(spec, duos))}
             '''
         )))
         bundles = []
@@ -222,7 +218,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             # single dataset. This verification is performed independently and
             # concurrently for every partition, but only one partition actually
             # emits the bundle.
-            if row['entity_type'] == duos:
+            if row['table_name'] == duos:
                 require(0 == duos_count)
                 duos_count += 1
                 # Ensure that one partition will always contain the DUOS bundle
@@ -233,43 +229,43 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 source=source,
                 uuid=bundle_uuid,
                 version=self._version,
-                entity_type=BundleEntityType(row['entity_type'])
+                table_name=row['table_name']
             ))
         return bundles
 
     def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
-        if 'entity_type' not in fqid:
-            # Resolution of bundles without entity type is expensive, so we only
-            # support it during canning.
-            assert not config.is_in_lambda, ('Bundle FQID lacks entity type', fqid)
+        if 'table_name' not in fqid:
+            # Resolution of bundles without the table name is expensive, so we
+            # only support it during canning.
+            assert not config.is_in_lambda, ('Bundle FQID lacks table name', fqid)
             source = self.source_from_json(fqid['source'])
             entity_id = uuids.change_version(fqid['uuid'],
                                              self.bundle_uuid_version,
                                              self.datarepo_row_uuid_version)
             rows = self._run_sql(' UNION ALL '.join((
                 f'''
-                SELECT {entity_type.value!r} AS entity_type
-                FROM {backtick(self._full_table_name(source.spec, entity_type.table_name))}
+                SELECT {bundle_type.value!r} AS table_name
+                FROM {backtick(self._full_table_name(source.spec, bundle_type.value))}
                 WHERE datarepo_row_id = {entity_id!r}
                 '''
-                for entity_type in BundleEntityType
+                for bundle_type in BundleType
             )))
             fqid = {**fqid, **one(rows)}
         return super().resolve_bundle(fqid)
 
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
-        if bundle_fqid.entity_type is BundleEntityType.primary:
+        if bundle_fqid.table_name == BundleType.primary.value:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
             return self._primary_bundle(bundle_fqid)
-        elif bundle_fqid.entity_type is BundleEntityType.supplementary:
+        elif bundle_fqid.table_name == BundleType.supplementary.value:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
             return self._supplementary_bundle(bundle_fqid)
-        elif bundle_fqid.entity_type is BundleEntityType.duos:
+        elif bundle_fqid.table_name == BundleType.duos.value:
             assert config.duos_service_url is not None, bundle_fqid
             log.info('Bundle %r is a DUOS bundle', bundle_fqid.uuid)
             return self._duos_bundle(bundle_fqid)
         else:
-            assert False, bundle_fqid.entity_type
+            assert False, bundle_fqid.table_name
 
     def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
@@ -325,12 +321,13 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
         source = bundle_fqid.source.spec
-        bundle_entity_type = bundle_fqid.entity_type
+        table_name = bundle_fqid.table_name
+        entity_type = table_name.removeprefix('anvil_')
         result = TDRAnvilBundle(fqid=bundle_fqid)
-        columns = self._columns(bundle_entity_type.table_name)
+        columns = self._columns(table_name)
         bundle_entity = dict(one(self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
-            FROM {backtick(self._full_table_name(source, bundle_entity_type.table_name))}
+            FROM {backtick(self._full_table_name(source, table_name))}
             WHERE datarepo_row_id = '{entity_id}'
         ''')))
         linked_entity_type = 'dataset'
@@ -342,7 +339,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         ''')))
         link_args = {}
         for entity_type, row, arg in [
-            (bundle_entity_type.value, bundle_entity, 'outputs'),
+            (entity_type, bundle_entity, 'outputs'),
             (linked_entity_type, linked_entity, 'inputs')
         ]:
             entity_ref = EntityReference(entity_type=entity_type, entity_id=row['datarepo_row_id'])
@@ -357,7 +354,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         entity_id = change_version(bundle_fqid.uuid,
                                    self.bundle_uuid_version,
                                    self.datarepo_row_uuid_version)
-        entity = EntityReference(entity_type=bundle_fqid.entity_type.value,
+        entity = EntityReference(entity_type=bundle_fqid.table_name,
                                  entity_id=entity_id)
         bundle = TDRAnvilBundle(fqid=bundle_fqid)
         bundle.add_entity(entity=entity,
@@ -371,16 +368,17 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         entity_id = uuids.change_version(bundle_uuid,
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
-        entity_type = bundle_fqid.entity_type.value
+        table_name = bundle_fqid.table_name
+        entity_type = table_name.removeprefix('anvil_')
         pk_column = entity_type + '_id'
         bundle_entity = one(self._run_sql(f'''
             SELECT {pk_column}
-            FROM {backtick(self._full_table_name(source.spec, entity_type))}
+            FROM {backtick(self._full_table_name(source.spec, table_name))}
             WHERE datarepo_row_id = '{entity_id}'
         '''))[pk_column]
-        bundle_entity = KeyReference(key=bundle_entity, entity_type=entity_type)
+        bundle_entity = KeyReference(key=bundle_entity, entity_type=table_name)
         log.info('Bundle UUID %r resolved to primary key %r in table %r',
-                 bundle_uuid, bundle_entity.key, entity_type)
+                 bundle_uuid, bundle_entity.key, table_name)
         return bundle_entity
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:

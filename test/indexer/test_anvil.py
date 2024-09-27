@@ -42,7 +42,7 @@ from azul.plugins.repository import (
     tdr_anvil,
 )
 from azul.plugins.repository.tdr_anvil import (
-    BundleEntityType,
+    BundleType,
     TDRAnvilBundle,
     TDRAnvilBundleFQID,
 )
@@ -105,13 +105,13 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
                     *,
                     uuid,
                     version=None,
-                    entity_type=BundleEntityType.primary
+                    table_name=BundleType.primary.value
                     ) -> TDRAnvilBundleFQID:
         assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
                                   version=cls.version,
-                                  entity_type=entity_type)
+                                  table_name=table_name)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -120,12 +120,12 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                               entity_type=BundleEntityType.supplementary)
+                               table_name=BundleType.supplementary.value)
 
     @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                               entity_type=BundleEntityType.duos)
+                               table_name=BundleType.duos.value)
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase,
