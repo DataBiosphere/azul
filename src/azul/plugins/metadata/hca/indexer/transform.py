@@ -1470,17 +1470,19 @@ class FileTransformer(PartitionedTransformer[api.File]):
                         for entity_type, values in additional_contents.items():
                             contents[entity_type].extend(values)
                 file_id = file.ref.entity_id
+                project_ref = self._api_project.ref
+                project_id = project_ref.entity_id
                 yield self._contribution(contents, file_id)
                 if config.enable_replicas:
-                    yield self._replica(self.api_bundle.ref, file_hub=file_id)
+                    yield self._replica(self.api_bundle.ref, file_hub=file_id, root_hub=project_id)
                     # Projects are linked to every file in their snapshot,
                     # making an explicit list of hub IDs for the project both
                     # redundant and impractically large. Therefore, we leave the
                     # hub IDs field empty for projects and rely on the tenet
                     # that every file is an implicit hub of its parent project.
-                    yield self._replica(self._api_project.ref, file_hub=None)
+                    yield self._replica(project_ref, file_hub=None, root_hub=project_id)
                     for linked_entity in visitor.entities:
-                        yield self._replica(linked_entity, file_hub=file_id)
+                        yield self._replica(linked_entity, file_hub=file_id, root_hub=project_id)
 
     def matrix_stratification_values(self, file: api.File) -> JSON:
         """
