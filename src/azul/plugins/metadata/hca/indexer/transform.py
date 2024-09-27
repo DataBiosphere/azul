@@ -1385,7 +1385,8 @@ class TransformerVisitor(api.EntityVisitor):
             # noinspection PyDeprecation
             file_name = entity.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
-            # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/623 is resolved
+            # zarray files no longer exist in DCP2. This condition may no longer
+            # be needed to support them, but we don't want to risk removing it.
             if not is_zarr or sub_name.endswith('.zattrs'):
                 self.files[entity.document_id] = entity
 
@@ -1433,7 +1434,8 @@ class FileTransformer(PartitionedTransformer[api.File]):
         for file in files:
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
-            # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+            # zarray files no longer exist in DCP2. This condition may no longer
+            # be needed to support them, but we don't want to risk removing it.
             if not is_zarr or sub_name.endswith('.zattrs'):
                 if is_zarr:
                     # This is the representative file, so add the related files

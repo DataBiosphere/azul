@@ -1501,7 +1501,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 self.assertNotIn('!', related_file['name'])
 
     def test_indexing_with_skipped_matrix_file(self):
-        # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
+        # zarray files no longer exist in DCP2. This test covers behavior that
+        # may no longer be needed to support them, but we don't want to risk
+        # removing it.
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(bundle_fqid)
