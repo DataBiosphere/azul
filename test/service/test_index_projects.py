@@ -84,7 +84,8 @@ class TestIndexProjectsEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
             'tissueAtlas',
             'isTissueAtlasProject',
             'bionetworkName',
-            'estimatedCellCount'
+            'estimatedCellCount',
+            'dataUseRestriction'
         }
         response_json = get_response_json()
         self.assertIn('hits', response_json)

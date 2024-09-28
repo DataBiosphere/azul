@@ -53,9 +53,9 @@ from azul.plugins.repository.tdr import (
     TDRBundle,
     TDRBundleFQID,
     TDRPlugin,
-    TDRSourceRef,
 )
 from azul.terra import (
+    TDRSourceRef,
     TDRSourceSpec,
 )
 from azul.types import (
