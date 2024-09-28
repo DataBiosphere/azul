@@ -20,6 +20,7 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
+import itertools
 from itertools import (
     count,
     starmap,
@@ -286,73 +287,17 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
-    def _list_partition_bundles(self,
-                                catalog: CatalogName,
-                                source: str
-                                ) -> tuple[SourceRef, str, list[SourcedBundleFQID]]:
+    def _list_partitions(self,
+                         catalog: CatalogName,
+                         *,
+                         min_bundles: int,
+                         public_1st: bool
+                         ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         """
-        Randomly select a partition of bundles from the specified source, check that
-        it isn't empty, and return the FQIDs of the bundles in that partition.
+        Iterate through the sources in the given catalog and yield partitions of
+        bundle FQIDs until a desired minimum number of bundles are found. For
+        each emitted source, every partition is included, even if it's empty.
         """
-        plugin = self.azul_client.repository_plugin(catalog)
-        source = plugin.resolve_source(source)
-        prefix = source.spec.prefix
-        partition_prefixes = list(prefix.partition_prefixes())
-        partition_prefix = self.random.choice(partition_prefixes)
-        effective_prefix = prefix.common + partition_prefix
-        fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
-        num_bundles = len(fqids)
-        partition = f'Partition {effective_prefix!r} of source {source.spec}'
-        if not config.deployment.is_sandbox_or_personal:
-            # For sources that use partitioning, 512 is the desired partition
-            # size. In practice, we observe the reindex succeeding with sizes
-            # >700 without the partition size becoming a limiting factor. From
-            # this we project 1024 as a reasonable upper bound to enforce.
-            upper = 1024
-            if effective_prefix:
-                lower = 512 // 16
-                if len(fqids) < lower:
-                    # If bundle UUIDs were uniformly distributed by prefix, we
-                    # could directly assert a minimum partition size, but since
-                    # they're not, a given partition may fail to exceed this
-                    # minimum even with an optimal choice of partition prefix
-                    # length.
-                    log.warning('With %i bundles, %s is too small', len(fqids), partition)
-                    counts = plugin.list_partitions(source)
-                    if counts is None:
-                        lower = 1
-                    else:
-                        # For plugins that support efficiently counting bundles
-                        # across all partitions simultaneously, we can check
-                        # whether the chosen partition is an outlier by
-                        # determining the *average* partition size.
-                        num_bundles = sum(counts.values()) / prefix.num_partitions
-            else:
-                # Sources too small to be split into more than one partition may
-                # have as few as one bundle in total
-                lower = 1
-        else:
-            # The sandbox and personal deployments typically don't use
-            # partitioning and the desired number of bundles per source is
-            # 16 +/- 50%, i.e. 8 to 24. However, no choice of common prefix can
-            # satisfy this range for snapshots with `n` bundles where `n < 8` or
-            # `24 < n <= 112`. The choice of upper bound here is somewhat
-            # arbitrary.
-            upper = 64
-            lower = 1
-
-        self.assertLessEqual(num_bundles, upper, partition + ' is too large')
-        self.assertGreaterEqual(num_bundles, lower, partition + ' is too small')
-
-        return source, partition_prefix, fqids
-
-    def _list_bundles(self,
-                      catalog: CatalogName,
-                      *,
-                      min_bundles: int,
-                      check_all: bool,
-                      public_1st: bool
-                      ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
@@ -367,18 +312,22 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 if source not in managed_access_sources
             )
             sources[0], sources[index] = sources[index], sources[0]
+        plugin = self.azul_client.repository_plugin(catalog)
         # This iteration prefers sources occurring first, so we shuffle them
         # above to neutralize the bias.
         for source in sources:
-            source, prefix, new_fqids = self._list_partition_bundles(catalog, source)
-            if total_bundles < min_bundles:
+            source = plugin.resolve_source(source)
+            source = plugin.partition_source(catalog, source)
+            for prefix in source.spec.prefix.partition_prefixes():
+                new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
                 total_bundles += len(new_fqids)
                 yield source, prefix, new_fqids
-            # If `check_all` is True, keep looping to verify the size of a
-            # partition for all sources
-            elif not check_all:
+            # We postpone this check until after we've yielded all partitions in
+            # the current source to ensure test coverage for handling multiple
+            # partitions per source
+            if total_bundles >= min_bundles:
                 break
-        if total_bundles < min_bundles:
+        else:
             log.warning('Checked all sources and found only %d bundles instead of the '
                         'expected minimum %d', total_bundles, min_bundles)
 
@@ -391,6 +340,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         # prefix as possible.
         for source in self.managed_access_sources_by_catalog[catalog]:
             assert str(source.spec) in sources
+            source = self.repository_plugin(catalog).partition_source(catalog, source)
             bundle_fqids = sorted(
                 bundle_fqid
                 for bundle_fqid in self.azul_client.list_bundles(catalog, source, prefix='')
@@ -401,11 +351,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 )
             )
             bundle_fqid = self.random.choice(bundle_fqids)
-            # FIXME: We shouldn't need to include the common prefix
-            #        https://github.com/DataBiosphere/azul/issues/3579
-            common = source.spec.prefix.common
-            prefix = bundle_fqid.uuid[len(common):8]
-            assert prefix != '', prefix
+            prefix = bundle_fqid.uuid[:8]
             new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
             yield source, prefix, new_fqids
 
@@ -1271,16 +1217,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         num_bundles = max(self.min_bundles - len(bundle_fqids), 1)
         log.info('Selected %d bundles to satisfy managed access coverage; '
                  'selecting at least %d more', len(bundle_fqids), num_bundles)
-        # _list_bundles selects both public and managed access sources at random.
+        # _list_partitions selects both public and managed access sources at random.
         # If we don't index at least one public source, every request would need
         # service account credentials and we couldn't compare the responses for
         # public and managed access data. `public_1st` ensures that at least
         # one of the sources will be public because sources are indexed starting
         # with the first one yielded by the iteration.
-        list(starmap(update, self._list_bundles(catalog,
-                                                min_bundles=num_bundles,
-                                                check_all=True,
-                                                public_1st=True)))
+        list(starmap(update, self._list_partitions(catalog,
+                                                   min_bundles=num_bundles,
+                                                   public_1st=True)))
 
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
@@ -1989,10 +1934,13 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        source, prefix, bundle_fqids = next(self._list_bundles(catalog,
-                                                               min_bundles=1,
-                                                               check_all=False,
-                                                               public_1st=False))
+        # Skip through empty partitions
+        bundle_fqids = itertools.chain.from_iterable(
+            bundle_fqids
+            for _, _, bundle_fqids in self._list_partitions(catalog,
+                                                            min_bundles=1,
+                                                            public_1st=False)
+        )
         return self.random.choice(sorted(bundle_fqids))
 
     def _can_bundle(self,

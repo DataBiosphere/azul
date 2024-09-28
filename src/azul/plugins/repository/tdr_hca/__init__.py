@@ -16,9 +16,6 @@ from typing import (
     Any,
     ClassVar,
     Iterable,
-    Mapping,
-    Optional,
-    Union,
     cast,
 )
 
@@ -66,9 +63,6 @@ from azul.terra import (
 from azul.types import (
     JSONs,
     is_optional,
-)
-from azul.uuids import (
-    validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
@@ -141,9 +135,9 @@ class Links:
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Checksums:
     crc32c: str
-    sha1: Optional[str] = None
+    sha1: str | None = None
     sha256: str
-    s3_etag: Optional[str] = None
+    s3_etag: str | None = None
 
     def to_json(self) -> dict[str, str]:
         """
@@ -233,8 +227,8 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
                             size: int,
                             content_type: str,
                             dcp_type: str,
-                            checksums: Optional[Checksums] = None,
-                            drs_uri: Optional[str] = None) -> None:
+                            checksums: Checksums | None = None,
+                            drs_uri: str | None = None) -> None:
         self.manifest[str(entity)] = {
             'name': name,
             'uuid': uuid,
@@ -255,9 +249,9 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
         }
 
     def _parse_drs_uri(self,
-                       file_id: Optional[str],
+                       file_id: str | None,
                        descriptor: JSON
-                       ) -> Optional[str]:
+                       ) -> str | None:
         if file_id is None:
             try:
                 external_drs_uri = descriptor['drs_uri']
@@ -281,33 +275,21 @@ class TDRHCABundle(HCABundle[TDRBundleFQID], TDRBundle):
 
 class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]):
 
-    def list_partitions(self,
-                        source: TDRSourceRef
-                        ) -> Mapping[str, int]:
-        prefix = source.spec.prefix
+    def _count_subgraphs(self, source: TDRSourceSpec) -> int:
         rows = self._run_sql(f'''
-            SELECT prefix, COUNT(*) AS subgraph_count
-            FROM (
-                SELECT SUBSTR(links_id, 1, {len(prefix)}) AS prefix
-                FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            )
-            WHERE STARTS_WITH(prefix, {prefix.common!r})
-            GROUP BY prefix
+            SELECT COUNT(*) AS count
+            FROM {backtick(self._full_table_name(source, 'links'))}
         ''')
-        partitions = {row['prefix']: row['subgraph_count'] for row in rows}
-        assert all(v > 0 for v in partitions.values())
-        return partitions
+        return one(rows)['count']
 
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
                       ) -> list[TDRBundleFQID]:
-        source_prefix = source.spec.prefix.common
-        validate_uuid_prefix(source_prefix + prefix)
         current_bundles = self._query_unique_sorted(f'''
             SELECT links_id, version
             FROM {backtick(self._full_table_name(source.spec, 'links'))}
-            WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
+            WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [
             TDRBundleFQID(source=source,
@@ -435,7 +417,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
     def _retrieve_entities(self,
                            source: TDRSourceSpec,
                            entity_type: EntityType,
-                           entity_ids: Union[set[EntityID], set[BundleFQID]],
+                           entity_ids: set[EntityID] | set[BundleFQID],
                            ) -> list[BigQueryRow]:
         """
         Efficiently retrieve multiple entities from BigQuery in a single query.

@@ -1,7 +1,3 @@
-from collections.abc import (
-    Mapping,
-    Sequence,
-)
 from itertools import (
     permutations,
     product,
@@ -9,10 +5,10 @@ from itertools import (
 import logging
 from typing import (
     Callable,
-    Optional,
+    Mapping,
+    Sequence,
     TypeVar,
     TypedDict,
-    Union,
     cast,
 )
 
@@ -58,7 +54,7 @@ class ValueAndUnit(TypedDict):
 
 class Term(TypedDict):
     count: int
-    term: Union[str, ValueAndUnit, None]
+    term: str | ValueAndUnit | None
 
 
 class ProjectTerm(Term):
@@ -81,13 +77,13 @@ class FileTypeSummary(TypedDict):
 
 
 class FileTypeSummaryForHit(FileTypeSummary):
-    fileSource: list[Optional[str]]
+    fileSource: list[str | None]
     isIntermediate: bool
-    contentDescription: list[Optional[str]]
+    contentDescription: list[str | None]
 
 
 class OrganCellCountSummary(TypedDict):
-    organType: list[Optional[str]]
+    organType: list[str | None]
     countOfDocsWithOrganType: int
     totalCellCountByOrgan: float
 
@@ -116,7 +112,7 @@ class SummarizedHit(Hit):
 
 
 class SearchResponse(TypedDict):
-    hits: list[Union[SummarizedHit, CompleteHit]]
+    hits: list[SummarizedHit | CompleteHit]
     pagination: ResponsePagination
     termFacets: dict[str, Terms]
 

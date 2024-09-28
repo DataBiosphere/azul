@@ -3,7 +3,6 @@ from operator import (
 )
 from typing import (
     Any,
-    Optional,
 )
 
 from azul.collections import (
@@ -29,7 +28,7 @@ class ActivityAggregator(SimpleAggregator):
 
 class BiosampleAggregator(SimpleAggregator):
 
-    def _accumulator(self, field: str) -> Optional[Accumulator]:
+    def _accumulator(self, field: str) -> Accumulator | None:
         if field == 'donor_age_at_collection':
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
@@ -44,7 +43,7 @@ class DatasetAggregator(SimpleAggregator):
 
 class DiagnosisAggregator(SimpleAggregator):
 
-    def _accumulator(self, field: str) -> Optional[Accumulator]:
+    def _accumulator(self, field: str) -> Accumulator | None:
         if field in ('diagnosis_age', 'onset_age'):
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
@@ -65,7 +64,7 @@ class FileAggregator(GroupingAggregator):
     def _group_keys(self, entity) -> tuple[Any, ...]:
         return entity['file_format'],
 
-    def _accumulator(self, field: str) -> Optional[Accumulator]:
+    def _accumulator(self, field: str) -> Accumulator | None:
         if field == 'count':
             return DistinctAccumulator(SumAccumulator())
         else:

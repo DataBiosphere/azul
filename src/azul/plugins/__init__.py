@@ -2,12 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Iterable,
-    Mapping,
-    Sequence,
-    Set,
-)
 from enum import (
     Enum,
 )
@@ -16,14 +10,15 @@ from inspect import (
     isabstract,
 )
 from typing import (
+    AbstractSet,
     ClassVar,
     Generic,
-    Optional,
+    Iterable,
+    Mapping,
+    Sequence,
     TYPE_CHECKING,
-    Type,
     TypeVar,
     TypedDict,
-    Union,
 )
 
 import attr
@@ -43,6 +38,7 @@ from azul.indexer import (
     BUNDLE,
     BUNDLE_FQID,
     Bundle,
+    Prefix,
     SOURCE_REF,
     SOURCE_SPEC,
     SourceJSON,
@@ -94,7 +90,7 @@ DottedFieldPath = str
 FieldGlobs = list[DottedFieldPath]
 
 
-def dotted(path_or_element: Union[FieldPathElement, FieldPath],
+def dotted(path_or_element: FieldPathElement | FieldPath,
            *elements: FieldPathElement
            ) -> DottedFieldPath:
     dot = '.'
@@ -159,7 +155,7 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
     """
 
     @classmethod
-    def load(cls: Type[T], catalog: CatalogName) -> Type[T]:
+    def load(cls: type[T], catalog: CatalogName) -> type[T]:
         """
         Load and return one of the concrete subclasses of the class this method
         is called on. Which concrete class is returned depends on how the
@@ -175,11 +171,11 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
         return cls._load(plugin_type_name, plugin_package_name)
 
     @classmethod
-    def types(cls) -> Sequence[Type['Plugin']]:
+    def types(cls) -> Sequence[type['Plugin']]:
         return cls.__subclasses__()
 
     @classmethod
-    def type_for_name(cls, plugin_type_name: str) -> Type[T]:
+    def type_for_name(cls, plugin_type_name: str) -> type[T]:
         """
         Return the plugin type for the given name.
 
@@ -205,7 +201,7 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
     @classmethod
     def bundle_cls(cls,
                    plugin_package_name: str
-                   ) -> Type[BUNDLE]:
+                   ) -> type[BUNDLE]:
         plugin_type_name = cls._plugin_type_name()
         plugin_cls = cls._load(plugin_type_name, plugin_package_name)
         bundle_cls = get_generic_type_params(plugin_cls)[0]
@@ -220,7 +216,7 @@ class Plugin(Generic[BUNDLE], metaclass=ABCMeta):
         return plugin_type_name
 
     @classmethod
-    def _load(cls, plugin_type_name: str, plugin_package_name: str) -> Type[T]:
+    def _load(cls, plugin_type_name: str, plugin_package_name: str) -> type[T]:
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = getattr(plugin_module, 'Plugin')
@@ -242,7 +238,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         return cls()
 
     @abstractmethod
-    def transformer_types(self) -> Iterable[Type[Transformer]]:
+    def transformer_types(self) -> Iterable[type[Transformer]]:
         raise NotImplementedError
 
     @abstractmethod
@@ -260,7 +256,7 @@ class MetadataPlugin(Plugin[BUNDLE]):
         """
         raise NotImplementedError
 
-    def aggregate_class(self) -> Type[Aggregate]:
+    def aggregate_class(self) -> type[Aggregate]:
         """
         Returns the concrete class to use for representing aggregate documents
         in the indexer.
@@ -369,8 +365,8 @@ class MetadataPlugin(Plugin[BUNDLE]):
 
     #: See :meth:`_field_mapping`
     _FieldMapping2 = Mapping[FieldPathElement, FieldName]
-    _FieldMapping1 = Mapping[FieldPathElement, Union[FieldName, _FieldMapping2]]
-    _FieldMapping = Mapping[FieldPathElement, Union[FieldName, _FieldMapping1]]
+    _FieldMapping1 = Mapping[FieldPathElement, FieldName | _FieldMapping2]
+    _FieldMapping = Mapping[FieldPathElement, FieldName | _FieldMapping1]
 
     @cached_property
     def field_mapping(self) -> FieldMapping:
@@ -462,32 +458,32 @@ class MetadataPlugin(Plugin[BUNDLE]):
         return replicas, replica_types, pfb_schema
 
     @abstractmethod
-    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+    def document_slice(self, entity_type: str) -> DocumentSlice | None:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def summary_response_stage(self) -> 'Type[SummaryResponseStage]':
+    def summary_response_stage(self) -> 'type[SummaryResponseStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def search_response_stage(self) -> 'Type[SearchResponseStage]':
+    def search_response_stage(self) -> 'type[SearchResponseStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def summary_aggregation_stage(self) -> 'Type[AggregationStage]':
+    def summary_aggregation_stage(self) -> 'type[AggregationStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def aggregation_stage(self) -> 'Type[AggregationStage]':
+    def aggregation_stage(self) -> 'type[AggregationStage]':
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def filter_stage(self) -> 'Type[FilterStage]':
+    def filter_stage(self) -> 'type[FilterStage]':
         raise NotImplementedError
 
 
@@ -508,18 +504,32 @@ class RepositoryPlugin(Plugin[BUNDLE],
 
     @property
     @abstractmethod
-    def sources(self) -> Set[SOURCE_SPEC]:
+    def sources(self) -> AbstractSet[SOURCE_SPEC]:
         """
         The names of the sources the plugin is configured to read metadata from.
         """
         raise NotImplementedError
 
     def _assert_source(self, source: SOURCE_REF):
-        assert source.spec in self.sources, (self.sources, source)
+        """
+        Assert that the given source is present in the plugin configuration.
+        """
+        assert source.spec.prefix is not None, source
+        for configured_spec in self.sources:
+            if configured_spec == source.spec:
+                break
+            # Most configured sources lack an explicit prefix
+            elif configured_spec.eq_ignoring_prefix(source.spec):
+                assert configured_spec.prefix is None, (configured_spec, source)
+                break
+            else:
+                continue
+        else:
+            assert False, (self.sources, source)
 
     @abstractmethod
     def list_sources(self,
-                     authentication: Optional[Authentication]
+                     authentication: Authentication | None
                      ) -> Iterable[SOURCE_REF]:
         """
         The sources the plugin is configured to read metadata from that are
@@ -531,7 +541,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
         raise NotImplementedError
 
     def list_source_ids(self,
-                        authentication: Optional[Authentication]
+                        authentication: Authentication | None
                         ) -> set[str]:
         """
         List source IDs in the underlying repository that are accessible using
@@ -557,7 +567,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
         return bundle_cls, spec_cls, ref_cls, fqid_cls
 
     @property
-    def _source_ref_cls(self) -> Type[SOURCE_REF]:
+    def _source_ref_cls(self) -> type[SOURCE_REF]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return ref_cls
 
@@ -569,12 +579,12 @@ class RepositoryPlugin(Plugin[BUNDLE],
         return self._source_ref_cls.from_json(ref)
 
     @property
-    def _bundle_fqid_cls(self) -> Type[BUNDLE_FQID]:
+    def _bundle_fqid_cls(self) -> type[BUNDLE_FQID]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return fqid_cls
 
     @property
-    def _bundle_cls(self) -> Type[BUNDLE]:
+    def _bundle_cls(self) -> type[BUNDLE]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return bundle_cls
 
@@ -601,6 +611,35 @@ class RepositoryPlugin(Plugin[BUNDLE],
         return self._bundle_fqid_cls.from_json(fqid)
 
     @abstractmethod
+    def _count_subgraphs(self, source: SOURCE_SPEC) -> int:
+        """
+        The total number of subgraphs in the given source, ignoring its prefix.
+        """
+        raise NotImplementedError
+
+    def partition_source(self,
+                         catalog: CatalogName,
+                         source: SOURCE_REF
+                         ) -> SOURCE_REF:
+        """
+        If the source already has a prefix, return the source. Otherwise, return
+        an updated copy of the source with a heuristically computed prefix that
+        should be appropriate for indexing in the given catalog.
+        """
+        if source.spec.prefix is None:
+            count = self._count_subgraphs(source.spec)
+            is_main = config.deployment.is_main
+            is_it = catalog in config.integration_test_catalogs
+            # We use the "lesser" heuristic during IT to avoid indexing an
+            # excessive number of bundles
+            if is_main and not is_it:
+                prefix = Prefix.for_main_deployment(count)
+            else:
+                prefix = Prefix.for_lesser_deployment(count)
+            source = attr.evolve(source, spec=attr.evolve(source.spec, prefix=prefix))
+        return source
+
+    @abstractmethod
     def list_bundles(self,
                      source: SOURCE_REF,
                      prefix: str
@@ -612,28 +651,11 @@ class RepositoryPlugin(Plugin[BUNDLE],
         :param source: a reference to the repository source that contains the
                        bundles to list
 
-        :param prefix: appended to the common prefix of the provided source's
-                       spec to produce a string that should be no more than
-                       eight lower-case hexadecimal characters
+        :param prefix: a string that should be no more than eight lower-case
+                       hexadecimal characters
         """
 
         raise NotImplementedError
-
-    def list_partitions(self, source: SOURCE_REF) -> Optional[Mapping[str, int]]:
-        """
-        Return the number of bundles in each non-empty partition of the given
-        source, or return None if that information cannot be retrieved
-        inexpensively. Each key in the returned mapping is the full prefix of a
-        partition, including the common prefix if one is configured.
-
-        Subclasses may optionally implement this method to facilitate
-        integration test coverage of the partition sizes of their sources.
-
-        :param source: The source to be listed. Note that the given source may
-                       not necessarily be a member of the :py:meth:`sources`
-                       configured for this plugin.
-        """
-        return None
 
     @abstractmethod
     def fetch_bundle(self, bundle_fqid: BUNDLE_FQID) -> BUNDLE:
@@ -654,7 +676,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
 
     @abstractmethod
     def drs_client(self,
-                   authentication: Optional[Authentication] = None
+                   authentication: Authentication | None = None
                    ) -> DRSClient:
         """
         Returns a DRS client that uses the given authentication with requests to
@@ -664,7 +686,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
         raise NotImplementedError
 
     @abstractmethod
-    def file_download_class(self) -> Type['RepositoryFileDownload']:
+    def file_download_class(self) -> type['RepositoryFileDownload']:
         raise NotImplementedError
 
     @abstractmethod
@@ -684,7 +706,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     file_name: str
 
     #: Optional version of the file. Defaults to the most recent version.
-    file_version: Optional[str]
+    file_version: str | None
 
     #: The DRS URI of the file in the repository from which to download the
     #: file.
@@ -694,7 +716,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     #: Repository plugins that populate the DRS URI (``azul.indexer.Bundle.
     #: drs_uri``) usually require this to be set. Plugins that don't will
     #: ignore this.
-    drs_uri: Optional[str]
+    drs_uri: str | None
 
     #: True if the download of a file requires its DRS URI
     needs_drs_uri: ClassVar[bool] = False
@@ -702,16 +724,16 @@ class RepositoryFileDownload(metaclass=ABCMeta):
     #: The name of the replica to download the file from. Defaults to the name
     #: of the default replica. The set of valid replica names depends on the
     #: repository, but each repository must support the default replica.
-    replica: Optional[str]
+    replica: str | None
 
     #: A token to capture download state in. Should be `None` when the download
     #: is first requested.
-    token: Optional[str]
+    token: str | None
 
     @abstractmethod
     def update(self,
                plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
+               authentication: Authentication | None
                ) -> None:
         """
         Initiate the preparation of a URL from which the file can be downloaded.
@@ -730,7 +752,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         """
         The final URL from which the file contents can be downloaded.
         """
@@ -738,7 +760,7 @@ class RepositoryFileDownload(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def retry_after(self) -> Optional[int]:
+    def retry_after(self) -> int | None:
         """
         A number of seconds to wait before calling `update` again.
         """

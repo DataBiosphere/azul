@@ -439,40 +439,26 @@ Export AWS Inspector findings
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When adding a new snapshot to dev, the operator should also add the snapshot to
-sandbox, but with an appropriate prefix.
+When adding a new snapshot to ``dev``, ``anvildev``, the operator should also
+add the snapshot to ``sandbox`` or ``anvilbox``, respectively.
 
-To determine the prefix:
-
-#. Go to `TDR dev in the Google Cloud Console`_. Authenticate with your personal
-   (…@ucsc.edu) account.
-
-#. Run queries such as ::
-
-       SELECT COUNT(*) FROM `<TDR_PROJECT_NAME>.<SNAPSHOT_NAME>.links` where starts_with(links_id, '4')
-
-   in order to find the shortest prefix that yields 64 or more links (the amount
-   required by the integration test). By convention, prefixes start with 42.
-
-.. _TDR dev in the Google Cloud Console: https://console.cloud.google.com/bigquery?project=platform-hca-dev
+The ``post_deploy_tdr.py`` script will fail if the computed common prefix
+contains an unacceptable number of subgraphs. If the script reports that the
+common prefix is too long, truncate it by 1 character. If it's too short, append
+1 arbitrary hexadecimal character. Pass the updated prefix as a keyword argument
+to the ``mksrc`` function for the affected source(s), including a partition
+prefix length of 1. Then refresh the environment and re-attempt the deployment.
 
 Adding snapshots to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Unless specifically agreed with the system admin (tech lead), PRs which update
-or add new snapshots to ``prod`` should be filed against the ``prod`` branch
-instead of ``develop``. When deciding whether to perform snapshot channges
-directly to ``prod`` or include them in a routine promotion, the system admin
-considers the scope of changes to be promoted. It would be a mistake to promote
-large changes in combination with snapshots because that would make it difficult
-to diagnose whether indexing failures are caused by the changes or the
-snapshots.
-
-Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
-with regular promotions.
-
-Add a checklist item at the end of the operator's PR checklist to file a
-back-merge PR from ``prod`` to ``develop``.
+We decide on a case-by-case basis whether PRs which update or add new snapshots
+to ``prod`` should be filed against the ``prod`` branch instead of ``develop``.
+When deciding whether to perform snapshot changes directly to ``prod`` or
+include them in a routine promotion, the system admin considers the scope of
+changes to be promoted. It would be a mistake to promote large changes in
+combination with snapshots because that would make it difficult to diagnose
+whether indexing failures are caused by the changes or the snapshots.
 
 Removing catalogs from ``prod`` and setting a new default
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

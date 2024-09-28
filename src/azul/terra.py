@@ -115,8 +115,8 @@ class TDRSourceSpec(SourceSpec):
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{type}{domain}{subdomain}:{name}:{prefix}' ending with an optional
-        '/{partition_prefix_length}'.
+        'tdr:{type}:{domain}:{subdomain}:{name}:{prefix}', where prefix is
+        either the empty string or '{common_prefix}/{partition_prefix}'.
 
         >>> s = TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:/0')
         >>> s # doctest: +NORMALIZE_WHITESPACE
@@ -138,6 +138,26 @@ class TDRSourceSpec(SourceSpec):
         Traceback (most recent call last):
         ...
         ValueError: 'eggs' is not a valid TDRSourceSpec.Domain
+
+        If any :'s are missing, the last part will be interpreted as the prefix
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar')
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Missing partition prefix length', 'bar')
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        TDRSourceSpec(prefix=None,
+                      type=<Type.bigquery: 'bigquery'>,
+                      domain=<Domain.gcp: 'gcp'>,
+                      subdomain='foo',
+                      name='bar')
+
+        >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:aaa')
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Missing partition prefix length', 'aaa')
 
         >>> TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar:n32/0')
         Traceback (most recent call last):
@@ -182,33 +202,11 @@ class TDRSourceSpec(SourceSpec):
             self.domain.value,
             self.subdomain,
             self.name,
-            str(self.prefix)
+            self._prefix_str
         ])
 
     def qualify_table(self, table_name: str) -> str:
         return '.'.join((self.subdomain, self.name, table_name))
-
-    def contains(self, other: 'SourceSpec') -> bool:
-        """
-        >>> p = TDRSourceSpec.parse
-
-        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:foo:bar:/0'))
-        True
-
-        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:bar:bar:/0'))
-        False
-
-        >>> p('tdr:bigquery:gcp:foo:bar:/0').contains(p('tdr:bigquery:gcp:foo:baz:/0'))
-        False
-        """
-        return (
-            isinstance(other, TDRSourceSpec)
-            and super().contains(other)
-            and self.type == other.type
-            and self.domain == other.domain
-            and self.subdomain == other.subdomain
-            and self.name == other.name
-        )
 
 
 class TDRSourceRef(BaseSourceRef[TDRSourceSpec, 'TDRSourceRef']):

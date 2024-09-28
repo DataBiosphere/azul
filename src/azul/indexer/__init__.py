@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Iterator,
-)
 from itertools import (
     product,
 )
@@ -16,8 +13,8 @@ from threading import (
 from typing import (
     ClassVar,
     Generic,
-    Optional,
-    Type,
+    Iterator,
+    Self,
     TypeVar,
     TypedDict,
 )
@@ -94,7 +91,7 @@ class Prefix:
                'Invalid common prefix and partition length', self)
 
     @classmethod
-    def parse(cls, prefix: str) -> 'Prefix':
+    def parse(cls, prefix: str) -> Self:
         """
         >>> Prefix.parse('aa/1')
         Prefix(common='aa', partition=1)
@@ -116,7 +113,7 @@ class Prefix:
                                 Prefix(common='8f538f53', partition=1))
 
         >>> list(Prefix.parse('8f538f53/0').partition_prefixes())
-        ['']
+        ['8f538f53']
 
         >>> Prefix.parse('aa/bb')
         Traceback (most recent call last):
@@ -143,22 +140,86 @@ class Prefix:
         validate_uuid_prefix(entry)
         return cls(common=entry, partition=partition)
 
+    @classmethod
+    def for_main_deployment(cls, num_subgraphs: int) -> Self:
+        """
+        A prefix that is expected to rarely exceed 8192 subgraphs per partition
+
+        >>> str(Prefix.for_main_deployment(0))
+        Traceback (most recent call last):
+        ...
+        ValueError: math domain error
+
+        >>> str(Prefix.for_main_deployment(1))
+        '/0'
+
+        >>> cases = [-1, 0, 1, 2]
+
+        >>> n = 8192
+        >>> [str(Prefix.for_main_deployment(n + i)) for i in cases]
+        ['/0', '/0', '/1', '/1']
+
+        Sources with this many bundles are very rare, so we have a generous
+        margin of error surrounding this cutoff point
+
+        >>> n = 8192 * 16
+        >>> [str(Prefix.for_main_deployment(n + i)) for i in cases]
+        ['/1', '/1', '/2', '/2']
+        """
+        partition = cls._prefix_length(num_subgraphs, 8192)
+        return cls(common='', partition=partition)
+
+    @classmethod
+    def for_lesser_deployment(cls, num_subgraphs: int) -> Self:
+        """
+        A prefix that yields an average of approximately 24 subgraphs per
+        source, using an experimentally derived heuristic formula designed to
+        minimize manual adjustment of the computed common prefixes. The
+        partition prefix length is always 1, even though some partitions may be
+        empty, to provide test coverage for handling multiple partitions.
+
+        >>> str(Prefix.for_lesser_deployment(0))
+        Traceback (most recent call last):
+        ...
+        ValueError: math domain error
+
+        >>> str(Prefix.for_lesser_deployment(1))
+        '/1'
+
+        >>> cases = [-1, 0, 1, 2]
+
+        >>> n = 64
+        >>> [str(Prefix.for_lesser_deployment(n + i)) for i in cases]
+        ['/1', '/1', '0/1', '1/1']
+
+        >>> n = 64 * 16
+        >>> [str(Prefix.for_lesser_deployment(n + i)) for i in cases]
+        ['e/1', 'f/1', '00/1', '10/1']
+        """
+        digits = f'{num_subgraphs - 1:x}'[::-1]
+        length = cls._prefix_length(num_subgraphs, 64)
+        assert length < len(digits), num_subgraphs
+        return cls(common=digits[:length], partition=1)
+
+    @classmethod
+    def _prefix_length(cls, n, m) -> int:
+        return max(0, math.ceil(math.log(n / m, len(cls.digits))))
+
     def partition_prefixes(self) -> Iterator[str]:
         """
         >>> list(Prefix.parse('/0').partition_prefixes())
         ['']
 
-        >>> list(Prefix.parse('/1').partition_prefixes())
-        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+        >>> list(Prefix.parse('a/1').partition_prefixes())
+        ['a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'aa', 'ab', 'ac', 'ad', 'ae', 'af']
 
         >>> len(list(Prefix.parse('/2').partition_prefixes()))
         256
         """
-        partition_prefixes = map(''.join, product(self.digits,
-                                                  repeat=self.partition))
-        for partition_prefix in partition_prefixes:
-            validate_uuid_prefix(self.common + partition_prefix)
-            yield partition_prefix
+        for partition_prefix_digits in product(self.digits, repeat=self.partition):
+            complete_prefix = ''.join((self.common, *partition_prefix_digits))
+            validate_uuid_prefix(complete_prefix)
+            yield complete_prefix
 
     @property
     def num_partitions(self) -> int:
@@ -208,7 +269,7 @@ class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
     have simple unstructured names may want to use :class:`SimpleSourceSpec`.
     """
 
-    prefix: Prefix
+    prefix: Prefix | None
 
     @classmethod
     @abstractmethod
@@ -216,37 +277,31 @@ class SourceSpec(Generic[SOURCE_SPEC], metaclass=ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    def _parse(cls, spec: str) -> tuple[str, Prefix]:
+    def _parse(cls, spec: str) -> tuple[str, Prefix | None]:
         rest, sep, prefix = spec.rpartition(':')
         reject(sep == '', 'Invalid source specification', spec)
-        prefix = Prefix.parse(prefix)
+        prefix = Prefix.parse(prefix) if prefix else None
         return rest, prefix
+
+    @property
+    def _prefix_str(self) -> str:
+        return '' if self.prefix is None else str(self.prefix)
 
     @abstractmethod
     def __str__(self) -> str:
         raise NotImplementedError
 
-    def contains(self, other: 'SourceSpec') -> bool:
+    def eq_ignoring_prefix(self, other: Self) -> bool:
         """
         >>> p = SimpleSourceSpec.parse
 
-        >>> p('foo:4/0').contains(p('foo:42/0'))
+        >>> p('foo:4/0').eq_ignoring_prefix(p('foo:42/0'))
         True
 
-        >>> p('foo:42/0').contains(p('foo:4/0'))
-        False
-
-        >>> p('foo:42/0').contains(p('foo:42/0'))
-        True
-
-        >>> p('foo:42/0').contains(p('foo:42/1'))
-        True
-
-        >>> p('foo:1/0').contains(p('foo:2/0'))
+        >>> p('foo:4/0').eq_ignoring_prefix(p('bar:4/0'))
         False
         """
-        assert isinstance(other, SourceSpec), (self, other)
-        return other.prefix.common.startswith(self.prefix.common)
+        return self == attrs.evolve(other, prefix=self.prefix)
 
 
 @attrs.frozen(kw_only=True)
@@ -298,23 +353,7 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         >>> s == str(SimpleSourceSpec.parse(s))
         True
         """
-        return f'{self.name}:{self.prefix}'
-
-    def contains(self, other: 'SourceSpec') -> bool:
-        """
-        >>> p = SimpleSourceSpec.parse
-
-        >>> p('foo:/0').contains(p('foo:/0'))
-        True
-
-        >>> p('foo:/0').contains(p('bar:/0'))
-        False
-        """
-        return (
-            isinstance(other, SimpleSourceSpec)
-            and super().contains(other)
-            and self.name == other.name
-        )
+        return f'{self.name}:{self._prefix_str}'
 
 
 class SourceJSON(TypedDict):
@@ -355,10 +394,10 @@ class SourceRef(SupportsLessAndGreaterThan, Generic[SOURCE_SPEC, SOURCE_REF]):
     id: str = attrs.field(order=str.lower)
     spec: SOURCE_SPEC = attrs.field(order=False)
 
-    _lookup: ClassVar[dict[tuple[Type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
+    _lookup: ClassVar[dict[tuple[type['SourceRef'], str, 'SourceSpec'], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
-    def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
+    def __new__(cls: type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
         """
         Interns instances by their ID and ensures that names are unambiguous
         for any given ID. Two different sources may still use the same name.
@@ -411,7 +450,7 @@ class SourceRef(SupportsLessAndGreaterThan, Generic[SOURCE_SPEC, SOURCE_REF]):
         return cls(id=ref['id'], spec=cls.spec_cls().parse(ref['spec']))
 
     @classmethod
-    def spec_cls(cls) -> Type[SourceSpec]:
+    def spec_cls(cls) -> type[SourceSpec]:
         spec_cls, ref_cls = get_generic_type_params(cls, SourceSpec, SourceRef)
         return spec_cls
 
@@ -444,7 +483,7 @@ class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
     source: SOURCE_REF
 
     @classmethod
-    def source_ref_cls(cls) -> Type[SOURCE_REF]:
+    def source_ref_cls(cls) -> type[SOURCE_REF]:
         ref_cls, = get_generic_type_params(cls, SourceRef)
         return ref_cls
 
@@ -476,7 +515,7 @@ class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
         return self.fqid.version
 
     @abstractmethod
-    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_uri(self, manifest_entry: JSON) -> str | None:
         """
         Return the DRS URI to a data file in this bundle, or None if the data
         file is not accessible via DRS.

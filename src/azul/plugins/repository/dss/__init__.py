@@ -1,12 +1,9 @@
-from collections.abc import (
-    Sequence,
-    Set,
-)
 import logging
 import time
 from typing import (
-    Optional,
-    Type,
+    AbstractSet,
+    NoReturn,
+    Sequence,
 )
 import urllib
 from urllib.parse import (
@@ -112,7 +109,7 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
         return cls()
 
     @property
-    def sources(self) -> Set[SimpleSourceSpec]:
+    def sources(self) -> AbstractSet[SimpleSourceSpec]:
         assert config.dss_source is not None
         return {
             SimpleSourceSpec.parse(config.dss_source)
@@ -121,8 +118,11 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
     def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
 
+    def _count_subgraphs(self, source: SimpleSourceSpec) -> NoReturn:
+        assert False, 'DSS is EOL'
+
     def list_sources(self,
-                     authentication: Optional[Authentication]
+                     authentication: Authentication | None
                      ) -> list[DSSSourceRef]:
         return [
             DSSSourceRef(id=self._lookup_source_id(spec), spec=spec)
@@ -132,15 +132,11 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
     def list_bundles(self,
                      source: DSSSourceRef,
                      prefix: str
-                     ) -> list[DSSBundleFQID]:
+                     ) -> NoReturn:
         assert False, 'DSS is EOL'
-        # noinspection PyUnreachableCode
-        return []
 
-    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> DSSBundle:
+    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> NoReturn:
         assert False, 'DSS is EOL'
-        # noinspection PyUnreachableCode
-        return DSSBundle(fqid=bundle_fqid, manifest={}, metadata={}, links={})
 
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {
@@ -399,10 +395,10 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
     def _direct_file_url(self,
                          file_uuid: str,
                          *,
-                         file_version: Optional[str] = None,
-                         replica: Optional[str] = None,
-                         token: Optional[str] = None,
-                         ) -> Optional[str]:
+                         file_version: str | None = None,
+                         replica: str | None = None,
+                         token: str | None = None,
+                         ) -> str | None:
         dss_endpoint = one(self.sources).name
         url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
@@ -410,12 +406,12 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
         return str(url)
 
     def drs_client(self,
-                   authentication: Optional[Authentication] = None
+                   authentication: Authentication | None = None
                    ) -> DRSClient:
         assert authentication is None, type(authentication)
         return DRSClient(http_client=self._http_client)
 
-    def file_download_class(self) -> Type[RepositoryFileDownload]:
+    def file_download_class(self) -> type[RepositoryFileDownload]:
         return DSSFileDownload
 
     def validate_version(self, version: str) -> None:
@@ -427,12 +423,12 @@ class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBund
 
 
 class DSSFileDownload(RepositoryFileDownload):
-    _location: Optional[str] = None
-    _retry_after: Optional[int] = None
+    _location: str | None = None
+    _retry_after: int | None = None
 
     def update(self,
                plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
+               authentication: Authentication | None
                ) -> None:
         self.drs_uri = None  # to shorten the retry URLs
         if self.replica is None:
@@ -481,9 +477,9 @@ class DSSFileDownload(RepositoryFileDownload):
             assert False
 
     @property
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         return self._location
 
     @property
-    def retry_after(self) -> Optional[int]:
+    def retry_after(self) -> int | None:
         return self._retry_after

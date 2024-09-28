@@ -1,4 +1,4 @@
-from collections.abc import (
+from typing import (
     Mapping,
 )
 
