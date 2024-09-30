@@ -678,10 +678,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         execution_ids = {token.execution_id for token in tokens}
         return execution_ids
 
-    def _get_one_inner_file(self, catalog: CatalogName) -> FileInnerEntity:
+    def _get_one_inner_file(self, catalog: CatalogName) -> tuple[JSON, FileInnerEntity]:
         outer_file = self._get_one_outer_file(catalog)
         inner_files: JSONs = outer_file['files']
-        return cast(FileInnerEntity, one(inner_files))
+        return outer_file, cast(FileInnerEntity, one(inner_files))
 
     @cache
     def _get_one_outer_file(self, catalog: CatalogName) -> JSON:
@@ -702,6 +702,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.fail('No files found')
         return one(hits)
 
+    def _source_spec(self, catalog: CatalogName, entity: JSON) -> TDRSourceSpec:
+        if config.is_hca_enabled(catalog):
+            field = 'sourceSpec'
+        elif config.is_anvil_enabled(catalog):
+            field = 'source_spec'
+        else:
+            assert False, catalog
+        return TDRSourceSpec.parse(one(entity['sources'])[field])
+
     def _file_size_facet(self, catalog: CatalogName) -> str:
         if config.is_hca_enabled(catalog):
             return 'fileSize'
@@ -710,17 +719,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         else:
             assert False, catalog
 
-    def _file_format_facet(self, catalog: CatalogName) -> str:
+    def _fastq_filter(self, catalog: CatalogName) -> JSON:
         if config.is_hca_enabled(catalog):
-            return 'fileFormat'
+            facet = 'fileFormat'
+            prefix = ''
         elif config.is_anvil_enabled(catalog):
-            return 'files.file_format'
+            facet = 'files.file_format'
+            prefix = '.'
         else:
             assert False, catalog
-
-    def _fastq_filter(self, catalog: CatalogName) -> JSON:
-        facet = self._file_format_facet(catalog)
-        return {facet: {'is': ['fastq', 'fastq.gz']}}
+        return {facet: {'is': [f'{prefix}fastq', f'{prefix}fastq.gz']}}
 
     def _bundle_type(self, catalog: CatalogName) -> EntityType:
         if config.is_hca_enabled(catalog):
@@ -740,7 +748,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file = self._get_one_inner_file(catalog)
+            _, file = self._get_one_inner_file(catalog)
             self._test_dos(catalog, file)
             self._test_drs(catalog, file)
 
@@ -1076,10 +1084,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info('Manifest contains %d replicas', num_replicas)
         self.assertGreater(num_replicas, 0)
 
-    def _test_repository_files(self, catalog: str):
+    def _test_repository_files(self, catalog: CatalogName):
         with self.subTest('repository_files', catalog=catalog):
-            file = self._get_one_inner_file(catalog)
-            file_uuid, file_version = file['uuid'], file['version']
+            outer_file, inner_file = self._get_one_inner_file(catalog)
+            source = self._source_spec(catalog, outer_file)
+            file_uuid, file_version = inner_file['uuid'], inner_file['version']
             endpoint_url = config.service_endpoint
             file_url = endpoint_url.set(path=f'/fetch/repository/files/{file_uuid}',
                                         args=dict(catalog=catalog,
@@ -1102,7 +1111,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_json(GET, furl(response['Location']))
                 self.assertNotIn('Retry-After', response)
                 response = self._get_url(GET, furl(response['Location']), stream=True)
-                self._validate_file_response(response, file)
+                self._validate_file_response(response, source, inner_file)
 
     def _file_ext(self, file: FileInnerEntity) -> str:
         # We believe that the file extension is a more reliable indicator than
@@ -1124,12 +1133,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _validate_file_response(self,
                                 response: urllib3.HTTPResponse,
+                                source: TDRSourceSpec,
                                 file: FileInnerEntity):
         """
         Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_file_content(response, file)
+            if source.name == 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732':
+                # All files in this snapshot were truncated to zero bytes by the
+                # Broad to save costs. The metadata is not a reliable indication
+                # of these files' actual size.
+                self.assertEqual(response.headers['Content-Length'], '0')
+            else:
+                self._validate_file_content(response, file)
         finally:
             response.close()
 
