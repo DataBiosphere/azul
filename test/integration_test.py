@@ -1076,7 +1076,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info('Manifest contains %d replicas', num_replicas)
         self.assertGreater(num_replicas, 0)
 
-    def _test_repository_files(self, catalog: str):
+    def _test_repository_files(self, catalog: CatalogName):
         with self.subTest('repository_files', catalog=catalog):
             file = self._get_one_inner_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
