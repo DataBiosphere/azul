@@ -710,17 +710,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         else:
             assert False, catalog
 
-    def _file_format_facet(self, catalog: CatalogName) -> str:
+    def _fastq_filter(self, catalog: CatalogName) -> JSON:
         if config.is_hca_enabled(catalog):
-            return 'fileFormat'
+            facet = 'fileFormat'
+            prefix = ''
         elif config.is_anvil_enabled(catalog):
-            return 'files.file_format'
+            facet = 'files.file_format'
+            prefix = '.'
         else:
             assert False, catalog
-
-    def _fastq_filter(self, catalog: CatalogName) -> JSON:
-        facet = self._file_format_facet(catalog)
-        return {facet: {'is': ['fastq', 'fastq.gz']}}
+        return {facet: {'is': [f'{prefix}fastq', f'{prefix}fastq.gz']}}
 
     def _bundle_type(self, catalog: CatalogName) -> EntityType:
         if config.is_hca_enabled(catalog):
