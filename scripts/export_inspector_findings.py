@@ -141,6 +141,7 @@ class ParseInspectorFindings:
         resource_type = resource['type']
         summary = {
             'severity': severity,
+            'source_url': finding['packageVulnerabilityDetails']['sourceUrl'],
             'resource_type': resource_type,
             'resources': set(),
         }
@@ -169,10 +170,21 @@ class ParseInspectorFindings:
     def findings_sort(self, item: tuple[str, list[SummaryType]]) -> tuple[int, str]:
         score = 0
         weights = {'HIGH': 1, 'CRITICAL': 10}
-        for summary in item[1]:
+        vulnerability, summaries = item
+        for summary in summaries:
             count = len(summary['resources'])
             score += count * weights.get(summary['severity'], 0)
-        return score, item[0]
+        if vulnerability.startswith('CVE-'):
+            # Best effort on sorting CVEs by descending year and sequence
+            # number. Other types of findings are sorted strictly
+            # alphanumerically.
+            sequence = vulnerability.rsplit('-', 1)[1]
+            # The sequence number portion of CVE IDs is at most seven digits
+            # long. We pad it to that length so that, for example, a CVE with
+            # sequence number 11 precedes one with number 2.
+            # See https://cve.mitre.org/cve/identifiers/syntaxchange.html#new.
+            vulnerability = vulnerability.removesuffix(sequence) + f'{sequence:0>7}'
+        return score, vulnerability
 
     def write_to_csv(self, findings: dict[str, list[SummaryType]]) -> None:
         titles = [
@@ -198,7 +210,9 @@ class ParseInspectorFindings:
             row_num = len(rows) + 1
             col_range = f'C{row_num}:{last_col}{row_num}'
             severity_formula = f'=(COUNTIF({col_range},"C")*10)+(COUNTIF({col_range},"H"))'
-            row = [vulnerability, severity_formula]
+            urls = sorted([summary['source_url'] for summary in summaries], reverse=True)
+            hyperlink = f'=HYPERLINK("{urls.pop(0)}","{vulnerability}")'
+            row = [hyperlink, severity_formula]
             for column_index in range(len(row), len(titles) + 1):
                 row.append(column_values.get(column_index, ''))
             rows.append(row)
