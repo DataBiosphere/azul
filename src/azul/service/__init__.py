@@ -10,7 +10,7 @@ from typing import (
     TypedDict,
 )
 
-import attr
+import attrs
 from chalice import (
     ForbiddenError,
 )
@@ -59,7 +59,7 @@ FilterOperator = TypedDict(
 FiltersJSON = Mapping[str, FilterOperator]
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class Filters:
     explicit: FiltersJSON
     source_ids: set[str]
@@ -82,7 +82,7 @@ class Filters:
         }
 
     def update(self, filters: FiltersJSON) -> 'Filters':
-        return attr.evolve(self, explicit={**self.explicit, **filters})
+        return attrs.evolve(self, explicit={**self.explicit, **filters})
 
     def reify(self,
               plugin: MetadataPlugin,
@@ -177,7 +177,7 @@ class FileUrlFunc(Protocol):
                  ) -> mutable_furl: ...
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ServiceAppController(AppController):
     file_url_func: FileUrlFunc
 

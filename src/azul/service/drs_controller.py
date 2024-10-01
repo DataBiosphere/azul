@@ -12,7 +12,6 @@ from dataclasses import (
 from datetime import (
     datetime,
 )
-import time
 from typing import (
     Optional,
 )
@@ -184,10 +183,7 @@ class DRSController(SourceController):
                     return url
                 elif dss_response.status_code == 301:
                     url = dss_response.next.url
-                    remaining_lambda_seconds = self.lambda_context.get_remaining_time_in_millis() / 1000
-                    server_side_sleep = min(1,
-                                            max(remaining_lambda_seconds - config.api_gateway_timeout_padding - 3, 0))
-                    time.sleep(server_side_sleep)
+                    self.server_side_sleep(1.0)
                 else:
                     raise ChaliceViewError({
                         'msg': f'Received {dss_response.status_code} from DSS. Could not get file'

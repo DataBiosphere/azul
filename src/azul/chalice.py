@@ -15,6 +15,7 @@ import logging
 import mimetypes
 import os
 import pathlib
+import time
 from typing import (
     Any,
     Iterator,
@@ -617,3 +618,27 @@ class AppController:
     @property
     def current_request(self) -> AzulRequest:
         return self.app.current_request
+
+    def server_side_sleep(self, max_seconds: float) -> float:
+        """
+        Sleep in the current Lambda function.
+
+        :param max_seconds: The requested amount of time to sleep in seconds.
+                            The actual time slept will be less if the requested
+                            amount would cause the Lambda function to exceed its
+                            execution timeout.
+
+        :return: The actual amount of time slept in seconds
+        """
+        assert isinstance(max_seconds, float), max_seconds
+        assert 0 <= max_seconds <= config.api_gateway_lambda_timeout, max_seconds
+        remaining_time = self.lambda_context.get_remaining_time_in_millis() / 1000
+        # A small buffer is subtracted from the Lambda's remaining time to
+        # ensure that it wakes up before it runs out of execution time (and
+        # before API Gateway times out) so it gets a chance to return a response
+        # to the client.
+        actual_seconds = min(max_seconds,
+                             remaining_time - config.api_gateway_timeout_padding - 3)
+        log.debug('Sleeping for %.3f seconds', actual_seconds)
+        time.sleep(actual_seconds)
+        return actual_seconds
