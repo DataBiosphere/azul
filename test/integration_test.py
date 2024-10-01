@@ -104,6 +104,9 @@ from azul.azulclient import (
     AzulClient,
     AzulClientNotificationError,
 )
+from azul.chalice import (
+    AzulChaliceApp,
+)
 from azul.drs import (
     AccessMethod,
 )
@@ -2042,11 +2045,6 @@ class ResponseHeadersTest(AzulTestCase):
             '/oauth2_redirect': {'Cache-Control': 'no-store'},
             '/health/basic': {'Cache-Control': 'no-store'}
         }
-        global_headers = {
-            'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
-            'X-Content-Type-Options': 'nosniff',
-            'X-Frame-Options': 'DENY',
-        }
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, expected_headers in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
@@ -2055,5 +2053,5 @@ class ResponseHeadersTest(AzulTestCase):
                     else:
                         response = requests.get(str(endpoint / path))
                         response.raise_for_status()
-                        expected = expected_headers | global_headers
+                        expected = AzulChaliceApp.security_headers | expected_headers
                         self.assertIsSubset(expected.items(), response.headers.items())

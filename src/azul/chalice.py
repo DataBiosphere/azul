@@ -61,6 +61,9 @@ from azul.json import (
     copy_json,
     json_head,
 )
+from azul.strings import (
+    join_words as jw,
+)
 from azul.types import (
     JSON,
     LambdaContext,
@@ -189,15 +192,25 @@ class AzulChaliceApp(Chalice):
         finally:
             config.lambda_is_handling_api_gateway_request = False
 
+    hsts_max_age = 60 * 60 * 24 * 365 * 2
+
+    # Headers added to every response from the app. Use of these headers
+    # addresses known security vulnerabilities.
+    #
+    security_headers = {
+        'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
+                                        'includeSubDomains;',
+                                        'preload'),
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+    }
+
     def _security_headers_middleware(self, event, get_response):
         """
         Add headers to the response
         """
         response = get_response(event)
-        seconds = 60 * 60 * 24 * 365 * 2
-        response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains; preload'
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers.update(self.security_headers)
         view_function = self.routes[event.path][event.method].view_function
         cache_control = getattr(view_function, 'cache_control')
         response.headers['Cache-Control'] = cache_control
