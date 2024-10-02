@@ -1,6 +1,17 @@
 function handler(event) {
     var request = event.request;
 
+    var new_uri = request.uri.replace(/^\/explore(\/|$)/,'/');
+    if( request.uri !== new_uri ) {
+        return {
+            statusCode: 301,
+            statusDescription: 'Moved Permanently',
+            headers: {
+                'location': {'value': new_uri}
+            }
+        }
+    }
+
     // @alex explorePath needs to be configurable to the path of the behavior like
     // /explore, /data or /ncpi/data or ""
     var explorePath = ""
