@@ -1115,14 +1115,14 @@ dcp41_sources = mkdict(dcp40_sources, 462, mkdelta([
 
 dcp42_sources = mkdict(dcp41_sources, 470, mkdelta([
     # @formatter:off
-    mksrc('bigquery', 'datarepo-db22b6c5', 'hca_prod_19037ec943a74823b93f9e59c694d17e__20240903_dcp2_20240904_dcp42', 16), # noqa E501
-    mksrc('bigquery', 'datarepo-8e43554a', 'hca_prod_35d5b0573daf4ccd8112196194598893__20240903_dcp2_20240905_dcp42', 303, ma), # noqa E501
-    mksrc('bigquery', 'datarepo-5b6ac433', 'hca_prod_5f1a1aee6c484dd4a2c4eb4ca6aadf74__20240903_dcp2_20240904_dcp42', 40), # noqa E501
-    mksrc('bigquery', 'datarepo-d5e4c41e', 'hca_prod_7c75f07c608d4c4aa1b7b13d11c0ad31__20220117_dcp2_20240904_dcp42', 80), # noqa E501
-    mksrc('bigquery', 'datarepo-eb6182b7', 'hca_prod_888f17664c8443bb8717b5f9d2046097__20240903_dcp2_20240904_dcp42', 111), # noqa E501
-    mksrc('bigquery', 'datarepo-b9e1d9ec', 'hca_prod_9dd91b6e7c6249d3a3d474f603deffdb__20240903_dcp2_20240904_dcp42', 135), # noqa E501
-    mksrc('bigquery', 'datarepo-582bf509', 'hca_prod_b176d75662d8493383a48b026380262f__20240903_dcp2_20240904_dcp42', 106), # noqa E501
-    mksrc('bigquery', 'datarepo-c85d293d', 'hca_prod_f598aee0d269403690e9d6d5b1c84429__20240903_dcp2_20240904_dcp42', 6)
+    mksrc('bigquery', 'datarepo-db22b6c5', 'hca_prod_19037ec943a74823b93f9e59c694d17e__20240903_dcp2_20240904_dcp42'),
+    mksrc('bigquery', 'datarepo-8e43554a', 'hca_prod_35d5b0573daf4ccd8112196194598893__20240903_dcp2_20240905_dcp42', ma),  # noqa E501
+    mksrc('bigquery', 'datarepo-5b6ac433', 'hca_prod_5f1a1aee6c484dd4a2c4eb4ca6aadf74__20240903_dcp2_20240904_dcp42',),
+    mksrc('bigquery', 'datarepo-d5e4c41e', 'hca_prod_7c75f07c608d4c4aa1b7b13d11c0ad31__20220117_dcp2_20240904_dcp42',),
+    mksrc('bigquery', 'datarepo-eb6182b7', 'hca_prod_888f17664c8443bb8717b5f9d2046097__20240903_dcp2_20240904_dcp42',),
+    mksrc('bigquery', 'datarepo-b9e1d9ec', 'hca_prod_9dd91b6e7c6249d3a3d474f603deffdb__20240903_dcp2_20240904_dcp42',),
+    mksrc('bigquery', 'datarepo-582bf509', 'hca_prod_b176d75662d8493383a48b026380262f__20240903_dcp2_20240904_dcp42',),
+    mksrc('bigquery', 'datarepo-c85d293d', 'hca_prod_f598aee0d269403690e9d6d5b1c84429__20240903_dcp2_20240904_dcp42',)
     # @formatter:on
 ]))
 
