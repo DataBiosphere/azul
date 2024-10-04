@@ -48,21 +48,21 @@ class KeyReference:
     entity_type: EntityType
 
 
-ENTITY_REF = TypeVar('ENTITY_REF', bound=EntityReference | KeyReference)
+REF = TypeVar('REF', bound=EntityReference | KeyReference)
 
 
 @attrs.frozen(kw_only=True, order=False)
-class Link(Generic[ENTITY_REF]):
-    inputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
-                                                  converter=frozenset)
+class Link(Generic[REF]):
+    inputs: AbstractSet[REF] = attrs.field(factory=frozenset,
+                                           converter=frozenset)
 
-    activity: ENTITY_REF | None = attrs.field(default=None)
+    activity: REF | None = attrs.field(default=None)
 
-    outputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
-                                                   converter=frozenset)
+    outputs: AbstractSet[REF] = attrs.field(factory=frozenset,
+                                            converter=frozenset)
 
     @property
-    def all_entities(self) -> AbstractSet[ENTITY_REF]:
+    def all_entities(self) -> AbstractSet[REF]:
         return self.inputs | self.outputs | aset(self.activity)
 
     @classmethod
