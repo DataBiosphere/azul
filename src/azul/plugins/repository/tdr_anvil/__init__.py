@@ -29,6 +29,9 @@ from azul import (
 from azul.bigquery import (
     backtick,
 )
+from azul.collections import (
+    none_safe_apply,
+)
 from azul.drs import (
     DRSURI,
 )
@@ -156,16 +159,11 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
     def add_links(self,
                   links: KeyLinks,
                   entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
-        def key_ref_to_entity_ref(key_ref: KeyReference) -> EntityReference:
-            return entities_by_key[key_ref]
-
-        def optional_key_ref_to_entity_ref(key_ref: KeyReference | None) -> EntityReference | None:
-            return None if key_ref is None else key_ref_to_entity_ref(key_ref)
-
+        lookup = entities_by_key.__getitem__
         self.links.update(
-            Link(inputs=set(map(key_ref_to_entity_ref, link.inputs)),
-                 activity=optional_key_ref_to_entity_ref(link.activity),
-                 outputs=set(map(key_ref_to_entity_ref, link.outputs)))
+            Link(inputs=set(map(lookup, link.inputs)),
+                 activity=none_safe_apply(lookup, link.activity),
+                 outputs=set(map(lookup, link.outputs)))
             for link in links
         )
 

@@ -131,6 +131,17 @@ def explode_dict(d: Mapping[K, Union[V, list[V], set[V], tuple[V]]]
         yield dict(zip(d.keys(), t))
 
 
+def none_safe_apply(f: Callable[[K], V], o: K | None) -> V | None:
+    """
+    >>> none_safe_apply(str, 123)
+    '123'
+
+    >>> none_safe_apply(str, None) is None
+    True
+    """
+    return None if o is None else f(o)
+
+
 def none_safe_key(none_last: bool = False) -> Callable[[Any], Any]:
     """
     Returns a sort key that handles None values.
@@ -300,6 +311,20 @@ def alist(*args: V) -> list[V]:
     [0]
     """
     return _athing(list, *args)
+
+
+def aset(*args: V) -> set[V]:
+    """
+    >>> aset()
+    set()
+
+    >>> aset(None)
+    set()
+
+    >>> aset(0, None)
+    {0}
+    """
+    return _athing(set, *args)
 
 
 class NestedDict(defaultdict):

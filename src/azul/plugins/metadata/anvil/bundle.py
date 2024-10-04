@@ -17,6 +17,10 @@ from more_itertools import (
 from azul import (
     CatalogName,
 )
+from azul.collections import (
+    aset,
+    none_safe_apply,
+)
 from azul.indexer import (
     BUNDLE_FQID,
     Bundle,
@@ -59,18 +63,18 @@ class Link(Generic[ENTITY_REF]):
 
     @property
     def all_entities(self) -> AbstractSet[ENTITY_REF]:
-        return self.inputs | self.outputs | (set() if self.activity is None else {self.activity})
+        return self.inputs | self.outputs | aset(self.activity)
 
     @classmethod
     def from_json(cls, link: JSON) -> Self:
         return cls(inputs=set(map(EntityReference.parse, link['inputs'])),
-                   activity=None if link['activity'] is None else EntityReference.parse(link['activity']),
+                   activity=none_safe_apply(EntityReference.parse, link['activity']),
                    outputs=set(map(EntityReference.parse, link['outputs'])))
 
     def to_json(self) -> MutableJSON:
         return {
             'inputs': sorted(map(str, self.inputs)),
-            'activity': None if self.activity is None else str(self.activity),
+            'activity': none_safe_apply(str, self.activity),
             'outputs': sorted(map(str, self.outputs))
         }
 
