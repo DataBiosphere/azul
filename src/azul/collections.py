@@ -270,6 +270,10 @@ def adict(seq: Union[Mapping[K, V], Iterable[tuple[K, V]]] = None,
     return kwargs if seq is None else dict(seq, **kwargs)
 
 
+def _athing(cls: type, *args):
+    return cls(arg for arg in args if arg is not None)
+
+
 def atuple(*args: V) -> tuple[V, ...]:
     """
     >>> atuple()
@@ -281,7 +285,7 @@ def atuple(*args: V) -> tuple[V, ...]:
     >>> atuple(0, None)
     (0,)
     """
-    return tuple(arg for arg in args if arg is not None)
+    return _athing(tuple, *args)
 
 
 def alist(*args: V) -> list[V]:
@@ -295,7 +299,7 @@ def alist(*args: V) -> list[V]:
     >>> alist(0, None)
     [0]
     """
-    return list(arg for arg in args if arg is not None)
+    return _athing(list, *args)
 
 
 class NestedDict(defaultdict):
