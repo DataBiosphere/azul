@@ -13,7 +13,6 @@ from typing import (
     AbstractSet,
     Callable,
     Mapping,
-    Optional,
 )
 
 import attrs
@@ -64,7 +63,6 @@ from azul.types import (
 )
 from azul.uuids import (
     change_version,
-    validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
@@ -161,7 +159,7 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
         def key_ref_to_entity_ref(key_ref: KeyReference) -> EntityReference:
             return entities_by_key[key_ref]
 
-        def optional_key_ref_to_entity_ref(key_ref: Optional[KeyReference]) -> Optional[EntityReference]:
+        def optional_key_ref_to_entity_ref(key_ref: KeyReference | None) -> EntityReference | None:
             return None if key_ref is None else key_ref_to_entity_ref(key_ref)
 
         self.links.update(
@@ -185,25 +183,33 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
     datarepo_row_uuid_version = 4
     bundle_uuid_version = 10
 
+    def _count_subgraphs(self, source: TDRSourceSpec) -> int:
+        rows = self._run_sql(f'''
+            SELECT COUNT(*) AS count
+            FROM {backtick(self._full_table_name(source, BundleEntityType.primary.value))}
+            UNION ALL
+            SELECT COUNT(*) AS count
+            FROM {backtick(self._full_table_name(source, BundleEntityType.supplementary.value))}
+            WHERE is_supplementary
+        ''')
+        return sum(row['count'] for row in rows)
+
     def _list_bundles(self,
                       source: TDRSourceRef,
                       prefix: str
                       ) -> list[TDRAnvilBundleFQID]:
         spec = source.spec
-        common_prefix = spec.prefix.common
-        complete_prefix = common_prefix + prefix
-        validate_uuid_prefix(complete_prefix)
         primary = BundleEntityType.primary.value
         supplementary = BundleEntityType.supplementary.value
         duos = BundleEntityType.duos.value
         rows = list(self._run_sql(f'''
             SELECT datarepo_row_id, {primary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, primary))}
-            WHERE STARTS_WITH(datarepo_row_id, '{complete_prefix}')
+            WHERE STARTS_WITH(datarepo_row_id, '{prefix}')
             UNION ALL
             SELECT datarepo_row_id, {supplementary!r} AS entity_type
             FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
-            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{complete_prefix}')
+            WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{prefix}')
         ''' + (
             ''
             if config.duos_service_url is None else
@@ -231,7 +237,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 duos_count += 1
                 # Ensure that one partition will always contain the DUOS bundle
                 # regardless of the choice of common prefix
-                if not bundle_uuid[len(common_prefix):].startswith(prefix):
+                if not bundle_uuid.startswith(prefix):
                     continue
             bundles.append(TDRAnvilBundleFQID(
                 source=source,
@@ -240,30 +246,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 entity_type=BundleEntityType(row['entity_type'])
             ))
         return bundles
-
-    def list_partitions(self,
-                        source: TDRSourceRef
-                        ) -> Mapping[str, int]:
-        prefix = source.spec.prefix
-        primary = BundleEntityType.primary.value
-        supplementary = BundleEntityType.supplementary.value
-        rows = self._run_sql(f'''
-            SELECT prefix, COUNT(*) AS subgraph_count
-            FROM (
-                SELECT SUBSTR(datarepo_row_id, 1, {len(prefix)}) AS prefix
-                FROM (
-                    SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, primary))}
-                    UNION ALL
-                    SELECT datarepo_row_id FROM {backtick(self._full_table_name(source.spec, supplementary))}
-                    WHERE is_supplementary
-                )
-            )
-            WHERE STARTS_WITH(prefix, {prefix.common!r})
-            GROUP BY prefix
-        ''')
-        partitions = {row['prefix']: row['subgraph_count'] for row in rows}
-        assert all(v > 0 for v in partitions.values())
-        return partitions
 
     def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
         if 'entity_type' not in fqid:

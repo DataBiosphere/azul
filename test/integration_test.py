@@ -20,6 +20,7 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
+import itertools
 from itertools import (
     count,
     starmap,
@@ -286,73 +287,17 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
-    def _list_partition_bundles(self,
-                                catalog: CatalogName,
-                                source: str
-                                ) -> tuple[SourceRef, str, list[SourcedBundleFQID]]:
+    def _list_partitions(self,
+                         catalog: CatalogName,
+                         *,
+                         min_bundles: int,
+                         public_1st: bool
+                         ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         """
-        Randomly select a partition of bundles from the specified source, check that
-        it isn't empty, and return the FQIDs of the bundles in that partition.
+        Iterate through the sources in the given catalog and yield partitions of
+        bundle FQIDs until a desired minimum number of bundles are found. For
+        each emitted source, every partition is included, even if it's empty.
         """
-        plugin = self.azul_client.repository_plugin(catalog)
-        source = plugin.resolve_source(source)
-        prefix = source.spec.prefix
-        partition_prefixes = list(prefix.partition_prefixes())
-        partition_prefix = self.random.choice(partition_prefixes)
-        effective_prefix = prefix.common + partition_prefix
-        fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
-        num_bundles = len(fqids)
-        partition = f'Partition {effective_prefix!r} of source {source.spec}'
-        if not config.deployment.is_sandbox_or_personal:
-            # For sources that use partitioning, 512 is the desired partition
-            # size. In practice, we observe the reindex succeeding with sizes
-            # >700 without the partition size becoming a limiting factor. From
-            # this we project 1024 as a reasonable upper bound to enforce.
-            upper = 1024
-            if effective_prefix:
-                lower = 512 // 16
-                if len(fqids) < lower:
-                    # If bundle UUIDs were uniformly distributed by prefix, we
-                    # could directly assert a minimum partition size, but since
-                    # they're not, a given partition may fail to exceed this
-                    # minimum even with an optimal choice of partition prefix
-                    # length.
-                    log.warning('With %i bundles, %s is too small', len(fqids), partition)
-                    counts = plugin.list_partitions(source)
-                    if counts is None:
-                        lower = 1
-                    else:
-                        # For plugins that support efficiently counting bundles
-                        # across all partitions simultaneously, we can check
-                        # whether the chosen partition is an outlier by
-                        # determining the *average* partition size.
-                        num_bundles = sum(counts.values()) / prefix.num_partitions
-            else:
-                # Sources too small to be split into more than one partition may
-                # have as few as one bundle in total
-                lower = 1
-        else:
-            # The sandbox and personal deployments typically don't use
-            # partitioning and the desired number of bundles per source is
-            # 16 +/- 50%, i.e. 8 to 24. However, no choice of common prefix can
-            # satisfy this range for snapshots with `n` bundles where `n < 8` or
-            # `24 < n <= 112`. The choice of upper bound here is somewhat
-            # arbitrary.
-            upper = 64
-            lower = 1
-
-        self.assertLessEqual(num_bundles, upper, partition + ' is too large')
-        self.assertGreaterEqual(num_bundles, lower, partition + ' is too small')
-
-        return source, partition_prefix, fqids
-
-    def _list_bundles(self,
-                      catalog: CatalogName,
-                      *,
-                      min_bundles: int,
-                      check_all: bool,
-                      public_1st: bool
-                      ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
@@ -367,18 +312,22 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 if source not in managed_access_sources
             )
             sources[0], sources[index] = sources[index], sources[0]
+        plugin = self.azul_client.repository_plugin(catalog)
         # This iteration prefers sources occurring first, so we shuffle them
         # above to neutralize the bias.
         for source in sources:
-            source, prefix, new_fqids = self._list_partition_bundles(catalog, source)
-            if total_bundles < min_bundles:
+            source = plugin.resolve_source(source)
+            source = plugin.partition_source(catalog, source)
+            for prefix in source.spec.prefix.partition_prefixes():
+                new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
                 total_bundles += len(new_fqids)
                 yield source, prefix, new_fqids
-            # If `check_all` is True, keep looping to verify the size of a
-            # partition for all sources
-            elif not check_all:
+            # We postpone this check until after we've yielded all partitions in
+            # the current source to ensure test coverage for handling multiple
+            # partitions per source
+            if total_bundles >= min_bundles:
                 break
-        if total_bundles < min_bundles:
+        else:
             log.warning('Checked all sources and found only %d bundles instead of the '
                         'expected minimum %d', total_bundles, min_bundles)
 
@@ -391,6 +340,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         # prefix as possible.
         for source in self.managed_access_sources_by_catalog[catalog]:
             assert str(source.spec) in sources
+            source = self.repository_plugin(catalog).partition_source(catalog, source)
             bundle_fqids = sorted(
                 bundle_fqid
                 for bundle_fqid in self.azul_client.list_bundles(catalog, source, prefix='')
@@ -401,11 +351,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 )
             )
             bundle_fqid = self.random.choice(bundle_fqids)
-            # FIXME: We shouldn't need to include the common prefix
-            #        https://github.com/DataBiosphere/azul/issues/3579
-            common = source.spec.prefix.common
-            prefix = bundle_fqid.uuid[len(common):8]
-            assert prefix != '', prefix
+            prefix = bundle_fqid.uuid[:8]
             new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
             yield source, prefix, new_fqids
 
@@ -732,10 +678,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         execution_ids = {token.execution_id for token in tokens}
         return execution_ids
 
-    def _get_one_inner_file(self, catalog: CatalogName) -> FileInnerEntity:
+    def _get_one_inner_file(self, catalog: CatalogName) -> tuple[JSON, FileInnerEntity]:
         outer_file = self._get_one_outer_file(catalog)
         inner_files: JSONs = outer_file['files']
-        return cast(FileInnerEntity, one(inner_files))
+        return outer_file, cast(FileInnerEntity, one(inner_files))
 
     @cache
     def _get_one_outer_file(self, catalog: CatalogName) -> JSON:
@@ -756,6 +702,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.fail('No files found')
         return one(hits)
 
+    def _source_spec(self, catalog: CatalogName, entity: JSON) -> TDRSourceSpec:
+        if config.is_hca_enabled(catalog):
+            field = 'sourceSpec'
+        elif config.is_anvil_enabled(catalog):
+            field = 'source_spec'
+        else:
+            assert False, catalog
+        return TDRSourceSpec.parse(one(entity['sources'])[field])
+
     def _file_size_facet(self, catalog: CatalogName) -> str:
         if config.is_hca_enabled(catalog):
             return 'fileSize'
@@ -764,17 +719,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         else:
             assert False, catalog
 
-    def _file_format_facet(self, catalog: CatalogName) -> str:
+    def _fastq_filter(self, catalog: CatalogName) -> JSON:
         if config.is_hca_enabled(catalog):
-            return 'fileFormat'
+            facet = 'fileFormat'
+            prefix = ''
         elif config.is_anvil_enabled(catalog):
-            return 'files.file_format'
+            facet = 'files.file_format'
+            prefix = '.'
         else:
             assert False, catalog
-
-    def _fastq_filter(self, catalog: CatalogName) -> JSON:
-        facet = self._file_format_facet(catalog)
-        return {facet: {'is': ['fastq', 'fastq.gz']}}
+        return {facet: {'is': [f'{prefix}fastq', f'{prefix}fastq.gz']}}
 
     def _bundle_type(self, catalog: CatalogName) -> EntityType:
         if config.is_hca_enabled(catalog):
@@ -794,7 +748,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file = self._get_one_inner_file(catalog)
+            _, file = self._get_one_inner_file(catalog)
             self._test_dos(catalog, file)
             self._test_drs(catalog, file)
 
@@ -1130,10 +1084,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info('Manifest contains %d replicas', num_replicas)
         self.assertGreater(num_replicas, 0)
 
-    def _test_repository_files(self, catalog: str):
+    def _test_repository_files(self, catalog: CatalogName):
         with self.subTest('repository_files', catalog=catalog):
-            file = self._get_one_inner_file(catalog)
-            file_uuid, file_version = file['uuid'], file['version']
+            outer_file, inner_file = self._get_one_inner_file(catalog)
+            source = self._source_spec(catalog, outer_file)
+            file_uuid, file_version = inner_file['uuid'], inner_file['version']
             endpoint_url = config.service_endpoint
             file_url = endpoint_url.set(path=f'/fetch/repository/files/{file_uuid}',
                                         args=dict(catalog=catalog,
@@ -1156,7 +1111,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_json(GET, furl(response['Location']))
                 self.assertNotIn('Retry-After', response)
                 response = self._get_url(GET, furl(response['Location']), stream=True)
-                self._validate_file_response(response, file)
+                self._validate_file_response(response, source, inner_file)
 
     def _file_ext(self, file: FileInnerEntity) -> str:
         # We believe that the file extension is a more reliable indicator than
@@ -1178,12 +1133,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _validate_file_response(self,
                                 response: urllib3.HTTPResponse,
+                                source: TDRSourceSpec,
                                 file: FileInnerEntity):
         """
         Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_file_content(response, file)
+            if source.name == 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732':
+                # All files in this snapshot were truncated to zero bytes by the
+                # Broad to save costs. The metadata is not a reliable indication
+                # of these files' actual size.
+                self.assertEqual(response.headers['Content-Length'], '0')
+            else:
+                self._validate_file_content(response, file)
         finally:
             response.close()
 
@@ -1271,16 +1233,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         num_bundles = max(self.min_bundles - len(bundle_fqids), 1)
         log.info('Selected %d bundles to satisfy managed access coverage; '
                  'selecting at least %d more', len(bundle_fqids), num_bundles)
-        # _list_bundles selects both public and managed access sources at random.
+        # _list_partitions selects both public and managed access sources at random.
         # If we don't index at least one public source, every request would need
         # service account credentials and we couldn't compare the responses for
         # public and managed access data. `public_1st` ensures that at least
         # one of the sources will be public because sources are indexed starting
         # with the first one yielded by the iteration.
-        list(starmap(update, self._list_bundles(catalog,
-                                                min_bundles=num_bundles,
-                                                check_all=True,
-                                                public_1st=True)))
+        list(starmap(update, self._list_partitions(catalog,
+                                                   min_bundles=num_bundles,
+                                                   public_1st=True)))
 
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
@@ -1989,10 +1950,13 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        source, prefix, bundle_fqids = next(self._list_bundles(catalog,
-                                                               min_bundles=1,
-                                                               check_all=False,
-                                                               public_1st=False))
+        # Skip through empty partitions
+        bundle_fqids = itertools.chain.from_iterable(
+            bundle_fqids
+            for _, _, bundle_fqids in self._list_partitions(catalog,
+                                                            min_bundles=1,
+                                                            public_1st=False)
+        )
         return self.random.choice(sorted(bundle_fqids))
 
     def _can_bundle(self,

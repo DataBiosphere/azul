@@ -5,9 +5,7 @@ from typing import (
     AbstractSet,
     Generic,
     Iterable,
-    Optional,
     TypeVar,
-    Union,
 )
 
 import attrs
@@ -45,7 +43,7 @@ class KeyReference:
     entity_type: EntityType
 
 
-ENTITY_REF = TypeVar('ENTITY_REF', bound=Union[EntityReference, KeyReference])
+ENTITY_REF = TypeVar('ENTITY_REF', bound=EntityReference | KeyReference)
 
 
 @attrs.frozen(kw_only=True, order=False)
@@ -53,7 +51,7 @@ class Link(Generic[ENTITY_REF]):
     inputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
                                                   converter=frozenset)
 
-    activity: Optional[ENTITY_REF] = attrs.field(default=None)
+    activity: ENTITY_REF | None = attrs.field(default=None)
 
     outputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
                                                    converter=frozenset)

@@ -1,4 +1,8 @@
+from datetime import (
+    datetime,
+)
 import os
+import time
 from typing import (
     ClassVar,
     Optional,
@@ -75,6 +79,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
         log.info('Launching %scontainer from image %s',
                  'sibling ' if is_sibling else '', image)
         ports = None if is_sibling else {container_port: ('127.0.0.1', None)}
+        start = datetime.now()
         container = cls._docker.containers.run(image,
                                                detach=True,
                                                auto_remove=True,
@@ -82,21 +87,29 @@ class DockerContainerTestCase(AzulUnitTestCase):
                                                **kwargs)
         try:
             container_info = cls._docker.api.inspect_container(container.id)
-            network_settings = container_info['NetworkSettings']
             if is_sibling:  # no coverage
-                container_ip = network_settings['IPAddress']
+                container_ip = container_info['NetworkSettings']['IPAddress']
                 assert isinstance(container_ip, str)
                 endpoint = (container_ip, container_port)
                 log.info('Launched sibling container %s from image %s, listening on %s:%i',
                          container.name, image, container_ip, container_port)
             else:
-                ports = network_settings['Ports']
-                port = one(ports[f'{container_port}/tcp'])
+                while True:
+                    seconds = (datetime.now() - start).total_seconds()
+                    ports = container_info['NetworkSettings']['Ports'][f'{container_port}/tcp']
+                    if len(ports) > 0:
+                        break
+                    elif seconds > 3:
+                        raise RuntimeError('Unreachable TCP port', container_port, container.name)
+                    else:
+                        time.sleep(.33)
+                        container_info = cls._docker.api.inspect_container(container.id)
+                port = one(ports)
                 host_ip = port['HostIp']
                 host_port = int(port['HostPort'])
-                log.info('Launched container %s from image %s, '
+                log.info('Launched container %s from image %s after %.3fs, '
                          'with container port %s mapped to %s:%i on the host',
-                         container.name, image, container_port, host_ip, host_port)
+                         container.name, image, seconds, container_port, host_ip, host_port)
                 endpoint = (host_ip, host_port)
         except BaseException:  # no coverage
             container.kill()

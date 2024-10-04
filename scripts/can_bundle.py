@@ -89,9 +89,8 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
         else:
             log.debug('Searching for %r in catalog %r', source, catalog)
             for plugin_source_spec in plugin.sources:
-                if source_ref.spec.contains(plugin_source_spec):
-                    plugin_source_ref = plugin.resolve_source(str(plugin_source_spec))
-                    fqid = SourcedBundleFQIDJSON(source=plugin_source_ref.to_json(),
+                if source_ref.spec.eq_ignoring_prefix(plugin_source_spec):
+                    fqid = SourcedBundleFQIDJSON(source=source_ref.to_json(),
                                                  uuid=bundle_uuid,
                                                  version=bundle_version)
                     fqid = plugin.resolve_bundle(fqid)

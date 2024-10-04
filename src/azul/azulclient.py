@@ -245,6 +245,7 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
         plugin = self.repository_plugin(catalog)
         for source in sources:
             source = plugin.resolve_source(source)
+            source = plugin.partition_source(catalog, source)
 
             def message(partition_prefix: str) -> JSON:
                 log.info('Remotely reindexing prefix %r of source %r into catalog %r',
