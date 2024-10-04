@@ -104,7 +104,14 @@ class EntityLink(Link[EntityReference]):
 
 
 class KeyLink(Link[KeyReference]):
-    pass
+
+    def to_entity_link(self,
+                       entities_by_key: Mapping[KeyReference, EntityReference]
+                       ) -> EntityLink:
+        lookup = entities_by_key.__getitem__
+        return EntityLink(inputs=set(map(lookup, self.inputs)),
+                          activity=none_safe_apply(lookup, self.activity),
+                          outputs=set(map(lookup, self.outputs)))
 
 
 @attrs.define(kw_only=True)

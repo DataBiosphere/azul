@@ -9,7 +9,7 @@ from operator import (
 from typing import (
     AbstractSet,
     Callable,
-    Mapping,
+    Iterable,
 )
 
 import attrs
@@ -25,9 +25,6 @@ from azul import (
 )
 from azul.bigquery import (
     backtick,
-)
-from azul.collections import (
-    none_safe_apply,
 )
 from azul.drs import (
     DRSURI,
@@ -154,16 +151,8 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                             crc32='')
         self.entities[entity] = metadata
 
-    def add_links(self,
-                  links: KeyLinks,
-                  entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
-        lookup = entities_by_key.__getitem__
-        self.links.update(
-            EntityLink(inputs=set(map(lookup, link.inputs)),
-                       activity=none_safe_apply(lookup, link.activity),
-                       outputs=set(map(lookup, link.outputs)))
-            for link in links
-        )
+    def add_links(self, links: Iterable[EntityLink]):
+        self.links.update(links)
         EntityLink.group_by_activity(self.links)
 
 
@@ -324,7 +313,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 entity = EntityReference(entity_id=row['datarepo_row_id'], entity_type=entity_type)
                 entities_by_key[key] = entity
                 result.add_entity(entity, self._version, row)
-        result.add_links(links, entities_by_key)
+        result.add_links((link.to_entity_link(entities_by_key) for link in links))
         return result
 
     def _supplementary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
@@ -346,18 +335,15 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             SELECT {', '.join(sorted(columns))}
             FROM {backtick(self._full_table_name(source, linked_entity_type))}
         ''')))
-        entities_by_key = {}
         link_args = {}
         for entity_type, row, arg in [
             (bundle_entity_type, bundle_entity, 'outputs'),
             (linked_entity_type, linked_entity, 'inputs')
         ]:
             entity_ref = EntityReference(entity_type=entity_type, entity_id=row['datarepo_row_id'])
-            key_ref = KeyReference(key=row[entity_type + '_id'], entity_type=entity_type)
-            entities_by_key[key_ref] = entity_ref
             result.add_entity(entity_ref, self._version, row)
-            link_args[arg] = {key_ref}
-        result.add_links({KeyLink(**link_args)}, entities_by_key)
+            link_args[arg] = {entity_ref}
+        result.add_links({EntityLink(**link_args)})
         return result
 
     def _duos_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
