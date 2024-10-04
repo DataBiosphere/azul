@@ -3,7 +3,6 @@ from operator import (
 )
 from typing import (
     Any,
-    Optional,
     cast,
 )
 
@@ -98,7 +97,7 @@ class FileAggregator(GroupingAggregator):
             entity['is_intermediate']
         )
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field in ('content_description', 'file_format', 'is_intermediate'):
             return SingleValueAccumulator()
         elif field == 'file_source':
@@ -108,7 +107,7 @@ class FileAggregator(GroupingAggregator):
         else:
             return super()._accumulator(field)
 
-    def _default_accumulator(self) -> Optional[Accumulator]:
+    def _default_accumulator(self) -> Accumulator | None:
         return None
 
 
@@ -135,7 +134,7 @@ class CellSuspensionAggregator(GroupingAggregator):
     def _group_keys(self, entity) -> tuple[Any, ...]:
         return frozenset(entity['organ']),
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field in self.cell_count_fields:
             return DistinctAccumulator(SumAccumulator())
         else:
@@ -154,7 +153,7 @@ class DonorOrganismAggregator(SimpleAggregator):
             'donor_count': entity['biomaterial_id']
         }
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field == 'organism_age_range':
             return SetAccumulator(max_size=100)
         elif field == 'organism_age':
@@ -173,7 +172,7 @@ class OrganoidAggregator(SimpleAggregator):
 
 class ProjectAggregator(SimpleAggregator):
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field == 'document_id':
             return ListAccumulator(max_size=100)
         elif field in ('project_description',
@@ -195,13 +194,13 @@ class ProjectAggregator(SimpleAggregator):
 
 class ProtocolAggregator(SimpleAggregator):
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field == 'assay_type':
             return FrequencySetAccumulator(max_size=100)
         else:
             return super()._accumulator(field)
 
-    def _default_accumulator(self) -> Optional[Accumulator]:
+    def _default_accumulator(self) -> Accumulator | None:
         return SetAccumulator()
 
 
@@ -211,13 +210,13 @@ class SequencingInputAggregator(SimpleAggregator):
 
 class SequencingProcessAggregator(SimpleAggregator):
 
-    def _default_accumulator(self) -> Optional[Accumulator]:
+    def _default_accumulator(self) -> Accumulator | None:
         return SetAccumulator(max_size=10)
 
 
 class MatricesAggregator(SimpleAggregator):
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field == 'document_id':
             return None
         elif field == 'file':
@@ -228,7 +227,7 @@ class MatricesAggregator(SimpleAggregator):
 
 class DateAggregator(SimpleAggregator):
 
-    def _accumulator(self, field) -> Optional[Accumulator]:
+    def _accumulator(self, field) -> Accumulator | None:
         if field == 'document_id':
             return None
         elif field in ('submission_date', 'aggregate_submission_date'):

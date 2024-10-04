@@ -6,9 +6,7 @@ from operator import (
 )
 from typing import (
     Iterable,
-    Optional,
     Sequence,
-    Type,
 )
 
 from azul import (
@@ -92,7 +90,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             ])
         ]
 
-    def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
+    def transformer_types(self) -> Iterable[type[BaseTransformer]]:
         return (
             ActivityTransformer,
             BiosampleTransformer,
@@ -378,25 +376,25 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             'type': type_,
         }
 
-    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+    def document_slice(self, entity_type: str) -> DocumentSlice | None:
         return None
 
     @property
-    def summary_response_stage(self) -> 'Type[AnvilSummaryResponseStage]':
+    def summary_response_stage(self) -> 'type[AnvilSummaryResponseStage]':
         return AnvilSummaryResponseStage
 
     @property
-    def search_response_stage(self) -> 'Type[AnvilSearchResponseStage]':
+    def search_response_stage(self) -> 'type[AnvilSearchResponseStage]':
         return AnvilSearchResponseStage
 
     @property
-    def summary_aggregation_stage(self) -> 'Type[AnvilSummaryAggregationStage]':
+    def summary_aggregation_stage(self) -> 'type[AnvilSummaryAggregationStage]':
         return AnvilSummaryAggregationStage
 
     @property
-    def aggregation_stage(self) -> 'Type[AnvilAggregationStage]':
+    def aggregation_stage(self) -> 'type[AnvilAggregationStage]':
         return AnvilAggregationStage
 
     @property
-    def filter_stage(self) -> 'Type[AnvilFilterStage]':
+    def filter_stage(self) -> 'type[AnvilFilterStage]':
         return AnvilFilterStage

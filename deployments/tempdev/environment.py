@@ -7,18 +7,6 @@ from typing import (
     Optional,
 )
 
-
-def partition_prefix_length(n: int) -> int:
-    """
-    For a given number of subgraphs, return a partition prefix length that is
-    expected to rarely exceed 512 subgraphs per partition.
-
-    >>> [partition_prefix_length(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
-    [0, 0, 0, 1, 1, 2]
-    """
-    return 1 + partition_prefix_length(n // 16) if n > 512 else 0
-
-
 ma = 1  # managed access
 pop = 2  # remove snapshot
 
@@ -26,8 +14,9 @@ pop = 2  # remove snapshot
 def mksrc(source_type: Literal['bigquery', 'parquet'],
           google_project,
           snapshot,
-          subgraphs,
-          flags: int = 0
+          flags: int = 0,
+          /,
+          prefix: str = ''
           ) -> tuple[str, str | None]:
     project = '_'.join(snapshot.split('_')[1:-3])
     assert flags <= ma | pop
@@ -37,7 +26,7 @@ def mksrc(source_type: Literal['bigquery', 'parquet'],
         'gcp',
         google_project,
         snapshot,
-        '/' + str(partition_prefix_length(subgraphs))
+        prefix
     ])
     return project, source
 
@@ -64,9 +53,9 @@ def mkdict(previous_catalog: dict[str, str],
 
 
 anvil_sources = mkdict({}, 3, mkdelta([
-    mksrc('bigquery', 'datarepo-dev-e53e74aa', 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 6804),
-    mksrc('bigquery', 'datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520', 28),
-    mksrc('bigquery', 'datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509', 25)
+    mksrc('bigquery', 'datarepo-dev-e53e74aa', 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'),
+    mksrc('bigquery', 'datarepo-dev-42c70e6a', 'ANVIL_CCDG_Sample_1_20230228_ANV5_202302281520'),
+    mksrc('bigquery', 'datarepo-dev-97ad270b', 'ANVIL_CMG_Sample_1_20230225_ANV5_202302281509')
 ]))
 
 

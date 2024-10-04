@@ -7,10 +7,6 @@ area, and should not be used to create catalogs on a deployment. It can however
 be used with the `can_bundle.py` script to create a local canned bundle from the
 files in the canned staging area.
 """
-from collections.abc import (
-    Sequence,
-    Set,
-)
 from dataclasses import (
     dataclass,
 )
@@ -23,8 +19,8 @@ from tempfile import (
 )
 import time
 from typing import (
-    Optional,
-    Type,
+    AbstractSet,
+    Sequence,
 )
 
 from furl import (
@@ -47,6 +43,7 @@ from azul.http import (
     HasCachedHttpClient,
 )
 from azul.indexer import (
+    SOURCE_SPEC,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -89,14 +86,14 @@ class CannedBundle(HCABundle[CannedBundleFQID]):
     def canning_qualifier(cls) -> str:
         return 'gh.hca'
 
-    def drs_uri(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_uri(self, manifest_entry: JSON) -> str | None:
         return 'dss'
 
 
 @dataclass(frozen=True)
 class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, CannedBundleFQID],
              HasCachedHttpClient):
-    _sources: Set[SimpleSourceSpec]
+    _sources: AbstractSet[SimpleSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -108,11 +105,11 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         )
 
     @property
-    def sources(self) -> Set[SimpleSourceSpec]:
+    def sources(self) -> AbstractSet[SimpleSourceSpec]:
         return self._sources
 
     def list_sources(self,
-                     authentication: Optional[Authentication]
+                     authentication: Authentication | None
                      ) -> list[CannedSourceRef]:
         return [
             CannedSourceRef(id=self._lookup_source_id(spec), spec=spec)
@@ -166,15 +163,15 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                                                             ref)
             return factory.load_staging_area(path)
 
-    def _assert_source(self, source: CannedSourceRef):
-        assert source.spec in self.sources, (source, self.sources)
+    def _count_subgraphs(self, source: SOURCE_SPEC) -> int:
+        staging_area = self.staging_area(source.spec.name)
+        return len(staging_area.links)
 
     def list_bundles(self,
                      source: CannedSourceRef,
                      prefix: str
                      ) -> list[CannedBundleFQID]:
         self._assert_source(source)
-        prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
@@ -235,8 +232,8 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
     def _direct_file_url(self,
                          file_uuid: str,
                          *,
-                         file_version: Optional[str] = None,
-                         ) -> Optional[furl]:
+                         file_version: str | None = None,
+                         ) -> furl | None:
         # Check all sources for the file. If a file_version was specified return
         # when we find a match, otherwise continue checking all sources and
         # return the URL for the match with the latest (largest) version.
@@ -262,11 +259,11 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
                         found_version = actual_file_version
         return found_url
 
-    def file_download_class(self) -> Type[RepositoryFileDownload]:
+    def file_download_class(self) -> type[RepositoryFileDownload]:
         return CannedFileDownload
 
     def drs_client(self,
-                   authentication: Optional[Authentication] = None
+                   authentication: Authentication | None = None
                    ) -> DRSClient:
         assert authentication is None, type(authentication)
         return DRSClient(http_client=self._http_client)
@@ -276,12 +273,12 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
 
 
 class CannedFileDownload(RepositoryFileDownload):
-    _location: Optional[furl] = None
-    _retry_after: Optional[int] = None
+    _location: furl | None = None
+    _retry_after: int | None = None
 
     def update(self,
                plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
+               authentication: Authentication | None
                ) -> None:
         assert isinstance(plugin, Plugin)
         url = plugin._direct_file_url(file_uuid=self.file_uuid,
@@ -289,9 +286,9 @@ class CannedFileDownload(RepositoryFileDownload):
         self._location = url
 
     @property
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         return None if self._location is None else str(self._location)
 
     @property
-    def retry_after(self) -> Optional[int]:
+    def retry_after(self) -> int | None:
         return self._retry_after
