@@ -22,6 +22,7 @@ from typing import (
     Callable,
     Collection,
     Iterable,
+    Self,
 )
 from uuid import (
     UUID,
@@ -107,7 +108,7 @@ class LinkedEntities:
     def from_links(cls,
                    origin: EntityReference,
                    links: Collection[Link[EntityReference]]
-                   ) -> 'LinkedEntities':
+                   ) -> Self:
         return cls(origin=origin,
                    ancestors=cls._search(origin, links, from_='outputs', to='inputs'),
                    descendants=cls._search(origin, links, from_='inputs', to='outputs'))

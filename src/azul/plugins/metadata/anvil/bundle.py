@@ -5,6 +5,7 @@ from typing import (
     AbstractSet,
     Generic,
     Iterable,
+    Self,
     TypeVar,
 )
 
@@ -61,7 +62,7 @@ class Link(Generic[ENTITY_REF]):
         return self.inputs | self.outputs | (set() if self.activity is None else {self.activity})
 
     @classmethod
-    def from_json(cls, link: JSON) -> 'Link':
+    def from_json(cls, link: JSON) -> Self:
         return cls(inputs=set(map(EntityReference.parse, link['inputs'])),
                    activity=None if link['activity'] is None else EntityReference.parse(link['activity']),
                    outputs=set(map(EntityReference.parse, link['outputs'])))
@@ -74,12 +75,12 @@ class Link(Generic[ENTITY_REF]):
         }
 
     @classmethod
-    def merge(cls, links: Iterable['Link']) -> 'Link':
+    def merge(cls, links: Iterable[Self]) -> Self:
         return cls(inputs=frozenset.union(*[link.inputs for link in links]),
                    activity=one({link.activity for link in links}),
                    outputs=frozenset.union(*[link.outputs for link in links]))
 
-    def __lt__(self, other: 'Link') -> bool:
+    def __lt__(self, other: Self) -> bool:
         return min(self.inputs) < min(other.inputs)
 
 
@@ -103,7 +104,7 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
         }
 
     @classmethod
-    def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> 'AnvilBundle':
+    def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> Self:
         return cls(
             fqid=fqid,
             entities={
