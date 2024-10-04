@@ -1,18 +1,18 @@
 from abc import (
     ABC,
 )
+from collections import (
+    defaultdict,
+)
 from typing import (
     AbstractSet,
     Generic,
-    Iterable,
+    Mapping,
     Self,
     TypeVar,
 )
 
 import attrs
-from more_itertools import (
-    one,
-)
 
 from azul import (
     CatalogName,
@@ -79,10 +79,21 @@ class Link(Generic[REF]):
         }
 
     @classmethod
-    def merge(cls, links: Iterable[Self]) -> Self:
-        return cls(inputs=frozenset.union(*[link.inputs for link in links]),
-                   activity=one({link.activity for link in links}),
-                   outputs=frozenset.union(*[link.outputs for link in links]))
+    def group_by_activity(cls, links: set[Self]):
+        """
+        Merge links that share the same (non-null) activity.
+        """
+        groups_by_activity: Mapping[KeyReference, set[Self]] = defaultdict(set)
+        for link in links:
+            if link.activity is not None:
+                groups_by_activity[link.activity].add(link)
+        for activity, group in groups_by_activity.items():
+            if len(group) > 1:
+                links -= group
+                merged_link = cls(inputs=frozenset.union(*[link.inputs for link in group]),
+                                  activity=activity,
+                                  outputs=frozenset.union(*[link.outputs for link in group]))
+                links.add(merged_link)
 
     def __lt__(self, other: Self) -> bool:
         return min(self.inputs) < min(other.inputs)

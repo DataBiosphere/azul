@@ -1,7 +1,4 @@
-﻿from collections import (
-    defaultdict,
-)
-import datetime
+﻿import datetime
 from enum import (
     Enum,
 )
@@ -167,6 +164,7 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                        outputs=set(map(lookup, link.outputs)))
             for link in links
         )
+        EntityLink.group_by_activity(self.links)
 
 
 class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBundleFQID]):
@@ -306,7 +304,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         log.info('Found %i entities linked to bundle %r: %r',
                  len(keys), bundle_fqid.uuid, arg)
 
-        self._simplify_links(links)
         result = TDRAnvilBundle(fqid=bundle_fqid)
         entities_by_key: dict[KeyReference, EntityReference] = {}
         for entity_type, typed_keys in sorted(keys_by_type.items()):
@@ -408,15 +405,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         for e in entities:
             result[e.entity_type].add(e.key)
         return result
-
-    def _simplify_links(self, links: KeyLinks) -> None:
-        grouped_links: Mapping[KeyReference, KeyLinks] = defaultdict(set)
-        for link in links:
-            grouped_links[link.activity].add(link)
-        for activity, convergent_links in grouped_links.items():
-            if activity is not None and len(convergent_links) > 1:
-                links -= convergent_links
-                links.add(KeyLink.merge(convergent_links))
 
     def _follow_upstream(self,
                          source: TDRSourceSpec,
