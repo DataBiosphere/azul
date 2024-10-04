@@ -66,7 +66,7 @@ from azul.indexer.transform import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
-    Link,
+    EntityLink,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
     ActivityAggregator,
@@ -107,7 +107,7 @@ class LinkedEntities:
     @classmethod
     def from_links(cls,
                    origin: EntityReference,
-                   links: Collection[Link[EntityReference]]
+                   links: Collection[EntityLink]
                    ) -> Self:
         return cls(origin=origin,
                    ancestors=cls._search(origin, links, from_='outputs', to='inputs'),
@@ -116,7 +116,7 @@ class LinkedEntities:
     @classmethod
     def _search(cls,
                 entity_ref: EntityReference,
-                links: Collection[Link[EntityReference]],
+                links: Collection[EntityLink],
                 entities: EntityRefsByType | None = None,
                 *,
                 from_: str,

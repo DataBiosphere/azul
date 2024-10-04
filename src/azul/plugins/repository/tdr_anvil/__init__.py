@@ -44,9 +44,10 @@ from azul.indexer.document import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
+    EntityLink,
     Key,
+    KeyLink,
     KeyReference,
-    Link,
 )
 from azul.plugins.metadata.anvil.schema import (
     anvil_schema,
@@ -74,7 +75,7 @@ Keys = AbstractSet[KeyReference]
 MutableKeys = set[KeyReference]
 KeysByType = dict[EntityType, AbstractSet[Key]]
 MutableKeysByType = dict[EntityType, set[Key]]
-KeyLinks = set[Link[KeyReference]]
+KeyLinks = set[KeyLink]
 
 
 class BundleEntityType(Enum):
@@ -161,9 +162,9 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                   entities_by_key: Mapping[KeyReference, EntityReference]) -> None:
         lookup = entities_by_key.__getitem__
         self.links.update(
-            Link(inputs=set(map(lookup, link.inputs)),
-                 activity=none_safe_apply(lookup, link.activity),
-                 outputs=set(map(lookup, link.outputs)))
+            EntityLink(inputs=set(map(lookup, link.inputs)),
+                       activity=none_safe_apply(lookup, link.activity),
+                       outputs=set(map(lookup, link.outputs)))
             for link in links
         )
 
@@ -359,7 +360,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             entities_by_key[key_ref] = entity_ref
             result.add_entity(entity_ref, self._version, row)
             link_args[arg] = {key_ref}
-        result.add_links({Link(**link_args)}, entities_by_key)
+        result.add_links({KeyLink(**link_args)}, entities_by_key)
         return result
 
     def _duos_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
@@ -415,7 +416,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         for activity, convergent_links in grouped_links.items():
             if activity is not None and len(convergent_links) > 1:
                 links -= convergent_links
-                links.add(Link.merge(convergent_links))
+                links.add(KeyLink.merge(convergent_links))
 
     def _follow_upstream(self,
                          source: TDRSourceSpec,
@@ -476,13 +477,13 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             for row in rows:
                 downstream_ref = KeyReference(entity_type='biosample',
                                               key=row['biosample_id'])
-                result.add(Link(outputs={downstream_ref},
-                                inputs={KeyReference(entity_type='dataset',
-                                                     key=one(row['part_of_dataset_id']))}))
+                result.add(KeyLink(outputs={downstream_ref},
+                                   inputs={KeyReference(entity_type='dataset',
+                                                        key=one(row['part_of_dataset_id']))}))
                 for donor_id in row['donor_id']:
-                    result.add(Link(outputs={downstream_ref},
-                                    inputs={KeyReference(entity_type='donor',
-                                                         key=donor_id)}))
+                    result.add(KeyLink(outputs={downstream_ref},
+                                       inputs={KeyReference(entity_type='donor',
+                                                            key=donor_id)}))
             return result
         else:
             return set()
@@ -544,7 +545,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                     ON f.file_id IN UNNEST(a.generated_file_id)
             ''')
             return {
-                Link(
+                KeyLink(
                     activity=KeyReference(entity_type=row['activity_table'], key=row['activity_id']),
                     # The generated link is not a complete representation of the
                     # upstream activity because it does not include generated files
@@ -573,9 +574,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 WHERE dgn.donor_id IN ({', '.join(map(repr, donor_ids))})
             ''')
             return {
-                Link(inputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
-                     outputs={KeyReference(key=row['donor_id'], entity_type='donor')},
-                     activity=None)
+                KeyLink(inputs={KeyReference(key=row['diagnosis_id'], entity_type='diagnosis')},
+                        outputs={KeyReference(key=row['donor_id'], entity_type='donor')},
+                        activity=None)
                 for row in rows
             }
         else:
@@ -618,12 +619,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
             ''')
             return {
-                Link(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
-                     outputs={
-                         KeyReference(key=output_id, entity_type='file')
-                         for output_id in row['generated_file_id']
-                     },
-                     activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
+                KeyLink(inputs={KeyReference(key=row['biosample_id'], entity_type='biosample')},
+                        outputs={
+                            KeyReference(key=output_id, entity_type='file')
+                            for output_id in row['generated_file_id']
+                        },
+                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
                 for row in rows
             }
         else:
@@ -664,12 +665,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
             ''')
             return {
-                Link(inputs={KeyReference(key=row['used_file_id'], entity_type='file')},
-                     outputs={
-                         KeyReference(key=file_id, entity_type='file')
-                         for file_id in row['generated_file_id']
-                     },
-                     activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
+                KeyLink(inputs={KeyReference(key=row['used_file_id'], entity_type='file')},
+                        outputs={
+                            KeyReference(key=file_id, entity_type='file')
+                            for file_id in row['generated_file_id']
+                        },
+                        activity=KeyReference(key=row['activity_id'], entity_type=row['activity_table']))
                 for row in rows
             }
         else:

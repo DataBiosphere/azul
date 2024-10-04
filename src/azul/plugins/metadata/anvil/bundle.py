@@ -88,10 +88,18 @@ class Link(Generic[REF]):
         return min(self.inputs) < min(other.inputs)
 
 
+class EntityLink(Link[EntityReference]):
+    pass
+
+
+class KeyLink(Link[KeyReference]):
+    pass
+
+
 @attrs.define(kw_only=True)
 class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
     entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
-    links: set[Link[EntityReference]] = attrs.field(factory=set)
+    links: set[EntityLink] = attrs.field(factory=set)
 
     def reject_joiner(self, catalog: CatalogName):
         # FIXME: Optimize joiner rejection and re-enable it for AnVIL
@@ -115,5 +123,5 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
                 EntityReference.parse(entity_ref): entity
                 for entity_ref, entity in json_['entities'].items()
             },
-            links=set(map(Link.from_json, json_['links']))
+            links=set(map(EntityLink.from_json, json_['links']))
         )
