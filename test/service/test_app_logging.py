@@ -56,7 +56,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                                                         'X-Amz-Date,'
                                                         'X-Amz-Security-Token,'
                                                         'X-Api-Key',
-                        **AzulChaliceApp.security_headers,
+                        **AzulChaliceApp.security_headers(),
                         'Cache-Control': 'no-store'
                     }
                     self.assertEqual(logs, [
