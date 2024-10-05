@@ -124,7 +124,7 @@ def change_version(uuid: str, old_version: int, new_version: int) -> str:
     prefix, version, suffix = uuid[:14], uuid[14], uuid[15:]
     version = int(version, 16)
     assert version == old_version, (uuid, version, old_version)
-    uuid = prefix + hex(new_version)[2:] + suffix
+    uuid = f'{prefix}{new_version:x}{suffix}'
     assert UUID(uuid).version == new_version, (uuid, old_version)
     if new_version in (1, 3, 4, 5):
         validate_uuid(uuid)
