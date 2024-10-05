@@ -193,29 +193,31 @@ class AzulChaliceApp(Chalice):
         finally:
             config.lambda_is_handling_api_gateway_request = False
 
-    hsts_max_age = 60 * 60 * 24 * 365 * 2
-
-    # Headers added to every response from the app, as well as canned 4XX and
-    # 5XX responses from API Gateway. Use of these headers addresses known
-    # security vulnerabilities.
-    #
-    security_headers = {
-        'Content-Security-Policy': jw('default-src', sq('self')),
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
-                                        'includeSubDomains;',
-                                        'preload'),
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'X-XSS-Protection': '1; mode=block'
-    }
+    @classmethod
+    def security_headers(cls) -> dict[str, str]:
+        """
+        Headers added to every response from the app, as well as canned 4XX and
+        5XX responses from API Gateway. Use of these headers addresses known
+        security vulnerabilities.
+        """
+        hsts_max_age = 60 * 60 * 24 * 365 * 2
+        return {
+            'Content-Security-Policy': jw('default-src', sq('self')),
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
+                                            'includeSubDomains;',
+                                            'preload'),
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block'
+        }
 
     def _security_headers_middleware(self, event, get_response):
         """
         Add headers to the response
         """
         response = get_response(event)
-        response.headers.update(self.security_headers)
+        response.headers.update(self.security_headers())
         # FIXME: Add a CSP header with a nonce value to text/html responses
         #        https://github.com/DataBiosphere/azul-private/issues/6
         if response.headers.get('Content-Type') == 'text/html':

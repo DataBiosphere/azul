@@ -104,7 +104,7 @@ class TestAppLogging(AzulUnitTestCase):
                         # … and the response is logged.
                         headers = {
                             'Content-Type': 'text/plain',
-                            **app.security_headers,
+                            **app.security_headers(),
                             'Cache-Control': 'no-store'
                         }
                         self.assertEqual(
