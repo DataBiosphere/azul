@@ -61,6 +61,10 @@ from azul.json import (
     copy_json,
     json_head,
 )
+from azul.strings import (
+    join_words as jw,
+    single_quote as sq,
+)
 from azul.types import (
     JSON,
     LambdaContext,
@@ -189,15 +193,33 @@ class AzulChaliceApp(Chalice):
         finally:
             config.lambda_is_handling_api_gateway_request = False
 
+    hsts_max_age = 60 * 60 * 24 * 365 * 2
+
+    # Headers added to every response from the app, as well as canned 4XX and
+    # 5XX responses from API Gateway. Use of these headers addresses known
+    # security vulnerabilities.
+    #
+    security_headers = {
+        'Content-Security-Policy': jw('default-src', sq('self')),
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
+                                        'includeSubDomains;',
+                                        'preload'),
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block'
+    }
+
     def _security_headers_middleware(self, event, get_response):
         """
         Add headers to the response
         """
         response = get_response(event)
-        seconds = 60 * 60 * 24 * 365
-        response.headers['Strict-Transport-Security'] = f'max-age={seconds}; includeSubDomains'
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers.update(self.security_headers)
+        # FIXME: Add a CSP header with a nonce value to text/html responses
+        #        https://github.com/DataBiosphere/azul-private/issues/6
+        if response.headers.get('Content-Type') == 'text/html':
+            del response.headers['Content-Security-Policy']
         view_function = self.routes[event.path][event.method].view_function
         cache_control = getattr(view_function, 'cache_control')
         response.headers['Cache-Control'] = cache_control

@@ -106,6 +106,9 @@ from azul.service.manifest_service import (
 from azul.service.storage_service import (
     StorageService,
 )
+from azul.strings import (
+    single_quote as sq,
+)
 from azul.types import (
     JSON,
     JSONs,
@@ -1611,7 +1614,7 @@ class TestManifestResponse(DCP1ManifestTestCase):
                 expected_url_for_bash = expected_url
             else:
                 expected_url = object_url
-                expected_url_for_bash = f"'{expected_url}'"
+                expected_url_for_bash = sq(str(expected_url))
             if format is ManifestFormat.curl:
                 manifest_options = '--location --fail'
                 file_options = '--fail-early --continue-at - --retry 15 --retry-delay 10'

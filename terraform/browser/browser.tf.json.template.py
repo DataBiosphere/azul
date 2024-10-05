@@ -31,6 +31,11 @@ from azul.collections import (
 from azul.deployment import (
     aws,
 )
+from azul.strings import (
+    double_quote as dq,
+    join_words as jw,
+    single_quote as sq,
+)
 from azul.terraform import (
     block_public_s3_bucket_access,
     emit_tf,
@@ -370,7 +375,7 @@ def emit():
                                             '--fail',
                                             '--silent',
                                             gitlab_helper.curl_auth_flags(),
-                                            quote(gitlab_helper.tarball_url(site))
+                                            dq(gitlab_helper.tarball_url(site))
                                         ]),
                                         ' '.join([
                                             # --transform is specific to GNU Tar, which, on macOS must be installed
@@ -492,60 +497,54 @@ def cloudfront_function(script: Path):
 
 
 def content_security_policy() -> str:
-    def q(s: str) -> str:
-        return f"'{s}'"
-
-    def s(*args: str) -> str:
-        return ' '.join(args)
-
-    self = q('self')
-    none = q('none')
-    unsafe_inline = q('unsafe-inline')
-    unsafe_eval = q('unsafe-eval')
+    self = sq('self')
+    none = sq('none')
+    unsafe_inline = sq('unsafe-inline')
+    unsafe_eval = sq('unsafe-eval')
 
     return ';'.join([
-        s('default-src', self),
-        s('object-src', none),
-        s('frame-src', none),
-        s('frame-ancestors', none),
-        s('child-src', none),
-        s('img-src',
-          self,
-          'data:',
-          'https://lh3.googleusercontent.com',
-          'https://www.google-analytics.com',
-          'https://www.googletagmanager.com'),
-        s('script-src',
-          self,
-          unsafe_inline,
-          unsafe_eval,
-          'https://accounts.google.com/gsi/client',
-          'https://www.google-analytics.com',
-          'https://www.googletagmanager.com'),
-        s('style-src',
-          self,
-          unsafe_inline,
-          'https://fonts.googleapis.com',
-          'https://p.typekit.net',
-          'https://use.typekit.net'),
-        s('font-src',
-          self,
-          'data:',
-          'https://fonts.gstatic.com',
-          'https://use.typekit.net/af/'),
-        s('connect-src',
-          self,
-          'https://www.google-analytics.com',
-          'https://www.googleapis.com/oauth2/v3/userinfo',
-          'https://www.googletagmanager.com',
-          'https://support.terra.bio/api/v2/',
-          str(furl(config.sam_service_url,
-                   path='/register/user/v1')),
-          str(furl(config.sam_service_url,
-                   path='/register/user/v2/self/termsOfServiceDetails')),
-          str(furl(config.terra_service_url,
-                   path='/api/nih/status')),
-          str(config.service_endpoint))
+        jw('default-src', self),
+        jw('object-src', none),
+        jw('frame-src', none),
+        jw('frame-ancestors', none),
+        jw('child-src', none),
+        jw('img-src',
+           self,
+           'data:',
+           'https://lh3.googleusercontent.com',
+           'https://www.google-analytics.com',
+           'https://www.googletagmanager.com'),
+        jw('script-src',
+           self,
+           unsafe_inline,
+           unsafe_eval,
+           'https://accounts.google.com/gsi/client',
+           'https://www.google-analytics.com',
+           'https://www.googletagmanager.com'),
+        jw('style-src',
+           self,
+           unsafe_inline,
+           'https://fonts.googleapis.com',
+           'https://p.typekit.net',
+           'https://use.typekit.net'),
+        jw('font-src',
+           self,
+           'data:',
+           'https://fonts.gstatic.com',
+           'https://use.typekit.net/af/'),
+        jw('connect-src',
+           self,
+           'https://www.google-analytics.com',
+           'https://www.googleapis.com/oauth2/v3/userinfo',
+           'https://www.googletagmanager.com',
+           'https://support.terra.bio/api/v2/',
+           str(furl(config.sam_service_url,
+                    path='/register/user/v1')),
+           str(furl(config.sam_service_url,
+                    path='/register/user/v2/self/termsOfServiceDetails')),
+           str(furl(config.terra_service_url,
+                    path='/api/nih/status')),
+           str(config.service_endpoint))
     ])
 
 
@@ -613,7 +612,7 @@ class GitLabHelper:
         token_type, token = 'PRIVATE', config.gitlab_access_token
         if token is None:
             token_type, token = 'JOB', os.environ['CI_JOB_TOKEN']
-        header = quote(f'{token_type}-TOKEN: {token}')
+        header = dq(token_type + '-TOKEN:', token)
         return '--header ' + header
 
     def tarball_hash(self, site: config.BrowserSite) -> str:
@@ -650,11 +649,6 @@ class GitLabHelper:
     def tarball_version(self, branch: str) -> str:
         # package_version can't contain slashes
         return branch.replace('/', '_')
-
-
-def quote(s):
-    assert '"' not in s, s
-    return '"' + s + '"'
 
 
 gitlab_helper = GitLabHelper()

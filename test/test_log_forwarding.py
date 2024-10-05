@@ -23,6 +23,9 @@ from azul.deployment import (
 from azul.indexer.log_forwarding_controller import (
     LogForwardingController,
 )
+from azul.strings import (
+    double_quote as dq,
+)
 from azul.types import (
     JSONs,
 )
@@ -77,23 +80,23 @@ class TestLogForwarding(S3TestCase):
                     '0.000', '0.002', '0.000',
                     '204', '204',
                     '963', '229',
-                    '"POST '
-                    f'https://gitlab.dev.singlecell.gi.ucsc.edu:443/api/v4/jobs/request?chars={escaped} '
-                    'HTTP/1.1"',
-                    f'"gitlab-runner 15.6.1 (15-6-stable; go1.18.8; linux/amd64; {escaped})"',
+                    dq('POST',
+                       f'https://gitlab.dev.singlecell.gi.ucsc.edu:443/api/v4/jobs/request?chars={escaped}',
+                       'HTTP/1.1'),
+                    dq(f'gitlab-runner 15.6.1 (15-6-stable; go1.18.8; linux/amd64; {escaped})'),
                     'ECDHE-RSA-AES128-GCM-SHA256',
                     'TLSv1.2',
                     'arn:aws:elasticloadbalancing:us-east-1:122796619775:targetgroup/azul-gitlab-http/136c2d6db59941f6',
-                    '"Root=1-63b0cbd4-7d218b82786295005dbf8b6d"',
-                    '"gitlab.dev.singlecell.gi.ucsc.edu"',
-                    '"arn:aws:acm:us-east-1:122796619775:certificate/81241b8e-c875-4a22-a30e-58003ee139ae"',
+                    dq('Root=1-63b0cbd4-7d218b82786295005dbf8b6d'),
+                    dq('gitlab.dev.singlecell.gi.ucsc.edu'),
+                    dq('arn:aws:acm:us-east-1:122796619775:certificate/81241b8e-c875-4a22-a30e-58003ee139ae'),
                     '0',
                     '2022-12-31T23:55:00.386000Z',
-                    '"forward"',
-                    '"-"', '"-"',
-                    '"172.71.0.215:80"',
-                    '"204"',
-                    '"-"', '"-"',
+                    dq('forward'),
+                    dq('-'), dq('-'),
+                    dq('172.71.0.215:80'),
+                    dq('204'),
+                    dq('-'), dq('-'),
                 ])]
                 expected_output = [{
                     '_source_bucket': self.log_bucket,
@@ -142,16 +145,16 @@ class TestLogForwarding(S3TestCase):
             'K829N8AH88F1RX7K',
             'REST.PUT.OBJECT',
             'health/service',
-            '"PUT /edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1/health/service HTTP/1.1"',
+            dq('PUT /edu-ucsc-gi-platform-anvil-dev-storage-anvilbox.us-east-1/health/service HTTP/1.1'),
             '200',
             '-',
             '-',
             '523',
             '85',
             '52',
-            '"-"',
-            '"Boto3/1.24.94 Python/3.11.5 Linux/4.14.255-301-238.520.amzn2.x86_64 '
-            + 'exec-env/AWS_Lambda_python3.11 aws-chalice/1.30.0 Botocore/1.27.94"',
+            dq('-'),
+            dq('Boto3/1.24.94 Python/3.11.5 Linux/4.14.255-301-238.520.amzn2.x86_64',
+               'exec-env/AWS_Lambda_python3.11 aws-chalice/1.30.0 Botocore/1.27.94'),
             '-',
             'jcmyLMRqqJ7dT4ovtY21rtgwmuTC3qs24vgAtLAkcad9sRV92zC90gf2zGvCkxxsLSaKm48AMjo=',
             'SigV4',
