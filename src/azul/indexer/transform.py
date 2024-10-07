@@ -11,6 +11,9 @@ from typing import (
 
 import attr
 
+from azul.collections import (
+    alist,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -34,10 +37,7 @@ from azul.json import (
 )
 from azul.types import (
     JSON,
-    MutableJSON,
 )
-
-Transform = tuple[Optional[Contribution], Optional[Replica]]
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
@@ -55,12 +55,14 @@ class Transformer(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def replica_type(self, entity: EntityReference) -> str:
+    def _replicate(self, entity: EntityReference) -> tuple[str, JSON]:
         """
-        The name of the type of replica emitted by this transformer for a given
-        entity.
+        A tuple consisting of:
 
-        See :py:attr:`Replica.replica_type`
+            1. The name of the type of replica emitted by this transformer for a
+               given entity. See :py:attr:`Replica.replica_type`.
+
+            2. The contents of the replica for that entity.
         """
         raise NotImplementedError
 
@@ -88,7 +90,9 @@ class Transformer(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def transform(self, partition: BundlePartition) -> Iterable[Transform]:
+    def transform(self,
+                  partition: BundlePartition
+                  ) -> Iterable[Contribution | Replica]:
         """
         Return the contributions by the current bundle to the entities it
         contains metadata about. More than one bundle can contribute to a
@@ -114,9 +118,10 @@ class Transformer(metaclass=ABCMeta):
         raise NotImplementedError
 
     def _contribution(self,
-                      contents: MutableJSON,
-                      entity: EntityReference
+                      contents: JSON,
+                      entity_id: EntityID
                       ) -> Contribution:
+        entity = EntityReference(entity_type=self.entity_type(), entity_id=entity_id)
         coordinates = ContributionCoordinates(entity=entity,
                                               bundle=self.bundle.fqid.upcast(),
                                               deleted=self.deleted)
@@ -126,17 +131,20 @@ class Transformer(metaclass=ABCMeta):
                             contents=contents)
 
     def _replica(self,
-                 contents: MutableJSON,
                  entity: EntityReference,
-                 hub_ids: list[EntityID]
+                 *,
+                 file_hub: EntityID | None,
                  ) -> Replica:
+        replica_type, contents = self._replicate(entity)
         coordinates = ReplicaCoordinates(content_hash=json_hash(contents).hexdigest(),
                                          entity=entity)
         return Replica(coordinates=coordinates,
                        version=None,
-                       replica_type=self.replica_type(entity),
+                       replica_type=replica_type,
                        contents=contents,
-                       hub_ids=hub_ids)
+                       # The other hubs will be added when the indexer
+                       # consolidates duplicate replicas.
+                       hub_ids=alist(file_hub))
 
     @classmethod
     @abstractmethod

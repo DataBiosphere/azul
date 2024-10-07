@@ -1349,7 +1349,11 @@ class TestManifests(DCP1ManifestTestCase, PFBTestCase):
                 'project/e8642221-4c2c-4fd7-b926-a68bce363c88',
                 'sequence_file/70d1af4a-82c8-478a-8960-e9028b3616ca',
                 'sequence_file/0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb',
-                'specimen_from_organism/a21dc760-a500-4236-bcff-da34a0e873d2'
+                'specimen_from_organism/a21dc760-a500-4236-bcff-da34a0e873d2',
+                'donor_organism/7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
+                'library_preparation_protocol/9c32cf70-3ed7-4720-badc-5ee71e8a38af',
+                'sequencing_protocol/61e629ed-0135-4492-ac8a-5c4ab3ccca8a',
+                'process/771ddaf6-3a4f-4314-97fe-6294ff8e25a4'
             ]:
                 expected.append({
                     'type': EntityReference.parse(ref).entity_type,
