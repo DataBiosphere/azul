@@ -1910,7 +1910,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 }
                 self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
-                self.assertEqual({'entities', 'links'}, bundle_json.keys())
+                self.assertEqual({'entities', 'links', 'orphans'}, bundle_json.keys())
                 entities, links = bundle_json['entities'], bundle_json['links']
                 self.assertIsInstance(entities, dict)
                 self.assertIsInstance(links, list)
