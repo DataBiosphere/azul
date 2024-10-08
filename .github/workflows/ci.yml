@@ -28,6 +28,8 @@ jobs:
           _link dev
           _refresh
 
+          export azul_aws_account_name=test-hca-dev
+          
           make virtualenv
           source .venv/bin/activate
           make requirements

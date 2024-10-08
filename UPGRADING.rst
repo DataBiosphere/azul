@@ -47,6 +47,18 @@ as its first argument at all call sites. As always, use the sandbox deployment's
 ``environment.py`` as a model when upgrading personal deployments.
 
 
+#5246 Route SNS notifications through a Lambda function
+=======================================================
+
+Operator
+~~~~~~~~
+
+After the merge commit builds on GitLab, follow the instructions in the
+README.md, for section 3.3.1 titled `Move Amazon SES out of sandbox for
+deployments with monitoring enabled`. This needs to be done for all main
+deployments, except for ``dev``.
+
+
 #6446 Base image of Azul image is not pinned to digest
 ======================================================
 

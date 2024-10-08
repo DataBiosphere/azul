@@ -521,7 +521,20 @@ emit_tf({
                                    }
                                })
                         } for i, domain in enumerate(app.domains)
-                    }
+                    },
+                    **(
+                        {
+                            'notify': {
+                                'zone_id': '${data.aws_route53_zone.%s.id}' % zones_by_domain[app.domains[0]].slug,
+                                'name': '_amazonses.' + app.domains[0],
+                                'type': 'TXT',
+                                'ttl': '600',
+                                'records': ['${aws_ses_domain_identity.notify.verification_token}']
+                            }
+                        }
+                        if app.name == 'indexer' and config.enable_monitoring else
+                        {}
+                    )
                 },
                 'aws_cloudwatch_log_group': {
                     app.name: {
@@ -643,6 +656,15 @@ emit_tf({
                         }
                     )
                 },
+                **(
+                    {
+                        'aws_ses_domain_identity': {
+                            'notify': {
+                                'domain': app.domains[0]
+                            }
+                        }
+                    } if app.name == 'indexer' and config.enable_monitoring else {}
+                ),
                 **(
                     {
                         'aws_lb': {
