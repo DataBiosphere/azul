@@ -1711,7 +1711,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
                             version=BundleType.supplementary.value),
             cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
-                            version=BundleType.primary.value)
+                            version=BundleType.primary.value),
+            cls.bundle_fqid(uuid='abc00000-0000-a000-0000-000000000000',
+                            version='anvil_activity')
         ]
 
     def test_compact_manifest(self):
