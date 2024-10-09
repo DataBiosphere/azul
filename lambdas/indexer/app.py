@@ -64,7 +64,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '1.0'
+        'version': '1.1'
     }
 }
 
@@ -291,7 +291,8 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
             },
             '401': {
                 'description': 'Request lacked a valid HMAC header'
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 )
