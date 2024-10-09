@@ -12,6 +12,9 @@ from inspect import (
 )
 import json
 import logging.config
+from time import (
+    sleep,
+)
 from typing import (
     Any,
     Callable,
@@ -471,6 +474,14 @@ configure_app_logging(app, log)
 )
 def swagger_ui():
     return app.swagger_ui()
+
+
+@app.route(
+    '/error-timeout',
+    cors=False
+)
+def error_504():
+    sleep(45)
 
 
 @app.route(
