@@ -44,6 +44,7 @@ from azul.openapi import (
     schema,
 )
 from azul.openapi.responses import (
+    http_504_response,
     json_content,
 )
 from azul.openapi.spec import (
@@ -291,7 +292,8 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
             },
             '401': {
                 'description': 'Request lacked a valid HMAC header'
-            }
+            },
+            **http_504_response()
         }
     }
 )

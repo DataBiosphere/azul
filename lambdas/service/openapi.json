@@ -742,6 +742,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -874,6 +877,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -887,6 +893,9 @@
                 "responses": {
                     "200": {
                         "description": "\nThe HEAD method can be used to test whether an index is\noperational, or to check the validity of query parameters\nfor the [GET method](#operations-Index-get_index__entity_type_).\n"
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 },
                 "parameters": [
@@ -3970,6 +3979,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             },
@@ -5573,6 +5585,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -5586,6 +5601,9 @@
                 "responses": {
                     "200": {
                         "description": "\nThe HEAD method can be used to test whether an index is\noperational, or to check the validity of query parameters\nfor the [GET method](#operations-Index-get_index_summary).\n"
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 },
                 "parameters": [
@@ -6992,6 +7010,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 },
                 "tags": [
@@ -9705,6 +9726,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -9761,6 +9785,9 @@
                     },
                     "410": {
                         "description": "\nThe manifest preparation job has expired. Request a\nnew preparation using the `PUT /manifest/files`\nendpoint.\n"
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -11160,6 +11187,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -11228,6 +11258,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -11363,6 +11396,9 @@
                                 "description": "\nSet to a value that makes user agents download the file\ninstead of rendering it, suggesting a meaningful name\nfor the downloaded file stored on the user's file\nsystem. The suggested file name is taken  from the\n`fileName` request parameter or, if absent, from\nmetadata describing the file. It generally does not\ncorrelate with the path component of the URL returned in\nthe `Location` header.\n"
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -11486,6 +11522,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
@@ -11546,6 +11585,9 @@
                                 }
                             }
                         }
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds given in the `Retry-After` header and then retry the request."
                     }
                 }
             }
