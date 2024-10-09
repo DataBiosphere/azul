@@ -1126,6 +1126,21 @@ dcp42_sources = mkdict(dcp41_sources, 470, mkdelta([
     # @formatter:on
 ]))
 
+dcp43_sources = mkdict(dcp42_sources, 476, mkdelta([
+    # @formatter:off
+    mksrc('bigquery', 'datarepo-ac7cee91', 'hca_prod_087efc3c26014de6bbe90114593050d1__20241004_dcp2_20241007_dcp43'),
+    mksrc('bigquery', 'datarepo-e9df1043', 'hca_prod_248c5dc36b754fb4ad8acc771968483f__20240806_dcp2_20241007_dcp43'),
+    mksrc('bigquery', 'datarepo-65c49269', 'hca_prod_2ef3655a973d4d699b4121fa4041eed7__20220111_dcp2_20241004_dcp43'),
+    mksrc('bigquery', 'datarepo-456691e5', 'hca_prod_3627473eb6d645c987b5b9f12ce57a10__20241004_dcp2_20241007_dcp43'),
+    mksrc('bigquery', 'datarepo-c577eed5', 'hca_prod_7f351a4cd24c4fcd9040f79071b097d0__20220906_dcp2_20241004_dcp43'),
+    mksrc('bigquery', 'datarepo-1dbd3c50', 'hca_prod_ae9f439bbd474d6ebd7232dc70b35d97__20241004_dcp2_20241004_dcp43', ma),  # noqa E501
+    mksrc('bigquery', 'datarepo-21d1f89b', 'hca_prod_b39381584e8d4fdb9e139e94270dde16__20241004_dcp2_20241004_dcp43'),
+    mksrc('bigquery', 'datarepo-550c8f98', 'hca_prod_c3dd819dabab4957b20988f1e0900368__20241004_dcp2_20241004_dcp43'),
+    mksrc('bigquery', 'datarepo-06a00830', 'hca_prod_c5ca43aa3b2b42168eb3f57adcbc99a1__20220118_dcp2_20241004_dcp43'),
+    mksrc('bigquery', 'datarepo-55151ed4', 'hca_prod_cdabcf0b76024abf9afb3b410e545703__20230201_dcp2_20241008_dcp43')
+    # @formatter:on
+]))
+
 pilot1_sources = mkdict({}, 4, mkdelta([
     # @formatter:off
     mksrc('bigquery', 'datarepo-11e4dc06', 'hca_prod_59b3bfd9cf454d538c8ee240273cba71__20240410_dcp2_20240410_dcpPilot'), # noqa E501
@@ -1222,6 +1237,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=mklist(sources))
             for atlas, catalog, sources in [
                 ('hca', 'dcp42', dcp42_sources),
+                ('hca', 'dcp43', dcp43_sources),
                 ('hca', 'pilot1', pilot1_sources),
                 ('lungmap', 'lm7', lm7_sources),
                 ('lungmap', 'lm8', lm8_sources)
