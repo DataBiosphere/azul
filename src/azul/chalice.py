@@ -563,11 +563,11 @@ class AzulChaliceApp(Chalice):
 
         #: The number of failed or throttled lambda invocations that, when
         #: exceeded, will trigger the alarm.
-        threshold: int = attrs.field(default=0)
+        threshold: int
 
         #: The interval (in seconds) at which the alarm threshold is evaluated,
         #: ranging from 1 minute to 1 day. The default is 5 minutes.
-        period: int = attrs.field(default=5 * 60)
+        period: int
 
         def __call__(self, f):
             assert isinstance(f, chalice.app.EventSourceHandler), f
@@ -588,13 +588,20 @@ class AzulChaliceApp(Chalice):
             # The api_handler lambda functions (indexer & service) aren't
             # included in the app_module's handler_map, so we account for those
             # first.
-            yield self.metric_alarm(metric=metric).bind(self)
+            yield self.metric_alarm(metric=metric,
+                                    threshold=0,
+                                    period=5 * 60).bind(self)
         for handler_name, handler in self.handler_map.items():
             if isinstance(handler, chalice.app.EventSourceHandler):
                 try:
                     metric_alarms = getattr(handler, 'metric_alarms')
                 except AttributeError:
-                    metric_alarms = (self.metric_alarm(metric=metric) for metric in LambdaMetric)
+                    metric_alarms = (
+                        self.metric_alarm(metric=metric,
+                                          threshold=0,
+                                          period=5 * 60)
+                        for metric in LambdaMetric
+                    )
                 for metric_alarm in metric_alarms:
                     yield metric_alarm.bind(self, handler_name)
 
