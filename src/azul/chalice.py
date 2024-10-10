@@ -588,9 +588,11 @@ class AzulChaliceApp(Chalice):
             # The api_handler lambda functions (indexer & service) aren't
             # included in the app_module's handler_map, so we account for those
             # first.
+            threshold = 1 if metric == LambdaMetric.errors else 0
+            period = 24 * 60 * 60 if metric == LambdaMetric.errors else 5 * 60
             yield self.metric_alarm(metric=metric,
-                                    threshold=0,
-                                    period=5 * 60).bind(self)
+                                    threshold=threshold,
+                                    period=period).bind(self)
         for handler_name, handler in self.handler_map.items():
             if isinstance(handler, chalice.app.EventSourceHandler):
                 try:
