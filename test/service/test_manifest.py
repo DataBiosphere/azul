@@ -2089,6 +2089,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
 
     def test_verbatim_jsonl_manifest(self):
         linked_entities_by_hash = {}
+        all_entities_by_hash = {}
 
         def unique_rows(entities: Mapping[EntityReference, JSON]
                         ) -> Iterable[tuple[str, JSON]]:
@@ -2101,11 +2102,21 @@ class TestAnvilManifests(AnvilManifestTestCase):
         for bundle_fqid in self.bundles():
             bundle = self._load_canned_bundle(bundle_fqid)
             linked_entities_by_hash.update(unique_rows(bundle.entities))
+            all_entities_by_hash.update(unique_rows(bundle.orphans))
+        all_entities_by_hash.update(linked_entities_by_hash)
 
-        response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
-        self.assertEqual(200, response.status_code)
-        expected_rows = list(linked_entities_by_hash.values())
-        self._assert_jsonl(expected_rows, response)
+        for filters, expect_orphans in [
+            ({}, False),
+            ({'datasets.title': {'is': ['ANVIL_CMG_UWASH_DS_BDIS']}}, False),
+            # Orphans should be included only when filtering by dataset ID
+            ({'datasets.dataset_id': {'is': ['52ee7665-7033-63f2-a8d9-ce8e32666739']}}, True)
+        ]:
+            with self.subTest(filters=filters):
+                response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters=filters)
+                self.assertEqual(200, response.status_code)
+                expected_rows = list((all_entities_by_hash if expect_orphans
+                                      else linked_entities_by_hash).values())
+                self._assert_jsonl(expected_rows, response)
 
     def test_verbatim_pfb_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})

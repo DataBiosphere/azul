@@ -122,3 +122,6 @@ class DocumentService:
                                          self.field_types(catalog),
                                          forward=forward,
                                          allowed_paths=allowed_paths)
+
+    def always_limit_access(self) -> bool:
+        return True
