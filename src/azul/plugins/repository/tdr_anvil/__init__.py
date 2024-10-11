@@ -136,9 +136,14 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
     def add_entity(self,
                    entity: EntityReference,
                    version: str,
-                   row: MutableJSON
+                   row: MutableJSON,
+                   *,
+                   is_orphan: bool = False
                    ) -> None:
-        assert entity not in self.entities, entity
+        dst = self.orphans if is_orphan else self.entities
+        # In DUOS bundles, the dataset is represented as both as entity and an
+        # orphan
+        assert entity not in dst, entity
         metadata = dict(row,
                         version=version)
         if entity.entity_type == 'file':
@@ -148,7 +153,7 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
             metadata.update(drs_uri=drs_uri,
                             sha256='',
                             crc32='')
-        self.entities[entity] = metadata
+        dst[entity] = metadata
 
     def add_links(self, links: Iterable[EntityLink]):
         self.links.update(links)
