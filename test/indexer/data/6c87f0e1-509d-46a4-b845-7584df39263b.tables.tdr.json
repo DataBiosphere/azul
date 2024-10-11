@@ -1,6 +1,6 @@
 {
     "tables": {
-        "activity": {
+        "anvil_activity": {
             "rows": [
                 {
                     "activity_id": "",
@@ -12,7 +12,7 @@
                 }
             ]
         },
-        "alignmentactivity": {
+        "anvil_alignmentactivity": {
             "rows": [
                 {
                     "activity_type": "",
@@ -25,7 +25,7 @@
                 }
             ]
         },
-        "assayactivity": {
+        "anvil_assayactivity": {
             "rows": [
                 {
                     "activity_type": "",
@@ -39,7 +39,7 @@
                 }
             ]
         },
-        "biosample": {
+        "anvil_biosample": {
             "rows": [
                 {
                     "anatomical_site": null,
@@ -63,7 +63,7 @@
                 }
             ]
         },
-        "dataset": {
+        "anvil_dataset": {
             "rows": [
                 {
                     "consent_group": [
@@ -89,7 +89,7 @@
                 }
             ]
         },
-        "diagnosis": {
+        "anvil_diagnosis": {
             "rows": [
                 {
                     "datarepo_row_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
@@ -135,7 +135,7 @@
                 }
             ]
         },
-        "donor": {
+        "anvil_donor": {
             "rows": [
                 {
                     "datarepo_row_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
@@ -153,7 +153,7 @@
                 }
             ]
         },
-        "file": {
+        "anvil_file": {
             "rows": [
                 {
                     "data_modality": [],
@@ -202,7 +202,7 @@
                 }
             ]
         },
-        "sequencingactivity": {
+        "anvil_sequencingactivity": {
             "rows": [
                 {
                     "activity_type": "Sequencing",
@@ -238,7 +238,7 @@
                 }
             ]
         },
-        "variantcallingactivity": {
+        "anvil_variantcallingactivity": {
             "rows": [
                 {
                     "activity_type": "",
