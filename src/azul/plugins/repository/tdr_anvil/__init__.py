@@ -379,8 +379,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         return bundle_entity
 
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
-        if not table_name.startswith('INFORMATION_SCHEMA'):
-            table_name = 'anvil_' + table_name
+        prefixed = f'anvil_{table_name}'
+        if prefixed in self._schema_columns:
+            table_name = prefixed
         return super()._full_table_name(source, table_name)
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
