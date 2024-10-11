@@ -114,6 +114,10 @@ class BundleEntityType(Enum):
     supplementary: EntityType = 'file'
     duos: EntityType = 'dataset'
 
+    @property
+    def table_name(self) -> str:
+        return f'anvil_{self.value}'
+
 
 class TDRAnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
     entity_type: str
@@ -172,10 +176,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
     def _count_subgraphs(self, source: TDRSourceSpec) -> int:
         rows = self._run_sql(f'''
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source, BundleEntityType.primary.value))}
+            FROM {backtick(self._full_table_name(source, BundleEntityType.primary.table_name))}
             UNION ALL
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source, BundleEntityType.supplementary.value))}
+            FROM {backtick(self._full_table_name(source, BundleEntityType.supplementary.table_name))}
             WHERE is_supplementary
         ''')
         return sum(row['count'] for row in rows)
@@ -185,24 +189,24 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       prefix: str
                       ) -> list[TDRAnvilBundleFQID]:
         spec = source.spec
-        primary = BundleEntityType.primary.value
-        supplementary = BundleEntityType.supplementary.value
-        duos = BundleEntityType.duos.value
+        primary = BundleEntityType.primary
+        supplementary = BundleEntityType.supplementary
+        duos = BundleEntityType.duos
         rows = list(self._run_sql(f'''
-            SELECT datarepo_row_id, {primary!r} AS entity_type
-            FROM {backtick(self._full_table_name(spec, primary))}
+            SELECT datarepo_row_id, {primary.value!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, primary.table_name))}
             WHERE STARTS_WITH(datarepo_row_id, '{prefix}')
             UNION ALL
-            SELECT datarepo_row_id, {supplementary!r} AS entity_type
-            FROM {backtick(self._full_table_name(spec, supplementary))} AS supp
+            SELECT datarepo_row_id, {supplementary.value!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, supplementary.table_name))} AS supp
             WHERE supp.is_supplementary AND STARTS_WITH(datarepo_row_id, '{prefix}')
         ''' + (
             ''
             if config.duos_service_url is None else
             f'''
             UNION ALL
-            SELECT datarepo_row_id, {duos!r} AS entity_type
-            FROM {backtick(self._full_table_name(spec, duos))}
+            SELECT datarepo_row_id, {duos.value!r} AS entity_type
+            FROM {backtick(self._full_table_name(spec, duos.table_name))}
             '''
         )))
         bundles = []
@@ -245,7 +249,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             rows = self._run_sql(' UNION ALL '.join((
                 f'''
                 SELECT {entity_type.value!r} AS entity_type
-                FROM {backtick(self._full_table_name(source.spec, entity_type.value))}
+                FROM {backtick(self._full_table_name(source.spec, entity_type.table_name))}
                 WHERE datarepo_row_id = {entity_id!r}
                 '''
                 for entity_type in BundleEntityType
@@ -321,23 +325,24 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
         source = bundle_fqid.source.spec
-        bundle_entity_type = bundle_fqid.entity_type.value
+        bundle_entity_type = bundle_fqid.entity_type
         result = TDRAnvilBundle(fqid=bundle_fqid)
-        columns = self._columns(bundle_entity_type)
+        columns = self._columns(bundle_entity_type.table_name)
         bundle_entity = dict(one(self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
-            FROM {backtick(self._full_table_name(source, bundle_entity_type))}
+            FROM {backtick(self._full_table_name(source, bundle_entity_type.table_name))}
             WHERE datarepo_row_id = '{entity_id}'
         ''')))
         linked_entity_type = 'dataset'
-        columns = self._columns(linked_entity_type)
+        linked_table_name = f'anvil_{linked_entity_type}'
+        columns = self._columns(linked_table_name)
         linked_entity = dict(one(self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
-            FROM {backtick(self._full_table_name(source, linked_entity_type))}
+            FROM {backtick(self._full_table_name(source, linked_table_name))}
         ''')))
         link_args = {}
         for entity_type, row, arg in [
-            (bundle_entity_type, bundle_entity, 'outputs'),
+            (bundle_entity_type.value, bundle_entity, 'outputs'),
             (linked_entity_type, linked_entity, 'inputs')
         ]:
             entity_ref = EntityReference(entity_type=entity_type, entity_id=row['datarepo_row_id'])
@@ -377,11 +382,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         log.info('Bundle UUID %r resolved to primary key %r in table %r',
                  bundle_uuid, bundle_entity.key, entity_type)
         return bundle_entity
-
-    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
-        if not table_name.startswith('INFORMATION_SCHEMA'):
-            table_name = 'anvil_' + table_name
-        return super()._full_table_name(source, table_name)
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
         result = {
@@ -444,7 +444,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         if biosample_ids:
             rows = self._run_sql(f'''
                 SELECT b.biosample_id, b.donor_id, b.part_of_dataset_id
-                FROM {backtick(self._full_table_name(source, 'biosample'))} AS b
+                FROM {backtick(self._full_table_name(source, 'anvil_biosample'))} AS b
                 WHERE b.biosample_id IN ({', '.join(map(repr, biosample_ids))})
             ''')
             result: KeyLinks = set()
@@ -469,7 +469,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         if file_ids:
             rows = self._run_sql(f'''
                 WITH file AS (
-                  SELECT f.file_id FROM {backtick(self._full_table_name(source, 'file'))} AS f
+                  SELECT f.file_id FROM {backtick(self._full_table_name(source, 'anvil_file'))} AS f
                   WHERE f.file_id IN ({', '.join(map(repr, file_ids))})
                 )
                 SELECT
@@ -479,7 +479,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       ama.used_file_id AS uses_file_id,
                       [] AS uses_biosample_id,
                   FROM file AS f
-                  JOIN {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ama
+                  JOIN {backtick(self._full_table_name(source, 'anvil_alignmentactivity'))} AS ama
                     ON f.file_id IN UNNEST(ama.generated_file_id)
                 UNION ALL SELECT
                       f.file_id,
@@ -488,7 +488,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       [],
                       aya.used_biosample_id,
                   FROM file AS f
-                  JOIN {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                  JOIN {backtick(self._full_table_name(source, 'anvil_assayactivity'))} AS aya
                     ON f.file_id IN UNNEST(aya.generated_file_id)
                 UNION ALL SELECT
                       f.file_id,
@@ -497,7 +497,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                       [],
                       sqa.used_biosample_id,
                   FROM file AS f
-                  JOIN {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
+                  JOIN {backtick(self._full_table_name(source, 'anvil_sequencingactivity'))} AS sqa
                     ON f.file_id IN UNNEST(sqa.generated_file_id)
                 UNION ALL SELECT
                     f.file_id,
@@ -506,7 +506,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                     vca.used_file_id,
                     []
                   FROM file AS f
-                  JOIN {backtick(self._full_table_name(source, 'variantcallingactivity'))} AS vca
+                  JOIN {backtick(self._full_table_name(source, 'anvil_variantcallingactivity'))} AS vca
                     ON f.file_id IN UNNEST(vca.generated_file_id)
                 UNION ALL SELECT
                     f.file_id,
@@ -515,7 +515,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                     a.used_file_id,
                     a.used_biosample_id,
                   FROM file AS f
-                  JOIN {backtick(self._full_table_name(source, 'activity'))} AS a
+                  JOIN {backtick(self._full_table_name(source, 'anvil_activity'))} AS a
                     ON f.file_id IN UNNEST(a.generated_file_id)
             ''')
             return {
@@ -544,7 +544,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         if donor_ids:
             rows = self._run_sql(f'''
                 SELECT dgn.donor_id, dgn.diagnosis_id
-                FROM {backtick(self._full_table_name(source, 'diagnosis'))} as dgn
+                FROM {backtick(self._full_table_name(source, 'anvil_diagnosis'))} as dgn
                 WHERE dgn.donor_id IN ({', '.join(map(repr, donor_ids))})
             ''')
             return {
@@ -568,21 +568,21 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                         'sequencingactivity' as activity_table,
                         sqa.used_biosample_id,
                         sqa.generated_file_id
-                    FROM {backtick(self._full_table_name(source, 'sequencingactivity'))} AS sqa
+                    FROM {backtick(self._full_table_name(source, 'anvil_sequencingactivity'))} AS sqa
                     UNION ALL
                     SELECT
                         aya.assayactivity_id,
                         'assayactivity',
                         aya.used_biosample_id,
                         aya.generated_file_id,
-                    FROM {backtick(self._full_table_name(source, 'assayactivity'))} AS aya
+                    FROM {backtick(self._full_table_name(source, 'anvil_assayactivity'))} AS aya
                     UNION ALL
                     SELECT
                         a.activity_id,
                         'activity',
                         a.used_biosample_id,
                         a.generated_file_id,
-                    FROM {backtick(self._full_table_name(source, 'activity'))} AS a
+                    FROM {backtick(self._full_table_name(source, 'anvil_activity'))} AS a
                 )
                 SELECT
                     biosample_id,
@@ -616,19 +616,19 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                         'alignmentactivity' AS activity_table,
                         ala.used_file_id,
                         ala.generated_file_id
-                    FROM {backtick(self._full_table_name(source, 'alignmentactivity'))} AS ala
+                    FROM {backtick(self._full_table_name(source, 'anvil_alignmentactivity'))} AS ala
                     UNION ALL SELECT
                         vca.variantcallingactivity_id,
                         'variantcallingactivity',
                         vca.used_file_id,
                         vca.generated_file_id
-                    FROM {backtick(self._full_table_name(source, 'variantcallingactivity'))} AS vca
+                    FROM {backtick(self._full_table_name(source, 'anvil_variantcallingactivity'))} AS vca
                     UNION ALL SELECT
                         a.activity_id,
                         'activity',
                         a.used_file_id,
                         a.generated_file_id
-                    FROM {backtick(self._full_table_name(source, 'activity'))} AS a
+                    FROM {backtick(self._full_table_name(source, 'anvil_activity'))} AS a
                 )
                 SELECT
                     used_file_id,
@@ -656,8 +656,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                            keys: AbstractSet[Key],
                            ) -> MutableJSONs:
         if keys:
-            table_name = self._full_table_name(source, entity_type)
-            columns = self._columns(entity_type)
+            table_name = f'anvil_{entity_type}'
+            columns = self._columns(table_name)
+            table_name = self._full_table_name(source, table_name)
             pk_column = entity_type + '_id'
             assert pk_column in columns, entity_type
             log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
@@ -687,10 +688,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         else:
             return []
 
-    def _columns(self, entity_type: EntityType) -> set[str]:
+    def _columns(self, table_name: str) -> set[str]:
         table = one(
             table for table in anvil_schema['tables']
-            if table['name'] == f'anvil_{entity_type}'
+            if table['name'] == table_name
         )
         entity_columns = {column['name'] for column in table['columns']}
         entity_columns.add('datarepo_row_id')
