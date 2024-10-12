@@ -49,6 +49,9 @@ from azul.plugins.repository.tdr_anvil import (
 from azul.terra import (
     TDRClient,
 )
+from azul.uuids import (
+    zero_pad,
+)
 from azul_test_case import (
     TDRTestCase,
 )
@@ -105,10 +108,12 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
                     *,
                     uuid,
                     version=BundleType.primary.value,
+                    batch_prefix_length=None
                     ) -> TDRAnvilBundleFQID:
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
-                                  version=version)
+                                  version=version,
+                                  batch_prefix_length=batch_prefix_length)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -117,7 +122,8 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                               version=BundleType.supplementary.value)
+                               version=BundleType.supplementary.value,
+                               batch_prefix_length=0)
 
     @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
@@ -126,8 +132,9 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
 
     @classmethod
     def replica_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='abc00000-0000-a000-0000-000000000000',
-                               table_name='anvil_activity')
+        return cls.bundle_fqid(uuid='00000000-0000-a000-0000-000000000000',
+                               table_name='anvil_activity',
+                               batch_prefix_length=0)
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase,
@@ -167,13 +174,21 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
 
     def test_list_and_fetch_bundles(self):
         source_ref = self.source
-        self._make_mock_tdr_tables(source_ref)
-        expected_bundle_fqids = sorted([
-            self.primary_bundle(),
-            self.supplementary_bundle(),
-            self.duos_bundle()
-        ])
+        tables = self._make_mock_tdr_tables(source_ref)
         plugin = self.plugin_for_source_spec(source_ref.spec)
+        unbatched_bundles = [
+            self.primary_bundle(),
+            self.duos_bundle()
+        ]
+        batched_bundles = [
+            self.bundle_fqid(uuid=zero_pad('', plugin.bundle_uuid_version),
+                             table_name=table_name,
+                             batch_prefix_length=self.source.spec.prefix.partition)
+            for table_name in tables.keys()
+            if table_name not in (BundleType.primary.value, BundleType.duos.value)
+        ]
+        self.assertIn(self.supplementary_bundle(), batched_bundles)
+        expected_bundle_fqids = sorted(unbatched_bundles + batched_bundles)
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
         self.assertEqual(expected_bundle_fqids, bundle_fqids)
         for bundle_fqid in bundle_fqids:

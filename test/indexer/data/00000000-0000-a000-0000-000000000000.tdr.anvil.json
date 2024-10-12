@@ -1,0 +1,80 @@
+{
+    "entities": {},
+    "links": [],
+    "orphans": {
+        "dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
+            "consent_group": [
+                "DS-BDIS"
+            ],
+            "data_modality": [],
+            "data_use_permission": [
+                "DS-BDIS"
+            ],
+            "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+            "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+            "owner": [
+                "Debbie Nickerson"
+            ],
+            "principal_investigator": [],
+            "registered_identifier": [
+                "phs000693"
+            ],
+            "source_datarepo_row_ids": [
+                "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+            ],
+            "title": "ANVIL_CMG_UWASH_DS_BDIS",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/7c0b04d4-09a3-4e00-a142-3a4c5fc4c3fb": {
+            "datarepo_row_id": "7c0b04d4-09a3-4e00-a142-3a4c5fc4c3fb",
+            "activity_id": "71f12c9c-5115-374b-cd96-9414b6f1935a",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "ad7932a7-55d3-36af-ba7d-cb22b627f10d"
+            ],
+            "generated_file_id": [
+                "00195da1-8e9f-3d95-957b-41607759de38"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:239769e6-1ea0-4066-8289-4c1a07d180ee",
+                "file_inventory:0945564c-b45b-482e-94db-7506118fc50d"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/7fce9cf8-5d2b-4a27-83fc-bc22214116e3": {
+            "datarepo_row_id": "7fce9cf8-5d2b-4a27-83fc-bc22214116e3",
+            "activity_id": "8d502145-9cd0-0a30-a6fe-8c4f529086c4",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "af3ca37e-76a8-3568-94aa-b9f0f256bcf2"
+            ],
+            "generated_file_id": [
+                "0027abb3-5038-3849-aeaf-adccdc692259"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:c4d7b383-cab6-46e3-8d8f-37b0c8e42f25",
+                "file_inventory:c332b008-d443-4fa2-878a-3af2b3ebd893"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/fc734969-1c7f-4806-b0f8-299584a6158d": {
+            "datarepo_row_id": "fc734969-1c7f-4806-b0f8-299584a6158d",
+            "activity_id": "07361e60-5446-4a38-b4ae-c765c6f4cfbd",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "1c086a00-2869-3f58-9ed8-87e5f4d59e33"
+            ],
+            "generated_file_id": [
+                "002eddb4-d277-36a4-bf0e-8c8318d10531"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:b856a7f2-c4ed-4cd1-a2fb-cd9dc7a810f5",
+                "file_inventory:53f3388d-314e-407c-8548-85797a56b735"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        }
+    }
+}
