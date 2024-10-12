@@ -687,11 +687,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         else:
             return []
 
+    _schema_columns = {
+        table['name']: [column['name'] for column in table['columns']]
+        for table in anvil_schema['tables']
+    }
+
     def _columns(self, entity_type: EntityType) -> set[str]:
-        table = one(
-            table for table in anvil_schema['tables']
-            if table['name'] == f'anvil_{entity_type}'
-        )
-        entity_columns = {column['name'] for column in table['columns']}
-        entity_columns.add('datarepo_row_id')
-        return entity_columns
+        columns = set(self._schema_columns[f'anvil_{entity_type}'])
+        columns.add('datarepo_row_id')
+        return columns
