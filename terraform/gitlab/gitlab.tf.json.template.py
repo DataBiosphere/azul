@@ -1061,11 +1061,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'egress': [
                     vpc.security_rule(description='Any traffic to the '
                                                   f"{'VPC' if split_tunnel else 'internet'}",
-                                      cidr_blocks=[
-                                          '${aws_vpc.gitlab.cidr_block}'
-                                          if split_tunnel else
-                                          all_ipv4
-                                      ],
+                                      cidr_blocks=['${aws_vpc.gitlab.cidr_block}' if split_tunnel else all_ipv4],
                                       protocol=-1,
                                       from_port=0,
                                       to_port=0),

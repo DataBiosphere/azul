@@ -147,6 +147,11 @@ class AzulTestCase(TestCase):
                     'The \'body\' parameter is deprecated for the \'.*\' API '
                     'and will be removed in .*. Instead use .*'
                 ),
+
+                # FIXME: DeprecationWarning for datetime methods in Python 3.12
+                #        https://github.com/DataBiosphere/azul/issues/5953
+                'datetime.datetime.utcnow() is deprecated',
+                'datetime.datetime.utcfromtimestamp() is deprecated'
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',

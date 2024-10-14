@@ -1,3 +1,3 @@
 pip==23.3.2
-setuptools==70.3.0
+setuptools==70.3.0  # keep consistent with requirements.txt
 wheel==0.38.4
