@@ -104,6 +104,9 @@ from azul.azulclient import (
     AzulClient,
     AzulClientNotificationError,
 )
+from azul.chalice import (
+    AzulChaliceApp,
+)
 from azul.drs import (
     AccessMethod,
 )
@@ -2042,11 +2045,6 @@ class ResponseHeadersTest(AzulTestCase):
             '/oauth2_redirect': {'Cache-Control': 'no-store'},
             '/health/basic': {'Cache-Control': 'no-store'}
         }
-        global_headers = {
-            'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-            'X-Content-Type-Options': 'nosniff',
-            'X-Frame-Options': 'DENY',
-        }
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, expected_headers in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
@@ -2055,5 +2053,17 @@ class ResponseHeadersTest(AzulTestCase):
                     else:
                         response = requests.get(str(endpoint / path))
                         response.raise_for_status()
-                        expected = expected_headers | global_headers
+                        expected = AzulChaliceApp.security_headers | expected_headers
+                        # FIXME: Add a CSP header with a nonce value to text/html responses
+                        #        https://github.com/DataBiosphere/azul-private/issues/6
+                        if path in ['/', '/oauth2_redirect']:
+                            del expected['Content-Security-Policy']
                         self.assertIsSubset(expected.items(), response.headers.items())
+
+    def test_default_4xx_response_headers(self):
+        for endpoint in (config.service_endpoint, config.indexer_endpoint):
+            with self.subTest(endpoint=endpoint):
+                response = requests.get(str(endpoint / 'does-not-exist'))
+                self.assertEqual(403, response.status_code)
+                self.assertIsSubset(AzulChaliceApp.security_headers.items(),
+                                    response.headers.items())

@@ -140,6 +140,9 @@ from azul.service.storage_service import (
     StorageObjectNotFound,
     StorageService,
 )
+from azul.strings import (
+    double_quote as dq,
+)
 from azul.types import (
     AnyJSON,
     FlatJSON,
@@ -887,9 +890,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         Escape a string for insertion into a `cmd.exe` command line
         """
-        assert '"' not in s, s
         assert '\\' not in s, s
-        return f'"{s}"'
+        return dq(s)
 
     @classmethod
     def command_lines(cls,

@@ -1,6 +1,6 @@
 [
     {
-        "_id": "bundles_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_50b88c774d130ce5cb9e680241549c2df665efca",
+        "_id": "links_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_50b88c774d130ce5cb9e680241549c2df665efca",
         "_index": "azul_v2_dev_test_replica",
         "_score": 1.0,
         "_type": "_doc",
@@ -3460,7 +3460,7 @@
         }
     },
     {
-        "_id": "files_0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_4628c80cede8a4dd39584f8b50619edacc7f62e7",
+        "_id": "sequence_file_0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_4628c80cede8a4dd39584f8b50619edacc7f62e7",
         "_index": "azul_v2_dev_test_replica",
         "_score": 1.0,
         "_source": {
@@ -3491,7 +3491,7 @@
         "_type": "_doc"
     },
     {
-        "_id": "cell_suspensions_412898c5-5b9b-4907-b07c-e9b89666e204_f8ca7504548249c223277135af497beb5fba29df",
+        "_id": "cell_suspension_412898c5-5b9b-4907-b07c-e9b89666e204_f8ca7504548249c223277135af497beb5fba29df",
         "_index": "azul_v2_dev_test_replica",
         "_score": 1.0,
         "_source": {
@@ -3530,7 +3530,7 @@
         "_type": "_doc"
     },
     {
-        "_id": "files_70d1af4a-82c8-478a-8960-e9028b3616ca_8ee6fbddb7c933ebe39b31b977c51af21687f036",
+        "_id": "sequence_file_70d1af4a-82c8-478a-8960-e9028b3616ca_8ee6fbddb7c933ebe39b31b977c51af21687f036",
         "_index": "azul_v2_dev_test_replica",
         "_score": 1.0,
         "_source": {
@@ -3561,7 +3561,7 @@
         "_type": "_doc"
     },
     {
-        "_id": "samples_a21dc760-a500-4236-bcff-da34a0e873d2_0bb754590d94de62d6fb15bdbac5f64f54072cb0",
+        "_id": "specimen_from_organism_a21dc760-a500-4236-bcff-da34a0e873d2_0bb754590d94de62d6fb15bdbac5f64f54072cb0",
         "_index": "azul_v2_dev_test_replica",
         "_score": 1.0,
         "_source": {
@@ -3614,7 +3614,7 @@
         "_type": "_doc"
     },
     {
-        "_id": "projects_e8642221-4c2c-4fd7-b926-a68bce363c88_42d51043dcd0030b5ee9ce47fa30c85bcc92bac6",
+        "_id": "project_e8642221-4c2c-4fd7-b926-a68bce363c88_42d51043dcd0030b5ee9ce47fa30c85bcc92bac6",
         "_index": "azul_v2_dev_test_replica",
         "_score": 1.0,
         "_source": {
@@ -3689,6 +3689,176 @@
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "replica_type": "project",
             "hub_ids": []
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "donor_organism_7b07b9d0-cc0e-4098-9f64-f4a569f7d746_7dd78e18008a0c036bb25e84f7742c075e16873f",
+        "_index": "azul_v2_dummy_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "biomaterial_core": {
+                    "biomaterial_id": "DID_scRSq06",
+                    "ncbi_taxon_id": [
+                        9606
+                    ]
+                },
+                "death": {
+                    "cause_of_death": "stroke"
+                },
+                "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+                "diseases": [
+                    {
+                        "ontology": "PATO:0000461",
+                        "ontology_label": "normal",
+                        "text": "normal"
+                    }
+                ],
+                "genus_species": [
+                    {
+                        "ontology": "NCBITaxon:9606",
+                        "ontology_label": "Australopithecus",
+                        "text": "Australopithecus"
+                    }
+                ],
+                "human_specific": {
+                    "body_mass_index": 29.5,
+                    "ethnicity": [
+                        {
+                            "ontology": "hancestro:0005",
+                            "ontology_label": "European",
+                            "text": "European"
+                        }
+                    ]
+                },
+                "is_living": "no",
+                "organism_age": "38",
+                "organism_age_unit": {
+                    "ontology": "UO:0000036",
+                    "ontology_label": "year",
+                    "text": "year"
+                },
+                "provenance": {
+                    "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                    "submission_date": "2018-11-02T10:02:12.191Z",
+                    "update_date": "2018-11-02T10:07:39.622Z"
+                },
+                "schema_type": "biomaterial",
+                "sex": "female"
+            },
+            "entity_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+            "hub_ids": [
+                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+            ],
+            "replica_type": "donor_organism"
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "library_preparation_protocol_9c32cf70-3ed7-4720-badc-5ee71e8a38af_33c8ff808fc57c3dcb4b3872d1dcbc859e45a85a",
+        "_index": "azul_v2_dummy_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+                "end_bias": "full length",
+                "input_nucleic_acid_molecule": {
+                    "ontology": "OBI:0000869",
+                    "text": "polyA RNA"
+                },
+                "library_construction_approach": {
+                    "ontology": "EFO:0008931",
+                    "ontology_label": "Smart-seq2",
+                    "text": "Smart-seq2"
+                },
+                "library_construction_kit": {
+                    "manufacturer": "Illumina",
+                    "retail_name": "Nextera XT kit"
+                },
+                "nucleic_acid_source": "single cell",
+                "primer": "poly-dT",
+                "protocol_core": {
+                    "protocol_id": "library_preparation_protocol_1"
+                },
+                "provenance": {
+                    "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                    "submission_date": "2018-11-02T10:05:05.547Z",
+                    "update_date": "2018-11-02T10:05:10.360Z"
+                },
+                "schema_type": "protocol",
+                "strand": "unstranded"
+            },
+            "entity_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+            "hub_ids": [
+                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+            ],
+            "replica_type": "library_preparation_protocol"
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "sequencing_protocol_61e629ed-0135-4492-ac8a-5c4ab3ccca8a_187e49da61e5d3fbf91f3a6cf626bc4ce3c2d2be",
+        "_index": "azul_v2_dummy_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/9.0.3/sequencing_protocol",
+                "instrument_manufacturer_model": {
+                    "ontology": "EFO:0008566",
+                    "ontology_label": "Illumina NextSeq 500",
+                    "text": "Illumina NextSeq 500"
+                },
+                "paired_end": true,
+                "protocol_core": {
+                    "protocol_id": "sequencing_protocol_1"
+                },
+                "provenance": {
+                    "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                    "submission_date": "2018-11-02T10:05:05.555Z",
+                    "update_date": "2018-11-02T10:05:10.376Z"
+                },
+                "schema_type": "protocol",
+                "sequencing_approach": {
+                    "ontology": "EFO:0008896",
+                    "ontology_label": "RNA-Seq",
+                    "text": "RNA-Seq"
+                }
+            },
+            "entity_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+            "hub_ids": [
+                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+            ],
+            "replica_type": "sequencing_protocol"
+        },
+        "_type": "_doc"
+    },
+    {
+        "_id": "process_771ddaf6-3a4f-4314-97fe-6294ff8e25a4_2e08df0ed1adfe582cd63f4daef287d9a637cdf1",
+        "_index": "azul_v2_dummy_test_replica",
+        "_score": 1.0,
+        "_source": {
+            "contents": {
+                "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
+                "process_core": {
+                    "process_id": "SRR3562915"
+                },
+                "provenance": {
+                    "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                    "submission_date": "2018-11-02T10:06:37.087Z",
+                    "update_date": "2018-11-02T10:13:43.197Z"
+                },
+                "schema_type": "process"
+            },
+            "entity_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+            "hub_ids": [
+                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+            ],
+            "replica_type": "process"
         },
         "_type": "_doc"
     }

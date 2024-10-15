@@ -1,20 +1,25 @@
 from abc import (
     ABC,
 )
+from collections import (
+    defaultdict,
+)
 from typing import (
     AbstractSet,
     Generic,
-    Iterable,
+    Mapping,
+    Self,
     TypeVar,
 )
 
 import attrs
-from more_itertools import (
-    one,
-)
 
 from azul import (
     CatalogName,
+)
+from azul.collections import (
+    aset,
+    none_safe_apply,
 )
 from azul.indexer import (
     BUNDLE_FQID,
@@ -43,50 +48,76 @@ class KeyReference:
     entity_type: EntityType
 
 
-ENTITY_REF = TypeVar('ENTITY_REF', bound=EntityReference | KeyReference)
+REF = TypeVar('REF', bound=EntityReference | KeyReference)
 
 
 @attrs.frozen(kw_only=True, order=False)
-class Link(Generic[ENTITY_REF]):
-    inputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
-                                                  converter=frozenset)
+class Link(Generic[REF]):
+    inputs: AbstractSet[REF] = attrs.field(factory=frozenset,
+                                           converter=frozenset)
 
-    activity: ENTITY_REF | None = attrs.field(default=None)
+    activity: REF | None = attrs.field(default=None)
 
-    outputs: AbstractSet[ENTITY_REF] = attrs.field(factory=frozenset,
-                                                   converter=frozenset)
+    outputs: AbstractSet[REF] = attrs.field(factory=frozenset,
+                                            converter=frozenset)
 
     @property
-    def all_entities(self) -> AbstractSet[ENTITY_REF]:
-        return self.inputs | self.outputs | (set() if self.activity is None else {self.activity})
+    def all_entities(self) -> AbstractSet[REF]:
+        return self.inputs | self.outputs | aset(self.activity)
 
     @classmethod
-    def from_json(cls, link: JSON) -> 'Link':
+    def from_json(cls, link: JSON) -> Self:
         return cls(inputs=set(map(EntityReference.parse, link['inputs'])),
-                   activity=None if link['activity'] is None else EntityReference.parse(link['activity']),
+                   activity=none_safe_apply(EntityReference.parse, link['activity']),
                    outputs=set(map(EntityReference.parse, link['outputs'])))
 
     def to_json(self) -> MutableJSON:
         return {
             'inputs': sorted(map(str, self.inputs)),
-            'activity': None if self.activity is None else str(self.activity),
+            'activity': none_safe_apply(str, self.activity),
             'outputs': sorted(map(str, self.outputs))
         }
 
     @classmethod
-    def merge(cls, links: Iterable['Link']) -> 'Link':
-        return cls(inputs=frozenset.union(*[link.inputs for link in links]),
-                   activity=one({link.activity for link in links}),
-                   outputs=frozenset.union(*[link.outputs for link in links]))
+    def group_by_activity(cls, links: set[Self]):
+        """
+        Merge links that share the same (non-null) activity.
+        """
+        groups_by_activity: Mapping[KeyReference, set[Self]] = defaultdict(set)
+        for link in links:
+            if link.activity is not None:
+                groups_by_activity[link.activity].add(link)
+        for activity, group in groups_by_activity.items():
+            if len(group) > 1:
+                links -= group
+                merged_link = cls(inputs=frozenset.union(*[link.inputs for link in group]),
+                                  activity=activity,
+                                  outputs=frozenset.union(*[link.outputs for link in group]))
+                links.add(merged_link)
 
-    def __lt__(self, other: 'Link') -> bool:
+    def __lt__(self, other: Self) -> bool:
         return min(self.inputs) < min(other.inputs)
+
+
+class EntityLink(Link[EntityReference]):
+    pass
+
+
+class KeyLink(Link[KeyReference]):
+
+    def to_entity_link(self,
+                       entities_by_key: Mapping[KeyReference, EntityReference]
+                       ) -> EntityLink:
+        lookup = entities_by_key.__getitem__
+        return EntityLink(inputs=set(map(lookup, self.inputs)),
+                          activity=none_safe_apply(lookup, self.activity),
+                          outputs=set(map(lookup, self.outputs)))
 
 
 @attrs.define(kw_only=True)
 class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
     entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
-    links: set[Link[EntityReference]] = attrs.field(factory=set)
+    links: set[EntityLink] = attrs.field(factory=set)
 
     def reject_joiner(self, catalog: CatalogName):
         # FIXME: Optimize joiner rejection and re-enable it for AnVIL
@@ -103,12 +134,12 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
         }
 
     @classmethod
-    def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> 'AnvilBundle':
+    def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> Self:
         return cls(
             fqid=fqid,
             entities={
                 EntityReference.parse(entity_ref): entity
                 for entity_ref, entity in json_['entities'].items()
             },
-            links=set(map(Link.from_json, json_['links']))
+            links=set(map(EntityLink.from_json, json_['links']))
         )

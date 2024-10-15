@@ -385,9 +385,8 @@ tf_config = {
             # security boundary, so vulnerabilities that are detected within
             # them do not need to be addressed with the same urgency.
             #
-            # Using CF stack because the AWS provider does not support
-            # Inspector filters and the AWSCC provider fails due to
-            # https://github.com/hashicorp/terraform-provider-awscc/issues/1364
+            # FIXME: Remove workaround for false Terraform bug
+            #        https://github.com/DataBiosphere/azul/issues/6577
             'inspector_filters': {
                 'name': config.qualified_resource_name('inspectorfilters'),
                 'template_body': json.dumps({

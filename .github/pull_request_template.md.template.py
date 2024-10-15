@@ -33,6 +33,7 @@ from azul.collections import (
     OrderedSet,
 )
 from azul.strings import (
+    back_quote as bq,
     join_grammatically,
 )
 from azul.template import (
@@ -223,10 +224,6 @@ class T(Enum):
 
     def shared_deploy_target(self, target_branch: str) -> str:
         return 'apply' + iif(self.shared_deploy_is_two_phase(target_branch), '_keep_unused')
-
-
-def bq(s):
-    return '`' + s + '`'
 
 
 def main():
