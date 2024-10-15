@@ -706,6 +706,237 @@ anvil7_sources = mkdict(anvil6_sources, 257, mkdelta([
     # @formatter:on
 ]))
 
+anvil8_sources = mkdict(anvil7_sources, 257, mkdelta([
+    # @formatter:off
+    mksrc('bigquery', 'datarepo-6fd2f543', 'ANVIL_1000G_PRIMED_data_model_20240410_ANV5_202409251724'),
+    mksrc('bigquery', 'datarepo-13858a9f', 'ANVIL_1000G_high_coverage_2019_20230517_ANV5_202409231755'),
+    mksrc('bigquery', 'datarepo-f954ce44', 'ANVIL_African_American_Seq_HGV_20230727_ANV5_202409251735'),
+    mksrc('bigquery', 'datarepo-1c288bc8', 'ANVIL_CCDG_Baylor_CVD_ARIC_20231008_ANV5_202409231808'),
+    mksrc('bigquery', 'datarepo-69a5161a', 'ANVIL_CCDG_Broad_AI_IBD_Brant_DS_IBD_WGS_20240113_ANV5_202409302325'),
+    mksrc('bigquery', 'datarepo-87ae3152', 'ANVIL_CCDG_Broad_AI_IBD_Brant_HMB_WGS_20240113_ANV5_202410011417'),
+    mksrc('bigquery', 'datarepo-0de3f19d', 'ANVIL_CCDG_Broad_AI_IBD_Cho_WGS_20240113_ANV5_202409261925'),
+    mksrc('bigquery', 'datarepo-183d3f73', 'ANVIL_CCDG_Broad_AI_IBD_Kugathasan_WGS_20240113_ANV5_202409261935'),
+    mksrc('bigquery', 'datarepo-647d4494', 'ANVIL_CCDG_Broad_AI_IBD_McCauley_WGS_20240114_ANV5_202409261945'),
+    mksrc('bigquery', 'datarepo-f82d1472', 'ANVIL_CCDG_Broad_AI_IBD_McGovern_WGS_20240113_ANV5_202409262009'),
+    mksrc('bigquery', 'datarepo-a173fc34', 'ANVIL_CCDG_Broad_AI_IBD_Newberry_WGS_20240113_ANV5_202409262020'),
+    mksrc('bigquery', 'datarepo-b0ce674b', 'ANVIL_CCDG_Broad_CVD_EOCAD_PartnersBiobank_HMB_Arrays_20230517_ANV5_202410011428'), # noqa E501
+    mksrc('bigquery', 'datarepo-f88712d7', 'ANVIL_CCDG_Broad_CVD_EOCAD_PartnersBiobank_HMB_WES_20230621_ANV5_202409262029'), # noqa E501
+    mksrc('bigquery', 'datarepo-948779f6', 'ANVIL_CCDG_Broad_CVD_EOCAD_TaiChi_WGS_20221026_ANV5_202409251741'),
+    mksrc('bigquery', 'datarepo-ed6900d9', 'ANVIL_CCDG_Broad_CVD_EOCAD_VIRGO_WGS_20221024_ANV5_202409251751'),
+    mksrc('bigquery', 'datarepo-38d33c51', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSALF_HMB_IRB_WES_20230128_ANV5_202410011452'), # noqa E501
+    mksrc('bigquery', 'datarepo-a6afe2df', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPIL_BA_MDS_WES_20221101_ANV5_202409262047'), # noqa E501
+    mksrc('bigquery', 'datarepo-9bf401b1', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EPI_BA_ID_MDS_WES_20221101_ANV5_202409262056'), # noqa E501
+    mksrc('bigquery', 'datarepo-573b1bec', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSAUS_EP_BA_CN_ID_MDS_WES_20221101_ANV5_202409262105'), # noqa E501
+    mksrc('bigquery', 'datarepo-eeaf2d1a', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSRMB_DS_EAED_IRB_WES_20230621_ANV5_202410011503'), # noqa E501
+    mksrc('bigquery', 'datarepo-3b3be681', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUSRMB_DS_EAED_MDS_WES_20221026_ANV5_202409262116'), # noqa E501
+    mksrc('bigquery', 'datarepo-b8d6b994', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUTMUV_DS_NS_ADLT_WES_20230128_ANV5_202410011513'), # noqa E501
+    mksrc('bigquery', 'datarepo-49cabb98', 'ANVIL_CCDG_Broad_NP_Epilepsy_AUTMUV_DS_NS_WES_20230314_ANV5_202410011523'),
+    mksrc('bigquery', 'datarepo-afcff545', 'ANVIL_CCDG_Broad_NP_Epilepsy_BELATW_GRU_WES_20221108_ANV5_202410011533'),
+    mksrc('bigquery', 'datarepo-2df70f51', 'ANVIL_CCDG_Broad_NP_Epilepsy_BELULB_DS_EP_NPU_WES_20221027_ANV5_202409262125'), # noqa E501
+    mksrc('bigquery', 'datarepo-ab5c8456', 'ANVIL_CCDG_Broad_NP_Epilepsy_BRAUSP_DS_WES_20240201_ANV5_202410011544'),
+    mksrc('bigquery', 'datarepo-a1b27d24', 'ANVIL_CCDG_Broad_NP_Epilepsy_CANCAL_GRU_v2_WES_20240201_ANV5_202410011554'),
+    mksrc('bigquery', 'datarepo-3f080a87', 'ANVIL_CCDG_Broad_NP_Epilepsy_CANUTN_DS_EP_WES_20230328_ANV5_202409262134'),
+    mksrc('bigquery', 'datarepo-465bfaac', 'ANVIL_CCDG_Broad_NP_Epilepsy_CHEUBB_HMB_IRB_MDS_WES_20221102_ANV5_202409262144'), # noqa E501
+    mksrc('bigquery', 'datarepo-ccb8a4b7', 'ANVIL_CCDG_Broad_NP_Epilepsy_CYPCYP_HMB_NPU_MDS_WES_20230328_ANV5_202409301706'), # noqa E501
+    mksrc('bigquery', 'datarepo-015bb538', 'ANVIL_CCDG_Broad_NP_Epilepsy_CZEMTH_GRU_WES_20221108_ANV5_202409262231'),
+    mksrc('bigquery', 'datarepo-435613ab', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUPUM_HMB_MDS_WES_20230328_ANV5_202409262240'), # noqa E501
+    mksrc('bigquery', 'datarepo-2f73c7c1', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUUGS_DS_EP_MDS_WES_20240201_ANV5_202409262249'), # noqa E501
+    mksrc('bigquery', 'datarepo-3841aefa', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUUKB_HMB_NPU_MDS_WES_20230328_ANV5_202409262258'), # noqa E501
+    mksrc('bigquery', 'datarepo-99470817', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUUKL_HMB_WES_20221102_ANV5_202409262308'),
+    mksrc('bigquery', 'datarepo-46e142ab', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUULG_GRU_WES_20221108_ANV5_202409262318'),
+    mksrc('bigquery', 'datarepo-2648f51f', 'ANVIL_CCDG_Broad_NP_Epilepsy_DEUUTB_HMB_NPU_MDS_WES_20230328_ANV5_202409262327'), # noqa E501
+    mksrc('bigquery', 'datarepo-b749c687', 'ANVIL_CCDG_Broad_NP_Epilepsy_FINKPH_EPIL_CO_MORBIDI_MDS_WES_20230328_ANV5_202409262337'), # noqa E501
+    mksrc('bigquery', 'datarepo-5d23c09d', 'ANVIL_CCDG_Broad_NP_Epilepsy_FINUVH_HMB_NPU_MDS_WES_20221114_ANV5_202409262346'), # noqa E501
+    mksrc('bigquery', 'datarepo-548a0b21', 'ANVIL_CCDG_Broad_NP_Epilepsy_FRALYU_HMB_WES_20230621_ANV5_202409262355'),
+    mksrc('bigquery', 'datarepo-7a345902', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRSWU_CARDI_NEURO_WES_20221026_ANV5_202409270005'), # noqa E501
+    mksrc('bigquery', 'datarepo-9f144aec', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUCL_DS_EARET_MDS_WES_20221026_ANV5_202409251801'), # noqa E501
+    mksrc('bigquery', 'datarepo-813188f4', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUNL_EP_ETIOLOGY_MDS_WES_20221027_ANV5_202409301252'), # noqa E501
+    mksrc('bigquery', 'datarepo-dca2300f', 'ANVIL_CCDG_Broad_NP_Epilepsy_GBRUNL_GRU_WES_20221108_ANV5_202409301302'),
+    mksrc('bigquery', 'datarepo-6f0e0649', 'ANVIL_CCDG_Broad_NP_Epilepsy_GHAKNT_GRU_WES_20221122_ANV5_202409301311'),
+    mksrc('bigquery', 'datarepo-6d3907bb', 'ANVIL_CCDG_Broad_NP_Epilepsy_HKGHKK_HMB_MDS_WES_20230328_ANV5_202409301321'), # noqa E501
+    mksrc('bigquery', 'datarepo-636e501f', 'ANVIL_CCDG_Broad_NP_Epilepsy_HKOSB_GRU_WES_20230110_ANV5_202409231955'),
+    mksrc('bigquery', 'datarepo-5271045a', 'ANVIL_CCDG_Broad_NP_Epilepsy_HRVUZG_HMB_MDS_WES_20221114_ANV5_202409301332'), # noqa E501
+    mksrc('bigquery', 'datarepo-941ca2d1', 'ANVIL_CCDG_Broad_NP_Epilepsy_IRLRCI_GRU_IRB_WES_20230328_ANV5_202409301342'), # noqa E501
+    mksrc('bigquery', 'datarepo-d6a4eda2', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAICB_HMB_NPU_MDS_WES_20230223_ANV5_202409301352'), # noqa E501
+    mksrc('bigquery', 'datarepo-174f3d1e', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAIGI_GRU_WES_20221108_ANV5_202409301402'),
+    mksrc('bigquery', 'datarepo-6cb9a7a7', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAUBG_DS_EPI_NPU_MDS_WES_20221027_ANV5_202409301413'), # noqa E501
+    mksrc('bigquery', 'datarepo-87e7f1b9', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAUMC_DS_NEURO_MDS_WES_20221108_ANV5_202409301423'), # noqa E501
+    mksrc('bigquery', 'datarepo-cbfb79d8', 'ANVIL_CCDG_Broad_NP_Epilepsy_ITAUMR_GRU_NPU_WES_20221114_ANV5_202409301433'), # noqa E501
+    mksrc('bigquery', 'datarepo-9bbfe25c', 'ANVIL_CCDG_Broad_NP_Epilepsy_JPNFKA_GRU_WES_20221220_ANV5_202409301444'),
+    mksrc('bigquery', 'datarepo-d4950205', 'ANVIL_CCDG_Broad_NP_Epilepsy_JPNRKI_DS_NPD_IRB_NPU_WES_20221027_ANV5_202410011604'), # noqa E501
+    mksrc('bigquery', 'datarepo-12cc5629', 'ANVIL_CCDG_Broad_NP_Epilepsy_KENKIL_GRU_WES_20230110_ANV5_202409301453'),
+    mksrc('bigquery', 'datarepo-b119a402', 'ANVIL_CCDG_Broad_NP_Epilepsy_LEBABM_DS_Epilepsy_WES_20230328_ANV5_202409301503'), # noqa E501
+    mksrc('bigquery', 'datarepo-7354f3d2', 'ANVIL_CCDG_Broad_NP_Epilepsy_LEBABM_GRU_WES_20230110_ANV5_202409301514'),
+    mksrc('bigquery', 'datarepo-00271874', 'ANVIL_CCDG_Broad_NP_Epilepsy_LTUUHK_HMB_NPU_MDS_WES_20221114_ANV5_202409301526'), # noqa E501
+    mksrc('bigquery', 'datarepo-d0749ece', 'ANVIL_CCDG_Broad_NP_Epilepsy_NZLUTO_EPIL_BC_ID_MDS_WES_20230328_ANV5_202409301537'), # noqa E501
+    mksrc('bigquery', 'datarepo-52be6def', 'ANVIL_CCDG_Broad_NP_Epilepsy_TURBZU_GRU_WES_20221108_ANV5_202409301547'),
+    mksrc('bigquery', 'datarepo-8629a23a', 'ANVIL_CCDG_Broad_NP_Epilepsy_TURIBU_DS_NEURO_AD_NPU_WES_20221027_ANV5_202409301557'), # noqa E501
+    mksrc('bigquery', 'datarepo-c6b049b2', 'ANVIL_CCDG_Broad_NP_Epilepsy_TWNCGM_HMB_NPU_AdultsONLY_WES_20240201_ANV5_202410011615'), # noqa E501
+    mksrc('bigquery', 'datarepo-1b2e88a4', 'ANVIL_CCDG_Broad_NP_Epilepsy_USABCH_EPI_MUL_CON_MDS_WES_20221027_ANV5_202409301607'), # noqa E501
+    mksrc('bigquery', 'datarepo-798646a1', 'ANVIL_CCDG_Broad_NP_Epilepsy_USABLC_GRU_NPU_WES_20221215_ANV5_202410011625'), # noqa E501
+    mksrc('bigquery', 'datarepo-83ec96c3', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACCF_HMB_MDS_WES_20221207_ANV5_202409301617'), # noqa E501
+    mksrc('bigquery', 'datarepo-1e1218b7', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACCH_DS_NEURO_MDS_WES_20221116_ANV5_202409301627'), # noqa E501
+    mksrc('bigquery', 'datarepo-e421074a', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACHP_GRU_WES_20230612_ANV5_202410011634'),
+    mksrc('bigquery', 'datarepo-a7b2b8bc', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACRW_DS_EP_MDS_WES_20221027_ANV5_202409232006'), # noqa E501
+    mksrc('bigquery', 'datarepo-9dc6e713', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACRW_DS_SEIZD_WES_20221027_ANV5_202409232016'), # noqa E501
+    mksrc('bigquery', 'datarepo-69531ad0', 'ANVIL_CCDG_Broad_NP_Epilepsy_USACRW_EPI_ASZ_MED_MDS_WES_20221027_ANV5_202409232025'), # noqa E501
+    mksrc('bigquery', 'datarepo-a1fbb513', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAEGP_GRU_WES_20221110_ANV5_202409301638'),
+    mksrc('bigquery', 'datarepo-797b067f', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAFEB_GRU_WES_20221205_ANV5_202409301648'),
+    mksrc('bigquery', 'datarepo-acd1fc6d', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAHEP_GRU_WES_20230328_ANV5_202409301657'),
+    mksrc('bigquery', 'datarepo-e44dfa03', 'ANVIL_CCDG_Broad_NP_Epilepsy_USALCH_HMB_WES_20230126_ANV5_202410011646'),
+    mksrc('bigquery', 'datarepo-5521223c', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAMGH_HMB_MDS_WES_20221207_ANV5_202409302000'), # noqa E501
+    mksrc('bigquery', 'datarepo-c5ca49db', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAMGH_MGBB_HMB_MDS_WES_20221207_ANV5_202409302009'), # noqa E501
+    mksrc('bigquery', 'datarepo-8a9bc88a', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAMON_GRU_NPU_WES_20221215_ANV5_202409302018'), # noqa E501
+    mksrc('bigquery', 'datarepo-302dbf9e', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAMON_GRU_WES_20240201_ANV5_202409302028'),
+    mksrc('bigquery', 'datarepo-2d22bf8b', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAMON_HMB_WES_20230131_ANV5_202410011657'),
+    mksrc('bigquery', 'datarepo-23486b33', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAMSS_DS_EP_NEURO_MDS_WES_20230612_ANV5_202410011708'), # noqa E501
+    mksrc('bigquery', 'datarepo-76142d3b', 'ANVIL_CCDG_Broad_NP_Epilepsy_USANCH_DS_NEURO_MDS_WES_20221108_ANV5_202410011719'), # noqa E501
+    mksrc('bigquery', 'datarepo-3e1c2a3e', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAUPN_Marsh_GRU_NPU_WES_20221114_ANV5_202409302037'), # noqa E501
+    mksrc('bigquery', 'datarepo-fd6ee483', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAUPN_Marsh_GRU_WES_20230328_ANV5_202409302046'), # noqa E501
+    mksrc('bigquery', 'datarepo-416b4095', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAUPN_Rader_GRU_WES_20230328_ANV5_202409302055'), # noqa E501
+    mksrc('bigquery', 'datarepo-a8099f9d', 'ANVIL_CCDG_Broad_NP_Epilepsy_USAVAN_HMB_GSO_WES_20221207_ANV5_202410011732'), # noqa E501
+    mksrc('bigquery', 'datarepo-7529b6b1', 'ANVIL_CCDG_Broad_Spalletta_HMB_NPU_MDS_WES_20221102_ANV5_202409232034'),
+    mksrc('bigquery', 'datarepo-27e59539', 'ANVIL_CCDG_NYGC_NP_Autism_ACE2_DS_MDS_WGS_20230605_ANV5_202409302125'),
+    mksrc('bigquery', 'datarepo-37c78fc4', 'ANVIL_CCDG_NYGC_NP_Autism_ACE2_GRU_MDS_WGS_20230605_ANV5_202409232043'),
+    mksrc('bigquery', 'datarepo-e3ebc7f0', 'ANVIL_CCDG_NYGC_NP_Autism_AGRE_WGS_20230605_ANV5_202410011742'),
+    mksrc('bigquery', 'datarepo-1c1b8f44', 'ANVIL_CCDG_NYGC_NP_Autism_CAG_DS_WGS_20230605_ANV5_202409232053'),
+    mksrc('bigquery', 'datarepo-f32ef49b', 'ANVIL_CCDG_NYGC_NP_Autism_HFA_DS_WGS_20230605_ANV5_202409232102'),
+    mksrc('bigquery', 'datarepo-82575f4a', 'ANVIL_CCDG_NYGC_NP_Autism_PELPHREY_ACE_DS_WGS_20221103_ANV5_202409232112'),
+    mksrc('bigquery', 'datarepo-25858a7b', 'ANVIL_CCDG_NYGC_NP_Autism_PELPHREY_ACE_GRU_WGS_20221103_ANV5_202409241351'),
+    mksrc('bigquery', 'datarepo-8302ff1f', 'ANVIL_CCDG_NYGC_NP_Autism_SAGE_WGS_20230605_ANV5_202409302144'),
+    mksrc('bigquery', 'datarepo-443d8d20', 'ANVIL_CCDG_NYGC_NP_Autism_SSC_WGS_20230605_ANV5_202409302154'),
+    mksrc('bigquery', 'datarepo-660280f8', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_DS_WGS_20230525_ANV5_202409302255'),
+    mksrc('bigquery', 'datarepo-d36f3ea3', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_GRU_IRB_WGS_20230525_ANV5_202409302305'), # noqa E501
+    mksrc('bigquery', 'datarepo-c2a2b724', 'ANVIL_CMG_YALE_DS_MC_20221026_ANV5_202409302315'),
+    mksrc('bigquery', 'datarepo-f961f617', 'ANVIL_CMG_YALE_DS_RARED_20221020_ANV5_202409251714'),
+    mksrc('bigquery', 'datarepo-5d222190', 'ANVIL_CMG_Yale_DS_BPEAKD_20240113_ANV5_202410011754'),
+    mksrc('bigquery', 'datarepo-fe056168', 'ANVIL_CMG_Yale_DS_RD_20240113_ANV5_202410011804'),
+    mksrc('bigquery', 'datarepo-06182245', 'ANVIL_CMG_Yale_DS_THAL_IRB_20240113_ANV5_202410011814'),
+    mksrc('bigquery', 'datarepo-35779fe0', 'ANVIL_CMG_Yale_HMB_20221020_ANV5_202410011825'),
+    mksrc('bigquery', 'datarepo-cebe6de0', 'ANVIL_CMG_Yale_HMB_GSO_20221020_ANV5_202410011834'),
+    mksrc('bigquery', 'datarepo-5c7f0d2a', 'ANVIL_CMG_Yale_HMB_IRB_20240113_ANV5_202410011846'),
+    mksrc('bigquery', 'datarepo-abdbf318', 'ANVIL_CMH_GAFK_10X_Genomics_20240304_ANV5_202409251809'),
+    mksrc('bigquery', 'datarepo-a3097787', 'ANVIL_CMH_GAFK_ES_20240301_ANV5_202409251815'),
+    mksrc('bigquery', 'datarepo-e4a5f270', 'ANVIL_CMH_GAFK_GS_linked_read_20221107_ANV5_202409251830'),
+    mksrc('bigquery', 'datarepo-0eaa72dc', 'ANVIL_CMH_GAFK_GS_long_read_20240301_ANV5_202409251840'),
+    mksrc('bigquery', 'datarepo-54e0207f', 'ANVIL_CMH_GAFK_IlluminaGSA_20240311_ANV5_202409231642'),
+    mksrc('bigquery', 'datarepo-b69c3ccd', 'ANVIL_CMH_GAFK_IsoSeq_20240113_ANV5_202409251851'),
+    mksrc('bigquery', 'datarepo-aa13412e', 'ANVIL_CMH_GAFK_MGI_20240304_ANV5_202409251952'),
+    mksrc('bigquery', 'datarepo-61c255d4', 'ANVIL_CMH_GAFK_PacBio_methyl_tagged_20240311_ANV5_202409231650'),
+    mksrc('bigquery', 'datarepo-e6bc59ce', 'ANVIL_CMH_GAFK_WGS_20240113_ANV5_202409252004'),
+    mksrc('bigquery', 'datarepo-2b8418a9', 'ANVIL_CSER_CHARM_GRU_20240301_ANV5_202410021502'),
+    mksrc('bigquery', 'datarepo-3c4e3e42', 'ANVIL_CSER_NYCKIDSEQ_GRU_20240113_ANV5_202409252031'),
+    mksrc('bigquery', 'datarepo-bfb01f90', 'ANVIL_CSER_NYCKIDSEQ_HMB_20240113_ANV5_202409252040'),
+    mksrc('bigquery', 'datarepo-9fb7b90a', 'ANVIL_CSER_P3EGS_GRU_20230727_ANV5_202409252049'),
+    mksrc('bigquery', 'datarepo-0e626b88', 'ANVIL_CSER_SouthSeq_GRU_20221208_ANV5_202410021513'),
+    mksrc('bigquery', 'datarepo-c60190e0', 'ANVIL_GREGoR_R01_GRU_20240208_ANV5_202408141711'),
+    mksrc('bigquery', 'datarepo-9a665ca1', 'ANVIL_GREGoR_R01_HMB_20240208_ANV5_202408141715'),
+    mksrc('bigquery', 'datarepo-14f8d940', 'ANVIL_GTEx_BCM_GRU_CoRSIVs_20240116_ANV5_202409252058'),
+    mksrc('bigquery', 'datarepo-44ba7ece', 'ANVIL_GTEx_V8_hg38_20240116_ANV5_202409251632'),
+    mksrc('bigquery', 'datarepo-5fd8c286', 'ANVIL_GTEx_public_data_20240117_ANV5_202409252106'),
+    mksrc('bigquery', 'datarepo-c1e66f15', 'ANVIL_HPRC_20240401_ANV5_202409251654'),
+    mksrc('bigquery', 'datarepo-5dff1da7', 'ANVIL_NIA_CARD_Coriell_Cell_Lines_Open_20230727_ANV5_202410021438'),
+    mksrc('bigquery', 'datarepo-65212bf5', 'ANVIL_NIA_CARD_LR_WGS_NABEC_GRU_20230727_ANV5_202410021449'),
+    mksrc('bigquery', 'datarepo-9ffeaa82', 'ANVIL_NIMH_Broad_ConvNeuro_McCarroll_Nehme_Levy_CIRM_DS_Village_20240405_ANV5_202409201403'), # noqa E501
+    mksrc('bigquery', 'datarepo-7f246585', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_CIRM_GRU_WGS_20240206_ANV5_202409252122'), # noqa E501
+    mksrc('bigquery', 'datarepo-62c7b77b', 'ANVIL_NIMH_Broad_ConvergentNeuro_McCarroll_Eggan_Finkel_SMA_DS_WGS_20230109_ANV5_202409252132'), # noqa E501
+    mksrc('bigquery', 'datarepo-0050666b', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_COGS_DS_WGS_20240113_ANV5_202409252139'),
+    mksrc('bigquery', 'datarepo-591f1c1e', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Escamilla_DS_WGS_20240112_ANV5_202410011855'), # noqa E501
+    mksrc('bigquery', 'datarepo-59c59a28', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Light_DS_WGS_20240625_ANV5_202409252147'),
+    mksrc('bigquery', 'datarepo-754928da', 'ANVIL_NIMH_Broad_WGSPD1_McCarroll_Pato_GRU_WGS_20240112_ANV5_202410011904'),
+    mksrc('bigquery', 'datarepo-cce0dbdc', 'ANVIL_NIMH_Broad_WGSPD_1_McCarroll_Braff_DS_WGS_20240304_ANV5_202409252156'), # noqa E501
+    mksrc('bigquery', 'datarepo-2bf3361f', 'ANVIL_NIMH_CIRM_FCDI_ConvergentNeuro_McCarroll_Eggan_GRU_Arrays_20230109_ANV5_202409252204'), # noqa E501
+    mksrc('bigquery', 'datarepo-95f60999', 'ANVIL_T2T_20230714_ANV5_202409252214'),
+    mksrc('bigquery', 'datarepo-a20ffbf1', 'ANVIL_T2T_CHRY_20240301_ANV5_202409252300'),
+    mksrc('bigquery', 'datarepo-c4be3462', 'ANVIL_ccdg_asc_ndd_daly_talkowski_AGRE_asd_exome_20221102_ANV5_202409241400'), # noqa E501
+    mksrc('bigquery', 'datarepo-842d0cc0', 'ANVIL_ccdg_asc_ndd_daly_talkowski_IBIS_asd_exome_20221024_ANV5_202409241411'), # noqa E501
+    mksrc('bigquery', 'datarepo-40c6c06f', 'ANVIL_ccdg_asc_ndd_daly_talkowski_TASC_asd_exome_20221117_ANV5_202409241420'), # noqa E501
+    mksrc('bigquery', 'datarepo-56136832', 'ANVIL_ccdg_asc_ndd_daly_talkowski_aleksic_asd_exome_20231013_ANV5_202409241432'), # noqa E501
+    mksrc('bigquery', 'datarepo-dd505610', 'ANVIL_ccdg_asc_ndd_daly_talkowski_barbosa_asd_exome_20221108_ANV5_202409241442'), # noqa E501
+    mksrc('bigquery', 'datarepo-b2e1bb0d', 'ANVIL_ccdg_asc_ndd_daly_talkowski_brusco_asd_exome_20230327_ANV5_202409241451'), # noqa E501
+    mksrc('bigquery', 'datarepo-5382a45d', 'ANVIL_ccdg_asc_ndd_daly_talkowski_chung_asd_exome_20221107_ANV5_202409241501'), # noqa E501
+    mksrc('bigquery', 'datarepo-ffb6d106', 'ANVIL_ccdg_asc_ndd_daly_talkowski_control_NIMH_asd_exome_20221201_ANV5_202409241511'), # noqa E501
+    mksrc('bigquery', 'datarepo-0de6bd0f', 'ANVIL_ccdg_asc_ndd_daly_talkowski_gargus_asd_exome_20231013_ANV5_202409241521'), # noqa E501
+    mksrc('bigquery', 'datarepo-eced0cb1', 'ANVIL_ccdg_asc_ndd_daly_talkowski_goethe_asd_exome_20221107_ANV5_202409241530'), # noqa E501
+    mksrc('bigquery', 'datarepo-849f26ad', 'ANVIL_ccdg_asc_ndd_daly_talkowski_gurrieri_asd_exome_20221024_ANV5_202409252359'), # noqa E501
+    mksrc('bigquery', 'datarepo-ef7e53e2', 'ANVIL_ccdg_asc_ndd_daly_talkowski_hertz_picciotto_asd_exome_20221107_ANV5_202409241541'), # noqa E501
+    mksrc('bigquery', 'datarepo-4155fb6c', 'ANVIL_ccdg_asc_ndd_daly_talkowski_hertz_picciotto_asd_wgs_20221107_ANV5_202409241551'), # noqa E501
+    mksrc('bigquery', 'datarepo-7ef162bf', 'ANVIL_ccdg_asc_ndd_daly_talkowski_kolevzon_asd_exome_20221108_ANV5_202409241559'), # noqa E501
+    mksrc('bigquery', 'datarepo-0aba3c39', 'ANVIL_ccdg_asc_ndd_daly_talkowski_kolevzon_asd_wgs_20221109_ANV5_202409241611'), # noqa E501
+    mksrc('bigquery', 'datarepo-49fb2096', 'ANVIL_ccdg_asc_ndd_daly_talkowski_mayo_asd_exome_20221024_ANV5_202409252350'), # noqa E501
+    mksrc('bigquery', 'datarepo-ac3a764d', 'ANVIL_ccdg_asc_ndd_daly_talkowski_mcpartland_asd_exome_20221116_ANV5_202409241620'), # noqa E501
+    mksrc('bigquery', 'datarepo-3829964a', 'ANVIL_ccdg_asc_ndd_daly_talkowski_menashe_asd_exome_20221108_ANV5_202409241630'), # noqa E501
+    mksrc('bigquery', 'datarepo-903678e2', 'ANVIL_ccdg_asc_ndd_daly_talkowski_parellada_asd_exome_20221108_ANV5_202409241638'), # noqa E501
+    mksrc('bigquery', 'datarepo-9d656629', 'ANVIL_ccdg_asc_ndd_daly_talkowski_passos_bueno_asd_exome_20221108_ANV5_202409241649'), # noqa E501
+    mksrc('bigquery', 'datarepo-faa3347c', 'ANVIL_ccdg_asc_ndd_daly_talkowski_pericak_vance_asd_exome__20221025_ANV5_202409241658'), # noqa E501
+    mksrc('bigquery', 'datarepo-2ea97771', 'ANVIL_ccdg_asc_ndd_daly_talkowski_pericak_vance_asd_wgs_20221027_ANV5_202409241814'), # noqa E501
+    mksrc('bigquery', 'datarepo-88aae06e', 'ANVIL_ccdg_asc_ndd_daly_talkowski_persico_asd_exome_20221027_ANV5_202409241823'), # noqa E501
+    mksrc('bigquery', 'datarepo-08215fa6', 'ANVIL_ccdg_asc_ndd_daly_talkowski_renieri_asd_exome_20230327_ANV5_202409241833'), # noqa E501
+    mksrc('bigquery', 'datarepo-6f17c190', 'ANVIL_ccdg_asc_ndd_daly_talkowski_schloesser_asd_exome_20230324_ANV5_202409241842'), # noqa E501
+    mksrc('bigquery', 'datarepo-333a3617', 'ANVIL_ccdg_asc_ndd_daly_talkowski_weiss_asd_exome_20221108_ANV5_202409241851'), # noqa E501
+    mksrc('bigquery', 'datarepo-1e362e1d', 'ANVIL_ccdg_broad_ai_ibd_daly_brant_burnstein_utsw_wes_20240627_ANV5_202409260008'), # noqa E501
+    mksrc('bigquery', 'datarepo-8918d261', 'ANVIL_ccdg_broad_ai_ibd_daly_brant_niddk_gsa_20240103_ANV5_202409260018'),
+    mksrc('bigquery', 'datarepo-f5fdd89a', 'ANVIL_ccdg_broad_ai_ibd_daly_burnstein_gsa_20240103_ANV5_202409261428'),
+    mksrc('bigquery', 'datarepo-91d1ab8e', 'ANVIL_ccdg_broad_ai_ibd_daly_chen_gsa_20240103_ANV5_202409261437'),
+    mksrc('bigquery', 'datarepo-acab4546', 'ANVIL_ccdg_broad_ai_ibd_daly_chen_wes_20240103_ANV5_202409241859'),
+    mksrc('bigquery', 'datarepo-45c2ba3b', 'ANVIL_ccdg_broad_ai_ibd_daly_cho_niddk_gsa_20240103_ANV5_202409261446'),
+    mksrc('bigquery', 'datarepo-185d52bd', 'ANVIL_ccdg_broad_ai_ibd_daly_chung_gider_gsa_20240103_ANV5_202409261456'),
+    mksrc('bigquery', 'datarepo-01e1177c', 'ANVIL_ccdg_broad_ai_ibd_daly_chung_gider_wes_20240103_ANV5_202409241909'),
+    mksrc('bigquery', 'datarepo-94a46beb', 'ANVIL_ccdg_broad_ai_ibd_daly_faubion_share_gsa_20240104_ANV5_202409261505'),
+    mksrc('bigquery', 'datarepo-b2456308', 'ANVIL_ccdg_broad_ai_ibd_daly_faubion_share_wes_20240104_ANV5_202409241919'),
+    mksrc('bigquery', 'datarepo-dde3655d', 'ANVIL_ccdg_broad_ai_ibd_daly_franchimont_gsa_20240104_ANV5_202409261515'),
+    mksrc('bigquery', 'datarepo-73a081bb', 'ANVIL_ccdg_broad_ai_ibd_daly_franchimont_wes_20240104_ANV5_202409241929'),
+    mksrc('bigquery', 'datarepo-f4d731a0', 'ANVIL_ccdg_broad_ai_ibd_daly_hyams_protect_gsa_20240311_ANV5_202409231656'),
+    mksrc('bigquery', 'datarepo-21868172', 'ANVIL_ccdg_broad_ai_ibd_daly_hyams_protect_wes_20240104_ANV5_202409241940'),
+    mksrc('bigquery', 'datarepo-a6a40cd9', 'ANVIL_ccdg_broad_ai_ibd_daly_kastner_fmf_gsa_20240104_ANV5_202409261525'),
+    mksrc('bigquery', 'datarepo-4b41d063', 'ANVIL_ccdg_broad_ai_ibd_daly_kastner_fmf_nhgri_wes_20240104_ANV5_202409261534'), # noqa E501
+    mksrc('bigquery', 'datarepo-59084d62', 'ANVIL_ccdg_broad_ai_ibd_daly_kupcinskas_gsa_20240311_ANV5_202409231708'),
+    mksrc('bigquery', 'datarepo-e56d71fd', 'ANVIL_ccdg_broad_ai_ibd_daly_kupcinskas_wes_20240104_ANV5_202409241949'),
+    mksrc('bigquery', 'datarepo-98f1acc9', 'ANVIL_ccdg_broad_ai_ibd_daly_lewis_sparc_gsa_20240104_ANV5_202409261543'),
+    mksrc('bigquery', 'datarepo-5b2de91f', 'ANVIL_ccdg_broad_ai_ibd_daly_lira_share_wes_20240104_ANV5_202409242001'),
+    mksrc('bigquery', 'datarepo-144a86c1', 'ANVIL_ccdg_broad_ai_ibd_daly_louis_gsa_20240311_ANV5_202409231721'),
+    mksrc('bigquery', 'datarepo-5dd9d83b', 'ANVIL_ccdg_broad_ai_ibd_daly_louis_wes_20240104_ANV5_202409242011'),
+    mksrc('bigquery', 'datarepo-f11a2ad0', 'ANVIL_ccdg_broad_ai_ibd_daly_mccauley_wes_20240104_ANV5_202409242021'),
+    mksrc('bigquery', 'datarepo-2b74b327', 'ANVIL_ccdg_broad_ai_ibd_daly_mcgovern_niddk_wes_20240104_ANV5_202409242032'), # noqa E501
+    mksrc('bigquery', 'datarepo-b36de71b', 'ANVIL_ccdg_broad_ai_ibd_daly_mcgovern_share_wes_20240104_ANV5_202409261554'), # noqa E501
+    mksrc('bigquery', 'datarepo-91cac0e9', 'ANVIL_ccdg_broad_ai_ibd_daly_moayyedi_imagine_gsa_20240105_ANV5_202409261605'), # noqa E501
+    mksrc('bigquery', 'datarepo-1cde4183', 'ANVIL_ccdg_broad_ai_ibd_daly_newberry_share_gsa_20240105_ANV5_202409261616'), # noqa E501
+    mksrc('bigquery', 'datarepo-7a369c1e', 'ANVIL_ccdg_broad_ai_ibd_daly_newberry_share_wes_20240105_ANV5_202409242046'), # noqa E501
+    mksrc('bigquery', 'datarepo-db6e29bb', 'ANVIL_ccdg_broad_ai_ibd_daly_niddk_cho_wes_20240105_ANV5_202409242056'),
+    mksrc('bigquery', 'datarepo-820a5c30', 'ANVIL_ccdg_broad_ai_ibd_daly_pekow_share_gsa_20240105_ANV5_202409261627'),
+    mksrc('bigquery', 'datarepo-69911b0d', 'ANVIL_ccdg_broad_ai_ibd_daly_pekow_share_wes_20240105_ANV5_202409242107'),
+    mksrc('bigquery', 'datarepo-77ec2fe1', 'ANVIL_ccdg_broad_ai_ibd_daly_rioux_bitton_igenomed_wes_20240105_ANV5_202409261636'), # noqa E501
+    mksrc('bigquery', 'datarepo-08a64b4f', 'ANVIL_ccdg_broad_ai_ibd_daly_rioux_genizon_wes_20240311_ANV5_202409231732'),
+    mksrc('bigquery', 'datarepo-13a5c9e0', 'ANVIL_ccdg_broad_ai_ibd_daly_rioux_igenomed_gsa_20240105_ANV5_202409261645'), # noqa E501
+    mksrc('bigquery', 'datarepo-d8202699', 'ANVIL_ccdg_broad_ai_ibd_daly_rioux_niddk_gsa_20240108_ANV5_202409261653'),
+    mksrc('bigquery', 'datarepo-67df5d1d', 'ANVIL_ccdg_broad_ai_ibd_daly_rioux_niddk_wes_20240108_ANV5_202409242116'),
+    mksrc('bigquery', 'datarepo-f0ead8f9', 'ANVIL_ccdg_broad_ai_ibd_daly_sands_msccr_gsa_20240108_ANV5_202409261705'),
+    mksrc('bigquery', 'datarepo-f890c249', 'ANVIL_ccdg_broad_ai_ibd_daly_sands_msccr_wes_20240108_ANV5_202409242127'),
+    mksrc('bigquery', 'datarepo-065c8f18', 'ANVIL_ccdg_broad_ai_ibd_daly_silverberg_niddk_gsa_20240108_ANV5_202409261715'), # noqa E501
+    mksrc('bigquery', 'datarepo-401b1cf7', 'ANVIL_ccdg_broad_ai_ibd_daly_stampfer_nhs_gsa_20240311_ANV5_202409231743'),
+    mksrc('bigquery', 'datarepo-034aecb5', 'ANVIL_ccdg_broad_ai_ibd_daly_stampfer_wes_20240108_ANV5_202409251505'),
+    mksrc('bigquery', 'datarepo-f3933ea2', 'ANVIL_ccdg_broad_ai_ibd_daly_vermeire_gsa_20240113_ANV5_202409261726'),
+    mksrc('bigquery', 'datarepo-dbda69e3', 'ANVIL_ccdg_broad_ai_ibd_daly_vermeire_wes_20240108_ANV5_202409251516'),
+    mksrc('bigquery', 'datarepo-d1d3e261', 'ANVIL_ccdg_broad_ai_ibd_daly_xavier_prism_gsa_20240108_ANV5_202409261740'),
+    mksrc('bigquery', 'datarepo-1918c027', 'ANVIL_ccdg_broad_ai_ibd_daly_xavier_prism_wes_20240108_ANV5_202409251531'),
+    mksrc('bigquery', 'datarepo-900597b7', 'ANVIL_ccdg_broad_ai_ibd_daly_xavier_share_gsa_20240108_ANV5_202409261751'),
+    mksrc('bigquery', 'datarepo-e9e9f233', 'ANVIL_ccdg_broad_ai_ibd_daly_xavier_share_wes_20240108_ANV5_202409251548'),
+    mksrc('bigquery', 'datarepo-851fd8f7', 'ANVIL_ccdg_broad_ai_ibd_niddk_daly_duerr_wes_20240112_ANV5_202409251558'),
+    mksrc('bigquery', 'datarepo-13a30243', 'ANVIL_ccdg_broad_ai_ibd_niddk_daly_silverberg_wes_20240112_ANV5_202409251610'), # noqa E501
+    mksrc('bigquery', 'datarepo-eceddedc', 'ANVIL_ccdg_broad_daly_igsr_1kg_twist_wes_20240625_ANV5_202409231828'),
+    mksrc('bigquery', 'datarepo-96417715', 'ANVIL_ccdg_broad_mi_univutah_ds_cvd_wes_20221026_ANV5_202409231943'),
+    mksrc('bigquery', 'datarepo-ff012258', 'ANVIL_ccdg_broad_np_epilepsy_usavancontrols_hmb_gso_wes_20221101_ANV5_202409302105'), # noqa E501
+    mksrc('bigquery', 'datarepo-61b6b42b', 'ANVIL_ccdg_broad_np_epilepsy_zafagn_ds_epi_como_mds_wes_20221026_ANV5_202409302116'), # noqa E501
+    mksrc('bigquery', 'datarepo-c27e3cda', 'ANVIL_ccdg_nygc_np_autism_hmca_wgs_20221024_ANV5_202409302135'),
+    mksrc('bigquery', 'datarepo-f4073027', 'ANVIL_ccdg_nygc_np_autism_tasc_wgs_20221024_ANV5_202409302207'),
+    mksrc('bigquery', 'datarepo-6f9855f6', 'ANVIL_ccdg_washu_ai_t1d_t1dgc_wgs_20221031_ANV5_202409302216'),
+    mksrc('bigquery', 'datarepo-95a5e448', 'ANVIL_ccdg_washu_cvd_eocad_cleveland_wgs_20221024_ANV5_202409302226'),
+    mksrc('bigquery', 'datarepo-9faffbb3', 'ANVIL_ccdg_washu_cvd_eocad_emerge_wgs_20221024_ANV5_202409302235'),
+    mksrc('bigquery', 'datarepo-5d6d4dc4', 'ANVIL_ccdg_washu_cvd_eocad_emory_wgs_20221024_ANV5_202409302245'),
+    mksrc('bigquery', 'datarepo-db95c1cc', 'ANVIL_nhgri_broad_ibd_daly_winter_wes_20240112_ANV5_202409251622'),
+    # @formatter:on
+]))
+
 
 def env() -> Mapping[str, Optional[str]]:
     """
@@ -760,6 +991,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('anvil', 'anvil7', anvil7_sources),
+                ('anvil', 'anvil8', anvil8_sources),
             ]
             for suffix, internal in [
                 ('', False),
