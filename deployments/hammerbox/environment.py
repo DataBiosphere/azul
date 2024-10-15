@@ -218,7 +218,7 @@ anvil3_sources = mkdict(anvil2_sources, 151, mkdelta([
     mksrc('bigquery', 'datarepo-55b75002', 'ANVIL_PAGE_SoL_HMB_WGS_20221220_ANV5_202310061302'),
     mksrc('bigquery', 'datarepo-02ad84ea', 'ANVIL_T2T_20230714_ANV5_202310101616'),
     mksrc('bigquery', 'datarepo-08cd15a2', 'ANVIL_ccdg_washu_ai_t1d_t1dgc_wgs_20221031_ANV5_202304211552'),
-    mksrc('bigquery', 'datarepo-e3065356', 'ANVIL_ccdg_washu_cvd_eocad_biome_wgs_20221024_ANV5_202304211601'), # noqa E501
+    mksrc('bigquery', 'datarepo-e3065356', 'ANVIL_ccdg_washu_cvd_eocad_biome_wgs_20221024_ANV5_202304211601'),
     # @formatter:on
 ]))
 
@@ -252,7 +252,7 @@ anvil4_sources = mkdict(anvil3_sources, 200, mkdelta([
     mksrc('bigquery', 'datarepo-58dffe5a', 'ANVIL_CCDG_Broad_CVD_AF_GAPP_DS_MDS_Arrays_20221103_ANV5_202304242105'),
     mksrc('bigquery', 'datarepo-cf7f2c0c', 'ANVIL_CCDG_Broad_CVD_AF_GAPP_DS_MDS_WES_20221103_ANV5_202304242107'),
     mksrc('bigquery', 'datarepo-f896734e', 'ANVIL_CCDG_Broad_CVD_AF_Marcus_UCSF_Arrays_20221102_ANV5_202304242039'),
-    mksrc('bigquery', 'datarepo-40c2f4f4', 'ANVIL_CCDG_Broad_CVD_AF_Marcus_UCSF_WES_20221222_ANV5_202304242040'), # noqa E501
+    mksrc('bigquery', 'datarepo-40c2f4f4', 'ANVIL_CCDG_Broad_CVD_AF_Marcus_UCSF_WES_20221222_ANV5_202304242040'),
     mksrc('bigquery', 'datarepo-67117555', 'ANVIL_CCDG_Broad_CVD_AF_Rienstra_WES_20221222_ANV5_202304242035'),
     mksrc('bigquery', 'datarepo-c45dd622', 'ANVIL_CCDG_Broad_CVD_AF_Swiss_Cases_DS_MDS_Arrays_20221103_ANV5_202304242110'), # noqa E501
     mksrc('bigquery', 'datarepo-b12d2e52', 'ANVIL_CCDG_Broad_CVD_AF_Swiss_Cases_DS_MDS_WES_20230118_ANV5_202304242112'),
@@ -482,7 +482,7 @@ anvil6_sources = mkdict(anvil5_sources, 250, mkdelta([
     mksrc('bigquery', 'datarepo-f7fb0742', 'ANVIL_CCDG_Broad_NP_Epilepsy_JPNRKI_DS_NPD_IRB_NPU_WES_20221027_ANV5_202402062057'), # noqa E501
     mksrc('bigquery', 'datarepo-b979e83a', 'ANVIL_CCDG_Broad_NP_Epilepsy_KENKIL_GRU_WES_20230110_ANV5_202403031555'),
     mksrc('bigquery', 'datarepo-54571a90', 'ANVIL_CCDG_Broad_NP_Epilepsy_LEBABM_DS_Epilepsy_WES_20230328_ANV5_202403031603'), # noqa E501
-    mksrc('bigquery', 'datarepo-5495da63', 'ANVIL_CCDG_Broad_NP_Epilepsy_LEBABM_GRU_WES_20230110_ANV5_202403031612'), # noqa E501
+    mksrc('bigquery', 'datarepo-5495da63', 'ANVIL_CCDG_Broad_NP_Epilepsy_LEBABM_GRU_WES_20230110_ANV5_202403031612'),
     mksrc('bigquery', 'datarepo-7275a9bd', 'ANVIL_CCDG_Broad_NP_Epilepsy_LTUUHK_HMB_NPU_MDS_WES_20221114_ANV5_202403031621'), # noqa E501
     mksrc('bigquery', 'datarepo-2c2a7d19', 'ANVIL_CCDG_Broad_NP_Epilepsy_NZLUTO_EPIL_BC_ID_MDS_WES_20230328_ANV5_202403031629'), # noqa E501
     mksrc('bigquery', 'datarepo-edbd02ca', 'ANVIL_CCDG_Broad_NP_Epilepsy_TURBZU_GRU_WES_20221108_ANV5_202403031637'),
