@@ -26,6 +26,10 @@ from azul.docker import (
 )
 from azul.strings import (
     departition,
+    double_quote as dq,
+    join_lines as jl,
+    join_words as jw,
+    single_quote as sq,
 )
 from azul.terraform import (
     chalice,
@@ -270,22 +274,6 @@ aws_managed_buckets_for_ssm_agent = [
 
 def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
     return sorted(set(chain(*sets)))
-
-
-def jw(*words):
-    return ' '.join(words)
-
-
-def jl(*lines):
-    return '\n'.join(lines)
-
-
-def qq(*words):
-    return '"' + jw(*words) + '"'
-
-
-def sq(*words):
-    return "'" + jw(*words) + "'"
 
 
 emit_tf({} if config.terraform_component != 'gitlab' else {
@@ -1882,7 +1870,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     str(clamav_image),
                                     '/bin/sh',
                                     '-c',
-                                    qq(
+                                    dq(
                                         'freshclam',
                                         '&& echo freshclam succeeded',
                                         '|| (echo freshclam failed; false)',

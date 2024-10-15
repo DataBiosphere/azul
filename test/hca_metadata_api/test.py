@@ -437,7 +437,7 @@ class TestAccessorApi(AzulUnitTestCase):
         self.assertIn(DonorOrganism, root_entity_types)
         self.assertTrue({DonorOrganism, SupplementaryFile}.issuperset(root_entity_types))
         root_entity = next(iter(root_entities))
-        self.assertRegex(root_entity.address, 'donor_organism@.*')
+        self.assertEqual(root_entity.ref.entity_type, 'donor_organism')
         self.assertIsInstance(root_entity, DonorOrganism)
         self.assertEqual(root_entity.organism_age_in_seconds, age_range)
         self.assertTrue(root_entity.sex in ('female', 'male', 'unknown'))

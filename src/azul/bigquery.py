@@ -10,8 +10,8 @@ from typing import (
     Union,
 )
 
-from azul import (
-    require,
+from azul.strings import (
+    back_quote as bq,
 )
 
 BigQueryValue = Union[int, float, bool, str, bytes, datetime, None]
@@ -42,10 +42,9 @@ def backtick(table_name: str) -> str:
     >>> backtick('foo-2.bar`s.my_table')
     Traceback (most recent call last):
     ...
-    azul.RequirementError: foo-2.bar`s.my_table
+    azul.RequirementError: ('`', 'must not occur in', 'foo-2.bar`s.my_table')
     """
     if table_name_re.fullmatch(table_name):
         return table_name
     else:
-        require('`' not in table_name, table_name)
-        return f'`{table_name}`'
+        return bq(table_name)
