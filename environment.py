@@ -308,7 +308,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.4.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.4.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
