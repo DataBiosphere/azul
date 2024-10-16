@@ -6,11 +6,11 @@ from logging import (
 
 import requests
 
-from app_test_case import (
-    LocalAppTestCase,
-)
 from azul.chalice import (
     log,
+)
+from azul.json import (
+    json_head,
 )
 from azul.logging import (
     configure_test_logging,
@@ -21,6 +21,9 @@ from azul.strings import (
 from indexer import (
     DCP1CannedBundleTestCase,
 )
+from service import (
+    WebServiceTestCase,
+)
 
 
 # noinspection PyPep8Naming
@@ -28,7 +31,17 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
+class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -38,10 +51,10 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
         for level in INFO, DEBUG:
             for authenticated in False, True:
                 with self.subTest(level=level, authenticated=authenticated):
-                    url = self.base_url.set(path='/health/basic')
+                    url = self.base_url.set(path='/index/projects')
                     headers = {'authorization': 'Bearer foo_token'} if authenticated else {}
                     with self.assertLogs(logger=log, level=level) as logs:
-                        requests.get(str(url), headers=headers)
+                        response = requests.get(str(url), headers=headers)
                     logs = [(r.levelno, r.getMessage()) for r in logs.records]
                     headers = {
                         'host': url.netloc,
@@ -54,8 +67,9 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                     self.assertEqual(logs, [
                         (
                             INFO,
-                            f"Received GET request for '/health/basic', "
-                            f"with {json.dumps({'query': None, 'headers': headers})}."),
+                            f"Received GET request for '/index/projects', "
+                            f"with {json.dumps({'query': None, 'headers': headers})}."
+                        ),
                         (
                             INFO,
                             "Authenticated request as OAuth2(access_token='foo_token')"
@@ -77,6 +91,6 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                             '"X-XSS-Protection": "1; mode=block", '
                             '"Cache-Control": "no-store"}. '
                             'See next line for the first 1024 characters of the body.\n'
-                            '{"up": true}'
+                            + json_head(1024, response.json()),
                         )
                     ])
