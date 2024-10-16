@@ -131,6 +131,8 @@ class SpecialFields:
     source_id: FieldName
     source_spec: FieldName
     bundle_uuid: FieldName
+    # FIXME: Generalize qualifiers in bundle FQIDs
+    #        https://github.com/DataBiosphere/azul/issues/6637
     bundle_version: FieldName
 
 
