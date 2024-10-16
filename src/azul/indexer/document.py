@@ -540,9 +540,9 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
     def document_id(self) -> str:
         return '_'.join((
             self.entity.entity_id,
+            'deleted' if self.deleted else 'exists',
             self.bundle.uuid,
             self.bundle.version,
-            'deleted' if self.deleted else 'exists'
         ))
 
     @classmethod
@@ -552,7 +552,7 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
                     ) -> 'ContributionCoordinates[CataloguedEntityReference]':
         entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.contribution
-        entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
+        entity_id, deleted, bundle_uuid, bundle_version = document_id.split('_')
         if deleted == 'deleted':
             deleted = True
         elif deleted == 'exists':
