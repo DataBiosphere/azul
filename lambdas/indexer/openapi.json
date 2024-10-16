@@ -3,7 +3,7 @@
     "info": {
         "title": "azul_indexer",
         "description": "\nThis is the internal API for Azul's indexer component.\n",
-        "version": "1.0"
+        "version": "1.1"
     },
     "paths": {
         "/openapi": {

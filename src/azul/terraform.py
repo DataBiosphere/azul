@@ -815,8 +815,8 @@ class Chalice:
         key = 'x-amazon-apigateway-minimum-compression-size'
         openapi_spec[key] = config.minimum_compression_size
         assert 'aws_api_gateway_gateway_response' not in resources, resources
-        openapi_spec['x-amazon-apigateway-gateway-responses'] = {
-            **{
+        openapi_spec['x-amazon-apigateway-gateway-responses'] = (
+            {
                 f'DEFAULT_{response_type}': {
                     'responseParameters': {
                         # Static value response header parameters must be enclosed
@@ -833,8 +833,7 @@ class Chalice:
                         for k, v in AzulChaliceApp.security_headers.items()
                     }
                 } for response_type in ['4XX', '5XX']
-            },
-            **{
+            } | {
                 response_type: {
                     'responseParameters': {
                         **{
@@ -852,7 +851,7 @@ class Chalice:
                     }
                 } for response_type in ['INTEGRATION_TIMEOUT', 'INTEGRATION_FAILURE']
             }
-        }
+        )
         locals[app_name] = json.dumps(openapi_spec)
 
         return {
