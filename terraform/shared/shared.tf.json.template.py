@@ -250,12 +250,7 @@ tf_config = {
                                 'Service': 'config.amazonaws.com'
                             },
                             'Action': ['s3:GetBucketAcl', 's3:ListBucket'],
-                            'Resource': '${aws_s3_bucket.aws_config.arn}',
-                            'Condition': {
-                                'StringEquals': {
-                                    'AWS:SourceAccount': config.aws_account_id
-                                }
-                            }
+                            'Resource': '${aws_s3_bucket.aws_config.arn}'
                         },
                         {
                             'Effect': 'Allow',
@@ -267,8 +262,7 @@ tf_config = {
                                         f'/*/AWSLogs/{config.aws_account_id}/Config/*',
                             'Condition': {
                                 'StringEquals': {
-                                    's3:x-amz-acl': 'bucket-owner-full-control',
-                                    'AWS:SourceAccount': config.aws_account_id
+                                    's3:x-amz-acl': 'bucket-owner-full-control'
                                 }
                             }
                         }
@@ -860,9 +854,6 @@ tf_config = {
             'shared': {
                 'name': config.qualified_resource_name(config.aws_config_term),
                 's3_bucket_name': '${aws_s3_bucket.aws_config.bucket}',
-                'snapshot_delivery_properties': {
-                    'delivery_frequency': 'TwentyFour_Hours'
-                },
                 'depends_on': [
                     'aws_config_configuration_recorder.shared'
                 ]
