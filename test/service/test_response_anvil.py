@@ -1954,7 +1954,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 ],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
                                 'is_supplementary': False,
-                                'version': '2022-06-01T00:00:00.000000Z',
+                                'version': self.version,
                                 'uuid': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                                 'size': 213021639,
                                 'name': '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
@@ -1965,7 +1965,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                            f'1e269f04-4347-4188-b060-1dcc69e71d67',
                                 'url': str(self.base_url.set(
                                     path='/repository/files/15b76f9c-6b46-433f-851d-34e89f1b9ba6',
-                                    args=dict(catalog='test', version='2022-06-01T00:00:00.000000Z')
+                                    args=dict(catalog='test', version=self.version)
                                 ))
                             }
                         ]
@@ -2083,7 +2083,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 ],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.bam',
                                 'is_supplementary': False,
-                                'version': '2022-06-01T00:00:00.000000Z',
+                                'version': self.version,
                                 'uuid': '3b17377b-16b1-431c-9967-e5d01fc5923f',
                                 'size': 3306845592,
                                 'name': '307500.merged.matefixed.sorted.markeddups.recal.bam',
@@ -2094,7 +2094,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                            f'8b722e88-8103-49c1-b351-e64fa7c6ab37',
                                 'url': str(self.base_url.set(
                                     path='/repository/files/3b17377b-16b1-431c-9967-e5d01fc5923f',
-                                    args=dict(catalog='test', version='2022-06-01T00:00:00.000000Z')
+                                    args=dict(catalog='test', version=self.version)
                                 ))
                             }
                         ]
