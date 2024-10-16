@@ -259,7 +259,8 @@ def env() -> Mapping[str, Optional[str]]:
         # because it is referenced in the early stages of the GitLab build.
         #
         # Modifying this variable requires running `make environment.boot` and
-        # committing the resulting changes.
+        # `make -C terraform check_schema`, and committing the resulting
+        # changes.
         #
         'azul_terraform_version': '1.9.8',
 
