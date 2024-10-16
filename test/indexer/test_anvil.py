@@ -104,14 +104,11 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     def bundle_fqid(cls,
                     *,
                     uuid,
-                    version=None,
-                    table_name=BundleType.primary
+                    version=BundleType.primary.value,
                     ) -> TDRAnvilBundleFQID:
-        assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
-                                  version=cls.version,
-                                  table_name=table_name)
+                                  version=version)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -120,12 +117,12 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                               table_name=BundleType.supplementary)
+                               version=BundleType.supplementary.value)
 
     @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                               table_name=BundleType.duos)
+                               version=BundleType.duos.value)
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase,

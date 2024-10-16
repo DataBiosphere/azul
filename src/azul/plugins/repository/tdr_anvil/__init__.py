@@ -10,6 +10,7 @@ from typing import (
     AbstractSet,
     Callable,
     Iterable,
+    cast,
 )
 
 import attrs
@@ -116,16 +117,14 @@ class BundleType(Enum):
 
 
 class TDRAnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
-    table_name: str
+    pass
 
 
 @attrs.frozen(kw_only=True)
 class TDRAnvilBundleFQID(TDRBundleFQID):
-    table_name: BundleType = attrs.field(converter=BundleType)
 
     def to_json(self) -> TDRAnvilBundleFQIDJSON:
-        return dict(super().to_json(),
-                    table_name=self.table_name.value)
+        return cast(TDRAnvilBundleFQIDJSON, super().to_json())
 
 
 class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
@@ -228,13 +227,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             bundles.append(TDRAnvilBundleFQID(
                 source=source,
                 uuid=bundle_uuid,
-                version=self._version,
-                table_name=BundleType(row['table_name'])
+                version=row['table_name']
             ))
         return bundles
 
     def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
-        if 'table_name' not in fqid:
+        if fqid['version'] is None:
             # Resolution of bundles without the table name is expensive, so we
             # only support it during canning.
             assert not config.is_in_lambda, ('Bundle FQID lacks table name', fqid)
@@ -254,18 +252,18 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         return super().resolve_bundle(fqid)
 
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
-        if bundle_fqid.table_name is BundleType.primary:
+        if bundle_fqid.version == BundleType.primary.value:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
             return self._primary_bundle(bundle_fqid)
-        elif bundle_fqid.table_name is BundleType.supplementary:
+        elif bundle_fqid.version == BundleType.supplementary.value:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
             return self._supplementary_bundle(bundle_fqid)
-        elif bundle_fqid.table_name is BundleType.duos:
+        elif bundle_fqid.version == BundleType.duos.value:
             assert config.duos_service_url is not None, bundle_fqid
             log.info('Bundle %r is a DUOS bundle', bundle_fqid.uuid)
             return self._duos_bundle(bundle_fqid)
         else:
-            assert False, bundle_fqid.table_name
+            assert False, bundle_fqid.version
 
     def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         source = bundle_fqid.source
@@ -321,7 +319,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
         source = bundle_fqid.source.spec
-        table_name = bundle_fqid.table_name.value
+        table_name = bundle_fqid.version
         result = TDRAnvilBundle(fqid=bundle_fqid)
         columns = self._columns(table_name)
         bundle_entity = dict(one(self._run_sql(f'''
@@ -367,7 +365,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
         entity_id = uuids.change_version(bundle_uuid,
                                          self.bundle_uuid_version,
                                          self.datarepo_row_uuid_version)
-        table_name = bundle_fqid.table_name.value
+        table_name = bundle_fqid.version
         entity_type = table_name.removeprefix('anvil_')
         pk_column = entity_type + '_id'
         bundle_entity = one(self._run_sql(f'''

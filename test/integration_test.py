@@ -153,8 +153,6 @@ from azul.plugins.metadata.anvil.bundle import (
 )
 from azul.plugins.repository.tdr_anvil import (
     BundleType,
-    TDRAnvilBundleFQID,
-    TDRAnvilBundleFQIDJSON,
 )
 from azul.portal_service import (
     PortalService,
@@ -347,7 +345,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 if not (
                     # DUOS bundles are too sparse to fulfill the managed access tests
                     config.is_anvil_enabled(catalog)
-                    and cast(TDRAnvilBundleFQID, bundle_fqid).table_name is BundleType.duos
+                    and bundle_fqid.version == BundleType.duos.value
                 )
             )
             bundle_fqid = self.random.choice(bundle_fqids)
@@ -1267,22 +1265,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle[special_fields.bundle_uuid],
                                                 version=bundle[special_fields.bundle_version],
                                                 source=source)
-            if config.is_anvil_enabled(catalog):
-                # Every primary bundle contains 1 or more biosamples, 1 dataset,
-                # and 0 or more other entities. Biosamples only occur in primary
-                # bundles.
-                if len(hit['biosamples']) > 0:
-                    table_name = BundleType.primary
-                # Supplementary bundles contain only 1 file and 1 dataset.
-                elif len(hit['files']) > 0:
-                    table_name = BundleType.supplementary
-                # DUOS bundles contain only 1 dataset.
-                elif len(hit['datasets']) > 0:
-                    table_name = BundleType.duos
-                else:
-                    assert False, hit
-                bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
-                bundle_fqid['table_name'] = table_name.value
             bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
             indexed_fqids.add(bundle_fqid)
         return indexed_fqids

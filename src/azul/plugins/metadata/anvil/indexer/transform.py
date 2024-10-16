@@ -423,8 +423,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                                  ) -> tuple[JSON, BundleFQID]:
         this_entity, this_bundle = this
         that_entity, that_bundle = that
-        # All AnVIL bundles use a fixed known version
-        assert this_bundle.version == that_bundle.version, (this, that)
         if this_entity.keys() == that_entity.keys():
             return this
         else:

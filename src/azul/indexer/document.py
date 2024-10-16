@@ -552,7 +552,7 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
                     ) -> 'ContributionCoordinates[CataloguedEntityReference]':
         entity_type = index_name.qualifier
         assert index_name.doc_type is DocumentType.contribution
-        entity_id, deleted, bundle_uuid, bundle_version = document_id.split('_')
+        entity_id, deleted, bundle_uuid, bundle_version = document_id.split('_', 3)
         if deleted == 'deleted':
             deleted = True
         elif deleted == 'exists':
