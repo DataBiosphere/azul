@@ -2056,7 +2056,11 @@ class ResponseHeadersTest(AzulTestCase):
             '/health/basic': {'Cache-Control': 'no-store'}
         }
         # https://www.w3.org/TR/CSP2/#policy-syntax
-        directive_re = re.compile(r'[ \t]*([a-zA-Z0-9-]+)[ \t]?([^;,]*)')
+        directive_re = re.compile(r'[ \t]*([a-zA-Z0-9-]+)'
+                                  # Directive value can be any visible character
+                                  # (0x21-0xFE), plus ' ' (0x20) and '\t' (0x09)
+                                  # except ',' (0x2C) and ';' (0x3B).
+                                  r'(?:[ \t]([\x21-\x2b\x2d-\x3a\x3c-\xFE\x20\x09]+))?')
         nonce_re = re.compile(r"'nonce-([a-zA-Z0-9_-]+)'")
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, expected_headers in test_cases.items():
