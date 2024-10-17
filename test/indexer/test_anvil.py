@@ -42,7 +42,7 @@ from azul.plugins.repository import (
     tdr_anvil,
 )
 from azul.plugins.repository.tdr_anvil import (
-    BundleEntityType,
+    BundleType,
     TDRAnvilBundle,
     TDRAnvilBundleFQID,
 )
@@ -105,13 +105,13 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
                     *,
                     uuid,
                     version=None,
-                    entity_type=BundleEntityType.primary
+                    table_name=BundleType.primary
                     ) -> TDRAnvilBundleFQID:
         assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
                                   version=cls.version,
-                                  entity_type=entity_type)
+                                  table_name=table_name)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -120,12 +120,12 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                               entity_type=BundleEntityType.supplementary)
+                               table_name=BundleType.supplementary)
 
     @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                               entity_type=BundleEntityType.duos)
+                               table_name=BundleType.duos)
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase,
@@ -199,7 +199,7 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
         self.index_service.delete_indices(self.catalog)
 
     def test_dataset_description(self):
-        dataset_ref = EntityReference(entity_type='dataset',
+        dataset_ref = EntityReference(entity_type='anvil_dataset',
                                       entity_id='2370f948-2783-4eb6-afea-e022897f4dcf')
         bundles = [self.primary_bundle(), self.duos_bundle()]
         for bundle_fqid in bundles:

@@ -116,6 +116,10 @@ class KeyLink(Link[KeyReference]):
 
 @attrs.define(kw_only=True)
 class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
+    # The `entity_type` attribute of these keys contains the entities' BigQuery
+    # table name (e.g. `anvil_sequencingactivity`), not the entity type used for
+    # the contributions (e.g. `activities`). The metadata plugin converts from
+    # the former to the latter during transformation.
     entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
     links: set[EntityLink] = attrs.field(factory=set)
 
