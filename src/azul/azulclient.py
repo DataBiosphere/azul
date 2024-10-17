@@ -269,10 +269,12 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
         validate_uuid_prefix(prefix)
         source = self.repository_plugin(catalog).source_from_json(source)
         bundle_fqids = self.list_bundles(catalog, source, prefix)
-        bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
-        log.info('After filtering obsolete versions, '
-                 '%i bundles remain in prefix %r of source %r in catalog %r',
-                 len(bundle_fqids), prefix, str(source.spec), catalog)
+        # All AnVIL bundles and entities use the same version
+        if not config.is_anvil_enabled(catalog):
+            bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
+            log.info('After filtering obsolete versions, '
+                     '%i bundles remain in prefix %r of source %r in catalog %r',
+                     len(bundle_fqids), prefix, str(source.spec), catalog)
         messages = (
             self.bundle_message(catalog, bundle_fqid)
             for bundle_fqid in bundle_fqids

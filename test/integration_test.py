@@ -1300,10 +1300,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                  bundle_fqids: Set[SourcedBundleFQID]
                                  ) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
-            expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
-            obsolete_fqids = bundle_fqids - expected_fqids
-            if obsolete_fqids:
-                log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
+            expected_fqids = bundle_fqids
+            if not config.is_anvil_enabled(catalog):
+                expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(expected_fqids))
+                obsolete_fqids = bundle_fqids - expected_fqids
+                if obsolete_fqids:
+                    log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
             num_bundles = len(expected_fqids)
             timeout = 600
             log.debug('Expecting bundles %s ', sorted(expected_fqids))
