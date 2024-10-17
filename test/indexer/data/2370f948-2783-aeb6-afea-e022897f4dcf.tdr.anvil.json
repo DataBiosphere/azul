@@ -1,6 +1,6 @@
 {
     "entities": {
-        "dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
+        "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
             "description": "Study description from DUOS",
             "version": "2022-06-01T00:00:00.000000Z"
         }
