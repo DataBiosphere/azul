@@ -3,14 +3,21 @@ from logging import (
     DEBUG,
     INFO,
 )
+from unittest.mock import (
+    PropertyMock,
+    patch as mock_patch,
+)
 
 import requests
 
-from app_test_case import (
-    LocalAppTestCase,
+from azul import (
+    Config,
 )
 from azul.chalice import (
     log,
+)
+from azul.json import (
+    json_head,
 )
 from azul.logging import (
     configure_test_logging,
@@ -21,6 +28,9 @@ from azul.strings import (
 from indexer import (
     DCP1CannedBundleTestCase,
 )
+from service import (
+    WebServiceTestCase,
+)
 
 
 # noinspection PyPep8Naming
@@ -28,7 +38,17 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
+class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -37,46 +57,96 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
     def test_request_logs(self):
         for level in INFO, DEBUG:
             for authenticated in False, True:
-                with self.subTest(level=level, authenticated=authenticated):
-                    url = self.base_url.set(path='/health/basic')
+                for request_body in False, True:
                     headers = {'authorization': 'Bearer foo_token'} if authenticated else {}
-                    with self.assertLogs(logger=log, level=level) as logs:
-                        requests.get(str(url), headers=headers)
-                    logs = [(r.levelno, r.getMessage()) for r in logs.records]
-                    headers = {
-                        'host': url.netloc,
-                        'user-agent': 'python-requests/2.32.2',
-                        'accept-encoding': 'gzip, deflate, br',
-                        'accept': '*/*',
-                        'connection': 'keep-alive',
-                        **headers,
-                    }
-                    self.assertEqual(logs, [
-                        (
-                            INFO,
-                            f"Received GET request for '/health/basic', "
-                            f"with {json.dumps({'query': None, 'headers': headers})}."),
-                        (
-                            INFO,
-                            "Authenticated request as OAuth2(access_token='foo_token')"
-                            if authenticated else
-                            'Did not authenticate request.'
-                        ),
-                        (
-                            level,
-                            'Returning 200 response. To log headers and body, set AZUL_DEBUG to 1.'
-                            if level == INFO else
-                            'Returning 200 response with headers {"Access-Control-Allow-Origin": '
-                            '"*", "Access-Control-Allow-Headers": '
-                            '"Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key", '
-                            f'"Content-Security-Policy": "default-src {sq("self")}", '
-                            '"Referrer-Policy": "strict-origin-when-cross-origin", '
-                            '"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload", '
-                            '"X-Content-Type-Options": "nosniff", '
-                            '"X-Frame-Options": "DENY", '
-                            '"X-XSS-Protection": "1; mode=block", '
-                            '"Cache-Control": "no-store"}. '
-                            'See next line for the first 1024 characters of the body.\n'
-                            '{"up": true}'
-                        )
-                    ])
+                    if request_body:
+                        request_body = json.dumps({'filters': json.dumps({'organ': {'is': ['foo']}})})
+                        headers = {
+                            'content-length': str(len(request_body)),
+                            'content-type': 'application/json',
+                            **headers,
+                        }
+                    if level is DEBUG:
+                        for azul_debug in [azul_debug + 1 for azul_debug in range(2)]:
+                            with mock_patch.object(Config,
+                                                   'debug',
+                                                   new=PropertyMock(return_value=azul_debug)):
+                                self._assert_request_logs(authenticated, request_body, headers, level, azul_debug)
+                    else:
+                        self._assert_request_logs(authenticated, request_body, headers, level)
+
+    def _assert_request_logs(self,
+                             authenticated: bool,
+                             body: str | bool,
+                             headers: dict,
+                             level: int,
+                             azul_debug: int = 1) -> None:
+        """
+        Asserts some of the chalice middleware log entries generated by a GET
+        request to the /index/projects endpoint.
+
+        :param authenticated: Whether the request is authenticated or not
+        :param body: The request body as a JSON string or False for non-body
+        :param headers: The request headers as a dictionary
+        :param level: The logging level to assert
+        :param azul_debug: The value of the AZUL_DEBUG environment variable
+        """
+
+        url = self.base_url.set(path='/index/projects')
+        with self.subTest(level=level,
+                          authenticated=authenticated,
+                          request_body=body,
+                          azul_debug=azul_debug):
+            with self.assertLogs(logger=log, level=level) as logs:
+                response = requests.get(str(url),
+                                        headers=headers,
+                                        json=json.loads(body) if body else None)
+            logs = [(r.levelno, r.getMessage()) for r in logs.records]
+            headers = {
+                'host': url.netloc,
+                'user-agent': 'python-requests/2.32.2',
+                'accept-encoding': 'gzip, deflate, br',
+                'accept': '*/*',
+                'connection': 'keep-alive',
+                **headers,
+            }
+            self.assertEqual(logs, [
+                (
+                    INFO,
+                    f"Received GET request for '/index/projects', "
+                    f"with {json.dumps({'query': None, 'headers': headers})}"
+                ),
+                (
+                    INFO,
+                    '… without request body'
+                ) if not body else
+                (
+                    INFO,
+                    f'… with request body {body!r} '
+                    f'({str(len(body)) if azul_debug == 2 else "first 1024"} characters)'
+                ),
+                (
+                    INFO,
+                    "Authenticated request as OAuth2(access_token='foo_token')"
+                    if authenticated else
+                    'Did not authenticate request.'
+                ),
+                (
+                    level,
+                    'Returning 200 response. To log headers and body, set AZUL_DEBUG to 1.'
+                    if level == INFO else
+                    'Returning 200 response with headers {"Access-Control-Allow-Origin": '
+                    '"*", "Access-Control-Allow-Headers": '
+                    '"Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key", '
+                    f'"Content-Security-Policy": "default-src {sq("self")}", '
+                    '"Referrer-Policy": "strict-origin-when-cross-origin", '
+                    '"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload", '
+                    '"X-Content-Type-Options": "nosniff", '
+                    '"X-Frame-Options": "DENY", '
+                    '"X-XSS-Protection": "1; mode=block", '
+                    '"Cache-Control": "no-store"}. '
+                    'See next line for the first 1024 characters of the body.\n'
+                    + json_head(1024, response.json()),
+                )
+            ])
+            self.assertEqual(200, response.status_code)
