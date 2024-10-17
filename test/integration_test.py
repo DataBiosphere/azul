@@ -749,6 +749,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         else:
             assert False, catalog
 
+    def _uuid_column_name(self, catalog: CatalogName) -> str:
+        if config.is_hca_enabled(catalog):
+            return 'bundle_uuid'
+        elif config.is_anvil_enabled(catalog):
+            return 'bundles.bundle_uuid'
+        else:
+            assert False, catalog
+
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
             _, file = self._get_one_inner_file(catalog)
@@ -927,8 +935,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             )
         )
 
-    def _check_compact_manifest(self, _catalog: CatalogName, response: bytes):
-        self.__check_csv_manifest(BytesIO(response), 'bundle_uuid')
+    def _check_compact_manifest(self, catalog: CatalogName, response: bytes):
+        self.__check_csv_manifest(BytesIO(response), self._uuid_column_name(catalog))
 
     def _check_terra_bdbag_manifest(self, catalog: CatalogName, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
@@ -1047,14 +1055,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def __check_csv_manifest(self,
                              file: IO[bytes],
-                             uuid_field_name: str
+                             uuid_column_name: str
                              ) -> list[Mapping[str, str]]:
         reader = self._read_csv_manifest(file)
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
-        self.assertIn(uuid_field_name, reader.fieldnames)
-        bundle_uuids = rows[0][uuid_field_name].split(ManifestGenerator.padded_joiner)
+        self.assertIn(uuid_column_name, reader.fieldnames)
+        bundle_uuids = rows[0][uuid_column_name].split(ManifestGenerator.padded_joiner)
         self.assertGreater(len(bundle_uuids), 0)
         for bundle_uuid in bundle_uuids:
             self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
@@ -1605,9 +1613,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         def test_compact_manifest(expected_bundles):
             manifest = BytesIO(self._get_url_content(PUT, manifest_url))
             manifest_rows = self._read_csv_manifest(manifest)
+            uuid_column_name = self._uuid_column_name(catalog)
             all_found_bundles = set()
             for row in manifest_rows:
-                row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.padded_joiner))
+                row_bundles = set(row[uuid_column_name].split(ManifestGenerator.padded_joiner))
                 # It's possible for one file to be present in multiple
                 # bundles (e.g. due to stitching), so each row may include
                 # additional bundles besides those included in the filters.

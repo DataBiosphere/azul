@@ -1716,25 +1716,25 @@ class TestAnvilManifests(AnvilManifestTestCase):
         self.assertEqual(200, response.status_code)
         expected = [
             (
-                'bundle_uuid',
+                'bundles.bundle_uuid',
                 '6b0f6c0f-5d80-a242-accb-840921351cd5',
                 '826dea02-e274-affe-aabc-eb3db63ad068',
                 '826dea02-e274-affe-aabc-eb3db63ad068'
             ),
             (
-                'bundle_version',
+                'bundles.bundle_version',
                 '2022-06-01T00:00:00.000000Z',
                 '2022-06-01T00:00:00.000000Z',
                 '2022-06-01T00:00:00.000000Z'
             ),
             (
-                'source_id',
+                'sources.source_id',
                 '6c87f0e1-509d-46a4-b845-7584df39263b',
                 '6c87f0e1-509d-46a4-b845-7584df39263b',
                 '6c87f0e1-509d-46a4-b845-7584df39263b'
             ),
             (
-                'source_spec',
+                'sources.source_spec',
                 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot:/2',
                 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot:/2',
                 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot:/2'
@@ -1974,12 +1974,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 'a60c5138-3749-f7cb-8714-52d389ad5231'
             ),
             (
-                'activities.activity_table',
-                '',
-                'sequencingactivity',
-                'sequencingactivity'
-            ),
-            (
                 'activities.activity_type',
                 '',
                 'Sequencing',
@@ -2082,7 +2076,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self._drs_uri('v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37')
             ),
             (
-                'files.file_url',
+                'files.azul_file_url',
                 self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
                 self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
                 self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
