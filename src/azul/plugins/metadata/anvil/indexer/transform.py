@@ -402,13 +402,16 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _only_dataset(self) -> EntityReference:
         return one(self._entities_by_type['dataset'])
 
-    _activity_polymorphic_types = {
-        'activity',
-        'alignmentactivity',
-        'assayactivity',
-        'sequencingactivity',
-        'variantcallingactivity'
-    }
+    @cached_property
+    def _activity_polymorphic_types(self) -> AbstractSet[str]:
+        from azul.plugins.metadata.anvil import (
+            anvil_schema,
+        )
+        return {
+            table['name'].removeprefix('anvil_')
+            for table in anvil_schema['tables']
+            if table['name'].endswith('activity')
+        }
 
     @classmethod
     def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
