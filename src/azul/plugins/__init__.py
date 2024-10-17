@@ -134,6 +134,7 @@ class SpecialFields:
     # FIXME: Generalize qualifiers in bundle FQIDs
     #        https://github.com/DataBiosphere/azul/issues/6637
     bundle_version: FieldName
+    implicit_hub_id: FieldName
 
 
 class ManifestFormat(Enum):

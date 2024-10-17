@@ -282,7 +282,8 @@ class Plugin(MetadataPlugin[HCABundle]):
         return SpecialFields(source_id='sourceId',
                              source_spec='sourceSpec',
                              bundle_uuid='bundleUuid',
-                             bundle_version='bundleVersion')
+                             bundle_version='bundleVersion',
+                             implicit_hub_id='projectId')
 
     @property
     def implicit_hub_type(self) -> str:

@@ -1985,7 +1985,7 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator, metaclass=ABCMeta):
 
     @property
     def entity_type(self) -> str:
-        return 'files'
+        return self.implicit_hub_type if self.include_orphans else 'files'
 
     @property
     def included_fields(self) -> list[FieldPath]:
@@ -2000,6 +2000,11 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator, metaclass=ABCMeta):
     @property
     def implicit_hub_type(self) -> str:
         return self.service.metadata_plugin(self.catalog).implicit_hub_type
+
+    @property
+    def include_orphans(self) -> bool:
+        special_fields = self.service.metadata_plugin(self.catalog).special_fields
+        return self.filters.explicit.keys() == {special_fields.implicit_hub_id}
 
     @attrs.frozen(kw_only=True)
     class ReplicaKeys:
@@ -2019,8 +2024,11 @@ class VerbatimManifestGenerator(FileBasedManifestGenerator, metaclass=ABCMeta):
         hub_type = self.implicit_hub_type
         request = self._create_request()
         for hit in request.scan():
+            replica_id = one(hit['contents'][hub_type])['document_id']
+            if self.entity_type != hub_type:
+                replica_id = one(replica_id)
             yield self.ReplicaKeys(hub_id=hit['entity_id'],
-                                   replica_id=one(one(hit['contents'][hub_type])['document_id']))
+                                   replica_id=replica_id)
 
     def _all_replicas(self) -> Iterable[JSON]:
         emitted_replica_ids = set()
