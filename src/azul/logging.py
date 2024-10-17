@@ -4,6 +4,7 @@ from contextlib import (
 import logging
 from typing import (
     Optional,
+    TYPE_CHECKING,
 )
 
 import attr
@@ -15,12 +16,17 @@ import azul
 from azul import (
     config,
 )
-from azul.chalice import (
-    AzulChaliceApp,
-)
 from azul.strings import (
     trunc_ellipses,
 )
+
+if TYPE_CHECKING:
+    from azul.chalice import (
+        AzulChaliceApp,
+    )
+else:
+    class AzulChaliceApp:
+        pass
 
 
 @attr.s(frozen=False, kw_only=False, auto_attribs=True)
