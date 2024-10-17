@@ -169,6 +169,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             assert False, entity_type
 
     def estimate(self, partition: BundlePartition) -> int:
+        # Orphans are not considered when deciding whether to partition the
+        # bundle, but if the bundle is partitioned then each orphan will be
+        # replicated in a single partition
         return sum(map(partial(self._contains, partition), self.bundle.entities))
 
     def transform(self,
@@ -188,7 +191,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _replicate(self, entity: EntityReference) -> tuple[str, JSON]:
-        return f'anvil_{entity.entity_type}', self.bundle.entities[entity]
+        replica_type = f'anvil_{entity.entity_type}'
+        content = ChainMap(self.bundle.entities, self.bundle.orphans)[entity]
+        return replica_type, content
 
     def _pluralize(self, entity_type: str) -> str:
         if entity_type == 'diagnosis':
@@ -400,7 +405,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                             uuid=file.entity_id)
 
     def _only_dataset(self) -> EntityReference:
-        return one(self._entities_by_type['dataset'])
+        try:
+            return one(self._entities_by_type['dataset'])
+        except ValueError:
+            return one(o for o in self.bundle.orphans if o.entity_type == 'dataset')
 
     @cached_property
     def _activity_polymorphic_types(self) -> AbstractSet[str]:
@@ -426,8 +434,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                                  ) -> tuple[JSON, BundleFQID]:
         this_entity, this_bundle = this
         that_entity, that_bundle = that
-        # All AnVIL bundles use a fixed known version
-        assert this_bundle.version == that_bundle.version, (this, that)
         if this_entity.keys() == that_entity.keys():
             return this
         else:
@@ -500,7 +506,9 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
             return super()._dataset(dataset)
 
     def _list_entities(self) -> Iterable[EntityReference]:
-        yield self._singleton()
+        # Suppress contributions for bundles that only contain orphans
+        if self.bundle.entities:
+            yield self._singleton()
 
     @abstractmethod
     def _singleton(self) -> EntityReference:
@@ -558,6 +566,15 @@ class BundleTransformer(SingletonTransformer):
         return EntityReference(entity_type='bundle',
                                entity_id=self.bundle.uuid)
 
+    def transform(self,
+                  partition: BundlePartition
+                  ) -> Iterable[Contribution | Replica]:
+        yield from super().transform(partition)
+        dataset = self._only_dataset()
+        for orphan in self.bundle.orphans:
+            if partition.contains(UUID(orphan.entity_id)):
+                yield self._replica(orphan, file_hub=None, root_hub=dataset.entity_id)
+
 
 class DatasetTransformer(SingletonTransformer):
 
@@ -573,7 +590,7 @@ class DatasetTransformer(SingletonTransformer):
                    ) -> Iterable[Contribution | Replica]:
         yield from super()._transform(entity)
         if self._is_duos(entity):
-            yield self._replica(entity, file_hub=None)
+            yield self._replica(entity, file_hub=None, root_hub=entity.entity_id)
 
 
 class DonorTransformer(BaseTransformer):
@@ -608,20 +625,21 @@ class FileTransformer(BaseTransformer):
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
+        dataset = self._only_dataset()
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(dataset)],
             diagnoses=self._entities(self._diagnosis, linked['diagnosis']),
             donors=self._entities(self._donor, linked['donor']),
             files=[self._file(entity)],
         )
         yield self._contribution(contents, entity.entity_id)
         if config.enable_replicas:
-            yield self._replica(entity, file_hub=entity.entity_id)
+            yield self._replica(entity, file_hub=entity.entity_id, root_hub=dataset.entity_id)
             for linked_entity in linked:
                 yield self._replica(
                     linked_entity,
@@ -631,4 +649,5 @@ class FileTransformer(BaseTransformer):
                     # hub IDs field empty for datasets and rely on the tenet
                     # that every file is an implicit hub of its parent dataset.
                     file_hub=None if linked_entity.entity_type == 'dataset' else entity.entity_id,
+                    root_hub=dataset.entity_id
                 )

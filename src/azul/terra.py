@@ -39,6 +39,7 @@ from google.cloud import (
     bigquery,
 )
 from google.cloud.bigquery import (
+    DatasetReference,
     QueryJob,
     QueryJobConfig,
     QueryPriority,
@@ -506,6 +507,14 @@ class TDRClient(SAMClient):
         if log.isEnabledFor(logging.DEBUG):
             log.debug('Job info: %s', json.dumps(self._job_info(job)))
         return result
+
+    def list_tables(self, source: TDRSourceSpec) -> set[str]:
+        bigquery = self._bigquery(self.credentials.project_id)
+        ref = DatasetReference(project=source.subdomain, dataset_id=source.name)
+        return {
+            table.to_api_repr()['tableReference']['tableId']
+            for table in bigquery.list_tables(ref)
+        }
 
     def _trunc_query(self, query: str) -> str:
         return trunc_ellipses(query, 2048)

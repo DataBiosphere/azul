@@ -124,11 +124,36 @@ def change_version(uuid: str, old_version: int, new_version: int) -> str:
     prefix, version, suffix = uuid[:14], uuid[14], uuid[15:]
     version = int(version, 16)
     assert version == old_version, (uuid, version, old_version)
-    uuid = prefix + hex(new_version)[2:] + suffix
+    uuid = f'{prefix}{new_version:x}{suffix}'
     assert UUID(uuid).version == new_version, (uuid, old_version)
     if new_version in (1, 3, 4, 5):
         validate_uuid(uuid)
     return uuid
+
+
+def zero_pad(prefix: str, version: int) -> str:
+    """
+    Extend a prefix with zeros to produce a valid UUID.
+
+    >>> zero_pad('', 1)
+    '00000000-0000-1000-8000-000000000000'
+
+    >>> zero_pad('abcd', 4)
+    'abcd0000-0000-4000-8000-000000000000'
+
+    >>> zero_pad('f' * 32, 1)
+    'ffffffff-ffff-1fff-bfff-ffffffffffff'
+
+    >>> zero_pad('f' * 33, 1)
+    Traceback (most recent call last):
+    ...
+    ValueError: badly formed hexadecimal UUID string
+    """
+    # The intermediary representation is necessary to support non-standard
+    # versions
+    temp_version = 1
+    u = str(UUID(prefix.ljust(32, '0'), version=temp_version))
+    return change_version(u, temp_version, version)
 
 
 UUID_PARTITION = TypeVar('UUID_PARTITION', bound='UUIDPartition')

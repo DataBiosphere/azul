@@ -1,0 +1,200 @@
+{
+    "entities": {},
+    "links": [],
+    "orphans": {
+        "dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
+            "consent_group": [
+                "DS-BDIS"
+            ],
+            "data_modality": [],
+            "data_use_permission": [
+                "DS-BDIS"
+            ],
+            "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
+            "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+            "owner": [
+                "Debbie Nickerson"
+            ],
+            "principal_investigator": [],
+            "registered_identifier": [
+                "phs000693"
+            ],
+            "source_datarepo_row_ids": [
+                "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
+            ],
+            "title": "ANVIL_CMG_UWASH_DS_BDIS",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/7c0b04d4-09a3-4e00-a142-3a4c5fc4c3fb": {
+            "datarepo_row_id": "7c0b04d4-09a3-4e00-a142-3a4c5fc4c3fb",
+            "activity_id": "71f12c9c-5115-374b-cd96-9414b6f1935a",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "ad7932a7-55d3-36af-ba7d-cb22b627f10d"
+            ],
+            "generated_file_id": [
+                "00195da1-8e9f-3d95-957b-41607759de38"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:239769e6-1ea0-4066-8289-4c1a07d180ee",
+                "file_inventory:0945564c-b45b-482e-94db-7506118fc50d"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/7fce9cf8-5d2b-4a27-83fc-bc22214116e3": {
+            "datarepo_row_id": "7fce9cf8-5d2b-4a27-83fc-bc22214116e3",
+            "activity_id": "8d502145-9cd0-0a30-a6fe-8c4f529086c4",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "af3ca37e-76a8-3568-94aa-b9f0f256bcf2"
+            ],
+            "generated_file_id": [
+                "0027abb3-5038-3849-aeaf-adccdc692259"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:c4d7b383-cab6-46e3-8d8f-37b0c8e42f25",
+                "file_inventory:c332b008-d443-4fa2-878a-3af2b3ebd893"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/fc734969-1c7f-4806-b0f8-299584a6158d": {
+            "datarepo_row_id": "fc734969-1c7f-4806-b0f8-299584a6158d",
+            "activity_id": "07361e60-5446-4a38-b4ae-c765c6f4cfbd",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "1c086a00-2869-3f58-9ed8-87e5f4d59e33"
+            ],
+            "generated_file_id": [
+                "002eddb4-d277-36a4-bf0e-8c8318d10531"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:b856a7f2-c4ed-4cd1-a2fb-cd9dc7a810f5",
+                "file_inventory:53f3388d-314e-407c-8548-85797a56b735"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/71a0dc30-4531-45cd-9c5f-2f65a562f391": {
+            "datarepo_row_id": "71a0dc30-4531-45cd-9c5f-2f65a562f391",
+            "activity_id": "4dde5557-daee-fadf-649f-f611d9f093ea",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "7f8d77be-3113-3f57-b152-403f43e9b15c"
+            ],
+            "generated_file_id": [
+                "003369a9-c81c-37ca-8484-6fde5a59baf3"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:50da565e-fa26-447e-956e-809a11fe22ac",
+                "file_inventory:6a578163-a160-4a70-a674-6aaca57d2241"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/1d7639a4-f451-4b5a-96f6-ed8a3b18da93": {
+            "datarepo_row_id": "1d7639a4-f451-4b5a-96f6-ed8a3b18da93",
+            "activity_id": "25668d4c-5b40-4688-ae37-5a641d322922",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "c80dea89-e141-3687-811e-e910dae867d5"
+            ],
+            "generated_file_id": [
+                "00369305-b094-363f-b81d-73717da52260"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:59fb470a-800b-44d2-85ab-e1f60b8b8254",
+                "file_inventory:c93e30f7-2122-4705-a843-a4753398dbbb"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/3def8066-0af9-42f8-aa96-9fa972bd089d": {
+            "datarepo_row_id": "3def8066-0af9-42f8-aa96-9fa972bd089d",
+            "activity_id": "d6070656-586d-66e9-39b6-c940f50216c0",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "63d35f20-5985-3f25-836e-7dabf14d06c8"
+            ],
+            "generated_file_id": [
+                "00600d8b-a9b2-3aa0-9908-004631916cd3"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:9c86966c-e067-44aa-95e2-812a975ea35f",
+                "file_inventory:fd680963-281c-40b8-84eb-204964fbaff3"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/d9ffcbc8-fc43-43bc-8743-c6932fe5867a": {
+            "datarepo_row_id": "d9ffcbc8-fc43-43bc-8743-c6932fe5867a",
+            "activity_id": "0cc7ffe4-7302-adb8-eebe-9223c8dc2ee1",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "adf28eac-afc1-30ed-ac47-4c9577840d28"
+            ],
+            "generated_file_id": [
+                "0068ed87-2357-3cde-960a-7ce720cff759"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:8de0c9fd-3cd0-406a-b074-27fcea961cb3",
+                "file_inventory:3f446e83-6780-44d9-9cf6-d457a9074408"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/c1a81b5a-70dc-4d19-b071-af6559e5ac3b": {
+            "datarepo_row_id": "c1a81b5a-70dc-4d19-b071-af6559e5ac3b",
+            "activity_id": "7ce79724-d533-16fd-172b-ab8e416e3a8e",
+            "activity_type": "Unknown",
+            "used_file_id": [],
+            "generated_file_id": [
+                "0070bc37-bd1e-32f5-a5fa-e083d3f3ff2e",
+                "19d62a88-6459-3e38-a3ba-9ce3ecd60cba",
+                "1cd69bb6-4c1d-3e83-8459-e68a5b6aed84"
+            ],
+            "used_biosample_id": [
+                "1e607e37-34fd-a21e-dfa3-94f4a1e29391"
+            ],
+            "source_datarepo_row_ids": [
+                "sample:57423aa3-6b17-4684-ae7f-bd86790630cd"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/e9cf06ed-092c-4867-8009-979d0fb1c05f": {
+            "datarepo_row_id": "e9cf06ed-092c-4867-8009-979d0fb1c05f",
+            "activity_id": "db9b9867-bf6c-942f-8f79-0d49a573faf7",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "824a9b0c-04bf-35b1-bea1-7b3a900bf880"
+            ],
+            "generated_file_id": [
+                "00b0567a-932c-378f-ab7c-d8b42bd58e3e"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:e8752934-998e-4a25-adb2-748d0913d699",
+                "file_inventory:8cb2cb49-0499-4a0a-87f2-de0b70cc2f4a"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "activity/b240b3ac-e7e4-47b2-aae4-c47d65e84ccd": {
+            "datarepo_row_id": "b240b3ac-e7e4-47b2-aae4-c47d65e84ccd",
+            "activity_id": "363a0bed-be4d-8f10-208f-705857d8518f",
+            "activity_type": "Unknown",
+            "used_file_id": [
+                "32073db0-ef1a-3889-a470-077c09b1b741"
+            ],
+            "generated_file_id": [
+                "00b6d7db-c79d-3aa6-8c5d-5dd0e7618988"
+            ],
+            "used_biosample_id": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:01f5a54b-d1b1-4296-a368-ef76034452d4",
+                "file_inventory:3d9dfc08-457d-49be-a1d8-2db165fcd4bc"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        }
+    }
+}

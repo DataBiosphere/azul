@@ -59,6 +59,8 @@ class BundleFQID(SupportsLessAndGreaterThan):
     BundleFQID(uuid='d', version='e')]
     """
     uuid: BundleUUID = attrs.field(order=str.lower)
+    # FIXME: Generalize qualifiers in bundle FQIDs
+    #        https://github.com/DataBiosphere/azul/issues/6637
     version: BundleVersion = attrs.field(order=str.lower)
 
     def to_json(self) -> MutableJSON:

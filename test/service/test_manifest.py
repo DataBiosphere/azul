@@ -86,6 +86,9 @@ from azul.plugins import (
 from azul.plugins.repository.dss import (
     DSSBundle,
 )
+from azul.plugins.repository.tdr_anvil import (
+    BundleType,
+)
 from azul.service import (
     Filters,
     FiltersJSON,
@@ -1704,11 +1707,11 @@ class TestAnvilManifests(AnvilManifestTestCase):
     def bundles(cls) -> list[SourcedBundleFQID]:
         return [
             cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                            version=cls.version),
+                            version=BundleType.duos.value),
             cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                            version=cls.version),
+                            version=BundleType.supplementary.value),
             cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068',
-                            version=cls.version)
+                            version=BundleType.primary.value)
         ]
 
     def test_compact_manifest(self):
@@ -1723,9 +1726,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'bundle_version',
-                '2022-06-01T00:00:00.000000Z',
-                '2022-06-01T00:00:00.000000Z',
-                '2022-06-01T00:00:00.000000Z'
+                'anvil_file',
+                'anvil_biosample',
+                'anvil_biosample'
             ),
             (
                 'source_id',

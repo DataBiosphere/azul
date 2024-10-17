@@ -42,12 +42,15 @@ from azul.plugins.repository import (
     tdr_anvil,
 )
 from azul.plugins.repository.tdr_anvil import (
-    BundleEntityType,
+    BundleType,
     TDRAnvilBundle,
     TDRAnvilBundleFQID,
 )
 from azul.terra import (
     TDRClient,
+)
+from azul.uuids import (
+    zero_pad,
 )
 from azul_test_case import (
     TDRTestCase,
@@ -104,14 +107,13 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     def bundle_fqid(cls,
                     *,
                     uuid,
-                    version=None,
-                    entity_type=BundleEntityType.primary
+                    version=BundleType.primary.value,
+                    batch_prefix_length=None
                     ) -> TDRAnvilBundleFQID:
-        assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
-                                  version=cls.version,
-                                  entity_type=entity_type)
+                                  version=version,
+                                  batch_prefix_length=batch_prefix_length)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -120,12 +122,19 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                               entity_type=BundleEntityType.supplementary)
+                               version=BundleType.supplementary.value,
+                               batch_prefix_length=0)
 
     @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                               entity_type=BundleEntityType.duos)
+                               version=BundleType.duos.value)
+
+    @classmethod
+    def replica_bundle(cls) -> TDRAnvilBundleFQID:
+        return cls.bundle_fqid(uuid='00000000-0000-a000-0000-000000000000',
+                               table_name='anvil_activity',
+                               batch_prefix_length=0)
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase,
@@ -165,13 +174,21 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
 
     def test_list_and_fetch_bundles(self):
         source_ref = self.source
-        self._make_mock_tdr_tables(source_ref)
-        expected_bundle_fqids = sorted([
-            self.primary_bundle(),
-            self.supplementary_bundle(),
-            self.duos_bundle()
-        ])
+        tables = self._make_mock_tdr_tables(source_ref)
         plugin = self.plugin_for_source_spec(source_ref.spec)
+        unbatched_bundles = [
+            self.primary_bundle(),
+            self.duos_bundle()
+        ]
+        batched_bundles = [
+            self.bundle_fqid(uuid=zero_pad('', plugin.bundle_uuid_version),
+                             table_name=table_name,
+                             batch_prefix_length=self.source.spec.prefix.partition)
+            for table_name in tables.keys()
+            if table_name not in (BundleType.primary.value, BundleType.duos.value)
+        ]
+        self.assertIn(self.supplementary_bundle(), batched_bundles)
+        expected_bundle_fqids = sorted(unbatched_bundles + batched_bundles)
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
         self.assertEqual(expected_bundle_fqids, bundle_fqids)
         for bundle_fqid in bundle_fqids:
@@ -183,6 +200,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                 self.assertEqual(canned_bundle.fqid, bundle.fqid)
                 self.assertEqual(canned_bundle.entities, bundle.entities)
                 self.assertEqual(canned_bundle.links, bundle.links)
+                self.assertEqual(canned_bundle.orphans, bundle.orphans)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
@@ -237,3 +255,24 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
             # the files (hubs) from its bundle above
             **({DocumentType.replica: 1} if config.enable_replicas else {})
         })
+
+    def test_orphans(self):
+        bundle = self._load_canned_bundle(self.replica_bundle())
+        self._index_bundle(bundle)
+        dataset_entity_id = one(
+            ref.entity_id
+            for ref in bundle.orphans
+            if ref.entity_type == 'dataset'
+        )
+        expected = bundle.orphans if config.enable_replicas else {}
+        actual = {}
+        hits = self._get_all_hits()
+        for hit in hits:
+            qualifier, doc_type = self._parse_index_name(hit)
+            self.assertEqual(DocumentType.replica, doc_type)
+            source = hit['_source']
+            self.assertEqual(source['hub_ids'], [dataset_entity_id])
+            ref = EntityReference(entity_type=source['replica_type'].removeprefix('anvil_'),
+                                  entity_id=source['entity_id'])
+            actual[ref] = source['contents']
+        self.assertEqual(expected, actual)

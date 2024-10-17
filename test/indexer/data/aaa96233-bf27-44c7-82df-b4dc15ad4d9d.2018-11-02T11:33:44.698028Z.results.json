@@ -70,7 +70,8 @@
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ],
             "replica_type": "links"
         }
@@ -78,12 +79,12 @@
     {
         "_index": "azul_v2_dev_test_bundles",
         "_type": "_doc",
-        "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
         "_ignored": ["contents.projects.project_description.keyword"],
         "_score": 1.0,
         "_source": {
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-            "document_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "document_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
             "source": {
                 "id": "42848d8f-ecdc-5b32-a667-a7b5aedfc9f5",
                 "spec": "https://fake_dss_instance/v1:/2"
@@ -349,12 +350,12 @@
     {
         "_index": "azul_v2_dev_test_files",
         "_type": "_doc",
-        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
         "_ignored": ["contents.projects.project_description.keyword"],
         "_score": 1.0,
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-            "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
             "source": {
                 "id": "42848d8f-ecdc-5b32-a667-a7b5aedfc9f5",
                 "spec": "https://fake_dss_instance/v1:/2"
@@ -593,12 +594,12 @@
     {
         "_index": "azul_v2_dev_test_files",
         "_type": "_doc",
-        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
         "_ignored": ["contents.projects.project_description.keyword"],
         "_score": 1.0,
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
-            "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
             "source": {
                 "id": "42848d8f-ecdc-5b32-a667-a7b5aedfc9f5",
                 "spec": "https://fake_dss_instance/v1:/2"
@@ -837,12 +838,12 @@
     {
         "_index": "azul_v2_dev_test_samples",
         "_type": "_doc",
-        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
         "_ignored": ["contents.projects.project_description.keyword"],
         "_score": 1.0,
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
-            "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
             "source": {
                 "id": "42848d8f-ecdc-5b32-a667-a7b5aedfc9f5",
                 "spec": "https://fake_dss_instance/v1:/2"
@@ -1106,12 +1107,12 @@
     {
         "_index": "azul_v2_dev_test_projects",
         "_type": "_doc",
-        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
         "_ignored": ["contents.projects.project_description.keyword"],
         "_score": 1.0,
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-            "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
             "source": {
                 "id": "42848d8f-ecdc-5b32-a667-a7b5aedfc9f5",
                 "spec": "https://fake_dss_instance/v1:/2"
@@ -2904,12 +2905,12 @@
     {
         "_index": "azul_v2_dev_test_cell_suspensions",
         "_type": "_doc",
-        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
         "_ignored": ["contents.projects.project_description.keyword"],
         "_score": 1.0,
         "_source": {
             "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-            "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204_exists_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z",
             "source": {
                 "id": "42848d8f-ecdc-5b32-a667-a7b5aedfc9f5",
                 "spec": "https://fake_dss_instance/v1:/2"
@@ -3485,7 +3486,8 @@
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
             "replica_type": "sequence_file",
             "hub_ids": [
-                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb"
+                "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ]
         },
         "_type": "_doc"
@@ -3524,7 +3526,8 @@
             "replica_type": "cell_suspension",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ]
         },
         "_type": "_doc"
@@ -3555,7 +3558,8 @@
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
             "replica_type": "sequence_file",
             "hub_ids": [
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ]
         },
         "_type": "_doc"
@@ -3608,7 +3612,8 @@
             "replica_type": "specimen_from_organism",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ]
         },
         "_type": "_doc"
@@ -3688,7 +3693,9 @@
             },
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "replica_type": "project",
-            "hub_ids": []
+            "hub_ids": [
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
+            ]
         },
         "_type": "_doc"
     },
@@ -3750,7 +3757,8 @@
             "entity_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ],
             "replica_type": "donor_organism"
         },
@@ -3793,7 +3801,8 @@
             "entity_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ],
             "replica_type": "library_preparation_protocol"
         },
@@ -3830,7 +3839,8 @@
             "entity_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ],
             "replica_type": "sequencing_protocol"
         },
@@ -3856,7 +3866,8 @@
             "entity_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
             "hub_ids": [
                 "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                "70d1af4a-82c8-478a-8960-e9028b3616ca"
+                "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ],
             "replica_type": "process"
         },

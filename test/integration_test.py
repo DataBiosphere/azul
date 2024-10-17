@@ -152,9 +152,7 @@ from azul.plugins.metadata.anvil.bundle import (
     Link,
 )
 from azul.plugins.repository.tdr_anvil import (
-    BundleEntityType,
-    TDRAnvilBundleFQID,
-    TDRAnvilBundleFQIDJSON,
+    BundleType,
 )
 from azul.portal_service import (
     PortalService,
@@ -165,9 +163,6 @@ from azul.service.async_manifest_service import (
 from azul.service.manifest_service import (
     ManifestFormat,
     ManifestGenerator,
-)
-from azul.strings import (
-    pluralize,
 )
 from azul.terra import (
     ServiceAccountCredentialsProvider,
@@ -350,7 +345,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 if not (
                     # DUOS bundles are too sparse to fulfill the managed access tests
                     config.is_anvil_enabled(catalog)
-                    and cast(TDRAnvilBundleFQID, bundle_fqid).entity_type is BundleEntityType.duos
+                    and bundle_fqid.version == BundleType.duos.value
                 )
             )
             bundle_fqid = self.random.choice(bundle_fqids)
@@ -503,8 +498,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if config.is_hca_enabled(catalog):
             bundle_index, project_index = 'bundles', 'projects'
         elif config.is_anvil_enabled(catalog):
-            bundle_index = pluralize(BundleEntityType.primary.value)
-            project_index = 'datasets'
+            bundle_index, project_index = 'biosamples', 'datasets'
         else:
             assert False, catalog
         service_paths = {
@@ -1271,22 +1265,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle[special_fields.bundle_uuid],
                                                 version=bundle[special_fields.bundle_version],
                                                 source=source)
-            if config.is_anvil_enabled(catalog):
-                # Every primary bundle contains 1 or more biosamples, 1 dataset,
-                # and 0 or more other entities. Biosamples only occur in primary
-                # bundles.
-                if len(hit['biosamples']) > 0:
-                    entity_type = BundleEntityType.primary
-                # Supplementary bundles contain only 1 file and 1 dataset.
-                elif len(hit['files']) > 0:
-                    entity_type = BundleEntityType.supplementary
-                # DUOS bundles contain only 1 dataset.
-                elif len(hit['datasets']) > 0:
-                    entity_type = BundleEntityType.duos
-                else:
-                    assert False, hit
-                bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
-                bundle_fqid['entity_type'] = entity_type.value
             bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
             indexed_fqids.add(bundle_fqid)
         return indexed_fqids
@@ -1911,7 +1889,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 }
                 self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
-                self.assertEqual({'entities', 'links'}, bundle_json.keys())
+                self.assertEqual({'entities', 'links', 'orphans'}, bundle_json.keys())
                 entities, links = bundle_json['entities'], bundle_json['links']
                 self.assertIsInstance(entities, dict)
                 self.assertIsInstance(links, list)
