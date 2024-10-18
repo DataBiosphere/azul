@@ -1,6 +1,6 @@
 """
-Download manifest and metadata for a given bundle from the given repository
-source and store them as separate JSON files in the index test data directory.
+Download the contents of a given bundle from the given repository source and
+store it as a single JSON file.
 
 Note: silently overwrites the destination file.
 """
@@ -14,10 +14,6 @@ import os
 import struct
 import sys
 import uuid
-
-from more_itertools import (
-    one,
-)
 
 from azul import (
     cache,
@@ -52,21 +48,14 @@ log = logging.getLogger(__name__)
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=AzulArgumentHelpFormatter)
-    default_catalog = config.default_catalog
-    plugin_cls = RepositoryPlugin.load(default_catalog)
-    plugin = plugin_cls.create(default_catalog)
-    if len(plugin.sources) == 1:
-        source_arg = {'default': str(one(plugin.sources))}
-    else:
-        source_arg = {'required': True}
     parser.add_argument('--source', '-s',
-                        **source_arg,
+                        required=True,
                         help='The repository source containing the bundle')
     parser.add_argument('--uuid', '-b',
                         required=True,
                         help='The UUID of the bundle to can.')
     parser.add_argument('--version', '-v',
-                        help='The version of the bundle to can  (default: the latest version).')
+                        help='The version of the bundle to can. Required for HCA, ignored for AnVIL.')
     parser.add_argument('--output-dir', '-O',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the output directory (default: %(default)s).')
