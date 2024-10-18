@@ -1530,7 +1530,7 @@ class Replica(Document[ReplicaCoordinates[E]]):
     #: The type of replica, i.e., what sort of metadata document from the
     #: underlying data repository we are storing a copy of. In practice, this is
     #: the same as `self.coordinates.entity.entity_type`, but this isn't
-    # necessarily the case.
+    #: necessarily the case.
     #:
     #: Typically, all replicas of the same type have similar shapes, just like
     #: contributions for entities of the same type. However, mixing replicas of
