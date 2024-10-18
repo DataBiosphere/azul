@@ -2057,11 +2057,12 @@ class ResponseHeadersTest(AzulTestCase):
         }
         # https://www.w3.org/TR/CSP2/#policy-syntax
         directive_re = re.compile(r'[ \t]*([a-zA-Z0-9-]+)'
-                                  # Directive value can be any visible character
-                                  # (0x21-0xFE), plus ' ' (0x20) and '\t' (0x09)
-                                  # except ',' (0x2C) and ';' (0x3B).
-                                  r'(?:[ \t]([\x21-\x2b\x2d-\x3a\x3c-\xFE\x20\x09]+))?')
-        nonce_re = re.compile(r"'nonce-([a-zA-Z0-9_-]+)'")
+                                  # Space, tab and any visible character
+                                  # (0x21-0xFE) except for comma (0x2C) or
+                                  # semicolon (0x3B).
+                                  r'(?:[ \t]([ \t\x21-\x2B\x2D-\x3A\x3C-\xFE]+))?')
+        # The nonce token should be 43 characters long (32 bytes Base64 encoded)
+        nonce_re = re.compile(r"'nonce-([a-zA-Z0-9_-]{43})'")
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, expected_headers in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
@@ -2074,7 +2075,7 @@ class ResponseHeadersTest(AzulTestCase):
                         # These paths have a CSP that differs from the default
                         # by including randomly generated 'nonce' values.
                         if path in ['/', '/oauth2_redirect']:
-                            nonce = set()
+                            nonces = set()
                             for directive in response.headers['Content-Security-Policy'].split(';'):
                                 match = directive_re.fullmatch(directive)
                                 self.assertIsNotNone(match)
@@ -2082,10 +2083,8 @@ class ResponseHeadersTest(AzulTestCase):
                                 if name in ('script-src', 'style-src'):
                                     match = nonce_re.search(value)
                                     self.assertIsNotNone(match)
-                                    nonce.add(match.group(1))
-                            nonce = one(nonce)
-                            # Our nonce token is 32 bytes Base64 encoded
-                            self.assertEqual(43, len(nonce))
+                                    nonces.add(match.group(1))
+                            nonce = one(nonces)
                             expected_csp = AzulChaliceApp.content_security_policy(nonce)
                             expected['Content-Security-Policy'] = expected_csp
                         self.assertIsSubset(expected.items(), response.headers.items())
