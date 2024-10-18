@@ -46,7 +46,8 @@ RUN mkdir terraform \
 RUN install -m 0755 -d /etc/apt/keyrings
 COPY --chmod=0644 bin/keys/docker-apt-keyring.pgp /etc/apt/keyrings/docker.gpg
 ARG azul_docker_version
-RUN set -o pipefail \
+RUN --mount=type=bind,source=fips_enabled,target=/proc/sys/crypto/fips_enabled \
+    set -o pipefail \
     && ( \
       echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" \
       | tee /etc/apt/sources.list.d/docker.list \
