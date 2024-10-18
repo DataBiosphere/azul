@@ -419,7 +419,8 @@ class AzulChaliceApp(Chalice):
                 body = json.dumps(body, cls=self._LogJSONEncoder)
                 msg = f' ({len(body)} characters)'
             else:
-                msg = f' (first {str(n := 1024)} characters)'
+                n = 1024
+                msg = f' (first {str(n)} characters)'
                 body = json_head(n, body) if not isinstance(body, str | bytes) else body[:n]
             log.info('%s%s', http_body_log_message('request', body, verbatim=True), msg)
 
