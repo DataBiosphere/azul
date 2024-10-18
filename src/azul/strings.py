@@ -9,6 +9,10 @@ from more_itertools import (
     minmax,
 )
 
+from azul import (
+    reject,
+)
+
 
 def to_camel_case(text: str) -> str:
     camel_cased = ''.join(part.title() for part in text.split('_'))
@@ -223,3 +227,109 @@ def longest_common_prefix(strings: Iterable[str]) -> Optional[str]:
         if s2[i] != c:
             return s1[:i]
     return s1
+
+
+def join_lines(*lines: str) -> str:
+    """
+    Join the arguments with a newline character.
+
+    >>> join_lines()
+    ''
+
+    >>> join_lines('a')
+    'a'
+
+    >>> join_lines('a', 'b')
+    'a\\nb'
+    """
+    return '\n'.join(lines)
+
+
+def join_words(*words: str) -> str:
+    """
+    Join the arguments with a space character.
+
+    >>> join_words()
+    ''
+
+    >>> join_words('a')
+    'a'
+
+    >>> join_words('a', 'b')
+    'a b'
+    """
+    return ' '.join(words)
+
+
+def delimit(s: str, delimiter: str) -> str:
+    """
+    Prepend and append a delimiter to a string after ensuring that the former
+    does not occur in the latter.
+
+    >>> delimit('foo', "'")
+    "'foo'"
+
+    >>> delimit("foo's", "'")
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: ("'", 'must not occur in', "foo's")
+    """
+    reject(delimiter in s, delimiter, 'must not occur in', s)
+    return delimiter + s + delimiter
+
+
+def back_quote(*words: str) -> str:
+    """
+    Join the arguments with a space character and enclose the result in back
+    quotes. The arguments must not contain back quotes.
+
+    >>> back_quote()
+    '``'
+
+    >>> back_quote('foo', 'bar')
+    '`foo bar`'
+
+    >>> back_quote('foo`s')
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: ('`', 'must not occur in', 'foo`s')
+    """
+    return delimit(join_words(*words), '`')
+
+
+def single_quote(*words: str) -> str:
+    """
+    Join the arguments with a space character and enclose the result in single
+    quotes. The arguments must not contain single quotes.
+
+    >>> single_quote()
+    "''"
+
+    >>> single_quote('foo', 'bar')
+    "'foo bar'"
+
+    >>> single_quote("foo", "bar's")
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: ("'", 'must not occur in', "foo bar's")
+    """
+    return delimit(join_words(*words), "'")
+
+
+def double_quote(*words: str) -> str:
+    """
+    Join the arguments with a space character and enclose the result in double
+    quotes. The arguments must not contain double quotes.
+
+    >>> double_quote()
+    '""'
+
+    >>> double_quote('foo', 'bar')
+    '"foo bar"'
+
+    >>> double_quote('foo', 'b"a"r')
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: ('"', 'must not occur in', 'foo b"a"r')
+    """
+    return delimit(join_words(*words), '"')

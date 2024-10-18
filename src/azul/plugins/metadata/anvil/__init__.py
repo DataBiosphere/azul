@@ -36,7 +36,6 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     BiosampleTransformer,
     BundleTransformer,
     DatasetTransformer,
-    DiagnosisTransformer,
     DonorTransformer,
     FileTransformer,
 )
@@ -96,7 +95,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             BiosampleTransformer,
             BundleTransformer,
             DatasetTransformer,
-            DiagnosisTransformer,
             DonorTransformer,
             FileTransformer,
         )

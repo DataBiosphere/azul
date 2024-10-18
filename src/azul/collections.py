@@ -131,6 +131,17 @@ def explode_dict(d: Mapping[K, Union[V, list[V], set[V], tuple[V]]]
         yield dict(zip(d.keys(), t))
 
 
+def none_safe_apply(f: Callable[[K], V], o: K | None) -> V | None:
+    """
+    >>> none_safe_apply(str, 123)
+    '123'
+
+    >>> none_safe_apply(str, None) is None
+    True
+    """
+    return None if o is None else f(o)
+
+
 def none_safe_key(none_last: bool = False) -> Callable[[Any], Any]:
     """
     Returns a sort key that handles None values.
@@ -270,6 +281,10 @@ def adict(seq: Union[Mapping[K, V], Iterable[tuple[K, V]]] = None,
     return kwargs if seq is None else dict(seq, **kwargs)
 
 
+def _athing(cls: type, *args):
+    return cls(arg for arg in args if arg is not None)
+
+
 def atuple(*args: V) -> tuple[V, ...]:
     """
     >>> atuple()
@@ -281,7 +296,7 @@ def atuple(*args: V) -> tuple[V, ...]:
     >>> atuple(0, None)
     (0,)
     """
-    return tuple(arg for arg in args if arg is not None)
+    return _athing(tuple, *args)
 
 
 def alist(*args: V) -> list[V]:
@@ -295,7 +310,21 @@ def alist(*args: V) -> list[V]:
     >>> alist(0, None)
     [0]
     """
-    return list(arg for arg in args if arg is not None)
+    return _athing(list, *args)
+
+
+def aset(*args: V) -> set[V]:
+    """
+    >>> aset()
+    set()
+
+    >>> aset(None)
+    set()
+
+    >>> aset(0, None)
+    {0}
+    """
+    return _athing(set, *args)
 
 
 class NestedDict(defaultdict):
