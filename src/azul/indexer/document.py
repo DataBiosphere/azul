@@ -1528,13 +1528,10 @@ class Replica(Document[ReplicaCoordinates[E]]):
     """
 
     #: The type of replica, i.e., what sort of metadata document from the
-    #: underlying data repository we are storing a copy of. Conceptually related
-    #: to the entity type, but its value may be different from the entity type.
-    #: For example, AnVIL replicas use the name of the data table that contains
-    #: the entity, e.g. 'anvil_file', instead of just 'file'.
+    #: underlying data repository we are storing a copy of. In practice, this is
+    #: the same as `self.coordinates.entity.entity_type`, but this isn't
+    #: necessarily the case.
     #:
-    #: We can't model replica types as entity types because we want to hold all
-    #: replicas in a single index per catalog to facilitate quick retrieval.
     #: Typically, all replicas of the same type have similar shapes, just like
     #: contributions for entities of the same type. However, mixing replicas of
     #: different types results in an index containing documents of heterogeneous

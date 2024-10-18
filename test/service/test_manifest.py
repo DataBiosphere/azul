@@ -2090,7 +2090,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
         expected = {
             # Consolidate entities with the same replica (i.e. datasets)
             json_hash(entity).digest(): {
-                'type': 'anvil_' + entity_ref.entity_type,
+                'type': entity_ref.entity_type,
                 'value': entity,
             }
             for bundle in self.bundles()
