@@ -739,6 +739,12 @@ def validate_json_param(name: str, value: str) -> MutableJSON:
         raise BRE(f'The {name!r} parameter is not valid JSON')
 
 
+def validate_wait(wait: str | None):
+    valid_values = ['0', '1']
+    if wait not in [None, *valid_values]:
+        raise BRE(f'Invalid wait value `{wait}`. Must be one of {valid_values}')
+
+
 class Mandatory:
     """
     Validation wrapper signifying that a parameter is mandatory.
@@ -1057,26 +1063,27 @@ def parameter_hoisting_note(method: str,
                             ) -> str:
     return fd('''
         Any of the query parameters documented below can alternatively be passed
-        as a property of a JSON object in the body of the request. This can be
-        useful in case the value of the `filters` query parameter causes the URL
-        to exceed the maximum length of 8192 characters, resulting in a 413
-        Request Entity Too Large response.
+        as a property of a JSON object in the body of the request. This is
+        referred to as *parameter hoisting* and can be useful in case the value
+        of the `filters` query parameter causes the URL to exceed the maximum
+        length of 8192 characters, resulting in a 413 Request Entity Too Large
+        response.
 
         The request `%s %s?filters={…}`, for example, is equivalent to  `%s %s`
-        with the body `{"filters": "{…}"}` in which any double quotes or
-        backslash characters inside `…` are escaped with another backslash. That
-        escaping is the requisite procedure for embedding one JSON structure
-        inside another.
+        with a `Content-Type` header of `application/json` and the body
+        `{"filters": "{…}"}` in which any double quotes or backslash characters
+        inside `…` are escaped with another backslash. That escaping is the
+        requisite procedure for embedding one JSON structure inside another.
     ''' % (method, endpoint, equivalent_method, endpoint))
 
 
 def repository_search_spec(*, post: bool):
     id_spec_link = '#operations-Index-get_index__entity_type___entity_id_'
     return {
-        'summary': fd(f'''
-            Search an index for entities of interest
-            {", with filters provided in the request body" if post else ""}.
-        '''),
+        'summary': (
+            'Search an index for entities of interest' +
+            iif(post, ', with large parameters provided in the request body')
+        ),
         'deprecated': post,
         'description':
             iif(post, parameter_hoisting_note('GET', '/index/files', 'POST') + fd('''
@@ -1312,25 +1319,67 @@ def get_summary():
                                              authentication=request.authentication)
 
 
-def manifest_route(*, fetch: bool, initiate: bool):
+def wait_parameter_spec(*, default: int) -> JSON:
+    valid_values = [0, 1]
+    assert default in valid_values, default
+    return params.query(
+        'wait',
+        schema.optional(schema.with_default(default,
+                                            type_=schema.enum(*valid_values))),
+        description=fd('''
+            If 0, the client is responsible for honoring the waiting period
+            specified in the `Retry-After` response header. If 1, the server
+            will delay the response in order to consume as much of that waiting
+            period as possible. This parameter should only be set to 1 by
+            clients who can't honor the `Retry-After` header, preventing them
+            from quickly exhausting the maximum number of redirects. If the
+            server cannot wait the full amount, any amount of wait time left
+            will still be returned in the `Retry-After` header of the response.
+        ''')
+    )
+
+
+post_manifest_example_url = (
+    f'{app.base_url}/manifest/files'
+    f'?catalog={list(config.catalogs.keys())[0]}'
+    '&filters={…}'
+    f'&format={app.metadata_plugin.manifest_formats[0].value}'
+)
+
+
+def manifest_route(*, fetch: bool, initiate: bool, curl: bool = False):
+    if initiate:
+        if curl:
+            assert not fetch
+            method = 'POST'
+        else:
+            method = 'PUT'
+    else:
+        assert not curl
+        method = 'GET'
     return app.route(
         # The path parameter could be a token *or* an object key, but we don't
         # want to complicate the API with this detail
         ('/fetch' if fetch else '')
         + ('/manifest/files' if initiate else '/manifest/files/{token}'),
         # The initial PUT request is idempotent.
-        methods=['PUT' if initiate else 'GET'],
+        methods=[method],
+        # In order to support requests made with `curl` and its `--data` option,
+        # we accept the `application/x-www-form-urlencoded` content-type.
+        content_types=['application/json', 'application/x-www-form-urlencoded'],
         interactive=fetch,
         cors=True,
         path_spec=None if initiate else {
             'parameters': [
                 params.path('token', str, description=fd('''
                     An opaque string representing the manifest preparation job
-                '''))
+                ''')),
+                *([] if fetch else [wait_parameter_spec(default=0)])
             ]
         },
         method_spec={
             'tags': ['Manifests'],
+            'deprecated': curl,
             'summary':
                 (
                     'Initiate the preparation of a manifest'
@@ -1338,19 +1387,50 @@ def manifest_route(*, fetch: bool, initiate: bool):
                     'Determine status of a manifest preparation job'
                 ) + (
                     ' via XHR' if fetch else ''
+                ) + (
+                    ' as an alternative to PUT for curl users' if curl else ''
                 ),
-            'description': fd('''
-                Create a manifest preparation job, returning either
+            'description': (
+                fd('''
+                    Create a manifest preparation job, returning either
 
-                - a 301 redirect to the URL of the status of that job or
+                    - a 301 redirect to the URL of the status of that job or
 
-                - a 302 redirect to the URL of an already prepared manifest.
+                    - a 302 redirect to the URL of an already prepared manifest.
+                ''')
+                + iif(not curl, fd(f'''
+                    This endpoint is not suitable for interactive use via the
+                    Swagger UI. Please use [{method} /fetch/manifest/files][1]
+                    instead.
 
-                This endpoint is not suitable for interactive use via the
-                Swagger UI. Please use [PUT /fetch/manifest/files][1] instead.
+                    [1]: #operations-Manifests-{method.lower()}_fetch_manifest_files
+                '''))
+                + parameter_hoisting_note(method, '/manifest/files', method)
+                + iif(curl, fd(f'''
+                    Requests to this endpoint are idempotent, so PUT would be
+                    the more standards-compliant method to use. POST is offered
+                    as a convenience for `curl` users, exploiting the fact that
+                    `curl` drops to GET when following a redirect in response to
+                    a POST, but not a PUT request. This is the only reason for
+                    the deprecation of this endpoint and there are currently no
+                    plans to remove it.
 
-                [1]: #operations-Manifests-put_fetch_manifest_files
-            ''') + parameter_hoisting_note('PUT', '/manifest/files', 'PUT')
+                    To use this endpoint with `curl`, pass the `--location` and
+                    `--data` options. This makes `curl` automatically follow the
+                    intermediate redirects to the GET /manifest/files endpoint,
+                    and ultimately to the URL that yields the manifest. Example:
+
+                    ```
+                    curl --data "" --location {post_manifest_example_url}
+                    ```
+
+                    In order to facilitate this, a POST request to this endpoint
+                    may have a `Content-Type` header of
+                    `application/x-www-form-urlencoded`, which is what the
+                    `--data` option sends. The body must be empty in that case
+                    and parameters cannot be hoisted as described above.
+                '''))
+            )
             if initiate and not fetch else
             fd('''
                 Check on the status of an ongoing manifest preparation job,
@@ -1365,16 +1445,18 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 Swagger UI. Please use [GET /fetch/manifest/files/{token}][1]
                 instead.
 
-                [1]: #operations-Manifests-get_fetch_manifest_files
-            ''') if not initiate and not fetch else fd('''
+                [1]: #operations-Manifests-get_fetch_manifest_files__token_
+            ''')
+            if not initiate and not fetch else
+            fd(f'''
                 Create a manifest preparation job, returning a 200 status
                 response whose JSON body emulates the HTTP headers that would be
-                found in a response to an equivalent request to the [PUT
+                found in a response to an equivalent request to the [{method}
                 /manifest/files][1] endpoint.
 
                 Whenever client-side JavaScript code is used in a web
                 application to request the preparation of a manifest from Azul,
-                this endpoint should be used instead of [PUT
+                this endpoint should be used instead of [{method}
                 /manifest/files][1]. This way, the client can use XHR to make
                 the request, retaining full control over the handling of
                 redirects and enabling the client to bypass certain limitations
@@ -1384,8 +1466,9 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 upper limit on the number of consecutive redirects, before the
                 manifest generation job is done.
 
-                [1]: #operations-Manifests-put_manifest_files
-            ''') + parameter_hoisting_note('PUT', '/fetch/manifest/files', 'PUT')
+                [1]: #operations-Manifests-{method.lower()}_manifest_files
+            ''')
+            + parameter_hoisting_note(method, '/fetch/manifest/files', method)
             if initiate and fetch else
             fd('''
                 Check on the status of an ongoing manifest preparation job,
@@ -1405,10 +1488,11 @@ def manifest_route(*, fetch: bool, initiate: bool):
                 upper limit on the number of consecutive redirects, before the
                 manifest generation job is done.
 
-                [1]: #operations-Manifests-get_manifest_files
+                [1]: #operations-Manifests-get_manifest_files__token_
             '''),
             'parameters': [
                 catalog_param_spec,
+                *([wait_parameter_spec(default=1)] if curl else []),
                 filters_param_spec,
                 params.query(
                     'format',
@@ -1474,13 +1558,10 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         'Location': {
                             'description': fd('''
                                 The URL of the manifest preparation job at
-                            ''') + fd('''the [`GET
-                                /manifest/files/{token}`][2] endpoint.
-
-                                [2]: #operations-Manifests-get_fetch_manifest_files_token
-                                ''') if initiate else fd('''
+                                the `GET /manifest/files/{token}` endpoint.
+                            ''') if initiate else fd('''
                                 The URL of this endpoint
-                                '''),
+                            '''),
                             'schema': {'type': 'string', 'format': 'url'}
                         },
                         'Retry-After': {
@@ -1533,14 +1614,14 @@ def manifest_route(*, fetch: bool, initiate: bool):
 
                         For a detailed description of these properties see the
                         documentation for the respective response headers
-                        documented under ''') + (fd('''
-                        [PUT /manifest/files][1].
+                        documented under ''') + (fd(f'''
+                        [{method} /manifest/files][1].
 
-                        [1]: #operations-Manifests-put_manifest_files
+                        [1]: #operations-Manifests-{method.lower()}_manifest_files
                         ''') if initiate else fd('''
                         [GET /manifest/files/{token}][1].
 
-                        [1]: #operations-Manifests-get_manifest_files
+                        [1]: #operations-Manifests-get_manifest_files__token_
                         ''')) + fd('''
 
                         Note: For a 200 status code response whose body has the
@@ -1550,7 +1631,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
                         redirect, this time a genuine (not emulated) 302 status
                         redirect to the actual location of the manifest.
 
-                        [2]: #operations-Manifests-get_manifest_files
+                        [2]: #operations-Manifests-get_manifest_files__token_
 
                         Note: A 200 status response with a `Status` property of
                         302 in its body additionally contains a `CommandLine`
@@ -1578,6 +1659,7 @@ def manifest_route(*, fetch: bool, initiate: bool):
     )
 
 
+@manifest_route(fetch=False, initiate=True, curl=True)
 @manifest_route(fetch=False, initiate=True)
 def file_manifest():
     return _file_manifest(fetch=False)
@@ -1600,22 +1682,38 @@ def fetch_file_manifest_with_token(token: str):
 
 def _file_manifest(fetch: bool, token_or_key: Optional[str] = None):
     request = app.current_request
+    post = request.method == 'POST'
+    if (
+        post
+        and request.headers.get('content-type') == 'application/x-www-form-urlencoded'
+        and request.raw_body != b''
+    ):
+        raise BRE('POST requests to this endpoint must have an empty body if '
+                  'they specify a `Content-Type` header of '
+                  '`application/x-www-form-urlencoded`')
     query_params = request.query_params or {}
     _hoist_parameters(query_params, request)
     if token_or_key is None:
         query_params.setdefault('filters', '{}')
+        if post:
+            query_params.setdefault('wait', '1')
         # We list the `catalog` validator first so that the catalog is validated
         # before any other potentially catalog-dependent validators are invoked
         validate_params(query_params,
                         catalog=validate_catalog,
                         format=validate_manifest_format,
-                        filters=validate_filters)
+                        filters=validate_filters,
+                        **({'wait': validate_wait} if post else {}))
         # Now that the catalog is valid, we can provide the default format that
         # depends on it
         default_format = app.metadata_plugin.manifest_formats[0].value
         query_params.setdefault('format', default_format)
     else:
-        validate_params(query_params)
+        validate_params(query_params,
+                        # If the initial request was a POST to the non-fetch
+                        # endpoint, the 'wait' param will be carried over to
+                        # each subsequent GET request to the non-fetch endpoint.
+                        **({'wait': validate_wait} if not fetch else {}))
     return app.manifest_controller.get_manifest_async(query_params=query_params,
                                                       token_or_key=token_or_key,
                                                       fetch=fetch,
@@ -1662,21 +1760,7 @@ repository_files_spec = {
                 made. If that fails, the UUID of the file will be used instead.
             ''')
         ),
-        params.query(
-            'wait',
-            schema.optional(int),
-            description=fd('''
-                If 0, the client is responsible for honoring the waiting period
-                specified in the Retry-After response header. If 1, the server
-                will delay the response in order to consume as much of that
-                waiting period as possible. This parameter should only be set to
-                1 by clients who can't honor the `Retry-After` header,
-                preventing them from quickly exhausting the maximum number of
-                redirects. If the server cannot wait the full amount, any amount
-                of wait time left will still be returned in the Retry-After
-                header of the response.
-            ''')
-        ),
+        wait_parameter_spec(default=0),
         params.query(
             'replica',
             schema.optional(str),
@@ -1816,16 +1900,6 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
 
     def validate_replica(replica: str) -> None:
         if replica not in ('aws', 'gcp'):
-            raise ValueError
-
-    def validate_wait(wait: Optional[str]) -> Optional[int]:
-        if wait is None:
-            return None
-        elif wait == '0':
-            return False
-        elif wait == '1':
-            return True
-        else:
             raise ValueError
 
     def validate_version(version: str) -> None:
