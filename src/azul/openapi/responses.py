@@ -41,3 +41,14 @@ def header(type_: TYPE, **kwargs: PrimitiveJSON) -> JSON:
         'schema': schema.make_type(type_),
         **kwargs
     }
+
+
+def http_504_response() -> JSON:
+    return {
+        '504': {
+            'description': 'Request timed out. When handling this response,'
+                           ' clients should wait the number of seconds given in'
+                           ' the `Retry-After` header and then retry the'
+                           ' request.'
+        }
+    }
