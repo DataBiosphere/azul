@@ -204,6 +204,8 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
         bundles = [self.primary_bundle(), self.duos_bundle()]
         for bundle_fqid in bundles:
             bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
+            # To simplify the test, we drop all entities from the bundles
+            # except for the dataset
             bundle.links.clear()
             bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
             self._index_bundle(bundle, delete=False)
@@ -231,5 +233,7 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
         self.assertDictEqual(doc_counts, {
             DocumentType.aggregate: 1,
             DocumentType.contribution: 2,
-            **({DocumentType.replica: 2} if config.enable_replicas else {})
+            # No replica is emitted for the primary dataset because we dropped
+            # the files (hubs) from its bundle above
+            **({DocumentType.replica: 1} if config.enable_replicas else {})
         })

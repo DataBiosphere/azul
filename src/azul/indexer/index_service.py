@@ -38,7 +38,6 @@ from elasticsearch.helpers import (
 from more_itertools import (
     first,
     one,
-    unzip,
 )
 
 from azul import (
@@ -303,19 +302,21 @@ class IndexService(DocumentService):
             log.info('Transforming %i entities in partition %s of bundle %s, version %s.',
                      num_entities, partition, bundle.uuid, bundle.version)
             contributions = []
-            replicas = []
+            replicas_by_coords = {}
             for transformer in transformers:
-                # The cast is necessary because unzip()'s type stub doesn't
-                # support heterogeneous tuples.
-                transforms = cast(
-                    tuple[Iterable[Optional[Contribution]], Iterable[Optional[Replica]]],
-                    unzip(transformer.transform(partition))
-                )
-                if transforms:
-                    contributions_part, replicas_part = transforms
-                    contributions.extend(filter(None, contributions_part))
-                    replicas.extend(filter(None, replicas_part))
-            return contributions, replicas
+                for document in transformer.transform(partition):
+                    if isinstance(document, Contribution):
+                        contributions.append(document)
+                    elif isinstance(document, Replica):
+                        try:
+                            dup = replicas_by_coords[document.coordinates]
+                        except KeyError:
+                            replicas_by_coords[document.coordinates] = document
+                        else:
+                            dup.hub_ids.extend(document.hub_ids)
+                    else:
+                        assert False, document
+            return contributions, list(replicas_by_coords.values())
 
     def create_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()

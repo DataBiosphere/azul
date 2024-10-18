@@ -225,6 +225,365 @@
                 {
                     "fields": [
                         {
+                            "name": "biomaterial_core",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "biomaterial_id",
+                                        "namespace": "donor_organism.biomaterial_core",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ncbi_taxon_id",
+                                        "namespace": "donor_organism.biomaterial_core",
+                                        "type": {
+                                            "items": "long",
+                                            "type": "array"
+                                        }
+                                    }
+                                ],
+                                "name": "donor_organism.biomaterial_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "death",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "cause_of_death",
+                                        "namespace": "donor_organism.death",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "donor_organism.death",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "describedBy",
+                            "namespace": "donor_organism",
+                            "type": "string"
+                        },
+                        {
+                            "name": "diseases",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "ontology",
+                                            "namespace": "donor_organism.diseases",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_label",
+                                            "namespace": "donor_organism.diseases",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "text",
+                                            "namespace": "donor_organism.diseases",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "donor_organism.diseases",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "genus_species",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "ontology",
+                                            "namespace": "donor_organism.genus_species",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_label",
+                                            "namespace": "donor_organism.genus_species",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "text",
+                                            "namespace": "donor_organism.genus_species",
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "name": "donor_organism.genus_species",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "human_specific",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "body_mass_index",
+                                        "namespace": "donor_organism.human_specific",
+                                        "type": "double"
+                                    },
+                                    {
+                                        "name": "ethnicity",
+                                        "namespace": "donor_organism.human_specific",
+                                        "type": {
+                                            "items": {
+                                                "fields": [
+                                                    {
+                                                        "name": "ontology",
+                                                        "namespace": "donor_organism.human_specific.ethnicity",
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "name": "ontology_label",
+                                                        "namespace": "donor_organism.human_specific.ethnicity",
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "name": "text",
+                                                        "namespace": "donor_organism.human_specific.ethnicity",
+                                                        "type": "string"
+                                                    }
+                                                ],
+                                                "name": "donor_organism.human_specific.ethnicity",
+                                                "type": "record"
+                                            },
+                                            "type": "array"
+                                        }
+                                    }
+                                ],
+                                "name": "donor_organism.human_specific",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "is_living",
+                            "namespace": "donor_organism",
+                            "type": "string"
+                        },
+                        {
+                            "name": "organism_age",
+                            "namespace": "donor_organism",
+                            "type": "string"
+                        },
+                        {
+                            "name": "organism_age_unit",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "donor_organism.organism_age_unit",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ontology_label",
+                                        "namespace": "donor_organism.organism_age_unit",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "donor_organism.organism_age_unit",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "donor_organism.organism_age_unit",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "donor_organism",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "donor_organism.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "donor_organism.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "donor_organism.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "donor_organism.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "donor_organism",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sex",
+                            "namespace": "donor_organism",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "donor_organism",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "describedBy",
+                            "namespace": "library_preparation_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "end_bias",
+                            "namespace": "library_preparation_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "input_nucleic_acid_molecule",
+                            "namespace": "library_preparation_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "library_preparation_protocol.input_nucleic_acid_molecule",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "library_preparation_protocol.input_nucleic_acid_molecule",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "library_preparation_protocol.input_nucleic_acid_molecule",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "library_construction_approach",
+                            "namespace": "library_preparation_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "library_preparation_protocol.library_construction_approach",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ontology_label",
+                                        "namespace": "library_preparation_protocol.library_construction_approach",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "library_preparation_protocol.library_construction_approach",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "library_preparation_protocol.library_construction_approach",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "library_construction_kit",
+                            "namespace": "library_preparation_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "manufacturer",
+                                        "namespace": "library_preparation_protocol.library_construction_kit",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "retail_name",
+                                        "namespace": "library_preparation_protocol.library_construction_kit",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "library_preparation_protocol.library_construction_kit",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "nucleic_acid_source",
+                            "namespace": "library_preparation_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "primer",
+                            "namespace": "library_preparation_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "protocol_core",
+                            "namespace": "library_preparation_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "protocol_id",
+                                        "namespace": "library_preparation_protocol.protocol_core",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "library_preparation_protocol.protocol_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "library_preparation_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "library_preparation_protocol.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "library_preparation_protocol.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "library_preparation_protocol.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "library_preparation_protocol.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "library_preparation_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "strand",
+                            "namespace": "library_preparation_protocol",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "library_preparation_protocol",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
                             "name": "describedBy",
                             "namespace": "links",
                             "type": "string"
@@ -308,6 +667,62 @@
                         }
                     ],
                     "name": "links",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "describedBy",
+                            "namespace": "process",
+                            "type": "string"
+                        },
+                        {
+                            "name": "process_core",
+                            "namespace": "process",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "process_id",
+                                        "namespace": "process.process_core",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "process.process_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "process",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "process.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "process.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "process.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "process.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "process",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "process",
                     "type": "record"
                 },
                 {
@@ -590,6 +1005,117 @@
                         }
                     ],
                     "name": "sequence_file",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "describedBy",
+                            "namespace": "sequencing_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "instrument_manufacturer_model",
+                            "namespace": "sequencing_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "sequencing_protocol.instrument_manufacturer_model",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ontology_label",
+                                        "namespace": "sequencing_protocol.instrument_manufacturer_model",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "sequencing_protocol.instrument_manufacturer_model",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sequencing_protocol.instrument_manufacturer_model",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "paired_end",
+                            "namespace": "sequencing_protocol",
+                            "type": "boolean"
+                        },
+                        {
+                            "name": "protocol_core",
+                            "namespace": "sequencing_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "protocol_id",
+                                        "namespace": "sequencing_protocol.protocol_core",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sequencing_protocol.protocol_core",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "provenance",
+                            "namespace": "sequencing_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "document_id",
+                                        "namespace": "sequencing_protocol.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "submission_date",
+                                        "namespace": "sequencing_protocol.provenance",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "update_date",
+                                        "namespace": "sequencing_protocol.provenance",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sequencing_protocol.provenance",
+                                "type": "record"
+                            }
+                        },
+                        {
+                            "name": "schema_type",
+                            "namespace": "sequencing_protocol",
+                            "type": "string"
+                        },
+                        {
+                            "name": "sequencing_approach",
+                            "namespace": "sequencing_protocol",
+                            "type": {
+                                "fields": [
+                                    {
+                                        "name": "ontology",
+                                        "namespace": "sequencing_protocol.sequencing_approach",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "ontology_label",
+                                        "namespace": "sequencing_protocol.sequencing_approach",
+                                        "type": "string"
+                                    },
+                                    {
+                                        "name": "text",
+                                        "namespace": "sequencing_protocol.sequencing_approach",
+                                        "type": "string"
+                                    }
+                                ],
+                                "name": "sequencing_protocol.sequencing_approach",
+                                "type": "record"
+                            }
+                        }
+                    ],
+                    "name": "sequencing_protocol",
                     "type": "record"
                 },
                 {

@@ -1819,14 +1819,14 @@ the private key and can always be regenerated again later using `make config`.
 
 ### 9.1.2 Ensuring split tunnel on client
 
-It is important that you configure the client to only route VPC traffic
-through the VPN. The VPN server will not forward any other traffic, in what's
-commonly referred to as a *split tunnel*. The key indicator of a split tunnel
-is that it doesn't set up a default route on the client system. There will
-only be a route to the private 172.… subnet of the GitLab VPC but the default
-route remains in place. If you configure the VPN connection to set up a
-default route, your Internet access will be severed as soon as you establish
-the VPN connection. 
+Except on stable deployments, you should configure the client to only route VPC
+traffic through the VPN. The VPN server will not forward any other traffic, in
+what's commonly referred to as a *split tunnel*. The key indicator of a split
+tunnel is that it doesn't set up a default route on the client system. There
+will only be a route to the private 172.… subnet of the GitLab VPC but the
+default route remains in place.
+
+On stable deployments, split tunnels are prohibited.
 
 The `make config` step prints instruction on how to configure a split tunnel
 on Ubuntu. 

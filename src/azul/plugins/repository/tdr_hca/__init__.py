@@ -56,6 +56,9 @@ from azul.plugins.repository.tdr import (
     TDRBundleFQID,
     TDRPlugin,
 )
+from azul.strings import (
+    single_quote as sq,
+)
 from azul.terra import (
     TDRSourceRef,
     TDRSourceSpec,
@@ -439,22 +442,19 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRSourceSpec, TDRSourceRef, TDRBundleFQID]
         table_name = backtick(self._full_table_name(source, entity_type))
         entity_id_type = one(set(map(type, entity_ids)))
 
-        def quote(s):
-            return f"'{s}'"
-
         if entity_type == 'links':
             assert issubclass(entity_id_type, BundleFQID), entity_id_type
             entity_ids = cast(set[BundleFQID], entity_ids)
             where_columns = (pk_column, version_column)
             where_values = (
-                (quote(fqid.uuid), f'TIMESTAMP({quote(fqid.version)})')
+                (sq(fqid.uuid), f'TIMESTAMP({sq(fqid.version)})')
                 for fqid in entity_ids
             )
             expected = {fqid.uuid for fqid in entity_ids}
         else:
             assert issubclass(entity_id_type, str), (entity_type, entity_id_type)
             where_columns = (pk_column,)
-            where_values = ((quote(entity_id),) for entity_id in entity_ids)
+            where_values = ((sq(str(entity_id)),) for entity_id in entity_ids)
             expected = entity_ids
         query = f'''
             SELECT {', '.join({pk_column, *non_pk_columns})}

@@ -23,6 +23,9 @@ script statements typically used in `environment` and `environment.local` files.
 from azul.files import (
     write_file_atomically,
 )
+from azul.strings import (
+    single_quote as sq,
+)
 
 
 class Variable(NamedTuple):
@@ -144,7 +147,7 @@ def convert_value(value: str) -> Optional[str]:
                 return '{{' + m[1] + '}}'
 
         value = re.sub(r'\$?{([^}]+)}|\$([_A-Za-z][_A-Za-z0-9]*)', sub, value)
-        return f"'{value}'"
+        return sq(value)
 
 
 if __name__ == '__main__':
