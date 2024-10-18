@@ -78,7 +78,7 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertEqual(response.status_code, 500)
 
                     # The request is always logged
-                    self.assertEqual(len(azul_log.output), 3)
+                    self.assertEqual(len(azul_log.output), 4)
                     headers = {
                         'host': f'{host}:{port}',
                         'user-agent': 'python-requests/2.32.2',
@@ -88,8 +88,10 @@ class TestAppLogging(AzulUnitTestCase):
                     }
                     self.assertEqual(azul_log.output[0],
                                      f'INFO:azul.chalice:Received GET request for {path!r}, '
-                                     f"with {json.dumps({'query': None, 'headers': headers})}.")
+                                     f"with {json.dumps({'query': None, 'headers': headers})}")
                     self.assertEqual(azul_log.output[1],
+                                     'INFO:azul.chalice:… without request body')
+                    self.assertEqual(azul_log.output[2],
                                      'INFO:azul.chalice:Did not authenticate request.')
 
                     # The exception is always logged
@@ -106,7 +108,7 @@ class TestAppLogging(AzulUnitTestCase):
                         self.assertIn(magic_message, response)
                         # … and the response is logged.
                         self.assertEqual(
-                            azul_log.output[2],
+                            azul_log.output[3],
                             'DEBUG:azul.chalice:Returning 500 response with headers {"Content-Type": "text/plain", '
                             f'"Content-Security-Policy": "default-src {sq("self")}", '
                             '"Referrer-Policy": "strict-origin-when-cross-origin", '
@@ -124,7 +126,7 @@ class TestAppLogging(AzulUnitTestCase):
                         })
                         # … and a generic error message is logged.
                         self.assertEqual(
-                            azul_log.output[2],
+                            azul_log.output[3],
                             'INFO:azul.chalice:Returning 500 response. To log headers and body, set AZUL_DEBUG to 1.'
                         )
 
