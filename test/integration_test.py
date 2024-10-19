@@ -148,6 +148,7 @@ from azul.plugins.metadata.anvil.bundle import (
     Link,
 )
 from azul.plugins.repository.tdr_anvil import (
+    BundleType,
     TDRAnvilBundleFQID,
 )
 from azul.portal_service import (
@@ -1251,7 +1252,21 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                  ) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = bundle_fqids
-            if not config.is_anvil_enabled(catalog):
+            if config.is_anvil_enabled(catalog):
+                # Replica bundles do not add contributions to the index are
+                # therefore do not appear anywhere in the service response
+                replica_fqids = {
+                    bundle_fqid
+                    for bundle_fqid in expected_fqids
+                    if cast(TDRAnvilBundleFQID, bundle_fqid).table_name not in (
+                        BundleType.primary.value,
+                        BundleType.supplementary.value,
+                        BundleType.duos.value,
+                    )
+                }
+                expected_fqids -= replica_fqids
+                log.info('Ignoring replica bundles %r', replica_fqids)
+            else:
                 expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(expected_fqids))
                 obsolete_fqids = bundle_fqids - expected_fqids
                 if obsolete_fqids:
@@ -1865,7 +1880,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 }
                 self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
-                self.assertEqual({'entities', 'links'}, bundle_json.keys())
+                self.assertEqual({'entities', 'links', 'orphans'}, bundle_json.keys())
                 entities, links = bundle_json['entities'], bundle_json['links']
                 self.assertIsInstance(entities, dict)
                 self.assertIsInstance(links, list)
@@ -1922,7 +1937,8 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             '--version', fqid.version,
             '--source', str(fqid.source.spec),
             *([
-                  '--table-name', fqid.table_name.value,
+                  '--table-name', fqid.table_name,
+                  '--batch-prefix', 'null' if fqid.batch_prefix is None else fqid.batch_prefix,
               ] if isinstance(fqid, TDRAnvilBundleFQID) else []),
             '--output-dir', output_dir,
         ]

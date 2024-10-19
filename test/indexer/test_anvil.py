@@ -105,13 +105,14 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
                     *,
                     uuid,
                     version=None,
-                    table_name=BundleType.primary
+                    table_name=BundleType.primary.value,
                     ) -> TDRAnvilBundleFQID:
         assert version is None, 'All AnVIL bundles should use the same version'
         return TDRAnvilBundleFQID(source=cls.source,
                                   uuid=uuid,
                                   version=cls.version,
-                                  table_name=table_name)
+                                  table_name=table_name,
+                                  batch_prefix='' if BundleType.is_batched(table_name) else None)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -119,13 +120,18 @@ class AnvilIndexerTestCase(AnvilCannedBundleTestCase, IndexerTestCase):
 
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='6b0f6c0f-5d80-a242-accb-840921351cd5',
-                               table_name=BundleType.supplementary)
+        return cls.bundle_fqid(uuid='c67e7adb-1a9c-a3b9-bc91-eb10a428374a',
+                               table_name=BundleType.supplementary.value)
 
     @classmethod
     def duos_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                               table_name=BundleType.duos)
+                               table_name=BundleType.duos.value)
+
+    @classmethod
+    def replica_bundle(cls) -> TDRAnvilBundleFQID:
+        return cls.bundle_fqid(uuid='9a135c9a-069b-a90e-b588-eaf8d1aeeac9',
+                               table_name='non_schema_orphan_table')
 
 
 class TestAnvilIndexer(AnvilIndexerTestCase,
@@ -166,15 +172,32 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
     def test_list_and_fetch_bundles(self):
         source_ref = self.source
         self._make_mock_tdr_tables(source_ref)
-        expected_bundle_fqids = sorted([
+        canned_bundle_fqids = [
             self.primary_bundle(),
             self.supplementary_bundle(),
-            self.duos_bundle()
+            self.duos_bundle(),
+            self.replica_bundle(),
+        ]
+        expected_bundle_fqids = sorted(canned_bundle_fqids + [
+            self.bundle_fqid(uuid='cd512d30-7d5f-af35-88f0-efaadabfc17a',
+                             table_name='anvil_activity'),
+            self.bundle_fqid(uuid='2fd53d37-b8a3-a797-8477-4056bf2473bb',
+                             table_name='anvil_alignmentactivity'),
+            self.bundle_fqid(uuid='a52d7f0a-25c3-a4cf-af95-0fd8ecec8127',
+                             table_name='anvil_assayactivity'),
+            self.bundle_fqid(uuid='45e532bb-5af7-a977-8939-24933c154380',
+                             table_name='anvil_diagnosis'),
+            self.bundle_fqid(uuid='8cc4686a-76cd-a411-a11c-ec3a9fa1d417',
+                             table_name='anvil_donor'),
+            self.bundle_fqid(uuid='88092968-d1ec-ad7e-9112-4b38bd0df4c2',
+                             table_name='anvil_sequencingactivity'),
+            self.bundle_fqid(uuid='976fc781-4a33-a062-a67d-2c068e4d5e72',
+                             table_name='anvil_variantcallingactivity')
         ])
         plugin = self.plugin_for_source_spec(source_ref.spec)
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
         self.assertEqual(expected_bundle_fqids, bundle_fqids)
-        for bundle_fqid in bundle_fqids:
+        for bundle_fqid in canned_bundle_fqids:
             with self.subTest(bundle_fqid=bundle_fqid):
                 canned_bundle = self._load_canned_bundle(bundle_fqid)
                 assert isinstance(canned_bundle, TDRAnvilBundle)
@@ -183,6 +206,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                 self.assertEqual(canned_bundle.fqid, bundle.fqid)
                 self.assertEqual(canned_bundle.entities, bundle.entities)
                 self.assertEqual(canned_bundle.links, bundle.links)
+                self.assertEqual(canned_bundle.orphans, bundle.orphans)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
@@ -237,3 +261,19 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
             # the files (hubs) from its bundle above
             **({DocumentType.replica: 1} if config.enable_replicas else {})
         })
+
+    def test_orphans(self):
+        bundle = self._load_canned_bundle(self.replica_bundle())
+        self._index_bundle(bundle)
+        expected = bundle.orphans if config.enable_replicas else {}
+        actual = {}
+        hits = self._get_all_hits()
+        for hit in hits:
+            qualifier, doc_type = self._parse_index_name(hit)
+            self.assertEqual(DocumentType.replica, doc_type)
+            source = hit['_source']
+            self.assertEqual(source['hub_ids'], [])
+            ref = EntityReference(entity_type=source['replica_type'],
+                                  entity_id=source['entity_id'])
+            actual[ref] = source['contents']
+        self.assertEqual(expected, actual)

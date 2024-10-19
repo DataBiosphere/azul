@@ -122,6 +122,7 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
     # the former to the latter during transformation.
     entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
     links: set[EntityLink] = attrs.field(factory=set)
+    orphans: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
 
     def reject_joiner(self, catalog: CatalogName):
         # FIXME: Optimize joiner rejection and re-enable it for AnVIL
@@ -129,21 +130,29 @@ class AnvilBundle(Bundle[BUNDLE_FQID], ABC):
         pass
 
     def to_json(self) -> MutableJSON:
-        return {
-            'entities': {
+        def serialize_entities(entities):
+            return {
                 str(entity_ref): entity
-                for entity_ref, entity in sorted(self.entities.items())
-            },
+                for entity_ref, entity in sorted(entities.items())
+            }
+
+        return {
+            'entities': serialize_entities(self.entities),
+            'orphans': serialize_entities(self.orphans),
             'links': [link.to_json() for link in sorted(self.links)]
         }
 
     @classmethod
     def from_json(cls, fqid: BUNDLE_FQID, json_: JSON) -> Self:
+        def deserialize_entities(json_entities):
+            return {
+                EntityReference.parse(entity_ref): entity
+                for entity_ref, entity in json_entities.items()
+            }
+
         return cls(
             fqid=fqid,
-            entities={
-                EntityReference.parse(entity_ref): entity
-                for entity_ref, entity in json_['entities'].items()
-            },
-            links=set(map(EntityLink.from_json, json_['links']))
+            entities=deserialize_entities(json_['entities']),
+            links=set(map(EntityLink.from_json, json_['links'])),
+            orphans=deserialize_entities(json_['orphans'])
         )

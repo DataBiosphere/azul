@@ -61,6 +61,9 @@ def main(argv):
                         help='The version of the bundle to can. Required for HCA, ignored for AnVIL.')
     parser.add_argument('--table-name', '-t',
                         help='The BigQuery table of the bundle to can. Only applicable for AnVIL.')
+    parser.add_argument('--batch-prefix', '-p',
+                        help='The batch prefix of the bundle to can. Only applicable for AnVIL. '
+                             'Use "null" for non-batched bundle formats.')
     parser.add_argument('--output-dir', '-O',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the output directory (default: %(default)s).')
@@ -99,6 +102,11 @@ def parse_fqid_fields(args: argparse.Namespace) -> JSON:
     table_name = args.table_name
     if table_name is not None:
         fields['table_name'] = table_name
+    batch_prefix = args.batch_prefix
+    if batch_prefix is not None:
+        if batch_prefix == 'null':
+            batch_prefix = None
+        fields['batch_prefix'] = batch_prefix
     return fields
 
 

@@ -212,7 +212,8 @@ class IndexService(DocumentService):
         for contributions, replicas in transforms:
             tallies.update(self.contribute(catalog, contributions))
             self.replicate(catalog, replicas)
-        self.aggregate(tallies)
+        if tallies:
+            self.aggregate(tallies)
 
     def delete(self, catalog: CatalogName, bundle: Bundle) -> None:
         """
