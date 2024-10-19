@@ -147,6 +147,9 @@ from azul.plugins import (
 from azul.plugins.metadata.anvil.bundle import (
     Link,
 )
+from azul.plugins.repository.tdr_anvil import (
+    TDRAnvilBundleFQID,
+)
 from azul.portal_service import (
     PortalService,
 )
@@ -1837,10 +1840,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
         fqid = self.bundle_fqid(catalog.name)
         log.info('Canning bundle %r from catalog %r', fqid, catalog.name)
         with tempfile.TemporaryDirectory() as d:
-            self._can_bundle(source=str(fqid.source.spec),
-                             uuid=fqid.uuid,
-                             version=fqid.version,
-                             output_dir=d)
+            self._can_bundle(fqid, output_dir=d)
             generated_file = one(os.listdir(d))
             with open(os.path.join(d, generated_file)) as f:
                 bundle_json = json.load(f)
@@ -1914,16 +1914,17 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
         return self.random.choice(sorted(bundle_fqids))
 
     def _can_bundle(self,
-                    source: str,
-                    uuid: str,
-                    version: str,
+                    fqid: SourcedBundleFQID,
                     output_dir: str
                     ) -> None:
         args = [
-            '--source', source,
-            '--uuid', uuid,
-            '--version', version,
-            '--output-dir', output_dir
+            '--uuid', fqid.uuid,
+            '--version', fqid.version,
+            '--source', str(fqid.source.spec),
+            *([
+                  '--table-name', fqid.table_name.value,
+              ] if isinstance(fqid, TDRAnvilBundleFQID) else []),
+            '--output-dir', output_dir,
         ]
         return self._can_bundle_main(args)
 

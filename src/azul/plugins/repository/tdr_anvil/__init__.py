@@ -233,26 +233,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             ))
         return bundles
 
-    def bundle_fqid_from_json(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
-        if 'table_name' not in fqid:
-            # Resolution of bundles without the table name is expensive, so we
-            # only support it during canning.
-            assert not config.is_in_lambda, ('Bundle FQID lacks table name', fqid)
-            source = self.source_from_json(fqid['source'])
-            entity_id = uuids.change_version(fqid['uuid'],
-                                             self.bundle_uuid_version,
-                                             self.datarepo_row_uuid_version)
-            rows = self._run_sql(' UNION ALL '.join((
-                f'''
-                SELECT {bundle_type.value!r} AS table_name
-                FROM {backtick(self._full_table_name(source.spec, bundle_type.value))}
-                WHERE datarepo_row_id = {entity_id!r}
-                '''
-                for bundle_type in BundleType
-            )))
-            fqid = {**fqid, **one(rows)}
-        return super().bundle_fqid_from_json(fqid)
-
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         if bundle_fqid.table_name is BundleType.primary:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)

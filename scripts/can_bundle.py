@@ -1,6 +1,8 @@
 """
 Download the contents of a given bundle from the given repository source and
-store it as a single JSON file.
+store it as a single JSON file. Users are expected to be familiar with the
+structure of the bundle FQIDs for the given source and provide the appropriate
+attributes.
 
 Note: silently overwrites the destination file.
 """
@@ -41,6 +43,7 @@ from azul.plugins.metadata.anvil.bundle import (
 from azul.types import (
     AnyJSON,
     AnyMutableJSON,
+    JSON,
 )
 
 log = logging.getLogger(__name__)
@@ -56,19 +59,22 @@ def main(argv):
                         help='The UUID of the bundle to can.')
     parser.add_argument('--version', '-v',
                         help='The version of the bundle to can. Required for HCA, ignored for AnVIL.')
+    parser.add_argument('--table-name', '-t',
+                        help='The BigQuery table of the bundle to can. Only applicable for AnVIL.')
     parser.add_argument('--output-dir', '-O',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the output directory (default: %(default)s).')
     parser.add_argument('--redaction-key', '-K',
                         help='Provide a key to redact confidential or sensitive information from the output files')
     args = parser.parse_args(argv)
-    bundle = fetch_bundle(args.source, args.uuid, args.version)
+    fqid_fields = parse_fqid_fields(args)
+    bundle = fetch_bundle(args.source, fqid_fields)
     if args.redaction_key:
         redact_bundle(bundle, args.redaction_key.encode())
     save_bundle(bundle, args.output_dir)
 
 
-def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
+def fetch_bundle(source: str, fqid_args: JSON) -> Bundle:
     for catalog in config.catalogs:
         plugin = plugin_for(catalog)
         try:
@@ -79,15 +85,21 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
             log.debug('Searching for %r in catalog %r', source, catalog)
             for plugin_source_spec in plugin.sources:
                 if source_ref.spec.eq_ignoring_prefix(plugin_source_spec):
-                    fqid = SourcedBundleFQIDJSON(source=source_ref.to_json(),
-                                                 uuid=bundle_uuid,
-                                                 version=bundle_version)
+                    fqid = SourcedBundleFQIDJSON(source=source_ref.to_json(), **fqid_args)
                     fqid = plugin.bundle_fqid_from_json(fqid)
                     bundle = plugin.fetch_bundle(fqid)
                     log.info('Fetched bundle %r version %r from catalog %r.',
                              fqid.uuid, fqid.version, catalog)
                     return bundle
     raise ValueError(f'No repository using source {source!r}')
+
+
+def parse_fqid_fields(args: argparse.Namespace) -> JSON:
+    fields = {'uuid': args.uuid, 'version': args.version}
+    table_name = args.table_name
+    if table_name is not None:
+        fields['table_name'] = table_name
+    return fields
 
 
 @cache
