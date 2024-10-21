@@ -1,6 +1,6 @@
 {
     "entities": {
-        "dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
+        "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
             "consent_group": [
                 "DS-BDIS"
             ],
@@ -23,7 +23,7 @@
             "title": "ANVIL_CMG_UWASH_DS_BDIS",
             "version": "2022-06-01T00:00:00.000000Z"
         },
-        "file/6b0f6c0f-5d80-4242-accb-840921351cd5": {
+        "anvil_file/6b0f6c0f-5d80-4242-accb-840921351cd5": {
             "data_modality": [],
             "datarepo_row_id": "6b0f6c0f-5d80-4242-accb-840921351cd5",
             "file_format": ".txt",
@@ -46,11 +46,11 @@
     "links": [
         {
             "inputs": [
-                "dataset/2370f948-2783-4eb6-afea-e022897f4dcf"
+                "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf"
             ],
             "activity": null,
             "outputs": [
-                "file/6b0f6c0f-5d80-4242-accb-840921351cd5"
+                "anvil_file/6b0f6c0f-5d80-4242-accb-840921351cd5"
             ]
         }
     ]

@@ -152,7 +152,7 @@ from azul.plugins.metadata.anvil.bundle import (
     Link,
 )
 from azul.plugins.repository.tdr_anvil import (
-    BundleEntityType,
+    BundleType,
     TDRAnvilBundleFQID,
     TDRAnvilBundleFQIDJSON,
 )
@@ -165,9 +165,6 @@ from azul.service.async_manifest_service import (
 from azul.service.manifest_service import (
     ManifestFormat,
     ManifestGenerator,
-)
-from azul.strings import (
-    pluralize,
 )
 from azul.terra import (
     ServiceAccountCredentialsProvider,
@@ -350,7 +347,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                 if not (
                     # DUOS bundles are too sparse to fulfill the managed access tests
                     config.is_anvil_enabled(catalog)
-                    and cast(TDRAnvilBundleFQID, bundle_fqid).entity_type is BundleEntityType.duos
+                    and cast(TDRAnvilBundleFQID, bundle_fqid).table_name is BundleType.duos
                 )
             )
             bundle_fqid = self.random.choice(bundle_fqids)
@@ -503,8 +500,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if config.is_hca_enabled(catalog):
             bundle_index, project_index = 'bundles', 'projects'
         elif config.is_anvil_enabled(catalog):
-            bundle_index = pluralize(BundleEntityType.primary.value)
-            project_index = 'datasets'
+            bundle_index, project_index = 'biosamples', 'datasets'
         else:
             assert False, catalog
         service_paths = {
@@ -1284,17 +1280,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 # and 0 or more other entities. Biosamples only occur in primary
                 # bundles.
                 if len(hit['biosamples']) > 0:
-                    entity_type = BundleEntityType.primary
+                    table_name = BundleType.primary
                 # Supplementary bundles contain only 1 file and 1 dataset.
                 elif len(hit['files']) > 0:
-                    entity_type = BundleEntityType.supplementary
+                    table_name = BundleType.supplementary
                 # DUOS bundles contain only 1 dataset.
                 elif len(hit['datasets']) > 0:
-                    entity_type = BundleEntityType.duos
+                    table_name = BundleType.duos
                 else:
                     assert False, hit
                 bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
-                bundle_fqid['entity_type'] = entity_type.value
+                bundle_fqid['table_name'] = table_name.value
             bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
             indexed_fqids.add(bundle_fqid)
         return indexed_fqids
@@ -1304,10 +1300,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                  bundle_fqids: Set[SourcedBundleFQID]
                                  ) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
-            expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
-            obsolete_fqids = bundle_fqids - expected_fqids
-            if obsolete_fqids:
-                log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
+            expected_fqids = bundle_fqids
+            if not config.is_anvil_enabled(catalog):
+                expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(expected_fqids))
+                obsolete_fqids = bundle_fqids - expected_fqids
+                if obsolete_fqids:
+                    log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
             num_bundles = len(expected_fqids)
             timeout = 600
             log.debug('Expecting bundles %s ', sorted(expected_fqids))
