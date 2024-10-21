@@ -1141,15 +1141,6 @@ dcp43_sources = mkdict(dcp42_sources, 476, mkdelta([
     # @formatter:on
 ]))
 
-pilot1_sources = mkdict({}, 4, mkdelta([
-    # @formatter:off
-    mksrc('bigquery', 'datarepo-11e4dc06', 'hca_prod_59b3bfd9cf454d538c8ee240273cba71__20240410_dcp2_20240410_dcpPilot'), # noqa E501
-    mksrc('bigquery', 'datarepo-9ebf5be4', 'hca_prod_5bbd9f925bf447cb91999a9750d3fbcd__20240410_dcp2_20240410_dcpPilot'), # noqa E501
-    mksrc('bigquery', 'datarepo-d1a1fd3e', 'hca_prod_cc2f49634bc54d008fac69a8663b45fb__20240410_dcp2_20240410_dcpPilot'), # noqa E501
-    mksrc('bigquery', 'datarepo-ecbcde24', 'hca_prod_edc54c5d82404681844462a086d1d1be__20240410_dcp2_20240410_dcpPilot')
-    # @formatter:on
-]))
-
 lungmap_sources = mkdict({}, 3, mkdelta([
     mksrc('bigquery', 'datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308'),
     mksrc('bigquery', 'datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308'),
@@ -1238,7 +1229,6 @@ def env() -> Mapping[str, Optional[str]]:
             for atlas, catalog, sources in [
                 ('hca', 'dcp42', dcp42_sources),
                 ('hca', 'dcp43', dcp43_sources),
-                ('hca', 'pilot1', pilot1_sources),
                 ('lungmap', 'lm7', lm7_sources),
                 ('lungmap', 'lm8', lm8_sources)
             ] for suffix, internal in [
