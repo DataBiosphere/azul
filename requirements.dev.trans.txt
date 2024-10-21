@@ -1,6 +1,6 @@
 blessed==1.20.0
 blinker==1.8.2
-botocore-stubs==1.35.42
+botocore-stubs==1.35.44
 brotli==1.1.0
 click==8.1.7
 colorama==0.4.4
@@ -35,7 +35,7 @@ mypy-boto3-sqs==1.28.82
 mypy-boto3-stepfunctions==1.28.36
 openapi-schema-validator==0.3.4
 pathable==0.4.3
-psutil==6.0.0
+psutil==6.1.0
 py-partiql-parser==0.3.3
 pycodestyle==2.9.1
 pyflakes==2.5.0

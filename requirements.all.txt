@@ -10,7 +10,7 @@ blinker==1.8.2
 boto3==1.28.63
 boto3-stubs==1.28.63
 botocore==1.31.63
-botocore-stubs==1.35.42
+botocore-stubs==1.35.44
 brotli==1.1.0
 cachetools==5.5.0
 certifi==2024.8.30
@@ -22,7 +22,7 @@ click==8.1.7
 colorama==0.4.4
 configargparse==1.7
 coverage==6.5.0
-cryptography==43.0.1
+cryptography==43.0.3
 deprecated==1.2.13
 docker==7.1.0
 docutils==0.16
@@ -69,7 +69,7 @@ jsonschema-spec==0.1.6
 jwcrypto==1.5.6
 lazy-object-proxy==1.10.0
 locust==2.12.2
-markupsafe==3.0.1
+markupsafe==3.0.2
 mccabe==0.7.0
 more-itertools==9.0.0
 moto==4.1.13
@@ -92,7 +92,7 @@ pip==23.3.2
 posix_ipc==1.1.1
 proto-plus==1.24.0
 protobuf==4.25.5
-psutil==6.0.0
+psutil==6.1.0
 py-partiql-parser==0.3.3
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
