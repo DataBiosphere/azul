@@ -481,6 +481,9 @@ class SourceRef(SupportsLessAndGreaterThan, Generic[SOURCE_SPEC, SOURCE_REF]):
         spec_cls, ref_cls = get_generic_type_params(cls, SourceSpec, SourceRef)
         return spec_cls
 
+    def with_prefix(self, prefix: Prefix) -> Self:
+        return attrs.evolve(self, spec=attrs.evolve(self.spec, prefix=prefix))
+
 
 class SourcedBundleFQIDJSON(BundleFQIDJSON):
     source: SourceJSON

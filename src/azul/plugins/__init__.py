@@ -640,7 +640,7 @@ class RepositoryPlugin(Plugin[BUNDLE],
                 prefix = Prefix.for_main_deployment(count)
             else:
                 prefix = Prefix.for_lesser_deployment(count)
-            source = attr.evolve(source, spec=attr.evolve(source.spec, prefix=prefix))
+            source = source.with_prefix(prefix)
         return source
 
     @abstractmethod
