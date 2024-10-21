@@ -234,7 +234,7 @@ def env() -> Mapping[str, Optional[str]]:
         # `gitlab` components, as well as building and pushing the executor
         # image (see terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '27.2.1',
+        'azul_docker_version': '27.3.1',
 
         # The version of Python used throughout the system.
         #
@@ -259,9 +259,10 @@ def env() -> Mapping[str, Optional[str]]:
         # because it is referenced in the early stages of the GitLab build.
         #
         # Modifying this variable requires running `make environment.boot` and
-        # committing the resulting changes.
+        # `make -C terraform check_schema`, and committing the resulting
+        # changes.
         #
-        'azul_terraform_version': '1.9.7',
+        'azul_terraform_version': '1.9.8',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -282,24 +283,24 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.2.3-35',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.2.3-36',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.24-28',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.24-29',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-14',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-15',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.4.1-7',
+                'ref': 'docker.io/clamav/clamav:1.4.1-8',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
@@ -307,7 +308,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.4.0',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v17.4.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
