@@ -191,6 +191,7 @@ def emit():
             'aws_cloudfront_function': {
                 script.stem: cloudfront_function(script)
                 for script in Path(__file__).parent.glob('*.js')
+                if provision_custom_search or not script.stem == 'add_google_search_api_key'
             },
             'aws_cloudfront_response_headers_policy': {
                 name: {
