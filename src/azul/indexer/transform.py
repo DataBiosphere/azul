@@ -123,7 +123,7 @@ class Transformer(metaclass=ABCMeta):
                       ) -> Contribution:
         entity = EntityReference(entity_type=self.entity_type(), entity_id=entity_id)
         coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=self.bundle.fqid.upcast(),
+                                              bundle=self.bundle.fqid,
                                               deleted=self.deleted)
         return Contribution(coordinates=coordinates,
                             version=None,

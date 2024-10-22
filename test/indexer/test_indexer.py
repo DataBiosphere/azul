@@ -288,7 +288,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                             self.assertNotEqual(doc.contents, {})
                         elif doc_type is DocumentType.contribution:
                             doc = Contribution.from_index(field_types, hit)
-                            self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
+                            self.assertEqual(bundle_fqid, doc.coordinates.bundle)
                             self.assertFalse(doc.coordinates.deleted)
                         elif doc_type is DocumentType.replica:
                             pass
@@ -315,7 +315,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                         if doc_type is DocumentType.contribution:
                             doc = Contribution.from_index(field_types, hit)
                             docs_by_entity[doc.entity].append(doc)
-                            self.assertEqual(bundle_fqid.upcast(), doc.coordinates.bundle)
+                            self.assertEqual(bundle_fqid, doc.coordinates.bundle)
                         else:
                             # Since there is only one bundle and it was deleted,
                             # nothing should be aggregated
@@ -388,7 +388,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         coordinates = [
             ContributionCoordinates(
                 entity=entity,
-                bundle=bundle.fqid.upcast(),
+                bundle=bundle.fqid,
                 deleted=False
             ).with_catalog(self.catalog)
         ]
@@ -553,7 +553,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                                            entity_id=old_file_uuid,
                                            entity_type='files')
         deletion = ContributionCoordinates(entity=entity,
-                                           bundle=bundle_fqid.upcast(),
+                                           bundle=bundle_fqid,
                                            deleted=True)
         index_name, document_id = deletion.index_name, deletion.document_id
         hits = [

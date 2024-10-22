@@ -89,7 +89,7 @@ class TestDataExtractorTestCase(DCP1IndexerTestCase):
                     coordinates = AggregateCoordinates(entity=entity)
                 else:
                     coordinates = ContributionCoordinates(entity=entity,
-                                                          bundle=bundle_fqid.upcast(),
+                                                          bundle=bundle_fqid,
                                                           deleted=False)
                 result = self.es_client.get(index=coordinates.index_name,
                                             id=coordinates.document_id)

@@ -119,7 +119,7 @@ class TDRAnvilBundleFQIDJSON(SourcedBundleFQIDJSON):
     table_name: str
 
 
-@attrs.frozen(kw_only=True)
+@attrs.frozen(kw_only=True, eq=False)
 class TDRAnvilBundleFQID(TDRBundleFQID):
     table_name: BundleType = attrs.field(converter=BundleType)
 
