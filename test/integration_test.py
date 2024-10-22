@@ -6,7 +6,6 @@ from collections.abc import (
     Iterator,
     Mapping,
     Sequence,
-    Set,
 )
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
@@ -43,7 +42,6 @@ from typing import (
     Callable,
     ContextManager,
     IO,
-    Optional,
     Protocol,
     TypedDict,
     cast,
@@ -802,8 +800,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         method: str,
                         path: str,
                         *,
-                        args: Optional[Mapping[str, Any]] = None,
-                        endpoint: Optional[furl] = None,
+                        args: Mapping[str, Any] | None = None,
+                        endpoint: furl | None = None,
                         fetch: bool = False
                         ) -> bytes:
         if endpoint is None:
@@ -1202,7 +1200,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _get_gs_url_content(self,
                             url: furl,
-                            size: Optional[int] = None
+                            size: int | None = None
                             ) -> BytesIO:
         self.assertEquals('gs', url.scheme)
         path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
@@ -1263,7 +1261,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _get_indexed_bundles(self,
                              catalog: CatalogName,
-                             filters: Optional[JSON] = None
+                             filters: JSON | None = None
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
         hits = self._get_entities(catalog, 'bundles', filters)
@@ -1297,7 +1295,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
-                                 bundle_fqids: Set[SourcedBundleFQID]
+                                 bundle_fqids: set[SourcedBundleFQID]
                                  ) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = bundle_fqids
@@ -1356,7 +1354,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_entities(self,
                       catalog: CatalogName,
                       entity_type: EntityType,
-                      filters: Optional[JSON] = None
+                      filters: JSON | None = None
                       ) -> MutableJSONs:
         entities = []
         size = 100
@@ -1388,7 +1386,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access(self,
                              catalog: CatalogName,
-                             bundle_fqids: Set[SourcedBundleFQID]
+                             bundle_fqids: set[SourcedBundleFQID]
                              ) -> None:
         with self.subTest('managed_access', catalog=catalog):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
@@ -1419,8 +1417,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_repository_sources(self,
                                                 catalog: CatalogName,
-                                                indexed_source_ids: Set[str],
-                                                managed_access_source_ids: Set[str]
+                                                indexed_source_ids: set[str],
+                                                managed_access_source_ids: set[str]
                                                 ) -> set[str]:
         """
         Test the managed access controls for the /repository/sources endpoint
@@ -1452,7 +1450,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_indices(self,
                                      catalog: CatalogName,
-                                     managed_access_source_ids: Set[str]
+                                     managed_access_source_ids: set[str]
                                      ) -> JSONs:
         """
         Test the managed-access controls for the /index/bundles and
