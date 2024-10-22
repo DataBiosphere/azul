@@ -19,10 +19,8 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
-import itertools
 from itertools import (
     count,
-    starmap,
 )
 import json
 import os
@@ -115,6 +113,7 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
+    Prefix,
     SourceJSON,
     SourceRef,
     SourcedBundleFQID,
@@ -147,10 +146,6 @@ from azul.plugins import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     Link,
-)
-from azul.plugins.repository.tdr_anvil import (
-    BundleType,
-    TDRAnvilBundleFQID,
 )
 from azul.portal_service import (
     PortalService,
@@ -283,73 +278,17 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
-    def _list_partitions(self,
-                         catalog: CatalogName,
-                         *,
-                         min_bundles: int,
-                         public_1st: bool
-                         ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
+    def _list_sources(self,
+                      catalog: CatalogName,
+                      ) -> Iterable[SourceRef]:
         """
-        Iterate through the sources in the given catalog and yield partitions of
-        bundle FQIDs until a desired minimum number of bundles are found. For
-        each emitted source, every partition is included, even if it's empty.
+        Iterate through the configured sources for the given catalog in a random order.
         """
-        total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
-        if public_1st:
-            managed_access_sources = frozenset(
-                str(source.spec)
-                for source in self.managed_access_sources_by_catalog[catalog]
-            )
-            index = first(
-                i
-                for i, source in enumerate(sources)
-                if source not in managed_access_sources
-            )
-            sources[0], sources[index] = sources[index], sources[0]
-        plugin = self.azul_client.repository_plugin(catalog)
-        # This iteration prefers sources occurring first, so we shuffle them
-        # above to neutralize the bias.
+        plugin = self.repository_plugin(catalog)
         for source in sources:
-            source = plugin.resolve_source(source)
-            source = plugin.partition_source(catalog, source)
-            for prefix in source.spec.prefix.partition_prefixes():
-                new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
-                total_bundles += len(new_fqids)
-                yield source, prefix, new_fqids
-            # We postpone this check until after we've yielded all partitions in
-            # the current source to ensure test coverage for handling multiple
-            # partitions per source
-            if total_bundles >= min_bundles:
-                break
-        else:
-            log.warning('Checked all sources and found only %d bundles instead of the '
-                        'expected minimum %d', total_bundles, min_bundles)
-
-    def _list_managed_access_bundles(self,
-                                     catalog: CatalogName
-                                     ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
-        sources = self.azul_client.catalog_sources(catalog)
-        # We need at least one managed_access bundle per IT. To index them with
-        # remote_reindex and avoid collateral bundles, we use as specific a
-        # prefix as possible.
-        for source in self.managed_access_sources_by_catalog[catalog]:
-            assert str(source.spec) in sources
-            source = self.repository_plugin(catalog).partition_source(catalog, source)
-            bundle_fqids = sorted(
-                bundle_fqid
-                for bundle_fqid in self.azul_client.list_bundles(catalog, source, prefix='')
-                if not (
-                    # DUOS bundles are too sparse to fulfill the managed access tests
-                    config.is_anvil_enabled(catalog)
-                    and cast(TDRAnvilBundleFQID, bundle_fqid).table_name is BundleType.duos
-                )
-            )
-            bundle_fqid = self.random.choice(bundle_fqids)
-            prefix = bundle_fqid.uuid[:8]
-            new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
-            yield source, prefix, new_fqids
+            yield plugin.resolve_source(source)
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
@@ -1218,34 +1157,62 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
+    def _list_partitions(self,
+                         catalog: CatalogName,
+                         *,
+                         min_bundles: int,
+                         ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
+        """
+        Iterate through the sources in the given catalog and yield partitions of
+        bundle FQIDs until a desired minimum number of bundles are found. For
+        each emitted source, every partition is included, even if it's empty.
+        """
+        plugin = self.repository_plugin(catalog)
+        managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+        total_bundles = 0
+        need_public = True
+        # Don't need to look for a managed access source if there aren't any
+        need_managed_access = len(managed_access_sources) > 0
+        for source in self._list_sources(catalog):
+            is_public = source not in managed_access_sources
+            if need_public and is_public:
+                need_public = False
+            elif need_managed_access and not is_public:
+                need_managed_access = False
+            elif total_bundles >= min_bundles:
+                # Skip through sources until we find one that fulfills the
+                # outstanding managed access requirements
+                continue
+            source = plugin.partition_source(catalog, source)
+            for prefix in source.spec.prefix.partition_prefixes():
+                new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
+                total_bundles += len(new_fqids)
+                yield source, prefix, new_fqids
+            # We postpone this check until after we've yielded all partitions in
+            # the current source to ensure test coverage for handling multiple
+            # partitions per source
+            if total_bundles >= min_bundles and not need_public and not need_managed_access:
+                break
+        else:
+            if total_bundles < min_bundles:
+                log.warning('Checked all sources and found only %d bundles instead of the '
+                            'expected minimum %d', total_bundles, min_bundles)
+            if need_public:
+                self.fail(f'Failed to find any public sources in {catalog!r}')
+            if need_managed_access:
+                self.fail(f'Failed to find any managed access sources in {catalog!r}')
+
     def _prepare_notifications(self,
                                catalog: CatalogName
                                ) -> tuple[JSONs, set[SourcedBundleFQID]]:
         bundle_fqids: set[SourcedBundleFQID] = set()
         notifications = []
-
-        def update(source: SourceRef,
-                   prefix: str,
-                   partition_bundle_fqids: Iterable[SourcedBundleFQID]):
+        partitions = self._list_partitions(catalog, min_bundles=self.min_bundles)
+        for source, prefix, partition_bundle_fqids in partitions:
             bundle_fqids.update(partition_bundle_fqids)
             notifications.append(self.azul_client.reindex_message(catalog,
                                                                   source,
                                                                   prefix))
-
-        list(starmap(update, self._list_managed_access_bundles(catalog)))
-        num_bundles = max(self.min_bundles - len(bundle_fqids), 1)
-        log.info('Selected %d bundles to satisfy managed access coverage; '
-                 'selecting at least %d more', len(bundle_fqids), num_bundles)
-        # _list_partitions selects both public and managed access sources at random.
-        # If we don't index at least one public source, every request would need
-        # service account credentials and we couldn't compare the responses for
-        # public and managed access data. `public_1st` ensures that at least
-        # one of the sources will be public because sources are indexed starting
-        # with the first one yielded by the iteration.
-        list(starmap(update, self._list_partitions(catalog,
-                                                   min_bundles=num_bundles,
-                                                   public_1st=True)))
-
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
         # some notifications may end up being sent three or more times.
@@ -1940,13 +1907,10 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        # Skip through empty partitions
-        bundle_fqids = itertools.chain.from_iterable(
-            bundle_fqids
-            for _, _, bundle_fqids in self._list_partitions(catalog,
-                                                            min_bundles=1,
-                                                            public_1st=False)
-        )
+        source = first(self._list_sources(catalog))
+        # The plugin will raise an exception if the source lacks a prefix
+        source = source.with_prefix(Prefix.of_everything)
+        bundle_fqids = self.repository_plugin(catalog).list_bundles(source, '')
         return self.random.choice(sorted(bundle_fqids))
 
     def _can_bundle(self,
