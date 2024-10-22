@@ -93,7 +93,7 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
                     fqid = SourcedBundleFQIDJSON(source=source_ref.to_json(),
                                                  uuid=bundle_uuid,
                                                  version=bundle_version)
-                    fqid = plugin.resolve_bundle(fqid)
+                    fqid = plugin.bundle_fqid_from_json(fqid)
                     bundle = plugin.fetch_bundle(fqid)
                     log.info('Fetched bundle %r version %r from catalog %r.',
                              fqid.uuid, fqid.version, catalog)

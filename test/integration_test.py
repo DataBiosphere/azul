@@ -1289,7 +1289,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     assert False, hit
                 bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
                 bundle_fqid['table_name'] = table_name.value
-            bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
+            bundle_fqid = self.repository_plugin(catalog).bundle_fqid_from_json(bundle_fqid)
             indexed_fqids.add(bundle_fqid)
         return indexed_fqids
 

@@ -583,6 +583,13 @@ class RepositoryPlugin(Plugin[BUNDLE],
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
         return fqid_cls
 
+    def bundle_fqid_from_json(self, fqid: SourcedBundleFQIDJSON) -> BUNDLE_FQID:
+        """
+        Instantiate a :class:`SourcedBundleFQID` from its JSON representation.
+        The expected input matches the output format of `SourcedBundleFQID.to_json`.
+        """
+        return self._bundle_fqid_cls.from_json(fqid)
+
     @property
     def _bundle_cls(self) -> type[BUNDLE]:
         bundle_cls, spec_cls, ref_cls, fqid_cls = self._generic_params
@@ -606,9 +613,6 @@ class RepositoryPlugin(Plugin[BUNDLE],
         an exception if no such source exists.
         """
         raise NotImplementedError
-
-    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> BUNDLE_FQID:
-        return self._bundle_fqid_cls.from_json(fqid)
 
     @abstractmethod
     def _count_subgraphs(self, source: SOURCE_SPEC) -> int:

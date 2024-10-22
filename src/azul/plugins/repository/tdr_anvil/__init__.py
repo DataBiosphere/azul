@@ -233,7 +233,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
             ))
         return bundles
 
-    def resolve_bundle(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
+    def bundle_fqid_from_json(self, fqid: SourcedBundleFQIDJSON) -> TDRAnvilBundleFQID:
         if 'table_name' not in fqid:
             # Resolution of bundles without the table name is expensive, so we
             # only support it during canning.
@@ -251,7 +251,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRSourceSpec, TDRSourceRef, TDRAnvilBund
                 for bundle_type in BundleType
             )))
             fqid = {**fqid, **one(rows)}
-        return super().resolve_bundle(fqid)
+        return super().bundle_fqid_from_json(fqid)
 
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         if bundle_fqid.table_name is BundleType.primary:
