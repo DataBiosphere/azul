@@ -1191,7 +1191,6 @@ lm8_sources = mkdict(lm7_sources, 12, mkdelta([
     mksrc('bigquery', 'datarepo-c9158593', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20241002_lm8'),
     mksrc('bigquery', 'datarepo-35a6d7ca', 'lungmap_prod_3a02d15f9c6a4ef7852b4ddec733b70b__20241001_20241002_lm8'),
     mksrc('bigquery', 'datarepo-131a1234', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20241002_lm8'),
-    mksrc('bigquery', 'datarepo-3377446f', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20241002_lm8'),
     mksrc('bigquery', 'datarepo-3c4905d2', 'lungmap_prod_834e0d1671b64425a8ab022b5000961c__20241001_20241002_lm8'),
     mksrc('bigquery', 'datarepo-d7447983', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20241002_lm8'),
     mksrc('bigquery', 'datarepo-c11ef363', 'lungmap_prod_fdadee7e209745d5bf81cc280bd8348e__20240206_20241002_lm8'),
