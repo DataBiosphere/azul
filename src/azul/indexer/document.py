@@ -504,13 +504,12 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
     subgraph ("bundle") and represent either the addition of metadata to an
     entity or the removal of metadata from an entity.
 
-    Contributions produced by
-    transformers don't specify a catalog, the catalog is supplied when the
-    contributions are written to the index and it is guaranteed to be the same
-    for all contributions produced in response to one notification. When
-    contributions are read back during aggregation, they specify a catalog, the
-    catalog they were read from. Because of that duality this class has to be
-    generic in E, the type of EntityReference.
+    Contributions produced by transformers don't specify a catalog. The catalog
+    is supplied when the contributions are written to the index and it is
+    guaranteed to be the same for all contributions produced in response to one
+    notification. When contributions are read back during aggregation, they
+    specify a catalog, the catalog they were read from. Because of that duality
+    this class has to be generic in E, the type of EntityReference.
     """
 
     doc_type: ClassVar[DocumentType] = DocumentType.contribution
