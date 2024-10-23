@@ -814,31 +814,28 @@ class Chalice:
         assert 'minimum_compression_size' not in rest_api, rest_api
         key = 'x-amazon-apigateway-minimum-compression-size'
         openapi_spec[key] = config.minimum_compression_size
+
+        # When mapping a static value to a response parameter, the value
+        # must be enclosed within a pair of single quotes. Note that
+        # azul.strings.single_quote() is not used here since API Gateway allows
+        # internal single quotes, which that function would prohibit.
+        #
+        # https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html#mapping-response-parameters
+        #
+        security_headers = {
+            f'gatewayresponse.header.{k}': f"'{v}'"
+            for k, v in AzulChaliceApp.security_headers.items()
+        }
         assert 'aws_api_gateway_gateway_response' not in resources, resources
         openapi_spec['x-amazon-apigateway-gateway-responses'] = (
-            # Static value response header parameters must be enclosed within a
-            # pair of single quotes.
-            #
-            # https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html#mapping-response-parameters
-            # https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions-gateway-responses.html
-            #
-            # Note that azul.strings.single_quote() is not used here since API
-            # Gateway allows internal single quotes in the value, which that
-            # function would prohibit.
             {
                 f'DEFAULT_{response_type}': {
-                    'responseParameters': {
-                        f'gatewayresponse.header.{k}': f"'{v}'"
-                        for k, v in AzulChaliceApp.security_headers.items()
-                    }
+                    'responseParameters': security_headers
                 } for response_type in ['4XX', '5XX']
             } | {
                 response_type: {
                     'responseParameters': {
-                        **{
-                            f'gatewayresponse.header.{k}': f"'{v}'"
-                            for k, v in AzulChaliceApp.security_headers.items()
-                        },
+                        **security_headers,
                         'gatewayresponse.header.Retry-After': "'10'"
                     },
                     'responseTemplates': {
