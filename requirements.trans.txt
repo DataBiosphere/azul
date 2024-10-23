@@ -16,7 +16,7 @@ idna==3.10
 markupsafe==3.0.2
 orderedmultidict==1.0.1
 packaging==24.1
-proto-plus==1.24.0
+proto-plus==1.25.0
 protobuf==4.25.5
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
@@ -24,9 +24,9 @@ pycparser==2.22
 pyopenssl==24.2.1
 python-dateutil==2.9.0.post0
 pytz==2024.2
-s3transfer==0.7.0
+s3transfer==0.10.3
 setuptools-scm==5.0.2
 six==1.16.0
 typing_extensions==4.12.2
-tzlocal==2.1
+tzlocal==5.2
 wrapt==1.16.0

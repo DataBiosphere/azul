@@ -1,6 +1,5 @@
 from moto import (
-    mock_sqs,
-    mock_sts,
+    mock_aws,
 )
 
 from azul.logging import (
@@ -38,8 +37,7 @@ class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
             **self._expected_api_endpoints(up=endpoints_up),
         }
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_all_api_endpoints_down(self):
         self._create_mock_queues()
         with self._mock(endpoints_up=False):

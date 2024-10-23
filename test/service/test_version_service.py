@@ -1,5 +1,5 @@
 from moto import (
-    mock_dynamodb,
+    mock_aws,
 )
 
 from azul.logging import (
@@ -19,7 +19,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@mock_dynamodb
+@mock_aws
 class TestVersionService(VersionTableTestCase):
 
     def setUp(self):

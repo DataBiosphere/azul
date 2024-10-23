@@ -23,8 +23,7 @@ from furl import (
     furl,
 )
 from moto import (
-    mock_sqs,
-    mock_sts,
+    mock_aws,
 )
 import requests
 import responses
@@ -86,8 +85,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             response = requests.get(str(self.base_url.set(path=('health', path))))
             self.assertEqual(400, response.status_code)
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_health_all_ok(self):
         self._create_mock_queues()
         with self._mock():
@@ -102,8 +100,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             **self._expected_progress()
         }, response.json())
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_health_endpoint_keys(self):
         expected = {
             keys: {
@@ -126,8 +123,7 @@ class HealthCheckTestCase(LocalAppTestCase,
                 self.assertEqual(200, response.status_code)
                 self.assertEqual(expected_response, response.json())
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_cached_health(self):
         # No health object is available in S3 bucket, yielding an error
         with self._mock():
@@ -180,8 +176,7 @@ class HealthCheckTestCase(LocalAppTestCase,
                          ) -> MutableJSON:
         raise NotImplementedError
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_elasticsearch_down(self):
         self._create_mock_queues()
         mock_endpoint = ('7c9f2ddb-74ca-46a3-9438-24ce1fe7050e.com', 80)
@@ -204,8 +199,7 @@ class HealthCheckTestCase(LocalAppTestCase,
                         }
                     } if up else {
                         'up': False,
-                        'error': 'The specified queue does not exist for'
-                                 ' this wsdl version.'
+                        'error': 'The specified queue does not exist.'
                     }
                     for queue_name in config.all_queue_names
                 })

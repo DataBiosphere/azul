@@ -1,6 +1,5 @@
 from moto import (
-    mock_sqs,
-    mock_sts,
+    mock_aws,
 )
 
 from azul.logging import (
@@ -39,8 +38,7 @@ class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
             **self._expected_progress()
         }
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_queues_down(self):
         with self._mock():
             response = self._test('/health/fast')

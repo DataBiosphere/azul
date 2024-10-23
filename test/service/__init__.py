@@ -29,8 +29,7 @@ from more_itertools import (
     one,
 )
 from moto import (
-    mock_s3,
-    mock_sts,
+    mock_aws,
 )
 from mypy_boto3_s3.client import (
     S3Client,
@@ -216,8 +215,7 @@ class S3TestCase(AzulUnitTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.addPatch(mock_sts())
-        self.addPatch(mock_s3())
+        self.addPatch(mock_aws())
 
     def _create_test_bucket(self, bucket_name: str):
         assert config.region in get_args(BucketLocationConstraintType)

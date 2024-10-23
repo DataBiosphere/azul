@@ -23,7 +23,7 @@ from furl import (
     furl,
 )
 from moto import (
-    mock_sts,
+    mock_aws,
 )
 import requests
 import responses
@@ -150,7 +150,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
     execution_id = b'42'
 
-    @mock_sts
+    @mock_aws
     @mock.patch.object(AsyncManifestService, '_sfn')
     @mock.patch.object(ManifestService, 'get_manifest')
     @mock.patch.object(ManifestService, 'get_cached_manifest')
