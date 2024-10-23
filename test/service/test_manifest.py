@@ -28,6 +28,7 @@ from tempfile import (
     TemporaryDirectory,
 )
 from typing import (
+    Iterable,
     Optional,
 )
 from unittest.mock import (
@@ -2087,18 +2088,35 @@ class TestAnvilManifests(AnvilManifestTestCase):
         self._assert_tsv(expected, response)
 
     def test_verbatim_jsonl_manifest(self):
-        response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters={})
-        self.assertEqual(200, response.status_code)
-        expected = {
-            # Consolidate entities with the same replica (i.e. datasets)
-            json_hash(entity).digest(): {
-                'type': entity_ref.entity_type,
-                'value': entity,
-            }
-            for bundle in self.bundles()
-            for entity_ref, entity in self._load_canned_bundle(bundle).entities.items()
-        }.values()
-        self._assert_jsonl(list(expected), response)
+        linked_entities_by_hash = {}
+        all_entities_by_hash = {}
+
+        def unique_rows(entities: Mapping[EntityReference, JSON]
+                        ) -> Iterable[tuple[str, JSON]]:
+            for ref, contents in entities.items():
+                yield json_hash(contents).digest(), {
+                    'type': ref.entity_type,
+                    'value': contents
+                }
+
+        for bundle_fqid in self.bundles():
+            bundle = self._load_canned_bundle(bundle_fqid)
+            linked_entities_by_hash.update(unique_rows(bundle.entities))
+            all_entities_by_hash.update(unique_rows(bundle.orphans))
+        all_entities_by_hash.update(linked_entities_by_hash)
+
+        for filters, expect_orphans in [
+            ({}, False),
+            ({'datasets.title': {'is': ['ANVIL_CMG_UWASH_DS_BDIS']}}, False),
+            # Orphans should be included only when filtering by dataset ID
+            ({'datasets.dataset_id': {'is': ['52ee7665-7033-63f2-a8d9-ce8e32666739']}}, True)
+        ]:
+            with self.subTest(filters=filters):
+                response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters=filters)
+                self.assertEqual(200, response.status_code)
+                expected_rows = list((all_entities_by_hash if expect_orphans
+                                      else linked_entities_by_hash).values())
+                self._assert_jsonl(expected_rows, response)
 
     def test_verbatim_pfb_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})

@@ -6,4 +6,4 @@ from azul.service.elasticsearch_service import (
 class AnvilFilterStage(FilterStage):
 
     def _limit_access(self) -> bool:
-        return self.entity_type != 'datasets'
+        return self.service.always_limit_access() or self.entity_type != 'datasets'

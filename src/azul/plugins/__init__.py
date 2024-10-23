@@ -132,6 +132,7 @@ class SpecialFields:
     source_spec: FieldName
     bundle_uuid: FieldName
     bundle_version: FieldName
+    implicit_hub_id: FieldName
 
 
 class ManifestFormat(Enum):
