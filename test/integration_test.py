@@ -2078,7 +2078,8 @@ class ResponseHeadersTest(AzulTestCase):
                                 match = nonce_re.search(value)
                                 if match is not None:
                                     nonce = match.group(1)
-                                    # Our nonce token is 32 bytes Base64 encoded
+                                    # Our nonces are 32 bytes encoded with
+                                    # Base64, without padding
                                     self.assertEqual(43, len(nonce))
                                     nonces.add(nonce)
                         if path in ['/', '/oauth2_redirect']:
