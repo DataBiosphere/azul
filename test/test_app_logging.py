@@ -31,9 +31,6 @@ from azul.logging import (
     azul_log_level,
     configure_test_logging,
 )
-from azul.strings import (
-    single_quote as sq,
-)
 from azul_test_case import (
     AlwaysTearDownTestCase,
     AzulUnitTestCase,
@@ -105,17 +102,18 @@ class TestAppLogging(AzulUnitTestCase):
                         self.assertTrue(response.startswith(traceback_header))
                         self.assertIn(magic_message, response)
                         # … and the response is logged.
+                        headers = {
+                            'Content-Type': 'text/plain',
+                            **app.security_headers(),
+                            'Cache-Control': 'no-store'
+                        }
                         self.assertEqual(
                             azul_log.output[2],
-                            'DEBUG:azul.chalice:Returning 500 response with headers {"Content-Type": "text/plain", '
-                            f'"Content-Security-Policy": "default-src {sq("self")}", '
-                            '"Referrer-Policy": "strict-origin-when-cross-origin", '
-                            '"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload", '
-                            '"X-Content-Type-Options": "nosniff", '
-                            '"X-Frame-Options": "DENY", '
-                            '"X-XSS-Protection": "1; mode=block", '
-                            '"Cache-Control": "no-store"}. '
-                            'See next line for the first 1024 characters of the body.\n' + response)
+                            'DEBUG:azul.chalice:Returning 500 response with headers ' +
+                            json.dumps(headers) + '. ' +
+                            'See next line for the first 1024 characters of the body.\n' +
+                            response
+                        )
                     else:
                         # Otherwise, a generic error response is returned …
                         self.assertEqual(response.json(), {

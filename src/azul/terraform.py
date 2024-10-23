@@ -829,7 +829,7 @@ class Chalice:
                     # value, which that function would prohibit.
                     #
                     f'gatewayresponse.header.{k}': f"'{v}'"
-                    for k, v in AzulChaliceApp.security_headers.items()
+                    for k, v in AzulChaliceApp.security_headers().items()
                 }
             } for response_type in ['4XX', '5XX']
         }

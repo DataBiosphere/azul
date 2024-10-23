@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <title>Swagger UI</title>
     <link rel="stylesheet" href="static/swagger-ui.css" crossorigin="anonymous">
-    <style>
+    <style nonce={{{CSP_NONCE}}}>
       html
       {
         box-sizing: border-box;
@@ -30,7 +30,7 @@
     <div id="swagger-ui"></div>
     <script src="static/swagger-ui-bundle.js"></script>
     <script src="static/swagger-ui-standalone-preset.js"></script>
-    <script>
+    <script nonce={{{CSP_NONCE}}}>
     window.onload = function() {
       // Adapted from https://github.com/swagger-api/swagger-ui/issues/3725#issuecomment-334899276
       const DisableTryItOutPlugin = function() {

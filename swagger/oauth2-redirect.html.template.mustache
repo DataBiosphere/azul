@@ -2,10 +2,10 @@
 <!doctype html>
 <html lang="en-US">
 <title>Swagger UI: OAuth2 Redirect</title>
-<body onload="run()">
+<body>
 </body>
 </html>
-<script>
+<script nonce={{{CSP_NONCE}}}>
     'use strict';
     function run () {
         var oauth2 = window.opener.swaggerUIRedirectOauth2;
@@ -66,4 +66,15 @@
         }
         window.close();
     }
+    // The CSP blocks JS event handlers from inline HTML markup, so instead of
+    // calling run() from the body tag's onload property, as a workaround it
+    // is added here with an event listener.
+    //
+    // See also:
+    //
+    // https://github.com/swagger-api/swagger-ui/issues/5720
+    //
+    window.addEventListener('DOMContentLoaded', function () {
+        run();
+    });
 </script>

@@ -34,6 +34,7 @@ from random import (
     Random,
     randint,
 )
+import re
 import sys
 import tempfile
 import threading
@@ -2052,6 +2053,13 @@ class ResponseHeadersTest(AzulTestCase):
             '/oauth2_redirect': {'Cache-Control': 'no-store'},
             '/health/basic': {'Cache-Control': 'no-store'}
         }
+        # https://www.w3.org/TR/CSP2/#policy-syntax
+        directive_re = re.compile(r'[ \t]*([a-zA-Z0-9-]+)'
+                                  # Space, tab and any visible character
+                                  # (0x21-0xFE) except for comma (0x2C) or
+                                  # semicolon (0x3B).
+                                  r'(?:[ \t]([ \t\x21-\x2B\x2D-\x3A\x3C-\xFE]*))?')
+        nonce_re = re.compile(r"'nonce-([a-zA-Z0-9_-]+)'")
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, expected_headers in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
@@ -2060,11 +2068,26 @@ class ResponseHeadersTest(AzulTestCase):
                     else:
                         response = requests.get(str(endpoint / path))
                         response.raise_for_status()
-                        expected = AzulChaliceApp.security_headers | expected_headers
-                        # FIXME: Add a CSP header with a nonce value to text/html responses
-                        #        https://github.com/DataBiosphere/azul-private/issues/6
+                        expected = AzulChaliceApp.security_headers() | expected_headers
+                        nonces = set()
+                        for directive in response.headers['Content-Security-Policy'].split(';'):
+                            match = directive_re.fullmatch(directive)
+                            self.assertIsNotNone(match)
+                            name, value = match.groups()
+                            if name in ('script-src', 'style-src'):
+                                match = nonce_re.search(value)
+                                if match is not None:
+                                    nonce = match.group(1)
+                                    # Our nonces are 32 bytes encoded with
+                                    # Base64, without padding
+                                    self.assertEqual(43, len(nonce))
+                                    nonces.add(nonce)
                         if path in ['/', '/oauth2_redirect']:
-                            del expected['Content-Security-Policy']
+                            nonce = one(nonces)
+                            expected_csp = AzulChaliceApp.content_security_policy(nonce)
+                            expected['Content-Security-Policy'] = expected_csp
+                        else:
+                            self.assertEqual(0, len(nonces))
                         self.assertIsSubset(expected.items(), response.headers.items())
 
     def test_default_4xx_response_headers(self):
@@ -2072,5 +2095,5 @@ class ResponseHeadersTest(AzulTestCase):
             with self.subTest(endpoint=endpoint):
                 response = requests.get(str(endpoint / 'does-not-exist'))
                 self.assertEqual(403, response.status_code)
-                self.assertIsSubset(AzulChaliceApp.security_headers.items(),
+                self.assertIsSubset(AzulChaliceApp.security_headers().items(),
                                     response.headers.items())

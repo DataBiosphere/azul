@@ -12,6 +12,7 @@ from inspect import (
 )
 import json
 import logging.config
+import secrets
 from typing import (
     Any,
     Callable,
@@ -30,6 +31,7 @@ from chalice import (
     Response,
     UnauthorizedError,
 )
+import chevron
 from furl import (
     furl,
 )
@@ -488,10 +490,18 @@ def static_resource(file):
     cache_control='no-store'
 )
 def oauth2_redirect():
-    oauth2_redirect_html = app.load_static_resource('swagger', 'oauth2-redirect.html')
+    file_name = 'oauth2-redirect.html.template.mustache'
+    template = app.load_static_resource('swagger', file_name)
+    nonce = secrets.token_urlsafe(32)
+    html = chevron.render(template, {
+        'CSP_NONCE': json.dumps(nonce)
+    })
     return Response(status_code=200,
-                    headers={"Content-Type": "text/html"},
-                    body=oauth2_redirect_html)
+                    headers={
+                        'Content-Type': 'text/html',
+                        'Content-Security-Policy': app.content_security_policy(nonce)
+                    },
+                    body=html)
 
 
 common_specs = CommonEndpointSpecs(app_name='service')
