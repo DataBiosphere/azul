@@ -1280,5 +1280,5 @@ def env() -> Mapping[str, Optional[str]]:
             'channel_id': 'C04JWDFCPFZ'  # #team-boardwalk-prod
         }),
 
-        'AZUL_ENABLE_REPLICAS': '1',
+        'AZUL_ENABLE_REPLICAS': '0',
     }
