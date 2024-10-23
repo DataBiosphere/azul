@@ -1,28 +1,28 @@
 atomicwrites==1.4.1
-awscli==1.29.63
-boto3-stubs[s3,sqs,lambda,dynamodb,iam,ecr,stepfunctions,kms]==1.28.63  # match this with the version of the `boto3` runtime dependency
-coverage==6.5.0
+awscli==1.35.11
+boto3-stubs[s3,sqs,lambda,dynamodb,iam,ecr,stepfunctions,kms]==1.35.45  # match this with the version of the `boto3` runtime dependency
+coverage==7.6.4
 docker==7.1.0
-flake8==5.0.4
-gevent==23.9.1
+flake8==7.1.1
+gevent==24.10.2
 git+https://github.com/DataBiosphere/azul-chalice@1.30.0+12#egg=chalice
 git+https://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
-gitpython==3.1.41
-google-api-python-client==2.103.0
-google-cloud-bigquery-reservation==1.11.3
-google-cloud-storage==2.12.0
-jq==1.3.0
-locust==2.12.2
-moto[s3,sqs,sns,dynamodb,iam]==4.1.13  # match the extras with the backends listed in AzulUnitTestCase._reset_moto
-openapi-spec-validator==0.5.1
-openpyxl==3.0.6
+gitpython==3.1.43
+google-api-python-client==2.149.0
+google-cloud-bigquery-reservation==1.13.5
+google-cloud-storage==2.18.2
+jq==1.8.0
+locust==2.32.0
+moto[s3,sqs,sns,dynamodb,iam]==5.0.18  # match the extras with the backends listed in AzulUnitTestCase._reset_moto
+openapi-spec-validator==0.7.1
+openpyxl==3.1.5
 posix_ipc==1.1.1
-pygithub==1.56
-python-dxf==11.4.0
-python-gitlab==3.13.0
-pyyaml==6.0.1
-responses==0.22.0
+pygithub==2.4
+python-dxf==12.1.0
+python-gitlab==4.13.0
+pyyaml==6.0.2
+responses==0.25.3
 strict-rfc3339==0.7
-watchdog==2.1.9
+watchdog==5.0.3
 -r requirements.dev.trans.txt
 -r requirements.txt
