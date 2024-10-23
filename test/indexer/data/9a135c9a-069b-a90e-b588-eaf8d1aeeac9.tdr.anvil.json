@@ -1,12 +1,22 @@
 {
-    "entities": {
-        "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
-            "description": "Study description from DUOS",
-            "version": "2022-06-01T00:00:00.000000Z"
-        }
-    },
-    "links": [],
+    "entities": {},
+    "links": {},
     "orphans": {
+        "non_schema_orphan_table/9687b86d-a2ae-a083-b910-a16bcbef1ba4": {
+            "datarepo_row_id": "9687b86d-a2ae-a083-b910-a16bcbef1ba4",
+            "non_schema_column": "spam",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "non_schema_orphan_table/28ed0f3a-157b-417b-a05a-48f57f9d3a34": {
+            "datarepo_row_id": "28ed0f3a-157b-417b-a05a-48f57f9d3a34",
+            "non_schema_column": "eggs",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "non_schema_orphan_table/9db5952c-c454-49d9-8a62-5abb026701c0": {
+            "datarepo_row_id": "9db5952c-c454-49d9-8a62-5abb026701c0",
+            "non_schema_column": "baked beans",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
         "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
             "consent_group": [
                 "DS-BDIS"

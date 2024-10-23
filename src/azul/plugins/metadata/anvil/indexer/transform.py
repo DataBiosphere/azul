@@ -169,6 +169,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             assert False, entity_type
 
     def estimate(self, partition: BundlePartition) -> int:
+        # Orphans are not considered when deciding whether to partition the
+        # bundle, but if the bundle is partitioned then each orphan will be
+        # replicated in a single partition
         return sum(map(partial(self._contains, partition), self.bundle.entities))
 
     def transform(self,
@@ -188,7 +191,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _replicate(self, entity: EntityReference) -> tuple[str, JSON]:
-        return entity.entity_type, self.bundle.entities[entity]
+        content = ChainMap(self.bundle.entities, self.bundle.orphans)[entity]
+        return entity.entity_type, content
 
     def _convert_entity_type(self, entity_type: str) -> str:
         assert entity_type == 'bundle' or entity_type.startswith('anvil_'), entity_type
@@ -406,7 +410,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                             uuid=file.entity_id)
 
     def _only_dataset(self) -> EntityReference:
-        return one(self._entities_by_type['anvil_dataset'])
+        try:
+            return one(self._entities_by_type['anvil_dataset'])
+        except ValueError:
+            return one(o for o in self.bundle.orphans if o.entity_type == 'anvil_dataset')
 
     @cached_property
     def _activity_polymorphic_types(self) -> AbstractSet[str]:
@@ -506,7 +513,9 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
             return super()._dataset(dataset)
 
     def _list_entities(self) -> Iterable[EntityReference]:
-        yield self._singleton()
+        # Suppress contributions for bundles that only contain orphans
+        if self.bundle.entities:
+            yield self._singleton()
 
     @abstractmethod
     def _singleton(self) -> EntityReference:
@@ -564,6 +573,15 @@ class BundleTransformer(SingletonTransformer):
         return EntityReference(entity_type='bundle',
                                entity_id=self.bundle.uuid)
 
+    def transform(self,
+                  partition: BundlePartition
+                  ) -> Iterable[Contribution | Replica]:
+        yield from super().transform(partition)
+        dataset = self._only_dataset()
+        for orphan in self.bundle.orphans:
+            if partition.contains(UUID(orphan.entity_id)):
+                yield self._replica(orphan, file_hub=None, root_hub=dataset.entity_id)
+
 
 class DatasetTransformer(SingletonTransformer):
 
@@ -579,7 +597,7 @@ class DatasetTransformer(SingletonTransformer):
                    ) -> Iterable[Contribution | Replica]:
         yield from super()._transform(entity)
         if self._is_duos(entity):
-            yield self._replica(entity, file_hub=None)
+            yield self._replica(entity, file_hub=None, root_hub=entity.entity_id)
 
 
 class DonorTransformer(BaseTransformer):
@@ -614,6 +632,7 @@ class FileTransformer(BaseTransformer):
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
+        dataset = self._only_dataset()
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -627,7 +646,7 @@ class FileTransformer(BaseTransformer):
         )
         yield self._contribution(contents, entity.entity_id)
         if config.enable_replicas:
-            yield self._replica(entity, file_hub=entity.entity_id)
+            yield self._replica(entity, file_hub=entity.entity_id, root_hub=dataset.entity_id)
             for linked_entity in linked:
                 yield self._replica(
                     linked_entity,
@@ -637,4 +656,5 @@ class FileTransformer(BaseTransformer):
                     # hub IDs field empty for datasets and rely on the tenet
                     # that every file is an implicit hub of its parent dataset.
                     file_hub=None if linked_entity.entity_type == 'anvil_dataset' else entity.entity_id,
+                    root_hub=dataset.entity_id
                 )

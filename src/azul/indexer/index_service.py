@@ -197,7 +197,7 @@ class IndexService(DocumentService):
                      bundle_fqid: SourcedBundleFQIDJSON
                      ) -> Bundle:
         plugin = self.repository_plugin(catalog)
-        bundle_fqid = plugin.resolve_bundle(bundle_fqid)
+        bundle_fqid = plugin.bundle_fqid_from_json(bundle_fqid)
         return plugin.fetch_bundle(bundle_fqid)
 
     def index(self, catalog: CatalogName, bundle: Bundle) -> None:
@@ -212,7 +212,8 @@ class IndexService(DocumentService):
         for contributions, replicas in transforms:
             tallies.update(self.contribute(catalog, contributions))
             self.replicate(catalog, replicas)
-        self.aggregate(tallies)
+        if tallies:
+            self.aggregate(tallies)
 
     def delete(self, catalog: CatalogName, bundle: Bundle) -> None:
         """

@@ -6,7 +6,6 @@ from collections.abc import (
     Iterator,
     Mapping,
     Sequence,
-    Set,
 )
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
@@ -20,10 +19,8 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
-import itertools
 from itertools import (
     count,
-    starmap,
 )
 import json
 import os
@@ -43,7 +40,6 @@ from typing import (
     Callable,
     ContextManager,
     IO,
-    Optional,
     Protocol,
     TypedDict,
     cast,
@@ -117,10 +113,10 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
+    Prefix,
     SourceJSON,
     SourceRef,
     SourcedBundleFQID,
-    SourcedBundleFQIDJSON,
 )
 from azul.indexer.document import (
     EntityReference,
@@ -154,7 +150,6 @@ from azul.plugins.metadata.anvil.bundle import (
 from azul.plugins.repository.tdr_anvil import (
     BundleType,
     TDRAnvilBundleFQID,
-    TDRAnvilBundleFQIDJSON,
 )
 from azul.portal_service import (
     PortalService,
@@ -287,73 +282,17 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
-    def _list_partitions(self,
-                         catalog: CatalogName,
-                         *,
-                         min_bundles: int,
-                         public_1st: bool
-                         ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
+    def _list_sources(self,
+                      catalog: CatalogName,
+                      ) -> Iterable[SourceRef]:
         """
-        Iterate through the sources in the given catalog and yield partitions of
-        bundle FQIDs until a desired minimum number of bundles are found. For
-        each emitted source, every partition is included, even if it's empty.
+        Iterate through the configured sources for the given catalog in a random order.
         """
-        total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
-        if public_1st:
-            managed_access_sources = frozenset(
-                str(source.spec)
-                for source in self.managed_access_sources_by_catalog[catalog]
-            )
-            index = first(
-                i
-                for i, source in enumerate(sources)
-                if source not in managed_access_sources
-            )
-            sources[0], sources[index] = sources[index], sources[0]
-        plugin = self.azul_client.repository_plugin(catalog)
-        # This iteration prefers sources occurring first, so we shuffle them
-        # above to neutralize the bias.
+        plugin = self.repository_plugin(catalog)
         for source in sources:
-            source = plugin.resolve_source(source)
-            source = plugin.partition_source(catalog, source)
-            for prefix in source.spec.prefix.partition_prefixes():
-                new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
-                total_bundles += len(new_fqids)
-                yield source, prefix, new_fqids
-            # We postpone this check until after we've yielded all partitions in
-            # the current source to ensure test coverage for handling multiple
-            # partitions per source
-            if total_bundles >= min_bundles:
-                break
-        else:
-            log.warning('Checked all sources and found only %d bundles instead of the '
-                        'expected minimum %d', total_bundles, min_bundles)
-
-    def _list_managed_access_bundles(self,
-                                     catalog: CatalogName
-                                     ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
-        sources = self.azul_client.catalog_sources(catalog)
-        # We need at least one managed_access bundle per IT. To index them with
-        # remote_reindex and avoid collateral bundles, we use as specific a
-        # prefix as possible.
-        for source in self.managed_access_sources_by_catalog[catalog]:
-            assert str(source.spec) in sources
-            source = self.repository_plugin(catalog).partition_source(catalog, source)
-            bundle_fqids = sorted(
-                bundle_fqid
-                for bundle_fqid in self.azul_client.list_bundles(catalog, source, prefix='')
-                if not (
-                    # DUOS bundles are too sparse to fulfill the managed access tests
-                    config.is_anvil_enabled(catalog)
-                    and cast(TDRAnvilBundleFQID, bundle_fqid).table_name is BundleType.duos
-                )
-            )
-            bundle_fqid = self.random.choice(bundle_fqids)
-            prefix = bundle_fqid.uuid[:8]
-            new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
-            yield source, prefix, new_fqids
+            yield plugin.resolve_source(source)
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
@@ -802,8 +741,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         method: str,
                         path: str,
                         *,
-                        args: Optional[Mapping[str, Any]] = None,
-                        endpoint: Optional[furl] = None,
+                        args: Mapping[str, Any] | None = None,
+                        endpoint: furl | None = None,
                         fetch: bool = False
                         ) -> bytes:
         if endpoint is None:
@@ -1202,7 +1141,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _get_gs_url_content(self,
                             url: furl,
-                            size: Optional[int] = None
+                            size: int | None = None
                             ) -> BytesIO:
         self.assertEquals('gs', url.scheme)
         path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
@@ -1222,34 +1161,62 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
+    def _list_partitions(self,
+                         catalog: CatalogName,
+                         *,
+                         min_bundles: int,
+                         ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
+        """
+        Iterate through the sources in the given catalog and yield partitions of
+        bundle FQIDs until a desired minimum number of bundles are found. For
+        each emitted source, every partition is included, even if it's empty.
+        """
+        plugin = self.repository_plugin(catalog)
+        managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+        total_bundles = 0
+        need_public = True
+        # Don't need to look for a managed access source if there aren't any
+        need_managed_access = len(managed_access_sources) > 0
+        for source in self._list_sources(catalog):
+            is_public = source not in managed_access_sources
+            if need_public and is_public:
+                need_public = False
+            elif need_managed_access and not is_public:
+                need_managed_access = False
+            elif total_bundles >= min_bundles:
+                # Skip through sources until we find one that fulfills the
+                # outstanding managed access requirements
+                continue
+            source = plugin.partition_source(catalog, source)
+            for prefix in source.spec.prefix.partition_prefixes():
+                new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
+                total_bundles += len(new_fqids)
+                yield source, prefix, new_fqids
+            # We postpone this check until after we've yielded all partitions in
+            # the current source to ensure test coverage for handling multiple
+            # partitions per source
+            if total_bundles >= min_bundles and not need_public and not need_managed_access:
+                break
+        else:
+            if total_bundles < min_bundles:
+                log.warning('Checked all sources and found only %d bundles instead of the '
+                            'expected minimum %d', total_bundles, min_bundles)
+            if need_public:
+                self.fail(f'Failed to find any public sources in {catalog!r}')
+            if need_managed_access:
+                self.fail(f'Failed to find any managed access sources in {catalog!r}')
+
     def _prepare_notifications(self,
                                catalog: CatalogName
                                ) -> tuple[JSONs, set[SourcedBundleFQID]]:
         bundle_fqids: set[SourcedBundleFQID] = set()
         notifications = []
-
-        def update(source: SourceRef,
-                   prefix: str,
-                   partition_bundle_fqids: Iterable[SourcedBundleFQID]):
+        partitions = self._list_partitions(catalog, min_bundles=self.min_bundles)
+        for source, prefix, partition_bundle_fqids in partitions:
             bundle_fqids.update(partition_bundle_fqids)
             notifications.append(self.azul_client.reindex_message(catalog,
                                                                   source,
                                                                   prefix))
-
-        list(starmap(update, self._list_managed_access_bundles(catalog)))
-        num_bundles = max(self.min_bundles - len(bundle_fqids), 1)
-        log.info('Selected %d bundles to satisfy managed access coverage; '
-                 'selecting at least %d more', len(bundle_fqids), num_bundles)
-        # _list_partitions selects both public and managed access sources at random.
-        # If we don't index at least one public source, every request would need
-        # service account credentials and we couldn't compare the responses for
-        # public and managed access data. `public_1st` ensures that at least
-        # one of the sources will be public because sources are indexed starting
-        # with the first one yielded by the iteration.
-        list(starmap(update, self._list_partitions(catalog,
-                                                   min_bundles=num_bundles,
-                                                   public_1st=True)))
-
         # Index some bundles again to test that we handle duplicate additions.
         # Note: random.choices() may pick the same element multiple times so
         # some notifications may end up being sent three or more times.
@@ -1263,7 +1230,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _get_indexed_bundles(self,
                              catalog: CatalogName,
-                             filters: Optional[JSON] = None
+                             filters: JSON | None = None
                              ) -> set[SourcedBundleFQID]:
         indexed_fqids = set()
         hits = self._get_entities(catalog, 'bundles', filters)
@@ -1272,36 +1239,36 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             source, bundle = one(hit['sources']), one(hit['bundles'])
             source = SourceJSON(id=source[special_fields.source_id],
                                 spec=source[special_fields.source_spec])
-            bundle_fqid = SourcedBundleFQIDJSON(uuid=bundle[special_fields.bundle_uuid],
-                                                version=bundle[special_fields.bundle_version],
-                                                source=source)
-            if config.is_anvil_enabled(catalog):
-                # Every primary bundle contains 1 or more biosamples, 1 dataset,
-                # and 0 or more other entities. Biosamples only occur in primary
-                # bundles.
-                if len(hit['biosamples']) > 0:
-                    table_name = BundleType.primary
-                # Supplementary bundles contain only 1 file and 1 dataset.
-                elif len(hit['files']) > 0:
-                    table_name = BundleType.supplementary
-                # DUOS bundles contain only 1 dataset.
-                elif len(hit['datasets']) > 0:
-                    table_name = BundleType.duos
-                else:
-                    assert False, hit
-                bundle_fqid = cast(TDRAnvilBundleFQIDJSON, bundle_fqid)
-                bundle_fqid['table_name'] = table_name.value
-            bundle_fqid = self.repository_plugin(catalog).resolve_bundle(bundle_fqid)
+            source = self.repository_plugin(catalog).source_from_json(source)
+            bundle_fqid = SourcedBundleFQID(uuid=bundle[special_fields.bundle_uuid],
+                                            version=bundle[special_fields.bundle_version],
+                                            source=source)
             indexed_fqids.add(bundle_fqid)
         return indexed_fqids
 
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
-                                 bundle_fqids: Set[SourcedBundleFQID]
+                                 bundle_fqids: set[SourcedBundleFQID]
                                  ) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = bundle_fqids
-            if not config.is_anvil_enabled(catalog):
+            if config.is_anvil_enabled(catalog):
+                # Replica bundles do not add contributions to the index are
+                # therefore do not appear anywhere in the service response
+                # FIXME: Integration test does not assert that replica bundles are indexed
+                #        https://github.com/DataBiosphere/azul/issues/6647
+                replica_fqids = {
+                    bundle_fqid
+                    for bundle_fqid in expected_fqids
+                    if cast(TDRAnvilBundleFQID, bundle_fqid).table_name not in (
+                        BundleType.primary.value,
+                        BundleType.supplementary.value,
+                        BundleType.duos.value,
+                    )
+                }
+                expected_fqids -= replica_fqids
+                log.info('Ignoring replica bundles %r', replica_fqids)
+            else:
                 expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(expected_fqids))
                 obsolete_fqids = bundle_fqids - expected_fqids
                 if obsolete_fqids:
@@ -1356,7 +1323,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_entities(self,
                       catalog: CatalogName,
                       entity_type: EntityType,
-                      filters: Optional[JSON] = None
+                      filters: JSON | None = None
                       ) -> MutableJSONs:
         entities = []
         size = 100
@@ -1388,7 +1355,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access(self,
                              catalog: CatalogName,
-                             bundle_fqids: Set[SourcedBundleFQID]
+                             bundle_fqids: set[SourcedBundleFQID]
                              ) -> None:
         with self.subTest('managed_access', catalog=catalog):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
@@ -1419,8 +1386,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_repository_sources(self,
                                                 catalog: CatalogName,
-                                                indexed_source_ids: Set[str],
-                                                managed_access_source_ids: Set[str]
+                                                indexed_source_ids: set[str],
+                                                managed_access_source_ids: set[str]
                                                 ) -> set[str]:
         """
         Test the managed access controls for the /repository/sources endpoint
@@ -1452,7 +1419,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_indices(self,
                                      catalog: CatalogName,
-                                     managed_access_source_ids: Set[str]
+                                     managed_access_source_ids: set[str]
                                      ) -> JSONs:
         """
         Test the managed-access controls for the /index/bundles and
@@ -1890,10 +1857,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
         fqid = self.bundle_fqid(catalog.name)
         log.info('Canning bundle %r from catalog %r', fqid, catalog.name)
         with tempfile.TemporaryDirectory() as d:
-            self._can_bundle(source=str(fqid.source.spec),
-                             uuid=fqid.uuid,
-                             version=fqid.version,
-                             output_dir=d)
+            self._can_bundle(fqid, output_dir=d)
             generated_file = one(os.listdir(d))
             with open(os.path.join(d, generated_file)) as f:
                 bundle_json = json.load(f)
@@ -1918,7 +1882,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                 }
                 self.assertIsSubset(set(stitched), metadata_ids)
             elif metadata_plugin_name == 'anvil':
-                self.assertEqual({'entities', 'links'}, bundle_json.keys())
+                self.assertEqual({'entities', 'links', 'orphans'}, bundle_json.keys())
                 entities, links = bundle_json['entities'], bundle_json['links']
                 self.assertIsInstance(entities, dict)
                 self.assertIsInstance(links, list)
@@ -1960,26 +1924,25 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        # Skip through empty partitions
-        bundle_fqids = itertools.chain.from_iterable(
-            bundle_fqids
-            for _, _, bundle_fqids in self._list_partitions(catalog,
-                                                            min_bundles=1,
-                                                            public_1st=False)
-        )
+        source = first(self._list_sources(catalog))
+        # The plugin will raise an exception if the source lacks a prefix
+        source = source.with_prefix(Prefix.of_everything)
+        bundle_fqids = self.repository_plugin(catalog).list_bundles(source, '')
         return self.random.choice(sorted(bundle_fqids))
 
     def _can_bundle(self,
-                    source: str,
-                    uuid: str,
-                    version: str,
+                    fqid: SourcedBundleFQID,
                     output_dir: str
                     ) -> None:
         args = [
-            '--source', source,
-            '--uuid', uuid,
-            '--version', version,
-            '--output-dir', output_dir
+            '--uuid', fqid.uuid,
+            '--version', fqid.version,
+            '--source', str(fqid.source.spec),
+            *([
+                  '--table-name', fqid.table_name,
+                  '--batch-prefix', 'null' if fqid.batch_prefix is None else fqid.batch_prefix,
+              ] if isinstance(fqid, TDRAnvilBundleFQID) else []),
+            '--output-dir', output_dir,
         ]
         return self._can_bundle_main(args)
 

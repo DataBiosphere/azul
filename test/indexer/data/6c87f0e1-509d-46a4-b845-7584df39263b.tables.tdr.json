@@ -3,8 +3,9 @@
         "anvil_activity": {
             "rows": [
                 {
-                    "activity_id": "",
-                    "activity_type": "",
+                    "activity_id": "95aa5a62-0c42-48c7-aa70-e9987cfd9824",
+                    "activity_type": "other",
+                    "datarepo_row_id": "85342e55-8897-481e-a2c3-b7344071a72c",
                     "generated_file_id": [],
                     "source_datarepo_row_ids": [],
                     "used_biosample_id": [],
@@ -15,9 +16,10 @@
         "anvil_alignmentactivity": {
             "rows": [
                 {
-                    "activity_type": "",
-                    "alignmentactivity_id": "",
+                    "activity_type": "alignment",
+                    "alignmentactivity_id": "bb22e6de-7704-4435-8684-a34b1e4ff188",
                     "data_modality": [],
+                    "datarepo_row_id": "a6f3f829-dec6-4be8-9d53-2c963f9206fc",
                     "generated_file_id": [],
                     "reference_assembly": [],
                     "source_datarepo_row_ids": [],
@@ -28,11 +30,12 @@
         "anvil_assayactivity": {
             "rows": [
                 {
-                    "activity_type": "",
+                    "activity_type": "assay",
                     "antibody_id": [],
                     "assay_type": "",
-                    "assayactivity_id": "",
+                    "assayactivity_id": "d9150ab0-8e4a-46ab-9501-4b91c6f548e1",
                     "data_modality": [],
+                    "datarepo_row_id": "9258bb9f-1e2b-4139-9226-3588154a4632",
                     "generated_file_id": [],
                     "source_datarepo_row_ids": [],
                     "used_biosample_id": []
@@ -241,13 +244,30 @@
         "anvil_variantcallingactivity": {
             "rows": [
                 {
-                    "activity_type": "",
+                    "activity_type": "variant calling",
                     "data_modality": [],
+                    "datarepo_row_id": "c826d5b0-5e86-432b-ab53-36eced42ece0",
                     "generated_file_id": [],
                     "reference_assembly": [],
                     "source_datarepo_row_ids": [],
                     "used_file_id": [],
-                    "variantcallingactivity_id": ""
+                    "variantcallingactivity_id": "8db89e5e-1c8a-487e-b0c1-b26218ac6b7b"
+                }
+            ]
+        },
+        "non_schema_orphan_table": {
+            "rows": [
+                {
+                    "datarepo_row_id": "9687b86d-a2ae-a083-b910-a16bcbef1ba4",
+                    "non_schema_column": "spam"
+                },
+                {
+                    "datarepo_row_id": "28ed0f3a-157b-417b-a05a-48f57f9d3a34",
+                    "non_schema_column": "eggs"
+                },
+                {
+                    "datarepo_row_id": "9db5952c-c454-49d9-8a62-5abb026701c0",
+                    "non_schema_column": "baked beans"
                 }
             ]
         }
