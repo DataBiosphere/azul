@@ -7,7 +7,7 @@ from unittest import (
 )
 
 from moto import (
-    mock_dynamodb,
+    mock_aws,
 )
 from mypy_boto3_dynamodb.literals import (
     ScalarAttributeTypeType,
@@ -23,7 +23,7 @@ from dynamodb_test_case import (
 )
 
 
-@mock_dynamodb
+@mock_aws
 class TestSourceCache(DynamoDBTestCase):
 
     def _dynamodb_table_name(self) -> str:

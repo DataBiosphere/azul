@@ -81,7 +81,7 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertEqual(len(azul_log.output), 3)
                     headers = {
                         'host': f'{host}:{port}',
-                        'user-agent': 'python-requests/2.32.2',
+                        'user-agent': 'python-requests/2.32.3',
                         'accept-encoding': 'gzip, deflate, br',
                         'accept': '*/*',
                         'connection': 'keep-alive'

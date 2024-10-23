@@ -147,6 +147,15 @@ class AzulTestCase(TestCase):
                     'The \'body\' parameter is deprecated for the \'.*\' API '
                     'and will be removed in .*. Instead use .*'
                 ),
+                'validate_spec shortcut is deprecated. Use validate instead.',
+                (
+                    'Automatically retrieving remote references can be a security vulnerability and'
+                    ' is discouraged by the JSON Schema specifications. Relying on this behavior is'
+                    ' deprecated and will shortly become an error. If you are sure you want to '
+                    'remotely retrieve your reference and that it is safe to do so, you can find '
+                    'instructions for doing so via referencing.Registry in the referencing '
+                    'documentation (https://referencing.readthedocs.org).'
+                )
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',
@@ -210,7 +219,7 @@ class AzulTestCase(TestCase):
         # Moto mock's stop() method has the drastic effect of resetting the
         # model class attributes that are used to track model instances so that
         # they can later be cleaned up when the backend is reset.
-        if isinstance(instance, moto.BaseMockAWS):
+        if isinstance(instance, moto.core.models.MockAWS):
             cleanup = partial(instance.stop, remove_data=False)
         else:
             cleanup = instance.stop

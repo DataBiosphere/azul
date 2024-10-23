@@ -6,8 +6,7 @@ from uuid import (
 )
 
 from moto import (
-    mock_sqs,
-    mock_sts,
+    mock_aws,
 )
 import requests
 
@@ -39,8 +38,7 @@ class TestValidNotificationRequests(LocalAppTestCase,
     def lambda_name(cls) -> str:
         return 'indexer'
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_successful_notifications(self):
         self._create_mock_notifications_queue()
         body = {
@@ -55,8 +53,7 @@ class TestValidNotificationRequests(LocalAppTestCase,
                 self.assertEqual(202, response.status_code)
                 self.assertEqual('', response.text)
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_invalid_notifications(self):
         bodies = {
             'Missing body': {},
@@ -108,8 +105,7 @@ class TestValidNotificationRequests(LocalAppTestCase,
                         response = self._test(body, delete, valid_auth=True)
                         self.assertEqual(400, response.status_code)
 
-    @mock_sts
-    @mock_sqs
+    @mock_aws
     def test_invalid_auth_for_notification_request(self):
         self._create_mock_notifications_queue()
         body = {

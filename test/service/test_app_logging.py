@@ -45,7 +45,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, LocalAppTestCase):
                     logs = [(r.levelno, r.getMessage()) for r in logs.records]
                     headers = {
                         'host': url.netloc,
-                        'user-agent': 'python-requests/2.32.2',
+                        'user-agent': 'python-requests/2.32.3',
                         'accept-encoding': 'gzip, deflate, br',
                         'accept': '*/*',
                         'connection': 'keep-alive',

@@ -7,7 +7,7 @@ from collections.abc import (
 )
 
 from moto import (
-    mock_dynamodb,
+    mock_aws,
 )
 from mypy_boto3_dynamodb import (
     DynamoDBClient,
@@ -46,7 +46,7 @@ class DynamoDBTestCase(AzulUnitTestCase, metaclass=ABCMeta):
 
     def setUp(self):
         super().setUp()
-        self.addPatch(mock_dynamodb())
+        self.addPatch(mock_aws())
         self.dynamodb.create_table(TableName=self._dynamodb_table_name(),
                                    BillingMode='PAY_PER_REQUEST',
                                    AttributeDefinitions=[

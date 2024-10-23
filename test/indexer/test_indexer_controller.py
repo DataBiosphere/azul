@@ -25,8 +25,7 @@ from more_itertools import (
     one,
 )
 from moto import (
-    mock_sqs,
-    mock_sts,
+    mock_aws,
 )
 
 from azul import (
@@ -76,8 +75,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-@mock_sts
-@mock_sqs
+@mock_aws
 class TestIndexController(DCP1IndexerTestCase, SqsTestCase):
     partition_prefix_length = 0
 
