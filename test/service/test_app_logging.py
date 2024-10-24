@@ -58,24 +58,23 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
         for azul_debug in (0, 1, 2):
             level = [INFO, DEBUG, DEBUG][azul_debug]
             for authenticated in False, True:
-                for reques_body in False, True:
+                for request_body in False, True:
                     url = self.base_url.set(path='/index/projects')
                     headers = {'authorization': 'Bearer foo_token'} if authenticated else {}
-                    if reques_body:
-                        reques_body = json.dumps({'filters': json.dumps({'organ': {'is': ['foo']}})})
+                    if request_body:
+                        request_body = json.dumps({'filters': json.dumps({'organ': {'is': ['foo']}})})
                         headers = {
-                            'content-length': str(len(reques_body)),
+                            'content-length': str(len(request_body)),
                             'content-type': 'application/json',
                             **headers,
                         }
                     with self.subTest(level=level,
                                       authenticated=authenticated,
-                                      request_body=reques_body,
-                                      azul_debug=azul_debug):
+                                      request_body=request_body):
                         with self.assertLogs(logger=log, level=level) as logs:
                             debug = PropertyMock(return_value=azul_debug)
                             with patch.object(Config, 'debug', new=debug):
-                                json_body = json.loads(reques_body) if reques_body else None
+                                json_body = json.loads(request_body) if request_body else None
                                 response = requests.get(str(url), headers=headers, json=json_body)
                         logs = [(r.levelno, r.getMessage()) for r in logs.records]
                         headers = {
@@ -95,11 +94,11 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                             (
                                 INFO,
                                 '… without request body'
-                            ) if not reques_body else
+                            ) if not request_body else
                             (
                                 INFO,
-                                f'… with request body {reques_body!r} '
-                                f'({str(len(reques_body)) if azul_debug == 2 else "first 1024"} characters)'
+                                f'… with request body {request_body!r} '
+                                f'({str(len(request_body)) if azul_debug == 2 else "first 1024"} characters)'
                             ),
                             (
                                 INFO,
