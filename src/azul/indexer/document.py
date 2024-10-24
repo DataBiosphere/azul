@@ -1113,11 +1113,18 @@ C = TypeVar('C', bound=DocumentCoordinates)
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Document(Generic[C]):
-    needs_seq_no_primary_term: ClassVar[bool] = False
     needs_translation: ClassVar[bool] = True
 
     coordinates: C
-    version_type: VersionType = VersionType.none
+
+    #: By default, instances are fixed to VersionType.none. A subclass may
+    #: decide to make the version_type attribute mutable but it still needs to
+    #: declare what VersionType its instances use initially. This is so that
+    #: factories of these instances can make the necessary preparations.
+    #:
+    initial_version_type: ClassVar[VersionType] = VersionType.none
+    version_type: VersionType = attr.ib(default=initial_version_type,
+                                        on_setattr=attr.setters.frozen)
 
     # For VersionType.internal, version is a tuple composed of the sequence
     # number and primary term. For VersionType.none and .create_only, it is
@@ -1295,7 +1302,7 @@ class Document(Generic[C]):
             document = cls.translate_fields(document,
                                             field_types[coordinates.entity.catalog],
                                             forward=False)
-        if cls.needs_seq_no_primary_term:
+        if cls.initial_version_type is VersionType.internal:
             try:
                 version = (hit['_seq_no'], hit['_primary_term'])
             except KeyError:
@@ -1343,16 +1350,14 @@ class Document(Generic[C]):
         if bulk:
             result['_op_type'] = self.op_type.name
         if self.version_type is VersionType.none:
-            assert not self.needs_seq_no_primary_term
+            pass
         elif self.version_type is VersionType.create_only:
-            assert not self.needs_seq_no_primary_term
             if bulk:
                 if op_type is OpType.delete:
                     result['if_seq_no'], result['if_primary_term'] = self.version
             else:
                 assert op_type is OpType.create, op_type
         elif self.version_type is VersionType.internal:
-            assert self.needs_seq_no_primary_term
             if self.version is not None:
                 # For internal versioning, self.version is None for new documents
                 result['if_seq_no'], result['if_primary_term'] = self.version
@@ -1385,7 +1390,8 @@ class Contribution(Document[ContributionCoordinates[E]]):
 
     #: The version_type attribute will change to VersionType.none if writing
     #: to Elasticsearch fails with 409
-    version_type: VersionType = VersionType.create_only
+    initial_version_type: ClassVar[VersionType] = VersionType.create_only
+    version_type: VersionType = initial_version_type
 
     def __attrs_post_init__(self):
         assert self.contents is not None
@@ -1455,11 +1461,12 @@ class Contribution(Document[ContributionCoordinates[E]]):
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
-    version_type: VersionType = VersionType.internal
+    initial_version_type: ClassVar[VersionType] = VersionType.internal
+    version_type: VersionType = attr.ib(default=initial_version_type,
+                                        on_setattr=attr.setters.frozen)
     sources: set[DocumentSource]
     bundles: Optional[list[BundleFQIDJSON]]
     num_contributions: int
-    needs_seq_no_primary_term: ClassVar[bool] = True
 
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)

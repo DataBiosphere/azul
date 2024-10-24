@@ -609,6 +609,8 @@ class IndexService(DocumentService):
         num_contributions = sum(tallies.values())
         log.info('Reading %i expected contribution(s)', num_contributions)
 
+        is_internal_version = Contribution.initial_version_type is VersionType.internal
+
         def pages() -> Iterable[JSONs]:
             body = dict(query=query)
             while True:
@@ -617,7 +619,7 @@ class IndexService(DocumentService):
                                             body=body,
                                             size=config.contribution_page_size,
                                             track_total_hits=False,
-                                            seq_no_primary_term=Contribution.needs_seq_no_primary_term)
+                                            seq_no_primary_term=is_internal_version)
                 hits = response['hits']['hits']
                 log.debug('Read a page with %i contribution(s)', len(hits))
                 if hits:
