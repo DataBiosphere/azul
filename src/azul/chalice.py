@@ -413,16 +413,17 @@ class AzulChaliceApp(Chalice):
                      json.dumps(request_info, cls=self._LogJSONEncoder))
 
             body = self.current_request.json_body
-            if not body:
-                msg = ''
+            if body is None:
+                body_len_msg = ''
             elif config.debug == 2:
                 body = json.dumps(body, cls=self._LogJSONEncoder)
-                msg = f' ({len(body)} characters)'
+                body_len_msg = f' ({len(body)} characters)'
             else:
                 n = 1024
-                msg = f' (first {str(n)} characters)'
+                body_len_msg = f' (first {str(n)} characters)'
                 body = json_head(n, body) if not isinstance(body, str | bytes) else body[:n]
-            log.info('%s%s', http_body_log_message('request', body, verbatim=True), msg)
+            log.info('%s%s',
+                     http_body_log_message('request', body, verbatim=True), body_len_msg)
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):
