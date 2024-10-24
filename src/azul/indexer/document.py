@@ -1352,11 +1352,7 @@ class Document(Generic[C]):
         if self.version_type is VersionType.none:
             pass
         elif self.version_type is VersionType.create_only:
-            if bulk:
-                if op_type is OpType.delete:
-                    result['if_seq_no'], result['if_primary_term'] = self.version
-            else:
-                assert op_type is OpType.create, op_type
+            assert op_type is OpType.create, op_type
         elif self.version_type is VersionType.internal:
             if self.version is not None:
                 # For internal versioning, self.version is None for new documents
