@@ -1348,7 +1348,7 @@ class Document(Generic[C]):
         # For non-bulk updates, self.op_type determines which client
         # method is invoked.
         if bulk:
-            result['_op_type'] = self.op_type.name
+            result['_op_type'] = op_type.name
         if self.version_type is VersionType.none:
             pass
         elif self.version_type is VersionType.create_only:
