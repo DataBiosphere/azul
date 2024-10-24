@@ -1318,8 +1318,7 @@ class Document(Generic[C]):
 
     def to_index(self,
                  catalog: Optional[CatalogName],
-                 field_types: CataloguedFieldTypes,
-                 bulk: bool = False
+                 field_types: CataloguedFieldTypes
                  ) -> JSON:
         """
         Build request parameters from the document for indexing
@@ -1328,27 +1327,17 @@ class Document(Generic[C]):
                         coordinates must supply it. Otherwise this document's
                         coordinates must supply the same catalog or none at all.
         :param field_types: A mapping of field paths to field type
-        :param bulk: If bulk indexing
         :return: Request parameters for indexing
         """
         op_type = self.op_type
         coordinates = self.coordinates.with_catalog(catalog)
         result = {
-            '_index' if bulk else 'index': coordinates.index_name,
-            **(
-                {}
-                if op_type is OpType.delete else
-                {
-                    '_source' if bulk else 'body':
-                        self._body(field_types[coordinates.entity.catalog])
-                }
-            ),
-            '_id' if bulk else 'id': self.coordinates.document_id
+            'index': coordinates.index_name,
+            'id': self.coordinates.document_id
         }
-        # For non-bulk updates, self.op_type determines which client
-        # method is invoked.
-        if bulk:
-            result['_op_type'] = op_type.name
+        if op_type is not OpType.delete:
+            result['body'] = self._body(field_types[coordinates.entity.catalog])
+
         if self.version_type is VersionType.none:
             pass
         elif self.version_type is VersionType.create_only:

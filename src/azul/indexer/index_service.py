@@ -16,6 +16,7 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    Any,
     MutableSet,
     Optional,
     TYPE_CHECKING,
@@ -881,11 +882,25 @@ class IndexWriter:
             doc.coordinates: doc
             for doc in documents
         }
-        actions = [
-            doc.to_index(self.catalog, self.field_types, bulk=True)
-            for doc in documents.values()
-        ]
+
+        def expand_action(doc: Any) -> tuple[dict[str, Any], dict[str, Any] | None]:
+            # Document.to_index returns the keyword arguments to the ES client
+            # method referenced by Document.op_type. In bulk requests, these
+            # methods are not invoked individually. This function converts the
+            # keyword arguments returned by Document.to_index to the form
+            # internally used by the ES client's `bulk` method: a pair
+            # consisting of 1) the action and associated metadata and 2) an
+            # optional document source.
+            assert isinstance(doc, Document), doc
+            action = dict(doc.to_index(self.catalog, self.field_types))
+            action['_index'] = action.pop('index')
+            action['_id'] = action.pop('id')
+            body = action.pop('body', None)
+            action = {doc.op_type.name: action}
+            return action, body
+
         log.info('Writing documents using streaming_bulk().')
+
         # We cannot use parallel_bulk() for 1024+ actions because Lambda doesn't
         # support shared memory. See the issue below for details.
         #
@@ -896,8 +911,13 @@ class IndexWriter:
         # There is no way to split a single action and hence a single document
         # into multiple requests.
         #
+        # Technically, we're not supposed to pass Document instances in the
+        # `action` parameter but we're exploiting the undocumented fact that the
+        # method immediately maps the value of the `expand_action_callback`
+        # parameter over the list passed in the `actions` parameter.
         response = streaming_bulk(client=self.es_client,
-                                  actions=actions,
+                                  actions=list(documents.values()),
+                                  expand_action_callback=expand_action,
                                   refresh=self.refresh,
                                   raise_on_error=False,
                                   max_chunk_bytes=config.max_chunk_size)
