@@ -3,7 +3,7 @@
     "info": {
         "title": "azul_indexer",
         "description": "\nThis is the internal API for Azul's indexer component.\n",
-        "version": "1.0"
+        "version": "1.1"
     },
     "paths": {
         "/openapi": {
@@ -741,6 +741,9 @@
                     },
                     "401": {
                         "description": "Request lacked a valid HMAC header"
+                    },
+                    "504": {
+                        "description": "Request timed out. When handling this response, clients should wait the number of seconds specified in the `Retry-After` header and then retry the request."
                     }
                 }
             }

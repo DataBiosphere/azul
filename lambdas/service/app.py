@@ -12,6 +12,9 @@ from inspect import (
 )
 import json
 import logging.config
+from time import (
+    sleep,
+)
 from typing import (
     Any,
     Callable,
@@ -232,7 +235,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '9.2'
+        'version': '9.3'
     },
     'tags': [
         {
@@ -474,6 +477,14 @@ def swagger_ui():
 
 
 @app.route(
+    '/error-timeout',
+    cors=False
+)
+def error_504():
+    sleep(45)
+
+
+@app.route(
     '/static/{file}',
     cache_control='public, max-age=86400',
     cors=True
@@ -563,7 +574,9 @@ def custom_health(keys: Optional[str] = None):
 @app.metric_alarm(metric=LambdaMetric.errors,
                   threshold=1,
                   period=24 * 60 * 60)
-@app.metric_alarm(metric=LambdaMetric.throttles)
+@app.metric_alarm(metric=LambdaMetric.throttles,
+                  threshold=0,
+                  period=5 * 60)
 @app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
@@ -897,7 +910,8 @@ def get_integrations():
                     # don't adopt this just yet elsewhere in the program.
                     signature(app.catalog_controller.list_catalogs).return_annotation
                 )
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 )
@@ -1112,7 +1126,8 @@ def repository_search_spec(*, post: bool):
                     tabulated fields is consistent between entity types.
                 '''),
                 **responses.json_content(page_spec)
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 
@@ -1152,7 +1167,8 @@ def repository_id_spec():
                     between these cases).
                 '''),
                 **responses.json_content(hit_spec)
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 
@@ -1169,7 +1185,8 @@ def repository_head_spec(for_summary: bool = False):
                     operational, or to check the validity of query parameters
                     for the [GET method]({search_spec_link}).
                 ''')
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 
@@ -1281,7 +1298,8 @@ def _hoist_parameters(query_params, request):
                         specimenCount=int
                     )
                 )
-            }
+            },
+            **common_specs.http_504_response
         },
         **repository_summary_spec
     }
@@ -1522,7 +1540,8 @@ def manifest_route(*, fetch: bool, initiate: bool):
                             endpoint.
                         ''')
                     }
-                })
+                }),
+                **common_specs.http_504_response
             } if not fetch else {
                 '200': {
                     'description': fd('''
@@ -1571,7 +1590,8 @@ def manifest_route(*, fetch: bool, initiate: bool):
                             }))
                         )
                     ),
-                }
+                },
+                **common_specs.http_504_response
             }
 
         }
@@ -1761,7 +1781,8 @@ repository_files_spec = {
                         the `Location` header.
                     '''))
                 }
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 )
@@ -1800,7 +1821,8 @@ def repository_files(file_uuid: str) -> Response:
                         Location=str
                     )
                 )
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 )
@@ -1881,7 +1903,8 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                         )
                     ))
                 )
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 )

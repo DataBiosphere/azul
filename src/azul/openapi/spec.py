@@ -232,3 +232,14 @@ class CommonEndpointSpecs:
                 }
             }
         }
+
+    @property
+    def http_504_response(self) -> JSON:
+        return {
+            '504': {
+                'description': 'Request timed out. When handling this response,'
+                               ' clients should wait the number of seconds'
+                               ' specified in the `Retry-After` header and then'
+                               ' retry the request.'
+            }
+        }

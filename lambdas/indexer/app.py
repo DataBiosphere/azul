@@ -64,7 +64,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '1.0'
+        'version': '1.1'
     }
 }
 
@@ -98,7 +98,9 @@ class IndexerApp(AzulChaliceApp, SignatureHelper):
             error_decorator = self.metric_alarm(metric=LambdaMetric.errors,
                                                 threshold=1,  # One alarm …
                                                 period=24 * 60 * 60)  # … per day.
-            throttle_decorator = self.metric_alarm(metric=LambdaMetric.throttles)
+            throttle_decorator = self.metric_alarm(metric=LambdaMetric.throttles,
+                                                   threshold=0,
+                                                   period=5 * 60)
             retry_decorator = self.retry(num_retries=2)
 
             def decorator(f):
@@ -219,7 +221,9 @@ def health_by_key(keys: Optional[str] = None):
 @app.metric_alarm(metric=LambdaMetric.errors,
                   threshold=1,
                   period=24 * 60 * 60)
-@app.metric_alarm(metric=LambdaMetric.throttles)
+@app.metric_alarm(metric=LambdaMetric.throttles,
+                  threshold=0,
+                  period=5 * 60)
 @app.retry(num_retries=0)
 # FIXME: Remove redundant prefix from name
 #        https://github.com/DataBiosphere/azul/issues/5337
@@ -291,7 +295,8 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
             },
             '401': {
                 'description': 'Request lacked a valid HMAC header'
-            }
+            },
+            **common_specs.http_504_response
         }
     }
 )
@@ -303,9 +308,11 @@ def post_notification(catalog: CatalogName, action: str):
 
 
 @app.metric_alarm(metric=LambdaMetric.errors,
-                  threshold=int(config.contribution_concurrency(retry=False) * 2 / 3))
+                  threshold=int(config.contribution_concurrency(retry=False) * 2 / 3),
+                  period=5 * 60)
 @app.metric_alarm(metric=LambdaMetric.throttles,
-                  threshold=int(96000 / config.contribution_concurrency(retry=False)))
+                  threshold=int(96000 / config.contribution_concurrency(retry=False)),
+                  period=5 * 60)
 @app.on_sqs_message(
     queue=config.notifications_queue_name(),
     batch_size=1
@@ -315,9 +322,11 @@ def contribute(event: chalice.app.SQSEvent):
 
 
 @app.metric_alarm(metric=LambdaMetric.errors,
-                  threshold=int(config.aggregation_concurrency(retry=False) * 3))
+                  threshold=int(config.aggregation_concurrency(retry=False) * 3),
+                  period=5 * 60)
 @app.metric_alarm(metric=LambdaMetric.throttles,
-                  threshold=int(37760 / config.aggregation_concurrency(retry=False)))
+                  threshold=int(37760 / config.aggregation_concurrency(retry=False)),
+                  period=5 * 60)
 @app.on_sqs_message(
     queue=config.tallies_queue_name(),
     batch_size=IndexController.document_batch_size
@@ -330,8 +339,11 @@ def aggregate(event: chalice.app.SQSEvent):
 # with more RAM in the tallies_retry queue.
 
 @app.metric_alarm(metric=LambdaMetric.errors,
-                  threshold=int(config.aggregation_concurrency(retry=True) * 1 / 16))
-@app.metric_alarm(metric=LambdaMetric.throttles)
+                  threshold=int(config.aggregation_concurrency(retry=True) * 1 / 16),
+                  period=5 * 60)
+@app.metric_alarm(metric=LambdaMetric.throttles,
+                  threshold=0,
+                  period=5 * 60)
 @app.on_sqs_message(
     queue=config.tallies_queue_name(retry=True),
     batch_size=IndexController.document_batch_size
@@ -344,9 +356,11 @@ def aggregate_retry(event: chalice.app.SQSEvent):
 # retried with more RAM and a longer timeout in the notifications_retry queue.
 
 @app.metric_alarm(metric=LambdaMetric.errors,
-                  threshold=int(config.contribution_concurrency(retry=True) * 1 / 4))
+                  threshold=int(config.contribution_concurrency(retry=True) * 1 / 4),
+                  period=5 * 60)
 @app.metric_alarm(metric=LambdaMetric.throttles,
-                  threshold=int(31760 / config.contribution_concurrency(retry=True)))
+                  threshold=int(31760 / config.contribution_concurrency(retry=True)),
+                  period=5 * 60)
 @app.on_sqs_message(
     queue=config.notifications_queue_name(retry=True),
     batch_size=1
