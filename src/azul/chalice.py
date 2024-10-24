@@ -61,6 +61,9 @@ from azul.json import (
     copy_json,
     json_head,
 )
+from azul.logging import (
+    http_body_log_message,
+)
 from azul.strings import (
     join_words as jw,
     single_quote as sq,
@@ -404,10 +407,23 @@ class AzulChaliceApp(Chalice):
                 'query': self.current_request.query_params,
                 'headers': self.current_request.headers
             }
-            log.info('Received %s request for %r, with %s.',
+            log.info('Received %s request for %r, with %s',
                      context['httpMethod'],
                      context['path'],
                      json.dumps(request_info, cls=self._LogJSONEncoder))
+
+            body = self.current_request.json_body
+            if body is None:
+                body_len_msg = ''
+            elif config.debug == 2:
+                body = json.dumps(body, cls=self._LogJSONEncoder)
+                body_len_msg = f' ({len(body)} characters)'
+            else:
+                n = 1024
+                body_len_msg = f' (first {str(n)} characters)'
+                body = json_head(n, body) if not isinstance(body, str | bytes) else body[:n]
+            log.info('%s%s',
+                     http_body_log_message('request', body, verbatim=True), body_len_msg)
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):
