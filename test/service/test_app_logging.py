@@ -9,6 +9,9 @@ import requests
 from azul.chalice import (
     log,
 )
+from azul.json import (
+    json_head,
+)
 from azul.logging import (
     configure_test_logging,
 )
@@ -88,19 +91,98 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                             '"X-XSS-Protection": "1; mode=block", '
                             '"Cache-Control": "no-store"}. '
                             'See next line for the first 1024 characters of the body.\n'
-                            '{"pagination": {"count": 1, "total": 1, "size": 10, "next": null, "previous":'
-                            ' null, "pages": 1, "sort": "projectTitle", "order": "asc"}, "termFacets": '
-                            '{"organ": {"terms": [{"term": "pancreas", "count": 1}], "total": 1, "type": '
-                            '"terms"}, "sampleEntityType": {"terms": [{"term": "specimens", "count": 1}], '
-                            '"total": 1, "type": "terms"}, "dataUseRestriction": {"terms": [{"term": null, '
-                            '"count": 1}], "total": 1, "type": "terms"}, "project": {"terms": [{"term": '
-                            '"Single of human pancreas", "count": 1, "projectId": '
-                            '["e8642221-4c2c-4fd7-b926-a68bce363c88"]}], "total": 1, "type": "terms"}, '
-                            '"sampleDisease": {"terms": [{"term": "normal", "count": 1}], "total": 1, "type": '
-                            '"terms"}, "nucleicAcidSource": {"terms": [{"term": "single cell", "count": 1}], '
-                            '"total": 1, "type": "terms"}, "assayType": {"terms": [{"term": null, "count": 1}], '
-                            '"total": 0, "type": "terms"}, "instrumentManufacturerModel": {"terms": [{"term": '
-                            '"Illumina NextSeq 500", "count": 1}], "total": 1, "type": "terms"}, "institution": '
-                            '{"terms": [{"term": "Farmers Tru',
+                            + json_head(1024, {
+                                'pagination': {
+                                    'count': 1,
+                                    'total': 1,
+                                    'size': 10,
+                                    'next': None,
+                                    'previous': None,
+                                    'pages': 1,
+                                    'sort': 'projectTitle',
+                                    'order': 'asc'
+                                },
+                                'termFacets': {
+                                    'organ': {
+                                        'terms': [{
+                                            'term': 'pancreas',
+                                            'count': 1
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'sampleEntityType': {
+                                        'terms': [{
+                                            'term': 'specimens',
+                                            'count': 1
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'dataUseRestriction': {
+                                        'terms': [{
+                                            'term': None,
+                                            'count': 1
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'project': {
+                                        'terms': [{
+                                            'term': 'Single of human pancreas',
+                                            'count': 1,
+                                            'projectId': ['e8642221-4c2c-4fd7-b926-a68bce363c88']
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'sampleDisease': {
+                                        'terms': [{
+                                            'term': 'normal',
+                                            'count': 1
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'nucleicAcidSource': {
+                                        'terms': [{
+                                            'term': 'single cell',
+                                            'count': 1
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'assayType': {
+                                        'terms': [{
+                                            'term': None,
+                                            'count': 1
+                                        }],
+                                        'total': 0,
+                                        'type': 'terms'
+                                    },
+                                    'instrumentManufacturerModel': {
+                                        'terms': [{
+                                            'term': 'Illumina NextSeq 500',
+                                            'count': 1
+                                        }],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    },
+                                    'institution': {
+                                        'terms': [
+                                            {
+                                                'term': 'Farmers Trucks',
+                                                'count': 1
+                                            },
+                                            {
+                                                'term': 'University',
+                                                'count': 1
+                                            }
+                                        ],
+                                        'total': 1,
+                                        'type': 'terms'
+                                    }
+                                }
+                            })
                         )
                     ])
