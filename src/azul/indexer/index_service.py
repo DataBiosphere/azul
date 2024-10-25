@@ -80,7 +80,6 @@ from azul.indexer.document import (
     OpType,
     Replica,
     ReplicaCoordinates,
-    VersionType,
 )
 from azul.indexer.document_service import (
     DocumentService,
@@ -438,7 +437,7 @@ class IndexService(DocumentService):
                 else:
                     entity = CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
                     # Don't count overwrites, but ensure entry exists
-                    was_overwrite = c.version_type is VersionType.none
+                    was_overwrite = c.op_type is OpType.index
                     tallies[entity] += 0 if was_overwrite else 1
             contributions = retry_contributions
         writer.raise_on_errors()
@@ -610,8 +609,6 @@ class IndexService(DocumentService):
         num_contributions = sum(tallies.values())
         log.info('Reading %i expected contribution(s)', num_contributions)
 
-        is_internal_version = Contribution.initial_version_type is VersionType.internal
-
         def pages() -> Iterable[JSONs]:
             body = dict(query=query)
             while True:
@@ -620,7 +617,7 @@ class IndexService(DocumentService):
                                             body=body,
                                             size=config.contribution_page_size,
                                             track_total_hits=False,
-                                            seq_no_primary_term=is_internal_version)
+                                            seq_no_primary_term=True)
                 hits = response['hits']['hits']
                 log.debug('Read a page with %i contribution(s)', len(hits))
                 if hits:
@@ -963,13 +960,21 @@ class IndexWriter:
             self.retries.add(doc.coordinates)
         else:
             action = 'giving up'
-        if doc.version_type is VersionType.create_only:
-            log.warning('Document %r exists. Retrying with overwrite.', doc.coordinates)
-            # Try again but allow overwriting
-            doc.version_type = VersionType.none
-        else:
+
+        def warn():
             log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
                         doc.coordinates, e, self.conflicts[doc.coordinates], action)
+
+        if doc.op_type is OpType.create:
+            try:
+                doc.op_type = OpType.index
+            except AttributeError:
+                # We don't expect all Document types will let us modify op_type
+                warn()
+            else:
+                log.warning('Document %r exists. Retrying with overwrite.', doc.coordinates)
+        else:
+            warn()
 
     def raise_on_errors(self):
         if self.errors or self.conflicts:

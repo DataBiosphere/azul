@@ -1076,20 +1076,6 @@ FieldTypes1 = Union[Mapping[str, FieldTypes2], Sequence[FieldType], FieldType]
 FieldTypes = Mapping[str, FieldTypes1]
 CataloguedFieldTypes = Mapping[CatalogName, FieldTypes]
 
-
-class VersionType(Enum):
-    # No versioning; document is created or overwritten as needed
-    none = auto()
-
-    # Writing a document fails with 409 conflict if one with the same ID already
-    # exists in the index
-    create_only = auto()
-
-    # Use the Elasticsearch "internal" versioning type
-    # https://www.elastic.co/guide/en/elasticsearch/reference/6.8/docs-index_.html#_version_types
-    internal = auto()
-
-
 InternalVersion = tuple[int, int]
 
 
@@ -1112,24 +1098,11 @@ C = TypeVar('C', bound=DocumentCoordinates)
 
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
-class Document(Generic[C]):
+class Document(Generic[C], metaclass=ABCMeta):
     needs_translation: ClassVar[bool] = True
 
     coordinates: C
 
-    #: By default, instances are fixed to VersionType.none. A subclass may
-    #: decide to make the version_type attribute mutable but it still needs to
-    #: declare what VersionType its instances use initially. This is so that
-    #: factories of these instances can make the necessary preparations.
-    #:
-    initial_version_type: ClassVar[VersionType] = VersionType.none
-    version_type: VersionType = attr.ib(default=initial_version_type,
-                                        on_setattr=attr.setters.frozen)
-
-    # For VersionType.internal, version is a tuple composed of the sequence
-    # number and primary term. For VersionType.none and .create_only, it is
-    # None.
-    # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
     version: Optional[InternalVersion]
 
     # In the index, the `contents` property is always present and never null in
@@ -1143,6 +1116,22 @@ class Document(Generic[C]):
     @property
     def entity(self) -> EntityReference:
         return self.coordinates.entity
+
+    @property
+    @abstractmethod
+    def op_type(self) -> OpType:
+        """
+        Get the ES client method to use when writing this document to the index.
+        """
+        raise NotImplementedError
+
+    @op_type.setter
+    def op_type(self, value: OpType):
+        """
+        Set the ES client method to use when writing this document to the index.
+        This is an optional operation.
+        """
+        raise NotImplementedError
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -1302,14 +1291,11 @@ class Document(Generic[C]):
             document = cls.translate_fields(document,
                                             field_types[coordinates.entity.catalog],
                                             forward=False)
-        if cls.initial_version_type is VersionType.internal:
-            try:
-                version = (hit['_seq_no'], hit['_primary_term'])
-            except KeyError:
-                assert '_seq_no' not in hit
-                assert '_primary_term' not in hit
-                version = None
-        else:
+        try:
+            version = hit['_seq_no'], hit['_primary_term']
+        except KeyError:
+            assert '_seq_no' not in hit
+            assert '_primary_term' not in hit
             version = None
 
         return cls.from_json(coordinates=coordinates,
@@ -1333,30 +1319,16 @@ class Document(Generic[C]):
 
         :return: Request parameters for indexing
         """
-        op_type = self.op_type
         coordinates = self.coordinates.with_catalog(catalog)
         result = {
             'index': coordinates.index_name,
             'id': self.coordinates.document_id
         }
-        if op_type is not OpType.delete:
+        if self.op_type is not OpType.delete:
             result['body'] = self._body(field_types[coordinates.entity.catalog])
-
-        if self.version_type is VersionType.none:
-            pass
-        elif self.version_type is VersionType.create_only:
-            assert op_type is OpType.create, op_type
-        elif self.version_type is VersionType.internal:
-            if self.version is not None:
-                # For internal versioning, self.version is None for new documents
-                result['if_seq_no'], result['if_primary_term'] = self.version
-        else:
-            assert False, self.version_type
+        if self.version is not None:
+            result['if_seq_no'], result['if_primary_term'] = self.version
         return result
-
-    @property
-    def op_type(self) -> OpType:
-        raise NotImplementedError
 
     def _body(self, field_types: FieldTypes) -> JSON:
         body = self.to_json()
@@ -1377,10 +1349,17 @@ class Contribution(Document[ContributionCoordinates[E]]):
     contents: JSON
     source: DocumentSource
 
-    #: The version_type attribute will change to VersionType.none if writing
+    #: The op_type attribute will change to OpType.index if writing
     #: to Elasticsearch fails with 409
-    initial_version_type: ClassVar[VersionType] = VersionType.create_only
-    version_type: VersionType = initial_version_type
+    _op_type: OpType = OpType.create
+
+    @property
+    def op_type(self) -> OpType:
+        return self._op_type
+
+    @op_type.setter
+    def op_type(self, op_type: OpType):
+        self._op_type = op_type
 
     def __attrs_post_init__(self):
         assert self.contents is not None
@@ -1438,21 +1417,9 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_version=self.coordinates.bundle.version,
                     bundle_deleted=self.coordinates.deleted)
 
-    @property
-    def op_type(self) -> OpType:
-        if self.version_type is VersionType.create_only:
-            return OpType.create
-        elif self.version_type is VersionType.none:
-            return OpType.index
-        else:
-            assert False, self.version_type
-
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
-    initial_version_type: ClassVar[VersionType] = VersionType.internal
-    version_type: VersionType = attr.ib(default=initial_version_type,
-                                        on_setattr=attr.setters.frozen)
     sources: set[DocumentSource]
     bundles: Optional[list[BundleFQIDJSON]]
     num_contributions: int
@@ -1560,7 +1527,6 @@ class Replica(Document[ReplicaCoordinates[E]]):
 
     @property
     def op_type(self) -> OpType:
-        assert self.version_type is VersionType.none, self.version_type
         return OpType.update
 
     def _body(self, field_types: FieldTypes) -> JSON:
