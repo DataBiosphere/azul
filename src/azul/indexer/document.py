@@ -1076,20 +1076,6 @@ FieldTypes1 = Union[Mapping[str, FieldTypes2], Sequence[FieldType], FieldType]
 FieldTypes = Mapping[str, FieldTypes1]
 CataloguedFieldTypes = Mapping[CatalogName, FieldTypes]
 
-
-class VersionType(Enum):
-    # No versioning; document is created or overwritten as needed
-    none = auto()
-
-    # Writing a document fails with 409 conflict if one with the same ID already
-    # exists in the index
-    create_only = auto()
-
-    # Use the Elasticsearch "internal" versioning type
-    # https://www.elastic.co/guide/en/elasticsearch/reference/6.8/docs-index_.html#_version_types
-    internal = auto()
-
-
 InternalVersion = tuple[int, int]
 
 
@@ -1112,17 +1098,11 @@ C = TypeVar('C', bound=DocumentCoordinates)
 
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
-class Document(Generic[C]):
-    needs_seq_no_primary_term: ClassVar[bool] = False
+class Document(Generic[C], metaclass=ABCMeta):
     needs_translation: ClassVar[bool] = True
 
     coordinates: C
-    version_type: VersionType = VersionType.none
 
-    # For VersionType.internal, version is a tuple composed of the sequence
-    # number and primary term. For VersionType.none and .create_only, it is
-    # None.
-    # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
     version: Optional[InternalVersion]
 
     # In the index, the `contents` property is always present and never null in
@@ -1136,6 +1116,22 @@ class Document(Generic[C]):
     @property
     def entity(self) -> EntityReference:
         return self.coordinates.entity
+
+    @property
+    @abstractmethod
+    def op_type(self) -> OpType:
+        """
+        Get the ES client method to use when writing this document to the index.
+        """
+        raise NotImplementedError
+
+    @op_type.setter
+    def op_type(self, value: OpType):
+        """
+        Set the ES client method to use when writing this document to the index.
+        This is an optional operation.
+        """
+        raise NotImplementedError
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -1295,14 +1291,11 @@ class Document(Generic[C]):
             document = cls.translate_fields(document,
                                             field_types[coordinates.entity.catalog],
                                             forward=False)
-        if cls.needs_seq_no_primary_term:
-            try:
-                version = (hit['_seq_no'], hit['_primary_term'])
-            except KeyError:
-                assert '_seq_no' not in hit
-                assert '_primary_term' not in hit
-                version = None
-        else:
+        try:
+            version = hit['_seq_no'], hit['_primary_term']
+        except KeyError:
+            assert '_seq_no' not in hit
+            assert '_primary_term' not in hit
             version = None
 
         return cls.from_json(coordinates=coordinates,
@@ -1311,58 +1304,31 @@ class Document(Generic[C]):
 
     def to_index(self,
                  catalog: Optional[CatalogName],
-                 field_types: CataloguedFieldTypes,
-                 bulk: bool = False
+                 field_types: CataloguedFieldTypes
                  ) -> JSON:
         """
-        Build request parameters from the document for indexing
+        Prepare a request to write this document to the index. The return value
+        is a dictionary with keyword arguments to the ES client method selected
+        by the :meth:`op_type` property.
 
         :param catalog: An optional catalog name. If None, this document's
                         coordinates must supply it. Otherwise this document's
                         coordinates must supply the same catalog or none at all.
+
         :param field_types: A mapping of field paths to field type
-        :param bulk: If bulk indexing
+
         :return: Request parameters for indexing
         """
-        op_type = self.op_type
         coordinates = self.coordinates.with_catalog(catalog)
         result = {
-            '_index' if bulk else 'index': coordinates.index_name,
-            **(
-                {}
-                if op_type is OpType.delete else
-                {
-                    '_source' if bulk else 'body':
-                        self._body(field_types[coordinates.entity.catalog])
-                }
-            ),
-            '_id' if bulk else 'id': self.coordinates.document_id
+            'index': coordinates.index_name,
+            'id': self.coordinates.document_id
         }
-        # For non-bulk updates, self.op_type determines which client
-        # method is invoked.
-        if bulk:
-            result['_op_type'] = self.op_type.name
-        if self.version_type is VersionType.none:
-            assert not self.needs_seq_no_primary_term
-        elif self.version_type is VersionType.create_only:
-            assert not self.needs_seq_no_primary_term
-            if bulk:
-                if op_type is OpType.delete:
-                    result['if_seq_no'], result['if_primary_term'] = self.version
-            else:
-                assert op_type is OpType.create, op_type
-        elif self.version_type is VersionType.internal:
-            assert self.needs_seq_no_primary_term
-            if self.version is not None:
-                # For internal versioning, self.version is None for new documents
-                result['if_seq_no'], result['if_primary_term'] = self.version
-        else:
-            assert False, self.version_type
+        if self.op_type is not OpType.delete:
+            result['body'] = self._body(field_types[coordinates.entity.catalog])
+        if self.version is not None:
+            result['if_seq_no'], result['if_primary_term'] = self.version
         return result
-
-    @property
-    def op_type(self) -> OpType:
-        raise NotImplementedError
 
     def _body(self, field_types: FieldTypes) -> JSON:
         body = self.to_json()
@@ -1383,9 +1349,17 @@ class Contribution(Document[ContributionCoordinates[E]]):
     contents: JSON
     source: DocumentSource
 
-    #: The version_type attribute will change to VersionType.none if writing
+    #: The op_type attribute will change to OpType.index if writing
     #: to Elasticsearch fails with 409
-    version_type: VersionType = VersionType.create_only
+    _op_type: OpType = OpType.create
+
+    @property
+    def op_type(self) -> OpType:
+        return self._op_type
+
+    @op_type.setter
+    def op_type(self, op_type: OpType):
+        self._op_type = op_type
 
     def __attrs_post_init__(self):
         assert self.contents is not None
@@ -1443,23 +1417,12 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_version=self.coordinates.bundle.version,
                     bundle_deleted=self.coordinates.deleted)
 
-    @property
-    def op_type(self) -> OpType:
-        if self.version_type is VersionType.create_only:
-            return OpType.create
-        elif self.version_type is VersionType.none:
-            return OpType.index
-        else:
-            assert False, self.version_type
-
 
 @attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
-    version_type: VersionType = VersionType.internal
     sources: set[DocumentSource]
     bundles: Optional[list[BundleFQIDJSON]]
     num_contributions: int
-    needs_seq_no_primary_term: ClassVar[bool] = True
 
     def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
@@ -1564,7 +1527,6 @@ class Replica(Document[ReplicaCoordinates[E]]):
 
     @property
     def op_type(self) -> OpType:
-        assert self.version_type is VersionType.none, self.version_type
         return OpType.update
 
     def _body(self, field_types: FieldTypes) -> JSON:

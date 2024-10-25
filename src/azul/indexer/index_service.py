@@ -16,6 +16,7 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    Any,
     MutableSet,
     Optional,
     TYPE_CHECKING,
@@ -79,7 +80,6 @@ from azul.indexer.document import (
     OpType,
     Replica,
     ReplicaCoordinates,
-    VersionType,
 )
 from azul.indexer.document_service import (
     DocumentService,
@@ -437,7 +437,7 @@ class IndexService(DocumentService):
                 else:
                     entity = CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
                     # Don't count overwrites, but ensure entry exists
-                    was_overwrite = c.version_type is VersionType.none
+                    was_overwrite = c.op_type is OpType.index
                     tallies[entity] += 0 if was_overwrite else 1
             contributions = retry_contributions
         writer.raise_on_errors()
@@ -617,7 +617,7 @@ class IndexService(DocumentService):
                                             body=body,
                                             size=config.contribution_page_size,
                                             track_total_hits=False,
-                                            seq_no_primary_term=Contribution.needs_seq_no_primary_term)
+                                            seq_no_primary_term=True)
                 hits = response['hits']['hits']
                 log.debug('Read a page with %i contribution(s)', len(hits))
                 if hits:
@@ -879,11 +879,25 @@ class IndexWriter:
             doc.coordinates: doc
             for doc in documents
         }
-        actions = [
-            doc.to_index(self.catalog, self.field_types, bulk=True)
-            for doc in documents.values()
-        ]
+
+        def expand_action(doc: Any) -> tuple[dict[str, Any], dict[str, Any] | None]:
+            # Document.to_index returns the keyword arguments to the ES client
+            # method referenced by Document.op_type. In bulk requests, these
+            # methods are not invoked individually. This function converts the
+            # keyword arguments returned by Document.to_index to the form
+            # internally used by the ES client's `bulk` method: a pair
+            # consisting of 1) the action and associated metadata and 2) an
+            # optional document source.
+            assert isinstance(doc, Document), doc
+            action = dict(doc.to_index(self.catalog, self.field_types))
+            action['_index'] = action.pop('index')
+            action['_id'] = action.pop('id')
+            body = action.pop('body', None)
+            action = {doc.op_type.name: action}
+            return action, body
+
         log.info('Writing documents using streaming_bulk().')
+
         # We cannot use parallel_bulk() for 1024+ actions because Lambda doesn't
         # support shared memory. See the issue below for details.
         #
@@ -894,8 +908,13 @@ class IndexWriter:
         # There is no way to split a single action and hence a single document
         # into multiple requests.
         #
+        # Technically, we're not supposed to pass Document instances in the
+        # `action` parameter but we're exploiting the undocumented fact that the
+        # method immediately maps the value of the `expand_action_callback`
+        # parameter over the list passed in the `actions` parameter.
         response = streaming_bulk(client=self.es_client,
-                                  actions=actions,
+                                  actions=list(documents.values()),
+                                  expand_action_callback=expand_action,
                                   refresh=self.refresh,
                                   raise_on_error=False,
                                   max_chunk_bytes=config.max_chunk_size)
@@ -941,13 +960,21 @@ class IndexWriter:
             self.retries.add(doc.coordinates)
         else:
             action = 'giving up'
-        if doc.version_type is VersionType.create_only:
-            log.warning('Document %r exists. Retrying with overwrite.', doc.coordinates)
-            # Try again but allow overwriting
-            doc.version_type = VersionType.none
-        else:
+
+        def warn():
             log.warning('There was a conflict with document %r: %r. Total # of errors: %i, %s.',
                         doc.coordinates, e, self.conflicts[doc.coordinates], action)
+
+        if doc.op_type is OpType.create:
+            try:
+                doc.op_type = OpType.index
+            except AttributeError:
+                # We don't expect all Document types will let us modify op_type
+                warn()
+            else:
+                log.warning('Document %r exists. Retrying with overwrite.', doc.coordinates)
+        else:
+            warn()
 
     def raise_on_errors(self):
         if self.errors or self.conflicts:
