@@ -1321,12 +1321,16 @@ class Document(Generic[C]):
                  field_types: CataloguedFieldTypes
                  ) -> JSON:
         """
-        Build request parameters from the document for indexing
+        Prepare a request to write this document to the index. The return value
+        is a dictionary with keyword arguments to the ES client method selected
+        by the :meth:`op_type` property.
 
         :param catalog: An optional catalog name. If None, this document's
                         coordinates must supply it. Otherwise this document's
                         coordinates must supply the same catalog or none at all.
+
         :param field_types: A mapping of field paths to field type
+
         :return: Request parameters for indexing
         """
         op_type = self.op_type
