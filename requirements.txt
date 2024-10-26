@@ -19,5 +19,5 @@ msgpack==1.0.7
 requests==2.32.2
 rsa==4.7.2  # resolve ambiguity with build-time dependency
 urllib3==1.26.19
-werkzeug==3.0.3
+werkzeug==3.0.6
 -r requirements.trans.txt
