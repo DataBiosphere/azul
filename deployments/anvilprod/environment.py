@@ -714,7 +714,6 @@ anvil8_sources = mkdict(anvil7_sources, 257, mkdelta([
     mksrc('bigquery', 'datarepo-87ae3152', 'ANVIL_CCDG_Broad_AI_IBD_Brant_HMB_WGS_20240113_ANV5_202410011417'),
     mksrc('bigquery', 'datarepo-0de3f19d', 'ANVIL_CCDG_Broad_AI_IBD_Cho_WGS_20240113_ANV5_202409261925'),
     mksrc('bigquery', 'datarepo-183d3f73', 'ANVIL_CCDG_Broad_AI_IBD_Kugathasan_WGS_20240113_ANV5_202409261935'),
-    mksrc('bigquery', 'datarepo-647d4494', 'ANVIL_CCDG_Broad_AI_IBD_McCauley_WGS_20240114_ANV5_202409261945'),
     mksrc('bigquery', 'datarepo-f82d1472', 'ANVIL_CCDG_Broad_AI_IBD_McGovern_WGS_20240113_ANV5_202409262009'),
     mksrc('bigquery', 'datarepo-a173fc34', 'ANVIL_CCDG_Broad_AI_IBD_Newberry_WGS_20240113_ANV5_202409262020'),
     mksrc('bigquery', 'datarepo-b0ce674b', 'ANVIL_CCDG_Broad_CVD_EOCAD_PartnersBiobank_HMB_Arrays_20230517_ANV5_202410011428'), # noqa E501
