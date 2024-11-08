@@ -152,7 +152,7 @@ from azul.terraform import (
 # To then format the volume, you can then either attach it to some other Linux
 # instance and format it there or use `make terraform` to create the actual
 # Gitlab instance and attach the volume. For the latter you would need to ssh
-# into the Gitlab instance, format `/dev/xvdf` (`/dev/nvme1n1` on newer
+# into the Gitlab instance, format `/dev/xvdg` (`/dev/nvme2n1` on newer
 # instance types) and reboot the instance. For example:
 #
 # docker stop gitlab-runner
@@ -160,7 +160,7 @@ from azul.terraform import (
 # docker stop gitlab-dind
 # sudo mv /mnt/gitlab /mnt/gitlab.deleteme
 # sudo mkdir /mnt/gitlab
-# sudo mkfs.ext4 /dev/nvme1n1
+# sudo mkfs.ext4 /dev/nvme2n1
 # sudo reboot
 # sudo rm -rf /mnt/gitlab.deleteme
 #
@@ -244,10 +244,10 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see
 # OPERATOR.rst#upgrading-linux-ami
 #
-# CIS Amazon Linux 2 Kernel 4.14 Benchmark - Level 1 - v09 -4c096026-c6b0-440c-bd2f-6d34904e4fc6
+# CIS Amazon Linux 2 Benchmark - Level 2 - v10 -c41d38c4-3f6a-4434-9a86-06dd331d3f9c
 #
 ami_id = {
-    'us-east-1': 'ami-080cfaeb213b9f981'
+    'us-east-1': 'ami-085f8ec68dc857b57'
 }
 
 gitlab_mount = '/mnt/gitlab'
@@ -1421,7 +1421,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_volume_attachment': {
             'gitlab': {
-                'device_name': '/dev/sdf',
+                'device_name': '/dev/sdg',
                 'volume_id': '${data.aws_ebs_volume.gitlab.id}',
                 'instance_id': '${aws_instance.gitlab.id}',
                 'provisioner': {
@@ -1607,7 +1607,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'user_data_replace_on_change': True,
                 'user_data': '#cloud-config\n' + yaml.dump({
                     'mounts': [
-                        ['/dev/nvme1n1', gitlab_mount, 'ext4', '']
+                        ['/dev/nvme2n1', gitlab_mount, 'ext4', '']
                     ],
                     'packages': [
                         'docker',
