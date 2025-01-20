@@ -1,8 +1,4 @@
 import logging
-from typing import (
-    Optional,
-    Union,
-)
 
 from google.cloud.bigquery_reservation_v1 import (
     Assignment,
@@ -34,6 +30,14 @@ from azul.deployment import (
 
 log = logging.getLogger(__name__)
 
+ResourcePager = (
+    ListCapacityCommitmentsPager |
+    ListReservationsPager |
+    ListAssignmentsPager
+)
+
+Resource = CapacityCommitment | Reservation | Assignment
+
 
 class BigQueryReservation:
     _reservation_id = 'default'
@@ -48,8 +52,8 @@ class BigQueryReservation:
         'assignment': '/reservations/-'
     }
 
-    reservation: Optional[Reservation]
-    assignment: Optional[Assignment]
+    reservation: Reservation | None
+    assignment: Assignment | None
     location: str
 
     def __init__(self,
@@ -96,7 +100,7 @@ class BigQueryReservation:
                                                  location=self.location)
 
     @property
-    def is_active(self) -> Optional[bool]:
+    def is_active(self) -> bool | None:
         resource_statuses = {
             self.reservation is not None,
             self.assignment is not None
@@ -107,7 +111,7 @@ class BigQueryReservation:
             return None
 
     @property
-    def update_time(self) -> Optional[float]:
+    def update_time(self) -> float | None:
         """
         The time at which the current Reservation was updated as a Unix
         timestamp, or None if is there is no Reservation.
@@ -216,19 +220,7 @@ class BigQueryReservation:
         if not self.dry_run and self.is_active is not False:
             raise RuntimeError(f'Failed to delete slots in location {self.location!r}')
 
-    ResourcePager = Union[
-        ListCapacityCommitmentsPager,
-        ListReservationsPager,
-        ListAssignmentsPager
-    ]
-
-    Resource = Union[
-        CapacityCommitment,
-        Reservation,
-        Assignment
-    ]
-
-    def _single_resource(self, resources: ResourcePager) -> Optional[Resource]:
+    def _single_resource(self, resources: ResourcePager) -> Resource | None:
         resources = list(resources)
         try:
             resource, *extras = resources
