@@ -2,7 +2,7 @@
     "openapi": "3.0.1",
     "info": {
         "title": "azul-indexer-dev",
-        "version": "3.1",
+        "version": "3.2",
         "description": "\nThis is the internal API for Azul's indexer component.\n\n\n## Contact us\n\nFor technical support please file an issue at\n[GitHub](https://github.com/DataBiosphere/azul/issues) or email\n`azul-group@ucsc.edu`. To report a security concern or misconduct please email\n`azul-group@ucsc.edu`.\n"
     },
     "paths": {
@@ -176,43 +176,10 @@
                                                 "dirty"
                                             ],
                                             "additionalProperties": false
-                                        },
-                                        "changes": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "title": {
-                                                        "type": "string"
-                                                    },
-                                                    "issues": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "upgrade": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "notes": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "required": [
-                                                    "title",
-                                                    "issues",
-                                                    "upgrade"
-                                                ],
-                                                "additionalProperties": false
-                                            }
                                         }
                                     },
                                     "required": [
-                                        "git",
-                                        "changes"
+                                        "git"
                                     ],
                                     "additionalProperties": false
                                 }

@@ -826,14 +826,6 @@ class AzulChaliceApp(Chalice):
                                 git=schema.object(
                                     commit=str,
                                     dirty=bool
-                                ),
-                                changes=schema.array(
-                                    schema.object(
-                                        title=str,
-                                        issues=schema.array(str),
-                                        upgrade=schema.array(str),
-                                        notes=schema.optional(str)
-                                    )
                                 )
                             )
                         )
@@ -842,12 +834,8 @@ class AzulChaliceApp(Chalice):
             }
         )
         def version():
-            from azul.changelog import (
-                compact_changes,
-            )
             return {
-                'git': config.lambda_git_status,
-                'changes': compact_changes(limit=10)
+                'git': config.lambda_git_status
             }
 
         @self.route(
