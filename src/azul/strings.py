@@ -1,6 +1,5 @@
 from typing import (
     Iterable,
-    Optional,
     Sequence,
     TypeVar,
 )
@@ -19,7 +18,7 @@ def to_camel_case(text: str) -> str:
     return camel_cased[0].lower() + camel_cased[1:]
 
 
-def departition(before: Optional[str], sep: str, after: Optional[str]) -> str:
+def departition(before: str | None, sep: str, after: str | None) -> str:
     """
     >>> departition(None, '.', 'after')
     'after'
@@ -105,7 +104,7 @@ def join_grammatically(strings: Sequence[str],
     return joiner.join([*head, last_joiner.join(tail)])
 
 
-def splitter(sep: Optional[str] = None, maxsplit: int = -1):
+def splitter(sep: str | None = None, maxsplit: int = -1):
     """
     Main use case:
 
@@ -200,7 +199,7 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     return s
 
 
-def longest_common_prefix(strings: Iterable[str]) -> Optional[str]:
+def longest_common_prefix(strings: Iterable[str]) -> str | None:
     """
     >>> lcs = longest_common_prefix
     >>> lcs([])
