@@ -1,6 +1,6 @@
 atomicwrites==1.4.1
 awscli==1.37.3
-boto3-stubs[s3,sqs,lambda,dynamodb,iam,ecr,stepfunctions,kms]==1.36.3  # match this with the version of the `boto3` runtime dendency
+boto3-stubs[apigateway,cloudwatch,dynamodb,ec2,ecr,es,iam,kms,lambda,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.36.3  # match this with the version of the `boto3` runtime dendency
 coverage==7.6.10
 docker==7.1.0
 flake8==7.1.1

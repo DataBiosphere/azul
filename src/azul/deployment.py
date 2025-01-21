@@ -55,11 +55,23 @@ from azul.types import (
 )
 
 if TYPE_CHECKING:
+    from mypy_boto3_apigateway import (
+        APIGatewayClient,
+    )
+    from mypy_boto3_cloudwatch import (
+        CloudWatchClient,
+    )
     from mypy_boto3_dynamodb import (
         DynamoDBClient,
     )
+    from mypy_boto3_ec2 import (
+        EC2Client,
+    )
     from mypy_boto3_ecr import (
         ECRClient,
+    )
+    from mypy_boto3_es import (
+        ElasticsearchServiceClient,
     )
     from mypy_boto3_iam import (
         IAMClient,
@@ -67,11 +79,26 @@ if TYPE_CHECKING:
     from mypy_boto3_kms import (
         KMSClient,
     )
+    from mypy_boto3_lambda import (
+        LambdaClient,
+    )
     from mypy_boto3_s3 import (
         S3Client,
     )
+    from mypy_boto3_secretsmanager import (
+        SecretsManagerClient,
+    )
+    from mypy_boto3_securityhub import (
+        SecurityHubClient,
+    )
+    from mypy_boto3_sns import (
+        SNSClient,
+    )
     from mypy_boto3_stepfunctions import (
         SFNClient,
+    )
+    from mypy_boto3_sts import (
+        STSClient,
     )
 
 log = logging.getLogger(__name__)
@@ -150,27 +177,27 @@ class AWS:
         return self.client('s3', azul_logging=True)
 
     @property
-    def securityhub(self):
+    def securityhub(self) -> 'SecurityHubClient':
         return self.client('securityhub')
 
     @property
-    def sns(self):
+    def sns(self) -> 'SNSClient':
         return self.client('sns')
 
     @property
-    def sts(self):
+    def sts(self) -> 'STSClient':
         return self.client('sts')
 
     @property
-    def lambda_(self):
+    def lambda_(self) -> 'LambdaClient':
         return self.client('lambda')
 
     @property
-    def cloudwatch(self):
+    def cloudwatch(self) -> 'CloudWatchClient':
         return self.client('cloudwatch')
 
     @property
-    def apigateway(self):
+    def apigateway(self) -> 'APIGatewayClient':
         return self.client('apigateway')
 
     @property
@@ -187,7 +214,7 @@ class AWS:
         return one(self.iam.list_account_aliases()['AccountAliases'])
 
     @property
-    def es(self):
+    def es(self) -> 'ElasticsearchServiceClient':
         return self.client('es')
 
     @property
@@ -203,11 +230,11 @@ class AWS:
         return self.client('kms')
 
     @property
-    def secretsmanager(self):
+    def secretsmanager(self) -> 'SecretsManagerClient':
         return self.client('secretsmanager')
 
     @property
-    def ec2(self):
+    def ec2(self) -> 'EC2Client':
         return self.client('ec2')
 
     @property
