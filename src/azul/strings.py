@@ -2,6 +2,7 @@ from typing import (
     Iterable,
     Sequence,
     TypeVar,
+    overload,
 )
 
 from more_itertools import (
@@ -18,6 +19,14 @@ def to_camel_case(text: str) -> str:
     return camel_cased[0].lower() + camel_cased[1:]
 
 
+@overload
+def departition(before: str, sep: str, after: str | None) -> str: ...
+
+
+@overload
+def departition(before: str | None, sep: str, after: str) -> str: ...
+
+
 def departition(before: str | None, sep: str, after: str | None) -> str:
     """
     >>> departition(None, '.', 'after')
@@ -30,6 +39,7 @@ def departition(before: str | None, sep: str, after: str | None) -> str:
     'before.after'
     """
     if before is None:
+        assert after is not None
         return after
     elif after is None:
         return before
@@ -222,6 +232,7 @@ def longest_common_prefix(strings: Iterable[str]) -> str | None:
     s1, s2 = minmax(strings, default=(None, None))
     if s1 is None:
         return None
+    assert s2 is not None
     for i, c in enumerate(s1):
         if s2[i] != c:
             return s1[:i]
