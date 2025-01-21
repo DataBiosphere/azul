@@ -17,7 +17,6 @@ import threading
 from typing import (
     Any,
     Callable,
-    Optional,
     TYPE_CHECKING,
     Tuple,
     TypeVar,
@@ -104,7 +103,7 @@ def _cache(func: Callable[..., R]) -> Callable[..., R]:
 
 class AWS:
     class _PerThread(threading.local):
-        session: Optional[boto3.session.Session] = None
+        session: boto3.session.Session | None = None
 
     def __init__(self) -> None:
         super().__init__()
@@ -216,14 +215,14 @@ class AWS:
         return self.client('dynamodb', azul_logging=True)
 
     @property
-    def es_endpoint(self) -> Optional[Netloc]:
+    def es_endpoint(self) -> Netloc | None:
         if config.es_endpoint:
             return config.es_endpoint
         else:
             return self._es_domain_status['Endpoints']['vpc'], 443
 
     @property
-    def es_instance_count(self) -> Optional[int]:
+    def es_instance_count(self) -> int | None:
         if config.es_endpoint:
             return config.es_instance_count
         else:
@@ -231,7 +230,7 @@ class AWS:
 
     @property
     @_cache
-    def _es_domain_status(self) -> Optional[JSON]:
+    def _es_domain_status(self) -> JSON | None:
         """
         Return the status of the current deployment's Elasticsearch domain
         """
@@ -342,7 +341,7 @@ class AWS:
         return self.assumed_role_credentials(role_arn)
 
     @contextmanager
-    def assumed_role_credentials(self, role_arn: Optional[str]):
+    def assumed_role_credentials(self, role_arn: str | None):
         """
         A context manager that causes the client() method to return boto3
         clients that use credentials obtained by assuming the given role as long
@@ -471,7 +470,7 @@ class AWS:
                             event_name: str,
                             request: AWSPreparedRequest,
                             **_kwargs: Any
-                            ) -> Optional[AWSResponse]:
+                            ) -> AWSResponse | None:
         event_name = self._shorten_event_name(event_name, self._request_event_name)
         boto3_log.info('%s:\tMaking %s request to %s',
                        event_name,
@@ -487,7 +486,7 @@ class AWS:
                              *,
                              event_name: str,
                              **kwargs: Any
-                             ) -> Optional[AWSResponse]:
+                             ) -> AWSResponse | None:
         event_name = self._shorten_event_name(event_name, self._response_event_name)
         response, exception = kwargs['response_dict'], kwargs['exception']
         if exception is None:
