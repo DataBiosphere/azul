@@ -3,6 +3,7 @@ from contextlib import (
 )
 import logging
 from typing import (
+    IO,
     Optional,
 )
 
@@ -166,7 +167,7 @@ def silenced_es_logger():
 
 
 def http_body_log_message(body_type: str,
-                          body: bytes | bytearray | str | None,
+                          body: bytes | bytearray | str | IO[bytes] | IO[str] | None,
                           *,
                           verbatim: bool = False,
                           ) -> str:

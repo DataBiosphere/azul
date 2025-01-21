@@ -26,7 +26,6 @@ from typing import (
     Literal,
     NotRequired,
     Self,
-    TYPE_CHECKING,
     TextIO,
     TypeVar,
     TypedDict,
@@ -65,22 +64,16 @@ Netloc = tuple[str, int]
 
 CatalogName = str
 
-cached_property = property if TYPE_CHECKING else azul.caching.CachedProperty
+cached_property = azul.caching.CachedProperty
 
 lru_cache = functools.lru_cache
 
-if TYPE_CHECKING:
-    def cache(f, /):
-        return f
-else:
-    cache = functools.cache
+cache = functools.cache
 
-if TYPE_CHECKING:
-    def cache_per_thread(f, /):
-        return f
-else:
-    def cache_per_thread(f, /):
-        return lru_cache_per_thread(maxsize=None)(f)
+
+def cache_per_thread(f, /):
+    return lru_cache_per_thread(maxsize=None)(f)
+
 
 #: A type alias for annotating the return value of methods that return a
 #: ``furl`` instance that can be modified without side effects in the object
