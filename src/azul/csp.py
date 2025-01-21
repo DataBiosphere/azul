@@ -16,6 +16,7 @@ from more_itertools import (
 )
 
 from azul import (
+    RequirementError,
     require,
 )
 from azul.strings import (
@@ -115,13 +116,15 @@ class CSP:
                                   # semicolon (0x3B).
                                   r'(?:[ \t]([ \t\x21-\x2B\x2D-\x3A\x3C-\xFE]*))?')
         wsp_re = re.compile(r'[ \t]+')
-        directives = defaultdict(list)
+        directives: dict[str, list[str]] = defaultdict(list)
         for directive in csp.split(';'):
             match = directive_re.fullmatch(directive)
-            require(match is not None, 'Invalid directive', directive)
-            name, values = match.groups()
-            values = [] if values is None else filter(None, wsp_re.split(values))
-            directives[name].extend(values)
+            if match is None:
+                raise RequirementError('Invalid directive', directive)
+            else:
+                name, values = match.groups()
+                values = [] if values is None else filter(None, wsp_re.split(values))
+                directives[name].extend(values)
         return cls(directives)
 
     # Matches only Azul nonces, specifically
