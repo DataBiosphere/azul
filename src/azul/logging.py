@@ -178,7 +178,8 @@ def http_body_log_message(body_type: str,
             if isinstance(body, (bytes, bytearray)):
                 body = body.decode(errors='ignore')
         else:
-            body = trunc_ellipses(body, max_len=128)
+            # https://github.com/python/typing/discussions/1911
+            body = trunc_ellipses(body, max_len=128)  # type: ignore[type-var]
         return f'… with {body_type} body {body!r}'
     else:
         return f'… with nonprintable body ({type(body)!r})'

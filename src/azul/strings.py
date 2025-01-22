@@ -1,7 +1,6 @@
 from typing import (
     Iterable,
     Sequence,
-    TypeVar,
     overload,
 )
 
@@ -133,10 +132,7 @@ def splitter(sep: str | None = None, maxsplit: int = -1):
     return lambda s: s.split(sep, maxsplit)
 
 
-STRING = TypeVar('STRING', str, bytes)
-
-
-def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
+def trunc_ellipses[T:(bytes, str, bytearray)](s: T, /, max_len: int) -> T:
     """
     Truncates a string (bytes array) to the specified length, appending an
     ellipses character (sequence of three dots) to indicate truncation, if the
@@ -180,11 +176,14 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     >>> trunc_ellipses(b'0123', 3)
     b'...'
 
+    >>> trunc_ellipses(bytearray(b'012345'), 5)
+    bytearray(b'01...')
+
     >>> # noinspection PyTypeChecker
     >>> trunc_ellipses(0, 0)
     Traceback (most recent call last):
     ...
-    TypeError: ('First argument must be str or bytes', <class 'int'>)
+    TypeError: ('First argument must be str, bytes or bytearray', <class 'int'>)
 
     >>> # noinspection PyTypeChecker
     >>> trunc_ellipses('', 0.0)
@@ -194,10 +193,11 @@ def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     """
     if isinstance(s, str):
         ellipses = '…'
-    elif isinstance(s, bytes):
+    elif isinstance(s, (bytes, bytearray)):
         ellipses = b'...'
     else:
-        raise TypeError('First argument must be str or bytes', type(s))
+        raise TypeError('First argument must be str, bytes or bytearray',
+                        type(s))
     if not isinstance(max_len, int):
         raise TypeError('max_len argument must be int', type(max_len))
     if len(s) > max_len:
