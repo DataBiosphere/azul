@@ -44,7 +44,7 @@ from more_itertools import (
 )
 
 from azul import (
-    RequirementError,
+    R,
     cached_property,
     config,
 )
@@ -2152,8 +2152,9 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         contributor = project['contributors'][0]
         assert contributor['institution'] == 'Lund University'
         contributor['institution'] += ' || LabMED'
-        with self.assertRaisesRegex(RequirementError, "'||' is disallowed"):
+        with self.assertRaisesRegex(AssertionError, "'||' is disallowed") as cm:
             self._index_bundle(bundle)
+        self.assertTrue(R.caused(cm.exception))
 
     def test_replica_update(self):
         contents = {'replica': {}}

@@ -32,7 +32,7 @@ import requests
 
 from azul import (
     CatalogName,
-    RequirementError,
+    R,
     cache,
     cached_property,
     config,
@@ -118,8 +118,11 @@ class HealthController(AppController):
             keys = keys.split(',')
             try:
                 body = self._health.as_json(keys)
-            except RequirementError:
-                body = {'Message': 'Invalid health keys'}
+            except AssertionError as e:
+                if R.caused(e):
+                    body = {'Message': 'Invalid health keys'}
+                else:
+                    raise
         else:
             body = {'Message': 'Invalid health keys'}
         return self._make_response(body)

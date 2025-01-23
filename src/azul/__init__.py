@@ -39,6 +39,10 @@ from furl import (
 )
 from more_itertools import (
     first,
+    one,
+)
+from typing_extensions import (
+    deprecated,
 )
 
 import azul.caching
@@ -388,10 +392,13 @@ class Config:
                     stage = default_stage
                 role_name = self.qualified_resource_name(lambda_name, stage=stage)
                 return f'arn:aws:iam::{account_id}:role/{role_name}'
-            except RequirementError:
-                # If we fail to parse the role name, we can't parameterize it
-                # and must return the ARN verbatim.
-                return role_arn
+            except AssertionError as e:
+                if R.caused(e):
+                    # If we fail to parse the role name, we can't parameterize it
+                    # and must return the ARN verbatim.
+                    return role_arn
+                else:
+                    raise
 
     @property
     def num_dss_workers(self) -> int:
@@ -1648,12 +1655,101 @@ class Config:
 config: Config = Config()  # yes, the type hint does help PyCharm
 
 
-class RequirementError(RuntimeError):
+class R:
     """
-    Unlike assertions, unsatisfied requirements do not constitute a bug in the program.
+    R is short for Requirement. We think this abbreviation is justified by how
+    frequently this class is used.
+
+    Use an instance of this class as the second argument to `assert` in order to
+    express that the assertion fired due to an invalid input to a component of
+    the program, rather than a defect *in* the program component itself. A
+    program component can be a function, class or module. Individual methods
+    typically aren't components. A regular assertion firing constitutes a defect
+    inside the component, an unsatisfied requirement constitutes a defect
+    outside of it.
+
+    >>> foo = 1
+    >>> assert foo > 42, R('Invalid foo', foo)
+    Traceback (most recent call last):
+    ...
+    AssertionError: R('Invalid foo', 1)
+
+    There are two advantages to using `assert` to enforce requirements as
+    opposed to the now deprecated :func:`require()` or :func:`reject()`: One
+    advantage is that the second argument to assert is evaluated lazily, thereby
+    avoiding potentially expensive operations in case the assert does not fire.
+
+    >>> foo = 43
+    >>> assert foo > 42, R('Invalid foo', (foo:=0))
+    >>> foo
+    43
+
+    The second advantage is that `assert` can help type checkers to infer a more
+    narrow type:
+
+    >>> strict = True
+    >>> def f(x:int | None) -> bytes:
+    ...     if strict:
+    ...         assert x is not None, R('x may not be None')
+    ...         return x.to_bytes()
     """
 
+    @classmethod
+    def caused(cls, e: AssertionError) -> bool:
+        """
+        Use this method to check if the given exception was raised due to an
+        unsatisfied requirement. Typical usage looks as follows:
 
+        >>> try:
+        ...     foo = 1
+        ...     assert foo > 42, R('Invalid foo', foo)
+        ... except AssertionError as e:
+        ...     if R.caused(e):
+        ...         pass  # handle the unsatisfied requirement
+        ...     else:
+        ...         raise  # some other type of assertion
+        """
+        return bool(e.args) and isinstance(e.args[0], cls)
+
+    def __init__(self, message: str, *args):
+        super().__init__()
+        self.args = message, *args
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        match self.args:
+            case (message, ):
+                return f'{class_name}({message!r})'
+            case args:
+                return class_name + repr(args)
+
+
+@deprecated("Use 'assert False, R(…)' instead", category=None)
+class RequirementError(AssertionError):
+
+    def __init__(self, *args):
+        # Unlike the R() constructor, the deprecated reject() and require()
+        # methods don't enforce that a message is being passed. To work around
+        # this while also maintaining backwards compatibility, we insert a
+        # placeholder and remove it in ``__str__()`` below.
+        super().__init__(R('placeholder', *args))
+
+    def __str__(self) -> str:
+        # Unpack the Requirement instance, remove the placeholder and emulate
+        # BaseException.__str__
+        #
+        # https://github.com/python/cpython/blob/v3.12.8/Objects/exceptions.c#L118
+        #
+        match one(self.args).args[1:]:
+            case ():
+                return ''
+            case (message, ):
+                return str(message)
+            case args:
+                return str(args)
+
+
+@deprecated("Use 'assert …, R(…)' instead", category=None)
 def require(condition: bool, *args, exception: type = RequirementError):
     """
     Raise a RequirementError, or an instance of the given exception class, if
@@ -1672,6 +1768,7 @@ def require(condition: bool, *args, exception: type = RequirementError):
     reject(not condition, *args, exception=exception)
 
 
+@deprecated("Use 'assert not …, R(…)' instead", category=None)
 def reject(condition: bool, *args, exception: type = RequirementError):
     """
     Raise a RequirementError, or an instance of the given exception class, if

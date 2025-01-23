@@ -39,6 +39,7 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    R,
     RequirementError,
     cache,
     cached_property,
@@ -414,8 +415,11 @@ class ServiceApp(HealthApp):
                                    search_before=sb,
                                    search_after=sa,
                                    self_url=self.self_url)
-        except RequirementError as e:
-            raise ChaliceViewError(repr(e.args))
+        except AssertionError as e:
+            if R.caused(e):
+                raise ChaliceViewError(repr(e.args))
+            else:
+                raise
 
     def file_url(self,
                  *,
@@ -533,8 +537,11 @@ min_page_size = 1
 def validate_catalog(catalog):
     try:
         config.Catalog.validate_name(catalog)
-    except RequirementError as e:
-        raise BRE(e)
+    except AssertionError as e:
+        if R.caused(e):
+            raise BRE(e)
+        else:
+            raise
     else:
         if catalog not in config.catalogs:
             raise NotFoundError(f'Catalog name {catalog!r} does not exist. '
@@ -602,9 +609,12 @@ def validate_filters(filters):
                               f'parameter entry for `{field}` is not a single-item list')
                 try:
                     require(isinstance(nested, dict))
-                except RequirementError:
-                    raise BRE(f'The value of the `is` relation in the `filters` '
-                              f'parameter entry for `{field}` must contain a dictionary')
+                except AssertionError as e:
+                    if R.caused(e):
+                        raise BRE(f'The value of the `is` relation in the `filters` '
+                                  f'parameter entry for `{field}` must contain a dictionary')
+                    else:
+                        raise
                 extra_props = nested.keys() - field_type.properties.keys()
                 if extra_props:
                     raise BRE(f'The value of the `is` relation in the `filters` '
@@ -615,8 +625,11 @@ def validate_organism_age_filter(values):
     for value in values:
         try:
             value_and_unit.to_index(value)
-        except RequirementError as e:
-            raise BRE(e)
+        except AssertionError as e:
+            if R.caused(e):
+                raise BRE(e)
+            else:
+                raise
 
 
 def validate_field(field: str, *, include_synthetic: bool = False):

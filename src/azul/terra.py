@@ -56,6 +56,7 @@ import urllib3.request
 import urllib3.response
 
 from azul import (
+    R,
     RequirementError,
     cache,
     config,
@@ -637,9 +638,12 @@ class TDRClient(SAMClient):
         self = cls(credentials_provider=UserCredentialsProvider(authentication))
         try:
             self.validate()
-        except RequirementError as e:
-            log.warning('Invalid credentials', exc_info=e)
-            raise UnauthorizedError('Invalid credentials')
+        except AssertionError as e:
+            if R.caused(e):
+                log.warning('Invalid credentials', exc_info=e)
+                raise UnauthorizedError('Invalid credentials')
+            else:
+                raise
         else:
             return self
 

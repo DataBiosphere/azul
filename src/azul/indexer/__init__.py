@@ -28,7 +28,7 @@ from typing import (
 import attrs
 
 from azul import (
-    RequirementError,
+    R,
     config,
     reject,
 )
@@ -635,8 +635,8 @@ class Bundle(Generic[BUNDLE_FQID], metaclass=ABCMeta):
         encoder = json.JSONEncoder(check_circular=False)
         for value in values:
             for chunk in encoder.iterencode(value):
-                if joiner in chunk:
-                    raise RequirementError(f'{joiner!r} is disallowed in metadata', self.fqid)
+                assert joiner not in chunk, R(
+                    f'The string {joiner!r} is disallowed in metadata', self.fqid)
 
     @abstractmethod
     def reject_joiner(self):

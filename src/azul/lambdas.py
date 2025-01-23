@@ -12,7 +12,7 @@ from more_itertools import (
 
 from azul import (
     JSON,
-    RequirementError,
+    R,
     cache,
     config,
 )
@@ -40,8 +40,9 @@ class Lambda:
                 #        https://github.com/databiosphere/azul/issues/2964
                 resource_name, _ = config.unqualified_resource_name(self.name,
                                                                     suffix='-' + lambda_name)
-            except RequirementError:
-                pass
+            except AssertionError as e:
+                if not R.caused(e):
+                    raise
             else:
                 if resource_name == 'indexer':
                     return True
