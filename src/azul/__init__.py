@@ -21,14 +21,16 @@ from pathlib import (
 import re
 import shlex
 from typing import (
+    Any,
     BinaryIO,
     ClassVar,
+    IO,
     Literal,
     NotRequired,
     Self,
     TextIO,
-    TypeVar,
     TypedDict,
+    final,
     overload,
 )
 
@@ -42,6 +44,7 @@ from more_itertools import (
     one,
 )
 from typing_extensions import (
+    TypeIs,
     deprecated,
 )
 
@@ -57,6 +60,10 @@ from azul.openapi import (
 )
 from azul.types import (
     JSON,
+    json_bool,
+    json_mapping,
+    json_sequence,
+    json_str,
 )
 from azul.vendored.frozendict import (
     frozendict,
@@ -84,6 +91,52 @@ def cache_per_thread(f, /):
 #: whose method returned it.
 #
 mutable_furl = furl
+
+
+@final
+class Sentinel(object):
+    """
+    Use an instance of this class instead of ``object()`` as the default value
+    for function arguments for which ``None`` isn't a suitable default value.
+    """
+
+    def is_(self, other: Any) -> TypeIs['Sentinel']:
+        """
+        Detect if the given argument is this sentinel, and if it isn't, that it
+        is no no other instance of this class.
+
+        :return: True, if the given value is this sentinel. False, if the given
+                 value is no sentinel. Otherwise, a requirement assertion is
+                 raised
+
+        A typical usage would look as follows:
+
+        >>> zero = Sentinel()
+
+        >>> def f(x: int | Sentinel = zero) -> list[int]:
+        ...     if zero.is_(x):
+        ...         x = 0
+        ...     # `x` is now narrowed to just `int`
+        ...     return [x]
+
+        This is equivalent to.
+
+        >>> def f(x: int | Sentinel = zero) -> list[int]:
+        ...     if x is zero:
+        ...         x = 0
+        ...     assert not isinstance(zero, Sentinel)
+        ...     return [x]
+
+        Without the narrowing done by this method, or by the assertion in the
+        second example, the type checker would reject the return statement
+        as it would consider its type to be ``list[x | Sentinel]``, not just
+        ``list[int]`` as required by the return type annotation of ``f``.
+        """
+        if self is other:
+            return True
+        else:
+            assert not isinstance(other, type(self)), R('Invalid sentinel')
+            return False
 
 
 class Config:
@@ -213,11 +266,11 @@ class Config:
 
     storage_term = 'storage'
 
-    current = object()
+    current = Sentinel()
 
     def alb_access_log_path_prefix(self,
                                    *component: str,
-                                   deployment: str | None = current,
+                                   deployment: str | None | Sentinel = current,
                                    ) -> str:
         """
         :param deployment: Which deployment name to use in the path. Omit this
@@ -230,7 +283,7 @@ class Config:
 
     def s3_access_log_path_prefix(self,
                                   *component: str,
-                                  deployment: str | None = current,
+                                  deployment: str | None | Sentinel = current,
                                   ) -> str:
         """
         :param deployment: Which deployment name to use in the path. Omit this
@@ -243,10 +296,10 @@ class Config:
 
     def _log_path_prefix(self,
                          prefix: list[str],
-                         deployment: str | None,
+                         deployment: str | None | Sentinel,
                          *component: str,
                          ):
-        if deployment is self.current:
+        if self.current.is_(deployment):
             deployment = self.deployment_stage
         return '/'.join([*prefix, *atuple(deployment), *component])
 
@@ -474,7 +527,7 @@ class Config:
         result = {}
         for account in accounts.split(':'):
             account_id, *roles = map(str.strip, account.split(','))
-            require(account_id and roles and all(roles),
+            require(bool(account_id) and bool(roles) and all(roles),
                     'An account ID and at least one role must be specified', account)
             result[account_id] = roles
         return result
@@ -582,12 +635,12 @@ class Config:
         >>> f('foo-bar-dev')  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
-        azul.RequirementError: ("Expected prefix 'azul'", 'foo', 'foo-bar-dev')
+        AssertionError: R("Expected prefix 'azul'", 'foo', 'foo-bar-dev')
 
         >>> f('azul-foo')  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
-        azul.RequirementError: ('Expected 3 name components', \
+        AssertionError: R('Expected 3 name components', \
             ['azul', 'foo'], \
             'azul-foo')
 
@@ -610,26 +663,27 @@ class Config:
         >>> f('azul-0foo-dev')
         Traceback (most recent call last):
             ...
-        azul.RequirementError: ('Invalid resource name', '0foo')
+        AssertionError: R('Invalid resource name', '0foo')
 
         >>> f('azul-tallies_retry-0dev.fifo')
         Traceback (most recent call last):
             ...
-        azul.RequirementError: ('Invalid deployment name', '0dev.fifo')
+        AssertionError: R('Invalid deployment name', '0dev.fifo')
         """
         num_components = 3
         components = qualified_name.split(self.resource_name_separator,
                                           maxsplit=num_components - 1)
-        require(len(components) == num_components,
-                f'Expected {num_components!r} name components', components, qualified_name)
+        assert len(components) == num_components, R(
+            f'Expected {num_components!r} name components',
+            components, qualified_name)
         prefix, resource_name, deployment_stage = components
-        require(prefix == self.resource_prefix,
-                f'Expected prefix {self.resource_prefix!r}', prefix, qualified_name)
-        require(self._is_valid_term(resource_name),
-                'Invalid resource name', resource_name)
+        assert prefix == self.resource_prefix, R(
+            f'Expected prefix {self.resource_prefix!r}',
+            prefix, qualified_name)
+        assert self._is_valid_term(resource_name), R(
+            'Invalid resource name', resource_name)
         match = self.qualifier_re.match(deployment_stage)
-        reject(match is None,
-               'Invalid deployment name', deployment_stage)
+        assert match is not None, R('Invalid deployment name', deployment_stage)
         index = match.end()
         deployment_stage, suffix = deployment_stage[0:index], deployment_stage[index:]
         assert self._is_valid_term(deployment_stage), qualified_name
@@ -829,6 +883,10 @@ class Config:
         class Plugin:
             name: str
 
+            @classmethod
+            def from_json(cls, spec: JSON) -> Self:
+                return cls(name=json_str(spec['name']))
+
         name: str
         atlas: str
         internal: bool
@@ -888,14 +946,14 @@ class Config:
         @classmethod
         def from_json(cls, name: str, spec: JSON) -> Self:
             plugins = {
-                plugin_type: cls.Plugin(**plugin_spec)
-                for plugin_type, plugin_spec in spec['plugins'].items()
+                plugin_type: cls.Plugin.from_json(json_mapping(plugin_spec))
+                for plugin_type, plugin_spec in json_mapping(spec['plugins']).items()
             }
             return cls(name=name,
-                       atlas=spec['atlas'],
-                       internal=spec['internal'],
+                       atlas=json_str(spec['atlas']),
+                       internal=json_bool(spec['internal']),
                        plugins=plugins,
-                       sources=set(spec['sources']))
+                       sources=set(map(json_str, json_sequence(spec['sources']))))
 
         @classmethod
         def validate_name(cls, catalog, **kwargs):
@@ -1347,13 +1405,11 @@ class Config:
         ValueError: invalid literal for int() with base 10: '456/789'
         """
         value, sep, retry_value = value.partition('/')
-        value = int(value)
-        if sep:
-            retry_value = int(retry_value)
-        else:
-            assert not retry_value
+        if sep == '':
+            assert retry_value == ''
             retry_value = value
-        return retry_value if retry else value
+        # Using eager iif so that both values are validated with int()
+        return iif(retry, int(retry_value), int(value))
 
     def contribution_concurrency(self, *, retry: bool) -> int:
         return self._concurrency(self.environ['AZUL_CONTRIBUTION_CONCURRENCY'], retry)
@@ -1798,14 +1854,14 @@ def open_resource(*path: str,
 @overload
 def open_resource(*path: str,
                   package_root: str | None = None,
-                  binary: Literal[True] = False
+                  binary: Literal[True]
                   ) -> BinaryIO: ...
 
 
 def open_resource(*path: str,
                   package_root: str | None = None,
                   binary: bool = False
-                  ) -> TextIO | BinaryIO:
+                  ) -> IO[Any]:
     """
     Return a file object for the resources at the given path. A resource is
     a source file that can be loaded at runtime. Resources typically aren't
@@ -1859,13 +1915,10 @@ def str_to_bool(string: str):
         raise ValueError(string)
 
 
-absent = object()
-
-T = TypeVar('T')
-E = TypeVar('E')
+absent = Sentinel()
 
 
-def iif(condition: bool, then: T, otherwise: E = absent) -> T | E:
+def iif[T, E](condition: bool, then: T, otherwise: E | Sentinel = absent) -> T | E:
     """
     An alternative to ``if`` expressions, that, in certain situations, might
     be more convenient or readable, such as when the ``else`` branch
@@ -1910,11 +1963,11 @@ def iif(condition: bool, then: T, otherwise: E = absent) -> T | E:
     if condition:
         return then
     else:
-        if otherwise is absent:
+        if absent.is_(otherwise):
             return type(then)()
         else:
             return otherwise
 
 
-def either(value: T | None, alternative: E) -> T | E:
+def either[T, E](value: T | None, alternative: E) -> T | E:
     return alternative if value is None else value

@@ -298,7 +298,7 @@ def _athing(cls: type, *args):
     return cls(arg for arg in args if arg is not None)
 
 
-def atuple[V](*args: V) -> tuple[V, ...]:
+def atuple[V](*args: V | None) -> tuple[V, ...]:
     """
     >>> atuple()
     ()
@@ -312,7 +312,7 @@ def atuple[V](*args: V) -> tuple[V, ...]:
     return _athing(tuple, *args)
 
 
-def alist[V](*args: V) -> list[V]:
+def alist[V](*args: V | None) -> list[V]:
     """
     >>> alist()
     []
@@ -326,7 +326,7 @@ def alist[V](*args: V) -> list[V]:
     return _athing(list, *args)
 
 
-def aset[V](*args: V) -> set[V]:
+def aset[V](*args: V | None) -> set[V]:
     """
     >>> aset()
     set()
