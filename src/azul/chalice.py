@@ -8,9 +8,6 @@ from enum import (
     Enum,
 )
 import json
-from json import (
-    JSONEncoder,
-)
 import logging
 import mimetypes
 import os
@@ -431,7 +428,7 @@ class AzulChaliceApp(Chalice):
                    "Only specify 'spec' once per route path and method")
             path_methods[method] = copy_json(spec)
 
-    class _LogJSONEncoder(JSONEncoder):
+    class _LogJSONEncoder(json.JSONEncoder):
 
         def default(self, o: Any) -> Any:
             if isinstance(o, MultiDict):

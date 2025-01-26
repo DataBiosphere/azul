@@ -49,9 +49,6 @@ from typing_extensions import (
 )
 
 import azul.caching
-from azul.caching import (
-    lru_cache_per_thread,
-)
 from azul.collections import (
     atuple,
 )
@@ -83,7 +80,7 @@ cache = functools.cache
 
 
 def cache_per_thread(f, /):
-    return lru_cache_per_thread(maxsize=None)(f)
+    return azul.caching.lru_cache_per_thread(maxsize=None)(f)
 
 
 #: A type alias for annotating the return value of methods that return a

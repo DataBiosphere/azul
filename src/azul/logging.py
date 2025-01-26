@@ -13,9 +13,6 @@ from more_itertools import (
 )
 
 import azul
-from azul import (
-    config,
-)
 from azul.chalice import (
     AzulChaliceApp,
 )
@@ -152,7 +149,7 @@ def silenced_es_logger():
     client. If other threads use the ES client concurrently, their logging will
     be affected, too.
     """
-    if config.debug > 1:
+    if azul.config.debug > 1:
         yield
     else:
         patched_log_level = silent_es_log_level()
