@@ -49,12 +49,14 @@ from more_itertools import (
 import requests
 
 from azul import (
+    R,
     cached_property,
     config,
-    require,
 )
 from azul.types import (
     JSONs,
+    json_int,
+    json_str,
 )
 
 log = logging.getLogger(__name__)
@@ -81,10 +83,10 @@ class ImageRef(metaclass=ABCMeta):
 
     #: The part after the second slash, split on the remaining slashes. Will
     #: have at least one element.
-    repository: tuple[str]
+    repository: tuple[str, ...]
 
     @classmethod
-    def parse(cls, image_ref: str) -> Self:
+    def parse(cls, image_ref: str) -> 'ImageRef':
         """
         >>> ImageRef.parse('2@1')
         DigestImageRef(registry='docker.io', username='library', repository=('2',), digest='1')
@@ -171,15 +173,17 @@ class ImageRef(metaclass=ABCMeta):
         ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Reference already ported to registry',
+        AssertionError: R('Reference already ported to registry',
         TagImageRef(registry='a', username='b', repository=('c',), tag='d'),
         'a')
         """
         if registry:
-            require(self.registry != registry,
-                    'Reference already ported to registry',
-                    self, registry)
-            return type(self).parse(registry + '/' + str(self))
+            assert self.registry != registry, R(
+                'Reference already ported to registry',
+                self, registry)
+            other = type(self).parse(registry + '/' + str(self))
+            assert isinstance(other, type(self))
+            return other
         else:
             return self
 
@@ -194,14 +198,16 @@ class ImageRef(metaclass=ABCMeta):
         ... # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Reference does not use the registry to port from',
+        AssertionError: R('Reference does not use the registry to port from',
         TagImageRef(registry='a', username='b', repository=('c',), tag='d'), 'e')
         """
         if registry:
-            require(self.registry == registry,
-                    'Reference does not use the registry to port from',
-                    self, registry)
-            return type(self).parse(str(self).removeprefix(registry + '/'))
+            assert self.registry == registry, R(
+                'Reference does not use the registry to port from',
+                self, registry)
+            other = type(self).parse(str(self).removeprefix(registry + '/'))
+            assert isinstance(other, type(self))
+            return other
         else:
             return self
 
@@ -324,15 +330,15 @@ class Platform:
     def normalize(self) -> Self:
         os = _normalize_os(self.os)
         arch, variant = _normalize_arch(self.arch, self.variant)
-        return Platform(os=os, arch=arch, variant=variant)
+        return attrs.evolve(self, os=os, arch=arch, variant=variant)
 
     @classmethod
     def parse(cls, platform: str) -> Self:
         os, arch, variant = padded(platform.split('/'), None, 3)
-        require(os, 'Invalid operating system in Docker platform', platform)
-        require(arch, 'Invalid architecture in Docker platform', platform)
-        require(variant or variant is None, 'Invalid variant in Docker platform', platform)
-        return Platform(os=os, arch=arch, variant=variant)
+        assert os, R('Invalid operating system', platform)
+        assert arch, R('Invalid architecture', platform)
+        assert variant is None or variant, R('Invalid variant', platform)
+        return cls(os=os, arch=arch, variant=variant)
 
     @classmethod
     def from_json(cls, platform, config: bool = False) -> Self:
@@ -465,8 +471,8 @@ class Repository:
         return self.image_ref.relative_name
 
     @classmethod
-    def get_gists(cls):
-        gists: dict[str, ImageGist | IndexImageGist] = {}
+    def get_gists(cls) -> dict[str, ImageGist | IndexImageGist]:
+        gists = {}
         for alias, ref in images_by_alias.items():
             log.info('Getting information for %r (%s)', alias, ref)
             repository = cls(ref)
@@ -521,12 +527,12 @@ class Repository:
         for manifest in manifests:
             platform = Platform.from_json(manifest['platform']).normalize()
             if platform in platforms:
-                digest, size = manifest['digest'], manifest['size']
-                gist: ImageGist = self.get_gist(digest)
-                require(gist['platform'] == str(platform),
-                        'Inconsistent platform between manifest and manifest list',
-                        manifest, gist)
-                gists[platform] = gist, size
+                digest, size = json_str(manifest['digest']), json_int(manifest['size'])
+                gist = self.get_gist(digest)
+                assert gist.get('platform') == str(platform), R(
+                    'Inconsistent platform between manifest and manifest list',
+                    manifest, gist)
+                gists[platform] = cast(ImageGist, gist), size
         return gists
 
     def get_blob(self, digest: str) -> bytes:
@@ -563,8 +569,8 @@ class Repository:
             command = 'docker-credential-' + creds_store
             output = subprocess.check_output(args=[command, 'get'],
                                              input=auth_server_url.encode('ascii'))
-            output = json.loads(output)
-            return output['Username'], output['Secret']
+            credentials = json.loads(output)
+            return credentials['Username'], credentials['Secret']
 
     @property
     def encoded_auth(self) -> str:
@@ -723,11 +729,10 @@ def resolve_docker_image_for_pull(alias: str
     # For multi-arch images, we need to use the digest of the mirrored image, if
     # we're pulling from a mirror.  For single-arch images, the digest is the
     # same between the upstream and mirror registries.
-    digest = gist[
-        'mirror_digest'
-        if 'parts' in gist and ref.is_mirrored else
-        'digest'
-    ]
+    if 'parts' in gist and ref.is_mirrored:
+        digest = cast(IndexImageGist, gist)['mirror_digest']
+    else:
+        digest = gist['digest']
     ref = ref.with_digest(digest)
     log.info('Resolved %r image to %r', alias, ref)
     return ref, gist
