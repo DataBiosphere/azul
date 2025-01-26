@@ -397,10 +397,12 @@ Ordering artifacts in the source
 Disabling sections of code
 --------------------------
 
-* To temporarily disable a section of code, we embed it in a conditional
-  statement with an test that always evaluates to false (``if False:`` in
-  Python) instead of commenting that section out. We do this to keep the code
-  subject to refactorings and code inspection tools.
+* We do not comment out sections of code. To temporarily disable some section of
+  code, we embed it in a conditional statement with a test that always evaluates
+  to ``False``. We do this to keep the code subject to refactorings and type
+  checkers. We use ``azul.false()`` instead of just the ``False`` literal, in
+  order to avoid the detection of unreachable code during static analysis by
+  PyCharm and CodeQL.
 
 Control flow
 ------------

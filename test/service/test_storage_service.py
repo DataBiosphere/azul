@@ -11,6 +11,9 @@ from unittest.mock import (
 
 import requests
 
+from azul import (
+    false,
+)
 from azul.logging import (
     configure_test_logging,
 )
@@ -83,8 +86,7 @@ class StorageServiceTest(StorageServiceTestCase):
                 if file_name is None:
                     self.assertNotIn('Content-Disposition', response.headers)
                 else:
-                    # noinspection PyUnreachableCode
-                    if False:  # no coverage
+                    if false():
                         # Unfortunately, moto does not support emulating S3's
                         # mechanism of specifying response headers via request
                         # parameters (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html,

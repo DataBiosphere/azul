@@ -139,6 +139,28 @@ class Sentinel(object):
             return False
 
 
+def false() -> bool:
+    """
+    Use this to disable code while keeping it in scope for type checkers and
+    refactorings, but without tripping static detection of "dead" code. The
+    disablement is usually temporary (a work around) but may even be permanent,
+    in order to, say, document a hypothetical.
+
+    :return: Always ``False``
+
+    >>> if false():
+    ...     print('Entering the forbidden zone')
+    """
+    return False
+
+
+def true() -> bool:
+    """
+    See :meth:`false`
+    """
+    return True
+
+
 class Config:
     """
     See `environment` for documentation of these settings.

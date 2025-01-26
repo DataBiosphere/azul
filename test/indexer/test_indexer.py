@@ -47,6 +47,7 @@ from azul import (
     R,
     cached_property,
     config,
+    true,
 )
 from azul.collections import (
     NestedDict,
@@ -2006,7 +2007,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                         #        should have all the standard fields of a donor inner
                         #        entity with values of `None`.
                         #        https://github.com/databiosphere/azul/issues/3152
-                        self.assertEqual([] if True else [donor_none], contents['donors'])
+                        self.assertEqual([] if true() else [donor_none], contents['donors'])
                     else:
                         assert False, sample_id
                 else:

@@ -91,6 +91,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    false,
 )
 from azul.auth import (
     OAuth2,
@@ -462,8 +463,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if index and delete:
             # FIXME: Test delete notifications
             #        https://github.com/DataBiosphere/azul/issues/3548
-            # noinspection PyUnreachableCode
-            if False:
+            if false():
                 with self._service_account_credentials:
                     for catalog in catalogs:
                         self._assert_catalog_empty(catalog.name)

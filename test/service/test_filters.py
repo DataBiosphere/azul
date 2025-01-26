@@ -152,7 +152,8 @@ class TestFilterReification(AzulTestCase):
                 self._get_filters(limit_access=True,
                                   explicit_sources=[self.inaccessible_source],
                                   explicit_access=explicit_access)
-            self._test_filters({'is': [self.inaccessible_source] if False in explicit_access else []},
+            is_filter = [self.inaccessible_source] if False in explicit_access else []
+            self._test_filters({'is': is_filter},
                                explicit_sources=[self.inaccessible_source],
                                limit_access=False,
                                explicit_access=explicit_access)

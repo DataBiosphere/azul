@@ -22,6 +22,7 @@ from azul import (
     JSON,
     cached_property,
     config,
+    false,
     iif,
 )
 from azul.collections import (
@@ -461,7 +462,7 @@ def bucket_origin_id(bucket):
 
 
 def bucket_regional_domain_name(bucket):
-    if False:
+    if false():
         return '${aws_s3_bucket.%s.bucket_regional_domain_name}' % bucket  # noqa
     else:
         assert config.region == 'us-east-1'
