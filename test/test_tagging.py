@@ -113,8 +113,10 @@ class TestTerraformResourceTags(AzulUnitTestCase):
         if isinstance(actual, primitive_json) and isinstance(expected, primitive_json):
             if expected != actual:
                 return path
+            else:
+                return None
         elif expected is None:
-            pass
+            return None
         elif isinstance(actual, Sequence) and isinstance(expected, Sequence):
             if len(actual) > len(expected):
                 return *path, len(expected)
@@ -128,6 +130,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                         diff = self.permissive_compare(expected_v, actual_v, *path, i)
                         if diff is not None:
                             return diff
+                return None
         elif isinstance(actual, Mapping) and isinstance(expected, Mapping):
             if len(actual) > len(expected):
                 return *path, first(actual.keys() - expected.keys())
@@ -142,6 +145,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                         diff = self.permissive_compare(expected_v, actual_v, *path, k)
                         if diff is not None:
                             return diff
+                return None
         else:
             return path
 
