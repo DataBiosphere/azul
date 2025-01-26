@@ -41,10 +41,9 @@ from more_itertools import (
 )
 
 from azul import (
+    R,
     cached_property,
     config,
-    reject,
-    require,
 )
 from azul.collections import (
     OrderedSet,
@@ -158,57 +157,57 @@ class ValueAndUnit(FieldType[JSON, str]):
         >>> a.to_index({})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: A dictionary with entries for `value` and `unit` is required
+        AssertionError: R('Need dictionary with entries for `value` and `unit`')
 
         >>> a.to_index({'value': '1', 'unit': 'day', 'foo': 12})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: A dictionary with exactly two entries is required
+        AssertionError: R('Need dictionary with exactly two entries')
 
         >>> a.to_index({'unit': 'day'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: A dictionary with entries for `value` and `unit` is required
+        AssertionError: R('Need dictionary with entries for `value` and `unit`')
 
         >>> a.to_index({'value': '1'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: A dictionary with entries for `value` and `unit` is required
+        AssertionError: R('Need dictionary with entries for `value` and `unit`')
 
         >>> a.to_index({'value': '', 'unit': 'year'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `value` entry must not be empty
+        AssertionError: R('The `value` entry must not be empty')
 
         >>> a.to_index({'value': '20', 'unit': ''})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `unit` entry must not be empty
+        AssertionError: R('The `unit` entry must not be empty')
 
         >>> a.to_index({'value': None, 'unit': 'years'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `value` entry must not be null
+        AssertionError: R('The `value` entry must not be null')
 
         >>> a.to_index({'value': 20, 'unit': None})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `value` entry must be a string
+        AssertionError: R('The `value` entry must be a string')
 
         >>> a.to_index({'value': '20', 'unit': True})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `unit` entry must be a string
+        AssertionError: R('The `unit` entry must be a string')
 
         >>> a.to_index({'value': '20 ', 'unit': None})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `value` entry must not contain space characters
+        AssertionError: R('The `value` entry must not contain spaces')
 
         >>> a.to_index({'value': '20', 'unit': 'years '})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: The `unit` entry must not contain space characters
+        AssertionError: R('The `unit` entry must not contain spaces')
         """
         if value_unit is None:
             return NullableString.null_string
@@ -216,19 +215,19 @@ class ValueAndUnit(FieldType[JSON, str]):
             try:
                 value, unit = value_unit['value'], value_unit['unit']
             except KeyError:
-                reject(True, 'A dictionary with entries for `value` and `unit` is required')
+                assert False, R('Need dictionary with entries for `value` and `unit`')
             else:
-                require(len(value_unit) == 2, 'A dictionary with exactly two entries is required')
-                reject(value == '', 'The `value` entry must not be empty')
-                reject(unit == '', 'The `unit` entry must not be empty')
-                reject(value is None, 'The `value` entry must not be null')
-                require(type(value) is str, 'The `value` entry must be a string')
-                reject(' ' in value, 'The `value` entry must not contain space characters')
+                assert len(value_unit) == 2, R('Need dictionary with exactly two entries')
+                assert value != '', R('The `value` entry must not be empty')
+                assert unit != '', R('The `unit` entry must not be empty')
+                assert value is not None, R('The `value` entry must not be null')
+                assert type(value) is str, R('The `value` entry must be a string')
+                assert ' ' not in value, R('The `value` entry must not contain spaces')
                 if unit is None:
                     return value
                 else:
-                    require(type(unit) is str, 'The `unit` entry must be a string')
-                    reject(' ' in unit, 'The `unit` entry must not contain space characters')
+                    assert type(unit) is str, R('The `unit` entry must be a string')
+                    assert ' ' not in unit, R('The `unit` entry must not contain spaces')
                     return f'{value} {unit}'
 
     def from_index(self, value: str) -> JSON | None:
@@ -830,7 +829,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
         if donor.organism_age is None:
-            require(donor.organism_age_unit is None)
+            assert donor.organism_age_unit is None, R('Unit must be None if value is')
             organism_age = None
         else:
             organism_age = {
