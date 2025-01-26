@@ -5,6 +5,9 @@ from collections.abc import (
 from dataclasses import (
     dataclass,
 )
+from functools import (
+    total_ordering,
+)
 import logging
 from pathlib import (
     Path,
@@ -100,6 +103,7 @@ class PinnedRequirement:
         return self.name + str(self.versions)
 
 
+@total_ordering
 class PinnedRequirements:
 
     def __init__(self, reqs: Iterable[Optional[PinnedRequirement]]) -> None:
