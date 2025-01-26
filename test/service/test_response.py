@@ -364,8 +364,8 @@ class TestIndexResponse(IndexResponseTestCase):
         response = stage.process_response((hits, self.paginations[0], {}))
 
         for hit in response['hits']:
-            self.assertTrue('fileTypeSummaries' in hit)
-            self.assertFalse('files' in hit)
+            self.assertIn('fileTypeSummaries', hit)
+            self.assertNotIn('files', hit)
 
     canned_aggs = {
         "organ": {

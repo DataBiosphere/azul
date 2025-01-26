@@ -440,7 +440,7 @@ class TestAccessorApi(AzulUnitTestCase):
         self.assertEqual(root_entity.ref.entity_type, 'donor_organism')
         self.assertIsInstance(root_entity, DonorOrganism)
         self.assertEqual(root_entity.organism_age_in_seconds, age_range)
-        self.assertTrue(root_entity.sex in ('female', 'male', 'unknown'))
+        self.assertIn(root_entity.sex, {'female', 'male', 'unknown'})
         # noinspection PyDeprecation
         self.assertEqual(root_entity.sex, root_entity.biological_sex)
 

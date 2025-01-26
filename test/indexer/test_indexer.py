@@ -1630,7 +1630,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 sample = one(contents['samples'])
                 self.assertEqual(sample['organ'], sample['effective_organ'])
                 if qualifier == 'samples':
-                    self.assertTrue(sample['effective_organ'] in {'Brain 1', 'Brain 2', 'Brain 3'})
+                    self.assertIn(sample['effective_organ'], {'Brain 1', 'Brain 2', 'Brain 3'})
                 else:
                     self.assertEqual(set(sample['effective_organ']), {'Brain 1', 'Brain 2', 'Brain 3'})
 
@@ -1902,7 +1902,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                     self.assertEqual(sample['biomaterial_id'], entity['biomaterial_id'])
                 else:
                     assert False, doc_type
-                self.assertTrue(sample['document_id'] in document_ids)
+                self.assertIn(sample['document_id'], document_ids)
                 self.assertEqual(one(contents['specimens'])['organ'], ['blood'] if aggregate else 'blood')
                 self.assertEqual(one(contents['specimens'])['organ_part'], ['venous blood'])
                 self.assertEqual(len(contents['cell_lines']), 1 if aggregate else 2)
