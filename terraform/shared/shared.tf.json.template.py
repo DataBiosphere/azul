@@ -632,23 +632,6 @@ tf_config = {
                     }
                 )
             },
-            'aws_config': {
-                'name': 'azul-aws_config',
-                'assume_role_policy': json.dumps(
-                    {
-                        'Version': '2012-10-17',
-                        'Statement': [
-                            {
-                                'Action': 'sts:AssumeRole',
-                                'Effect': 'Allow',
-                                'Principal': {
-                                    'Service': 'config.amazonaws.com'
-                                }
-                            }
-                        ]
-                    }
-                )
-            },
             'trail': {
                 'name': config.qualified_resource_name('trail'),
                 'assume_role_policy': json.dumps(
@@ -728,25 +711,6 @@ tf_config = {
                     ]
                 })
             },
-            'aws_config': {
-                'name': 'azul-aws_config',
-                'role': '${aws_iam_role.aws_config.id}',
-                'policy': json.dumps({
-                    'Version': '2012-10-17',
-                    'Statement': [
-                        {
-                            'Action': [
-                                's3:*'
-                            ],
-                            'Effect': 'Allow',
-                            'Resource': [
-                                '${aws_s3_bucket.aws_config.arn}',
-                                '${aws_s3_bucket.aws_config.arn}/*'
-                            ]
-                        }
-                    ]
-                })
-            },
             'trail': {
                 'name': config.qualified_resource_name('trail'),
                 'role': '${aws_iam_role.trail.id}',
@@ -822,6 +786,9 @@ tf_config = {
         'aws_iam_service_linked_role': {
             'opensearch': {
                 'aws_service_name': 'opensearchservice.amazonaws.com'
+            },
+            'aws_config': {
+                'aws_service_name': 'config.amazonaws.com'
             }
         },
         'aws_api_gateway_account': {
@@ -832,7 +799,7 @@ tf_config = {
         'aws_config_configuration_recorder': {
             'shared': {
                 'name': config.qualified_resource_name(config.aws_config_term),
-                'role_arn': '${aws_iam_role.aws_config.arn}',
+                'role_arn': '${aws_iam_service_linked_role.aws_config.arn}',
                 'recording_group': {
                     'all_supported': True,
                     'include_global_resource_types': True
@@ -856,10 +823,6 @@ tf_config = {
             }
         },
         'aws_iam_role_policy_attachment': {
-            'aws_config': {
-                'role': '${aws_iam_role.aws_config.name}',
-                'policy_arn': 'arn:aws:iam::aws:policy/service-role/AWS_ConfigRole'
-            },
             **{
                 f'support_{i}': {
                     'role': '${data.aws_iam_role.support_%s.name}' % i,
