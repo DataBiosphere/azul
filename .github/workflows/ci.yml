@@ -141,7 +141,6 @@ jobs:
       - uses: 'github/codeql-action/init@v3'
         with:
           languages: '${{ matrix.language }}'
-          setup-python-dependencies: false
           config-file: './.github/codeql/codeql-config.yml'
           queries: 'security-and-quality'
 
