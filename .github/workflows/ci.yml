@@ -138,13 +138,13 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'requirements.dev.txt'
 
-      - uses: 'github/codeql-action/init@v2'
+      - uses: 'github/codeql-action/init@v3'
         with:
           languages: '${{ matrix.language }}'
           setup-python-dependencies: false
           config-file: './.github/codeql/codeql-config.yml'
           queries: 'security-and-quality'
 
-      - uses: 'github/codeql-action/analyze@v2'
+      - uses: 'github/codeql-action/analyze@v3'
         with:
           category: '/language:${{matrix.language}}'
