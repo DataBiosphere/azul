@@ -264,7 +264,7 @@ tf_config = {
                             },
                             'Action': 's3:PutObject',
                             'Resource': '${aws_s3_bucket.aws_config.arn}'
-                                        f'/*/AWSLogs/{config.aws_account_id}/Config/*',
+                                        f'/AWSLogs/{config.aws_account_id}/Config/*',
                             'Condition': {
                                 'StringEquals': {
                                     's3:x-amz-acl': 'bucket-owner-full-control',
