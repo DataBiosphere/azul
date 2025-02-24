@@ -804,7 +804,6 @@ anvil8_sources = mkdict(anvil7_sources, 256, mkdelta([
     mksrc('bigquery', 'datarepo-8302ff1f', 'ANVIL_CCDG_NYGC_NP_Autism_SAGE_WGS_20230605_ANV5_202409302144'),
     mksrc('bigquery', 'datarepo-443d8d20', 'ANVIL_CCDG_NYGC_NP_Autism_SSC_WGS_20230605_ANV5_202409302154'),
     mksrc('bigquery', 'datarepo-660280f8', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_DS_WGS_20230525_ANV5_202409302255'),
-    mksrc('bigquery', 'datarepo-d36f3ea3', 'ANVIL_CCDG_WashU_CVD_EOCAD_WashU_CAD_GRU_IRB_WGS_20230525_ANV5_202409302305'), # noqa E501
     mksrc('bigquery', 'datarepo-c2a2b724', 'ANVIL_CMG_YALE_DS_MC_20221026_ANV5_202409302315'),
     mksrc('bigquery', 'datarepo-f961f617', 'ANVIL_CMG_YALE_DS_RARED_20221020_ANV5_202409251714'),
     mksrc('bigquery', 'datarepo-5d222190', 'ANVIL_CMG_Yale_DS_BPEAKD_20240113_ANV5_202410011754'),
@@ -897,7 +896,6 @@ anvil8_sources = mkdict(anvil7_sources, 256, mkdelta([
     mksrc('bigquery', 'datarepo-5dd9d83b', 'ANVIL_ccdg_broad_ai_ibd_daly_louis_wes_20240104_ANV5_202409242011'),
     mksrc('bigquery', 'datarepo-f11a2ad0', 'ANVIL_ccdg_broad_ai_ibd_daly_mccauley_wes_20240104_ANV5_202409242021'),
     mksrc('bigquery', 'datarepo-2b74b327', 'ANVIL_ccdg_broad_ai_ibd_daly_mcgovern_niddk_wes_20240104_ANV5_202409242032'), # noqa E501
-    mksrc('bigquery', 'datarepo-b36de71b', 'ANVIL_ccdg_broad_ai_ibd_daly_mcgovern_share_wes_20240104_ANV5_202409261554'), # noqa E501
     mksrc('bigquery', 'datarepo-91cac0e9', 'ANVIL_ccdg_broad_ai_ibd_daly_moayyedi_imagine_gsa_20240105_ANV5_202409261605'), # noqa E501
     mksrc('bigquery', 'datarepo-1cde4183', 'ANVIL_ccdg_broad_ai_ibd_daly_newberry_share_gsa_20240105_ANV5_202409261616'), # noqa E501
     mksrc('bigquery', 'datarepo-7a369c1e', 'ANVIL_ccdg_broad_ai_ibd_daly_newberry_share_wes_20240105_ANV5_202409242046'), # noqa E501
