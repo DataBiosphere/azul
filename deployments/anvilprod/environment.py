@@ -703,7 +703,7 @@ anvil7_sources = mkdict(anvil6_sources, 257, mkdelta([
     # @formatter:on
 ]))
 
-anvil8_sources = mkdict(anvil7_sources, 256, mkdelta([
+anvil8_sources = mkdict(anvil7_sources, 255, mkdelta([
     # @formatter:off
     mksrc('bigquery', 'datarepo-6fd2f543', 'ANVIL_1000G_PRIMED_data_model_20240410_ANV5_202409251724'),
     mksrc('bigquery', 'datarepo-13858a9f', 'ANVIL_1000G_high_coverage_2019_20230517_ANV5_202409231755'),
@@ -894,6 +894,7 @@ anvil8_sources = mkdict(anvil7_sources, 256, mkdelta([
     mksrc('bigquery', 'datarepo-5dd9d83b', 'ANVIL_ccdg_broad_ai_ibd_daly_louis_wes_20240104_ANV5_202409242011'),
     mksrc('bigquery', 'datarepo-f11a2ad0', 'ANVIL_ccdg_broad_ai_ibd_daly_mccauley_wes_20240104_ANV5_202409242021'),
     mksrc('bigquery', 'datarepo-2b74b327', 'ANVIL_ccdg_broad_ai_ibd_daly_mcgovern_niddk_wes_20240104_ANV5_202409242032'), # noqa E501
+    mksrc('bigquery', 'datarepo-b36de71b', 'ANVIL_ccdg_broad_ai_ibd_daly_mcgovern_share_wes_20240104_ANV5_202409261554', pop), # noqa E501
     mksrc('bigquery', 'datarepo-91cac0e9', 'ANVIL_ccdg_broad_ai_ibd_daly_moayyedi_imagine_gsa_20240105_ANV5_202409261605'), # noqa E501
     mksrc('bigquery', 'datarepo-1cde4183', 'ANVIL_ccdg_broad_ai_ibd_daly_newberry_share_gsa_20240105_ANV5_202409261616'), # noqa E501
     mksrc('bigquery', 'datarepo-7a369c1e', 'ANVIL_ccdg_broad_ai_ibd_daly_newberry_share_wes_20240105_ANV5_202409242046'), # noqa E501
