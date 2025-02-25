@@ -247,7 +247,8 @@ tf_config = {
                         {
                             'Effect': 'Allow',
                             'Principal': {
-                                'Service': 'config.amazonaws.com'
+                                'Service': 'config.amazonaws.com',
+                                'AWS': '${aws_iam_service_linked_role.aws_config.arn}',
                             },
                             'Action': ['s3:GetBucketAcl', 's3:ListBucket'],
                             'Resource': '${aws_s3_bucket.aws_config.arn}',
