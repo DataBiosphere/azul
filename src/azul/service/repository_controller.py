@@ -265,7 +265,8 @@ class RepositoryController(SourceController):
 
         plugin = self.repository_plugin(catalog)
 
-        is_mirrored = self.mirror_service.is_mirrored(catalog, file)
+        is_mirrored = (config.enable_mirroring
+                       and self.mirror_service.is_mirrored(catalog, file))
         if is_mirrored:
             download = MirrorFileDownload(
                 file=file,
