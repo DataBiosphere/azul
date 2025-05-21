@@ -56,8 +56,14 @@ emit({
                     'lambda_timeout': config.aggregation_lambda_timeout(retry=True),
                     **chalice.vpc_lambda_config(app_name)
                 },
-                indexer.forward_alb_logs.name: chalice.vpc_lambda_config(app_name),
-                indexer.forward_s3_logs.name: chalice.vpc_lambda_config(app_name),
+                **(
+                    {
+                        indexer.forward_alb_logs.name: chalice.vpc_lambda_config(app_name),
+                        indexer.forward_s3_logs.name: chalice.vpc_lambda_config(app_name),
+                    }
+                    if config.enable_log_forwarding else
+                    {}
+                ),
                 **(
                     {
                         indexer.mirror.name: {
