@@ -989,10 +989,11 @@ anvil9_sources = mkdict(anvil8_sources, 284, mkdelta([
     bqsrc('91ecebc5', 'NIMH_Broad_WGSPD_1_McCarroll_Braff_DS_WGS_20240304_ANV5_202502202030'),
 ]))
 
-anvil10_sources = mkdict(anvil9_sources, 288, mkdelta([
+anvil10_sources = mkdict(anvil9_sources, 287, mkdelta([
     bqsrc('6db4e098', 'CCDG_Baylor_CVD_ARIC_20231008_ANV5_202503171456'),
     bqsrc('14967a4d', 'CCDG_WashU_CVD_EOCAD_WashU_CAD_GRU_IRB_WGS_20230525_ANV5_202503171543'),
     bqsrc('2c000b04', 'FetalGenomics_PrenatalSEQ_20250520_ANV5_202505201718'),
+    bqsrc('37dbd6bc', 'GREGoR_R02_GRU_20241105_ANV5_202502202052', pop),
     bqsrc('09c1687e', 'AnVIL_MAGE_20250520_ANV5_202505201916'),
     bqsrc('8ae2d6e6', 'ccdg_asc_ndd_daly_talkowski_AGRE_asd_exome_20250514_ANV5_202505191331'),
     bqsrc('1841de51', 'ccdg_asc_ndd_daly_talkowski_IBIS_asd_exome_20250514_ANV5_202505191529'),
