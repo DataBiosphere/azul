@@ -5,6 +5,7 @@ __pycache__/
 # Python coverage
 /.coverage
 /.coverage.*
+/test_profile.html
 /fedramp_inventory.xlsx
 # FIXME: Remove fips_enabled
 #        https://github.com/DataBiosphere/azul/issues/6675

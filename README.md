@@ -1727,12 +1727,7 @@ certificates.
 
 Each client certificate is backed by a private key as well. That private key
 resides solely on the developer's local disk. If the developer's private key
-is lost, a new one must be issued. 
-
-<!--
-FIXME: Automate the revocation of VPN client certificates
-       https://github.com/DataBiosphere/azul/issues/3929
--->
+is lost, a new one must be issued.
 
 When a developer with VPN access departs the team, either the entire CA must be
 reinitialized and all remaining client certificates reissued or the departing

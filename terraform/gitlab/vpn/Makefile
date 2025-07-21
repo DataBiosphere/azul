@@ -12,7 +12,7 @@ server_cn = $(cn)-server-$(AZUL_DEPLOYMENT_STAGE)
 ca_cn = $(cn)-$(AZUL_DEPLOYMENT_STAGE)
 pki = $(azul_easyrsa_pki)/gitlab/$(AZUL_DEPLOYMENT_STAGE)
 
-export EASYRSA_CERT_EXPIRE = 365
+export EASYRSA_CERT_EXPIRE = $(shell expr 365 '*' 5 / 12)
 export EASYRSA_CRL_DAYS = 3650
 
 .PHONY: _client

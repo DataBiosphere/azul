@@ -122,7 +122,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
 
     @classmethod
     def _teardown_indices(cls):
-        cls.index_service.delete_indices(cls.catalog)
+        cls._purge_indices()
         cls.indexed_bundles = None
 
     def _params(self,

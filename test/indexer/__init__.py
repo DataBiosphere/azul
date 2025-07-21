@@ -7,6 +7,7 @@ from pathlib import (
     Path,
 )
 from typing import (
+    ClassVar,
     Literal,
     Optional,
     Type,
@@ -24,6 +25,9 @@ from more_itertools import (
 from azul import (
     CatalogName,
     config,
+)
+from azul.es import (
+    ESClientFactory,
 )
 from azul.indexer import (
     Bundle,
@@ -201,12 +205,21 @@ class IndexerTestCase(CatalogTestCase,
                       ElasticsearchTestCase,
                       CannedBundleTestCase,
                       metaclass=ABCMeta):
-    index_service: IndexService
+    index_service: ClassVar[IndexService | None] = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
+
+    @classmethod
+    def _purge_indices(cls):
+        """
+        Deletes everything and is faster than deleting indices individually
+        through the service.
+        """
+        es = ESClientFactory.get()
+        es.indices.delete(index='*')
 
     def _get_all_hits(self):
         # Without `preserve_order`, hits are sorted by `_doc`, which is fastest

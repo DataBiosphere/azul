@@ -1,5 +1,9 @@
+import atexit
 from datetime import (
     datetime,
+)
+from functools import (
+    partial,
 )
 import os
 import time
@@ -23,6 +27,9 @@ from more_itertools import (
 from azul import (
     Netloc,
 )
+from azul.json import (
+    json_hash,
+)
 from azul.logging import (
     get_test_logger,
 )
@@ -40,17 +47,22 @@ class DockerContainerTestCase(AzulUnitTestCase):
     """
     _docker: ClassVar[Optional[DockerClient]] = None
 
-    _containers: ClassVar[list[Container]] = []
+    _containers: ClassVar[dict[bytes, tuple[bool, Container]]] = {}
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        assert len(cls._containers) == 0  # tearDownClass reset this already
+        atexit.register(partial(cls._kill_containers, keep_cached=False))
         if cls._docker is None:
             cls._docker = docker.from_env()
 
     @classmethod
-    def _create_container(cls, image: str, container_port: int, **kwargs) -> Netloc:
+    def _create_container(cls,
+                          image: str,
+                          container_port: int,
+                          cached: bool = False,
+                          **kwargs
+                          ) -> Netloc:
         """
         Create a Docker container from the given image, exposing the given
         container port on an interface that is within reach of the current
@@ -67,6 +79,18 @@ class DockerContainerTestCase(AzulUnitTestCase):
         :return: A tuple `(ip, port)` describing the actual endpoint the given
                  container port was exposed on.
         """
+        key = json_hash(dict(cached=cached,
+                             image=image,
+                             container_port=container_port,
+                             kwargs=kwargs)).digest()
+        try:
+            was_cached, container = cls._containers[key]
+        except KeyError:
+            container = None
+        else:
+            assert was_cached, ('Left over container', container)
+            if not cached:
+                container = None
         # If the current process runs in a container (as is currently the case
         # on Gitlab), our best guess is that the container launcher here will
         # be a sibling of the current container. Exposing the container port on
@@ -76,22 +100,25 @@ class DockerContainerTestCase(AzulUnitTestCase):
         # need traffic to be forwarded from the current container to that host
         # interface.
         is_sibling = cls._running_in_docker()
-        log.info('Launching %scontainer from image %s',
-                 'sibling ' if is_sibling else '', image)
-        ports = None if is_sibling else {container_port: ('127.0.0.1', None)}
         start = datetime.now()
-        container = cls._docker.containers.run(image,
-                                               detach=True,
-                                               auto_remove=True,
-                                               ports=ports,
-                                               **kwargs)
+        if container is None:
+            log.info('Launching %scontainer from image %s',
+                     'sibling ' if is_sibling else '', image)
+            ports = None if is_sibling else {container_port: ('127.0.0.1', None)}
+            container = cls._docker.containers.run(image,
+                                                   detach=True,
+                                                   auto_remove=True,
+                                                   ports=ports,
+                                                   **kwargs)
+        else:
+            log.info('Reusing container from image %s', image)
         try:
             container_info = cls._docker.api.inspect_container(container.id)
             if is_sibling:  # no coverage
                 container_ip = container_info['NetworkSettings']['IPAddress']
                 assert isinstance(container_ip, str)
                 endpoint = (container_ip, container_port)
-                log.info('Launched sibling container %s from image %s, listening on %s:%i',
+                log.info('Sibling container %s from image %s is listening on %s:%i',
                          container.name, image, container_ip, container_port)
             else:
                 while True:
@@ -107,7 +134,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
                 port = one(ports)
                 host_ip = port['HostIp']
                 host_port = int(port['HostPort'])
-                log.info('Launched container %s from image %s after %.3fs, '
+                log.info('Launched (or reused) container %s from image %s after %.3fs, '
                          'with container port %s mapped to %s:%i on the host',
                          container.name, image, seconds, container_port, host_ip, host_port)
                 endpoint = (host_ip, host_port)
@@ -115,7 +142,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
             container.kill()
             raise
         else:
-            cls._containers.append(container)
+            cls._containers[key] = (cached, container)
             return endpoint
 
     @classmethod
@@ -138,14 +165,19 @@ class DockerContainerTestCase(AzulUnitTestCase):
         return running_in_container
 
     @classmethod
-    def _kill_containers(cls):
-        for container in cls._containers:
-            container.kill()
+    def _kill_containers(cls, keep_cached: bool = True):
+        containers = {}
+        for key, (cached, container) in cls._containers.items():
+            if cached and keep_cached:
+                containers[key] = (cached, container)
+            else:
+                container.kill()
         cls._containers.clear()
+        cls._containers.update(containers)
 
     @classmethod
     def tearDownClass(cls):
-        for containers in cls._containers:
+        for cached, containers in cls._containers.values():
             for line in containers.logs().decode().split('\n'):
                 if 'deprecated' in line.lower():
                     warnings.warn(line, DeprecationWarning)

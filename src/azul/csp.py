@@ -38,7 +38,8 @@ class CSP:
             'img-src': [self, data],
             'script-src': [self, *nonce],
             'style-src': [self, *nonce],
-            'frame-ancestors': [none]
+            'frame-ancestors': [none],
+            'form-action': [self]
         })
 
     @classmethod

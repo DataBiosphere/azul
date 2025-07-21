@@ -9,8 +9,7 @@ from azul.chalice import (
 # package and is removed from the final result.
 
 app = AzulChaliceApp(app_name=config.qualified_resource_name('dependencies'),
-                     app_module_path=__file__,
-                     unit_test=False,
+                     globals=globals(),
                      spec={})
 
 

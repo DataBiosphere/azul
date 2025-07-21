@@ -36,6 +36,9 @@ from typing import (
 import uuid
 
 import attrs
+from chalice.app import (
+    SQSRecord,
+)
 import more_itertools
 from more_itertools import (
     chunked,
@@ -87,11 +90,28 @@ if TYPE_CHECKING:
 class SQSMessage:
     body: JSON
 
+    #: Approximate number of times this message has been received, or None if
+    #: this message was not received from a queue
+    #:
+    attempts: int | None = None
+
+    #: The ID of this message in the queue, or None if this message was not
+    #: received from a queue.
+    #:
+    id: str | None = None
+
     def to_entry(self) -> 'SendMessageRequestQueueSendMessageTypeDef':
         return {'MessageBody': json.dumps(self.body)}
 
     def to_batch_entry(self, id: int) -> 'SendMessageBatchRequestEntryTypeDef':
         return {**self.to_entry(), 'Id': str(id)}
+
+    @classmethod
+    def from_record(cls, record: SQSRecord) -> Self:
+        attributes = json_mapping(record.to_dict()['attributes'])
+        return cls(id=json_str(record.to_dict()['messageId']),
+                   body=json.loads(record.body),
+                   attempts=int(json_str(attributes['ApproximateReceiveCount'])))
 
 
 @attrs.frozen(kw_only=True)
@@ -105,6 +125,15 @@ class SQSFifoMessage(SQSMessage):
             'MessageGroupId': self.group_id,
             'MessageDeduplicationId': self.dedup_id
         }
+
+    @classmethod
+    def from_record(cls, record: SQSRecord) -> Self:
+        attributes = json_mapping(record.to_dict()['attributes'])
+        return cls(id=json_str(record.to_dict()['messageId']),
+                   body=json.loads(record.body),
+                   attempts=int(json_str(attributes['ApproximateReceiveCount'])),
+                   group_id=json_str(attributes['MessageGroupId']),
+                   dedup_id=json_str(attributes['MessageDeduplicationId']))
 
 
 class Queues:
@@ -494,7 +523,7 @@ class Queues:
         Returns a dictionary that maps queues to the Lambda function triggered
         by the queue. The keys and values are fully qualified resource names.
         """
-        indexer = load_app_module('indexer', unit_test=True)
+        indexer = load_app_module('indexer')
         functions_by_queue = {
             handler.queue: config.indexer_function_name(handler.name)
             for handler in indexer.app.handler_map.values()

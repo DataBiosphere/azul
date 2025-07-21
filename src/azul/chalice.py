@@ -17,6 +17,7 @@ from typing import (
     Callable,
     Iterator,
     Literal,
+    Mapping,
     Self,
     Sequence,
 )
@@ -66,6 +67,9 @@ from azul.enums import (
 from azul.json import (
     copy_json,
     json_head,
+)
+from azul.modules import (
+    module_loaded_dynamically,
 )
 from azul.openapi import (
     format_description,
@@ -129,14 +133,14 @@ class AzulChaliceApp(Chalice):
 
     def __init__(self,
                  app_name: str,
-                 app_module_path: str,
+                 globals: Mapping[str, Any],
                  *,
-                 unit_test: bool = False,
                  spec: JSON):
         self._patch_event_source_handler()
+        app_module_path = globals['__file__']
         require(app_module_path.endswith('/app.py'), app_module_path)
         self.app_module_path = app_module_path
-        self.unit_test = unit_test
+        self.loaded_dynamically = module_loaded_dynamically(globals)
         self.non_interactive_routes: set[tuple[str, str]] = set()
         reject('paths' in spec, 'The top-level spec must not define paths')
         self._specs = self._add_contact_to_spec(spec)
@@ -327,12 +331,6 @@ class AzulChaliceApp(Chalice):
             return decorator
         else:
             return lambda view_func: view_func
-
-    def test_route(self, *args, **kwargs):
-        """
-        A route that's only enabled during unit tests.
-        """
-        return self.route(*args, enabled=self.unit_test, **kwargs)
 
     def spec(self) -> JSON:
         """

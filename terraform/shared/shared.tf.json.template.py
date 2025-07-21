@@ -580,7 +580,7 @@ tf_config = {
                     'ok_actions': ['${aws_sns_topic.monitoring.arn}'],
                     # CloudWatch uses an unconfigurable "evaluation range" when missing
                     # data is involved. In practice this means that an alarm on the
-                    # absence of logs with an evaluation period of ten minutes would
+                    # absence of logs with an evaluation window of ten minutes would
                     # require thirty minutes of no logs before the alarm is raised.
                     # Using a metric query we can fill in missing datapoints with a
                     # value of zero and avoid the need for the evaluation range.

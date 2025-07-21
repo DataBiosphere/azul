@@ -1772,45 +1772,69 @@ class Config:
 
     blocked_user_agents_custom_regex_term = 'blocked_user_agents_custom'
 
-    waf_rate_rule_name = 'RateRule'
+    #: The WAF rules whose matching requests will neither be logged in the WAF
+    #: log group, nor trip the corresponding Cloudwatch alarm
+    #:
+    waf_rules_not_logged = [
+        blocked_v4_ips_term,
+        blocked_user_agents_regex_term
+    ]
 
-    waf_rate_alarm_rule_name = 'RateAlarmRule'
+    waf_rate_rule_name = 'rate_limit'
 
-    waf_rate_rule_period = 300  # seconds; this value is fixed by AWS
-
-    waf_rate_rule_retry_after = 30  # seconds
-
-    waf_rate_rule_limit = 1000
+    waf_rate_alarm_rule_name = 'rate_limit_alarm'
 
     @frozen(kw_only=True)
-    class FileDownloadLimit:
-        rate_limit: int
-        evaluation_window: int
-        assumed_request_concurrency: float
+    class RateLimit:
+        #: Name of the WAF rule
+        name: str
 
-        @classmethod
-        def parse(cls, s: str) -> Self:
-            rate, s = s.split('/')
-            window, concurrency = s.split('@')
-            return cls(rate_limit=int(rate),
-                       evaluation_window=int(window),
-                       assumed_request_concurrency=float(concurrency))
+        #: Number of requests per evaluation window
+        value: int
 
-        @property
-        def retry_after(self) -> int:
-            return round(self.evaluation_window /
-                         self.rate_limit *
-                         self.assumed_request_concurrency)
+        #: WAF rate limit evaluation window in seconds
+        period: int
 
-    @property
-    def waf_file_download_limit(self) -> FileDownloadLimit | None:
-        value = self.environ.get('azul_waf_download_rate_limit')
-        if value is None:
-            return None
-        else:
-            return self.FileDownloadLimit.parse(value)
+        #: Value of the Retry-After response header in seconds
+        retry_after: int
 
-    assert 100 <= waf_rate_rule_limit <= 2_000_000_000  # mandated by AWS
+        def __attrs_post_init__(self):
+            # Allowed range of the rate limit mandated by AWS
+            assert 10 <= self.value <= 2_000_000_000, R(
+                'Rate limit out of range', self)
+            # Valid values for the evaluation window mandated by AWS
+            assert self.period in [60, 120, 300, 600], R(
+                'Invalid period', self)
+
+    #: The rate limit per IP before WAF starts rejecting requests
+    waf_rate_limit = RateLimit(name='rate_limit',
+                               value=1000,
+                               period=5 * 60,
+                               retry_after=30)
+
+    #: The rate limit per IP before a CloudWatch alarm is raised
+    waf_rate_limit_alarm = evolve(waf_rate_limit,
+                                  name='rate_limit_alarm',
+                                  value=waf_rate_limit.value * 2)
+
+    #: The rate limit per IP for requests that trigger a manifest generation
+    #:
+    waf_rate_limit_manifests = RateLimit(name='rate_limit_manifests',
+                                         value=10,
+                                         period=10 * 60,
+                                         retry_after=30)
+
+    #: The rate limit for file download requests
+    #:
+    #: We aim for a global limit of 60 file downloads per 10 minutes. Based on
+    #: an observed average of 2.9 distinct IPs concurrently downloading files
+    #: in any 10-minute window, the maximum per-IP request rate we can allow is
+    #: 20/10min, or 10/5min.
+    #:
+    waf_rate_limit_files = RateLimit(name='rate_limit_files',
+                                     value=10,
+                                     period=5 * 60,
+                                     retry_after=30)
 
     @property
     def waf_bot_control(self) -> bool:

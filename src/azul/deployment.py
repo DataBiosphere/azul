@@ -8,6 +8,9 @@ from functools import (
     wraps,
 )
 import inspect
+from ipaddress import (
+    IPv4Address,
+)
 import json
 import logging
 import os
@@ -22,7 +25,6 @@ from typing import (
     Callable,
     TYPE_CHECKING,
     Tuple,
-    TypeVar,
     cast,
 )
 from unittest.mock import (
@@ -37,16 +39,22 @@ from botocore.awsrequest import (
 import botocore.credentials
 import botocore.session
 import botocore.utils
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
 
 from azul import (
     Netloc,
+    R,
     cache,
     cached_property,
     config,
-    reject,
+)
+from azul.http import (
+    http_client,
 )
 from azul.logging import (
     azul_boto3_log as boto3_log,
@@ -119,10 +127,8 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-R = TypeVar('R')
 
-
-def _cache(func: Callable[..., R]) -> Callable[..., R]:
+def _cache[R](func: Callable[..., R]) -> Callable[..., R]:
     """
     Methods and properties whose return values depend on the currently active
     AWS credentials must be cached under the currently active Boto3 session.
@@ -729,8 +735,9 @@ class AWS:
             }
         ]
 
-    def _validate_bucket_path_prefix(self, path_prefix):
-        reject(path_prefix.startswith('/') or path_prefix.endswith('/'), path_prefix)
+    def _validate_bucket_path_prefix(self, prefix: str) -> None:
+        assert not (prefix.startswith('/') or prefix.endswith('/')), R(
+            'Path prefix must not start or end in slash', prefix)
 
     @property
     def monitoring_topic_name(self):
@@ -749,3 +756,15 @@ class AWS:
 aws = AWS()
 del AWS
 del _cache
+
+
+def public_ip() -> IPv4Address:
+    """
+    Return the public IPv4 address of the machine running this code.
+    """
+    url = furl('https://checkip.amazonaws.com')
+    http = http_client(log)
+    response = http.request('GET', str(url))
+    assert response.status == 200, R('Unexpected response', response)
+    ip_address = response.data.decode().strip()
+    return IPv4Address(ip_address)

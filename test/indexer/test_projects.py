@@ -37,7 +37,7 @@ class TestDataExtractorTestCase(DCP1IndexerTestCase):
         self.index_service.create_indices(self.catalog)
 
     def tearDown(self) -> None:
-        self.index_service.delete_indices(self.catalog)
+        self._purge_indices()
         super().tearDown()
 
     def test_hca_extraction(self):

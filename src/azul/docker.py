@@ -50,6 +50,7 @@ import requests
 
 from azul import (
     R,
+    cache,
     cached_property,
     config,
 )
@@ -689,6 +690,7 @@ def get_docker_image_gists() -> dict[str, ImageGist | IndexImageGist]:
         return json.load(f)
 
 
+@cache
 def resolve_docker_image_for_launch(alias: str) -> str:
     """
     Return an image reference that can be used to launch a container from the

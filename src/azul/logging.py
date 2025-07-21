@@ -45,7 +45,7 @@ lambda_log_date_format = '%Y-%m-%dT%H:%M:%S'
 
 def configure_app_logging(app: AzulChaliceApp, *loggers):
     _configure_log_levels(app.log, *loggers)
-    if not app.unit_test:
+    if not app.loaded_dynamically:
         # Environment is not unit test
         root_logger = logging.getLogger()
         if root_logger.hasHandlers():

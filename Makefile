@@ -234,9 +234,16 @@ format: check_venv check_docker
 	    $$(AZUL_DEBUG=0 python -m azul 'docker.resolve_docker_image_for_launch("pycharm")') \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
+test_args = -m unittest discover --verbose test
+
 .PHONY: test
 test: check_python
-	coverage run -m unittest discover --verbose --durations 0 test
+	coverage run $(test_args)
+
+.PHONY: test_profile
+test_profile: check_python
+	python -c "import pyinstrument" || (echo "Run 'pip install pyinstrument'" ; false)
+	python -m pyinstrument -r html -o test_profile.html $(test_args)
 
 .PHONY: test_list
 test_list: check_python
@@ -249,7 +256,7 @@ tag: check_branch
 
 .PHONY: integration_test
 integration_test: check_python check_branch $(project_root)/lambdas/service/.chalice/config.json
-	python -m unittest --verbose --durations 0 integration_test
+	python -m unittest --verbose integration_test
 
 .PHONY: check_clean
 check_clean: check_env

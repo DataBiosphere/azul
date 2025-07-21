@@ -109,7 +109,7 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
         return self.queue_service.index_repository_service
 
     def tearDown(self):
-        self.index_service.delete_indices(self.catalog)
+        self._purge_indices()
         super().tearDown()
 
     def _fqid_from_message(self, message: JSON) -> TDRBundleFQID:
@@ -260,7 +260,7 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
         self.assertEqual(expected_digest, digest)
 
         # Test aggregation
-        messages = map(partial(self._mock_sqs_record), tallies)
+        messages = map(partial(self._mock_sqs_record, fifo=True), tallies)
         with patch.object(IndexWriter, 'write', side_effect=TransportError):
             try:
                 self.controller.aggregate(messages)
@@ -280,7 +280,8 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
             self._mock_sqs_record(tally,
                                   attempts=(attempts + 1
                                             if tally['entity_type'] in {'bundles', 'projects'}
-                                            else 1))
+                                            else 1),
+                                  fifo=True)
             for tally in tallies
         ]
         self.controller.aggregate(messages, retry=True)
@@ -296,7 +297,7 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
         self.assertEqual(expected_digest, digest)
 
         # Aggregate the remaining deferred tallies
-        messages = map(self._mock_sqs_record, tallies)
+        messages = map(partial(self._mock_sqs_record, fifo=True), tallies)
         self.controller.aggregate(messages, retry=True)
 
         # All tallies were referred

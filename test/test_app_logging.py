@@ -52,7 +52,9 @@ class TestAppLogging(AzulUnitTestCase):
             with mock.patch.dict(os.environ, AZUL_DEBUG=str(debug)):
                 with self.subTest(debug=debug):
                     log_level = azul_log_level()
-                    app = AzulChaliceApp(__name__, '/app.py', unit_test=True, spec={})
+                    app = AzulChaliceApp(app_name=__name__,
+                                         globals={'__file__': '/app.py'},
+                                         spec={})
                     path = '/fail/path'
 
                     @app.route(path, spec={})

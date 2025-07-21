@@ -77,9 +77,7 @@ class IndexerApp(HealthApp, SignatureHelper):
 
     def __init__(self):
         super().__init__(app_name=config.indexer_name,
-                         app_module_path=__file__,
-                         # see LocalAppTestCase.setUpClass()
-                         unit_test=globals().get('unit_test', False),
+                         globals=globals(),
                          spec=spec)
 
     def log_forwarder(self, prefix: str):

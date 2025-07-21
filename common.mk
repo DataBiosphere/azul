@@ -116,7 +116,7 @@ git_list_dirt: check_env
 	@$(call list_dirt)
 
 %.json: %.json.template.py check_python .FORCE
-	python $< $@
+	python -m azul.template $< $@
 .FORCE:
 
 # The template output file depends on the template file, of course, as well as

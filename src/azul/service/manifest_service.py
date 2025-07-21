@@ -1398,13 +1398,14 @@ class CurlManifestGenerator(PagedManifestGenerator):
             '--location',
             '--fail',
         ]
+        rate_limit = config.waf_rate_limit
         # Some options are added to the command-line instead of the curl
         # manifest so that the user can more easily customize them.
         file_options = [
             # We want curl to make enough retries so that it waits a total of
-            # one and a half times the evaluation period of the WAF rate rule,
+            # one and a half times the evaluation window of the WAF rate rule,
             # long enough for the tripped rule to clear.
-            f'--retry {ceil(config.waf_rate_rule_period * 1.5 / config.waf_rate_rule_retry_after)}',
+            f'--retry {ceil(rate_limit.period * 1.5 / rate_limit.retry_after)}',
             # Curl will respect the 'Retry-After' header if given in a response,
             # like the one returned when the WAF rate rule is tripped. Otherwise,
             # curl will wait for the number of seconds specified here.

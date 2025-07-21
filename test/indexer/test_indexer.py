@@ -256,7 +256,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                             else:
                                 self.assertEqual(set(), replicas)
                         finally:
-                            self.index_service.delete_indices(self.catalog)
+                            self._purge_indices()
 
     def test_deletion(self):
         """
@@ -332,7 +332,7 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
                     for pair in docs_by_entity.values():
                         self.assertEqual(list(sorted(doc.coordinates.deleted for doc in pair)), [False, True])
                 finally:
-                    self.index_service.delete_indices(self.catalog)
+                    self._purge_indices()
 
     def test_disable_automatic_index_creation(self):
         with self.assertRaises(elasticsearch.exceptions.NotFoundError) as cm:
@@ -351,7 +351,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.index_service.create_indices(self.catalog)
 
     def tearDown(self):
-        self.index_service.delete_indices(self.catalog)
+        self._purge_indices()
         super().tearDown()
 
     translated_str_null = null_str.to_index(None)
@@ -2143,7 +2143,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
 
         for reverse in (False, True):
             with self.subTest(reverse=reverse):
-                self.index_service.delete_indices(self.catalog)
+                self._purge_indices()
                 self.index_service.create_indices(self.catalog)
 
                 for bundle_fqid in reversed(bundle_fqids) if reverse else bundle_fqids:

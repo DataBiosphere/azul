@@ -2,6 +2,9 @@ from contextlib import (
     contextmanager,
     nullcontext,
 )
+from functools import (
+    partial,
+)
 from http.server import (
     BaseHTTPRequestHandler,
     ThreadingHTTPServer,
@@ -56,7 +59,11 @@ class TestHttp(AzulUnitTestCase):
     @contextmanager
     def http_server(self, handler: type[BaseHTTPRequestHandler]):
         with ThreadingHTTPServer(('127.0.0.1', 0), handler) as server:
-            thread = Thread(target=server.serve_forever)
+            # A shorter poll intervall causes the server thread to check the
+            # exit flag more frequently, but wastes more CPU. Going from the
+            # default of .5 to .05 caused an improvement of the overall test
+            # duration by tens of seconds.
+            thread = Thread(target=partial(server.serve_forever, poll_interval=.1))
             thread.start()
             try:
                 url = f'http://localhost:{server.server_port}'

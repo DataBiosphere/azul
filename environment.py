@@ -236,7 +236,7 @@ def env() -> Mapping[str, Optional[str]]:
         # `gitlab` components, as well as building and pushing the executor
         # image (see terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '27.5.1',
+        'azul_docker_version': '28.0.4',
 
         # The version of Python used throughout the system.
         #
@@ -296,32 +296,32 @@ def env() -> Mapping[str, Optional[str]]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.3.5-55',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.3.6-56',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
             'elasticsearch': {
-                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.28-46',
+                'ref': 'docker.io/ucscgi/azul-elasticsearch:7.17.28-47',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-elasticsearch',
                 'is_custom': True
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-37',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-38',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
             # Updating any of the four images below additionally requires
             # redeploying the `gitlab` TF component.
             'clamav': {
-                'ref': 'docker.io/clamav/clamav:1.4.2-43',
+                'ref': 'docker.io/clamav/clamav:1.4.3-46',
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:18.0.2-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:18.1.2-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v18.0.3',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v18.1.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
@@ -949,22 +949,6 @@ def env() -> Mapping[str, Optional[str]]:
         # skipped.
         #
         'azul_it_flags': None,
-
-        # A global rate limit on file downloads across all regions and IP
-        # addresses, enforced by AWS WAF.
-        #
-        # The syntax is `<limit>/<window>@<concurrency>` where `<limit>` is the
-        # maximum allowed number of download requests made every `<window>`
-        # seconds, and `<concurrency>` is the expected number of distinct IPs
-        # making at least one download request during that time. The concurrency
-        # does not need to be an integer. See
-        #
-        # https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-type-rate-based-high-level-settings.html
-        #
-        # for restrictions on the supported values for `<limit>` ("Rate limit")
-        # and `<window>` ("Evaluation window").
-        #
-        'azul_waf_download_rate_limit': None,
 
         # Wether to enable bot control in AWS WAF. Setting this to 1 will enable
         # two rules aimed at blocking requests from suspected and verified bots.

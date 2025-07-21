@@ -37,7 +37,9 @@ def setUpModule():
 class TestAppSpecs(AzulUnitTestCase):
 
     def app(self, spec):
-        return AzulChaliceApp('testing', '/app.py', spec=spec)
+        return AzulChaliceApp(app_name='testing',
+                              globals={'__file__': '/app.py'},
+                              spec=spec)
 
     def test_top_level_spec(self):
         spec = {'foo': 'bar'}

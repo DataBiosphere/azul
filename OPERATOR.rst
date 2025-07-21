@@ -1,5 +1,4 @@
 .. contents::
-.. contents::
 
 Getting started as operator
 ---------------------------
@@ -664,6 +663,162 @@ The ``ucsc/data-browser`` pipeline on GitLab blindly builds any branch, but
 Azul's ``deploy_browser`` job is configured to only use the tarball from exactly
 one branch (see ``deployments/*.browser/environment.py``) and it will always use
 the tarball from the most recent pipeline on that branch.
+
+
+Running a ZAP vulnerability scan
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Setting up ZAP
+""""""""""""""
+
+Follow these steps to set up the ZAP application for scanning the HCA and
+AnVIL systems. This set up only needs to be completed once, and for future scans
+you can simply jump to `Launching ZAP`_.
+
+#. Download ZAP from https://www.zaproxy.org/ .
+
+#. Install & open ZAP.
+
+#. From the popup, select the *No, I do not want to persis this session at this
+   moment in time* option and click *Start*.
+
+#. Confirm that ZAP is configured to run in standard mode by first selecting
+   *Edit* from the app menu bar, then *ZAP Mode*, then selecting *Standard
+   Mode*.
+
+#. To prevent ZAP scans from exceeding Azul's request rate limit and being
+   temporarily blocked by the system, you will need to configure the maximum
+   rate of requests that ZAP will send out. From the app menu bar, select
+   *Tools*, then *Options*, then *Network*, then *Rate Limit*. Add and enable a
+   three request per second rule for the match string ``anvilprod.org``, and
+   another rule for the match string ``humancellatlas.org``.
+
+#. With the *Options* window open, select *Check for Updates* from the list of
+   options. Confirm that both *Check for updates on startup*, and *Check for
+   updates to the add-ons you have installed* are enabled.
+
+#. Click *OK* to close the *Options* window, and then proceed to exit the ZAP
+   application.
+
+Launching ZAP
+"""""""""""""
+
+All scans need be run with authenticated requests. The process for running an
+authenticated scan is to first obtain an Azul authentication token, and then
+launch the ZAP application with the token set as an environment variable. ZAP
+will then use your token to add an authentication header to all requests made
+during the scan. See the `ZAP documentation`_ for more information.
+
+.. _`ZAP documentation`: https://www.zaproxy.org/docs/getting-further/authentication/handling-auth-yourself/
+
+Follow these steps to get an authorization token from Azul:
+
+#. Open the Swagger UI for the appropriate (HCA or AnVIL) Azul service.
+
+#. Click *Authorize*, select all scopes, click *Authorize*, then *Close* to
+   complete the authorization.
+
+#. Using the Swagger UI, execute an endpoint such as ``/index/catalogs``.
+
+#. Locate the example ``curl`` command that Swagger produces for you, and copy
+   the token value from the ``Authorization`` header (e.g. ``Bearer ya29.a0…``).
+
+Using the token copied above, you can now set an environment variable and launch
+ZAP from the command line. Open a terminal window, and run:
+
+#. ``export ZAP_AUTH_HEADER_VALUE="<TOKEN-VALUE-HERE>"``
+
+#. ``/Applications/ZAP.app/Contents/MacOS/ZAP.sh``
+
+After the ZAP application has opened, follow the steps below to `create a new
+session`_ and run a scan. After your scan has completed and you have generated
+a report, close the ZAP application, and then repeat the steps above to start
+each additional scan with a fresh authentication token.
+
+.. _`create a new session`: #zap-sessions
+
+ZAP Sessions
+""""""""""""
+
+With the ZAP application open, you must start a new session prior to running a
+new scan. Failure to do so can pollute the scan results with the findings from
+the previous scan. A new session is created each time you launch ZAP, or
+alternatively, to manually open a new session, from the app menu bar select
+*File*, and then *New Session*.
+
+If you are prompted with options to persist the ZAP session, select the *No, I
+do not want to persis this session at this moment in time* option and click
+*Start*.
+
+You may now continue with either a `Data Portal / Browser scan`_ or `Azul
+Indexer / Service API scan`_.
+
+.. _`Portal / Browser scan`: #running-a-portal-browser-scan
+.. _`Azul Indexer / Service API scan`: #running-an-azul-indexer-service-api-scan
+
+Running a Data Portal / Browser scan
+""""""""""""""""""""""""""""""""""""
+
+#. Using the *Quick Start* tab, click *Automated Scan*.
+
+#. Enter the desired URL (e.g. https://anvilproject.org/) in the *URL to attack*
+   field.
+
+#. Enable the *Use traditional spider* option.
+
+#. Select *If modern* from the *Use ajax spider* option, and *Firefox Headless*
+   from the *With* option.
+
+#. Click *Attack* to begin the scan.
+
+#. Wait until all the scans (Ajax spider, passive scans, etc.) have completed.
+   In practice, this can take up to four hours depending on the target URL. Note
+   that you will not receive a notification when the scans have completed.
+   Instead, take note of the *Current Status* values in the ZAP window footer.
+   Proceed when all scan counts show ``0``.
+
+#. Continue with the steps below to `generate a report`_.
+
+.. _`generate a report`: #generating-a-zap-report
+
+Running an Azul Indexer / Service API scan
+""""""""""""""""""""""""""""""""""""""""""
+
+In order to run an API scan you must first import the OpenAPI definition:
+
+#. From the app menu bar, select *Import*, then *Import an OpenAPI Definition*.
+
+#. Enter the URL of the OpenAPI definition (e.g.
+   https://service.explore.anvilproject.org/openapi.json) in the *URL* field.
+
+#. Click *Import* to complete start the import.
+
+After the import of the OpenAPI definition completes, you can then proceed to
+run an automated scan using the same steps as when running an `Data Portal /
+Browser scan`_. For the *URL to attack*, enter the base URL of the Azul indexer
+or service with no additional path components (e.g.
+https://service.explore.anvilproject.org/).
+
+.. _`Data Portal / Browser scan`: #running-a-data-portal-browser-scan
+
+Generating a ZAP Report
+"""""""""""""""""""""""
+
+After a scan has completed, use the following steps to save a PDF export of the
+scan results.
+
+#. From the app menu bar, select *Report*, then *Generate Report*.
+
+#. Navigate to the *Template* tab of the *Generate Report* window, and select
+   *Traditional PDF Report* from the *Template* option.
+
+#. Navigate to the *Scope* tab, and enter a value such as "AnVIL Data Portal"
+   in the *Report Title* field.
+
+#. The *Report Name* field specifies the name of the file to be created. Enter
+   a value such as "2025-01-01-anvil-data-portal.pdf" in this field.
+
+#. Click *Generate Report* to complete the export.
 
 
 Troubleshooting

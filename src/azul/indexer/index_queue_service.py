@@ -326,6 +326,10 @@ class DocumentTally:
                    attempts=0)
 
     @classmethod
+    def from_message(cls, msg: SQSFifoMessage) -> Self:
+        return cls.from_json(msg.body, json_int(msg.attempts))
+
+    @classmethod
     def from_json(cls, json: JSON, attempts: int) -> Self:
         return cls(entity=CataloguedEntityReference(catalog=json_str(json['catalog']),
                                                     entity_type=json_str(json['entity_type']),

@@ -49,17 +49,6 @@ emit_tf({
                     }
                 },
                 {
-                    'aws_nat_gateway': {
-                        **{
-                            f'gitlab_{zone}': {
-                                'filter': {
-                                    'name': 'tag:Name',
-                                    'values': [f'azul-gitlab_{zone}']
-                                },
-                            }
-                            for zone in range(vpc.num_zones)
-                        }
-                    },
                     'aws_ec2_client_vpn_endpoint': {
                         'gitlab': {
                             'filter': {
@@ -141,7 +130,7 @@ emit_tf({
                                 'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                                 # CloudWatch uses an unconfigurable "evaluation range" when missing
                                 # data is involved. In practice this means that an alarm on the
-                                # absence of logs with an evaluation period of ten minutes would
+                                # absence of logs with an evaluation window of ten minutes would
                                 # require thirty minutes of no logs before the alarm is raised.
                                 # Using a metric query we can fill in missing datapoints with a
                                 # value of zero and avoid the need for the evaluation range.
@@ -189,6 +178,7 @@ emit_tf({
                                             'id': f'm{zone}',
                                             'metric': {
                                                 'dimensions': {
+                                                    # Data source defined in data_sources.tf.json
                                                     'NatGatewayId': f'${{data.aws_nat_gateway.gitlab_{zone}.id}}'
                                                 },
                                                 'namespace': 'AWS/NATGateway',
@@ -267,41 +257,6 @@ emit_tf({
                             for lambda_name in config.lambda_names()
                             for metric_alarm in load_app_module(lambda_name).app.metric_alarms
                         },
-                        'waf_blocked': {
-                            'alarm_name': config.qualified_resource_name('waf_blocked'),
-                            'comparison_operator': 'GreaterThanThreshold',
-                            'threshold': 25,  # percent blocked of total requests in a period
-                            'evaluation_periods': 4,
-                            'datapoints_to_alarm': 4,
-                            'treat_missing_data': 'notBreaching',
-                            'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                            'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
-                            'metric_query': [
-                                {
-                                    'id': 'waf',
-                                    'label': 'Percentage of blocked requests',
-                                    'expression': 'm1/(m0+m1)*100',
-                                    'return_data': 'true',
-                                },
-                                *(
-                                    {
-                                        'id': f'm{i}',
-                                        'metric': {
-                                            'namespace': 'AWS/WAFV2',
-                                            'metric_name': metric,
-                                            'period': 15 * 60,
-                                            'stat': 'Sum',
-                                            'dimensions': {
-                                                'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
-                                                'Region': config.region,
-                                                'Rule': 'ALL'
-                                            }
-                                        }
-                                    }
-                                    for i, metric in enumerate(['AllowedRequests', 'BlockedRequests'])
-                                )
-                            ]
-                        },
                         'waf_rate_blocked': {
                             'alarm_name': config.qualified_resource_name('waf_rate_blocked'),
                             'comparison_operator': 'GreaterThanThreshold',
@@ -316,7 +271,7 @@ emit_tf({
                             'dimensions': {
                                 'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
                                 'Region': config.region,
-                                'Rule': config.waf_rate_alarm_rule_name
+                                'Rule': config.waf_rate_limit.name
                             },
                             'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                             'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],

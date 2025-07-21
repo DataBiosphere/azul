@@ -161,7 +161,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                         hits.sort(key=itemgetter('_id'))
                         self.assertElasticEqual(expected_hits, hits)
                     finally:
-                        self.index_service.delete_indices(self.catalog)
+                        self._purge_indices()
 
     def test_list_and_fetch_bundles(self):
         self._mock_normal_duos()
@@ -245,7 +245,7 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
 
     def tearDown(self):
         super().tearDown()
-        self.index_service.delete_indices(self.catalog)
+        self._purge_indices()
 
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='anvil_dataset',

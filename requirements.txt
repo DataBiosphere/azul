@@ -1,8 +1,8 @@
 attrs==25.3.0
 aws-requests-auth==0.4.3
 bdbag==1.7.5
-boto3==1.38.37  # Match version of the `boto3-stubs` dev dependency
-botocore==1.38.37
+boto3==1.39.0  # Match version of the `boto3-stubs` dev dependency
+botocore==1.39.0
 chevron==0.14.0  # Match with types-chevron in requirements.dev.txt
 deprecated==1.2.18
 elasticsearch==7.17.12  # 7.x to match server-side
@@ -12,7 +12,7 @@ furl==2.1.4
 google-api-core==2.25.1
 google-auth[pyopenssl]==2.40.3
 google-cloud-bigquery==3.13.0  # < 3.14.0, see https://github.com/DataBiosphere/azul/issues/6709
-http-message-signatures==0.6.1
+http-message-signatures==0.7.0
 jmespath==1.0.1
 more-itertools==10.7.0
 msgpack==1.1.1

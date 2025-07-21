@@ -220,7 +220,7 @@ def json_head(n: int, o: AnyJSON) -> str:
 
 def json_hash(o: AnyJSON, hash=None):
     """
-    Efficiently compute a hash of a JSON object.
+    Quickly compute a hash of a JSON object.
 
     >>> o = {'foo': 1, 'bar': 2.0, 'baz': 'baz'}
     >>> json_hash(o).hexdigest()
@@ -238,8 +238,22 @@ def json_hash(o: AnyJSON, hash=None):
     if hash is None:
         hash = hashlib.sha1()
     encoder = json.JSONEncoder(sort_keys=True, separators=(',', ':'))
-    for chunk in encoder.iterencode(o):
-        hash.update(chunk.encode())
+    # We intentionally do not directly use .iterencode() here. It's still being
+    # used internally by .encode() but it turns out that passing each chunk
+    # individually to the hash via .update() is much slower than first joining
+    # all chunks and then hashing the result in one call, which is what this
+    # implementation does. The reason is that the chunks tend to be short:
+    # delimiters and scalars are all individual chunks. Calling .update() that
+    # frequently is slow, as was confirmed by profiling the unit tests. This
+    # implementation comes at the expense of a potentially large amount of
+    # memory being used, albeit briefly. We currently use this method for
+    # relatively small JSON structures, under 1MiB, so that caveat is
+    # acceptable. A further improved hybrid approach would cap the amount of
+    # memory being used by batching chunks. An interesting tidbit: .encode()
+    # does not pass the iterable from .iterencode() directly to ''.join() but
+    # instead renders a list first, claiming it produces better diagnostic
+    # output, with little impact on performance.
+    hash.update(encoder.encode(o).encode())
     return hash
 
 

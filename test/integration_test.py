@@ -693,7 +693,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                             # racy state. However, we still have to throttle the
                             # requests in order to prevent tripping the WAF rate
                             # limit.
-                            time.sleep(config.waf_rate_rule_period / config.waf_rate_rule_limit)
+                            rate_limit = config.waf_rate_limit
+                            time.sleep(rate_limit.period / rate_limit.value)
                         elif response.status == 302:
                             responses.append(response)
                             method, manifest_url = GET, furl(response.headers['Location'])
@@ -1833,7 +1834,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        app_module = load_app_module('service', unit_test=True)
+        app_module = load_app_module('service')
         app_dir = os.path.dirname(app_module.__file__)
         factory = chalice.cli.factory.CLIFactory(app_dir)
         config = factory.create_config_obj()

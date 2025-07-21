@@ -19,6 +19,7 @@ from azul.chalice import (
 )
 from azul.deployment import (
     aws,
+    public_ip,
 )
 from azul.modules import (
     load_app_module,
@@ -32,6 +33,7 @@ from azul.terraform import (
     vpc,
 )
 from azul.types import (
+    JSON,
     JSONs,
 )
 
@@ -144,7 +146,110 @@ api_gateway_log_format = {
     'status': '$context.status'
 }
 
-file_download_limit = config.waf_file_download_limit
+
+def waf_match_method(http_method: str) -> JSON:
+    return {
+        'byte_match_statement': {
+            'field_to_match': {
+                'method': {}
+            },
+            'positional_constraint': 'EXACTLY',
+            'search_string': http_method,
+            'text_transformation': {
+                'priority': 0,
+                'type': 'NONE'
+            }
+        }
+    }
+
+
+def waf_match_path(path_regex: str) -> JSON:
+    return {
+        'regex_match_statement': {
+            'regex_string': path_regex,
+            'field_to_match': {
+                'uri_path': {}
+            },
+            'text_transformation': {
+                'priority': 0,
+                'type': 'NONE'
+            }
+        }
+    }
+
+
+def add_waf_blocked_alarm(resources: JSON) -> JSON:
+    """
+    Add a metric alarm that trips if the ratio between blocked and overall
+    requests goes above 25%. Note that requests blocked by rules listed in
+    :py:attr:`Config.waf_rules_not_logged` are not considered.
+    """
+    if not config.enable_monitoring:
+        return resources
+    else:
+        rules = [
+            rule['name']
+            for rule in resources['aws_wafv2_web_acl']['api_gateway']['rule']
+            if (
+                (
+                    'block' in rule.get('action', {})
+                    # In the case of AWS-managed rules, each rule's action is
+                    # pre-configured, and 'override_action' must be specified.
+                    # Note, not all possible managed rules use a block action,
+                    # however all the managed rules we use do.
+                    or 'none' in rule.get('override_action', {})
+                )
+                and rule['name'] not in config.waf_rules_not_logged
+            )
+        ]
+        metrics = [
+            ('AllowedRequests', 'ALL'),
+            *[('BlockedRequests', rule) for rule in rules]
+        ]
+        m_sum = '+'.join(f'm{i}' for i in range(1, len(metrics)))
+        expression = f'{m_sum}/(m0+{m_sum})*100'
+
+        assert 'aws_cloudwatch_metric_alarm' not in resources
+        return resources | {
+            'aws_cloudwatch_metric_alarm': {
+                'waf_blocked': {
+                    'alarm_name': config.qualified_resource_name('waf_blocked'),
+                    'comparison_operator': 'GreaterThanThreshold',
+                    'threshold': 25,  # percent blocked of total requests in a period
+                    'evaluation_periods': 4,
+                    'datapoints_to_alarm': 4,
+                    'treat_missing_data': 'notBreaching',
+                    'alarm_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                    'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
+                    'metric_query': [
+                        {
+                            'id': 'waf',
+                            'label': 'Percentage of blocked requests',
+                            'expression': expression,
+                            'return_data': 'true',
+                        },
+                        *(
+                            {
+                                'id': f'm{i}',
+                                'metric': {
+                                    'namespace': 'AWS/WAFV2',
+                                    'metric_name': metric,
+                                    'period': 15 * 60,
+                                    'stat': 'Sum',
+                                    'dimensions': {
+                                        'WebACL': '${aws_wafv2_web_acl.api_gateway.name}',
+                                        'Region': config.region,
+                                        'Rule': rule
+                                    }
+                                }
+                            }
+                            for i, (metric, rule) in enumerate(metrics)
+                        )
+                    ]
+                }
+            }
+        }
+
 
 emit_tf({
     'data': [
@@ -224,7 +329,28 @@ emit_tf({
         for app in apps
     ],
     'resource': [
-        {
+        add_waf_blocked_alarm({
+            'aws_wafv2_ip_set': {
+                # The IPs in this set are exempt from the rate limit on service
+                # API requests so as to prevent integration tests from tripping
+                # them. In the set, we include the IP of the GitLab instance and
+                # that of the machine deploying the set because those are the
+                # machines most likely to run integration tests.
+                #
+                'it_v4_ips': {
+                    'name': config.qualified_resource_name('it_v4_ips'),
+                    'scope': 'REGIONAL',
+                    'ip_address_version': 'IPV4',
+                    'addresses': [
+                        f'{public_ip()}/32',
+                        *[
+                            # Data source defined in data_sources.tf.json
+                            f'${{data.aws_nat_gateway.gitlab_{zone}.public_ip}}/32'
+                            for zone in range(vpc.num_zones)
+                        ]
+                    ]
+                }
+            },
             'aws_wafv2_web_acl': {
                 'api_gateway': {
                     'name': config.qualified_resource_name('api_gateway'),
@@ -234,79 +360,37 @@ emit_tf({
                     'rule': check_waf_rules([
                         {**rule, 'priority': i}
                         for i, rule in enumerate([
-                            *([] if file_download_limit is None else [
-                                {
-                                    'name': 'FileDownloadRateLimit',
-                                    'statement': {
-                                        'rate_based_statement': {
-                                            'limit': file_download_limit.rate_limit,
-                                            'evaluation_window_sec': file_download_limit.evaluation_window,
-                                            'aggregate_key_type': 'CONSTANT',
-                                            'scope_down_statement': {
-                                                'regex_match_statement': {
-                                                    'regex_string': '^(/fetch)?/repository/files',
-                                                    'field_to_match': {'uri_path': {}},
-                                                    'text_transformation': {
-                                                        'priority': 0,
-                                                        'type': 'NONE'
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    'action': {
-                                        'block': {
-                                            'custom_response': {
-                                                'response_code': 429,
-                                                'response_header': [
-                                                    {
-                                                        'name': 'Retry-After',
-                                                        'value': str(file_download_limit.retry_after),
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    'visibility_config': {
-                                        'metric_name': 'FileDownloadRateLimit',
-                                        'sampled_requests_enabled': True,
-                                        'cloudwatch_metrics_enabled': True
-                                    }
-                                }
-                            ]),
                             *[
                                 {
                                     'name': name,
                                     'statement': {
                                         'ip_set_reference_statement': {
-                                            'arn': '${data.aws_wafv2_ip_set.%s.arn}' % ip_set_term
+                                            'arn': '${data.aws_wafv2_ip_set.%s.arn}' % name
                                         }
                                     },
                                     'action': {
                                         action: {}
                                     },
-                                    **(
-                                        {
-                                            'rule_label': {
-                                                'name': config.blocked_v4_ips_term
-                                            }
-                                        }
-                                        if ip_set_term == config.blocked_v4_ips_term else
-                                        {}
-                                    ),
+                                    # We label these requests to give us the
+                                    # option to exclude them from being logged
+                                    # in the WAF log group. See
+                                    # aws_wafv2_web_acl_logging_configuration
+                                    'rule_label': {
+                                        'name': name
+                                    },
                                     'visibility_config': {
                                         'metric_name': name,
                                         'sampled_requests_enabled': True,
                                         'cloudwatch_metrics_enabled': True
                                     }
                                 }
-                                for name, action, ip_set_term in [
-                                    ('BlockedIPs', 'block', config.blocked_v4_ips_term),
-                                    ('AllowedIPs', 'allow', config.allowed_v4_ips_term)
+                                for name, action in [
+                                    (config.blocked_v4_ips_term, 'block'),
+                                    (config.allowed_v4_ips_term, 'allow')
                                 ]
                             ],
                             {
-                                'name': 'BlockedUserAgents',
+                                'name': config.blocked_user_agents_regex_term,
                                 'statement': {
                                     'or_statement': {
                                         'statement': [
@@ -334,58 +418,21 @@ emit_tf({
                                 'action': {
                                     'block': {}
                                 },
+                                # We label these requests to give us the option
+                                # to exclude them from being logged in the WAF
+                                # log group. See
+                                # aws_wafv2_web_acl_logging_configuration
                                 'rule_label': {
                                     'name': config.blocked_user_agents_regex_term
                                 },
                                 'visibility_config': {
-                                    'metric_name': 'BlockedUserAgents',
+                                    'metric_name': config.blocked_user_agents_regex_term,
                                     'sampled_requests_enabled': True,
                                     'cloudwatch_metrics_enabled': True
                                 }
                             },
-                            *[
-                                {
-                                    'name': name,
-                                    'statement': {
-                                        'rate_based_statement': {
-                                            'limit': limit,
-                                            'aggregate_key_type': 'IP'
-                                        }
-                                    },
-                                    'action': {
-                                        'block': {
-                                            'custom_response': {
-                                                'response_code': 429,
-                                                'response_header': [
-                                                    {
-                                                        'name': 'Retry-After',
-                                                        'value': str(config.waf_rate_rule_retry_after)
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    'visibility_config': {
-                                        'metric_name': name,
-                                        'sampled_requests_enabled': True,
-                                        'cloudwatch_metrics_enabled': True
-                                    }
-                                }
-                                # We use two rate rules, one with a lower
-                                # threshold that will block requests, and one
-                                # with a higher threshold that will block
-                                # requests and trigger an alarm. Note, the rules
-                                # need to be defined in order of descending
-                                # threshold size since once a rate rule is
-                                # tripped, it will prevent evaluation of any
-                                # following rules.
-                                for name, limit in [
-                                    (config.waf_rate_alarm_rule_name, config.waf_rate_rule_limit * 2),
-                                    (config.waf_rate_rule_name, config.waf_rate_rule_limit),
-                                ]
-                            ],
                             {
-                                'name': 'AWS-CommonRuleSet',
+                                'name': 'aws_common_rule_set',
                                 'statement': {
                                     'managed_rule_group_statement': {
                                         'name': 'AWSManagedRulesCommonRuleSet',
@@ -427,13 +474,13 @@ emit_tf({
                                     'none': {}
                                 },
                                 'visibility_config': {
-                                    'metric_name': 'AWS-CommonRuleSet',
+                                    'metric_name': 'aws_common_rule_set',
                                     'sampled_requests_enabled': True,
                                     'cloudwatch_metrics_enabled': True
                                 }
                             },
                             {
-                                'name': 'AWS-AmazonIpReputationList',
+                                'name': 'aws_amazon_ip_reputation_list',
                                 'statement': {
                                     'managed_rule_group_statement': {
                                         'name': 'AWSManagedRulesAmazonIpReputationList',
@@ -444,13 +491,13 @@ emit_tf({
                                     'none': {}
                                 },
                                 'visibility_config': {
-                                    'metric_name': 'AWS-AmazonIpReputationList',
+                                    'metric_name': 'aws_amazon_ip_reputation_list',
                                     'sampled_requests_enabled': True,
                                     'cloudwatch_metrics_enabled': True
                                 }
                             },
                             {
-                                'name': 'AWS-UnixRuleSet',
+                                'name': 'aws_unix_rule_set',
                                 'statement': {
                                     'managed_rule_group_statement': {
                                         'name': 'AWSManagedRulesUnixRuleSet',
@@ -461,14 +508,14 @@ emit_tf({
                                     'none': {}
                                 },
                                 'visibility_config': {
-                                    'metric_name': 'AWS-UnixRuleSet',
+                                    'metric_name': 'aws_unix_rule_set',
                                     'sampled_requests_enabled': True,
                                     'cloudwatch_metrics_enabled': True
                                 }
                             },
                             *iif(config.waf_bot_control, [
                                 {
-                                    'name': 'AWS-AWSManagedRulesBotControlRuleSet',
+                                    'name': 'aws_managed_rules_bot_control_rule_set',
                                     'statement': {
                                         'managed_rule_group_statement': {
                                             'name': 'AWSManagedRulesBotControlRuleSet',
@@ -476,18 +523,9 @@ emit_tf({
                                             'version': 'Version_3.1',
                                             'scope_down_statement': {
                                                 'not_statement': {
-                                                    'statement': {
-                                                        'regex_match_statement': {
-                                                            # Keep consistent with the rules in the response of the
-                                                            # /robots.txt route in src/azul/chalice.py
-                                                            'regex_string': r'^/($|swagger/|robots.txt$)',
-                                                            'field_to_match': {'uri_path': {}},
-                                                            'text_transformation': {
-                                                                'priority': 0,
-                                                                'type': 'NONE'
-                                                            }
-                                                        }
-                                                    }
+                                                    # Keep consistent with the rules in the response of the
+                                                    # /robots.txt route in src/azul/chalice.py
+                                                    'statement': waf_match_path(r'^/($|swagger/|robots.txt$)')
                                                 }
                                             },
                                             'managed_rule_group_configs': [
@@ -516,7 +554,7 @@ emit_tf({
                                         'none': {}
                                     },
                                     'visibility_config': {
-                                        'metric_name': 'AWS-AWSManagedRulesBotControlRuleSet',
+                                        'metric_name': 'aws_managed_rules_bot_control_rule_set',
                                         'sampled_requests_enabled': True,
                                         'cloudwatch_metrics_enabled': True
                                     }
@@ -529,7 +567,7 @@ emit_tf({
                                     # requests. The managed rule is scoped down
                                     # to URLs dissallowed in robots.txt, so this
                                     # rule shouldn't affect well-behaved bot.
-                                    'name': 'BlockVerifiedBotsRule',
+                                    'name': 'block_verified_bots_rule',
                                     'statement': {
                                         'label_match_statement': {
                                             'scope': 'LABEL',
@@ -540,12 +578,125 @@ emit_tf({
                                         'block': {}
                                     },
                                     "visibility_config": {
-                                        'metric_name': 'BlockVerifiedBotsRule',
+                                        'metric_name': 'block_verified_bots_rule',
                                         'sampled_requests_enabled': True,
                                         'cloudwatch_metrics_enabled': True
                                     }
                                 }
-                            ])
+                            ]),
+                            *[
+                                {
+                                    'name': rate_limit.name,
+                                    'statement': {
+                                        'rate_based_statement': {
+                                            'limit': rate_limit.value,
+                                            'evaluation_window_sec': rate_limit.period,
+                                            'aggregate_key_type': 'IP'
+                                        }
+                                    },
+                                    'action': {
+                                        'block': {
+                                            'custom_response': {
+                                                'response_code': 429,
+                                                'response_header': [
+                                                    {
+                                                        'name': 'Retry-After',
+                                                        'value': str(rate_limit.retry_after)
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    'visibility_config': {
+                                        'metric_name': rate_limit.name,
+                                        'sampled_requests_enabled': True,
+                                        'cloudwatch_metrics_enabled': True
+                                    }
+                                }
+                                # We use two rate rules, one with a lower
+                                # threshold that will block requests, and one
+                                # with a higher threshold that will block
+                                # requests and trigger an alarm. Note, the rules
+                                # need to be defined in order of descending
+                                # threshold size since once a rate rule is
+                                # tripped, it will prevent evaluation of any
+                                # following rules.
+                                for rate_limit in [
+                                    config.waf_rate_limit_alarm,
+                                    config.waf_rate_limit,
+                                ]
+                            ],
+                            {
+                                # See it_v4_ips above
+                                'name': 'allow_it_requests',
+                                'statement': {
+                                    'and_statement': [
+                                        {
+                                            'statement': [
+                                                {
+                                                    'ip_set_reference_statement': {
+                                                        'arn': '${aws_wafv2_ip_set.%s.arn}' % 'it_v4_ips'
+                                                    }
+                                                },
+                                                waf_match_method('PUT'),
+                                                waf_match_path('^(/fetch)?/manifest/files')
+                                            ]
+                                        }
+                                    ]
+                                },
+                                'action': {
+                                    'allow': {}
+                                },
+                                'visibility_config': {
+                                    'metric_name': 'allow_it_requests',
+                                    'sampled_requests_enabled': True,
+                                    'cloudwatch_metrics_enabled': True
+                                }
+                            },
+                            *[
+                                {
+                                    'name': limit.name,
+                                    'statement': {
+                                        'rate_based_statement': {
+                                            'limit': limit.value,
+                                            'evaluation_window_sec': limit.period,
+                                            'aggregate_key_type': 'IP',
+                                            'scope_down_statement': {
+                                                'and_statement': [
+                                                    {
+                                                        'statement': [
+                                                            waf_match_method(method),
+                                                            waf_match_path(path)
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    'action': {
+                                        'block': {
+                                            'custom_response': {
+                                                'response_code': 429,
+                                                'response_header': [
+                                                    {
+                                                        'name': 'Retry-After',
+                                                        'value': str(limit.retry_after)
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    'visibility_config': {
+                                        'metric_name': limit.name,
+                                        'sampled_requests_enabled': True,
+                                        'cloudwatch_metrics_enabled': True
+                                    }
+                                }
+                                for method, path, limit in [
+                                    ('GET', '^(/fetch)?/repository/files', config.waf_rate_limit_files),
+                                    ('PUT', '^(/fetch)?/manifest/files', config.waf_rate_limit_manifests)
+                                ]
+                            ]
                         ])
                     ]),
                     'scope': 'REGIONAL',
@@ -601,10 +752,7 @@ emit_tf({
                                                               term
                                                           )
                                         }
-                                    } for term in [
-                                        config.blocked_v4_ips_term,
-                                        config.blocked_user_agents_regex_term,
-                                    ]
+                                    } for term in config.waf_rules_not_logged
                                 ]
                             ]
                         ]
@@ -620,7 +768,7 @@ emit_tf({
                 for app in apps
                 for retry in app.chalice.retries
             }
-        },
+        }),
         *(
             chalice.tf_config(app.name)['resource']
             for app in apps

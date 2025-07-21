@@ -61,106 +61,55 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'activities': [
                             {
                                 'document_id': '1509ef40-d1ba-440d-b298-16b7c173dcd4',
-                                'source_datarepo_row_ids': [
-                                    'sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051'
-                                ],
+                                'source_datarepo_row_ids': ['sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051'],
                                 'activity_id': '18b3be87-e26b-4376-0d8d-c1e370e90e07',
                                 'activity_table': 'anvil_sequencingactivity',
                                 'activity_type': 'Sequencing',
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
+                                'assay_type': [None],
+                                'data_modality': [None],
+                                'reference_assembly': [None],
                                 'accessible': True
                             }
                         ],
                         'biosamples': [
                             {
-                                'anatomical_site': [
-                                    None
-                                ],
-                                'biosample_type': [
-                                    None
-                                ],
-                                'disease': [
-                                    None
-                                ],
-                                'donor_age_at_collection_unit': [
-                                    None
-                                ],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ]
+                                'anatomical_site': [None],
+                                'biosample_type': [None],
+                                'disease': [None],
+                                'donor_age_at_collection_unit': [None],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}]
                             }
                         ],
                         'datasets': [
                             {
-                                'dataset_id': [
-                                    '52ee7665-7033-63f2-a8d9-ce8e32666739'
-                                ],
-                                'title': [
-                                    'ANVIL_CMG_UWASH_DS_BDIS'
-                                ]
+                                'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'onset_age_unit': [None],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
-                                'organism_type': [
-                                    'redacted-ACw+6ecI'
-                                ],
-                                'phenotypic_sex': [
-                                    'redacted-JfQ0b3xG'
-                                ],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ]
+                                'organism_type': ['redacted-ACw+6ecI'],
+                                'phenotypic_sex': ['redacted-JfQ0b3xG'],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None]
                             }
                         ],
                         'files': [
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.vcf.gz'],
+                                'file_size': 213021639,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             }
                         ]
@@ -182,106 +131,55 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'activities': [
                             {
                                 'document_id': '816e364e-1193-4e5b-a91a-14e4b009157c',
-                                'source_datarepo_row_ids': [
-                                    'sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'
-                                ],
+                                'source_datarepo_row_ids': ['sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'],
                                 'activity_id': 'a60c5138-3749-f7cb-8714-52d389ad5231',
                                 'activity_table': 'anvil_sequencingactivity',
                                 'activity_type': 'Sequencing',
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
+                                'assay_type': [None],
+                                'data_modality': [None],
+                                'reference_assembly': [None],
                                 'accessible': True
                             }
                         ],
                         'biosamples': [
                             {
-                                'anatomical_site': [
-                                    None
-                                ],
-                                'biosample_type': [
-                                    None
-                                ],
-                                'disease': [
-                                    None
-                                ],
-                                'donor_age_at_collection_unit': [
-                                    None
-                                ],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ]
+                                'anatomical_site': [None],
+                                'biosample_type': [None],
+                                'disease': [None],
+                                'donor_age_at_collection_unit': [None],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}]
                             }
                         ],
                         'datasets': [
                             {
-                                'dataset_id': [
-                                    '52ee7665-7033-63f2-a8d9-ce8e32666739'
-                                ],
-                                'title': [
-                                    'ANVIL_CMG_UWASH_DS_BDIS'
-                                ]
+                                'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'onset_age_unit': [None],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
-                                'organism_type': [
-                                    'redacted-ACw+6ecI'
-                                ],
-                                'phenotypic_sex': [
-                                    'redacted-JfQ0b3xG'
-                                ],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ]
+                                'organism_type': ['redacted-ACw+6ecI'],
+                                'phenotypic_sex': ['redacted-JfQ0b3xG'],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None]
                             }
                         ],
                         'files': [
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.bam'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.bam'],
+                                'file_size': 3306845592,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             }
                         ]
@@ -299,220 +197,113 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 },
                 'termFacets': {
                     'accessible': {
-                        'terms': [
-                            {
-                                'count': 2,
-                                'term': 'true'
-                            }
-                        ],
+                        'terms': [{'count': 2, 'term': 'true'}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'diagnoses.phenotype': {
-                        'terms': [
-                            {
-                                'term': 'redacted-acSYHZUr',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-acSYHZUr', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'biosamples.disease': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'diagnoses.disease': {
                         'terms': [
-                            {
-                                'term': 'redacted-A61iJlLx',
-                                'count': 2
-                            },
-                            {
-                                'term': 'redacted-g50ublm/',
-                                'count': 2
-                            }
+                            {'term': 'redacted-A61iJlLx', 'count': 2},
+                            {'term': 'redacted-g50ublm/', 'count': 2}
                         ],
                         'total': 2,
                         'type': 'terms'
                     },
                     'diagnoses.phenopacket': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'term': 'false',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'false', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'donors.reported_ethnicity': {
-                        'terms': [
-                            {
-                                'term': 'redacted-NSkwDycK',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-NSkwDycK', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.consent_group': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'activities.assay_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [
-                            {
-                                'term': 'ANVIL_CMG_UWASH_DS_BDIS',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'biosamples.anatomical_site': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'donors.organism_type': {
-                        'terms': [
-                            {
-                                'term': 'redacted-ACw+6ecI',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-ACw+6ecI', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.data_use_permission': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'donors.phenotypic_sex': {
-                        'terms': [
-                            {
-                                'term': 'redacted-JfQ0b3xG',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-JfQ0b3xG', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'activities.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'activities.activity_type': {
-                        'terms': [
-                            {
-                                'term': 'Sequencing',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'Sequencing', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'biosamples.biosample_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.file_format': {
                         'terms': [
-                            {
-                                'term': '.bam',
-                                'count': 1
-                            },
-                            {
-                                'term': '.vcf.gz',
-                                'count': 1
-                            }
+                            {'term': '.bam', 'count': 1},
+                            {'term': '.vcf.gz', 'count': 1}
                         ],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.registered_identifier': {
-                        'terms': [
-                            {
-                                'term': 'phs000693',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'phs000693', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.reference_assembly': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     }
@@ -536,113 +327,63 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'activities': [
                             {
-                                'activity_type': [
-                                    'Sequencing'
-                                ],
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ]
+                                'activity_type': ['Sequencing'],
+                                'assay_type': [None],
+                                'data_modality': [None]
                             }
                         ],
                         'biosamples': [
                             {
                                 'document_id': '826dea02-e274-4ffe-aabc-eb3db63ad068',
-                                'source_datarepo_row_ids': [
-                                    'sample:98048c3b-2525-4090-94fd-477de31f2608'
-                                ],
+                                'source_datarepo_row_ids': ['sample:98048c3b-2525-4090-94fd-477de31f2608'],
                                 'biosample_id': 'f9d40cf6-37b8-22f3-ce35-0dc614d2452b',
                                 'anatomical_site': None,
-                                'apriori_cell_type': [
-                                    None
-                                ],
+                                'apriori_cell_type': [None],
                                 'biosample_type': None,
                                 'disease': None,
                                 'donor_age_at_collection_unit': None,
-                                'donor_age_at_collection': {
-                                    'gte': None,
-                                    'lte': None
-                                },
+                                'donor_age_at_collection': {'gte': None, 'lte': None},
                                 'accessible': True
                             }
                         ],
                         'datasets': [
                             {
-                                'dataset_id': [
-                                    '52ee7665-7033-63f2-a8d9-ce8e32666739'
-                                ],
-                                'title': [
-                                    'ANVIL_CMG_UWASH_DS_BDIS'
-                                ]
+                                'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'onset_age_unit': [None],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
-                                'organism_type': [
-                                    'redacted-ACw+6ecI'
-                                ],
-                                'phenotypic_sex': [
-                                    'redacted-JfQ0b3xG'
-                                ],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ]
+                                'organism_type': ['redacted-ACw+6ecI'],
+                                'phenotypic_sex': ['redacted-JfQ0b3xG'],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None]
                             }
                         ],
                         'files': [
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.vcf.gz'],
+                                'file_size': 213021639,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             },
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.bam'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.bam'],
+                                'file_size': 3306845592,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             }
                         ]
@@ -660,220 +401,113 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 },
                 'termFacets': {
                     'accessible': {
-                        'terms': [
-                            {
-                                'count': 1,
-                                'term': 'true'
-                            }
-                        ],
+                        'terms': [{'count': 1, 'term': 'true'}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenotype': {
-                        'terms': [
-                            {
-                                'term': 'redacted-acSYHZUr',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-acSYHZUr', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.disease': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.disease': {
                         'terms': [
-                            {
-                                'term': 'redacted-A61iJlLx',
-                                'count': 1
-                            },
-                            {
-                                'term': 'redacted-g50ublm/',
-                                'count': 1
-                            }
+                            {'term': 'redacted-A61iJlLx', 'count': 1},
+                            {'term': 'redacted-g50ublm/', 'count': 1}
                         ],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenopacket': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'term': 'false',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'false', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.reported_ethnicity': {
-                        'terms': [
-                            {
-                                'term': 'redacted-NSkwDycK',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-NSkwDycK', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.consent_group': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.assay_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [
-                            {
-                                'term': 'ANVIL_CMG_UWASH_DS_BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.anatomical_site': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.organism_type': {
-                        'terms': [
-                            {
-                                'term': 'redacted-ACw+6ecI',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-ACw+6ecI', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.data_use_permission': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.phenotypic_sex': {
-                        'terms': [
-                            {
-                                'term': 'redacted-JfQ0b3xG',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-JfQ0b3xG', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.activity_type': {
-                        'terms': [
-                            {
-                                'term': 'Sequencing',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'Sequencing', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.biosample_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.file_format': {
                         'terms': [
-                            {
-                                'term': '.bam',
-                                'count': 1
-                            },
-                            {
-                                'term': '.vcf.gz',
-                                'count': 1
-                            }
+                            {'term': '.bam', 'count': 1},
+                            {'term': '.vcf.gz', 'count': 1}
                         ],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.registered_identifier': {
-                        'terms': [
-                            {
-                                'term': 'phs000693',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'phs000693', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.reference_assembly': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     }
@@ -891,9 +525,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
-                        'datasets': [
-                            {'duos_id': ['DUOS-000000']}
-                        ],
+                        'datasets': [{'duos_id': ['DUOS-000000']}],
                         'diagnoses': [],
                         'donors': [],
                         'entryId': '2370f948-2783-aeb6-afea-e022897f4dcf',
@@ -910,18 +542,15 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             {
                                 'activity_type': ['Sequencing'],
                                 'assay_type': [None],
-                                'data_modality': [None]}],
+                                'data_modality': [None]
+                            }
+                        ],
                         'biosamples': [
                             {
                                 'anatomical_site': [None],
                                 'biosample_type': [None],
                                 'disease': [None],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}],
                                 'donor_age_at_collection_unit': [None]
                             }
                         ],
@@ -941,10 +570,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'diagnoses': [
                             {
                                 'diagnosis_age_unit': [None],
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
                                 'onset_age_unit': [None],
                                 'phenopacket': [None],
                                 'phenotype': ['redacted-acSYHZUr']
@@ -955,8 +581,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'genetic_ancestry': [None],
                                 'organism_type': ['redacted-ACw+6ecI'],
                                 'phenotypic_sex': ['redacted-JfQ0b3xG'],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK']
+                                'reported_ethnicity': ['redacted-NSkwDycK']
                             }
                         ],
                         'entryId': '826dea02-e274-affe-aabc-eb3db63ad068',
@@ -965,6 +590,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'count': 1,
                                 'data_modality': [None],
                                 'file_format': ['.vcf.gz'],
+                                'file_size': 213021639,
                                 'is_supplementary': [False],
                                 'reference_assembly': [None]
                             },
@@ -972,8 +598,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'count': 1,
                                 'data_modality': [None],
                                 'file_format': ['.bam'],
+                                'file_size': 3306845592,
                                 'is_supplementary': [False],
-                                'reference_assembly': [None]}],
+                                'reference_assembly': [None]
+                            }
+                        ],
                         'sources': [
                             {
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b',
@@ -1160,37 +789,18 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'activities': [
                             {
-                                'activity_type': [
-                                    'Sequencing'
-                                ],
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ]
+                                'activity_type': ['Sequencing'],
+                                'assay_type': [None],
+                                'data_modality': [None]
                             }
                         ],
                         'biosamples': [
                             {
-                                'anatomical_site': [
-                                    None
-                                ],
-                                'biosample_type': [
-                                    None
-                                ],
-                                'disease': [
-                                    None
-                                ],
-                                'donor_age_at_collection_unit': [
-                                    None
-                                ],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ]
+                                'anatomical_site': [None],
+                                'biosample_type': [None],
+                                'disease': [None],
+                                'donor_age_at_collection_unit': [None],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}]
                             }
                         ],
                         'datasets': [
@@ -1200,25 +810,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc'
                                 ],
                                 'dataset_id': '52ee7665-7033-63f2-a8d9-ce8e32666739',
-                                'consent_group': [
-                                    'DS-BDIS'
-                                ],
-                                'data_use_permission': [
-                                    'DS-BDIS'
-                                ],
-                                'owner': [
-                                    'Debbie Nickerson'
-                                ],
-                                'principal_investigator': [
-                                    None
-                                ],
-                                'registered_identifier': [
-                                    'phs000693'
-                                ],
+                                'consent_group': ['DS-BDIS'],
+                                'data_use_permission': ['DS-BDIS'],
+                                'owner': ['Debbie Nickerson'],
+                                'principal_investigator': [None],
+                                'registered_identifier': ['phs000693'],
                                 'title': 'ANVIL_CMG_UWASH_DS_BDIS',
-                                'data_modality': [
-                                    None
-                                ],
+                                'data_modality': [None],
                                 'accessible': True,
                                 'description': 'Study description from DUOS',
                                 'duos_id': 'DUOS-000000'
@@ -1226,69 +824,36 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'onset_age_unit': [None],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
-                                'organism_type': [
-                                    'redacted-ACw+6ecI'
-                                ],
-                                'phenotypic_sex': [
-                                    'redacted-JfQ0b3xG'
-                                ],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ]
+                                'organism_type': ['redacted-ACw+6ecI'],
+                                'phenotypic_sex': ['redacted-JfQ0b3xG'],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None]
                             }
                         ],
                         'files': [
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.vcf.gz'],
+                                'file_size': 213021639,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             },
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.bam'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.bam'],
+                                'file_size': 3306845592,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             }
                         ]
@@ -1306,220 +871,113 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 },
                 'termFacets': {
                     'accessible': {
-                        'terms': [
-                            {
-                                'count': 1,
-                                'term': 'true'
-                            }
-                        ],
+                        'terms': [{'count': 1, 'term': 'true'}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenotype': {
-                        'terms': [
-                            {
-                                'term': 'redacted-acSYHZUr',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-acSYHZUr', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.disease': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.disease': {
                         'terms': [
-                            {
-                                'term': 'redacted-A61iJlLx',
-                                'count': 1
-                            },
-                            {
-                                'term': 'redacted-g50ublm/',
-                                'count': 1
-                            }
+                            {'term': 'redacted-A61iJlLx', 'count': 1},
+                            {'term': 'redacted-g50ublm/', 'count': 1}
                         ],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenopacket': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'term': 'false',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'false', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.reported_ethnicity': {
-                        'terms': [
-                            {
-                                'term': 'redacted-NSkwDycK',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-NSkwDycK', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.consent_group': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.assay_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [
-                            {
-                                'term': 'ANVIL_CMG_UWASH_DS_BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.anatomical_site': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.organism_type': {
-                        'terms': [
-                            {
-                                'term': 'redacted-ACw+6ecI',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-ACw+6ecI', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.data_use_permission': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.phenotypic_sex': {
-                        'terms': [
-                            {
-                                'term': 'redacted-JfQ0b3xG',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-JfQ0b3xG', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.activity_type': {
-                        'terms': [
-                            {
-                                'term': 'Sequencing',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'Sequencing', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.biosample_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.file_format': {
                         'terms': [
-                            {
-                                'term': '.bam',
-                                'count': 1
-                            },
-                            {
-                                'term': '.vcf.gz',
-                                'count': 1
-                            }
+                            {'term': '.bam', 'count': 1},
+                            {'term': '.vcf.gz', 'count': 1}
                         ],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.registered_identifier': {
-                        'terms': [
-                            {
-                                'term': 'phs000693',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'phs000693', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.reference_assembly': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     }
@@ -1543,128 +1001,64 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'activities': [
                             {
-                                'activity_type': [
-                                    'Sequencing'
-                                ],
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ]
+                                'activity_type': ['Sequencing'],
+                                'assay_type': [None],
+                                'data_modality': [None]
                             }
                         ],
                         'biosamples': [
                             {
-                                'anatomical_site': [
-                                    None
-                                ],
-                                'biosample_type': [
-                                    None
-                                ],
-                                'disease': [
-                                    None
-                                ],
-                                'donor_age_at_collection_unit': [
-                                    None
-                                ],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ]
+                                'anatomical_site': [None],
+                                'biosample_type': [None],
+                                'disease': [None],
+                                'donor_age_at_collection_unit': [None],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}]
                             }
                         ],
                         'datasets': [
                             {
-                                'dataset_id': [
-                                    '52ee7665-7033-63f2-a8d9-ce8e32666739'
-                                ],
-                                'title': [
-                                    'ANVIL_CMG_UWASH_DS_BDIS'
-                                ]
+                                'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'diagnosis_age': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'onset_age': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'diagnosis_age': [{'gte': None, 'lte': None}],
+                                'onset_age_unit': [None],
+                                'onset_age': [{'gte': None, 'lte': None}],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
                                 'document_id': 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
-                                'source_datarepo_row_ids': [
-                                    'subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'
-                                ],
+                                'source_datarepo_row_ids': ['subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'],
                                 'donor_id': '1e2bd7e5-f45e-a391-daea-7c060be76acd',
                                 'organism_type': 'redacted-ACw+6ecI',
                                 'phenotypic_sex': 'redacted-JfQ0b3xG',
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None],
                                 'accessible': True
                             }
                         ],
                         'files': [
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.vcf.gz'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.vcf.gz'],
+                                'file_size': 213021639,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             },
                             {
-                                'data_modality': [
-                                    None
-                                ],
-                                'file_format': [
-                                    '.bam'
-                                ],
-                                'reference_assembly': [
-                                    None
-                                ],
-                                'is_supplementary': [
-                                    False
-                                ],
+                                'data_modality': [None],
+                                'file_format': ['.bam'],
+                                'file_size': 3306845592,
+                                'reference_assembly': [None],
+                                'is_supplementary': [False],
                                 'count': 1
                             }
                         ]
@@ -1682,220 +1076,113 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 },
                 'termFacets': {
                     'accessible': {
-                        'terms': [
-                            {
-                                'count': 1,
-                                'term': 'true'
-                            }
-                        ],
+                        'terms': [{'count': 1, 'term': 'true'}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenotype': {
-                        'terms': [
-                            {
-                                'term': 'redacted-acSYHZUr',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-acSYHZUr', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.disease': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.disease': {
                         'terms': [
-                            {
-                                'term': 'redacted-A61iJlLx',
-                                'count': 1
-                            },
-                            {
-                                'term': 'redacted-g50ublm/',
-                                'count': 1
-                            }
+                            {'term': 'redacted-A61iJlLx', 'count': 1},
+                            {'term': 'redacted-g50ublm/', 'count': 1}
                         ],
                         'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenopacket': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'term': 'false',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'false', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.reported_ethnicity': {
-                        'terms': [
-                            {
-                                'term': 'redacted-NSkwDycK',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-NSkwDycK', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.consent_group': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.assay_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [
-                            {
-                                'term': 'ANVIL_CMG_UWASH_DS_BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.anatomical_site': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.organism_type': {
-                        'terms': [
-                            {
-                                'term': 'redacted-ACw+6ecI',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-ACw+6ecI', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.data_use_permission': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'donors.phenotypic_sex': {
-                        'terms': [
-                            {
-                                'term': 'redacted-JfQ0b3xG',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-JfQ0b3xG', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'activities.activity_type': {
-                        'terms': [
-                            {
-                                'term': 'Sequencing',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'Sequencing', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.biosample_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.file_format': {
                         'terms': [
-                            {
-                                'term': '.bam',
-                                'count': 1
-                            },
-                            {
-                                'term': '.vcf.gz',
-                                'count': 1
-                            }
+                            {'term': '.bam', 'count': 1},
+                            {'term': '.vcf.gz', 'count': 1}
                         ],
                         'total': 1,
                         'type': 'terms'
                     },
                     'datasets.registered_identifier': {
-                        'terms': [
-                            {
-                                'term': 'phs000693',
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': 'phs000693', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
                     'files.reference_assembly': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 1
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     }
@@ -1919,83 +1206,41 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'activities': [
                             {
-                                'activity_type': [
-                                    'Sequencing'
-                                ],
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ]
+                                'activity_type': ['Sequencing'],
+                                'assay_type': [None],
+                                'data_modality': [None]
                             }
                         ],
                         'biosamples': [
                             {
-                                'anatomical_site': [
-                                    None
-                                ],
-                                'biosample_type': [
-                                    None
-                                ],
-                                'disease': [
-                                    None
-                                ],
-                                'donor_age_at_collection_unit': [
-                                    None
-                                ],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ]
+                                'anatomical_site': [None],
+                                'biosample_type': [None],
+                                'disease': [None],
+                                'donor_age_at_collection_unit': [None],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}]
                             }
                         ],
                         'datasets': [
                             {
-                                'dataset_id': [
-                                    '52ee7665-7033-63f2-a8d9-ce8e32666739'
-                                ],
-                                'title': [
-                                    'ANVIL_CMG_UWASH_DS_BDIS'
-                                ]
+                                'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'onset_age_unit': [None],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
-                                'organism_type': [
-                                    'redacted-ACw+6ecI'
-                                ],
-                                'phenotypic_sex': [
-                                    'redacted-JfQ0b3xG'
-                                ],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ]
+                                'organism_type': ['redacted-ACw+6ecI'],
+                                'phenotypic_sex': ['redacted-JfQ0b3xG'],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None]
                             }
                         ],
                         'files': [
@@ -2005,15 +1250,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     'file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0'
                                 ],
                                 'file_id': '1e269f04-4347-4188-b060-1dcc69e71d67',
-                                'data_modality': [
-                                    None
-                                ],
+                                'data_modality': [None],
                                 'file_format': '.vcf.gz',
                                 'file_size': 213021639,
                                 'file_md5sum': 'vuxgbuCqKZ/fkT9CWTFmIg==',
-                                'reference_assembly': [
-                                    None
-                                ],
+                                'reference_assembly': [None],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
                                 'is_supplementary': False,
                                 'version': self.version,
@@ -2048,83 +1289,41 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'activities': [
                             {
-                                'activity_type': [
-                                    'Sequencing'
-                                ],
-                                'assay_type': [
-                                    None
-                                ],
-                                'data_modality': [
-                                    None
-                                ]
+                                'activity_type': ['Sequencing'],
+                                'assay_type': [None],
+                                'data_modality': [None]
                             }
                         ],
                         'biosamples': [
                             {
-                                'anatomical_site': [
-                                    None
-                                ],
-                                'biosample_type': [
-                                    None
-                                ],
-                                'disease': [
-                                    None
-                                ],
-                                'donor_age_at_collection_unit': [
-                                    None
-                                ],
-                                'donor_age_at_collection': [
-                                    {
-                                        'gte': None,
-                                        'lte': None
-                                    }
-                                ]
+                                'anatomical_site': [None],
+                                'biosample_type': [None],
+                                'disease': [None],
+                                'donor_age_at_collection_unit': [None],
+                                'donor_age_at_collection': [{'gte': None, 'lte': None}]
                             }
                         ],
                         'datasets': [
                             {
-                                'dataset_id': [
-                                    '52ee7665-7033-63f2-a8d9-ce8e32666739'
-                                ],
-                                'title': [
-                                    'ANVIL_CMG_UWASH_DS_BDIS'
-                                ]
+                                'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
                         'diagnoses': [
                             {
-                                'disease': [
-                                    'redacted-A61iJlLx',
-                                    'redacted-g50ublm/'
-                                ],
-                                'diagnosis_age_unit': [
-                                    None
-                                ],
-                                'onset_age_unit': [
-                                    None
-                                ],
-                                'phenotype': [
-                                    'redacted-acSYHZUr'
-                                ],
-                                'phenopacket': [
-                                    None
-                                ]
+                                'disease': ['redacted-A61iJlLx', 'redacted-g50ublm/'],
+                                'diagnosis_age_unit': [None],
+                                'onset_age_unit': [None],
+                                'phenotype': ['redacted-acSYHZUr'],
+                                'phenopacket': [None]
                             }
                         ],
                         'donors': [
                             {
-                                'organism_type': [
-                                    'redacted-ACw+6ecI'
-                                ],
-                                'phenotypic_sex': [
-                                    'redacted-JfQ0b3xG'
-                                ],
-                                'reported_ethnicity': [
-                                    'redacted-NSkwDycK'
-                                ],
-                                'genetic_ancestry': [
-                                    None
-                                ]
+                                'organism_type': ['redacted-ACw+6ecI'],
+                                'phenotypic_sex': ['redacted-JfQ0b3xG'],
+                                'reported_ethnicity': ['redacted-NSkwDycK'],
+                                'genetic_ancestry': [None]
                             }
                         ],
                         'files': [
@@ -2134,15 +1333,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     'file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2'
                                 ],
                                 'file_id': '8b722e88-8103-49c1-b351-e64fa7c6ab37',
-                                'data_modality': [
-                                    None
-                                ],
+                                'data_modality': [None],
                                 'file_format': '.bam',
                                 'file_size': 3306845592,
                                 'file_md5sum': 'fNn9e1SovzgOROk3BvH6LQ==',
-                                'reference_assembly': [
-                                    None
-                                ],
+                                'reference_assembly': [None],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.bam',
                                 'is_supplementary': False,
                                 'version': self.version,
@@ -2174,220 +1369,113 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 },
                 'termFacets': {
                     'accessible': {
-                        'terms': [
-                            {
-                                'count': 2,
-                                'term': 'true'
-                            }
-                        ],
+                        'terms': [{'count': 2, 'term': 'true'}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'diagnoses.phenotype': {
-                        'terms': [
-                            {
-                                'term': 'redacted-acSYHZUr',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-acSYHZUr', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'biosamples.disease': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'diagnoses.disease': {
                         'terms': [
-                            {
-                                'term': 'redacted-A61iJlLx',
-                                'count': 2
-                            },
-                            {
-                                'term': 'redacted-g50ublm/',
-                                'count': 2
-                            }
+                            {'term': 'redacted-A61iJlLx', 'count': 2},
+                            {'term': 'redacted-g50ublm/', 'count': 2}
                         ],
                         'total': 2,
                         'type': 'terms'
                     },
                     'diagnoses.phenopacket': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.is_supplementary': {
-                        'terms': [
-                            {
-                                'term': 'false',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'false', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'donors.reported_ethnicity': {
-                        'terms': [
-                            {
-                                'term': 'redacted-NSkwDycK',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-NSkwDycK', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.consent_group': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'activities.assay_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [
-                            {
-                                'term': 'ANVIL_CMG_UWASH_DS_BDIS',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'biosamples.anatomical_site': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'donors.organism_type': {
-                        'terms': [
-                            {
-                                'term': 'redacted-ACw+6ecI',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-ACw+6ecI', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.data_use_permission': {
-                        'terms': [
-                            {
-                                'term': 'DS-BDIS',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'DS-BDIS', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'donors.phenotypic_sex': {
-                        'terms': [
-                            {
-                                'term': 'redacted-JfQ0b3xG',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'redacted-JfQ0b3xG', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'activities.data_modality': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'activities.activity_type': {
-                        'terms': [
-                            {
-                                'term': 'Sequencing',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'Sequencing', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'biosamples.biosample_type': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.file_format': {
                         'terms': [
-                            {
-                                'term': '.bam',
-                                'count': 1
-                            },
-                            {
-                                'term': '.vcf.gz',
-                                'count': 1
-                            }
+                            {'term': '.bam', 'count': 1},
+                            {'term': '.vcf.gz', 'count': 1}
                         ],
                         'total': 2,
                         'type': 'terms'
                     },
                     'datasets.registered_identifier': {
-                        'terms': [
-                            {
-                                'term': 'phs000693',
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': 'phs000693', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
                     'files.reference_assembly': {
-                        'terms': [
-                            {
-                                'term': None,
-                                'count': 2
-                            }
-                        ],
+                        'terms': [{'term': None, 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     }
