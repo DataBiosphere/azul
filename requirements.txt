@@ -1,3 +1,4 @@
+--find-links  https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.2  # match version of resumablehash requirement below
 attrs==25.3.0
 aws-requests-auth==0.4.3
 boto3==1.40.3  # Match version of the `boto3-stubs` dev dependency
@@ -16,7 +17,7 @@ more-itertools==10.7.0
 msgpack==1.1.1
 opensearch-py==2.8.0  # < 3 to match server
 requests==2.32.4
-resumablesha256==1.0
+resumablehash==1.2  # match version with --find-links above
 rsa==4.7.2  # < 4.8, see https://github.com/DataBiosphere/azul/issues/6774. Resolve build-time dependency ambguity
 setuptools==80.9.0  # Match requirements.pip.txt. Python 3.12 removed distutils, which we depended on transitively. Luckily, setuptools includes a vendored copy.
 urllib3==1.26.20 # < 2, see https://github.com/DataBiosphere/azul/issues/6777, match with types-urllib in requirements.dev.txt

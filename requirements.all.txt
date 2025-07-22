@@ -112,7 +112,7 @@ requests==2.32.4
 requests-toolbelt==1.0.0
 requirements-parser==0.2.0+1
 responses==0.25.7
-resumablesha256==1.0
+resumablehash==1.2
 rfc3339-validator==0.1.4
 rpds-py==0.27.0
 rsa==4.7.2
