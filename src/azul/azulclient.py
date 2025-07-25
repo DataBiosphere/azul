@@ -137,7 +137,7 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
                 'transaction_id': str(uuid.uuid4()),
                 'bundle_fqid': bundle_fqid.to_json()
             }
-            for source in self.catalog_sources(catalog)
+            for source in config.sources(catalog)
             for bundle_fqid in service.list_bundles(catalog, source, prefix)
         ]
         self.index(catalog, notifications)
@@ -226,14 +226,11 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
         if errors or missing:
             raise AzulClientNotificationError
 
-    def catalog_sources(self, catalog: CatalogName) -> set[str]:
-        return set(map(str, self.repository_plugin(catalog).sources))
-
     def sources_by_catalog(self,
                            catalogs: Iterable[CatalogName]
                            ) -> dict[CatalogName, set[str]]:
         return {
-            catalog: self.catalog_sources(catalog)
+            catalog: set(config.sources(catalog))
             for catalog in catalogs
         }
 
