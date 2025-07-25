@@ -946,12 +946,11 @@ class Config:
             if self.internal:
                 assert self.is_integration_test_catalog is True, self
 
-            repository_bundle_cls: type[Bundle]
-            metadata_bundle_cls: type[Bundle]
-            repository_bundle_cls, metadata_bundle_cls = (
-                plugin_type.bundle_cls(self.plugins[plugin_type.type_name()].name)
-                for plugin_type in [RepositoryPlugin, MetadataPlugin]
-            )
+            def bundle_cls(plugin_type) -> type[Bundle]:
+                return plugin_type.bundle_cls(self.plugins[plugin_type.type_name()].name)
+
+            repository_bundle_cls = bundle_cls(RepositoryPlugin)
+            metadata_bundle_cls = bundle_cls(MetadataPlugin)
             assert issubclass(repository_bundle_cls, metadata_bundle_cls), R(
                 'Catalog combines incompatible metadata and repository plugins',
                 self.name, repository_bundle_cls, metadata_bundle_cls)
