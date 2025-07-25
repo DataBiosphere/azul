@@ -1,5 +1,4 @@
 from abc import (
-    ABCMeta,
     abstractmethod,
 )
 from io import (
@@ -150,18 +149,6 @@ class MockCredentialsProvider(TerraCredentialsProvider):
         pass
 
 
-class MockPlugin(TDRPlugin, metaclass=ABCMeta):
-    netloc: str
-    project_id: str
-
-    @classmethod
-    def _tdr(cls):
-        credentials_provider = MockCredentialsProvider(cls.project_id)
-        tdr = MockTDRClient(credentials_provider=credentials_provider)
-        MockTDRClient.netloc = cls.netloc
-        return tdr
-
-
 TDR_PLUGIN = TypeVar('TDR_PLUGIN', bound=TDRPlugin)
 
 
@@ -179,10 +166,15 @@ class TDRPluginTestCase(TDRTestCase,
     def plugin(self) -> TDR_PLUGIN:
         source_spec = self.source.spec
 
-        # noinspection PyAbstractClass
-        class Plugin(MockPlugin, self._plugin_cls()):
-            netloc = self.netloc
-            project_id = self.source.spec.subdomain
+        class Plugin(self._plugin_cls()):
+
+            # This overrides the implementation in TDRPlugin
+            @classmethod
+            def _tdr(cls):
+                credentials_provider = MockCredentialsProvider(project_id=source_spec.subdomain)
+                tdr = MockTDRClient(credentials_provider=credentials_provider)
+                MockTDRClient.netloc = self.netloc
+                return tdr
 
         return Plugin(sources={source_spec})
 
