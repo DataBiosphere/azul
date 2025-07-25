@@ -190,7 +190,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             self.bundle_fqid(uuid='6aec5e41-3a08-a86e-9f29-07092145ebdb',
                              table_name='anvil_variantcallingactivity')
         ])
-        plugin = self.plugin_for_source_spec(source_ref.spec)
+        plugin = self.plugin
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
         self.assertEqual(expected_bundle_fqids, bundle_fqids)
         for bundle_fqid in canned_bundle_fqids:
@@ -227,8 +227,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         for sub_test, response_bodies in cases.items():
             with self.subTest(sub_test):
                 with self.stacked_patches(self._duos_patches(response_bodies)):
-                    plugin = self.plugin_for_source_spec(source_ref.spec)
-                    bundle = plugin.fetch_bundle(self.duos_bundle())
+                    bundle = self.plugin.fetch_bundle(self.duos_bundle())
                     self.assertIsInstance(bundle, TDRAnvilBundle)
                     self.assertEqual({}, bundle.entities)
                     self.assertEqual(1, len(bundle.orphans))

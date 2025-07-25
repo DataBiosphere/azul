@@ -50,7 +50,7 @@ from more_itertools import (
 import urllib3
 
 from azul import (
-    cache,
+    cached_property,
     config,
 )
 from azul.auth import (
@@ -175,8 +175,10 @@ class TDRPluginTestCase(TDRTestCase,
     def _plugin_cls(cls) -> Type[TDR_PLUGIN]:
         raise NotImplementedError
 
-    @cache
-    def plugin_for_source_spec(self, source_spec) -> TDR_PLUGIN:
+    @cached_property
+    def plugin(self) -> TDR_PLUGIN:
+        source_spec = self.source.spec
+
         # noinspection PyAbstractClass
         class Plugin(MockPlugin, self._plugin_cls()):
             netloc = self.netloc
@@ -229,7 +231,7 @@ class TDRPluginTestCase(TDRTestCase,
                 for column_name, column_value in row.items()
             }
 
-        plugin = self.plugin_for_source_spec(source)
+        plugin = self.plugin
         bq = plugin.tdr._bigquery(source.subdomain)
         table_name = plugin._full_table_name(source, table_name)
         # https://youtrack.jetbrains.com/issue/PY-50178
@@ -278,8 +280,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
                                               content={})
                                          for links_id in links_ids
                                      ])
-        plugin = self.plugin_for_source_spec(source.spec)
-        bundle_ids = plugin.list_bundles(source, prefix='42')
+        bundle_ids = self.plugin.list_bundles(source, prefix='42')
         bundle_ids.sort(key=attrgetter('uuid'))
         self.assertEqual(bundle_ids, [
             TDRBundleFQID(source=source, uuid='42-abc', version=current_version),
@@ -295,7 +296,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         self._test_fetch_bundle(bundle, load_tables=True)
         # Test invalid links by modifying the canned bundle
         spec = self.source.spec
-        plugin = self.plugin_for_source_spec(spec)
+        plugin = self.plugin
         links_id = bundle.uuid
         links = one(plugin.tdr.run_sql(f'''
             SELECT links_id, content
@@ -349,8 +350,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
                            load_tables: bool):
         if load_tables:
             self._make_mock_tdr_tables(test_bundle.fqid.source)
-        plugin = self.plugin_for_source_spec(test_bundle.fqid.source.spec)
-        emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
+        emulated_bundle = self.plugin.fetch_bundle(test_bundle.fqid)
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
         assert isinstance(emulated_bundle, TDRHCABundle)
