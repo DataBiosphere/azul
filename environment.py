@@ -73,7 +73,7 @@ def env() -> Mapping[str, Optional[str]]:
         # A source represents a TDR snapshot or canned staging area to index.
         # Each source is a string matching the following EBNF grammar:
         #
-        # source = TDR source | canned source ;
+        # source = TDR source | canned source | DSS source;
         #
         # TDR source = 'tdr:', Google Cloud project name,
         #              ':', TDR dataset or snapshot name,
@@ -87,6 +87,10 @@ def env() -> Mapping[str, Optional[str]]:
         #                 ['/', path],
         #                 ':', [ prefix ],
         #                 '/', partition prefix length ;
+        #
+        # DSS sources = 'dss.data.humancellatlas.org/v1',
+        #               ':', [ prefix ],
+        #               '/', partition prefix length ;
         #
         # The `prefix` is an optional string of hexadecimal digits constraining
         # the set of indexed subgraphs from the source. A subgraph will be
@@ -626,23 +630,6 @@ def env() -> Mapping[str, Optional[str]]:
         # (1 yes, 0 no).
         #
         'AZUL_ENABLE_VERBATIM_RELATIONS': '1',
-
-        # Identifies the DSS repository endpoint and prefix to index.
-        # The syntax in EBNF is:
-        #
-        # source = endpoint,
-        #          ':', [ prefix ],
-        #          '/', partition prefix length ;
-        #
-        # `endpoint` is the URL of the DSS instance. For `prefix` and
-        # `partition prefix length` see `AZUL_CATALOGS` above.
-        #
-        # Examples:
-        #
-        # https://dss.data.humancellatlas.org/v1:/1
-        # https://dss.data.humancellatlas.org/v1:aa/1
-        #
-        'AZUL_DSS_SOURCE': None,
 
         # Mirror data files from the indexed repository in an S3 bucket
         # (1 yes, 0 no).

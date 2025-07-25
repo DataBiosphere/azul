@@ -456,16 +456,10 @@ class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls._patch_source()
         cls._patch_source_cache()
         cls._patch_drs_domain()
 
     source = DSSSourceRef.for_dss_source('https://fake_dss_instance/v1:/2')
-
-    @classmethod
-    def _patch_source(cls):
-        cls.addClassPatch(patch.dict(os.environ,
-                                     AZUL_DSS_SOURCE=str(cls.source.spec)))
 
     @classmethod
     def _patch_source_cache(cls):

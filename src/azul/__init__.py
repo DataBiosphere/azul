@@ -368,17 +368,15 @@ class Config:
 
     @property
     def dss_endpoint(self) -> str | None:
-        if self.dss_source is None:
-            return None
-        else:
+        catalog = self.default_catalog
+        if self.is_dss_enabled(catalog):
+            dss_source = one(self.sources(catalog))
             from azul.indexer import (
                 SimpleSourceSpec,
             )
-            return SimpleSourceSpec.parse(self.dss_source).name
-
-    @property
-    def dss_source(self) -> str | None:
-        return self.environ.get('AZUL_DSS_SOURCE')
+            return SimpleSourceSpec.parse(dss_source).name
+        else:
+            return None
 
     def sources(self, catalog: CatalogName) -> Set[str]:
         return self.catalogs[catalog].sources
