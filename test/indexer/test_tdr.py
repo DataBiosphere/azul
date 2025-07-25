@@ -162,21 +162,19 @@ class TDRPluginTestCase(TDRTestCase,
     def _plugin_cls(cls) -> Type[TDR_PLUGIN]:
         raise NotImplementedError
 
+    @classmethod
+    def _patch_tdr_client(cls):
+        source = cls.source.spec
+        credentials_provider = MockCredentialsProvider(project_id=source.subdomain)
+        tdr = MockTDRClient(credentials_provider=credentials_provider)
+        assert cls.netloc is not None
+        MockTDRClient.netloc = cls.netloc
+        cls.addClassPatch(mock.patch.object(TDRPlugin, '_tdr', return_value=tdr))
+
     @cached_property
     def plugin(self) -> TDR_PLUGIN:
-        source_spec = self.source.spec
-
-        class Plugin(self._plugin_cls()):
-
-            # This overrides the implementation in TDRPlugin
-            @classmethod
-            def _tdr(cls):
-                credentials_provider = MockCredentialsProvider(project_id=source_spec.subdomain)
-                tdr = MockTDRClient(credentials_provider=credentials_provider)
-                MockTDRClient.netloc = self.netloc
-                return tdr
-
-        return Plugin(sources={source_spec})
+        plugin_cls = self._plugin_cls()
+        return plugin_cls(sources={self.source.spec})
 
     netloc: tuple[str, int] | None = None
 
@@ -192,6 +190,7 @@ class TDRPluginTestCase(TDRTestCase,
                                                '--project=' + cls.source.spec.subdomain,
                                                '--dataset=' + cls.source.spec.name
                                            ])
+        cls._patch_tdr_client()
 
     def _make_mock_tdr_tables(self, source: TDRSourceRef) -> JSON:
         tables = self._load_canned_file_version(uuid=source.id,
