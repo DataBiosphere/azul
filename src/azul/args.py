@@ -8,6 +8,7 @@ from typing import (
 )
 
 from azul import (
+    CatalogName,
     R,
 )
 
@@ -22,9 +23,9 @@ class AzulArgumentHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
                          width=min(shutil.get_terminal_size((80, 25)).columns, 120))
 
 
-def matching_sources(sources_by_catalog: Mapping[str, AbstractSet[str]],
+def matching_sources(sources_by_catalog: Mapping[CatalogName, AbstractSet[str]],
                      source_globs: set[str]
-                     ) -> dict[str, set[str]]:
+                     ) -> dict[CatalogName, set[str]]:
     result = {}
     globs_matched = set()
     for catalog, sources in sources_by_catalog.items():

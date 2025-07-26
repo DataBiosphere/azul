@@ -229,7 +229,9 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
     def catalog_sources(self, catalog: CatalogName) -> set[str]:
         return set(map(str, self.repository_plugin(catalog).sources))
 
-    def sources_by_catalog(self, catalogs: Iterable[str]) -> dict[str, set[str]]:
+    def sources_by_catalog(self,
+                           catalogs: Iterable[CatalogName]
+                           ) -> dict[CatalogName, set[str]]:
         return {
             catalog: self.catalog_sources(catalog)
             for catalog in catalogs
