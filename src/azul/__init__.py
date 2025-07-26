@@ -64,7 +64,6 @@ from azul.types import (
     MutableJSON,
     json_bool,
     json_mapping,
-    json_sequence,
     json_str,
 )
 from azul.vendored.frozendict import (
@@ -378,7 +377,7 @@ class Config:
         else:
             return None
 
-    def sources(self, catalog: CatalogName) -> Set[str]:
+    def sources(self, catalog: CatalogName) -> Mapping[str, JSON]:
         return self.catalogs[catalog].sources
 
     @property
@@ -873,7 +872,7 @@ class Config:
     class Catalog:
         """
         >>> plugins = dict(metadata=dict(name='hca'), repository=dict(name='tdr_hca'))
-        >>> kwargs = dict(atlas='hca', plugins=plugins, sources=[])
+        >>> kwargs = dict(atlas='hca', plugins=plugins, sources={})
         >>> c = Config.Catalog.from_json
 
         >>> c(name='dcp', spec=dict(internal=False, **kwargs))
@@ -883,7 +882,7 @@ class Config:
                        internal=False,
                        plugins={'metadata': Config.Catalog.Plugin(name='hca'),
                                 'repository': Config.Catalog.Plugin(name='tdr_hca')},
-                       sources=set())
+                       sources={})
 
         >>> c(name='dcp-it', spec=dict(internal=True, **kwargs)).is_integration_test_catalog
         True
@@ -917,7 +916,7 @@ class Config:
         atlas: str
         internal: bool
         plugins: Mapping[str, Plugin]
-        sources: Set[str]
+        sources: Mapping[str, JSON]
 
         _it_catalog_suffix: ClassVar[str] = '-it'
 
@@ -978,11 +977,15 @@ class Config:
                 plugin_type: cls.Plugin.from_json(json_mapping(plugin_spec))
                 for plugin_type, plugin_spec in json_mapping(spec['plugins']).items()
             }
+            sources = {
+                source_spec: json_mapping(source_config)
+                for source_spec, source_config in json_mapping(spec['sources']).items()
+            }
             return cls(name=name,
                        atlas=json_str(spec['atlas']),
                        internal=json_bool(spec['internal']),
                        plugins=plugins,
-                       sources=set(map(json_str, json_sequence(spec['sources']))))
+                       sources=sources)
 
         @classmethod
         def validate_name(cls, catalog):

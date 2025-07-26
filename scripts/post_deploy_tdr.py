@@ -76,7 +76,7 @@ class TerraValidator:
         all_sources: set[TDRSourceSpec] = set()
         with ThreadPoolExecutor(max_workers=8) as tpe:
             for catalog in self.catalogs:
-                catalog_sources = self.repository_plugin(catalog).sources
+                catalog_sources = self.repository_plugin(catalog).sources.keys()
                 for source in catalog_sources - all_sources:
                     futures.append(tpe.submit(self.verify_source, catalog, source))
                 all_sources |= catalog_sources

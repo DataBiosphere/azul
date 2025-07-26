@@ -23,14 +23,16 @@ def mksrc(source_type: Literal['bigquery', 'parquet'],
           ) -> tuple[ProjectName, SourceEntry | None]:
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= pop
-    source = None if flags & pop else ':'.join([
+    source = None if flags & pop else (':'.join([
         'tdr',
         source_type,
         'gcp',
         google_project,
         snapshot,
+        # FIXME: Move prefix from spec to config
+        #        https://github.com/DataBiosphere/azul/issues/7305
         prefix
-    ])
+    ]), {})
     return project, source
 
 

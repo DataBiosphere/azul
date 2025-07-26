@@ -195,7 +195,7 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
 
     @classmethod
     def _sources(cls):
-        return set(map(cls.make_mock_source_spec, cls.mock_source_names))
+        return {cls.make_mock_source_spec(n): {} for n in cls.mock_source_names}
 
     @mock.patch.object(TDRClient, 'snapshot_names_by_id')
     @mock.patch.object(TDRClient, 'validate', new=MagicMock())

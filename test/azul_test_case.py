@@ -497,7 +497,7 @@ class DCP1TestCase(DSSTestCase):
                                         internal=False,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                                      repository=config.Catalog.Plugin(name='dss')),
-                                        sources={str(cls.source.spec)})
+                                        sources={str(cls.source.spec): {}})
         }
 
 
@@ -521,7 +521,7 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
 
     @classmethod
     def _sources(cls):
-        return {str(cls.source.spec)}
+        return {str(cls.source.spec): {}}
 
     @classmethod
     def _patch_source_cache(cls):
@@ -559,7 +559,7 @@ class AnvilTestCase(TDRTestCase):
                                         internal=False,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='anvil'),
                                                      repository=config.Catalog.Plugin(name='tdr_anvil')),
-                                        sources={str(cls.source.spec)})
+                                        sources={str(cls.source.spec): {}})
         }
 
 

@@ -28,6 +28,11 @@ In your personal deployments' ``environment.py`` files:
 1. Update the type annotations for ``mksrc``, ``mkdelta``, ``mkdict``,
    ``mklist``, and ``env``.
 
+2. Update the function body of ``mksrc``.
+
+3. Update the assignment of the ``sources`` parameter in the ``AZUL_CATALOGS``
+   variable.
+
 As always, use the sandbox deployment's ``environment.py`` as a model when
 upgrading personal deployments.
 

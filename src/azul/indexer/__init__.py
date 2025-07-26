@@ -384,6 +384,14 @@ class Prefix:
 Prefix.of_everything = Prefix.parse('/0')
 
 
+@attrs.frozen(kw_only=True)
+class SourceConfig(SerializableAttrs):
+    """
+    Configuration
+    """
+    pass
+
+
 @attrs.frozen(kw_only=True, order=True)
 class SourceSpec(Parseable, metaclass=ABCMeta):
     """

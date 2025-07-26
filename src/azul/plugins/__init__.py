@@ -10,7 +10,6 @@ from inspect import (
     isabstract,
 )
 from typing import (
-    AbstractSet,
     Callable,
     ClassVar,
     Iterable,
@@ -49,6 +48,7 @@ from azul.drs import (
 from azul.indexer import (
     Bundle,
     Prefix,
+    SourceConfig,
     SourceRef,
     SourceSpec,
     SourcedBundleFQID,
@@ -569,11 +569,14 @@ class RepositoryPlugin[BUNDLE: Bundle,
         return cls(catalog=catalog)
 
     @cached_property
-    def sources(self) -> AbstractSet[SOURCE_SPEC]:
+    def sources(self) -> Mapping[SOURCE_SPEC, SourceConfig]:
         """
         The sources the plugin is configured to read metadata from.
         """
-        return frozenset(map(self.parse_source, config.sources(self.catalog)))
+        return {
+            self.parse_source(source_spec): SourceConfig.from_json(source_config)
+            for source_spec, source_config in config.sources(self.catalog).items()
+        }
 
     def _assert_source(self, source: SOURCE_REF):
         """

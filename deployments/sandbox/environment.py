@@ -11,7 +11,7 @@ is_sandbox = True
 pop = 2  # remove snapshot
 
 ProjectName = str
-SourceEntry = str
+SourceEntry = tuple[str, dict]
 
 
 def mksrc(source_type: Literal['bigquery', 'parquet'],
@@ -23,14 +23,16 @@ def mksrc(source_type: Literal['bigquery', 'parquet'],
           ) -> tuple[ProjectName, SourceEntry | None]:
     _, env, project, _ = snapshot.split('_', 3)
     assert flags <= pop
-    source = None if flags & pop else ':'.join([
+    source = None if flags & pop else (':'.join([
         'tdr',
         source_type,
         'gcp',
         google_project,
         snapshot,
+        # FIXME: Move prefix from spec to config
+        #        https://github.com/DataBiosphere/azul/issues/7305
         prefix
-    ])
+    ]), {})
     return project, source
 
 
@@ -233,7 +235,7 @@ def env() -> Mapping[str, str | None]:
                                        internal=internal,
                                        plugins=dict(metadata=dict(name='hca'),
                                                     repository=dict(name='tdr_hca')),
-                                       sources=list(filter(None, sources.values())))
+                                       sources=dict(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp3', dcp3_sources),
                 ('lungmap', 'lungmap', lungmap_sources),
