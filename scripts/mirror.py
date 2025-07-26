@@ -5,6 +5,9 @@ mirroring bucket.
 import argparse
 import logging
 import sys
+from typing import (
+    Iterable,
+)
 
 from azul import (
     CatalogName,
@@ -17,6 +20,9 @@ from azul.args import (
 )
 from azul.azulclient import (
     AzulClient,
+)
+from azul.indexer import (
+    SourceRef,
 )
 from azul.logging import (
     configure_script_logging,
@@ -39,15 +45,16 @@ def mirror_catalog(azul: AzulClient,
         str(source.spec): source
         for source in plugin.list_sources(authentication=None)
     }
+    sources: Iterable[SourceRef]
     if '*' in source_globs:
         sources = public_sources_by_spec.values()
     else:
-        sources = matching_sources(azul.sources_by_catalog([catalog]),
-                                   source_globs)[catalog]
+        source_strs = matching_sources(azul.sources_by_catalog([catalog]),
+                                       source_globs)[catalog]
         try:
             sources = {
                 public_sources_by_spec[source]
-                for source in sources
+                for source in source_strs
             }
         except KeyError as e:
             assert False, R(

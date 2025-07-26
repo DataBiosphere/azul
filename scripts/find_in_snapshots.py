@@ -25,6 +25,9 @@ from azul.bigquery import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.plugins.repository.tdr import (
+    TDRPlugin,
+)
 from azul.terra import (
     TDRSourceSpec,
 )
@@ -38,10 +41,11 @@ def main(args):
 
     azul = AzulClient(num_workers=1)
     sources_by_catalog = azul.sources_by_catalog(args.catalogs)
-    previous_sources = set()
+    previous_sources: set[str] = set()
     for catalog, sources in sources_by_catalog.items():
         sources -= previous_sources
         tdr_plugin = azul.repository_plugin(catalog)
+        assert isinstance(tdr_plugin, TDRPlugin)
         log.info('Checking for %r in catalog %s', args.match, catalog)
         if args.snapshot is not None:
             sources = {s for s in sources if args.snapshot in s}
@@ -53,7 +57,10 @@ def main(args):
             rows = tdr_plugin._run_sql(query)
             table_columns = defaultdict(list)
             for row in rows:
-                table_columns[row[0]].append(row[1])
+                table_name, column_name = row['table_name'], row['column_name']
+                assert isinstance(table_name, str), table_name
+                assert isinstance(column_name, str), column_name
+                table_columns[table_name].append(column_name)
             for table_name, columns in table_columns.items():
                 log.info('Validating table %s', table_name)
                 table = tdr_plugin._full_table_name(source, table_name)

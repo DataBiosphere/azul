@@ -73,12 +73,11 @@ class TerraValidator:
 
     def verify_sources(self) -> None:
         futures = []
-        all_sources = set()
+        all_sources: set[str] = set()
         with ThreadPoolExecutor(max_workers=8) as tpe:
             for catalog in self.catalogs:
                 catalog_sources = config.sources(catalog)
-                for source in catalog_sources - all_sources:
-                    source = TDRSourceSpec.parse(source)
+                for source in map(TDRSourceSpec.parse, catalog_sources - all_sources):
                     futures.append(tpe.submit(self.verify_source, catalog, source))
                 all_sources |= catalog_sources
             for completed_future in as_completed(futures):

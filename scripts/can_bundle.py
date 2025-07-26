@@ -43,6 +43,7 @@ from azul.types import (
     AnyJSON,
     AnyMutableJSON,
     JSON,
+    json_dict,
 )
 
 log = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ def fetch_bundle(source: str, fqid_args: JSON) -> Bundle:
 
 
 @cache
-def plugin_for(catalog):
+def plugin_for(catalog) -> RepositoryPlugin:
     return RepositoryPlugin.load(catalog).create(catalog)
 
 
@@ -135,7 +136,7 @@ def redact_bundle(bundle: Bundle, key: bytes) -> None:
     if isinstance(bundle, AnvilBundle):
         for entity_ref, entity_metadata in bundle.entities.items():
             if entity_ref.entity_type in redacted_entity_types:
-                bundle.entities[entity_ref] = redact_json(entity_metadata, key)
+                bundle.entities[entity_ref] = json_dict(redact_json(entity_metadata, key))
     else:
         raise RuntimeError('HCA bundles do not support redaction', type(bundle))
 
@@ -171,10 +172,16 @@ def redact_json(o: AnyJSON, key: bytes) -> AnyMutableJSON:
             return o
     elif isinstance(o, (int, float)):
         o = struct.unpack('>Q', hashlib.sha1(key + str(o).encode()).digest()[:8])[0]
+        assert isinstance(o, int), o
         return (o & 0xFFFFFFFFFFFF) + 42000000000000000
     elif isinstance(o, list):
+
         # Preserve sorted-ness from AnVIL repository plugin
-        return sorted(redact_json(item, key) for item in o)
+        def sort_key(e: AnyMutableJSON) -> bool | int | float | str:
+            assert isinstance(e, (bool, int, float, str))
+            return e
+
+        return sorted((redact_json(e, key) for e in o), key=sort_key)
     elif isinstance(o, dict):
         return {
             # Preserve references to original dataset
