@@ -11,7 +11,6 @@ from azul import (
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
-    matching_sources,
 )
 from azul.azulclient import (
     AzulClient,
@@ -133,7 +132,6 @@ def main(argv: list[str]):
     every_source = '*' in source_globs
     deindex = args.deindex or (args.delete and not every_source)
     delete = args.delete and every_source
-    sources_by_catalog = azul.sources_by_catalog(args.catalogs)
 
     if every_source:
         if deindex:
@@ -143,12 +141,12 @@ def main(argv: list[str]):
         if args.local:
             parser.error('Cannot specify sources when performing a local reindex')
             assert False
-        sources_by_catalog = matching_sources(sources_by_catalog, source_globs)
 
     if not args.deindex and (args.delete or args.create):
         parser.error('--deindex is incompatible with --create and --delete.')
         assert False
 
+    sources_by_catalog = azul.matching_sources(args.catalogs, source_globs)
     azul.require_no_failures_before()
 
     if deindex:

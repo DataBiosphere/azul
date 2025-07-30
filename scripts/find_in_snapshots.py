@@ -15,7 +15,6 @@ from azul import (
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
-    matching_sources,
 )
 from azul.azulclient import (
     AzulClient,
@@ -41,10 +40,8 @@ def main(args):
     declined_snapshots = list()
 
     azul = AzulClient(num_workers=1)
-    sources_by_catalog = azul.sources_by_catalog(args.catalogs)
     source_globs = set(args.sources)
-    if '*' not in source_globs:
-        sources_by_catalog = matching_sources(sources_by_catalog, source_globs)
+    sources_by_catalog = azul.matching_sources(args.catalogs, source_globs)
 
     previous_sources: set[str] = set()
     for catalog, sources in sources_by_catalog.items():

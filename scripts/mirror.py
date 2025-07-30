@@ -16,7 +16,6 @@ from azul import (
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
-    matching_sources,
 )
 from azul.azulclient import (
     AzulClient,
@@ -53,8 +52,7 @@ def mirror_catalog(azul: AzulClient,
     if '*' in source_globs:
         sources = public_sources_by_spec.values()
     else:
-        source_strs = matching_sources(azul.sources_by_catalog([catalog]),
-                                       source_globs)[catalog]
+        source_strs = azul.matching_sources([catalog], source_globs)[catalog]
         try:
             sources = {
                 public_sources_by_spec[source]

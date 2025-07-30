@@ -11,6 +11,7 @@ from concurrent.futures import (
 from enum import (
     auto,
 )
+import fnmatch
 from functools import (
     partial,
 )
@@ -19,6 +20,7 @@ from pprint import (
     PrettyPrinter,
 )
 from typing import (
+    AbstractSet,
     cast,
 )
 import uuid
@@ -226,13 +228,32 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
         if errors or missing:
             raise AzulClientNotificationError
 
-    def sources_by_catalog(self,
-                           catalogs: Iterable[CatalogName]
-                           ) -> dict[CatalogName, set[str]]:
-        return {
-            catalog: set(config.sources(catalog))
-            for catalog in catalogs
-        }
+    def matching_sources(self,
+                         catalogs: Iterable[CatalogName],
+                         source_globs: AbstractSet[str] = frozenset('*')
+                         ) -> dict[CatalogName, set[str]]:
+        result = {}
+        globs_matched = set()
+        only_matching = '*' not in source_globs
+        for catalog in catalogs:
+            sources = set(config.sources(catalog))
+            catalog_matches = set()
+            if only_matching:
+                for source_glob in source_globs:
+                    matches = fnmatch.filter(sources, source_glob)
+                    if matches:
+                        globs_matched.add(source_glob)
+                    log.debug('Source glob %r matched sources %r in catalog %r',
+                              source_glob, matches, catalog)
+                    catalog_matches.update(matches)
+                result[catalog] = catalog_matches
+        if only_matching:
+            unmatched = source_globs - globs_matched
+            if unmatched:
+                log.warning('Source(s) not found in any catalog: %r', unmatched)
+        assert any(result.values()), R(
+            'No valid sources specified for any catalog')
+        return result
 
     def mirror_queue(self):
         name = config.mirror_queue.name
