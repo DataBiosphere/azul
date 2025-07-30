@@ -571,7 +571,7 @@ class RepositoryPlugin[BUNDLE: Bundle,
     @abstractmethod
     def sources(self) -> AbstractSet[SOURCE_SPEC]:
         """
-        The names of the sources the plugin is configured to read metadata from.
+        The sources the plugin is configured to read metadata from.
         """
         raise NotImplementedError
 
