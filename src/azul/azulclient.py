@@ -131,6 +131,7 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
 
     def local_reindex(self, catalog: CatalogName, prefix: str) -> int:
         service = self.index_repository_service
+        plugin = self.repository_plugin(catalog)
         notifications: JSONs = [
             # Notifications sent organically by DSS had a different structure,
             # but since DSS is long gone these synthetic notifications are now
@@ -139,7 +140,7 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
                 'transaction_id': str(uuid.uuid4()),
                 'bundle_fqid': bundle_fqid.to_json()
             }
-            for source in config.sources(catalog)
+            for source in map(plugin.resolve_source, config.sources(catalog))
             for bundle_fqid in service.list_bundles(catalog, source, prefix)
         ]
         self.index(catalog, notifications)

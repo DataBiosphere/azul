@@ -31,14 +31,10 @@ class IndexRepositoryService:
 
     def list_bundles(self,
                      catalog: CatalogName,
-                     source: str | SourceRef,
+                     source: SourceRef,
                      prefix: str
                      ) -> list[SourcedBundleFQID]:
         plugin = self.repository_plugin(catalog)
-        if isinstance(source, str):
-            source = plugin.resolve_source(source)
-        else:
-            assert isinstance(source, SourceRef), source
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = plugin.list_bundles(source, prefix)
         log.info('There are %i bundle(s) with prefix %r in source %r.',
