@@ -288,7 +288,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         public_sources = self._public_tdr_client.snapshot_names_by_id()
         all_sources = self._tdr_client.snapshot_names_by_id()
         configured_sources = {
-            catalog: [TDRSourceSpec.parse(source) for source in config.sources(catalog)]
+            catalog: self.repository_plugin(catalog).sources
             for catalog in config.integration_test_catalogs
             if config.is_tdr_enabled(catalog)
         }
@@ -319,10 +319,10 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                        sources.
         """
         plugin = self.repository_plugin(catalog)
-        sources = set(config.sources(catalog))
+        sources = set(plugin.sources)
         if public is not None:
             ma_sources = {
-                str(source.spec)
+                source.spec
                 # This would raise a KeyError during the can bundle script test
                 # due to it using a mock catalog, so we only evaluate it when
                 # it's actually needed

@@ -54,6 +54,7 @@ from azul.http import (
 )
 from azul.indexer import (
     SourceRef,
+    SourceSpec,
 )
 from azul.indexer.index_queue_service import (
     IndexQueueService,
@@ -232,16 +233,17 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
     def matching_sources(self,
                          catalogs: Iterable[CatalogName],
                          source_globs: AbstractSet[str] = frozenset('*')
-                         ) -> dict[CatalogName, set[str]]:
+                         ) -> dict[CatalogName, set[SourceSpec]]:
         result = {}
         globs_matched = set()
         only_matching = '*' not in source_globs
         for catalog in catalogs:
-            sources = set(config.sources(catalog))
-            catalog_matches = set()
+            plugin = self.repository_plugin(catalog)
+            sources = set(plugin.sources)
+            catalog_matches: set[SourceSpec] = set()
             if only_matching:
                 for source_glob in source_globs:
-                    matches = fnmatch.filter(sources, source_glob)
+                    matches = [s for s in sources if fnmatch.fnmatch(str(s), source_glob)]
                     if matches:
                         globs_matched.add(source_glob)
                     log.debug('Source glob %r matched sources %r in catalog %r',
@@ -284,7 +286,7 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
         ]
         self.index(catalog, notifications, delete=True)
 
-    def deindex(self, catalog: CatalogName, sources: Iterable[str]):
+    def deindex(self, catalog: CatalogName, sources: Iterable[SourceSpec]):
         plugin = self.repository_plugin(catalog)
         source_ids = [plugin.resolve_source(s).id for s in sources]
         es_client = ESClientFactory.get()

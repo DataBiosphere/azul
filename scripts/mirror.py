@@ -41,7 +41,7 @@ def mirror_catalog(azul: AzulClient,
         'there are still messages in the fail queue.',
         fail_queue)
     public_sources_by_spec = {
-        str(source.spec): source
+        source.spec: source
         for source in plugin.list_sources(authentication=None)
     }
     sources: Iterable[SourceRef]
@@ -52,11 +52,11 @@ def mirror_catalog(azul: AzulClient,
     if '*' in source_globs:
         sources = public_sources_by_spec.values()
     else:
-        source_strs = azul.matching_sources([catalog], source_globs)[catalog]
+        source_specs = azul.matching_sources([catalog], source_globs)[catalog]
         try:
             sources = {
-                public_sources_by_spec[source]
-                for source in source_strs
+                public_sources_by_spec[spec]
+                for spec in source_specs
             }
         except KeyError as e:
             assert False, R(

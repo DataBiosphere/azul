@@ -26,6 +26,7 @@ from azul.deployment import (
 from azul.indexer import (
     BundlePartition,
     SourceRef,
+    SourceSpec,
 )
 from azul.indexer.document import (
     Contribution,
@@ -141,7 +142,7 @@ class IndexQueueService:
             }
         )
 
-    def remote_reindex(self, catalog: CatalogName, sources: set[str]):
+    def remote_reindex(self, catalog: CatalogName, sources: Iterable[SourceSpec]):
         service = self.index_repository_service
         plugin = service.repository_plugin(catalog)
         for source_spec in sources:

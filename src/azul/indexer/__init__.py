@@ -384,7 +384,7 @@ class Prefix:
 Prefix.of_everything = Prefix.parse('/0')
 
 
-@attrs.frozen(kw_only=True)
+@attrs.frozen(kw_only=True, order=True)
 class SourceSpec(Parseable, metaclass=ABCMeta):
     """
     The name of a repository source containing bundles to index. A repository

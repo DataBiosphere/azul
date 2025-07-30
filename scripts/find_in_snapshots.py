@@ -22,6 +22,9 @@ from azul.azulclient import (
 from azul.bigquery import (
     backtick,
 )
+from azul.indexer import (
+    SourceSpec,
+)
 from azul.logging import (
     configure_script_logging,
 )
@@ -43,15 +46,15 @@ def main(args):
     source_globs = set(args.sources)
     sources_by_catalog = azul.matching_sources(args.catalogs, source_globs)
 
-    previous_sources: set[str] = set()
+    previous_sources: set[SourceSpec] = set()
     for catalog, sources in sources_by_catalog.items():
         sources -= previous_sources
         tdr_plugin = azul.repository_plugin(catalog)
         assert isinstance(tdr_plugin, TDRPlugin)
         log.info('Checking for %r in catalog %s', args.match, catalog)
-        for spec in sources:
-            log.info('Validating snapshot %s', spec)
-            source = TDRSourceSpec.parse(spec)
+        for source in sources:
+            assert isinstance(source, TDRSourceSpec)
+            log.info('Validating snapshot %s', source)
             tables = tdr_plugin._full_table_name(source, 'INFORMATION_SCHEMA.COLUMNS')
             query = f'SELECT table_name, column_name FROM {backtick(tables)}'
             rows = tdr_plugin._run_sql(query)
@@ -74,7 +77,7 @@ def main(args):
                     for row in result:
                         match = {
                             'catalog': catalog,
-                            'spec': spec,
+                            'spec': source,
                             'table': table,
                             'column': column,
                             'row_id': row['datarepo_row_id'],
