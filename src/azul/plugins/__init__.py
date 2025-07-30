@@ -651,14 +651,15 @@ class RepositoryPlugin[BUNDLE: Bundle,
     def parse_source(self, spec: str) -> SOURCE_SPEC:
         return self.source_ref_cls.spec_cls().parse(spec)
 
-    def resolve_source(self, spec: str) -> SOURCE_REF:
+    def resolve_source(self, spec: SOURCE_SPEC) -> SOURCE_REF:
         """
         Return an instance of :class:`SourceRef` for the repository source
         matching the given specification or raise an exception if no such source
         exists.
         """
         ref_cls = self.source_ref_cls
-        spec = self.parse_source(spec)
+        spec_cls = ref_cls.spec_cls()
+        assert isinstance(spec, spec_cls), spec
         id = self._lookup_source_id(spec)
         return ref_cls(id=id, spec=spec)
 

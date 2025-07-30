@@ -93,10 +93,11 @@ def fetch_bundle(source: str, fqid_args: JSON) -> Bundle:
     for catalog in config.catalogs:
         plugin = plugin_for(catalog)
         try:
-            source_ref = plugin.resolve_source(source)
+            source_spec = plugin.parse_source(source)
         except Exception:
             log.debug('Skipping catalog %r (incompatible source)', catalog)
         else:
+            source_ref = plugin.resolve_source(source_spec)
             log.debug('Searching for %r in catalog %r', source, catalog)
             for plugin_source_spec in plugin.sources:
                 if source_ref.spec.eq_ignoring_prefix(plugin_source_spec):
