@@ -131,9 +131,15 @@ def main(argv: list[str]):
 
     source_globs = set(args.sources)
     every_source = '*' in source_globs
+    deindex = args.deindex or (args.delete and not every_source)
+    delete = args.delete and every_source
     sources_by_catalog = azul.sources_by_catalog(args.catalogs)
 
-    if not every_source:
+    if every_source:
+        if deindex:
+            parser.error('--deindex is incompatible with source `*`. Use --delete instead.')
+            assert False
+    else:
         if args.local:
             parser.error('Cannot specify sources when performing a local reindex')
             assert False
@@ -144,13 +150,8 @@ def main(argv: list[str]):
         assert False
 
     azul.require_no_failures_before()
-    deindex = args.deindex or (args.delete and not every_source)
-    delete = args.delete and every_source
 
     if deindex:
-        if every_source:
-            parser.error('--deindex is incompatible with source `*`. Use --delete instead.')
-            assert False
         for catalog, sources in sources_by_catalog.items():
             if sources:
                 azul.deindex(catalog, sources)
