@@ -20,6 +20,18 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#7305 Refactor source configuration
+===================================
+
+In your personal deployments' ``environment.py`` files:
+
+1. Update the type annotations for ``mksrc``, ``mkdelta``, ``mkdict``,
+   ``mklist``, and ``env``.
+
+As always, use the sandbox deployment's ``environment.py`` as a model when
+upgrading personal deployments.
+
+
 #7076 Populate schema property in info objects
 ==============================================
 
