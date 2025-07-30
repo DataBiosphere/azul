@@ -8,7 +8,6 @@ import sys
 
 from azul import (
     config,
-    reject,
 )
 from azul.args import (
     AzulArgumentHelpFormatter,
@@ -140,16 +139,18 @@ def main(argv: list[str]):
             assert False
         sources_by_catalog = matching_sources(sources_by_catalog, source_globs)
 
-    reject(args.deindex and (args.delete or args.create),
-           '--deindex is incompatible with --create and --delete.')
+    if not args.deindex and (args.delete or args.create):
+        parser.error('--deindex is incompatible with --create and --delete.')
+        assert False
 
     azul.require_no_failures_before()
     deindex = args.deindex or (args.delete and not every_source)
     delete = args.delete and every_source
 
     if deindex:
-        reject(every_source, '--deindex is incompatible with source `*`. '
-                             'Use --delete instead.')
+        if every_source:
+            parser.error('--deindex is incompatible with source `*`. Use --delete instead.')
+            assert False
         for catalog, sources in sources_by_catalog.items():
             if sources:
                 azul.deindex(catalog, sources)
