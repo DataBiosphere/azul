@@ -548,32 +548,32 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         raise NotImplementedError
 
 
+@attrs.frozen(auto_attribs=True, kw_only=True)
 class RepositoryPlugin[BUNDLE: Bundle,
                        SOURCE_SPEC: SourceSpec,
                        SOURCE_REF: SourceRef,
                        BUNDLE_FQID: SourcedBundleFQID](
     Plugin[BUNDLE]
 ):
+    catalog: CatalogName
 
     @classmethod
     def type_name(cls) -> str:
         return 'repository'
 
     @classmethod
-    @abstractmethod
     def create(cls, catalog: CatalogName) -> Self:
         """
         Return a plugin instance suitable for populating the given catalog.
         """
-        raise NotImplementedError
+        return cls(catalog=catalog)
 
-    @property
-    @abstractmethod
+    @cached_property
     def sources(self) -> AbstractSet[SOURCE_SPEC]:
         """
         The sources the plugin is configured to read metadata from.
         """
-        raise NotImplementedError
+        return frozenset(map(self.parse_source, config.sources(self.catalog)))
 
     def _assert_source(self, source: SOURCE_REF):
         """
@@ -648,6 +648,9 @@ class RepositoryPlugin[BUNDLE: Bundle,
         assert issubclass(fqid_cls, SourcedBundleFQID), fqid_cls
         return cast(type[BUNDLE_FQID], fqid_cls)
 
+    def parse_source(self, spec: str) -> SOURCE_SPEC:
+        return self.source_ref_cls.spec_cls().parse(spec)
+
     def resolve_source(self, spec: str) -> SOURCE_REF:
         """
         Return an instance of :class:`SourceRef` for the repository source
@@ -655,7 +658,7 @@ class RepositoryPlugin[BUNDLE: Bundle,
         exists.
         """
         ref_cls = self.source_ref_cls
-        spec = ref_cls.spec_cls().parse(spec)
+        spec = self.parse_source(spec)
         id = self._lookup_source_id(spec)
         return ref_cls(id=id, spec=spec)
 

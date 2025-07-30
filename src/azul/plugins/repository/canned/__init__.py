@@ -7,9 +7,6 @@ area, and should not be used to create catalogs on a deployment. It can however
 be used with the `can_bundle.py` script to create a local canned bundle from the
 files in the canned staging area.
 """
-from dataclasses import (
-    dataclass,
-)
 import logging
 from pathlib import (
     Path,
@@ -18,18 +15,13 @@ from tempfile import (
     TemporaryDirectory,
 )
 import time
-from typing import (
-    AbstractSet,
-)
 
 from furl import (
     furl,
 )
 
 from azul import (
-    CatalogName,
     R,
-    config,
     lru_cache,
 )
 from azul.auth import (
@@ -88,30 +80,15 @@ class CannedBundle(HCABundle[CannedBundleFQID]):
         return 'dss'
 
 
-@dataclass(frozen=True)
 class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, CannedBundleFQID],
              HasCachedHttpClient):
-    _sources: AbstractSet[SimpleSourceSpec]
-
-    @classmethod
-    def create(cls, catalog: CatalogName) -> RepositoryPlugin:
-        return cls(
-            frozenset(
-                SimpleSourceSpec.parse(name)
-                for name in config.sources(catalog)
-            )
-        )
-
-    @property
-    def sources(self) -> AbstractSet[SimpleSourceSpec]:
-        return self._sources
 
     def list_sources(self,
                      authentication: Authentication | None
                      ) -> list[CannedSourceRef]:
         return [
             CannedSourceRef(id=self._lookup_source_id(spec), spec=spec)
-            for spec in self._sources
+            for spec in self.sources
         ]
 
     def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
@@ -131,7 +108,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
         :return: A tuple containing the URL of a GitHub repository, a relative
                  path inside that repository, and a Git ref.
 
-        >>> plugin = Plugin(_sources=set())
+        >>> plugin = Plugin(catalog='')
 
         >>> plugin.parse_github_url(furl('https://github.com/OWNER/NAME/tree/REF/tests'))
         (furl('https://github.com/OWNER/NAME.git'), PosixPath('tests'), 'REF')
@@ -237,7 +214,7 @@ class Plugin(RepositoryPlugin[CannedBundle, SimpleSourceSpec, CannedSourceRef, C
 
     def _construct_file_url(self, url: furl, file_name: str) -> furl:
         """
-        >>> plugin = Plugin(_sources=set())
+        >>> plugin = Plugin(catalog='')
         >>> url = furl('https://github.com/OWNER/REPO/tree/REF/tests')
 
         >>> plugin._construct_file_url(url, 'foo.zip')

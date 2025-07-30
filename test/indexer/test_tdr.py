@@ -174,7 +174,7 @@ class TDRPluginTestCase(TDRTestCase,
     @cached_property
     def plugin(self) -> TDR_PLUGIN:
         plugin_cls = self._plugin_cls()
-        return plugin_cls(sources={self.source.spec})
+        return plugin_cls(catalog=self.catalog)
 
     netloc: tuple[str, int] | None = None
 

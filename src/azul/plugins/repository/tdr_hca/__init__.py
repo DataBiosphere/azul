@@ -469,7 +469,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRBundleFQID]):
             values: Iterable[tuple[str, ...]]
             ) -> str:
         """
-        >>> plugin = Plugin(sources=set())
+        >>> plugin = Plugin(catalog='')
         >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
         '(foo, bar) IN (("abc", 123), ("def", 456))'
         """

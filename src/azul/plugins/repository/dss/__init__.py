@@ -1,7 +1,6 @@
 import logging
 import time
 from typing import (
-    AbstractSet,
     NoReturn,
 )
 import urllib
@@ -21,7 +20,6 @@ from more_itertools import (
 import requests
 
 from azul import (
-    CatalogName,
     config,
 )
 from azul.auth import (
@@ -99,20 +97,8 @@ class DSSBundle(HCABundle[DSSBundleFQID]):
                         args={'version': file_version}))
 
 
-@attrs.frozen()
 class Plugin(RepositoryPlugin[DSSBundle, SimpleSourceSpec, DSSSourceRef, DSSBundleFQID],
              HasCachedHttpClient):
-    source: str
-
-    @classmethod
-    def create(cls, catalog: CatalogName) -> RepositoryPlugin:
-        return cls(source=one(config.sources(catalog)))
-
-    @property
-    def sources(self) -> AbstractSet[SimpleSourceSpec]:
-        return {
-            SimpleSourceSpec.parse(self.source)
-        }
 
     def _lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)

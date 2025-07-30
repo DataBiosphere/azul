@@ -2172,7 +2172,7 @@ class TestIndexResponse(IndexResponseTestCase):
         for entity_type in filtered_entity_types:
             _test(entity_type, expect_empty=False, expect_accessible=True)
 
-        with mock.patch('azul.plugins.repository.dss.Plugin.sources', return_value=[]):
+        with mock.patch('azul.plugins.repository.dss.Plugin.list_sources', return_value=[]):
             for entity_type, is_filtered in filtered_entity_types.items():
                 _test(entity_type, expect_empty=is_filtered, expect_accessible=False)
 
