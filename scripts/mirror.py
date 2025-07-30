@@ -46,6 +46,10 @@ def mirror_catalog(azul: AzulClient,
         for source in plugin.list_sources(authentication=None)
     }
     sources: Iterable[SourceRef]
+    # When the user doesn't specify a source or provides "*" as a source glob,
+    # we implicitly filter out managed access sources. This lets us assert all
+    # sources matching the provided are public, without forcing the user to
+    # manually specify every public source.
     if '*' in source_globs:
         sources = public_sources_by_spec.values()
     else:
