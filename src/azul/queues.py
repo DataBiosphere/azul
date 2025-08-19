@@ -246,8 +246,12 @@ class Queues:
                          queue: 'Queue'):
         for message_batch in message_batches:
             response = queue.delete_messages(
-                Entries=[dict(Id=message.message_id,
-                              ReceiptHandle=message.receipt_handle) for message in message_batch])
+                Entries=[
+                    dict(Id=message.message_id,
+                         ReceiptHandle=message.receipt_handle)
+                    for message in message_batch
+                ]
+            )
             if len(response['Successful']) != len(message_batch):
                 raise RuntimeError(f'Failed to delete messages: {response!r}')
 
