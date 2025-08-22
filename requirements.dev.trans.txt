@@ -13,12 +13,12 @@ inquirer==3.4.1
 jinja2==3.1.6
 jsonschema-path==0.3.4
 jsonschema-specifications==2025.4.1
-lazy-object-proxy==1.11.0
+lazy-object-proxy==1.12.0
 mccabe==0.7.0
 mypy-boto3-apigateway==1.40.0
 mypy-boto3-cloudwatch==1.40.0
 mypy-boto3-dynamodb==1.40.14
-mypy-boto3-ec2==1.40.13
+mypy-boto3-ec2==1.40.18
 mypy-boto3-ecr==1.40.0
 mypy-boto3-es==1.40.15
 mypy-boto3-iam==1.40.0
@@ -28,7 +28,7 @@ mypy-boto3-s3==1.40.0
 mypy-boto3-secretsmanager==1.40.0
 mypy-boto3-securityhub==1.40.1
 mypy-boto3-sns==1.40.1
-mypy-boto3-sqs==1.40.0
+mypy-boto3-sqs==1.40.17
 mypy-boto3-ssm==1.40.0
 mypy-boto3-stepfunctions==1.40.0
 mypy-boto3-sts==1.40.0

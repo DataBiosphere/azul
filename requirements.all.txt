@@ -54,7 +54,7 @@ jq==1.10.0
 jsonschema==4.25.0
 jsonschema-path==0.3.4
 jsonschema-specifications==2025.4.1
-lazy-object-proxy==1.11.0
+lazy-object-proxy==1.12.0
 markupsafe==3.0.2
 mccabe==0.7.0
 more-itertools==10.7.0
@@ -64,7 +64,7 @@ mypy==1.17.1
 mypy-boto3-apigateway==1.40.0
 mypy-boto3-cloudwatch==1.40.0
 mypy-boto3-dynamodb==1.40.14
-mypy-boto3-ec2==1.40.13
+mypy-boto3-ec2==1.40.18
 mypy-boto3-ecr==1.40.0
 mypy-boto3-es==1.40.15
 mypy-boto3-iam==1.40.0
@@ -74,7 +74,7 @@ mypy-boto3-s3==1.40.0
 mypy-boto3-secretsmanager==1.40.0
 mypy-boto3-securityhub==1.40.1
 mypy-boto3-sns==1.40.1
-mypy-boto3-sqs==1.40.0
+mypy-boto3-sqs==1.40.17
 mypy-boto3-ssm==1.40.0
 mypy-boto3-stepfunctions==1.40.0
 mypy-boto3-sts==1.40.0
@@ -127,7 +127,7 @@ types-awscrt==0.27.6
 types-chevron==0.14.2
 types-s3transfer==0.13.0
 types-urllib3==1.26.25.14
-typing_extensions==4.14.1
+typing_extensions==4.15.0
 uritemplate==4.2.0
 urllib3==1.26.20
 watchdog==6.0.0
