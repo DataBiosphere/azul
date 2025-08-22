@@ -110,7 +110,7 @@ readchar==4.2.1
 referencing==0.36.2
 requests==2.32.4
 requests-toolbelt==1.0.0
-requirements-parser==0.2.0+1
+requirements-parser==0.13.0+2
 responses==0.25.7
 resumablehash==1.2
 rfc3339-validator==0.1.4
