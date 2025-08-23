@@ -1,7 +1,3 @@
-from __future__ import (
-    annotations,
-)
-
 from collections.abc import (
     Mapping,
     Sequence,
@@ -93,10 +89,10 @@ class StorageService:
         self.bucket_name = bucket_name
 
     @property
-    def _s3(self) -> S3Client:
+    def _s3(self) -> 'S3Client':
         return aws.s3
 
-    def head(self, object_key: str) -> HeadObjectOutputTypeDef:
+    def head(self, object_key: str) -> 'HeadObjectOutputTypeDef':
         try:
             return self._s3.head_object(Bucket=self.bucket_name,
                                         Key=object_key)
@@ -161,31 +157,32 @@ class StorageService:
     def create_multipart_upload(self,
                                 object_key: str,
                                 content_type: str | None = None,
-                                tagging: Tagging | None = None) -> MultipartUpload:
+                                tagging: Tagging | None = None
+                                ) -> 'MultipartUpload':
         kwargs = self._object_creation_kwargs(content_type=content_type,
                                               tagging=tagging)
         return self._create_multipart_upload(object_key=object_key, **kwargs)
 
-    def _create_multipart_upload(self, *, object_key, **kwargs) -> MultipartUpload:
+    def _create_multipart_upload(self, *, object_key, **kwargs) -> 'MultipartUpload':
         api_response = self._s3.create_multipart_upload(Bucket=self.bucket_name,
                                                         Key=object_key,
                                                         **kwargs)
         upload_id = api_response['UploadId']
         return self.load_multipart_upload(object_key, upload_id)
 
-    def load_multipart_upload(self, object_key, upload_id) -> MultipartUpload:
+    def load_multipart_upload(self, object_key, upload_id) -> 'MultipartUpload':
         s3 = aws.s3_resource
         return s3.MultipartUpload(self.bucket_name, object_key, upload_id)
 
     def upload_multipart_part(self,
                               buffer: str | bytes | IO | StreamingBody,
                               part_number: int,
-                              upload: MultipartUpload
+                              upload: 'MultipartUpload'
                               ) -> str:
         return upload.Part(part_number).upload(Body=buffer)['ETag']
 
     def complete_multipart_upload(self,
-                                  upload: MultipartUpload,
+                                  upload: 'MultipartUpload',
                                   etags: Sequence[str],
                                   *,
                                   overwrite: bool = True,
@@ -311,7 +308,7 @@ class StorageService:
         return self._time_until_object_expires(response, expiration)
 
     def _time_until_object_expires(self,
-                                   head_response: HeadObjectOutputTypeDef,
+                                   head_response: 'HeadObjectOutputTypeDef',
                                    expiration: int
                                    ) -> float:
         now = datetime.now(timezone.utc)

@@ -1,7 +1,3 @@
-from __future__ import (
-    annotations,
-)
-
 from abc import (
     ABCMeta,
     abstractmethod,
@@ -95,7 +91,7 @@ class BaseAccumulator[V, A](Accumulator[V, A], metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class SumAccumulator[V:SupportsAdd](BaseAccumulator[V | None, V | None]):
+class SumAccumulator[V: 'SupportsAdd'](BaseAccumulator[V | None, V | None]):
     """
     Add values.
 
@@ -136,7 +132,7 @@ class SetAccumulator[V: Hashable](Accumulator[V, list[V]]):
 
     def __init__(self,
                  max_size: int | None = None,
-                 key: Callable[[V], SupportsRichComparison] | None = None
+                 key: Callable[[V], 'SupportsRichComparison'] | None = None
                  ) -> None:
         """
         :param max_size: the maximum number of elements to retain
