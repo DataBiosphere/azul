@@ -1,7 +1,6 @@
 from contextlib import (
     contextmanager,
 )
-import json
 import logging
 from typing import (
     Any,
@@ -189,30 +188,27 @@ def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> st
 
     :param body: the request or response body to be logged
     """
-    debug, max_len = azul.config.debug, 1024
+    debug = azul.config.debug
+    max_len = 1024 * 1024 if debug > 1 else 1024
     assert debug >= 0, debug
     if body is None:
         return f'… without a {kind} body'
     elif isinstance(body, (str, bytes, bytearray)):
         if debug == 0:
             return f'… with a {kind} body of length {len(body)} and type {type(body)!r}'
-        elif debug == 1 and len(body) > max_len:
+        elif len(body) <= max_len:
+            return f'… with a {kind} body of length {len(body)} being {body !r}'
+        else:
             # https://github.com/python/typing/discussions/1911
             prefix = trunc_ellipses(body, max_len)  # type: ignore[type-var]
             return f'… with a {kind} body of length {len(body)} starting in {prefix!r}'
-        else:
-            return f'… with a {kind} body of length {len(body)} being {body !r}'
     elif isinstance(body, json_body_types):
         if debug == 0:
             pass  # fall through to the default
         else:
-            if debug == 1:
-                repr_prefix, is_complete = json_head(max_len, body)
-                if is_complete:
-                    repr = repr_prefix
-                else:
-                    return f'… with a {kind} body starting in {repr_prefix}'
+            repr, is_complete = json_head(max_len, body)
+            if is_complete:
+                return f'… with a {kind} body of length {len(repr)} being {repr}'
             else:
-                repr = json.dumps(body)
-            return f'… with a {kind} body of length {len(repr)} being {repr}'
+                return f'… with a {kind} body starting in {repr}'
     return f'… with a {kind} body of type ({type(body)!r})'
