@@ -28,6 +28,10 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
 		false; \
 	fi
+	@if ! python -c 'pass'; then \
+		echo -e "\nPython failed. This is most likely an issue with envhook.py aka sitecustomize.\n"; \
+		false; \
+	fi
 	@if ! python -c "import sys, os; \
 		             p = lambda v: tuple(map(int, v.split('.'))); \
 		             v = os.environ['azul_python_version']; \
