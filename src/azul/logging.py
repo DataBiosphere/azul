@@ -71,7 +71,6 @@ def configure_app_logging(app: 'AzulChaliceApp', *loggers):
             handler = one(root_logger.handlers)
             root_formatter = logging.Formatter(lambda_log_format, lambda_log_date_format)
             handler.setFormatter(root_formatter)
-            root_logger.addHandler(handler)
         else:
             # Otherwise, we're running `chalice local`
             handler = logging.StreamHandler()
