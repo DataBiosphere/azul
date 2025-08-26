@@ -61,12 +61,11 @@ def configure_app_logging(app: 'AzulChaliceApp', *loggers):
         # Environment is not unit test
         root_logger = logging.getLogger()
         if root_logger.hasHandlers():
-            # If a handler is already present, assume we're running in AWS Lambda. The
-            # handler is setup by AWS Lambda's bootstrap.py, around line 443. That
-            # module can be found on GitHub, in the repository linked below. Note
-            # that one must extract the image tarball to get to the module.
+            # If a handler is already present, we're running on AWS Lambda. See
             #
-            # https://github.com/aws/aws-lambda-base-images/tree/python3.12
+            # https://github.com/aws/aws-lambda-python-runtime-interface-client/blob/3f43f4d0/awslambdaric/bootstrap.py#L454
+            #
+            # for details.
             #
             handler = one(root_logger.handlers)
             root_formatter = logging.Formatter(lambda_log_format, lambda_log_date_format)
@@ -74,7 +73,9 @@ def configure_app_logging(app: 'AzulChaliceApp', *loggers):
         else:
             # Otherwise, we're running `chalice local`
             handler = logging.StreamHandler()
-            logging.basicConfig(format=lambda_log_format, datefmt=lambda_log_date_format, handlers=[handler])
+            logging.basicConfig(format=lambda_log_format,
+                                datefmt=lambda_log_date_format,
+                                handlers=[handler])
         handler.addFilter(LambdaLogFilter(app))
 
 
