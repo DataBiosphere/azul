@@ -41,6 +41,29 @@ class LambdaLogFilter(logging.Filter):
             record.aws_request_id = '00010ca1-b0ba-466f-8c58-dabbad000000'
         else:
             record.aws_request_id = self.app.lambda_context.aws_request_id
+
+        # The boto3.resources.action logger logs request parameters verbatim at
+        # level DEBUG, which is enabled when AZUL_DEBUG is 2. That logger is
+        # used for all Boto3 resources, one of which is MultipartUpload, which
+        # StorageService uses to upload parts to S3 during mirroring. The parts
+        # are very large, causing a memory error when the log message is being
+        # prepared in an AWS Lambda function with limited memory. We need to
+        # truncate the parameters to a reasonable size.
+        #
+        if azul.config.debug > 1 and record.name == 'boto3.resources.action':
+
+            def truncate(arg):
+                if isinstance(arg, string_types):
+                    return arg[:max_log_arg_len]
+                elif isinstance(arg, dict):
+                    return {k: truncate(v) for k, v in arg.items()}
+                elif isinstance(arg, (tuple, list)):
+                    return type(arg)(map(truncate, arg))
+                else:
+                    return arg
+
+            record.args = truncate(record.args)
+
         return True
 
 
@@ -176,6 +199,10 @@ def silenced_es_logger():
 
 json_body_types = reify(JSON)
 
+string_types = str, bytes, bytearray
+
+max_log_arg_len = 1024 * 1024
+
 
 def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> str:
     """
@@ -189,11 +216,11 @@ def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> st
     :param body: the request or response body to be logged
     """
     debug = azul.config.debug
-    max_len = 1024 * 1024 if debug > 1 else 1024
+    max_len = max_log_arg_len if debug > 1 else 1024
     assert debug >= 0, debug
     if body is None:
         return f'… without a {kind} body'
-    elif isinstance(body, (str, bytes, bytearray)):
+    elif isinstance(body, string_types):
         if debug == 0:
             return f'… with a {kind} body of length {len(body)} and type {type(body)!r}'
         elif len(body) <= max_len:
