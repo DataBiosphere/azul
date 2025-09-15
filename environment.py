@@ -296,11 +296,11 @@ def env() -> Mapping[str, Optional[str]]:
             # See `azul_python_version` above about what actions are required
             # after modifying this entry.
             'python': {
-                'ref': 'docker.io/library/python:{azul_python_version}-slim-bookworm',
+                'ref': 'docker.io/library/python:{azul_python_version}-slim-trixie',
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2024.3.6-61',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2024.3.6-62',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
@@ -310,7 +310,7 @@ def env() -> Mapping[str, Optional[str]]:
                 'is_custom': False
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-43',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-44',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },

@@ -8,7 +8,7 @@ _start: 2023-11-27T09:00
 _period: 14 days
 ---
 - [ ] Update [PyCharm image](https://github.com/DataBiosphere/azul-docker-pycharm)
-  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=bookworm) tag (only same Debian release), if possible
+  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=trixie) `-slim` tag (only same Debian release), if possible
   - [ ] Bump upstream version, if possible
   - [ ] Bump internal version
   - [ ] Remove unused dependencies with high or critical CVEs
@@ -16,7 +16,7 @@ _period: 14 days
   - [ ] GH Action workflow succeeded
   - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm/tags) 
 - [ ] Update [BigQuery Emulator image](https://github.com/DataBiosphere/azul-bigquery-emulator)
-  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=bookworm) tag, if possible
+  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=trixie) `-slim` tag, if possible
   - [ ] Bump internal version 
   - [ ] Push commit to GitHub (directly to `azul` branch, no PR needed)
   - [ ] GH Action workflow succeeded
