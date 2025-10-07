@@ -1915,7 +1915,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Unit]',
                                 'Description=Scheduled ClamAV malware scan of entire file system',
                                 '[Timer]',
-                                # Start service every hour unless already running
+                                # UTC time is in effect for the following
+                                # schedule, is +8 hours ahead of PST. 15:00 UTC
+                                # would be 07:00 PST.
+                                # Starts service hourly unless already running.
                                 'OnCalendar=*-*-* *:0:0',
                                 '[Install]',
                                 'WantedBy=timers.target'
@@ -1989,6 +1992,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Unit]',
                                 'Description=Scheduled pruning of stale docker images',
                                 '[Timer]',
+                                # UTC time is in effect for the following
+                                # schedule, is +8 hours ahead of PST. Scheduled
+                                # for Saturdays at 04:00 PST.
                                 'OnCalendar=Sat *-*-* 12:0:0',
                                 '[Install]',
                                 'WantedBy=timers.target'
@@ -2041,6 +2047,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 '[Unit]',
                                 'Description=Scheduled GitLab container registry garbage collection',
                                 '[Timer]',
+                                # UTC time is in effect for the following
+                                # schedule, is +8 hours ahead of PST. Scheduled
+                                # for Saturdays at 06:00 PST.
                                 'OnCalendar=Sat *-*-* 14:0:0',
                                 '[Install]',
                                 'WantedBy=timers.target'
