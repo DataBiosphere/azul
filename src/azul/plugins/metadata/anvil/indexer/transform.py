@@ -27,6 +27,7 @@ from typing import (
 )
 from uuid import (
     UUID,
+    uuid5,
 )
 
 import attr
@@ -220,9 +221,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                   partition: BundlePartition,
                   entity: EntityReference
                   ) -> bool:
+        # Creating new v5 UUID ensures that entity IDs are effectively uniformly
+        # distributed for batched bundles, which are constructed by selecting
+        # entities whose UUID's share a common prefix. This prevents the
+        # BundlePartition from emitting large numbers of empty partitions.
+        namespace = UUID('1b5a3188-407c-416d-bb16-e77beaea4c8c')
         return (
             self._convert_entity_type(entity.entity_type) == self.entity_type()
-            and partition.contains(UUID(entity.entity_id))
+            and partition.contains(uuid5(namespace, entity.entity_id))
         )
 
     @cached_property
