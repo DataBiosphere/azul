@@ -173,7 +173,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     generation_id = UUID('1ea94a54-a64d-54f1-8b41-15455fb958db')

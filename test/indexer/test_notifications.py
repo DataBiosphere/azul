@@ -35,7 +35,7 @@ class TestValidNotificationRequests(LocalAppTestCase,
                                     SqsTestCase):
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'indexer'
 
     @mock_aws

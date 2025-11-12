@@ -743,7 +743,7 @@ class Config:
         else:
             return self.service_endpoint
 
-    def lambda_names(self) -> list[str]:
+    def app_names(self) -> list[str]:
         return ['indexer', 'service']
 
     @property
@@ -760,13 +760,15 @@ class Config:
     def service_function_name(self, handler_name: str | None = None):
         return self._function_name('service', handler_name)
 
-    def _function_name(self, lambda_name: str, handler_name: str | None):
+    def _function_name(self, app_name: str, handler_name: str | None):
         if handler_name is None:
-            return self.qualified_resource_name(lambda_name)
+            return self.qualified_resource_name(app_name)
         else:
             # FIXME: Eliminate hardcoded separator
             #        https://github.com/databiosphere/azul/issues/2964
-            return self.qualified_resource_name(lambda_name, suffix='-' + handler_name)
+            return self.qualified_resource_name(app_name, suffix='-' + handler_name)
+
+    active_function_alias_name = 'active'
 
     qualifier_re = re.compile(r'[a-z][a-z0-9]{1,16}')
 

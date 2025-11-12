@@ -3690,7 +3690,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
     maxDiff = None
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     def test(self):

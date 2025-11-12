@@ -45,7 +45,7 @@ class CachePoisoningTestCase(LocalAppTestCase, metaclass=ABCMeta):
         super().tearDownClass()
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     def _test(self):

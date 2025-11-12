@@ -60,7 +60,7 @@ from azul.json import (
     Serializable,
 )
 from azul.lambdas import (
-    Lambdas,
+    LambdaFunctions,
 )
 from azul.modules import (
     load_app_module,
@@ -502,21 +502,27 @@ class Queues:
             time.sleep(3)
             queue.reload()
 
-    def _manage_sqs_push(self, function_name: str, queue: 'Queue', enable: bool):
+    def _manage_sqs_push(self,
+                         *,
+                         function: str,
+                         alias: str,
+                         queue: 'Queue',
+                         enable: bool):
         lambda_ = aws.lambda_
-        response = lambda_.list_event_source_mappings(FunctionName=function_name,
+        partial_arn = f'{function}:{alias}'
+        response = lambda_.list_event_source_mappings(FunctionName=partial_arn,
                                                       EventSourceArn=queue.attributes['QueueArn'])
         mapping_uuid = one(response['EventSourceMappings'])['UUID']
 
         def update_():
             log.info('%s push from %r to lambda function %r',
-                     'Enabling' if enable else 'Disabling', queue.url, function_name)
+                     'Enabling' if enable else 'Disabling', queue.url, function)
             lambda_.update_event_source_mapping(UUID=mapping_uuid, Enabled=enable)
 
         state = one(response['EventSourceMappings'])['State']
         while True:
             log.info('Push from %r to lambda function %r is in state %r.',
-                     queue.url, function_name, state)
+                     queue.url, function, state)
             if state in ('Disabling', 'Enabling', 'Updating'):
                 pass
             elif state == 'Enabled':
@@ -570,17 +576,21 @@ class Queues:
                     if queue_name == config.notifications_queue.name:
                         # Prevent new notifications from being added
                         submit(self._manage_lambda, config.indexer_name, enable)
-                    submit(self._manage_sqs_push, function, queue, enable)
+                    submit(self._manage_sqs_push,
+                           function=function,
+                           alias=config.active_function_alias_name,
+                           queue=queue,
+                           enable=enable)
             self._handle_futures(futures)
             futures = [tpe.submit(self._wait_for_queue_idle, queue) for queue in queues.values()]
             self._handle_futures(futures)
 
     def _manage_lambda(self, function_name: str, enable: bool):
-        self._lambdas.manage_lambda(function_name, enable)
+        self._functions.manage_function(function_name, enable)
 
     @cached_property
-    def _lambdas(self) -> Lambdas:
-        return Lambdas()
+    def _functions(self) -> LambdaFunctions:
+        return LambdaFunctions()
 
     def _handle_futures(self, futures: Iterable[Future]):
         errors = []

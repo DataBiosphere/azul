@@ -26,7 +26,6 @@ from urllib.parse import (
 )
 
 import attrs
-import chalice
 from chalice import (
     Chalice,
     ChaliceViewError,
@@ -34,6 +33,7 @@ from chalice import (
 from chalice.app import (
     BadRequestError,
     CaseInsensitiveMapping,
+    EventSourceHandler,
     HeadersType,
     MultiDict,
     NotFoundError,
@@ -598,7 +598,7 @@ class AzulChaliceApp(Chalice):
         period: int
 
         def __call__(self, f):
-            assert isinstance(f, chalice.app.EventSourceHandler), f
+            assert isinstance(f, EventSourceHandler), f
             try:
                 metric_alarms = getattr(f, 'metric_alarms')
             except AttributeError:
@@ -612,6 +612,14 @@ class AzulChaliceApp(Chalice):
             return f'{self.tf_function_resource_name}_{self.metric.name}'
 
     @property
+    def event_source_handlers(self) -> dict[str, EventSourceHandler]:
+        return {
+            handler_name: handler
+            for handler_name, handler in self.handler_map.items()
+            if isinstance(handler, EventSourceHandler)
+        }
+
+    @property
     def metric_alarms(self) -> Iterator[metric_alarm]:
         for metric in LambdaMetric:
             # The api_handler lambda functions (indexer & service) aren't
@@ -622,19 +630,16 @@ class AzulChaliceApp(Chalice):
                                       threshold=0,
                                       period=60 * 60 if for_errors else 5 * 60)
             yield alarm.bind(self)
-        for handler_name, handler in self.handler_map.items():
-            if isinstance(handler, chalice.app.EventSourceHandler):
-                try:
-                    metric_alarms = getattr(handler, 'metric_alarms')
-                except AttributeError:
-                    metric_alarms = (
-                        self.metric_alarm(metric=metric,
-                                          threshold=0,
-                                          period=5 * 60)
-                        for metric in LambdaMetric
-                    )
-                for metric_alarm in metric_alarms:
-                    yield metric_alarm.bind(self, handler_name)
+        for handler_name, handler in self.event_source_handlers.items():
+            try:
+                metric_alarms = getattr(handler, 'metric_alarms')
+            except AttributeError:
+                metric_alarms = (
+                    self.metric_alarm(metric=metric, threshold=0, period=5 * 60)
+                    for metric in LambdaMetric
+                )
+            for metric_alarm in metric_alarms:
+                yield metric_alarm.bind(self, handler_name)
 
     # noinspection PyPep8Naming
     @attrs.frozen
@@ -650,20 +655,25 @@ class AzulChaliceApp(Chalice):
         num_retries: int
 
         def __call__(self, f):
-            assert isinstance(f, chalice.app.EventSourceHandler), f
+            assert isinstance(f, EventSourceHandler), f
             setattr(f, 'retry', self)
             return f
 
     @property
     def retries(self) -> Iterator[retry]:
-        for handler_name, handler in self.handler_map.items():
-            if isinstance(handler, chalice.app.EventSourceHandler):
-                try:
-                    retry = getattr(handler, 'retry')
-                except AttributeError:
-                    pass
-                else:
-                    yield retry.bind(self, handler_name)
+        for handler_name, handler in self.event_source_handlers.items():
+            try:
+                retry = getattr(handler, 'retry')
+            except AttributeError:
+                pass
+            else:
+                yield retry.bind(self, handler_name)
+
+    @property
+    def tf_function_resource_names(self) -> Iterator[str]:
+        yield self.unqualified_app_name
+        for handler_name in self.event_source_handlers:
+            yield f'{self.unqualified_app_name}_{handler_name}'
 
     def default_routes(self):
 

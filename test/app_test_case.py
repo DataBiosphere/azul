@@ -75,11 +75,11 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         """
-        Return the name of the AWS Lambda function to start locally. Must match
-        the name of a subdirectory of ${project_root}/lambdas. Subclasses must
-        override this to select which AWS Lambda function to start locally.
+        Return the name of the application to start locally. Must match the name
+        of a directory in ${project_root}/lambdas. Subclasses must override this
+        method.
         """
         raise NotImplementedError
 
@@ -100,7 +100,7 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
         # app modules from different lambdas loaded by different concrete
         # subclasses. It does, however, violate this one invariant:
         # `sys.modules[module.__name__] == module`
-        cls.app_module = load_app_module(cls.lambda_name())
+        cls.app_module = load_app_module(cls.app_name())
 
     @classmethod
     def tearDownClass(cls):

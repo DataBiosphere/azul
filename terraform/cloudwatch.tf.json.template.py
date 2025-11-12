@@ -72,12 +72,12 @@ emit_tf({
                 *(
                     {
                         'aws_cloudwatch_metric_alarm': {
-                            f'{lambda_}_5xx': {
-                                'alarm_name': config.qualified_resource_name(lambda_ + '_5xx'),
+                            f'{app_name}_5xx': {
+                                'alarm_name': config.qualified_resource_name(app_name + '_5xx'),
                                 'namespace': 'AWS/ApiGateway',
                                 'metric_name': '5XXError',
                                 'dimensions': {
-                                    'ApiName': config.qualified_resource_name(lambda_),
+                                    'ApiName': config.qualified_resource_name(app_name),
                                     'Stage': config.deployment_stage,
                                 },
                                 'statistic': 'Sum',
@@ -92,21 +92,21 @@ emit_tf({
                             }
                         }
                     }
-                    for lambda_ in config.lambda_names()
+                    for app_name in config.app_names()
                 ),
                 *(
                     {
                         'aws_cloudwatch_log_metric_filter': {
-                            f'{lambda_}cachehealth': {
-                                'name': config.qualified_resource_name(f'{lambda_}cachehealth', suffix='.filter'),
+                            f'{app_name}cachehealth': {
+                                'name': config.qualified_resource_name(f'{app_name}cachehealth', suffix='.filter'),
                                 'pattern': '',
                                 'log_group_name': (
                                     '/aws/lambda/'
-                                    + config.qualified_resource_name(lambda_)
-                                    + f'-{lambda_}cachehealth'
+                                    + config.qualified_resource_name(app_name)
+                                    + f'-{app_name}cachehealth'
                                 ),
                                 'metric_transformation': {
-                                    'name': config.qualified_resource_name(f'{lambda_}cachehealth'),
+                                    'name': config.qualified_resource_name(f'{app_name}cachehealth'),
                                     'namespace': 'LogMetrics',
                                     'value': 1,
                                     'default_value': 0,
@@ -114,13 +114,13 @@ emit_tf({
                             }
                         }
                     }
-                    for lambda_ in config.lambda_names()
+                    for app_name in config.app_names()
                 ),
                 *(
                     {
                         'aws_cloudwatch_metric_alarm': {
-                            f'{lambda_}cachehealth': {
-                                'alarm_name': config.qualified_resource_name(f'{lambda_}cachehealth', suffix='.alarm'),
+                            f'{app_name}cachehealth': {
+                                'alarm_name': config.qualified_resource_name(f'{app_name}cachehealth', suffix='.alarm'),
                                 # CloudWatch uses an unconfigurable "evaluation range" when missing
                                 # data is involved. In practice this means that an alarm on the
                                 # absence of logs with an evaluation window of ten minutes would
@@ -133,7 +133,7 @@ emit_tf({
                                         'metric': {
                                             'namespace': 'LogMetrics',
                                             'metric_name': '${aws_cloudwatch_log_metric_filter.'
-                                                           '%scachehealth.metric_transformation[0].name}' % lambda_,
+                                                           '%scachehealth.metric_transformation[0].name}' % app_name,
                                             'stat': 'Sum',
                                             'period': 10 * 60,
                                         }
@@ -154,7 +154,7 @@ emit_tf({
                             }
                         }
                     }
-                    for lambda_ in config.lambda_names()
+                    for app_name in config.app_names()
                 ),
                 {
                     'aws_cloudwatch_metric_alarm': {
@@ -254,8 +254,8 @@ emit_tf({
                                 'ok_actions': ['${data.aws_sns_topic.monitoring.arn}'],
                                 'treat_missing_data': 'notBreaching',
                             }
-                            for lambda_name in config.lambda_names()
-                            for metric_alarm in load_app_module(lambda_name).app.metric_alarms
+                            for app_name in config.app_names()
+                            for metric_alarm in load_app_module(app_name).app.metric_alarms
                         },
                         'waf_rate_blocked': {
                             'alarm_name': config.qualified_resource_name('waf_rate_blocked'),

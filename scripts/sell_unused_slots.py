@@ -27,8 +27,8 @@ from azul.deployment import (
     aws,
 )
 from azul.lambdas import (
-    Lambda,
-    Lambdas,
+    LambdaFunction,
+    LambdaFunctions,
 )
 from azul.logging import (
     configure_script_logging,
@@ -65,17 +65,18 @@ class ReindexDetector:
 
     @classmethod
     @cache
-    def _list_contribution_lambda_functions(cls) -> list[Lambda]:
+    def _list_contribution_lambda_functions(cls) -> list[LambdaFunction]:
         """
         Search Lambda functions for the names of contribution Lambdas.
         """
+        functions = LambdaFunctions()
         return [
-            lambda_
-            for lambda_ in Lambdas().list_lambdas()
-            if lambda_.is_contribution_lambda
+            function
+            for function in functions.list_functions()
+            if function.contributes
         ]
 
-    def _lambda_invocation_counts(self) -> dict[Lambda, int]:
+    def _lambda_invocation_counts(self) -> dict[LambdaFunction, int]:
         # FIXME: DeprecationWarning for datetime methods in Python 3.12
         #        https://github.com/DataBiosphere/azul/issues/5953
         end = datetime.utcnow()
@@ -95,6 +96,9 @@ class ReindexDetector:
                                 'Namespace': 'AWS/Lambda',
                                 'MetricName': 'Invocations',
                                 'Dimensions': [{
+                                    # The 'FunctionName' dimension returns
+                                    # aggregate metrics for all versions and
+                                    # aliases of the function.
                                     'Name': 'FunctionName',
                                     'Value': lambda_.name
                                 }]

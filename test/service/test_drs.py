@@ -146,7 +146,7 @@ class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
     gs_url = 'gs://important-bucket/object/path'
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     def test_drs(self):

@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from azul.lambdas import (
-    Lambdas,
+    LambdaFunctions,
 )
 from azul.logging import (
     configure_script_logging,
@@ -18,4 +18,5 @@ if __name__ == '__main__':
     group.add_argument('--disable', dest='enabled', action='store_false')
     args = parser.parse_args()
     assert args.enabled is not None
-    Lambdas().manage_lambdas(args.enabled)
+    functions = LambdaFunctions()
+    functions.manage_lambdas(args.enabled)

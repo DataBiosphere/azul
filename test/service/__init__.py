@@ -105,7 +105,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
         ]
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     @classmethod

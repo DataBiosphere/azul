@@ -33,31 +33,30 @@ log = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class Lambda:
+class LambdaFunction:
     name: str
     role: str
     slot_location: Optional[str]
 
     @property
-    def is_contribution_lambda(self) -> bool:
-        for lambda_name in self._contribution_lambda_names():
+    def contributes(self) -> bool:
+        unqualify = config.unqualified_resource_name
+        for handler_name in self._contribution_handler_names():
             try:
                 # FIXME: Eliminate hardcoded separator
                 #        https://github.com/databiosphere/azul/issues/2964
-                resource_name, _ = config.unqualified_resource_name(self.name,
-                                                                    suffix='-' + lambda_name)
+                app_name, _ = unqualify(self.name, suffix='-' + handler_name)
             except AssertionError as e:
                 if not R.caused(e):
                     raise
             else:
-                if resource_name == 'indexer':
+                if app_name == 'indexer':
                     return True
         return False
 
     @classmethod
     @cache
-    def _contribution_lambda_names(cls) -> frozenset[str]:
-        indexer = load_app_module('indexer')
+    def _contribution_handler_names(cls) -> frozenset[str]:
         notification_queue_names = {
             config.notifications_queue.derive(retry=retry).unqual_name
             for retry in (False, True)
@@ -72,11 +71,12 @@ class Lambda:
                 resource_name, _, _ = config.unqualified_resource_name_and_suffix(queue)
                 return resource_name in notification_queue_names
 
-        return frozenset((
+        indexer = load_app_module('indexer')
+        return frozenset(
             handler.name
             for handler in vars(indexer).values()
             if has_notification_queue(handler)
-        ))
+        )
 
     @classmethod
     def from_response(cls, response: 'FunctionConfigurationTypeDef') -> Self:
@@ -92,97 +92,128 @@ class Lambda:
 
     def __attrs_post_init__(self):
         if self.slot_location is None:
-            assert not self.is_contribution_lambda, self
+            assert not self.contributes, self
         else:
             allowed_locations = config.tdr_allowed_source_locations
             assert self.slot_location in allowed_locations, self.slot_location
 
 
-class Lambdas:
+class LambdaFunctions:
     tag_name = 'azul-original-concurrency-limit'
 
     @property
     def _lambda(self):
         return aws.lambda_
 
-    def list_lambdas(self) -> list[Lambda]:
+    def list_functions(self) -> list[LambdaFunction]:
+        # Note that this method returns the $LATEST version, which is what
+        # Amazon also refers to as the "unpublished" version.
         return [
-            Lambda.from_response(function)
+            LambdaFunction.from_response(function)
             for response in self._lambda.get_paginator('list_functions').paginate()
             for function in response['Functions']
         ]
 
+    def delete_older_versions(self, function_name: str, keep_version: int) -> None:
+        """
+        Delete all versions of a Lambda function prior to the specified one.
+
+        :param function_name: The fully qualified name of the function
+                              e.g. 'azul-service-dev'
+
+        :param keep_version: The version of the function to not delete.
+        """
+        paginator = self._lambda.get_paginator('list_versions_by_function')
+        versions = [
+            function['Version']
+            for page in paginator.paginate(FunctionName=function_name)
+            for function in page['Versions']
+            if (
+                function['Version'] != '$LATEST'  # The so-called "unpublished" version
+                and int(function['Version']) < keep_version
+            )
+        ]
+        for version in versions:
+            log.info('Deleting version %r of %r', version, function_name)
+            self._lambda.delete_function(FunctionName=function_name,
+                                         Qualifier=version)
+
     def manage_lambdas(self, enabled: bool):
         paginator = self._lambda.get_paginator('list_functions')
-        lambda_prefixes = [config.qualified_resource_name(lambda_infix) for lambda_infix in config.lambda_names()]
-        assert all(lambda_prefixes)
-        for lambda_page in paginator.paginate(FunctionVersion='ALL', MaxItems=500):
-            for lambda_name in [metadata['FunctionName'] for metadata in lambda_page['Functions']]:
-                if any(lambda_name.startswith(prefix) for prefix in lambda_prefixes):
-                    self.manage_lambda(lambda_name, enabled)
+        prefixes = [
+            config.qualified_resource_name(app_name)
+            for app_name in config.app_names()
+        ]
+        assert all(prefixes)
+        for response in paginator.paginate(MaxItems=500):
+            for function in response['Functions']:
+                function_name = function['FunctionName']
+                if any(function_name.startswith(prefix) for prefix in prefixes):
+                    self.manage_function(function_name, enabled)
 
-    def manage_lambda(self, lambda_name: str, enable: bool):
-        lambda_settings = self._lambda.get_function(FunctionName=lambda_name)
-        lambda_arn = lambda_settings['Configuration']['FunctionArn']
-        lambda_tags = self._lambda.list_tags(Resource=lambda_arn)['Tags']
-        lambda_name = lambda_settings['Configuration']['FunctionName']
+    def manage_function(self, function_name: str, enable: bool):
+        function = self._lambda.get_function(FunctionName=function_name)
+        assert function_name == function['Configuration']['FunctionName']
+        function_arn = function['Configuration']['FunctionArn']
+        tags = self._lambda.list_tags(Resource=function_arn)['Tags']
         if enable:
-            if self.tag_name in lambda_tags.keys():
-                original_concurrency_limit = ast.literal_eval(lambda_tags[self.tag_name])
-
+            if self.tag_name in tags.keys():
+                original_concurrency_limit = ast.literal_eval(tags[self.tag_name])
                 if original_concurrency_limit is not None:
-                    log.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
-                    self._lambda.put_function_concurrency(FunctionName=lambda_name,
+                    log.info('Setting concurrency limit on %r back to %r.',
+                             function_name, original_concurrency_limit)
+                    self._lambda.put_function_concurrency(FunctionName=function_name,
                                                           ReservedConcurrentExecutions=original_concurrency_limit)
                 else:
-                    log.info(f'Removed concurrency limit for {lambda_name}.')
-                    self._lambda.delete_function_concurrency(FunctionName=lambda_name)
+                    log.info('Removed concurrency limit on %r.', function_name)
+                    self._lambda.delete_function_concurrency(FunctionName=function_name)
 
-                lambda_arn = lambda_settings['Configuration']['FunctionArn']
-                self._lambda.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
+                self._lambda.untag_resource(Resource=function_arn, TagKeys=[self.tag_name])
             else:
-                log.warning(f'{lambda_name} is already enabled.')
+                log.warning('Function %r is already enabled.', function_name)
         else:
-            if self.tag_name not in lambda_tags.keys():
+            if self.tag_name in tags.keys():
+                log.warning('Function %r is already disabled.', function_name)
+            else:
                 try:
-                    concurrency = lambda_settings['Concurrency']
+                    concurrency = function['Concurrency']
                 except KeyError:
-                    # If a lambda doesn't have a limit for concurrency
-                    # executions, Lambda.Client.get_function()
-                    # doesn't return a response with the key, `Concurrency`.
+                    # Function doesn't have a concurrency limit
                     concurrency_limit = None
                 else:
                     concurrency_limit = concurrency['ReservedConcurrentExecutions']
-
-                log.info(f'Setting concurrency limit for {lambda_name} to zero.')
+                log.info('Setting concurrency limit on %r to zero.', function_name)
                 new_tag = {self.tag_name: repr(concurrency_limit)}
-                self._lambda.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
-                self._lambda.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
-            else:
-                log.warning(f'{lambda_name} is already disabled.')
+                self._lambda.tag_resource(Resource=function_arn, Tags=new_tag)
+                self._lambda.put_function_concurrency(FunctionName=function_name, ReservedConcurrentExecutions=0)
 
     def reset_lambda_roles(self):
-        client = self._lambda
-        lambda_names = set(config.lambda_names())
+        """
+        Attempt to fix KMSAccessDeniedException when invoking a function.
 
-        for lambda_ in self.list_lambdas():
-            for lambda_name in lambda_names:
-                if lambda_.name.startswith(config.qualified_resource_name(lambda_name)):
-                    other_lambda_name = one(lambda_names - {lambda_name})
-                    temporary_role = lambda_.role.replace(
-                        config.qualified_resource_name(lambda_name),
-                        config.qualified_resource_name(other_lambda_name)
+        See Troubleshooting section in README.md for details.
+        """
+        client = self._lambda
+        app_names = set(config.app_names())
+
+        for function in self.list_functions():
+            for app_name in app_names:
+                if function.name.startswith(config.qualified_resource_name(app_name)):
+                    other_app_name = one(app_names - {app_name})
+                    temporary_role = function.role.replace(
+                        config.qualified_resource_name(app_name),
+                        config.qualified_resource_name(other_app_name)
                     )
-                    log.info('Temporarily updating %r to role %r', lambda_.name, temporary_role)
-                    client.update_function_configuration(FunctionName=lambda_.name,
+                    log.info('Temporarily updating %r to role %r', function.name, temporary_role)
+                    client.update_function_configuration(FunctionName=function.name,
                                                          Role=temporary_role)
-                    log.info('Updating %r to role %r', lambda_.name, lambda_.role)
+                    log.info('Updating %r to role %r', function.name, function.role)
                     while True:
                         try:
-                            client.update_function_configuration(FunctionName=lambda_.name,
-                                                                 Role=lambda_.role)
+                            client.update_function_configuration(FunctionName=function.name,
+                                                                 Role=function.role)
                         except client.exceptions.ResourceConflictException:
-                            log.info('Function %r is being updated. Retrying ...', lambda_.name)
+                            log.info('Function %r is being updated. Retrying ...', function.name)
                             time.sleep(1)
                         else:
                             break

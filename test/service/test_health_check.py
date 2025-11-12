@@ -24,7 +24,7 @@ def setUpModule():
 class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     def _expected_health(self,

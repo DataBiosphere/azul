@@ -93,7 +93,7 @@ class health_property(cached_property):
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class HealthController(AppController):
-    lambda_name: str
+    app_name: str
 
     @cached_property
     def storage_service(self):
@@ -134,7 +134,7 @@ class HealthController(AppController):
                                 self.app.catalog, config.default_catalog)
         else:
             try:
-                cache = json.loads(self.storage_service.get(f'health/{self.lambda_name}'))
+                cache = json.loads(self.storage_service.get(f'health/{self.app_name}'))
             except StorageObjectNotFound:
                 raise NotFoundError('Cached health object does not exist')
             else:
@@ -148,7 +148,7 @@ class HealthController(AppController):
     def update_cache(self) -> None:
         assert self.app.catalog == config.default_catalog
         health_object = dict(time=time.time(), health=self._health.as_json_fast())
-        self.storage_service.put(object_key=f'health/{self.lambda_name}',
+        self.storage_service.put(object_key=f'health/{self.app_name}',
                                  data=json.dumps(health_object).encode())
 
     @property
@@ -182,7 +182,7 @@ class Health:
 
     @property
     def lambda_name(self):
-        return self.controller.lambda_name
+        return self.controller.app_name
 
     def as_json(self, keys: Iterable[str]) -> JSON:
         keys = frozenset(keys)
@@ -200,9 +200,9 @@ class Health:
         Indicates whether the companion REST API responds to HTTP requests.
         """
         response = {
-            lambda_name: self._lambda(lambda_name)
-            for lambda_name in config.lambda_names()
-            if lambda_name != self.lambda_name
+            app_name: self._lambda(app_name)
+            for app_name in config.app_names()
+            if app_name != self.lambda_name
         }
         return {
             'up': all(json_bool(v['up']) for v in response.values()),
@@ -333,7 +333,7 @@ class HealthApp(AzulChaliceApp):
 
     @cached_property
     def health_controller(self) -> HealthController:
-        return HealthController(app=self, lambda_name=self.unqualified_app_name)
+        return HealthController(app=self, app_name=self.unqualified_app_name)
 
     def default_routes(self):
         _routes = super().default_routes()

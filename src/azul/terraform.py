@@ -652,15 +652,17 @@ class Chalice:
         # Sort in reverse so that keys that are prefixes of other keys go last
         rev_ref_map = sorted(ref_map.items(), reverse=True)
 
-        def patch_refs(v: AnyMutableJSON) -> AnyMutableJSON:
+        def patch_refs[T: AnyMutableJSON](v: T) -> T:
             if isinstance(v, dict):
-                return {k: patch_refs(v) for k, v in json_dict(v).items()}
+                return type(v)((k, patch_refs(v)) for k, v in json_dict(v).items())
             elif isinstance(v, list):
-                return list(map(patch_refs, v))
+                return type(v)(map(patch_refs, v))
             elif isinstance(v, str):
+                r: str = v
                 for old_ref, new_ref in rev_ref_map:
-                    v = v.replace(old_ref, new_ref)
-                return v
+                    r = r.replace(old_ref, new_ref)
+                assert isinstance(r, type(v))
+                return r
             else:
                 return v
 
@@ -755,10 +757,14 @@ class Chalice:
                 '${aws_vpc_endpoint.%s.id}' % app_name
             ]
 
-        functions = json_item_dicts(json_dict(resources['aws_lambda_function']))
-        for _, resource in functions:
+        functions = json_item_dicts(resources['aws_lambda_function'])
+        for resource_name, resource in functions:
             assert 'layers' not in resource
             resource['layers'] = ['${aws_lambda_layer_version.dependencies.arn}']
+            # Publishing a new Lambda function version each time lets us perform
+            # an atomic update of the function, avoiding a race condition
+            # between the update of the function's configuration and its code.
+            resource['publish'] = True
             env = config.es_endpoint_env(
                 es_endpoint=(
                     aws.es_endpoint
@@ -775,6 +781,25 @@ class Chalice:
             package_zip = str(self.package_zip_path(app_name))
             resource['source_code_hash'] = '${filebase64sha256("%s")}' % package_zip
             resource['filename'] = package_zip
+
+        # Replace any references to unqualified function ARNs emitted by Chalice
+        # with references to the alias.
+        #
+        def function_to_alias[T: AnyMutableJSON](v: T) -> T:
+            if isinstance(v, dict):
+                return type(v)((k, function_to_alias(v)) for k, v in v.items())
+            elif isinstance(v, list):
+                return type(v)(map(function_to_alias, v))
+            elif isinstance(v, str) and v.endswith(('.arn}', '.invoke_arn}')):
+                r = v.replace('${aws_lambda_function', '${aws_lambda_alias')
+                assert isinstance(r, type(v))
+                return r
+            else:
+                return v
+
+        openapi_spec = json_dict(json.loads(json_str(locals[app_name])))
+        openapi_spec = function_to_alias(openapi_spec)
+        resources = function_to_alias(resources)
 
         assert 'aws_cloudwatch_log_group' not in resources
         functions = json_item_dicts(resources['aws_lambda_function'])
@@ -867,7 +892,6 @@ class Chalice:
         # default responses for the API, so we use these extensions for that
         # purpose, too.
         #
-        openapi_spec = json.loads(json_str(locals[app_name]))
         rest_apis = json_dict(resources['aws_api_gateway_rest_api'])
         rest_api = json_dict(rest_apis[app_name])
         assert 'minimum_compression_size' not in rest_api, rest_api
@@ -881,43 +905,43 @@ class Chalice:
         #
         # https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html#mapping-response-parameters
         #
-        security_headers = {
+        security_headers: MutableJSON = {
             f'gatewayresponse.header.{k}': f"'{v}'"
             for k, v in AzulChaliceApp.security_headers().items()
         }
-        assert 'aws_api_gateway_gateway_response' not in resources, resources
-        openapi_spec['x-amazon-apigateway-gateway-responses'] = (
-            {
-                f'DEFAULT_{response_type}': {
-                    'responseParameters': security_headers
-                } for response_type in ['4XX', '5XX']
-            } | {
-                'INTEGRATION_FAILURE': {
-                    'statusCode': '502',
-                    'responseParameters': security_headers,
-                    'responseTemplates': {
-                        "application/json": json.dumps({
-                            'message': '502 Bad Gateway. The server was unable '
-                                       'to complete your request.'
-                        })
-                    }
+        default_responses: MutableJSON = {
+            f'DEFAULT_{response_type}': {'responseParameters': security_headers}
+            for response_type in ['4XX', '5XX']
+        }
+        error_responses: MutableJSON = {
+            'INTEGRATION_FAILURE': {
+                'statusCode': '502',
+                'responseParameters': security_headers,
+                'responseTemplates': {
+                    "application/json": json.dumps({
+                        'message': '502 Bad Gateway. The server was unable '
+                                   'to complete your request.'
+                    })
+                }
+            },
+            'INTEGRATION_TIMEOUT': {
+                'statusCode': '504',
+                'responseParameters': {
+                    **security_headers,
+                    'gatewayresponse.header.Retry-After': "'10'"
                 },
-                'INTEGRATION_TIMEOUT': {
-                    'statusCode': '504',
-                    'responseParameters': {
-                        **security_headers,
-                        'gatewayresponse.header.Retry-After': "'10'"
-                    },
-                    'responseTemplates': {
-                        "application/json": json.dumps({
-                            'message': '504 Gateway Timeout. Wait the number of '
-                                       'seconds specified in the `Retry-After` '
-                                       'header before retrying the request.'
-                        })
-                    }
+                'responseTemplates': {
+                    "application/json": json.dumps({
+                        'message': '504 Gateway Timeout. Wait the number of '
+                                   'seconds specified in the `Retry-After` '
+                                   'header before retrying the request.'
+                    })
                 }
             }
-        )
+        }
+        gateway_responses = error_responses | default_responses
+        assert 'aws_api_gateway_gateway_response' not in resources, resources
+        openapi_spec['x-amazon-apigateway-gateway-responses'] = gateway_responses
         locals[app_name] = json.dumps(openapi_spec)
 
         # Replace the hard-coded ARN emitted by Chalice with a resource
@@ -931,6 +955,14 @@ class Chalice:
                 suffix = '.fifo' if resource_name.endswith('.fifo') else ''
                 sqs_name, _ = config.unqualified_resource_name(resource_name, suffix)
                 resource['event_source_arn'] = f'${{aws_sqs_queue.{sqs_name}.arn}}'
+
+        # Ensure that the Lambda permissions for the previous aliases aren't
+        # deleted until after the permissions for the new aliases have been
+        # created.
+        #
+        for name, resource in json_item_dicts(resources['aws_lambda_permission']):
+            assert 'lifecycle' not in resource, resource
+            resource['lifecycle'] = {'create_before_destroy': True}
 
         return {
             'resource': resources,

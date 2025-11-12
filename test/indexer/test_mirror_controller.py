@@ -66,7 +66,7 @@ class TestMirrorController(DCP2TestCase,
                            MirrorTestCase):
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'indexer'
 
     def test_mirroring(self):

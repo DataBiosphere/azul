@@ -52,7 +52,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
         super().tearDownClass()
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'service'
 
     def test_request_logs(self):

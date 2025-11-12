@@ -24,7 +24,7 @@ def setUpModule():
 class TestIndexerHealthCheck(DCP1TestCase, HealthCheckTestCase):
 
     @classmethod
-    def lambda_name(cls) -> str:
+    def app_name(cls) -> str:
         return 'indexer'
 
     def _expected_health(self,

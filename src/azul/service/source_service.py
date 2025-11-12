@@ -86,7 +86,7 @@ class SourceService:
     ttl_attribute = 'expiration'
 
     # Timespan in seconds that sources persist in the cache
-    expiration = 60
+    expiration = 5 * 60
 
     @property
     def _dynamodb(self):

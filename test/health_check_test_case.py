@@ -137,7 +137,7 @@ class HealthCheckTestCase(LocalAppTestCase,
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
-        app = load_app_module(self.lambda_name())
+        app = load_app_module(self.app_name())
         with self._mock():
             app.update_health_cache(MagicMock(), MagicMock())
             response = self._test('/health/cached')
@@ -225,9 +225,9 @@ class HealthCheckTestCase(LocalAppTestCase,
 
     def _other_lambda_names(self) -> list[str]:
         return [
-            lambda_name
-            for lambda_name in config.lambda_names()
-            if lambda_name != self.lambda_name()
+            app_name
+            for app_name in config.app_names()
+            if app_name != self.app_name()
         ]
 
     def _expected_other_lambdas(self, *, up: bool) -> MutableJSON:

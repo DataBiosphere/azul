@@ -42,14 +42,14 @@ def main():
                                sources=set())
     }
 
-    lambda_name = Path.cwd().name
-    assert lambda_name in config.lambda_names(), lambda_name
+    app_name = Path.cwd().name
+    assert app_name in config.app_names(), app_name
 
     # To create a normalized OpenAPI document, we patch any
     # deployment-specific variables that affect the document.
     with (
         patch_config('catalogs', catalogs),
-        patch_config(f'{lambda_name}_function_name', f'azul-{lambda_name}-dev'),
+        patch_config(f'{app_name}_function_name', f'azul-{app_name}-dev'),
         patch_config('enable_log_forwarding', False),
         patch_config('enable_replicas', True),
         patch_config('monitoring_email', 'azul-group@ucsc.edu')
@@ -58,10 +58,10 @@ def main():
         with patch.object(target=AzulChaliceApp,
                           attribute='base_url',
                           new=lambda_endpoint):
-            app_module = load_app_module(lambda_name)
+            app_module = load_app_module(app_name)
             assert app_module.app.base_url == lambda_endpoint
             app_spec = app_module.app.spec()
-            doc_path = Path(config.project_root) / 'lambdas' / lambda_name / 'openapi.json'
+            doc_path = Path(config.project_root) / 'lambdas' / app_name / 'openapi.json'
             with write_file_atomically(doc_path) as file:
                 json.dump(app_spec, file, indent=4)
 
