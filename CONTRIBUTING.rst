@@ -116,14 +116,17 @@ Line wrapping and indentation
                  x=1,
                  y=2)
 
-  The one exception to this rule are logging method invocations and calls to
-  reject() and require()::
+  The exception to this rule are logging method invocations, calls to
+  reject(), require(), or uses of TestCase.subTest() ::
 
     logger.info('Waiting up to %s seconds for %s queues to %s ...',
                 timeout, len(queues), 'empty' if empty else 'not be empty')
 
     reject(spline not in reticulated_splines,
            'Unreticulated splines cause discombobulation.')
+
+    with self.subTest('manifest', catalog=catalog, format=format,
+                      fetch=fetch, curl=curl, wait=wait):
 
   Only if the second and subsequent arguments won't fit on one line, do we
   wrap all arguments, one line per argument.

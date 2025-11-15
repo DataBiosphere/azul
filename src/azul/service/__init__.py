@@ -17,7 +17,7 @@ from typing import (
     get_args,
 )
 
-import attr
+import attrs
 from chalice import (
     ForbiddenError,
 )
@@ -318,7 +318,7 @@ def parse_filters(raw_filters: str | None) -> FiltersJSON:
         return cast(FiltersJSON, filters)
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class Filters:
     explicit: FiltersJSON
     source_ids: set[str]
@@ -341,7 +341,7 @@ class Filters:
         }
 
     def update(self, filters: FiltersJSON) -> Self:
-        return attr.evolve(self, explicit={**self.explicit, **filters})
+        return attrs.evolve(self, explicit={**self.explicit, **filters})
 
     def reify(self,
               plugin: MetadataPlugin,

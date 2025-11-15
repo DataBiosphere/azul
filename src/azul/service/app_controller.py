@@ -4,7 +4,7 @@ from typing import (
     Mapping,
 )
 
-import attr
+import attrs
 from chalice import (
     BadRequestError as BRE,
     BadRequestError,
@@ -29,7 +29,7 @@ from azul.strings import (
 )
 
 
-@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ServiceAppController(AppController):
     file_url_func: FileUrlFunc
 
@@ -55,6 +55,12 @@ def validate_catalog(catalog):
         if catalog not in config.catalogs:
             raise NotFoundError(f'Catalog name {catalog!r} does not exist. '
                                 f'Must be one of {set(config.catalogs)}.')
+
+
+def validate_wait(wait: str | None):
+    valid_values = ['0', '1']
+    if wait not in [None, *valid_values]:
+        raise BRE(f'Invalid wait value `{wait}`. Must be one of {valid_values}')
 
 
 class Mandatory:

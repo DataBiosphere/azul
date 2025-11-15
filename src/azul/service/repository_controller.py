@@ -4,14 +4,15 @@ from collections.abc import (
 )
 import json
 import logging
-import time
+from math import (
+    ceil,
+)
 from typing import (
     Any,
     Callable,
     cast,
 )
 
-import attr
 import attrs
 from chalice import (
     BadRequestError,
@@ -58,6 +59,7 @@ from azul.service.app_controller import (
     Mandatory,
     validate_catalog,
     validate_params,
+    validate_wait,
 )
 from azul.service.elasticsearch_service import (
     IndexNotFoundError,
@@ -220,7 +222,7 @@ class RepositoryController(SourceController):
         validate_params(query_params,
                         catalog=str,
                         requestIndex=int,
-                        wait=self._validate_wait,
+                        wait=validate_wait,
                         replica=self._validate_replica,
                         token=str,
                         **self._file_param_validators(catalog, request_index))
@@ -240,7 +242,7 @@ class RepositoryController(SourceController):
             if file is None:
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')
-            file = attr.evolve(file, **adict(name=file_name, drs_uri=drs_uri))
+            file = attrs.evolve(file, **adict(name=file_name, drs_uri=drs_uri))
         else:
             file = self._file_from_request(catalog, file_uuid, query_params)
 
@@ -298,14 +300,8 @@ class RepositoryController(SourceController):
                 if wait == '0':
                     pass
                 elif wait == '1':
-                    # Sleep in the lambda but ensure that we wake up before it
-                    # runs out of execution time (and before API Gateway times
-                    # out) so we get a chance to return a response to the client
-                    remaining_time = self.lambda_context.get_remaining_time_in_millis() / 1000
-                    server_side_sleep = min(float(retry_after),
-                                            remaining_time - config.api_gateway_timeout_padding - 3)
-                    time.sleep(server_side_sleep)
-                    retry_after = round(retry_after - server_side_sleep)
+                    time_slept = self.server_side_sleep(float(retry_after))
+                    retry_after = ceil(retry_after - time_slept)
                 else:
                     assert False, wait
             query_params = self._file_to_request(download.file) | adict(
@@ -362,10 +358,6 @@ class RepositoryController(SourceController):
         assert accessible not in result, result
         result[accessible] = pass_thru_bool
         return result
-
-    def _validate_wait(self, wait: str | None):
-        if wait not in ('0', '1', None):
-            raise ValueError
 
     def _validate_replica(self, replica: str):
         if replica not in ('aws', 'gcp'):
