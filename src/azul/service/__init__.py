@@ -343,6 +343,25 @@ class Filters:
     def update(self, filters: FiltersJSON) -> Self:
         return attr.evolve(self, explicit={**self.explicit, **filters})
 
+    def reify_implicit_only(self, plugin: MetadataPlugin) -> FiltersJSON:
+        """
+        Construct filters for *only* the implicit restriction on accessible
+        sources. This is conceptually equivalent to the set difference
+        `self.reify(limit_access=True) - self.reify(limit_access=False)`.
+
+        :param plugin: Metadata plugin for the current request's catalog
+        """
+        source_id_field = plugin.special_fields.source_id.name
+        filters = copy_json(self.explicit)
+        explicit_sources = self._extract_filter(filters, source_id_field, default=None)
+        if explicit_sources is not None:
+            self._forbid_explicit_inaccessible_sources(explicit_sources)
+        return {
+            source_id_field: {
+                'is': sorted(self.source_ids),
+            }
+        }
+
     def reify(self,
               plugin: MetadataPlugin,
               *,

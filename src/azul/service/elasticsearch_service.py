@@ -181,6 +181,9 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
     def prepare_request(self, request: Search) -> Search:
         query = self.prepare_query(self.prepared_filters)
         if self.post_filter:
+            if self.service.always_limit_access or self._limit_access:
+                access_query = self.prepare_query(self.prepared_access_filter)
+                request = request.query(access_query)
             request = request.post_filter(query)
         else:
             request = request.query(query)
@@ -191,8 +194,15 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        limit_access = self.service.always_limit_access or self._limit_access
+        # The implicit source filter is always applied via a query, and would
+        # therefore be redundant in the post_filter
+        limit_access = (self.service.always_limit_access or self._limit_access) and not self.post_filter
         filters_json = self.filters.reify(self.plugin, limit_access=limit_access)
+        return self._translate_filters(filters_json)
+
+    @cached_property
+    def prepared_access_filter(self) -> TranslatedFilters:
+        filters_json = self.filters.reify_implicit_only(self.plugin)
         return self._translate_filters(filters_json)
 
     @property

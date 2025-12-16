@@ -107,6 +107,13 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of a simple request
         """
         expected_output = {
+            'query': {
+                'bool': {
+                    'must': [
+                        self.sources_filter
+                    ]
+                }
+            },
             'post_filter': {
                 'bool': {
                     'must': [
@@ -121,7 +128,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                                 }
                             }
                         },
-                        self.sources_filter
                     ]
                 }
             }
@@ -154,6 +160,13 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of a complex request.
         """
         expected_output = {
+            'query': {
+                'bool': {
+                    'must': [
+                        self.sources_filter
+                    ]
+                }
+            },
             'post_filter': {
                 'bool': {
                     'must': [
@@ -168,7 +181,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                                 }
                             }
                         },
-                        self.sources_filter
                     ]
                 }
             }
@@ -186,6 +198,13 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of a request for facets that do not have a value
         """
         expected_output = {
+            'query': {
+                'bool': {
+                    'must': [
+                        self.sources_filter
+                    ]
+                }
+            },
             'post_filter': {
                 'bool': {
                     'must': [
@@ -221,7 +240,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                                 }
                             }
                         },
-                        self.sources_filter
                     ]
                 }
             }
@@ -236,6 +254,13 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         not have a value
         """
         expected_output = {
+            'query': {
+                'bool': {
+                    'must': [
+                        self.sources_filter
+                    ]
+                }
+            },
             'post_filter': {
                 'bool': {
                     'must': [
@@ -300,7 +325,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                                 }
                             }
                         },
-                        self.sources_filter
                     ]
                 }
             }
@@ -346,9 +370,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         expected_output = {
             'filter': {
                 'bool': {
-                    'must': [
-                        self.sources_filter
-                    ]
                 }
             },
             'aggs': {
