@@ -179,7 +179,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
     post_filter: bool
 
     def prepare_request(self, request: Search) -> Search:
-        query = self.prepare_query()
+        query = self.prepare_query(self.prepared_filters)
         if self.post_filter:
             request = request.post_filter(query)
         else:
@@ -223,12 +223,15 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
             translated_filters[field] = {relation: list(values)}
         return translated_filters
 
-    def prepare_query(self, skip_field_paths: tuple[FieldPath] = ()) -> Query:
+    def prepare_query(self,
+                      prepared_filters: TranslatedFilters,
+                      skip_field_paths: tuple[FieldPath] = ()
+                      ) -> Query:
         """
         Converts the given filters into an Elasticsearch DSL Query object.
         """
         filter_list = []
-        for field_path, relation_and_values in self.prepared_filters.items():
+        for field_path, relation_and_values in prepared_filters.items():
             if field_path not in skip_field_paths:
                 relation, values = one(relation_and_values.items())
                 # Note that `is_not` is only used internally (for filtering by
@@ -320,7 +323,8 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         """
         # Create a filter agg using a query that represents all filters
         # except for the current facet.
-        query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
+        query = self.filter_stage.prepare_query(self.filter_stage.prepared_filters,
+                                                skip_field_paths=(facet_path,))
         agg = A('filter', query)
 
         field_type = self.service.field_type(self.catalog, facet_path)
