@@ -361,33 +361,20 @@ class Filters:
         filters = copy_json(self.explicit)
         special_fields = plugin.special_fields
 
-        def extract_filter(field: str, *, default: set | None) -> set | None:
-            filter = filters.pop(field, {})
-            # Other operators are not supported on string or boolean fields
-            assert filter.keys() <= {'is'}, filter
-            try:
-                values = filter['is']
-            except KeyError:
-                return default
-            else:
-                return set(values)
-
-        explicit_sources = extract_filter(special_fields.source_id.name,
-                                          default=None)
-        accessible = extract_filter(special_fields.accessible.name,
-                                    default={False, True})
+        explicit_sources = self._extract_filter(filters,
+                                                special_fields.source_id.name,
+                                                default=None)
+        accessible = self._extract_filter(filters,
+                                          special_fields.accessible.name,
+                                          default={False, True})
         source_relation = 'is'
 
         if limit_access:
             if explicit_sources is None:
                 sources = self.source_ids if True in accessible else []
             else:
-                forbidden_sources = explicit_sources - self.source_ids
-                if forbidden_sources:
-                    raise ForbiddenError('Cannot filter by inaccessible sources',
-                                         forbidden_sources)
-                else:
-                    sources = explicit_sources if True in accessible else []
+                self._forbid_explicit_inaccessible_sources(explicit_sources)
+                sources = explicit_sources if True in accessible else []
         else:
             if accessible == set():
                 sources = []
@@ -416,6 +403,23 @@ class Filters:
             assert set(filters[special_fields.source_id.name]['is']) <= self.source_ids
 
         return filters
+
+    def _extract_filter(self, filters, field: str, *, default: set | None) -> set | None:
+        filter = filters.pop(field, {})
+        # Other operators are not supported on string or boolean fields
+        assert filter.keys() <= {'is'}, filter
+        try:
+            values = filter['is']
+        except KeyError:
+            return default
+        else:
+            return set(values)
+
+    def _forbid_explicit_inaccessible_sources(self, explicit_sources: set[str]):
+        forbidden_sources = explicit_sources - self.source_ids
+        if forbidden_sources:
+            raise ForbiddenError('Cannot filter by inaccessible sources',
+                                 forbidden_sources)
 
 
 class BadArgumentException(Exception):
