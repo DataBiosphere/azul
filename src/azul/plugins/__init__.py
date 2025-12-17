@@ -519,7 +519,7 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
 
     @property
     def facets(self) -> Sequence[str]:
-        return [self.special_fields.source_id.name]
+        return []
 
     @property
     @abstractmethod
