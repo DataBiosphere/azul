@@ -9,6 +9,7 @@ from azul.indexer.aggregate import (
     Accumulator,
     DistinctAccumulator,
     GroupingAggregator,
+    SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
     SumAccumulator,
@@ -90,6 +91,11 @@ class DiagnosisAggregator(SimpleAggregator):
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          itemgetter('lte', 'gte')))
+        elif field == 'disease':
+            return SetAccumulator(max_size=100,
+                                  # Some AnVIL datasets have excessive numbers
+                                  # of disease values, all being accessions.
+                                  allow_overflow=self.outer_entity_type == 'datasets')
         else:
             return super()._accumulator(field)
 
