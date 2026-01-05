@@ -2102,7 +2102,7 @@ class TestIndexResponse(IndexResponseTestCase):
         """
         Test that invalid JSON for search_after or search_before raise a 400
         """
-        query_params = self._params(size=1, sort='sampleId', order='asc')
+        query_params = self._params(size=1, sort='entryId', order='asc')
         url = self.base_url.set(path='/index/samples', args=query_params)
         # Get page 1
         response = self._http_client.request('GET', str(url))
@@ -3812,7 +3812,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
                                     'default_order': 'asc'
                                 },
                                 'samples': {
-                                    'default_sort': 'sampleId',
+                                    'default_sort': 'entryId',
                                     'default_order': 'asc'
                                 }
                             }
