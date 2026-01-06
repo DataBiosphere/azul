@@ -286,6 +286,17 @@ class SequencingInputAggregator(SimpleAggregator):
 
 class SequencingProcessAggregator(SimpleAggregator):
 
+    def _accumulator(self, field) -> Accumulator | None:
+        if field == 'document_id':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
+
     def _default_accumulator(self) -> Accumulator | None:
         return SetAccumulator(max_size=10)
 
