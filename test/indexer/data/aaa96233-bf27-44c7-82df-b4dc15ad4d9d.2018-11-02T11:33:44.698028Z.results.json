@@ -1464,9 +1464,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
@@ -2367,9 +2364,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
@@ -2653,9 +2647,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
@@ -3243,9 +3234,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
