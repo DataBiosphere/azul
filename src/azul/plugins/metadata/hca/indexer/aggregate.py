@@ -116,7 +116,17 @@ class FileAggregator(GroupingAggregator):
 
 
 class SampleAggregator(SimpleAggregator):
-    pass
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field == 'biomaterial_id':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
 
 class SpecimenAggregator(SimpleAggregator):

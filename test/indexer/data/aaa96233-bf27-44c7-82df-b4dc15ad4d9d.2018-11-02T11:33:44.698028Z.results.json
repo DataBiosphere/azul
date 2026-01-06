@@ -1405,9 +1405,6 @@
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -1438,9 +1435,6 @@
                         ],
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
@@ -2565,9 +2559,6 @@
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -2598,9 +2589,6 @@
                         ],
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
@@ -3139,9 +3127,6 @@
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -3172,9 +3157,6 @@
                         ],
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
