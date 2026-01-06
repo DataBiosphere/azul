@@ -1402,9 +1402,6 @@
             "contents": {
                 "samples": [
                     {
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -1432,9 +1429,6 @@
                         ],
                         "_source": [
                             "specimen_from_organism"
-                        ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
                         ],
                         "disease": [
                             "normal"
@@ -2556,9 +2550,6 @@
             "contents": {
                 "samples": [
                     {
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -2586,9 +2577,6 @@
                         ],
                         "_source": [
                             "specimen_from_organism"
-                        ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
                         ],
                         "disease": [
                             "normal"
@@ -3124,9 +3112,6 @@
             "contents": {
                 "samples": [
                     {
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -3154,9 +3139,6 @@
                         ],
                         "_source": [
                             "specimen_from_organism"
-                        ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
                         ],
                         "disease": [
                             "normal"
