@@ -210,7 +210,7 @@ class DonorOrganismAggregator(SimpleAggregator):
 class OrganoidAggregator(SimpleAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'biomaterial_id':
+        if field in ('biomaterial_id', 'document_id'):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
