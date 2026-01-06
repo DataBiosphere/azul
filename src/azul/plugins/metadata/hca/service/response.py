@@ -472,7 +472,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_donor(self, donor) -> MutableJSON:
         return {
-            'id': donor['biomaterial_id'],
             'donorCount': donor.get('donor_count', None),
             'developmentStage': donor.get('development_stage', None),
             'genusSpecies': donor.get('genus_species', None),

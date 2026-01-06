@@ -275,7 +275,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'disease': ['normal'],
                         'developmentStage': [None],
                         'genusSpecies': ['Australopithecus'],
-                        'id': ['DID_scRSq06'],
                         'donorCount': 1,
                         'organismAge': [{'value': '38', 'unit': 'year'}],
                         'organismAgeRange': [[1198368000.0, 1198368000.0]],
@@ -545,7 +544,6 @@ class TestIndexResponse(IndexResponseTestCase):
                             'disease': ['normal'],
                             'developmentStage': [None],
                             'genusSpecies': ['Australopithecus'],
-                            'id': ['DID_scRSq06'],
                             'donorCount': 1,
                             'organismAge': [{'value': '38', 'unit': 'year'}],
                             'organismAgeRange': [[1198368000.0, 1198368000.0]],
@@ -778,7 +776,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'disease': ['H syndrome'],
                         'developmentStage': ['human adult stage'],
                         'genusSpecies': ['Homo sapiens'],
-                        'id': ['donor_ID_1'],
                         'donorCount': 1,
                         'organismAge': [{'value': '20', 'unit': 'year'}],
                         'organismAgeRange': [[630720000.0, 630720000.0]],
@@ -1236,12 +1233,6 @@ class TestIndexResponse(IndexResponseTestCase):
                     'genusSpecies': [
                         'Homo sapiens'
                     ],
-                    'id': [
-                        'HPSI0314i-hoik',
-                        'HPSI0214i-wibj',
-                        'HPSI0314i-sojd',
-                        'HPSI0214i-kucg'
-                    ],
                     'donorCount': 4,
                     'organismAge': [
                         {'value': '45-49', 'unit': 'year'},
@@ -1263,12 +1254,6 @@ class TestIndexResponse(IndexResponseTestCase):
                     'disease': ['normal'],
                     'genusSpecies': [
                         'Homo sapiens'
-                    ],
-                    'id': [
-                        'HPSI0314i-hoik',
-                        'HPSI0214i-wibj',
-                        'HPSI0314i-sojd',
-                        'HPSI0214i-kucg'
                     ],
                     'donorCount': 4,
                     'organismAge': [

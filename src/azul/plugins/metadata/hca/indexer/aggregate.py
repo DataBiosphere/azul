@@ -179,7 +179,14 @@ class DonorOrganismAggregator(SimpleAggregator):
         }
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'organism_age_range':
+        if field == 'biomaterial_id':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            else:
+                return None
+        elif field == 'organism_age_range':
             return SetAccumulator(max_size=100)
         elif field == 'organism_age':
             return SetOfDictAccumulator(max_size=100,
