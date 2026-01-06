@@ -433,7 +433,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_specimen(self, specimen) -> MutableJSON:
         return {
-            'id': specimen['biomaterial_id'],
             'organ': specimen.get('organ', None),
             'organPart': specimen.get('organ_part', None),
             'disease': specimen.get('disease', None),

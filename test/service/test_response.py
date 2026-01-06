@@ -334,7 +334,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['pancreas'],
                         'disease': ['normal'],
-                        'id': ['DID_scRSq06_pancreas'],
                         'organ': ['pancreas'],
                         'organPart': ['islet of Langerhans'],
                         'preservationMethod': [None],
@@ -353,7 +352,6 @@ class TestIndexResponse(IndexResponseTestCase):
                 'specimens': [
                     {
                         'disease': ['normal'],
-                        'id': ['DID_scRSq06_pancreas'],
                         'organ': ['pancreas'],
                         'organPart': ['islet of Langerhans'],
                         'preservationMethod': [None],
@@ -662,7 +660,6 @@ class TestIndexResponse(IndexResponseTestCase):
                             'sampleEntityType': ['specimens'],
                             'effectiveOrgan': ['pancreas'],
                             'disease': ['normal'],
-                            'id': ['DID_scRSq06_pancreas'],
                             'organ': ['pancreas'],
                             'organPart': ['islet of Langerhans'],
                             'preservationMethod': [None],
@@ -681,7 +678,6 @@ class TestIndexResponse(IndexResponseTestCase):
                     'specimens': [
                         {
                             'disease': ['normal'],
-                            'id': ['DID_scRSq06_pancreas'],
                             'organ': ['pancreas'],
                             'organPart': ['islet of Langerhans'],
                             'preservationMethod': [None],
@@ -930,7 +926,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['brain'],
                         'disease': ['H syndrome'],
-                        'id': ['specimen_ID_1'],
                         'organ': ['brain'],
                         'organPart': ['amygdala'],
                         'preservationMethod': [None],
@@ -949,7 +944,6 @@ class TestIndexResponse(IndexResponseTestCase):
                 'specimens': [
                     {
                         'disease': ['H syndrome'],
-                        'id': ['specimen_ID_1'],
                         'organ': ['brain'],
                         'organPart': ['amygdala'],
                         'preservationMethod': [None],
@@ -2408,7 +2402,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['embryo'],
-                        'id': ['Specimen1'],
                         'organ': ['embryo'],
                         'organPart': ['skin epidermis'],
                         'disease': ['normal'],
@@ -2441,7 +2434,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['embryo'],
-                        'id': ['Specimen1'],
                         'organ': ['embryo'],
                         'organPart': ['skin epidermis'],
                         'disease': ['normal'],
@@ -2453,7 +2445,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['pancreas'],
-                        'id': ['DID_scRSq06_pancreas'],
                         'organ': ['pancreas'],
                         'organPart': ['islet of Langerhans'],
                         'disease': ['normal'],
