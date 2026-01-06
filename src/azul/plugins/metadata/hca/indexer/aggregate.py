@@ -122,10 +122,16 @@ class SampleAggregator(SimpleAggregator):
 class SpecimenAggregator(SimpleAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'biomaterial_id':
+        if field in ('biomaterial_id', 'document_id'):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            # `document_id` is included in the sample aggregate so that the
+            # summary response field `specimenCount` can be calculated. This
+            # should not be a problem since there should only ever be one
+            # specimen inner entity in a samples outer entity.
+            elif field == 'document_id' and self.outer_entity_type == 'samples':
                 return super()._accumulator(field)
             else:
                 return None
