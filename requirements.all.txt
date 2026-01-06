@@ -101,7 +101,7 @@ pycparser==2.23
 pyflakes==3.4.0
 pygithub==2.8.1
 pyjwt==2.10.1
-pynacl==1.6.1
+pynacl==1.6.2
 pyopenssl==25.3.0
 pyparsing==3.2.5
 python-dateutil==2.9.0.post0

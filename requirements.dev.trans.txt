@@ -42,7 +42,7 @@ py-partiql-parser==0.6.3
 pycodestyle==2.14.0
 pyflakes==3.4.0
 pyjwt==2.10.1
-pynacl==1.6.1
+pynacl==1.6.2
 pyparsing==3.2.5
 readchar==4.2.1
 referencing==0.36.2
