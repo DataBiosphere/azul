@@ -143,7 +143,14 @@ class CellSuspensionAggregator(GroupingAggregator):
         return frozenset(entity['organ']),
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self.cell_count_fields:
+        if field == 'biomaterial_id':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            else:
+                return None
+        elif field in self.cell_count_fields:
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._accumulator(field)

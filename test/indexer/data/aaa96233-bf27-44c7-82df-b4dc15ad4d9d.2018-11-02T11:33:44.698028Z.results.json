@@ -1521,9 +1521,6 @@
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "total_estimated_cells_redundant": 0,
                         "total_estimated_cells_redundant_": 0,
                         "total_estimated_cells": 1,
@@ -2468,9 +2465,6 @@
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
                         ],
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -2762,9 +2756,6 @@
                     {
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
-                        "biomaterial_id": [
-                            "GSM2172585 1"
                         ],
                         "selected_cell_type": [
                             "~null"
