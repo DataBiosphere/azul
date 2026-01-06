@@ -2423,12 +2423,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['organoids'],
                         'effectiveOrgan': ['Brain'],
-                        'id': [
-                            'Org_HPSI0214i-kucg_2_2',
-                            'Org_HPSI0214i-wibj_2_2',
-                            'Org_HPSI0314i-hoik_1_2',
-                            'Org_HPSI0314i-sojd_3_2',
-                        ],
                         'modelOrgan': ['Brain'],
                         'modelOrganPart': [None],
                     }

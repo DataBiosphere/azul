@@ -486,7 +486,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_organoid(self, organoid) -> MutableJSON:
         return {
-            'id': organoid['biomaterial_id'],
             'modelOrgan': organoid.get('model_organ', None),
             'modelOrganPart': organoid.get('model_organ_part', None)
         }
