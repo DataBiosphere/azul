@@ -1518,9 +1518,6 @@
                 ],
                 "cell_suspensions": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "total_estimated_cells_redundant": 0,
                         "total_estimated_cells_redundant_": 0,
                         "total_estimated_cells": 1,
@@ -2462,9 +2459,6 @@
                 ],
                 "cell_suspensions": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -2754,9 +2748,6 @@
                 ],
                 "cell_suspensions": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "selected_cell_type": [
                             "~null"
                         ],
