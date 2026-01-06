@@ -994,7 +994,6 @@ class TestIndexResponse(IndexResponseTestCase):
         stage = self._response_stage('projects')
         response = stage.process_response((hits, self.paginations[0], {}))
         expected_cell_lines = {
-            'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
             'modelOrgan': ['blood (parent_cell_line)', 'blood (child_cell_line)'],
         }
@@ -1004,7 +1003,6 @@ class TestIndexResponse(IndexResponseTestCase):
         expected_samples = {
             'sampleEntityType': ['cellLines'],
             'effectiveOrgan': ['blood (child_cell_line)'],
-            'id': ['cell_line_Day7_hiPSC-CM_BioRep2'],
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
         }
@@ -2419,7 +2417,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['cellLines'],
                         'effectiveOrgan': ['immune system'],
-                        'id': ['Cell_line_2'],
                         'cellLineType': ['primary'],
                         'modelOrgan': ['immune system'],
                     },
@@ -2459,7 +2456,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['cellLines'],
                         'effectiveOrgan': ['immune system'],
-                        'id': ['Cell_line_2'],
                         'cellLineType': ['primary'],
                         'modelOrgan': ['immune system'],
                     },
