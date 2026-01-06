@@ -1464,9 +1464,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
@@ -2364,9 +2361,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
@@ -2647,9 +2641,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
@@ -3234,9 +3225,6 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
