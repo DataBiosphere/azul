@@ -1539,9 +1539,6 @@
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
-                        ],
                         "donor_count": 1,
                         "donor_count_": 1,
                         "biological_sex": [
@@ -2429,9 +2426,6 @@
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
-                        ],
                         "donor_count": 1,
                         "donor_count_": 1,
                         "genus_species": [
@@ -2717,9 +2711,6 @@
                     {
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
                         ],
                         "donor_count": 1,
                         "donor_count_": 1,
@@ -3328,9 +3319,6 @@
                     {
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
                         ],
                         "donor_count": 1,
                         "donor_count_": 1,

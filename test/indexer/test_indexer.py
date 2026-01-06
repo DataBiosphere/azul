@@ -2060,6 +2060,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 k: (v if isinstance(v, list) else [v]) +
                    ([] if k == 'organism_age_range' or True else [None])
                 for k, v in donor.items()
+                if k != 'biomaterial_id'
             }
         }
         hits = self._get_all_hits()
