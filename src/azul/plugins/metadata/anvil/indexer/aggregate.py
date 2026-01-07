@@ -99,7 +99,8 @@ class DonorAggregator(SimpleAggregator):
     def _accumulator(self, field: str) -> Accumulator | None:
         if field in {
             'document_id',
-            'donor_id'
+            'donor_id',
+            'source_datarepo_row_ids'
         } and self.outer_entity_type != 'files':
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
