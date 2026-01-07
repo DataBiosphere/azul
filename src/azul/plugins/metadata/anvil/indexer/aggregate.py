@@ -127,7 +127,8 @@ class FileAggregator(GroupingAggregator):
     def _accumulator(self, field: str) -> Accumulator | None:
         if field in {
             'document_id',
-            'drs_uri'
+            'drs_uri',
+            'file_id'
         }:
             return None
         elif field in ('count', 'file_size'):

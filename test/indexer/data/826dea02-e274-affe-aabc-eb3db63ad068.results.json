@@ -136,9 +136,6 @@
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
-                        "file_id": [
-                            "1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
                         "data_modality": [
                             "~null"
                         ],
@@ -1009,9 +1006,6 @@
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
-                        "file_id": [
-                            "1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
                         "data_modality": [
                             "~null"
                         ],
@@ -1040,9 +1034,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "data_modality": [
                             "~null"
@@ -1920,9 +1911,6 @@
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
                         ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
-                        ],
                         "data_modality": [
                             "~null"
                         ],
@@ -2317,9 +2305,6 @@
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
-                        "file_id": [
-                            "1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
                         "data_modality": [
                             "~null"
                         ],
@@ -2348,9 +2333,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "data_modality": [
                             "~null"
@@ -2798,9 +2780,6 @@
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
-                        "file_id": [
-                            "1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
                         "data_modality": [
                             "~null"
                         ],
@@ -2829,9 +2808,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "data_modality": [
                             "~null"
@@ -3278,9 +3254,6 @@
                         "source_datarepo_row_ids": [
                             "file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0"
                         ],
-                        "file_id": [
-                            "1e269f04-4347-4188-b060-1dcc69e71d67"
-                        ],
                         "data_modality": [
                             "~null"
                         ],
@@ -3309,9 +3282,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2"
-                        ],
-                        "file_id": [
-                            "8b722e88-8103-49c1-b351-e64fa7c6ab37"
                         ],
                         "data_modality": [
                             "~null"
