@@ -125,7 +125,9 @@ class FileAggregator(GroupingAggregator):
         return entity['file_format'],
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in ('count', 'file_size'):
+        if field == 'document_id':
+            return None
+        elif field in ('count', 'file_size'):
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._accumulator(field)
