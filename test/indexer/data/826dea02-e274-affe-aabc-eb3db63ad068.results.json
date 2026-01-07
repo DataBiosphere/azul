@@ -28,9 +28,6 @@
                 ],
                 "biosamples": [
                     {
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
                         "anatomical_site": [
                             "~null"
                         ],
@@ -936,9 +933,6 @@
                 ],
                 "biosamples": [
                     {
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
                         "anatomical_site": [
                             "~null"
                         ],
@@ -1879,9 +1873,6 @@
                 ],
                 "biosamples": [
                     {
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
                         "anatomical_site": [
                             "~null"
                         ],
@@ -2825,9 +2816,6 @@
                 ],
                 "biosamples": [
                     {
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
                         "anatomical_site": [
                             "~null"
                         ],
@@ -3342,9 +3330,6 @@
                 ],
                 "biosamples": [
                     {
-                        "source_datarepo_row_ids": [
-                            "sample:98048c3b-2525-4090-94fd-477de31f2608"
-                        ],
                         "anatomical_site": [
                             "~null"
                         ],

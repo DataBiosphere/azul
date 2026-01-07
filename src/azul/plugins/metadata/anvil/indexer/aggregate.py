@@ -42,7 +42,8 @@ class BiosampleAggregator(SimpleAggregator):
     def _accumulator(self, field: str) -> Accumulator | None:
         if field in {
             'biosample_id',
-            'document_id'
+            'document_id',
+            'source_datarepo_row_ids'
         } and self.outer_entity_type != 'files':
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
