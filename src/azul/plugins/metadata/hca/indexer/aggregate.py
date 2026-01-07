@@ -217,7 +217,7 @@ class DonorOrganismAggregator(SimpleAggregator):
         elif field == 'organism_age_range':
             return SetAccumulator(max_size=int(107 * 1.25))
         elif field == 'organism_age':
-            return SetOfDictAccumulator(max_size=100,
+            return SetOfDictAccumulator(max_size=int(107 * 1.25),
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          none_safe_itemgetter('value', 'unit')))
         elif field == 'donor_count':
