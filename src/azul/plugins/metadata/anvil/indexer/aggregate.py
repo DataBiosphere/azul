@@ -78,7 +78,11 @@ class DatasetAggregator(SimpleAggregator):
 class DiagnosisAggregator(SimpleAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in ('diagnosis_age', 'onset_age'):
+        if field == 'diagnosis_id' and self.outer_entity_type != 'files':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        elif field in ('diagnosis_age', 'onset_age'):
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          itemgetter('lte', 'gte')))
