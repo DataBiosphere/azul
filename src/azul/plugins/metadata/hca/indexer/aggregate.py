@@ -212,6 +212,8 @@ class DonorOrganismAggregator(SimpleAggregator):
                 return SetAccumulator(max_size=int(931 * 1.25))
             else:
                 return None
+        elif field == 'development_stage':
+            return SetAccumulator(max_size=int(124 * 1.25))
         elif field == 'organism_age_range':
             return SetAccumulator(max_size=100)
         elif field == 'organism_age':
