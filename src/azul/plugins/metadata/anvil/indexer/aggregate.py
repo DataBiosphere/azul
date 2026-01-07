@@ -40,7 +40,10 @@ class ActivityAggregator(SimpleAggregator):
 class BiosampleAggregator(SimpleAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field == 'biosample_id' and self.outer_entity_type != 'files':
+        if field in {
+            'biosample_id',
+            'document_id'
+        } and self.outer_entity_type != 'files':
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None
