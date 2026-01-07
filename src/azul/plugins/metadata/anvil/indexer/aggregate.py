@@ -23,7 +23,14 @@ from azul.lib.types import (
 
 
 class ActivityAggregator(SimpleAggregator):
-    pass
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if field == 'activity_id' and self.outer_entity_type != 'files':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        else:
+            return super()._accumulator(field)
 
 
 class BiosampleAggregator(SimpleAggregator):

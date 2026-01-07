@@ -931,10 +931,6 @@
                             "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b",
                             "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
                         ],
-                        "activity_id": [
-                            "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                            "a60c5138-3749-f7cb-8714-52d389ad5231"
-                        ],
                         "activity_table": [
                             "anvil_sequencingactivity"
                         ],
@@ -2332,10 +2328,6 @@
                             "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b",
                             "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
                         ],
-                        "activity_id": [
-                            "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                            "a60c5138-3749-f7cb-8714-52d389ad5231"
-                        ],
                         "activity_table": [
                             "anvil_sequencingactivity"
                         ],
@@ -2855,10 +2847,6 @@
                         "source_datarepo_row_ids": [
                             "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b",
                             "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-                        ],
-                        "activity_id": [
-                            "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                            "a60c5138-3749-f7cb-8714-52d389ad5231"
                         ],
                         "activity_table": [
                             "anvil_sequencingactivity"
@@ -3390,10 +3378,6 @@
                         "source_datarepo_row_ids": [
                             "sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b",
                             "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-                        ],
-                        "activity_id": [
-                            "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-                            "a60c5138-3749-f7cb-8714-52d389ad5231"
                         ],
                         "activity_table": [
                             "anvil_sequencingactivity"
