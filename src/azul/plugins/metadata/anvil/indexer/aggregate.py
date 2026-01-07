@@ -78,7 +78,10 @@ class DatasetAggregator(SimpleAggregator):
 class DiagnosisAggregator(SimpleAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field == 'diagnosis_id' and self.outer_entity_type != 'files':
+        if field in {
+            'diagnosis_id',
+            'document_id'
+        } and self.outer_entity_type != 'files':
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None

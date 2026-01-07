@@ -85,10 +85,6 @@
                 ],
                 "diagnoses": [
                     {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
@@ -980,10 +976,6 @@
                 ],
                 "diagnoses": [
                     {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
@@ -1919,10 +1911,6 @@
                 ],
                 "diagnoses": [
                     {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
@@ -2338,10 +2326,6 @@
                 ],
                 "diagnoses": [
                     {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
@@ -2848,10 +2832,6 @@
                 ],
                 "diagnoses": [
                     {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
@@ -3355,10 +3335,6 @@
                 ],
                 "diagnoses": [
                     {
-                        "document_id": [
-                            "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-                            "939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
-                        ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
