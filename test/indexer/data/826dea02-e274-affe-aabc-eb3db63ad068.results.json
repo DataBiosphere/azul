@@ -92,10 +92,6 @@
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
-                        ],
                         "disease": [
                             "redacted-A61iJlLx",
                             "redacted-g50ublm/"
@@ -990,10 +986,6 @@
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
                         ],
                         "disease": [
                             "redacted-A61iJlLx",
@@ -1934,10 +1926,6 @@
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
-                        ],
                         "disease": [
                             "redacted-A61iJlLx",
                             "redacted-g50ublm/"
@@ -2356,10 +2344,6 @@
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
                         ],
                         "disease": [
                             "redacted-A61iJlLx",
@@ -2871,10 +2855,6 @@
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
-                        ],
                         "disease": [
                             "redacted-A61iJlLx",
                             "redacted-g50ublm/"
@@ -3381,10 +3361,6 @@
                         ],
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "diagnosis_id": [
-                            "25ff8d32-18c9-fc3e-020a-5de20d35d906",
-                            "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6"
                         ],
                         "disease": [
                             "redacted-A61iJlLx",
