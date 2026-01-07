@@ -147,9 +147,6 @@
                         "reference_assembly": [
                             "~null"
                         ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
-                        ],
                         "is_supplementary": [
                             0
                         ],
@@ -1014,9 +1011,6 @@
                         "reference_assembly": [
                             "~null"
                         ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
-                        ],
                         "is_supplementary": [
                             0
                         ],
@@ -1039,9 +1033,6 @@
                         "file_size_": 3306845592,
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
                         "is_supplementary": [
                             0
@@ -1913,9 +1904,6 @@
                         "reference_assembly": [
                             "~null"
                         ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
-                        ],
                         "is_supplementary": [
                             0
                         ],
@@ -2304,9 +2292,6 @@
                         "reference_assembly": [
                             "~null"
                         ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
-                        ],
                         "is_supplementary": [
                             0
                         ],
@@ -2329,9 +2314,6 @@
                         "file_size_": 3306845592,
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
                         "is_supplementary": [
                             0
@@ -2773,9 +2755,6 @@
                         "reference_assembly": [
                             "~null"
                         ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
-                        ],
                         "is_supplementary": [
                             0
                         ],
@@ -2798,9 +2777,6 @@
                         "file_size_": 3306845592,
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
                         "is_supplementary": [
                             0
@@ -3241,9 +3217,6 @@
                         "reference_assembly": [
                             "~null"
                         ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"
-                        ],
                         "is_supplementary": [
                             0
                         ],
@@ -3266,9 +3239,6 @@
                         "file_size_": 3306845592,
                         "reference_assembly": [
                             "~null"
-                        ],
-                        "file_name": [
-                            "307500.merged.matefixed.sorted.markeddups.recal.bam"
                         ],
                         "is_supplementary": [
                             0
