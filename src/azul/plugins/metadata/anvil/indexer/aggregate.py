@@ -95,7 +95,14 @@ class DiagnosisAggregator(SimpleAggregator):
 
 
 class DonorAggregator(SimpleAggregator):
-    pass
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if field == 'document_id' and self.outer_entity_type != 'files':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        else:
+            return super()._accumulator(field)
 
 
 class FileAggregator(GroupingAggregator):
