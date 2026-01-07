@@ -57,7 +57,18 @@ class BiosampleAggregator(SimpleAggregator):
 
 
 class DatasetAggregator(SimpleAggregator):
-    pass
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if field == 'document_id':
+            # If any dataset IDs are missing from the aggregate, those datasets
+            # will be omitted during the verbatim handover. Datasets are a "hot"
+            # entity type, and we can't track their hubs in replica documents,
+            # so we rely on the inner entity IDs instead. We also need to
+            # aggregate document_id to allow filtering by the value on
+            # non-dataset endpoints.
+            return super()._accumulator(field)
+        else:
+            return super()._accumulator(field)
 
 
 class DiagnosisAggregator(SimpleAggregator):
