@@ -120,9 +120,6 @@
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
-                        ],
                         "organism_type": [
                             "redacted-ACw+6ecI"
                         ],
@@ -1004,9 +1001,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
                             "redacted-ACw+6ecI"
@@ -1934,9 +1928,6 @@
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
                         ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
-                        ],
                         "organism_type": [
                             "redacted-ACw+6ecI"
                         ],
@@ -2342,9 +2333,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
                             "redacted-ACw+6ecI"
@@ -2842,9 +2830,6 @@
                     {
                         "source_datarepo_row_ids": [
                             "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-                        ],
-                        "donor_id": [
-                            "1e2bd7e5-f45e-a391-daea-7c060be76acd"
                         ],
                         "organism_type": [
                             "redacted-ACw+6ecI"
