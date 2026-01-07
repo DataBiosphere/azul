@@ -25,7 +25,10 @@ from azul.lib.types import (
 class ActivityAggregator(SimpleAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field == 'activity_id' and self.outer_entity_type != 'files':
+        if field in {
+            'activity_id',
+            'document_id'
+        } and self.outer_entity_type != 'files':
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None
