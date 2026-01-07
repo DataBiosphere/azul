@@ -335,7 +335,7 @@ class MatricesAggregator(SimpleAggregator):
         if field == 'document_id':
             return None
         elif field == 'file':
-            return DictAccumulator(max_size=100, key=itemgetter('uuid'))
+            return DictAccumulator(max_size=int(515 * 1.25), key=itemgetter('uuid'))
         else:
             return SetAccumulator()
 
