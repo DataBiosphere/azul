@@ -131,7 +131,8 @@ class FileAggregator(GroupingAggregator):
             'file_id',
             'file_md5sum',
             'file_name',
-            'source_datarepo_row_ids'
+            'source_datarepo_row_ids',
+            'version'
         }:
             return None
         elif field in ('count', 'file_size'):
