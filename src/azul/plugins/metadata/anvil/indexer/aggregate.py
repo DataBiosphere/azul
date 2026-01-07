@@ -40,7 +40,11 @@ class ActivityAggregator(SimpleAggregator):
 class BiosampleAggregator(SimpleAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field == 'donor_age_at_collection':
+        if field == 'biosample_id' and self.outer_entity_type != 'files':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        elif field == 'donor_age_at_collection':
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          itemgetter('lte', 'gte')))
