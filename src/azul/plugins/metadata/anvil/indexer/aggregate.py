@@ -130,7 +130,8 @@ class FileAggregator(GroupingAggregator):
             'drs_uri',
             'file_id',
             'file_md5sum',
-            'file_name'
+            'file_name',
+            'source_datarepo_row_ids'
         }:
             return None
         elif field in ('count', 'file_size'):
