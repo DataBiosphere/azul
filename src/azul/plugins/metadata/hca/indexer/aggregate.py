@@ -230,7 +230,7 @@ class DonorOrganismAggregator(SimpleAggregator):
             #
             # FIXME: Enforce that hot entity types are completely aggregated
             #        https://github.com/DataBiosphere/azul/issues/6793
-            return SetAccumulator(max_size=100)
+            return SetAccumulator(max_size=int(931 * 1.25))
         else:
             return super()._accumulator(field)
 
