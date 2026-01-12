@@ -653,6 +653,27 @@ class RepositoryPlugin[BUNDLE: Bundle = Bundle[SourcedBundleFQID],
         assert source.prefix is not None, source
         assert prefix in source.prefix, (source, prefix)
 
+    def _match_sources(self,
+                       source_names_by_id: Mapping[str, str]
+                       ) -> list[SOURCE_REF]:
+        """
+        Filter the given sources to only include sources that the plugin is
+        configured to read metadata from, and instantiate them as `SourceRef`s.
+        """
+        configured_specs_by_name = {spec.name: spec for spec in self.sources}
+        source_ids_by_name = {
+            name: id
+            for id, name in source_names_by_id.items()
+            if name in configured_specs_by_name
+        }
+        source_ref_cls = self.source_ref_cls
+        return [
+            source_ref_cls(id=id,
+                           spec=configured_specs_by_name[name],
+                           prefix=None)
+            for name, id in source_ids_by_name.items()
+        ]
+
     @abstractmethod
     def list_accessible_sources(self,
                                 authentication: Authentication | None

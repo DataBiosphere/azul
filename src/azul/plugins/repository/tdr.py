@@ -23,6 +23,7 @@ from furl import (
 
 from azul import (
     cache_per_thread,
+    cached_property,
     config,
     require,
 )
@@ -112,29 +113,21 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                 tdr = self._user_authenticated_tdr(None)
                 return tdr_callback(tdr)
 
-    def list_accessible_sources(self,
-                                authentication: Authentication | None
-                                ) -> list[TDRSourceRef]:
-        configured_specs_by_name = {spec.name: spec for spec in self.sources}
-        # Filter by prefix of snapshot names in an attempt to speed up the
+    @cached_property
+    def _common_source_filter(self) -> str:
+        # We filter by prefix of snapshot names in an attempt to speed up the
         # listing by limiting the number of irrelevant snapshots returned. Note
         # that TDR does a substring match, not a prefix match, but determining
         # the longest common substring is complicated and, as of yet, I haven't
         # found a trustworthy, reusable implementation.
-        filter = longest_common_prefix(configured_specs_by_name.keys())
-        snapshots = self._auth_fallback(authentication,
-                                        lambda tdr: tdr.snapshot_names_by_id(filter=filter))
-        snapshot_ids_by_name = {
-            name: id
-            for id, name in snapshots.items()
-            if name in configured_specs_by_name
-        }
-        return [
-            TDRSourceRef(id=id,
-                         spec=configured_specs_by_name[name],
-                         prefix=None)
-            for name, id in snapshot_ids_by_name.items()
-        ]
+        return longest_common_prefix(spec.name for spec in self.sources)
+
+    def list_accessible_sources(self,
+                                authentication: Authentication | None
+                                ) -> list[TDRSourceRef]:
+        names_by_id = self._auth_fallback(authentication,
+                                          lambda tdr: tdr.snapshot_names_by_id(filter=self._common_source_filter))
+        return self._match_sources(names_by_id)
 
     def list_accessible_source_ids(self,
                                    authentication: Authentication | None
