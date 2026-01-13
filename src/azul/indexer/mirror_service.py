@@ -344,6 +344,10 @@ class BaseMirrorService:
             bucket = aws.mirror_bucket
         return StorageService(bucket)
 
+    @cached_property
+    def _source_service(self) -> SourceService:
+        return SourceService()
+
     def may_mirror_files_from_source(self, source_spec: SourceSpec) -> bool:
         """
         Test whether it makes sense to request the mirroring of files from the
@@ -518,10 +522,6 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
     """
 
     _schema_url_func: SchemaUrlFunc
-
-    @cached_property
-    def _source_service(self) -> SourceService:
-        return SourceService()
 
     # We don't store the mirrored files' actual content type(s) in S3's
     # `Content-Type` metadata because a single file object may store the
