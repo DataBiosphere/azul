@@ -88,6 +88,9 @@ class Plugin(RepositoryPlugin[
     def list_accessible_sources(self,
                                 authentication: Authentication | None
                                 ) -> list[CannedSourceRef]:
+        return self.list_sources()
+
+    def list_sources(self) -> list[CannedSourceRef]:
         return [
             CannedSourceRef(id=self._lookup_source_id(spec), spec=spec, prefix=None)
             for spec in self.sources

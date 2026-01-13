@@ -687,6 +687,14 @@ class RepositoryPlugin[BUNDLE: Bundle = Bundle[SourcedBundleFQID],
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def list_sources(self) -> Iterable[SOURCE_REF]:
+        """
+        The sources the plugin is configured to read metadata from. Retrieving
+        this information may require a round-trip to the underlying repository.
+        """
+        raise NotImplementedError
+
     def list_accessible_source_ids(self,
                                    authentication: Authentication | None
                                    ) -> set[str]:

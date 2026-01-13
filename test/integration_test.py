@@ -1584,6 +1584,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 }
             })
         inner_files = [one(file['files']) for file in files]
+        for file in inner_files:
+            self.assertIsNone(file['azul_mirror_uri'])
         managed_access_file_urls = {
             file['azul_url']
             for file in inner_files

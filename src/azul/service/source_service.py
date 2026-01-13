@@ -4,13 +4,17 @@ from time import (
     time,
 )
 from typing import (
+    AbstractSet,
     Iterable,
+    TypedDict,
 )
 
 from azul import (
     CatalogName,
+    NotInLambdaContextException,
     cache,
     config,
+    open_resource,
 )
 from azul.auth import (
     Authentication,
@@ -26,6 +30,8 @@ from azul.plugins import (
 )
 from azul.types import (
     AnyJSON,
+    JSON,
+    json_element_mappings,
 )
 
 log = logging.getLogger(__name__)
@@ -45,6 +51,11 @@ class Expired(CacheMiss):
 
     def __init__(self, key: str):
         super().__init__(f'Entry for key {key!r} is expired')
+
+
+class _ConfiguredSources(TypedDict):
+    all: AbstractSet[SourceRef]
+    public: AbstractSet[SourceRef]
 
 
 class SourceService:
@@ -121,3 +132,46 @@ class SourceService:
 
     def _now(self) -> int:
         return int(time())
+
+    @cache
+    def _configured_sources(self) -> _ConfiguredSources:
+        try:
+            with open_resource('sources.json') as f:
+                sources = json.load(f)
+        except NotInLambdaContextException:
+            all_sources, public_sources = set(), set()
+            for catalog in config.catalogs.values():
+                if not catalog.is_integration_test_catalog:
+                    all_sources.update(self.repository_plugin(catalog.name).list_sources())
+                    public_sources.update(self.list_accessible_sources(catalog.name,
+                                                                       authentication=None))
+            return {
+                'all': all_sources,
+                'public': public_sources,
+            }
+        else:
+            def parse(sources: AnyJSON) -> AbstractSet[SourceRef]:
+                return frozenset(
+                    SourceRef.from_json(source)
+                    for source in json_element_mappings(sources)
+                )
+
+            return {
+                'all': parse(sources['all']),
+                'public': parse(sources['public']),
+            }
+
+    @property
+    def configured_sources(self) -> AbstractSet[SourceRef]:
+        return self._configured_sources()['all']
+
+    @property
+    def configured_public_sources(self) -> AbstractSet[SourceRef]:
+        return self._configured_sources()['public']
+
+    @property
+    def configured_sources_for_outsourcing(self) -> JSON:
+        return {
+            k: [source.to_json() for source in v]
+            for k, v in self._configured_sources().items()
+        }

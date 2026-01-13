@@ -358,7 +358,14 @@ class BaseMirrorService:
         if self.may_mirror():
             plugin = self.repository_plugin
             source_config = plugin.sources[source_spec]
-            return source_config.mirror
+            if source_config.mirror:
+                is_public = any(
+                    source_spec == source.spec
+                    for source in self._source_service.configured_public_sources
+                )
+                return is_public
+            else:
+                return False
         else:
             return False
 
