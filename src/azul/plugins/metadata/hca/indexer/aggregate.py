@@ -122,7 +122,7 @@ class SampleAggregator(SimpleAggregator):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
-                return super()._accumulator(field)
+                return SetAccumulator(max_size=int(1209 * 1.25))
             else:
                 return None
         else:
