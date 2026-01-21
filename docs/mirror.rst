@@ -160,9 +160,9 @@ response from that endpoint contains the file's mirror URI at
 ``hits[].files[].azul_mirror_uri``. The mirror URI is of the form
 ``s3://${bucket}/file/${digest_value}.${digest_type}`` where ``digest_type`` and
 ``digest_value`` denote the primary digest of the file. If the property
-``azul_mirror_uri`` is absent from the Azul response, the mirror will not
-include that file. If the response property is present, the mirror will very
-likely include the file.
+``azul_mirror_uri`` is null in the Azul response, the mirror will not include
+that file. If the response property is non-null, the mirror will very likely
+include the file.
 
 .. [8] https://service.azul.data.humancellatlas.org/
 .. [9] https://service.explore.anvilproject.org/
