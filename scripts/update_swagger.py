@@ -36,7 +36,7 @@ files = [
     'swagger-initializer.js'
 ]
 
-swagger_dir = Path(config.project_root) / 'swagger'
+swagger_dir = Path(config.project_root) / 'resources/static/swagger'
 
 
 def download_file(name: str):
