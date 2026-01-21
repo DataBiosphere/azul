@@ -67,6 +67,10 @@ class DatasetAggregator(SimpleAggregator):
             # aggregate document_id to allow filtering by the value on
             # non-dataset endpoints.
             return super()._accumulator(field)
+        elif field == 'source_datarepo_row_ids' and self.outer_entity_type != 'files':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
         else:
             return super()._accumulator(field)
 
