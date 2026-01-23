@@ -1,8 +1,5 @@
 import requests
 
-from azul.deployment import (
-    aws,
-)
 from azul.logging import (
     configure_test_logging,
 )
@@ -1275,7 +1272,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     path='/repository/files/15b76f9c-6b46-433f-851d-34e89f1b9ba6',
                                     args=dict(catalog='test', version=self.version)
                                 )),
-                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/beec606ee0aa299fdf913f4259316622.md5'
+                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
+                                                   f'beec606ee0aa299fdf913f4259316622.md5'
                             }
                         ]
                     },
@@ -1354,7 +1352,8 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                     path='/repository/files/3b17377b-16b1-431c-9967-e5d01fc5923f',
                                     args=dict(catalog='test', version=self.version)
                                 )),
-                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/7cd9fd7b54a8bf380e44e93706f1fa2d.md5'
+                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
+                                                   f'7cd9fd7b54a8bf380e44e93706f1fa2d.md5'
                             }
                         ]
                     }

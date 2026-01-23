@@ -42,9 +42,6 @@ from azul import (
 from azul.collections import (
     none_safe_key,
 )
-from azul.deployment import (
-    aws,
-)
 from azul.indexer import (
     BundleFQID,
     Prefix,
@@ -254,7 +251,7 @@ class TestIndexResponse(IndexResponseTestCase):
                         'azul_url': f'{self.base_url}/repository/files/'
                                     f'7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
                                     f'?catalog=test&version=2018-11-02T11%3A33%3A44.698028Z',
-                        'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                        'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                            f'77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a.sha256',
                         'drs_uri': f'drs://{self._drs_domain_name}/'
                                    f'7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z',
@@ -985,7 +982,7 @@ class TestIndexResponse(IndexResponseTestCase):
             'azul_url': f'{self.base_url}/repository/files/'
                         f'a8b8479d-cfa9-4f74-909f-49552439e698'
                         f'?catalog=test&version=2019-10-09T17%3A22%3A51.560099Z',
-            'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+            'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                f'709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47.sha256',
             'drs_uri': f'drs://{self._drs_domain_name}/'
                        f'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T17%3A22%3A51.560099Z',
@@ -2970,7 +2967,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                     args=dict(catalog='test', version='2021-02-11T23:11:45.000000Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'6a6483c2e78da77017e912a4d350f141'
                                                                    f'bda1ec7b269f20ca718b55145ee5c83c.sha256'
                                             }
@@ -3005,7 +3002,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/538faa28-3235-5e4b-a998-5672e2d964e8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'edb8e0139fece9702d89ae5fe7f761c4'
                                                                    f'1c291ef6a71129c6420857e025228a24.sha256',
                                             },
@@ -3030,7 +3027,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/6c142250-567c-5b63-bd4f-0d78499863f8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'cb1467f4d23a2429b4928943b51652b3'
                                                                    f'2edb949099250d28cf400d13074f5440.sha256',
                                             },
@@ -3055,7 +3052,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'724b2c0ddf33c662b362179bc6ca90cd'
                                                                    f'866b99b340d061463c35d27cfd5a23c5.sha256',
                                             }
@@ -3099,7 +3096,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'331bd925c08539194eb06e197a1238e1'
                                                                    f'306c3b7876b6fe13548d03824cc4b68b.sha256',
                                             },
@@ -3124,7 +3121,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'cb7beb6f4e8c684e41d25aa4dc1294dc'
                                                                    f'b1e070e87f9ed852463bf651d511a36b.sha256',
                                             },
@@ -3149,7 +3146,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'6372732e9fe9b8d58c8be8df88ea439d'
                                                                    f'5c68ee9bb02e3d472c94633fadf782a1.sha256',
                                             },
@@ -3174,7 +3171,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'f1458913c223553d09966ff94f0ed3d8'
                                                                    f'7e7cdfce21904f32943d70f691d8f7a0.sha256',
                                             },
@@ -3199,7 +3196,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'053074e25a96a463c081e38bcd02662b'
                                                                    f'a1536dd0cb71411bd111b8a2086a03e1.sha256',
                                             },
@@ -3224,7 +3221,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'1c57cba1ade259fc9ec56b914b507507'
                                                                    f'd75ccbf6ddeebf03ba00c922c30e0c6e.sha256',
                                             },
@@ -3249,7 +3246,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/5b465aad-0981-5152-b468-e615e20f5884',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'af3ea779ca01a2ba65f9415720a44648'
                                                                    f'ef28a6ed73c9ec30e54ed4ba9895f590.sha256',
                                             },
@@ -3274,7 +3271,7 @@ class TestProjectMatrices(IndexResponseTestCase):
                                                     path='/repository/files/b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
                                                 )),
-                                                'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/'
+                                                'azul_mirror_uri': f's3://{self.mirror_bucket}/file/'
                                                                    f'4f515b8fbbec8bfbc72c8c0d656897ee'
                                                                    f'37bfa30bab6eb50fdc641924227be674.sha256',
                                             }
@@ -3804,7 +3801,7 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
                 version='2022-07-26T00:16:47.748000Z'
             )
         ))
-        mirror_uri = (f's3://{aws.mirror_bucket}/file/'
+        mirror_uri = (f's3://{self.mirror_bucket}/file/'
                       f'649c45bd2f01b028c974c7e2a9604b9cf564d8afcf528eb299eaf3d7fe92bae3.sha256')
         expected_file = {
             'contentDescription': ['Count matrix', 'Feature table'],

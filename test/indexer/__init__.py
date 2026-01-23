@@ -74,6 +74,9 @@ from azul_test_case import (
 from es_test_case import (
     ElasticsearchTestCase,
 )
+from mirror_test_case import (
+    MirroringEnabledTestCase,
+)
 
 
 class ForcedRefreshIndexService(IndexService):
@@ -210,6 +213,7 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
 class IndexerTestCase(CatalogTestCase,
                       ElasticsearchTestCase,
                       CannedBundleTestCase,
+                      MirroringEnabledTestCase,
                       metaclass=ABCMeta):
     index_service: ClassVar[IndexService | None] = None
 
