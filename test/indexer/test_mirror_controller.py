@@ -54,7 +54,7 @@ from azul.types import (
 from azul_test_case import (
     DCP2TestCase,
 )
-from service import (
+from mirror_test_case import (
     MirrorTestCase,
 )
 from sqs_test_case import (

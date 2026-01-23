@@ -78,8 +78,10 @@ from azul_test_case import (
     DCP1TestCase,
     DCP2TestCase,
 )
-from service import (
+from mirror_test_case import (
     MirrorTestCase,
+)
+from s3_test_case import (
     S3TestCase,
 )
 

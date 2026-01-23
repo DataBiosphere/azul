@@ -134,9 +134,11 @@ from indexer import (
     CannedFileTestCase,
     DCP1CannedBundleTestCase,
 )
+from mirror_test_case import (
+    MirrorTestCase,
+)
 from service import (
     DocumentCloningTestCase,
-    MirrorTestCase,
     StorageServiceTestCase,
     WebServiceTestCase,
 )
