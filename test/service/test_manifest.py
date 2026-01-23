@@ -135,7 +135,7 @@ from indexer import (
     DCP1CannedBundleTestCase,
 )
 from mirror_test_case import (
-    MirrorTestCase,
+    MirrorFilesTestCase,
 )
 from service import (
     DocumentCloningTestCase,
@@ -252,7 +252,7 @@ class CannedManifestTestCase(CannedFileTestCase):
 class ManifestTestCase(WebServiceTestCase,
                        StorageServiceTestCase,
                        CannedManifestTestCase,
-                       MirrorTestCase,
+                       MirrorFilesTestCase,
                        metaclass=ABCMeta):
 
     def setUp(self):

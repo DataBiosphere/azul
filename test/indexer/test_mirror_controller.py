@@ -55,7 +55,7 @@ from azul_test_case import (
     DCP2TestCase,
 )
 from mirror_test_case import (
-    MirrorTestCase,
+    MirrorFilesTestCase,
 )
 from sqs_test_case import (
     WorkQueueTestCase,
@@ -72,7 +72,7 @@ def setUpModule():
 class TestMirrorController(DCP2TestCase,
                            LocalAppTestCase,
                            WorkQueueTestCase,
-                           MirrorTestCase):
+                           MirrorFilesTestCase):
 
     @classmethod
     def app_name(cls) -> str:

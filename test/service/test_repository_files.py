@@ -79,7 +79,7 @@ from azul_test_case import (
     DCP2TestCase,
 )
 from mirror_test_case import (
-    MirrorTestCase,
+    MirrorFilesTestCase,
 )
 from s3_test_case import (
     S3TestCase,
@@ -405,7 +405,7 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
 
 class TestRepositoryFilesWithMirroring(DCP2TestCase,
                                        RepositoryFilesTestCase,
-                                       MirrorTestCase):
+                                       MirrorFilesTestCase):
 
     def test_repository_files(self):
         file_content = b'Contents of foo'
