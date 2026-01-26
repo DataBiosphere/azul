@@ -50,14 +50,14 @@ class Expired(CacheMiss):
 class SourceService:
 
     @cache
-    def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
     def list_accessible_source_ids(self,
                                    catalog: CatalogName,
                                    authentication: Authentication | None
                                    ) -> set[str]:
-        plugin = self._repository_plugin(catalog)
+        plugin = self.repository_plugin(catalog)
 
         cache_key = (
             catalog,
@@ -77,7 +77,7 @@ class SourceService:
                                 catalog: CatalogName,
                                 authentication: Authentication | None
                                 ) -> Iterable[SourceRef]:
-        return self._repository_plugin(catalog).list_accessible_sources(authentication)
+        return self.repository_plugin(catalog).list_accessible_sources(authentication)
 
     table_name = config.dynamo_sources_cache_table_name
 

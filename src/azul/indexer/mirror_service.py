@@ -333,9 +333,9 @@ class BaseMirrorService:
     def _queues(self) -> Queues:
         return Queues()
 
-    @cached_property
-    def _repository_plugin(self) -> RepositoryPlugin:
-        return RepositoryPlugin.load(self.catalog).create(self.catalog)
+    @property
+    def repository_plugin(self) -> RepositoryPlugin:
+        return self._source_service.repository_plugin(self.catalog)
 
     @cached_property
     def _storage(self) -> StorageService:
@@ -356,7 +356,7 @@ class BaseMirrorService:
         definitely refuse to mirror all files from the source.
         """
         if self.may_mirror():
-            plugin = self._repository_plugin
+            plugin = self.repository_plugin
             source_config = plugin.sources[source_spec]
             return source_config.mirror
         else:
@@ -551,7 +551,7 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
                                                                          authentication=None)
         assert a.source.id in public_sources, R(
             'Cannot mirror non-public source', a.source)
-        plugin = self._repository_plugin
+        plugin = self.repository_plugin
         # The desired partition size depends on the maximum number of messages
         # we can send in one Lambda invocation, because queueing the individual
         # mirror_file messages turns out to dominate the running time of
@@ -576,7 +576,7 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorPartitionAction) -> Iterator[MirrorAction]:
-        plugin = self._repository_plugin
+        plugin = self.repository_plugin
         files = plugin.list_files(a.source, a.prefix)
         for file in files:
             assert file.size is not None, R('File size unknown', file)
@@ -722,7 +722,7 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
-        object = self._repository_plugin.drs_object(file.drs_uri)
+        object = self.repository_plugin.drs_object(file.drs_uri)
         access = object.get(AccessMethod.gs)
         assert access.method is AccessMethod.https, access
         return furl(access.url)

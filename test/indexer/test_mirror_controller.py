@@ -169,7 +169,7 @@ class TestMirrorController(DCP2TestCase,
 
     def _test_mirror_partition(self, partition_message, files: list[HCAFile]):
         event = self._mirror_event(partition_message)
-        plugin_cls = type(self.service._repository_plugin)
+        plugin_cls = type(self.service.repository_plugin)
         with patch.object(plugin_cls, 'list_files', return_value=files):
             self.mirror_controller.mirror(event)
         file_message = one(self._read_queue(self.service._mirror_queue()))
