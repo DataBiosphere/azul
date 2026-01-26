@@ -547,7 +547,9 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorSourceAction) -> Iterator[MirrorAction]:
-        assert a.source.id in self._list_public_source_ids(), R(
+        public_sources = self._source_service.list_source_ids(self.catalog,
+                                                              authentication=None)
+        assert a.source.id in public_sources, R(
             'Cannot mirror non-public source', a.source)
         plugin = self._repository_plugin
         # The desired partition size depends on the maximum number of messages
@@ -571,9 +573,6 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
 
         for partition in prefix.partition_prefixes():
             yield devolve(MirrorPartitionAction, a, source=source, prefix=partition)
-
-    def _list_public_source_ids(self) -> set[str]:
-        return self._source_service.list_source_ids(self.catalog, authentication=None)
 
     @_mirror.register
     def _(self, a: MirrorPartitionAction) -> Iterator[MirrorAction]:
