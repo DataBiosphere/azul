@@ -654,9 +654,9 @@ class RepositoryPlugin[BUNDLE: Bundle = Bundle[SourcedBundleFQID],
         assert prefix in source.prefix, (source, prefix)
 
     @abstractmethod
-    def list_sources(self,
-                     authentication: Authentication | None
-                     ) -> Iterable[SOURCE_REF]:
+    def list_accessible_sources(self,
+                                authentication: Authentication | None
+                                ) -> Iterable[SOURCE_REF]:
         """
         The sources the plugin is configured to read metadata from that are
         accessible using the provided authentication. Retrieving this
@@ -666,20 +666,20 @@ class RepositoryPlugin[BUNDLE: Bundle = Bundle[SourcedBundleFQID],
         """
         raise NotImplementedError
 
-    def list_source_ids(self,
-                        authentication: Authentication | None
-                        ) -> set[str]:
+    def list_accessible_source_ids(self,
+                                   authentication: Authentication | None
+                                   ) -> set[str]:
         """
         List source IDs in the underlying repository that are accessible using
         the provided authentication. Sources may be included even if they are
         not configured to be read from. Subclasses should override this method
-        if it can be implemented more efficiently than `list_sources`.
+        if it can be implemented more efficiently than `list_accessible_sources`.
 
         Retrieving this information may require a round-trip to the underlying
         repository. Implementations should raise PermissionError if the provided
         authentication is insufficient to access the repository.
         """
-        return {source.id for source in self.list_sources(authentication)}
+        return {source.id for source in self.list_accessible_sources(authentication)}
 
     @cached_property
     def _generic_params(self) -> dict[TypeVar, type]:

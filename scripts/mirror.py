@@ -37,7 +37,7 @@ def mirror_catalog(azul: AzulClient,
         fail_queue)
     public_sources_by_spec = {
         source.spec: source
-        for source in plugin.list_sources(authentication=None)
+        for source in plugin.list_accessible_sources(authentication=None)
     }
     # When the user doesn't specify a source or provides "*" as a source glob,
     # we implicitly filter out managed-access sources. This lets us assert that

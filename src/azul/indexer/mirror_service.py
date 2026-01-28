@@ -547,8 +547,8 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorSourceAction) -> Iterator[MirrorAction]:
-        public_sources = self._source_service.list_source_ids(self.catalog,
-                                                              authentication=None)
+        public_sources = self._source_service.list_accessible_source_ids(self.catalog,
+                                                                         authentication=None)
         assert a.source.id in public_sources, R(
             'Cannot mirror non-public source', a.source)
         plugin = self._repository_plugin

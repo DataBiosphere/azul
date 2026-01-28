@@ -53,10 +53,10 @@ class SourceService:
     def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def list_source_ids(self,
-                        catalog: CatalogName,
-                        authentication: Authentication | None
-                        ) -> set[str]:
+    def list_accessible_source_ids(self,
+                                   catalog: CatalogName,
+                                   authentication: Authentication | None
+                                   ) -> set[str]:
         plugin = self._repository_plugin(catalog)
 
         cache_key = (
@@ -69,15 +69,15 @@ class SourceService:
         try:
             source_ids = set(self._get(cache_key))
         except CacheMiss:
-            source_ids = plugin.list_source_ids(authentication)
+            source_ids = plugin.list_accessible_source_ids(authentication)
             self._put(cache_key, list(source_ids))
         return source_ids
 
-    def list_sources(self,
-                     catalog: CatalogName,
-                     authentication: Authentication | None
-                     ) -> Iterable[SourceRef]:
-        return self._repository_plugin(catalog).list_sources(authentication)
+    def list_accessible_sources(self,
+                                catalog: CatalogName,
+                                authentication: Authentication | None
+                                ) -> Iterable[SourceRef]:
+        return self._repository_plugin(catalog).list_accessible_sources(authentication)
 
     table_name = config.dynamo_sources_cache_table_name
 

@@ -112,9 +112,9 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                 tdr = self._user_authenticated_tdr(None)
                 return tdr_callback(tdr)
 
-    def list_sources(self,
-                     authentication: Authentication | None
-                     ) -> list[TDRSourceRef]:
+    def list_accessible_sources(self,
+                                authentication: Authentication | None
+                                ) -> list[TDRSourceRef]:
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
         # Filter by prefix of snapshot names in an attempt to speed up the
         # listing by limiting the number of irrelevant snapshots returned. Note
@@ -136,9 +136,9 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
             for name, id in snapshot_ids_by_name.items()
         ]
 
-    def list_source_ids(self,
-                        authentication: Authentication | None
-                        ) -> set[str]:
+    def list_accessible_source_ids(self,
+                                   authentication: Authentication | None
+                                   ) -> set[str]:
         return self._auth_fallback(authentication,
                                    lambda tdr: tdr.snapshot_ids())
 

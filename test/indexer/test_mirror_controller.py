@@ -84,7 +84,7 @@ class TestMirrorController(DCP2TestCase,
     def setUpClass(cls):
         super().setUpClass()
         cls.addClassPatch(patch.object(SourceService,
-                                       'list_source_ids',
+                                       'list_accessible_source_ids',
                                        return_value={cls.source.id}))
         cls.addClassPatch(patch.object(MirrorAction,
                                        '_operation_id',

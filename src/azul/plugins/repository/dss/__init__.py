@@ -114,9 +114,9 @@ class Plugin(RepositoryPlugin[
     def count_files(self, source: DSSSourceRef) -> NoReturn:
         assert False, 'DSS is EOL'
 
-    def list_sources(self,
-                     authentication: Authentication | None
-                     ) -> list[DSSSourceRef]:
+    def list_accessible_sources(self,
+                                authentication: Authentication | None
+                                ) -> list[DSSSourceRef]:
         return [
             DSSSourceRef(id=self._lookup_source_id(spec), spec=spec, prefix=None)
             for spec in self.sources
