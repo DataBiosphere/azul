@@ -423,6 +423,7 @@ class SourceSpec(Parseable, metaclass=ABCMeta):
     are structured might want to implement this abstract class. Plugins that
     have simple unstructured names may want to use :class:`SimpleSourceSpec`.
     """
+    #: Assumed to be unique per catalog.
     name: str
 
 
