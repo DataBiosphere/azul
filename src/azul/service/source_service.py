@@ -81,6 +81,8 @@ class SourceService:
             source_ids = set(self._get(cache_key))
         except CacheMiss:
             source_ids = plugin.list_accessible_source_ids(authentication)
+            configured_source_ids = {source.id for source in self.configured_sources}
+            source_ids &= configured_source_ids
             self._put(cache_key, list(source_ids))
         return source_ids
 
