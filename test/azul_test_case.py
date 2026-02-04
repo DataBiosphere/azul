@@ -45,6 +45,7 @@ import moto.core.models
 from opensearchpy.exceptions import (
     OpenSearchWarning,
 )
+import urllib3
 
 from azul import (
     CatalogName,
@@ -53,6 +54,11 @@ from azul import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.http import (
+    DefaultRetryHttpClient,
+    HasCachedHttpClient,
+    HttpClient,
 )
 from azul.logging import (
     configure_test_logging,
@@ -237,7 +243,7 @@ class AzulTestCase(TestCase):
             yield
 
 
-class AzulUnitTestCase(AzulTestCase):
+class AzulUnitTestCase(AzulTestCase, HasCachedHttpClient):
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -352,6 +358,14 @@ class AzulUnitTestCase(AzulTestCase):
         cls.addClassPatch(patch.object(target=api,
                                        attribute='valid_schema_domains',
                                        new=cls.valid_schema_domains))
+
+    def _create_http_client(self) -> HttpClient:
+        return DefaultRetryHttpClient(
+            super()._create_http_client(),
+            retries=urllib3.util.Retry(total=0,
+                                       status=0,
+                                       raise_on_status=False)
+        )
 
 
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
