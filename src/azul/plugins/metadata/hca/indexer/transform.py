@@ -1237,7 +1237,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         for dimension, values in points.items():
             if values:
                 for value in values:
-                    assert self.dimension_value_re.fullmatch(value), value
+                    assert self.dimension_value_re.fullmatch(value), R(
+                        'Invalid dimension value', dimension, value)
                 point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
