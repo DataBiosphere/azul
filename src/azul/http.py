@@ -197,6 +197,43 @@ def http_client(log: logging.Logger | None = None) -> HttpClient:
     return StatusRetryHttpClient(client)
 
 
+class HTTPStatusError(Exception):
+
+    def __init__(self, url: str | None, status: int, reason: str | None = None):
+        # The URL is intentionally passed last, as it tends to be long and we
+        # don't want it to displace the other two arguments in the log line.
+        super().__init__('Unexpected response status', status, reason, url)
+
+
+def raise_on_status(response: urllib3.BaseHTTPResponse) -> None:
+    if not 200 <= response.status < 400:
+        raise HTTPStatusError(response.url, response.status, response.reason)
+
+
+class DefaultRetryHttpClient(HttpClientDecorator):
+
+    def __init__(self,
+                 inner: HttpClient,
+                 retries: urllib3.util.Retry,
+                 headers: dict | None = None):
+        super().__init__(inner, headers)
+        self.retries = retries
+
+    def urlopen(self,
+                method: str,
+                url: str,
+                *args,
+                **kwargs
+                ) -> urllib3.BaseHTTPResponse:
+        assert 'retries' not in kwargs, R("Argument 'retries' is disallowed")
+        response = super().urlopen(method,
+                                   url,
+                                   *args,
+                                   retries=self.retries,
+                                   **kwargs)
+        return response
+
+
 class LimitedTimeoutException(Exception):
 
     def __init__(self, url: furl, timeout: float):
