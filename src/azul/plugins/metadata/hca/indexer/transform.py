@@ -1223,6 +1223,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 donor.development_stage
                 for donor in visitor.donors.values()
                 if donor.development_stage is not None and not (
+                    # FIXME: Remove LungMAP-specific check for empty string value
+                    #        https://github.com/DataBiosphere/azul/issues/7742
                     donor.development_stage == ''
                     and self.bundle.fqid.source.spec.name.startswith('lungmap_')
                 )
