@@ -1222,7 +1222,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'developmentStage': {
                 donor.development_stage
                 for donor in visitor.donors.values()
-                if donor.development_stage is not None
+                if donor.development_stage is not None and not (
+                    donor.development_stage == ''
+                    and self.bundle.fqid.source.spec.name.startswith('lungmap_')
+                )
             },
             'organ': {
                 sample.organ if hasattr(sample, 'organ') else sample.model_organ
