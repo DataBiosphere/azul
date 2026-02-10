@@ -4,13 +4,17 @@ from time import (
     time,
 )
 from typing import (
+    AbstractSet,
     Iterable,
+    TypedDict,
 )
 
 from azul import (
     CatalogName,
+    NotInLambdaContextException,
     cache,
     config,
+    open_resource,
 )
 from azul.auth import (
     Authentication,
@@ -26,6 +30,8 @@ from azul.plugins import (
 )
 from azul.types import (
     AnyJSON,
+    JSON,
+    json_element_mappings,
 )
 
 log = logging.getLogger(__name__)
@@ -47,17 +53,22 @@ class Expired(CacheMiss):
         super().__init__(f'Entry for key {key!r} is expired')
 
 
+class _ConfiguredSources(TypedDict):
+    all: AbstractSet[SourceRef]
+    public: AbstractSet[SourceRef]
+
+
 class SourceService:
 
     @cache
-    def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def list_source_ids(self,
-                        catalog: CatalogName,
-                        authentication: Authentication | None
-                        ) -> set[str]:
-        plugin = self._repository_plugin(catalog)
+    def list_accessible_source_ids(self,
+                                   catalog: CatalogName,
+                                   authentication: Authentication | None
+                                   ) -> set[str]:
+        plugin = self.repository_plugin(catalog)
 
         cache_key = (
             catalog,
@@ -69,15 +80,17 @@ class SourceService:
         try:
             source_ids = set(self._get(cache_key))
         except CacheMiss:
-            source_ids = plugin.list_source_ids(authentication)
+            source_ids = plugin.list_accessible_source_ids(authentication)
+            configured_source_ids = {source.id for source in self.configured_sources}
+            source_ids &= configured_source_ids
             self._put(cache_key, list(source_ids))
         return source_ids
 
-    def list_sources(self,
-                     catalog: CatalogName,
-                     authentication: Authentication | None
-                     ) -> Iterable[SourceRef]:
-        return self._repository_plugin(catalog).list_sources(authentication)
+    def list_accessible_sources(self,
+                                catalog: CatalogName,
+                                authentication: Authentication | None
+                                ) -> Iterable[SourceRef]:
+        return self.repository_plugin(catalog).list_accessible_sources(authentication)
 
     table_name = config.dynamo_sources_cache_table_name
 
@@ -121,3 +134,46 @@ class SourceService:
 
     def _now(self) -> int:
         return int(time())
+
+    @cache
+    def _configured_sources(self) -> _ConfiguredSources:
+        try:
+            with open_resource('sources.json') as f:
+                sources = json.load(f)
+        except NotInLambdaContextException:
+            all_sources, public_sources = set(), set()
+            for catalog in config.catalogs.values():
+                if not catalog.is_integration_test_catalog:
+                    all_sources.update(self.repository_plugin(catalog.name).list_sources())
+                    public_sources.update(self.list_accessible_sources(catalog.name,
+                                                                       authentication=None))
+            return {
+                'all': all_sources,
+                'public': public_sources,
+            }
+        else:
+            def parse(sources: AnyJSON) -> AbstractSet[SourceRef]:
+                return frozenset(
+                    SourceRef.from_json(source)
+                    for source in json_element_mappings(sources)
+                )
+
+            return {
+                'all': parse(sources['all']),
+                'public': parse(sources['public']),
+            }
+
+    @property
+    def configured_sources(self) -> AbstractSet[SourceRef]:
+        return self._configured_sources()['all']
+
+    @property
+    def configured_public_sources(self) -> AbstractSet[SourceRef]:
+        return self._configured_sources()['public']
+
+    @property
+    def configured_sources_for_outsourcing(self) -> JSON:
+        return {
+            k: [source.to_json() for source in v]
+            for k, v in self._configured_sources().items()
+        }

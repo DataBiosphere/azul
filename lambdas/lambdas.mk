@@ -44,6 +44,9 @@ config: .chalice/config.json
 .PHONY: environ
 environ: vendor/resources/environ.json
 
+.PHONY: sources
+sources: vendor/resources/sources.json
+
 .PHONY: local
 local: check_python config
 	chalice local
@@ -52,7 +55,7 @@ local: check_python config
 clean: git_clean_recursive
 
 .PHONY: package
-package: check_branch check_python check_aws config environ compile
+package: check_branch check_python check_aws config environ sources compile
 	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform
 
 .PHONY: openapi

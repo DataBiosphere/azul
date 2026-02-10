@@ -330,9 +330,9 @@ class BaseMirrorService:
     def _queues(self) -> Queues:
         return Queues()
 
-    @cached_property
-    def _repository_plugin(self) -> RepositoryPlugin:
-        return RepositoryPlugin.load(self.catalog).create(self.catalog)
+    @property
+    def repository_plugin(self) -> RepositoryPlugin:
+        return self._source_service.repository_plugin(self.catalog)
 
     @cached_property
     def _storage(self) -> StorageService:
@@ -340,6 +340,10 @@ class BaseMirrorService:
         if bucket is None or self.catalog in config.integration_test_catalogs:
             bucket = aws.mirror_bucket
         return StorageService(bucket)
+
+    @cached_property
+    def _source_service(self) -> SourceService:
+        return SourceService()
 
     def may_mirror_files_from_source(self, source_spec: SourceSpec) -> bool:
         """
@@ -349,9 +353,16 @@ class BaseMirrorService:
         definitely refuse to mirror all files from the source.
         """
         if self.may_mirror():
-            plugin = self._repository_plugin
+            plugin = self.repository_plugin
             source_config = plugin.sources[source_spec]
-            return source_config.mirror
+            if source_config.mirror:
+                is_public = any(
+                    source_spec == source.spec
+                    for source in self._source_service.configured_public_sources
+                )
+                return is_public
+            else:
+                return False
         else:
             return False
 
@@ -516,10 +527,6 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
 
     _schema_url_func: SchemaUrlFunc
 
-    @cached_property
-    def _source_service(self) -> SourceService:
-        return SourceService()
-
     # We don't store the mirrored files' actual content type(s) in S3's
     # `Content-Type` metadata because a single file object may store the
     # contents of multiple file metadata entities, which may declare different
@@ -544,9 +551,11 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorSourceAction) -> Iterator[MirrorAction]:
-        assert a.source.id in self._list_public_source_ids(), R(
+        public_sources = self._source_service.list_accessible_source_ids(self.catalog,
+                                                                         authentication=None)
+        assert a.source.id in public_sources, R(
             'Cannot mirror non-public source', a.source)
-        plugin = self._repository_plugin
+        plugin = self.repository_plugin
         # The desired partition size depends on the maximum number of messages
         # we can send in one Lambda invocation, because queueing the individual
         # mirror_file messages turns out to dominate the running time of
@@ -569,12 +578,9 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
         for partition in prefix.partition_prefixes():
             yield devolve(MirrorPartitionAction, a, source=source, prefix=partition)
 
-    def _list_public_source_ids(self) -> set[str]:
-        return self._source_service.list_source_ids(self.catalog, authentication=None)
-
     @_mirror.register
     def _(self, a: MirrorPartitionAction) -> Iterator[MirrorAction]:
-        plugin = self._repository_plugin
+        plugin = self.repository_plugin
         files = plugin.list_files(a.source, a.prefix)
         for file in files:
             assert file.size is not None, R('File size unknown', file)
@@ -727,7 +733,7 @@ class MirrorService(BaseMirrorService, HasCachedHttpClient):
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
-        object = self._repository_plugin.drs_object(file.drs_uri)
+        object = self.repository_plugin.drs_object(file.drs_uri)
         access = object.get(AccessMethod.gs)
         assert access.method is AccessMethod.https, access
         return furl(access.url)

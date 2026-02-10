@@ -42,7 +42,7 @@ class SourceController(AppController):
                      authentication: Authentication | None
                      ) -> JSONs:
         try:
-            sources = self._source_service.list_sources(catalog, authentication)
+            sources = self._source_service.list_accessible_sources(catalog, authentication)
         except PermissionError:
             raise UnauthorizedError
         except LimitedTimeoutException as e:
@@ -70,7 +70,8 @@ class SourceController(AppController):
                          authentication: Authentication | None
                          ) -> set[str]:
         try:
-            source_ids = self._source_service.list_source_ids(catalog, authentication)
+            source_ids = self._source_service.list_accessible_source_ids(catalog,
+                                                                         authentication)
         except PermissionError:
             raise UnauthorizedError
         except LimitedTimeoutException as e:

@@ -207,6 +207,7 @@ absolute_sources = $(shell echo $(project_root)/src \
                                 $$(find $(project_root)/terraform{,/gitlab,/shared,/browser} \
                                         $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         $(project_root)/.github \
+                                        $(project_root)/resources \
                                         -maxdepth 1 \
                                         -name '*.template.py' \
                                         -type f ))

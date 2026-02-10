@@ -423,6 +423,8 @@ class SourceSpec(Parseable, metaclass=ABCMeta):
     are structured might want to implement this abstract class. Plugins that
     have simple unstructured names may want to use :class:`SimpleSourceSpec`.
     """
+    #: Assumed to be unique per catalog.
+    name: str
 
 
 @attrs.frozen(kw_only=True)
@@ -430,7 +432,6 @@ class SimpleSourceSpec(SourceSpec):
     """
     Default implementation for unstructured source names.
     """
-    name: str
 
     @classmethod
     def parse(cls, spec: str) -> Self:
@@ -465,7 +466,9 @@ class SourceRef[SOURCE_SPEC: SourceSpec](
 
     Note to plugin implementers: Since the source ID can't be assumed to be
     globally unique, plugins should subclass this class, even if the subclass
-    body is empty.
+    body is empty. Additionally, subclasses must not add any fields that are
+    required by the constructor, since the base repository plugin needs to be
+    able to instantiate them generically.
 
     >>> spec = SimpleSourceSpec(name='')
     >>> prefix = Prefix(partition=0)

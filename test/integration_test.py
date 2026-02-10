@@ -1594,9 +1594,12 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     'is': [ma_source.id]
                 }
             })
+        inner_files = [one(file['files']) for file in files]
+        for file in inner_files:
+            self.assertIsNone(file['azul_mirror_uri'])
         managed_access_file_urls = {
-            one(file['files'])['azul_url']
-            for file in files
+            file['azul_url']
+            for file in inner_files
         }
         file_url = furl(self.random.choice(sorted(managed_access_file_urls)))
         response = self._get_url_unchecked(GET, file_url)

@@ -123,7 +123,6 @@ class TDRSourceSpec(SourceSpec):
     type: Type
     domain: Domain
     subdomain: str
-    name: str
 
     @classmethod
     def parse(cls, spec: str) -> Self:
@@ -133,10 +132,10 @@ class TDRSourceSpec(SourceSpec):
 
         >>> s = TDRSourceSpec.parse('tdr:bigquery:gcp:foo:bar')
         >>> s # doctest: +NORMALIZE_WHITESPACE
-        TDRSourceSpec(type=<Type.bigquery: 'bigquery'>,
+        TDRSourceSpec(name='bar',
+                      type=<Type.bigquery: 'bigquery'>,
                       domain=<Domain.gcp: 'gcp'>,
-                      subdomain='foo',
-                      name='bar')
+                      subdomain='foo')
 
         >>> str(s)
         'tdr:bigquery:gcp:foo:bar'

@@ -68,6 +68,9 @@ from azul.plugins.repository.dss import (
 from azul.plugins.repository.tdr_hca import (
     TDRSourceRef,
 )
+from azul.service.source_service import (
+    SourceService,
+)
 from azul.terra import (
     TDRSourceSpec,
 )
@@ -361,6 +364,7 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         cls._patch_catalogs()
         cls._patch_replicas_enabled()
         cls._patch_deployment()
+        cls._patch_configured_sources()
 
     @classmethod
     def _patch_catalogs(cls):
@@ -403,6 +407,17 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
                                        'deployment_stage',
                                        new_callable=PropertyMock,
                                        return_value=config.deployment.test_name))
+
+    @classmethod
+    def _patch_configured_sources(cls):
+        cls.addClassPatch(patch.object(SourceService,
+                                       'configured_sources',
+                                       new_callable=PropertyMock,
+                                       return_value={cls.source}))
+        cls.addClassPatch(patch.object(SourceService,
+                                       'configured_public_sources',
+                                       new_callable=PropertyMock,
+                                       return_value={cls.source}))
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
