@@ -60,6 +60,7 @@ from google.cloud import (
 from google.oauth2 import (
     service_account,
 )
+import jsonschema
 from more_itertools import (
     first,
     grouper,
@@ -1819,6 +1820,14 @@ class IndexingIntegrationTest(IntegrationTestCase):
                         self.assertIsNotNone(actual_url)
                         actual_url.set(args=None)
                         self.assertEqual(expected_url, actual_url)
+
+                with self.subTest('validate_info_schemas'):
+                    for repository_file in indexed_files.keys():
+                        info_object = self._mirror_service(catalog).get_info(repository_file)
+                        schema_url = furl(info_object['$schema'])
+                        schema = self._get_url_json('GET', schema_url)
+                        jsonschema.validate(info_object, schema)
+
             _delete()
 
 

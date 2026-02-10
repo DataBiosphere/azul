@@ -88,6 +88,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
     json_element_strings,
 )
 
@@ -472,6 +473,9 @@ class BaseMirrorService:
         return self._storage.get_presigned_url(object_key=self._file_object_key(file),
                                                file_name=file.name,
                                                content_type=file.content_type)
+
+    def get_info(self, file: File) -> MutableJSON:
+        return json.loads(self._storage.get_object(self._info_object_key(file)))
 
     def info_exists(self, file: File) -> bool:
         return self._storage.object_exists(self._info_object_key(file))
