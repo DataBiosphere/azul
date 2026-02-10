@@ -14,8 +14,10 @@ import attr
 from more_itertools import (
     unzip,
 )
-import requests
 
+from azul.http import (
+    raise_on_status,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -124,8 +126,8 @@ class TestPagination(DCP1CannedBundleTestCase, DocumentCloningTestCase):
             return value
 
         def fetch(url):
-            response = requests.get(str(url))
-            response.raise_for_status()
+            response = self._http_client.request('GET', str(url))
+            raise_on_status(response)
             response = response.json()
             values = tuple(map(sort_field_value, response['hits']))
             self.assertEqual(values, tuple(sorted(unique(values), reverse=reverse)))
