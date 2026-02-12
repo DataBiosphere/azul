@@ -67,6 +67,11 @@ class ElasticsearchTestCase(DockerContainerTestCase):
                     # failure modes that are harder to diagnose.
                     #
                     'action.auto_create_index': False,
+
+                    # Allow wildcard deletions, making it possible to delete all
+                    # indices in a single request. Speeds up deletion of indices
+                    # between tests.
+                    #
                     'action.destructive_requires_name': False
                 }
             })
