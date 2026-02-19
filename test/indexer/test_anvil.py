@@ -42,6 +42,7 @@ from azul.lib.types import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins.repository import (
     tdr_anvil,
@@ -67,6 +68,9 @@ from indexer.test_tdr import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class DUOSTestCase(TDRTestCase, ABC):

@@ -22,6 +22,7 @@ from azul.lib.types import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.service.drs_controller import (
     DRSController,
@@ -39,6 +40,9 @@ from indexer import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
