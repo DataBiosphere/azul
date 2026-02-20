@@ -81,7 +81,6 @@ from openapi_spec_validator import (
     validate,
 )
 import opensearchpy
-import requests
 import urllib3
 
 from azul import (
@@ -113,9 +112,12 @@ from azul.drs import (
     HostBasedDRSURI,
 )
 from azul.http import (
+    DefaultRetryHttpClient,
+    HasCachedHttpClient,
     HttpClient,
     HttpClientDecorator,
     http_client,
+    raise_on_status,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -232,7 +234,14 @@ PUT = 'PUT'
 POST = 'POST'
 
 
-class IntegrationTestCase(AzulTestCase):
+class IntegrationTestCase(AzulTestCase, HasCachedHttpClient):
+
+    def _create_http_client(self) -> HttpClient:
+        return DefaultRetryHttpClient(
+            super()._create_http_client(),
+            retries=urllib3.util.Retry(status=0,
+                                       raise_on_status=False)
+        )
 
     @cached_property
     def azul_client(self):
@@ -359,7 +368,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
     def setUp(self) -> None:
         super().setUp()
-        self._plain_http = http_client(log)
+        self._plain_http = self._http_client
         self._http = self._plain_http
 
     @property
@@ -2032,7 +2041,7 @@ class AzulClientIntegrationTest(IntegrationTestCase):
         self.assertEqual({expected}, cm.exception.args[1])
 
 
-class OpenAPIIntegrationTest(AzulTestCase):
+class OpenAPIIntegrationTest(IntegrationTestCase):
 
     def test_openapi(self):
         for component, url in [
@@ -2041,19 +2050,19 @@ class OpenAPIIntegrationTest(AzulTestCase):
         ]:
             with self.subTest(component=component):
                 url.set(path='/')
-                response = requests.get(str(url))
-                self.assertEqual(response.status_code, 200)
+                response = self._http_client.request(GET, str(url), redirect=True)
+                self.assertEqual(response.status, 200)
                 self.assertEqual(response.headers['content-type'], 'text/html')
-                self.assertGreater(len(response.content), 0)
+                self.assertGreater(len(response.data), 0)
                 # validate OpenAPI spec
                 url.set(path='/openapi.json')
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request(GET, str(url))
+                raise_on_status(response)
                 spec = response.json()
                 validate(spec)
 
 
-class AzulChaliceLocalIntegrationTest(AzulTestCase):
+class AzulChaliceLocalIntegrationTest(IntegrationTestCase):
     url = furl(scheme='http', host='127.0.0.1', port=8000)
     server = None
     server_thread = None
@@ -2079,21 +2088,21 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         super().tearDownClass()
 
     def test_local_chalice(self):
-        response = requests.get(str(self.url))
-        self.assertEqual(200, response.status_code)
+        response = self._http_client.request(GET, str(self.url), redirect=True)
+        self.assertEqual(200, response.status)
 
     def test_local_chalice_health_endpoint(self):
         url = str(self.url.copy().set(path='health'))
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code)
+        response = self._http_client.request(GET, url)
+        self.assertEqual(200, response.status)
 
     catalog = first(config.integration_test_catalogs)
 
     def test_local_chalice_index_endpoints(self):
         url = str(self.url.copy().set(path='repository/sources',
                                       query=dict(catalog=self.catalog)))
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, response.content)
+        response = self._http_client.request(GET, url)
+        self.assertEqual(200, response.status, response.data)
 
     def test_local_filtered_index_endpoints(self):
         if config.is_hca_enabled(self.catalog):
@@ -2106,8 +2115,8 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         url = str(self.url.copy().set(path='index/files',
                                       query=dict(filters=json.dumps(filters),
                                                  catalog=self.catalog)))
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, response.content)
+        response = self._http_client.request(GET, url)
+        self.assertEqual(200, response.status, response.data)
 
 
 class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
@@ -2217,10 +2226,9 @@ class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
         return can_bundle.main
 
 
-class SwaggerResourceIntegrationTest(AzulTestCase):
+class SwaggerResourceIntegrationTest(IntegrationTestCase):
 
     def test(self):
-        http = http_client(log)
         for component, base_url in [
             ('service', config.service_endpoint),
             ('indexer', config.indexer_endpoint)
@@ -2236,11 +2244,11 @@ class SwaggerResourceIntegrationTest(AzulTestCase):
                 ('..%2Fdoes-not-exist', 403),
             ]:
                 with self.subTest(component=component, file=file):
-                    response = http.request(GET, str(base_url / 'swagger' / file))
+                    response = self._http_client.request(GET, str(base_url / 'swagger' / file))
                     self.assertEqual(expected_status, response.status)
 
 
-class DeployedVersionIntegrationTest(AzulTestCase):
+class DeployedVersionIntegrationTest(IntegrationTestCase):
 
     def test_version(self):
         local_status = config.git_status
@@ -2249,8 +2257,8 @@ class DeployedVersionIntegrationTest(AzulTestCase):
             ('indexer', config.indexer_endpoint)
         ]:
             endpoint.set(path='/version')
-            response = requests.get(str(endpoint))
-            self.assertEqual(response.status_code, 200)
+            response = self._http_client.request(GET, str(endpoint))
+            self.assertEqual(response.status, 200)
             lambda_status = response.json()['git']
             self.assertEqual(local_status, lambda_status)
 
@@ -2270,7 +2278,7 @@ class DisableAutomaticIndexCreationTest(IntegrationTestCase):
                 opensearch.indices.delete(index=[index_name])
 
 
-class ResponseHeadersTest(AzulTestCase):
+class ResponseHeadersTest(IntegrationTestCase):
 
     def test_response_security_headers(self):
         no_cache = 'no-store'
@@ -2286,8 +2294,8 @@ class ResponseHeadersTest(AzulTestCase):
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, cache_control in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
-                    response = requests.get(str(endpoint / path))
-                    response.raise_for_status()
+                    response = self._http_client.request(GET, str(endpoint / path))
+                    raise_on_status(response)
                     actual_csp = response.headers['Content-Security-Policy']
                     parsed_csp = CSP.parse(actual_csp)
                     parsed_csp.validate()
@@ -2311,15 +2319,16 @@ class ResponseHeadersTest(AzulTestCase):
                         # expected value.
                         'Content-Security-Policy': str(parsed_csp)
                     }
-                    self.assertIsSubset(expected_headers.items(), response.headers.items())
+                    self.assertIsSubset(expected_headers.items(),
+                                        set(list(response.headers.items())))
 
     def test_default_4xx_response_headers(self):
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             with self.subTest(endpoint=endpoint):
-                response = requests.get(str(endpoint / 'does-not-exist'))
-                self.assertEqual(403, response.status_code)
+                response = self._http_client.request(GET, str(endpoint / 'does-not-exist'))
+                self.assertEqual(403, response.status)
                 self.assertIsSubset(AzulChaliceApp.security_headers().items(),
-                                    response.headers.items())
+                                    set(list(response.headers.items())))
 
 
 class BearerTokenHttpClient(HttpClientDecorator):
