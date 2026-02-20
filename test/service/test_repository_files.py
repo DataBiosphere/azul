@@ -25,8 +25,6 @@ from furl import (
 from google.auth.transport.urllib3 import (
     AuthorizedHttp,
 )
-import requests
-import responses
 import urllib3
 
 from app_test_case import (
@@ -45,6 +43,7 @@ from azul.drs import (
 )
 from azul.http import (
     http_client,
+    raise_on_status,
 )
 from azul.indexer.mirror_service import (
     MirrorService,
@@ -56,6 +55,9 @@ from azul.logging import (
 )
 from azul.plugins.metadata.hca import (
     HCAFile,
+)
+from azul.plugins.repository.dss import (
+    DSSFileDownload,
 )
 from azul.service.index_service import (
     IndexService,
@@ -70,6 +72,9 @@ from azul_test_case import (
 from service import (
     MirrorTestCase,
     S3TestCase,
+)
+from urllib3_mock import (
+    Urllib3Mock,
 )
 
 log = get_test_logger(__name__)
@@ -218,8 +223,7 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
                                                  ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
-                            with responses.RequestsMock() as helper:
-                                helper.add_passthru(str(self.base_url))
+                            with Urllib3Mock(DSSFileDownload) as helper:
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
                                 s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
@@ -230,13 +234,13 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
                                                   'x-amz-security-token': 'SOMETOKEN',
                                                   'Expires': expires
                                               })
-                                helper.add(responses.Response(method='GET',
-                                                              url=str(dss_url),
-                                                              status=301,
-                                                              headers={
-                                                                  'Location': str(dss_url_with_token),
-                                                                  'Retry-After': '10'
-                                                              }))
+                                helper.add(method='GET',
+                                           url=str(dss_url),
+                                           status=301,
+                                           headers={
+                                               'Location': str(dss_url_with_token),
+                                               'Retry-After': '10'
+                                           })
                                 azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
                                                              args=dict(catalog=self.catalog, version=file_version))
                                 if fetch:
@@ -252,16 +256,16 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
                                     before = time.monotonic()
                                     with patch.object(type(aws), 'dss_checkout_bucket', return_value=bucket_name):
                                         with patch('time.time', new=lambda: 1547691253.07010):
-                                            response = requests.get(url, allow_redirects=False)
+                                            response = self._http_client.request('GET', url, redirect=False)
                                     if wait and expect_status == 301:
                                         self.assertLess(retry_after, time.monotonic() - before)
                                     if fetch:
-                                        self.assertEqual(200, response.status_code)
+                                        self.assertEqual(200, response.status)
                                         response = response.json()
                                         self.assertEqual(expect_status, response['Status'])
                                     else:
-                                        if response.status_code != expect_status:
-                                            response.raise_for_status()
+                                        if response.status != expect_status:
+                                            raise_on_status(response)
                                         response = dict(response.headers)
                                     if expect_retry_after is None:
                                         self.assertNotIn('Retry-After', response)
@@ -285,10 +289,10 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
                                 azul_url.args['sha256'] = file.sha256
                                 self.assertUrlEqual(azul_url, location)
 
-                                helper.add(responses.Response(method='GET',
-                                                              url=str(dss_url_with_token),
-                                                              status=302,
-                                                              headers={'Location': str(s3_url)}))
+                                helper.add(method='GET',
+                                           url=str(dss_url_with_token),
+                                           status=302,
+                                           headers={'Location': str(s3_url)})
 
                                 location = request_azul(url=location, expect_status=302)
 

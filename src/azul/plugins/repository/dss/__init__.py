@@ -18,7 +18,6 @@ from furl import (
 from more_itertools import (
     one,
 )
-import requests
 
 from azul import (
     config,
@@ -31,6 +30,7 @@ from azul.deployment import (
 )
 from azul.http import (
     HasCachedHttpClient,
+    raise_on_status,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -208,7 +208,7 @@ class Plugin(RepositoryPlugin[
         parse_dcp2_version(version)
 
 
-class DSSFileDownload(RepositoryFileDownload):
+class DSSFileDownload(RepositoryFileDownload, HasCachedHttpClient):
     _location: str | None = None
     _retry_after: int | None = None
 
@@ -222,8 +222,8 @@ class DSSFileDownload(RepositoryFileDownload):
                                                 file_version=self.file.version,
                                                 replica=self.replica,
                                                 token=self.token)
-        dss_response = requests.get(dss_url, allow_redirects=False)
-        if dss_response.status_code == 301:
+        dss_response = self._http_client.request('GET', dss_url, redirect=False)
+        if dss_response.status == 301:
             retry_after = int(dss_response.headers.get('Retry-After'))
             location = dss_response.headers['Location']
 
@@ -233,7 +233,7 @@ class DSSFileDownload(RepositoryFileDownload):
             self.replica = one(query['replica'])
             self.file = attrs.evolve(self.file, version=one(query['version']))
             self._retry_after = retry_after
-        elif dss_response.status_code == 302:
+        elif dss_response.status == 302:
             location = dss_response.headers['Location']
             # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
             if True:
@@ -256,7 +256,7 @@ class DSSFileDownload(RepositoryFileDownload):
                                                          Params=params)
             self._location = location
         else:
-            dss_response.raise_for_status()
+            raise_on_status(dss_response)
             assert False
 
     @property
