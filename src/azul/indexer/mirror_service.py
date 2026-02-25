@@ -802,7 +802,8 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         download = TDRFileDownload(plugin=self.repository_plugin,
                                    file=file,
                                    replica=None,
-                                   token=None)
+                                   token=None,
+                                   requester_pays=True)
         download.update(authentication)
         assert download.retry_after is None
         assert download.location is not None

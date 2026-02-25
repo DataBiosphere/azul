@@ -356,15 +356,30 @@ class DRSObject:
     _http_client: HttpClient
     _url: furl
 
-    def get(self, access_method: AccessMethod = AccessMethod.https) -> Access:
+    def get(self,
+            access_method: AccessMethod = AccessMethod.https,
+            headers: Mapping[str, str] | None = None
+            ) -> Access:
         """
         Returns access to the content of the data object identified by the
-        given URI. The scheme of the URL in the returned access object depends
-        on the access method specified.
-        """
-        return self._get(access_method)
+        given URI.
 
-    def _get(self, access_method: AccessMethod) -> Access:
+        :param access_method: The type of access method to use from the object
+                              response. The scheme of the URL in the returned
+                              access object depends on the access method
+                              specified.
+
+        :param headers: Optional request headers for accessing the object. Note
+                        that this argument is only applied for requests to
+                        .../objects/{object_id}/access/{access_id}/, and not to
+                        .../objects/{object_id}.
+        """
+        return self._get(access_method, headers)
+
+    def _get(self,
+             access_method: AccessMethod,
+             headers: Mapping[str, str] | None
+             ) -> Access:
         url = self._url
         while True:
             response = self._request(url)
@@ -384,9 +399,9 @@ class DRSObject:
                     # https://github.com/ga4gh/data-repository-service-schemas/issues/361
                     assert access_method is AccessMethod.gs, R(
                         'Unexpected access method', access_method)
-                    return self._get_access(access_id, AccessMethod.https)
+                    return self._get_access(access_id, AccessMethod.https, headers)
                 elif access_id is not None:
-                    return self._get_access(access_id, access_method)
+                    return self._get_access(access_id, access_method, headers)
                 elif access_url is not None:
                     scheme = furl(access_url['url']).scheme
                     assert scheme == access_method.scheme, R(
@@ -403,11 +418,15 @@ class DRSObject:
             else:
                 raise DRSStatusException(url, response)
 
-    def _get_access(self, access_id: str, access_method: AccessMethod) -> Access:
+    def _get_access(self,
+                    access_id: str,
+                    access_method: AccessMethod,
+                    headers: Mapping[str, str] | None
+                    ) -> Access:
         url = self._url.copy()
         url.path.add(['access', access_id])
         while True:
-            response = self._request(url)
+            response = self._request(url, headers=headers)
             if response.status == 200:
                 response_data = json_dict(json.loads(response.data))
                 scheme = furl(json_str(response_data['url'])).scheme
@@ -429,8 +448,8 @@ class DRSObject:
             else:
                 raise DRSStatusException(url, response)
 
-    def _request(self, url: furl) -> urllib3.BaseHTTPResponse:
-        return self._http_client.request('GET', str(url), redirect=False)
+    def _request(self, url: furl, **kwargs) -> urllib3.BaseHTTPResponse:
+        return self._http_client.request('GET', str(url), **kwargs, redirect=False)
 
 
 class DRSStatusException(Exception):
