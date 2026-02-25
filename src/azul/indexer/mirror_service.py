@@ -749,7 +749,12 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
         object = self.repository_plugin.drs_object(file.drs_uri)
-        access = object.get(AccessMethod.gs)
+        billing_project = config.terra_billing_project
+        if billing_project is not None:
+            access_headers = {'x-user-project': billing_project}
+        else:
+            access_headers = None
+        access = object.get(AccessMethod.gs, access_headers)
         assert access.method is AccessMethod.https, access
         return furl(access.url)
 

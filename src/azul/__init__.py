@@ -330,6 +330,10 @@ class Config:
         return mutable_furl(self.environ['azul_ecm_service_url'])
 
     @property
+    def terra_billing_project(self) -> str | None:
+        return self.environ.get('AZUL_TERRA_BILLING_PROJECT')
+
+    @property
     def dss_query_prefix(self) -> str:
         return self.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 

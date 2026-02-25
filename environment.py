@@ -744,6 +744,12 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_TERRA_SERVICE_URL': None,
 
+        # The Google Project ID associated with the Terra workspace to charge
+        # for file downloads while mirroring. If left unset, Terra pays the
+        # egress cost for the downloads.
+        #
+        'AZUL_TERRA_BILLING_PROJECT': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         #
