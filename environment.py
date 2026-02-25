@@ -762,6 +762,14 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_TERRA_SERVICE_URL': None,
 
+        # The GCP project ID of the Terra workspace to charge for file downloads
+        # from TDR while mirroring. If left unset, egress charges are incurred
+        # to the owner of the GCS bucket the files are stored in. Otherwise, the
+        # egress will be charged to the GCP billing account associated with the
+        # workspace. See section 3.2.3 of the README.
+        #
+        'AZUL_TDR_REQUESTER_PAYS_PROJECT': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         #

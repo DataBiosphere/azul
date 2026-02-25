@@ -668,6 +668,46 @@ These steps are performed once per deployment (multiple times per project).
 
     Follow the prompts to store the client secret.
 
+### 3.2.3 Terra workspace for requester-pays with TDR
+
+TDR supports requester-pays via Google Cloud to allow for data egress charges
+(e.g. from mirroring) to be billed to a specific [Terra billing project] instead
+of the bucket owner. Billing projects are a concept internal to Terra, related
+to but distinct from Google Cloud billing accounts.
+
+[Terra billing project]: https://support.terra.bio/hc/en-us/articles/360026182251-How-to-set-up-billing-in-Terra-GCP
+
+To use requester-pays, Azul must be configured with a Google Project ID
+associated with a Terra workspace that belongs to the chosen Terra billing
+project. This workspace must be creating and configuring manually. To set up a
+workspace for requester-pays in a given deployment:
+
+1. If the deployment's service accounts have not already been
+   [registered with SAM](#234-google-cloud-tdr-and-sam), complete the steps in that section before
+   proceeding further.
+
+2. Go to [Terra](https://app.terra.bio/#workspace) and create a new workspace.
+   Give it the name `"azul-requester_pays-${AZUL_DEPLOYMENT_STAGE}"`
+
+3. Select the Terra billing project to be used for requester-pays.
+
+4. Add the deployment's public service account as a collaborator and assign it
+   the role of "Writer". The service account's email follows the pattern
+   `"${AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC}@${GOOGLE_PROJECT}.iam.gserviceaccount.com"`
+
+5. If the deployment will be used to mirror managed-access files, repeat step 4
+   for the indexer service account.
+
+Then, to enable requester-pays for that deployment:
+
+1. Copy the workspace's Google Project ID from the "Cloud Information" side
+   panel.
+
+2. Set `"AZUL_TDR_REQUESTER_PAYS_PROJECT"` to the copied project ID in the
+   chosen deployment's `environment.py`.
+
+3. `_refresh` and `make deploy`.
+
 ## 3.3 Provisioning cloud infrastructure
 
 Once you've configured the project and your personal deployment or a shared
