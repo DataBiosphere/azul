@@ -615,7 +615,7 @@ class SimpleAggregator(EntityAggregator):
                     if isinstance(accumulator, SetAccumulator) and accumulator.allow_overflow:
                         log.warning(message)
                     else:
-                        log.warning(message)
+                        assert False, R(message)
         return result
 
 
