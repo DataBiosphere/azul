@@ -132,7 +132,9 @@ class SetAccumulator[V: Hashable](Accumulator[V, list[V]]):
 
     def __init__(self,
                  max_size: int | None = None,
-                 key: Callable[[V], SupportsRichComparison] | None = None
+                 key: Callable[[V], SupportsRichComparison] | None = None,
+                 *,
+                 allow_overflow: bool = False
                  ) -> None:
         """
         :param max_size: the maximum number of elements to retain
@@ -147,6 +149,7 @@ class SetAccumulator[V: Hashable](Accumulator[V, list[V]]):
         self.value: set[V] = set()
         self.max_size = max_size
         self.key = none_safe_key(none_last=True) if key is None else key
+        self.allow_overflow = allow_overflow
 
     def accumulate(self, value: V | list[V]) -> int:
         """
@@ -605,8 +608,14 @@ class SimpleAggregator(EntityAggregator):
             if accumulator is not None:
                 result[k] = accumulator.get()
                 if accumulator.dropped > 0:
-                    log.warning('Values were dropped %d times while aggregating %s.%s into %s',
-                                accumulator.dropped, self.entity_type, k, self.outer_entity_type)
+                    message = (
+                        f'Values were dropped {accumulator.dropped} times while aggregating '
+                        f'{self.entity_type}.{k} into {self.outer_entity_type}'
+                    )
+                    if isinstance(accumulator, SetAccumulator) and accumulator.allow_overflow:
+                        log.warning(message)
+                    else:
+                        log.warning(message)
         return result
 
 
