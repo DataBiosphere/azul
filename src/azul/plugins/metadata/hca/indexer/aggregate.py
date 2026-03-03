@@ -82,6 +82,12 @@ class HCAAggregate(Aggregate):
                     effective_cell_count=self.effective_cell_count)
 
 
+class HCAEntityAggregator(SimpleAggregator):
+
+    def _never_accumulate(self) -> set[str]:
+        return {'biomaterial_id', 'document_id'}
+
+
 class FileAggregator(GroupingAggregator):
 
     def _transform_entity(self, entity: JSON) -> JSON:
@@ -115,10 +121,10 @@ class FileAggregator(GroupingAggregator):
         return None
 
 
-class SampleAggregator(SimpleAggregator):
+class SampleAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in ('biomaterial_id', 'document_id'):
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -129,10 +135,10 @@ class SampleAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class SpecimenAggregator(SimpleAggregator):
+class SpecimenAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in ('biomaterial_id', 'document_id'):
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -149,7 +155,7 @@ class SpecimenAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class CellSuspensionAggregator(GroupingAggregator):
+class CellSuspensionAggregator(HCAEntityAggregator, GroupingAggregator):
     cell_count_fields = frozenset([
         'total_estimated_cells',
         'total_estimated_cells_redundant'
@@ -169,7 +175,7 @@ class CellSuspensionAggregator(GroupingAggregator):
         return frozenset(entity['organ']),
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in ('biomaterial_id', 'document_id'):
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -182,10 +188,10 @@ class CellSuspensionAggregator(GroupingAggregator):
             return super()._accumulator(field)
 
 
-class CellLineAggregator(SimpleAggregator):
+class CellLineAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == ('biomaterial_id', 'document_id'):
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -235,10 +241,10 @@ class DonorOrganismAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class OrganoidAggregator(SimpleAggregator):
+class OrganoidAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in ('biomaterial_id', 'document_id'):
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -298,10 +304,10 @@ class ProtocolAggregator(SimpleAggregator):
         return SetAccumulator()
 
 
-class SequencingInputAggregator(SimpleAggregator):
+class SequencingInputAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in ('biomaterial_id', 'document_id'):
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -312,10 +318,10 @@ class SequencingInputAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class SequencingProcessAggregator(SimpleAggregator):
+class SequencingProcessAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'document_id':
+        if field in self._never_accumulate():
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -329,10 +335,10 @@ class SequencingProcessAggregator(SimpleAggregator):
         return SetAccumulator(max_size=10)
 
 
-class MatricesAggregator(SimpleAggregator):
+class MatricesAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'document_id':
+        if field in self._never_accumulate():
             return None
         elif field == 'file':
             return DictAccumulator(max_size=int(515 * 1.25), key=itemgetter('uuid'))
@@ -340,10 +346,10 @@ class MatricesAggregator(SimpleAggregator):
             return SetAccumulator()
 
 
-class DateAggregator(SimpleAggregator):
+class DateAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'document_id':
+        if field in self._never_accumulate():
             return None
         elif field in ('submission_date', 'aggregate_submission_date'):
             return MinAccumulator()
