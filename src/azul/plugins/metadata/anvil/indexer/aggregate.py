@@ -23,14 +23,31 @@ from azul.lib.types import (
 )
 
 
-class ActivityAggregator(SimpleAggregator):
+class AnVILEntityAggregator(SimpleAggregator):
 
-    def _accumulator(self, field: str) -> Accumulator | None:
-        if field in {
-            'activity_id',
+    def _never_accumulate(self) -> set[str]:
+        entity_type = self.entity_type
+        if entity_type == 'activities':
+            entity_type = 'activity'
+        elif entity_type == 'diagnoses':
+            entity_type = 'diagnosis'
+        else:
+            assert entity_type.endswith('s')
+            entity_type = entity_type[:-1]
+        return {
+            entity_type + '_id',
             'document_id',
             'source_datarepo_row_ids'
-        } and self.outer_entity_type != 'files':
+        }
+
+
+class ActivityAggregator(AnVILEntityAggregator):
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None
@@ -38,14 +55,13 @@ class ActivityAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class BiosampleAggregator(SimpleAggregator):
+class BiosampleAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in {
-            'biosample_id',
-            'document_id',
-            'source_datarepo_row_ids'
-        } and self.outer_entity_type != 'files':
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None
@@ -76,14 +92,13 @@ class DatasetAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class DiagnosisAggregator(SimpleAggregator):
+class DiagnosisAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in {
-            'diagnosis_id',
-            'document_id',
-            'source_datarepo_row_ids'
-        } and self.outer_entity_type != 'files':
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None
@@ -100,14 +115,13 @@ class DiagnosisAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class DonorAggregator(SimpleAggregator):
+class DonorAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in {
-            'document_id',
-            'donor_id',
-            'source_datarepo_row_ids'
-        } and self.outer_entity_type != 'files':
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
             # These fields are only aggregated for files, where they are needed
             # for compact and PFB manifests
             return None
@@ -115,7 +129,7 @@ class DonorAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class FileAggregator(GroupingAggregator):
+class FileAggregator(AnVILEntityAggregator, GroupingAggregator):
 
     def _transform_entity(self, entity: JSON) -> JSON:
         file_aggregate_fields = {
@@ -131,13 +145,10 @@ class FileAggregator(GroupingAggregator):
         return entity['file_format'],
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in {
-            'document_id',
+        if field in self._never_accumulate() | {
             'drs_uri',
-            'file_id',
             'file_md5sum',
             'file_name',
-            'source_datarepo_row_ids',
             'version'
         }:
             return None
