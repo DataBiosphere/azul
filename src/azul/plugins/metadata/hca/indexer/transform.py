@@ -1487,6 +1487,33 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
     def entity_type(cls) -> str:
         return 'files'
 
+    # ┏━━━━━━━━━━━━━━━━━━┓
+    # ┃ Project replica  ┃
+    # ┃                  ┃
+    # ┣━━━━━━━━━━━━━━━━━━┫                                            ┏━━━━━━━━━━━━━━━━━━┓
+    # ┃    entity_id     ┃◀─┐                                         ┃   File replica   ┃
+    # ┣━━━━━━━━━━━━━━━━━━┫  │  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓     ┃                  ┃
+    # ┃     hub_ids      ┃  │  ┃         File aggregate         ┃     ┣━━━━━━━━━━━━━━━━━━┫
+    # ┗━━━━━━━━━━━━━━━━━━┛  │  ┃                                ┃  ┌─▶┃    entity_id     ┃
+    #                       │  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┣━━━━━━━━━━━━━━━━━━┫
+    # ┏━━━━━━━━━━━━━━━━━━┓  │  ┃           entity_id            ┃──┼─▶┃     hub_ids      ┃
+    # ┃  Donor replica   ┃  │  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┗━━━━━━━━━━━━━━━━━━┛
+    # ┃                  ┃  └──┃ contents.projects.document_id  ┃  │
+    # ┣━━━━━━━━━━━━━━━━━━┫     ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┏━━━━━━━━━━━━━━━━━━┓
+    # ┃    entity_id     ┃◀────┃  contents.donors.document_id   ┃  │  ┃ Specimen replica ┃
+    # ┣━━━━━━━━━━━━━━━━━━┫     ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┃                  ┃
+    # ┃     hub_ids      ┃  ┌──┃ contents.protocols.document_id ┃  │  ┣━━━━━━━━━━━━━━━━━━┫
+    # ┗━━━━━━━━━━━━━━━━━━┛  │  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛  │  ┃    entity_id     ┃
+    #                       │                                      │  ┣━━━━━━━━━━━━━━━━━━┫
+    # ┏━━━━━━━━━━━━━━━━━━┓  │                                      └─▶┃     hub_ids      ┃
+    # ┃ Protocol replica ┃  │                                         ┗━━━━━━━━━━━━━━━━━━┛
+    # ┃                  ┃  │
+    # ┣━━━━━━━━━━━━━━━━━━┫  │
+    # ┃    entity_id     ┃◀─┘
+    # ┣━━━━━━━━━━━━━━━━━━┫
+    # ┃     hub_ids      ┃
+    # ┗━━━━━━━━━━━━━━━━━━┛
+    #
     @classmethod
     def hot_entity_types(cls) -> dict[EntityType, EntityType]:
         return {
