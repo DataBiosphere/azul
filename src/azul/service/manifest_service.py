@@ -1273,6 +1273,34 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
     """
     page_size = 500
 
+    def _paginate_hits(self,
+                       request_factory: Callable[[SortKey | None], Search]
+                       ) -> Iterable[Hit]:
+        """
+        Yield all hits in every page of OpenSearch hits in responses to
+        requests that use client-side paging.
+
+        :param request_factory:  A callable that returns a prepared OpenSearch
+                                 request for the given search-after key, with the
+                                 appropriate filters and sorting applied. The
+                                 returned request should yield one page worth of
+                                 hits, starting at the first page (if the argument
+                                 is None), or the hit right after the hit with
+                                 given search-after key
+        """
+        search_after = None
+        while True:
+            request = request_factory(search_after)
+            response = request.execute()
+            if response.hits:
+                hit = None
+                for hit in response.hits:
+                    yield hit
+                assert hit is not None
+                search_after = self._search_after(hit)
+            else:
+                break
+
     def _create_paged_request(self, search_after: SortKey | None) -> Search:
         pagination = Pagination(sort='entryId',
                                 order='asc',
@@ -1924,34 +1952,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         """
         hub_id: str
         replica_ids: list[str]
-
-    def _paginate_hits(self,
-                       request_factory: Callable[[SortKey | None], Search]
-                       ) -> Iterable[Hit]:
-        """
-        Yield all hits in every page of OpenSearch hits in responses to
-        requests that use client-side paging.
-
-        :param request_factory:  A callable that returns a prepared OpenSearch
-                                 request for the given search-after key, with the
-                                 appropriate filters and sorting applied. The
-                                 returned request should yield one page worth of
-                                 hits, starting at the first page (if the argument
-                                 is None), or the hit right after the hit with
-                                 given search-after key
-        """
-        search_after = None
-        while True:
-            request = request_factory(search_after)
-            response = request.execute()
-            if response.hits:
-                hit = None
-                for hit in response.hits:
-                    yield hit
-                assert hit is not None
-                search_after = self._search_after(hit)
-            else:
-                break
 
     def _list_replica_keys(self) -> Iterable[ReplicaKeys]:
         for hit in self._paginate_hits(self._create_paged_request):
