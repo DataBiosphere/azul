@@ -1835,7 +1835,8 @@ Bundle = dict[Qualifier, Groups]
 Bundles = dict[FQID, Bundle]
 
 
-class PFBManifestGenerator(FileBasedManifestGenerator):
+class PFBManifestGenerator(FileBasedManifestGenerator,
+                           ClientSidePagingManifestGenerator):
 
     @classmethod
     def format(cls) -> ManifestFormat:
@@ -1863,10 +1864,10 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
 
     def _all_docs_sorted(self) -> Iterable[JSON]:
         request = self._create_request(self.entity_type)
-        request = request.params(preserve_order=True).sort('entity_id.keyword')
-        for hit in request.scan():
-            doc = self._hit_to_doc(hit)
-            yield doc
+        # Need two sort fields to satisfy type constraints
+        sort = ('entity_id.keyword',) * 2
+        hits = self._paginate_hits_sorted(request, sort)
+        return map(self._hit_to_doc, hits)
 
     def create_file(self) -> tuple[str, str | None]:
         transformers = self.service.transformer_types(self.catalog)
