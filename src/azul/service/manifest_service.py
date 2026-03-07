@@ -1314,6 +1314,25 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
             else:
                 break
 
+    def _paginate_hits_sorted(self,
+                              request: Search,
+                              sort: SortKey
+                              ) -> Iterable[Hit]:
+        """
+        Wrapper around :meth:`_paginate_hits` for simple cases where the request
+        does not require any additional setup between pages
+        """
+        request = request.extra(size=self.page_size)
+        request = request.sort(*sort)
+
+        def request_factory(search_after: SortKey | None) -> Search:
+            if search_after is None:
+                return request
+            else:
+                return request.extra(search_after=search_after)
+
+        return self._paginate_hits(request_factory)
+
     def _create_paged_request(self, search_after: SortKey | None) -> Search:
         pagination = Pagination(sort='entryId',
                                 order='asc',
@@ -1986,7 +2005,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
             {'terms': {'hub_ids.keyword': list(hub_ids)}},
             {'terms': {'entity_id.keyword': list(replica_ids)}}
         ]))
-        request = request.extra(size=self.page_size)
 
         # `_id` is currently the only index field that is unique to each replica
         # document (and thus results in an unambiguous total ordering). However,
@@ -1998,15 +2016,8 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         # FIXME: ES DeprecationWarning for using _id as sort key
         #        https://github.com/DataBiosphere/azul/issues/7290
         #
-        request = request.sort('entity_id.keyword', '_id')
-
-        def request_factory(search_after: SortKey | None) -> Search:
-            if search_after is None:
-                return request
-            else:
-                return request.extra(search_after=search_after)
-
-        return self._paginate_hits(request_factory)
+        sort = ('entity_id.keyword', '_id')
+        return self._paginate_hits_sorted(request, sort)
 
 
 class JSONLVerbatimManifestGenerator(PagedManifestGenerator,
