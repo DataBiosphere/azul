@@ -323,6 +323,17 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                              post_filter: bool = True
                              ):
         service = self.Service(self.MockPlugin())
+        self._test_create_request_with_service(service,
+                                               expected_output,
+                                               sample_filter,
+                                               post_filter)
+
+    def _test_create_request_with_service(self,
+                                          service: Service,
+                                          expected_output: JSON,
+                                          sample_filter: JSON,
+                                          post_filter: bool = True
+                                          ):
         filters = Filters(explicit=sample_filter, source_ids=set())
         request = self._prepare_request(filters, post_filter, service)
         expected_output = json.dumps(expected_output, sort_keys=True)
@@ -410,10 +421,5 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                 return ['foo']
 
         service = Service(MockPlugin())
-
-        filters = Filters(explicit={}, source_ids=set())
-        post_filter = True
-        request = self._prepare_request(filters, post_filter, service)
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(request.to_dict(), sort_keys=True)
-        self.assertEqual(actual_output, expected_output)
+        sample_filter = {}
+        self._test_create_request_with_service(service, expected_output, sample_filter)
