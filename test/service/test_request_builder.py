@@ -338,7 +338,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         request = self._prepare_request(filters, post_filter, service)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(request.to_dict(), sort_keys=True)
-        self.assertEqual(actual_output, expected_output)
+        self.assertEqual(expected_output, actual_output)
 
     def _prepare_request(self,
                          filters: Filters,
