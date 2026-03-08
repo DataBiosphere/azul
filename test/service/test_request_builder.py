@@ -5,9 +5,13 @@ from collections.abc import (
 import json
 
 import attr
+from opensearchpy import (
+    Search,
+)
 
 from azul import (
     CatalogName,
+    JSON,
 )
 from azul.indexer.field import (
     FieldTypes,
@@ -314,9 +318,9 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self,
-                             expected_output,
-                             sample_filter,
-                             post_filter=True
+                             expected_output: JSON,
+                             sample_filter: JSON,
+                             post_filter: bool = True
                              ):
         service = self.Service(self.MockPlugin())
         filters = Filters(explicit=sample_filter, source_ids=set())
@@ -325,7 +329,11 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         actual_output = json.dumps(request.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
 
-    def _prepare_request(self, filters, post_filter, service):
+    def _prepare_request(self,
+                         filters: Filters,
+                         post_filter: bool,
+                         service: Service
+                         ) -> Search:
         entity_type = 'files'
         pipeline = service.create_chain(catalog=self.catalog,
                                         entity_type=entity_type,
