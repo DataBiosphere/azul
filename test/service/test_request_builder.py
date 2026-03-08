@@ -352,7 +352,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of an ES aggregate
         """
         expected_output = {
-            'filter': {
+            'post_filter': {
                 'bool': {
                     'must': [
                         self.sources_filter
@@ -360,18 +360,29 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                 }
             },
             'aggs': {
-                'myTerms': {
-                    'terms': {
-                        'field': 'path.to.foo.keyword',
-                        'size': 99999
+                'foo': {
+                    'filter': {
+                        'bool': {
+                            'must': [
+                                self.sources_filter
+                            ]
+                        }
                     },
-                    'meta': {
-                        'path': ['path', 'to', 'foo']
-                    }
-                },
-                'untagged': {
-                    'missing': {
-                        'field': 'path.to.foo.keyword'
+                    'aggs': {
+                        'myTerms': {
+                            'terms': {
+                                'field': 'path.to.foo.keyword',
+                                'size': 99999
+                            },
+                            'meta': {
+                                'path': ['path', 'to', 'foo']
+                            }
+                        },
+                        'untagged': {
+                            'missing': {
+                                'field': 'path.to.foo.keyword'
+                            }
+                        }
                     }
                 }
             }
@@ -403,7 +414,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         filters = Filters(explicit={}, source_ids=set())
         post_filter = True
         request = self._prepare_request(filters, post_filter, service)
-        aggregation = request.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
+        actual_output = json.dumps(request.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
