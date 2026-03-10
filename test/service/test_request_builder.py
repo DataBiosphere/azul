@@ -100,7 +100,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         'constant_score': {
             'filter': {
                 'terms': {
-                    'sources.id.keyword': []
+                    'sources.id.keyword': '{{#toJson}}sourceId{{/toJson}}'
                 }
             }
         }
@@ -301,8 +301,12 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         filters = Filters(explicit=sample_filter, source_ids=set())
         request = self._prepare_request(filters, post_filter, service)
         expected_output = {
-            'source': json.dumps(expected_output, sort_keys=True),
-            'params': {}
+            'source': (
+                json.dumps(expected_output, sort_keys=True)
+                .replace('"{{#toJson}}', '{{#toJson}}')
+                .replace('{{/toJson}}"', '{{/toJson}}')
+            ),
+            'params': {'sourceId': []}
         }
         actual_request_body = request.to_dict()
         self.assertEqual(expected_output, actual_request_body)

@@ -4,6 +4,7 @@ from abc import (
 )
 from collections.abc import (
     Collection,
+    Iterator,
 )
 import json
 import logging
@@ -12,6 +13,7 @@ from typing import (
     Mapping,
     cast,
 )
+import unittest.mock
 from urllib.parse import (
     urlencode,
 )
@@ -272,6 +274,29 @@ class Template(metaclass=ABCMeta):
         raise NotImplementedError
 
 
+class RawStr(str):
+    """
+    Instances of this class will not be surrounded by quotes when encoded as
+    JSON using a :class:`TemplateSearchJSONEncoder`.
+    """
+
+
+@attrs.frozen(auto_attribs=True, kw_only=True)
+class ToJsonTemplate(Template):
+
+    def to_source(self) -> RawStr:
+        return RawStr('{{#toJson}}' + self.param_name + '{{/toJson}}')
+
+
+_original = json.encoder.py_encode_basestring_ascii
+
+
+def _encode_basestring_ascii(s: str) -> str:
+    result = _original(s)
+    assert result[0] == result[-1] == '"', result
+    return result[1:-1] if isinstance(s, RawStr) else result
+
+
 class TemplateSearchJSONEncoder(json.JSONEncoder):
 
     def __init__(self, **kwargs) -> None:
@@ -293,6 +318,11 @@ class TemplateSearchJSONEncoder(json.JSONEncoder):
             return obj.to_source()
         else:
             return super().default(obj)
+
+    def iterencode(self, o: AnyJSON, _one_shot: bool = False) -> Iterator[str]:
+        with unittest.mock.patch('json.encoder.encode_basestring_ascii',
+                                 wraps=_encode_basestring_ascii):
+            return super().iterencode(o, _one_shot=_one_shot)
 
 
 class TemplateSearch(Search):
