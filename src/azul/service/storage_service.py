@@ -206,6 +206,12 @@ class StorageService:
             self._s3.delete_objects(**request)
         log.info('Deleted %d objects overall', num_keys)
 
+    def delete_prefix(self, prefix: str) -> None:
+        assert len(prefix) > 1 and prefix.endswith('/'), prefix
+        object_keys = self.list_objects(prefix)
+        assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
+        self.delete_objects(object_keys, batch_size=100)
+
     def list_objects(self, prefix: str) -> OrderedSet[str]:
         keys: OrderedSet[str] = OrderedSet()
         num_keys = 0

@@ -524,11 +524,7 @@ class MirrorService:
         """
         assert self.catalog in config.integration_test_catalogs, R(
             'Not an IT catalog', self.catalog)
-        prefix = self._mirror_prefix
-        assert len(prefix) > 1 and prefix.endswith('/'), prefix
-        object_keys = self._storage.list_objects(prefix)
-        assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
-        self._storage.delete_objects(object_keys, batch_size=100)
+        self._storage.delete_prefix(self._mirror_prefix)
 
 
 @attrs.frozen(kw_only=True, slots=False)
