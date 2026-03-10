@@ -121,6 +121,7 @@ from azul.lib.collections import (
 )
 from azul.lib.functions import (
     compose,
+    iif,
 )
 from azul.lib.json import (
     copy_json,
@@ -791,8 +792,8 @@ type Cells = dict[str, str]
 class ManifestAccessor:
 
     @classmethod
-    def _manifest_prefix(cls) -> str:
-        return 'manifests/'
+    def _manifest_prefix(cls, is_it: bool) -> str:
+        return 'manifests/' + iif(is_it, '_it/')
 
 
 class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
@@ -1017,7 +1018,8 @@ class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
 
     @classmethod
     def s3_object_key(cls, manifest_key: ManifestKey) -> str:
-        return cls._manifest_prefix() + cls.s3_object_key_base(manifest_key)
+        is_it = config.catalogs[manifest_key.catalog].is_integration_test_catalog
+        return cls._manifest_prefix(is_it) + cls.s3_object_key_base(manifest_key)
 
     @classmethod
     def s3_object_key_base(cls, manifest_key: ManifestKey) -> str:
