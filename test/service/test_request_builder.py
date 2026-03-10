@@ -2,6 +2,7 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
+import json
 
 import attr
 from opensearchpy import (
@@ -299,8 +300,12 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                                           ):
         filters = Filters(explicit=sample_filter, source_ids=set())
         request = self._prepare_request(filters, post_filter, service)
-        actual_output = request.to_dict()
-        self.assertEqual(expected_output, actual_output)
+        expected_output = {
+            'source': json.dumps(expected_output, sort_keys=True),
+            'params': {}
+        }
+        actual_request_body = request.to_dict()
+        self.assertEqual(expected_output, actual_request_body)
 
     def _prepare_request(self,
                          filters: Filters,

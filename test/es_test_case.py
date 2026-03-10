@@ -72,7 +72,17 @@ class ElasticsearchTestCase(DockerContainerTestCase):
                     # indices in a single request. Speeds up deletion of indices
                     # between tests.
                     #
-                    'action.destructive_requires_name': False
+                    'action.destructive_requires_name': False,
+
+                    # The service uses template queries when reading from the
+                    # index which, during tests, can far exceed the default
+                    # script compilation rate of 75/5m. Rendering a template
+                    # query using mustache is a very cheap operation compared to
+                    # other compilation contexts (e.g. generating bytecode for a
+                    # painless script), so performance shouldn't be
+                    # significantly affected.
+                    #
+                    'script.context.template.max_compilations_rate': 'unlimited'
                 }
             })
         except BaseException:  # no coverage
