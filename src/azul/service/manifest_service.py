@@ -571,13 +571,16 @@ class CachedManifestNotFound(Exception):
     manifest_key: ManifestKey
 
 
-@attrs.frozen(kw_only=True)
-class ManifestService(QueryService):
-    file_url_func: FileUrlFunc
+class BaseManifestService:
 
     @cached_property
     def storage_service(self) -> StorageService:
         return StorageService()
+
+
+@attrs.frozen(kw_only=True)
+class ManifestService(BaseManifestService, QueryService):
+    file_url_func: FileUrlFunc
 
     def get_manifest(self,
                      *,
@@ -785,7 +788,14 @@ class ManifestService(QueryService):
 type Cells = dict[str, str]
 
 
-class ManifestGenerator(metaclass=ABCMeta):
+class ManifestAccessor:
+
+    @classmethod
+    def _manifest_prefix(cls) -> str:
+        return 'manifests/'
+
+
+class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
     """
     A generator for manifests. A manifest is an exhaustive representation of
     the documents in the aggregate index for a particular entity type. The
@@ -1004,10 +1014,6 @@ class ManifestGenerator(metaclass=ABCMeta):
                            format=format,
                            manifest_hash=manifest_hash,
                            source_hash=source_hash)
-
-    @classmethod
-    def _manifest_prefix(cls) -> str:
-        return 'manifests/'
 
     @classmethod
     def s3_object_key(cls, manifest_key: ManifestKey) -> str:
