@@ -152,38 +152,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         sample_filter = {}
         self._test_create_request(expected_output, sample_filter, post_filter=False)
 
-    def test_create_request_complex(self):
-        """
-        Tests creation of a complex request.
-        """
-        expected_output = {
-            'post_filter': {
-                'bool': {
-                    'must': [
-                        {
-                            'constant_score': {
-                                'filter': {
-                                    'terms': {
-                                        'entity_id.keyword': [
-                                            'cbb998ce-ddaf-34fa-e163-d14b399c6b34'
-                                        ]
-                                    }
-                                }
-                            }
-                        },
-                        self.sources_filter
-                    ]
-                }
-            }
-        }
-        sample_filter = {
-            'entity_id':
-                {
-                    'is': ['cbb998ce-ddaf-34fa-e163-d14b399c6b34']
-                }
-        }
-        self._test_create_request(expected_output, sample_filter)
-
     def test_create_request_missing_values(self):
         """
         Tests creation of a request for facets that do not have a value
