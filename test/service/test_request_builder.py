@@ -130,10 +130,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
         }
         sample_filter = {'entity_id': {'is': ['cbb998ce-ddaf-34fa-e163-d14b399c6b34']}}
-        # Need to work on a couple cases:
-        # - The empty case
-        # - The 1 filter case
-        # - The complex multiple filters case
         self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_empty(self):
