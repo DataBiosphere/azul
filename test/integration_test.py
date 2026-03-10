@@ -169,6 +169,8 @@ from azul.service.async_manifest_service import (
     Token,
 )
 from azul.service.manifest_service import (
+    BaseManifestService,
+    ManifestAccessor,
     ManifestFormat,
     ManifestGenerator,
 )
@@ -470,6 +472,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
             for flag in ['index', 'delete', 'mirror']
         ]
 
+        manifest_accessor = ManifestAccessor(BaseManifestService())
+
         self._assert_queues_empty(config.indexer_fail_queue_names)
         if index:
             self._reset_indexer()
@@ -518,6 +522,12 @@ class IndexingIntegrationTest(IntegrationTestCase):
                                               bundle_fqids=catalog.bundles)
                 self._test_single_entity_response(catalog=catalog.name)
 
+        # `test_manifest` and `test_manifest_tagging_race` assert how many times
+        # the step function is executed when retrieving the manifests, with the
+        # expectation that there are no pre-existing cached manifests. This
+        # deletion is necessary to enforce that expectation, especially when
+        # performing consecutive IT runs with the same seed.
+        manifest_accessor.delete_it_files()
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
@@ -526,6 +536,9 @@ class IndexingIntegrationTest(IntegrationTestCase):
             self._test_managed_access(catalog=catalog.name,
                                       public_source=catalog.public_source,
                                       ma_source=catalog.ma_source)
+
+        if delete:
+            manifest_accessor.delete_it_files()
 
         if mirror and config.enable_mirroring:
             self._test_mirroring(delete=delete)

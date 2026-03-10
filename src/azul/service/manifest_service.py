@@ -803,6 +803,9 @@ class ManifestAccessor:
     def _manifest_prefix(cls, is_it: bool) -> str:
         return 'manifests/' + iif(is_it, '_it/')
 
+    def delete_it_files(self):
+        self.storage.delete_prefix(self._manifest_prefix(is_it=True))
+
 
 class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
     """
