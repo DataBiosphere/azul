@@ -1006,8 +1006,12 @@ class ManifestGenerator(metaclass=ABCMeta):
                            source_hash=source_hash)
 
     @classmethod
+    def _manifest_prefix(cls) -> str:
+        return 'manifests/'
+
+    @classmethod
     def s3_object_key(cls, manifest_key: ManifestKey) -> str:
-        return 'manifests' + '/' + cls.s3_object_key_base(manifest_key)
+        return cls._manifest_prefix() + cls.s3_object_key_base(manifest_key)
 
     @classmethod
     def s3_object_key_base(cls, manifest_key: ManifestKey) -> str:
