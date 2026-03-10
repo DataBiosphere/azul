@@ -790,6 +790,14 @@ type Cells = dict[str, str]
 
 
 class ManifestAccessor:
+    service: BaseManifestService
+
+    def __init__(self, service: BaseManifestService):
+        self.service = service
+
+    @property
+    def storage(self) -> StorageService:
+        return self.service.storage_service
 
     @classmethod
     def _manifest_prefix(cls, is_it: bool) -> str:
@@ -807,6 +815,8 @@ class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
     # Note to implementors: all property getters in this class and its
     # descendants must be inexpensive. If a property getter performs and
     # expensive computation or I/O, it should cache its return value.
+
+    service: ManifestService
 
     @classmethod
     @abstractmethod
@@ -970,8 +980,7 @@ class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
 
         :param service: the service to use when querying the index
         """
-        super().__init__()
-        self.service = service
+        super().__init__(service)
         self.catalog = catalog
         self.filters = filters
         self.file_url_func = service.file_url_func
@@ -1275,10 +1284,6 @@ class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
         :param partition: The partition to write.
         """
         raise NotImplementedError
-
-    @property
-    def storage(self) -> StorageService:
-        return self.service.storage_service
 
 
 class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
