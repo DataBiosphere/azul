@@ -1,6 +1,11 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from collections.abc import (
     Collection,
 )
+import json
 import logging
 from typing import (
     Any,
@@ -11,13 +16,18 @@ from urllib.parse import (
     urlencode,
 )
 
+import attrs
 from aws_requests_auth.boto_utils import (
     BotoAWSRequestsAuth,
 )
 from opensearchpy import (
     Connection,
     OpenSearch,
+    Search,
     Urllib3HttpConnection,
+)
+from opensearchpy.connection.connections import (
+    get_connection,
 )
 import requests
 import requests.auth
@@ -36,6 +46,10 @@ from azul.http import (
 from azul.logging import (
     es_log,
     http_body_log_message,
+)
+from azul.types import (
+    AnyJSON,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -243,3 +257,58 @@ class ESClientFactory:
         else:
             return OpenSearch(connection_class=AzulUrllib3HttpConnection,
                               **common_params)
+
+
+@attrs.frozen(auto_attribs=True, kw_only=True)
+class Template(metaclass=ABCMeta):
+    param_name: str
+    value: AnyJSON
+
+    @abstractmethod
+    def to_source(self) -> AnyJSON:
+        raise NotImplementedError
+
+
+class TemplateSearchJSONEncoder(json.JSONEncoder):
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.params: MutableJSON = {}
+
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, Template):
+            try:
+                old_value = self.params[obj.param_name]
+            except KeyError:
+                self.params[obj.param_name] = obj.value
+            else:
+                # If two parameters have the same name, they ought to come from
+                # the same template object. Having two template objects with the
+                # same name probably indicates a bug even if they happen to use
+                # the same value.
+                assert obj.value is old_value, (obj, old_value)
+            return obj.to_source()
+        else:
+            return super().default(obj)
+
+
+class TemplateSearch(Search):
+
+    def to_dict(self, count: bool = False, **kwargs) -> MutableJSON:
+        # Sorting ensures consistent output for unit tests
+        encoder = TemplateSearchJSONEncoder(sort_keys=True)
+        return {
+            'source': encoder.encode(super().to_dict(count=count, **kwargs)),
+            'params': encoder.params,
+        }
+
+    def execute(self, ignore_cache: bool = False) -> Any:
+        if ignore_cache or not hasattr(self, '_response'):
+            opensearch = get_connection(self._using)
+            self._response = self._response_class(
+                self,
+                opensearch.search_template(
+                    index=self._index, body=self.to_dict(), **self._params
+                ),
+            )
+        return self._response

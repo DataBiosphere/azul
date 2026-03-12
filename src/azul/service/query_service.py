@@ -32,9 +32,6 @@ from opensearchpy import (
     Q,
     Search,
 )
-from opensearchpy.connection.connections import (
-    get_connection,
-)
 from opensearchpy.helpers.aggs import (
     Agg,
     Terms,
@@ -54,6 +51,7 @@ from azul import (
 )
 from azul.es import (
     ESClientFactory,
+    TemplateSearch,
 )
 from azul.indexer.document import (
     DocumentType,
@@ -76,7 +74,6 @@ from azul.service import (
     FiltersJSON,
 )
 from azul.types import (
-    AnyJSON,
     JSON,
     JSONTypedDict,
     JSONs,
@@ -656,61 +653,6 @@ class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
                                   pages=pages,
                                   sort=pagination.sort,
                                   order=pagination.order)
-
-
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class Template(metaclass=ABCMeta):
-    param_name: str
-    value: AnyJSON
-
-    @abstractmethod
-    def to_source(self) -> AnyJSON:
-        raise NotImplementedError
-
-
-class TemplateSearchJSONEncoder(json.JSONEncoder):
-
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self.params: MutableJSON = {}
-
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, Template):
-            try:
-                old_value = self.params[obj.param_name]
-            except KeyError:
-                self.params[obj.param_name] = obj.value
-            else:
-                # If two parameters have the same name, they ought to come from
-                # the same template object. Having two template objects with the
-                # same name probably indicates a bug even if they happen to use
-                # the same value.
-                assert obj.value is old_value, (obj, old_value)
-            return obj.to_source()
-        else:
-            return super().default(obj)
-
-
-class TemplateSearch(Search):
-
-    def to_dict(self, count: bool = False, **kwargs) -> MutableJSON:
-        # Sorting ensures consistent output for unit tests
-        encoder = TemplateSearchJSONEncoder(sort_keys=True)
-        return {
-            'source': encoder.encode(super().to_dict(count=count, **kwargs)),
-            'params': encoder.params,
-        }
-
-    def execute(self, ignore_cache: bool = False) -> Any:
-        if ignore_cache or not hasattr(self, '_response'):
-            opensearch = get_connection(self._using)
-            self._response = self._response_class(
-                self,
-                opensearch.search_template(
-                    index=self._index, body=self.to_dict(), **self._params
-                ),
-            )
-        return self._response
 
 
 class QueryService(DocumentService):
