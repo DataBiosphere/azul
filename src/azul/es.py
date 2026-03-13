@@ -43,6 +43,9 @@ from azul.deployment import (
 from azul.http import (
     HttpClient,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.logging import (
     es_log,
     http_body_log_message,
@@ -273,7 +276,7 @@ class TemplateSearchJSONEncoder(json.JSONEncoder):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.params: MutableJSON = {}
+        self.params: dict[str, AnyJSON] = {}
 
     def default(self, obj: Any) -> Any:
         if isinstance(obj, Template):
@@ -299,10 +302,15 @@ class TemplateSearch(Search):
         encoder = TemplateSearchJSONEncoder(sort_keys=True)
         return {
             'source': encoder.encode(super().to_dict(count=count, **kwargs)),
-            'params': encoder.params,
+            'params': copy_json(encoder.params),
         }
 
     def execute(self, ignore_cache: bool = False) -> Any:
+        # The body of this method is mostly copied from the superclass, with the
+        # only change being switching `search` for `search_template`. We could
+        # also monkeypatch that method, but this approach is more robust because
+        # we retain control over which arguments are passed. Note that `search`
+        # supports many parameters that `search_template` currently does not.
         if ignore_cache or not hasattr(self, '_response'):
             opensearch = get_connection(self._using)
             self._response = self._response_class(
