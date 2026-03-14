@@ -5,9 +5,13 @@ from collections.abc import (
 import json
 
 import attr
+from opensearchpy import (
+    Search,
+)
 
 from azul import (
     CatalogName,
+    JSON,
 )
 from azul.indexer.field import (
     FieldTypes,
@@ -96,7 +100,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         'constant_score': {
             'filter': {
                 'terms': {
-                    'sources.id.keyword': []
+                    'sources.id.keyword': '{{#toJson}}sourceId{{/toJson}}'
                 }
             }
         }
@@ -127,10 +131,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
         }
         sample_filter = {'entity_id': {'is': ['cbb998ce-ddaf-34fa-e163-d14b399c6b34']}}
-        # Need to work on a couple cases:
-        # - The empty case
-        # - The 1 filter case
-        # - The complex multiple filters case
         self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_empty(self):
@@ -148,38 +148,6 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         }
         sample_filter = {}
         self._test_create_request(expected_output, sample_filter, post_filter=False)
-
-    def test_create_request_complex(self):
-        """
-        Tests creation of a complex request.
-        """
-        expected_output = {
-            'post_filter': {
-                'bool': {
-                    'must': [
-                        {
-                            'constant_score': {
-                                'filter': {
-                                    'terms': {
-                                        'entity_id.keyword': [
-                                            'cbb998ce-ddaf-34fa-e163-d14b399c6b34'
-                                        ]
-                                    }
-                                }
-                            }
-                        },
-                        self.sources_filter
-                    ]
-                }
-            }
-        }
-        sample_filter = {
-            'entity_id':
-                {
-                    'is': ['cbb998ce-ddaf-34fa-e163-d14b399c6b34']
-                }
-        }
-        self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_missing_values(self):
         """
@@ -314,18 +282,40 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self,
-                             expected_output,
-                             sample_filter,
-                             post_filter=True
+                             expected_output: JSON,
+                             sample_filter: JSON,
+                             post_filter: bool = True
                              ):
         service = self.Service(self.MockPlugin())
+        self._test_create_request_with_service(service,
+                                               expected_output,
+                                               sample_filter,
+                                               post_filter)
+
+    def _test_create_request_with_service(self,
+                                          service: Service,
+                                          expected_output: JSON,
+                                          sample_filter: JSON,
+                                          post_filter: bool = True
+                                          ):
         filters = Filters(explicit=sample_filter, source_ids=set())
         request = self._prepare_request(filters, post_filter, service)
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(request.to_dict(), sort_keys=True)
-        self.assertEqual(actual_output, expected_output)
+        expected_output = {
+            'source': (
+                json.dumps(expected_output, sort_keys=True)
+                .replace('"{{#toJson}}', '{{#toJson}}')
+                .replace('{{/toJson}}"', '{{/toJson}}')
+            ),
+            'params': {'sourceId': []}
+        }
+        actual_request_body = request.to_dict()
+        self.assertEqual(expected_output, actual_request_body)
 
-    def _prepare_request(self, filters, post_filter, service):
+    def _prepare_request(self,
+                         filters: Filters,
+                         post_filter: bool,
+                         service: Service
+                         ) -> Search:
         entity_type = 'files'
         pipeline = service.create_chain(catalog=self.catalog,
                                         entity_type=entity_type,
@@ -344,7 +334,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of an ES aggregate
         """
         expected_output = {
-            'filter': {
+            'post_filter': {
                 'bool': {
                     'must': [
                         self.sources_filter
@@ -352,18 +342,29 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                 }
             },
             'aggs': {
-                'myTerms': {
-                    'terms': {
-                        'field': 'path.to.foo.keyword',
-                        'size': 99999
+                'foo': {
+                    'filter': {
+                        'bool': {
+                            'must': [
+                                self.sources_filter
+                            ]
+                        }
                     },
-                    'meta': {
-                        'path': ['path', 'to', 'foo']
-                    }
-                },
-                'untagged': {
-                    'missing': {
-                        'field': 'path.to.foo.keyword'
+                    'aggs': {
+                        'myTerms': {
+                            'terms': {
+                                'field': 'path.to.foo.keyword',
+                                'size': 99999
+                            },
+                            'meta': {
+                                'path': ['path', 'to', 'foo']
+                            }
+                        },
+                        'untagged': {
+                            'missing': {
+                                'field': 'path.to.foo.keyword'
+                            }
+                        }
                     }
                 }
             }
@@ -391,11 +392,5 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                 return ['foo']
 
         service = Service(MockPlugin())
-
-        filters = Filters(explicit={}, source_ids=set())
-        post_filter = True
-        request = self._prepare_request(filters, post_filter, service)
-        aggregation = request.aggs['foo']
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
-        self.assertEqual(actual_output, expected_output)
+        sample_filter = {}
+        self._test_create_request_with_service(service, expected_output, sample_filter)

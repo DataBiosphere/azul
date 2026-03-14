@@ -1273,6 +1273,53 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
     """
     page_size = 500
 
+    def _paginate_hits(self,
+                       request_factory: Callable[[SortKey | None], Search]
+                       ) -> Iterable[Hit]:
+        """
+        Yield all hits in every page of Elasticsearch hits in responses to
+        requests that use client-side paging.
+
+        :param request_factory:  A callable that returns a prepared Elasticsearch
+                                 request for the given search-after key, with the
+                                 appropriate filters and sorting applied. The
+                                 returned request should yield one page worth of
+                                 hits, starting at the first page (if the argument
+                                 is None), or the hit right after the hit with
+                                 given search-after key
+        """
+        search_after = None
+        while True:
+            request = request_factory(search_after)
+            response = request.execute()
+            if response.hits:
+                hit = None
+                for hit in response.hits:
+                    yield hit
+                assert hit is not None
+                search_after = self._search_after(hit)
+            else:
+                break
+
+    def _paginate_hits_sorted(self,
+                              request: Search,
+                              sort: SortKey
+                              ) -> Iterable[Hit]:
+        """
+        Wrapper around :meth:`_paginate_hits` for simple cases where the request
+        does not require any additional setup between pages
+        """
+        request = request.extra(size=self.page_size)
+        request = request.sort(*sort)
+
+        def request_factory(search_after: SortKey | None) -> Search:
+            if search_after is None:
+                return request
+            else:
+                return request.extra(search_after=search_after)
+
+        return self._paginate_hits(request_factory)
+
     def _create_paged_request(self, search_after: SortKey | None) -> Search:
         pagination = Pagination(sort='entryId',
                                 order='asc',
@@ -1775,7 +1822,8 @@ Bundle = dict[Qualifier, Groups]
 Bundles = dict[FQID, Bundle]
 
 
-class PFBManifestGenerator(FileBasedManifestGenerator):
+class PFBManifestGenerator(FileBasedManifestGenerator,
+                           ClientSidePagingManifestGenerator):
 
     @classmethod
     def format(cls) -> ManifestFormat:
@@ -1803,10 +1851,10 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
 
     def _all_docs_sorted(self) -> Iterable[JSON]:
         request = self._create_request(self.entity_type)
-        request = request.params(preserve_order=True).sort('entity_id.keyword')
-        for hit in request.scan():
-            doc = self._hit_to_doc(hit)
-            yield doc
+        # Need two sort fields to satisfy type constraints
+        sort = ('entity_id.keyword',) * 2
+        hits = self._paginate_hits_sorted(request, sort)
+        return map(self._hit_to_doc, hits)
 
     def create_file(self) -> tuple[str, str | None]:
         transformers = self.service.transformer_types(self.catalog)
@@ -1900,34 +1948,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         hub_id: str
         replica_ids: list[str]
 
-    def _paginate_hits(self,
-                       request_factory: Callable[[SortKey | None], Search]
-                       ) -> Iterable[Hit]:
-        """
-        Yield all hits in every page of Elasticsearch hits in responses to
-        requests that use client-side paging.
-
-        :param request_factory:  A callable that returns a prepared Elasticsearch
-                                 request for the given search-after key, with the
-                                 appropriate filters and sorting applied. The
-                                 returned request should yield one page worth of
-                                 hits, starting at the first page (if the argument
-                                 is None), or the hit right after the hit with
-                                 given search-after key
-        """
-        search_after = None
-        while True:
-            request = request_factory(search_after)
-            response = request.execute()
-            if response.hits:
-                hit = None
-                for hit in response.hits:
-                    yield hit
-                assert hit is not None
-                search_after = self._search_after(hit)
-            else:
-                break
-
     def _list_replica_keys(self) -> Iterable[ReplicaKeys]:
         for hit in self._paginate_hits(self._create_paged_request):
             document_ids = [
@@ -1973,7 +1993,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
             {'terms': {'hub_ids.keyword': list(hub_ids)}},
             {'terms': {'entity_id.keyword': list(replica_ids)}}
         ]))
-        request = request.extra(size=self.page_size)
 
         # `_id` is currently the only index field that is unique to each replica
         # document (and thus results in an unambiguous total ordering). However,
@@ -1985,15 +2004,8 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         # FIXME: ES DeprecationWarning for using _id as sort key
         #        https://github.com/DataBiosphere/azul/issues/7290
         #
-        request = request.sort('entity_id.keyword', '_id')
-
-        def request_factory(search_after: SortKey | None) -> Search:
-            if search_after is None:
-                return request
-            else:
-                return request.extra(search_after=search_after)
-
-        return self._paginate_hits(request_factory)
+        sort = ('entity_id.keyword', '_id')
+        return self._paginate_hits_sorted(request, sort)
 
 
 class JSONLVerbatimManifestGenerator(PagedManifestGenerator,

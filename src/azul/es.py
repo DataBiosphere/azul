@@ -1,23 +1,35 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from collections.abc import (
     Collection,
+    Iterator,
 )
+import json
 import logging
 from typing import (
     Any,
     Mapping,
     cast,
 )
+import unittest.mock
 from urllib.parse import (
     urlencode,
 )
 
+import attrs
 from aws_requests_auth.boto_utils import (
     BotoAWSRequestsAuth,
 )
 from opensearchpy import (
     Connection,
     OpenSearch,
+    Search,
     Urllib3HttpConnection,
+)
+from opensearchpy.connection.connections import (
+    get_connection,
 )
 import requests
 import requests.auth
@@ -33,9 +45,16 @@ from azul.deployment import (
 from azul.http import (
     HttpClient,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.logging import (
     es_log,
     http_body_log_message,
+)
+from azul.types import (
+    AnyJSON,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -243,3 +262,91 @@ class ESClientFactory:
         else:
             return OpenSearch(connection_class=AzulUrllib3HttpConnection,
                               **common_params)
+
+
+@attrs.frozen(auto_attribs=True, kw_only=True)
+class Template(metaclass=ABCMeta):
+    param_name: str
+    value: AnyJSON
+
+    @abstractmethod
+    def to_source(self) -> AnyJSON:
+        raise NotImplementedError
+
+
+class RawStr(str):
+    """
+    Instances of this class will not be surrounded by quotes when encoded as
+    JSON using a :class:`TemplateSearchJSONEncoder`.
+    """
+
+
+@attrs.frozen(auto_attribs=True, kw_only=True)
+class ToJsonTemplate(Template):
+
+    def to_source(self) -> RawStr:
+        return RawStr('{{#toJson}}' + self.param_name + '{{/toJson}}')
+
+
+_original = json.encoder.py_encode_basestring_ascii
+
+
+def _encode_basestring_ascii(s: str) -> str:
+    result = _original(s)
+    assert result[0] == result[-1] == '"', result
+    return result[1:-1] if isinstance(s, RawStr) else result
+
+
+class TemplateSearchJSONEncoder(json.JSONEncoder):
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.params: dict[str, AnyJSON] = {}
+
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, Template):
+            try:
+                old_value = self.params[obj.param_name]
+            except KeyError:
+                self.params[obj.param_name] = obj.value
+            else:
+                # If two parameters have the same name, they ought to come from
+                # the same template object. Having two template objects with the
+                # same name probably indicates a bug even if they happen to use
+                # the same value.
+                assert obj.value is old_value, (obj, old_value)
+            return obj.to_source()
+        else:
+            return super().default(obj)
+
+    def iterencode(self, o: AnyJSON, _one_shot: bool = False) -> Iterator[str]:
+        with unittest.mock.patch('json.encoder.encode_basestring_ascii',
+                                 wraps=_encode_basestring_ascii):
+            return super().iterencode(o, _one_shot=_one_shot)
+
+
+class TemplateSearch(Search):
+
+    def to_dict(self, count: bool = False, **kwargs) -> MutableJSON:
+        # Sorting ensures consistent output for unit tests
+        encoder = TemplateSearchJSONEncoder(sort_keys=True)
+        return {
+            'source': encoder.encode(super().to_dict(count=count, **kwargs)),
+            'params': copy_json(encoder.params),
+        }
+
+    def execute(self, ignore_cache: bool = False) -> Any:
+        # The body of this method is mostly copied from the superclass, with the
+        # only change being switching `search` for `search_template`. We could
+        # also monkeypatch that method, but this approach is more robust because
+        # we retain control over which arguments are passed. Note that `search`
+        # supports many parameters that `search_template` currently does not.
+        if ignore_cache or not hasattr(self, '_response'):
+            opensearch = get_connection(self._using)
+            self._response = self._response_class(
+                self,
+                opensearch.search_template(
+                    index=self._index, body=self.to_dict(), **self._params
+                ),
+            )
+        return self._response

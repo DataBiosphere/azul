@@ -52,6 +52,8 @@ from azul import (
 )
 from azul.es import (
     ESClientFactory,
+    TemplateSearch,
+    ToJsonTemplate,
 )
 from azul.indexer.document import (
     DocumentType,
@@ -228,23 +230,30 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         Converts the given filters into an Elasticsearch DSL Query object.
         """
         filter_list = []
+        plugin = self.plugin
+        source_id_field_name = plugin.special_fields.source_id.name
+        source_id_field_path = plugin.field_mapping[source_id_field_name]
         for field_path, filter in self.prepared_filters.items():
             if field_path not in skip_field_paths:
+                values: Sequence[PrimitiveJSON] | ToJsonTemplate
                 operator, values = one(filter.items())
+                original_values = values
                 # Note that `is_not` is only used internally (for filtering by
                 # inaccessible sources)
                 if operator in ('is', 'is_not'):
                     field_type = self.service.field_type(self.catalog, field_path)
+                    if field_path == source_id_field_path:
+                        values = ToJsonTemplate(param_name=source_id_field_name, value=values)
                     if isinstance(field_type, Nested):
                         term_queries = []
-                        for nested_field, nested_value in one(values).items():
+                        for nested_field, nested_value in one(original_values).items():
                             nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
                             term_queries.append(Q('term', **nested_body))
                         query = Q('nested', path=dotted(field_path), query=Q('bool', must=term_queries))
                     else:
                         query = Q('terms', **{dotted(field_path, 'keyword'): values})
                         translated_none = field_type.to_index(None)
-                        if translated_none in values:
+                        if translated_none in original_values:
                             # Note that at this point None values in filters have already
                             # been translated e.g. {'is': ['~null']} and if the filter has a
                             # None our query needs to find fields with None values as well
@@ -698,12 +707,12 @@ class QueryService(DocumentService):
                        catalog: CatalogName,
                        entity_type: str,
                        doc_type: DocumentType = DocumentType.aggregate
-                       ) -> Search:
+                       ) -> TemplateSearch:
         """
         Create an Elasticsearch request against the index containing documents
         of the given entity and document types, in the given catalog.
         """
-        return Search(using=self._es_client,
-                      index=str(IndexName.create(catalog=catalog,
-                                                 qualifier=entity_type,
-                                                 doc_type=doc_type)))
+        return TemplateSearch(using=self._es_client,
+                              index=str(IndexName.create(catalog=catalog,
+                                                         qualifier=entity_type,
+                                                         doc_type=doc_type)))
