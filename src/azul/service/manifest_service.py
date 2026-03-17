@@ -451,10 +451,6 @@ class Manifest(SerializableAttrs):
     file_name: str | None
 
 
-def tuple_or_none(v):
-    return v if v is None else tuple(v)
-
-
 @attrs.frozen(kw_only=True)
 class ManifestPartition(SerializableAttrs):
     """
