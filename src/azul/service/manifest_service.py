@@ -1344,8 +1344,7 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
         return request
 
     def _search_after(self, hit: Hit) -> SortKey:
-        a, b = hit.meta.sort
-        return a, b
+        return sort_key_from_json(list(hit.meta.sort))
 
 
 class PagedManifestGenerator(ClientSidePagingManifestGenerator):

@@ -73,7 +73,6 @@ from azul.lib.types import (
     JSONs,
     MutableJSON,
     PrimitiveJSON,
-    json_list,
     json_str,
 )
 from azul.opensearch import (
@@ -461,12 +460,17 @@ class ToDictStage(_OpenSearchStage[Response, MutableJSON]):
         return response.to_dict()
 
 
-type SortKey = tuple[PrimitiveJSON, str]
+type SortKey = tuple[PrimitiveJSON, str] | tuple[PrimitiveJSON]
 
 
 def sort_key_from_json(s: AnyJSON) -> SortKey:
-    a, b = json_list(s)
-    return a, json_str(b)
+    match s:
+        case [a, b]:
+            return (a, json_str(b))
+        case [a]:
+            return (a,)
+        case _:
+            assert False, s
 
 
 def sort_key_to_json(s: SortKey) -> AnyJSON:
