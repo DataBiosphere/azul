@@ -358,7 +358,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                         'size': 99999
                     },
                     'meta': {
-                        'path': ['path', 'to', 'foo']
+                        'paths': [['path', 'to', 'foo']]
                     }
                 },
                 'myUntagged': {

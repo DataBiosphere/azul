@@ -18,6 +18,9 @@ from more_itertools import (
     one,
 )
 
+from azul.field_type import (
+    Nested,
+)
 from azul.lib import (
     cached_property,
 )
@@ -559,9 +562,16 @@ class HCASearchResponseStage(SearchResponseStage):
             ]
             return summarized_hit
 
-    def make_terms(self, agg) -> Terms:
+    def make_terms(self, field_type, agg) -> Terms:
+        if isinstance(field_type, Nested):
+            nested_property_names = field_type.properties.keys()
+        else:
+            nested_property_names = None
+
         def choose_entry(_term):
-            if 'key_as_string' in _term:
+            if nested_property_names is not None:
+                return dict(zip(nested_property_names, _term['key']))
+            elif 'key_as_string' in _term:
                 return _term['key_as_string']
             elif (term_key := _term['key']) is None:
                 return None
@@ -606,8 +616,9 @@ class HCASearchResponseStage(SearchResponseStage):
                      type='terms')
 
     def make_facets(self, aggs: JSON) -> dict[str, Terms]:
+        field_types = self.service.mapped_field_types(self.catalog)
         facets = {}
         for facet, agg in aggs.items():
             if facet != '_project_agg':  # Filter out project specific aggs
-                facets[facet] = self.make_terms(agg)
+                facets[facet] = self.make_terms(field_types[facet], agg)
         return facets

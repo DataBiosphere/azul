@@ -98,7 +98,6 @@ class DocumentService:
         if isinstance(field_types, Nested):
             element = next(elements, None)
             if element is not None:
-                assert element == field_types.agg_property, (element, field_types)
                 field_types = field_types.properties[element]
         assert isinstance(field_types, FieldType), (path, field_types)
         element = next(elements, None)

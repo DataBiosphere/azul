@@ -35,6 +35,7 @@ from opensearchpy import (
 )
 from opensearchpy.helpers.aggs import (
     Agg,
+    MultiTerms,
     Terms,
 )
 from opensearchpy.helpers.query import (
@@ -80,9 +81,11 @@ from azul.opensearch import (
 )
 from azul.plugins import (
     DocumentSlice,
+    DottedFieldPath,
     FieldPath,
     MetadataPlugin,
     dotted,
+    undotted,
 )
 
 log = logging.getLogger(__name__)
@@ -340,15 +343,48 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
         field_type = self.service.field_type(self.catalog, facet_path)
         if isinstance(field_type, Nested):
+            dotted_facet_path = dotted(facet_path)
+            # Aggregate over the values of the nested field. The values are flat
+            # JSON, i.e. dictionaries consisting of properties whose values are
+            # primitive. OpenSearch refers to the values of the nested field as
+            # "nested documents". By itself, a `nested` aggregation only counts
+            # the number of nested documents.
             nested_agg = agg.bucket(name=nested_agg_name,
                                     agg_type='nested',
-                                    path=dotted(facet_path))
-            dotted_field_path = dotted(facet_path, field_type.agg_property, 'keyword')
+                                    path=dotted_facet_path)
+            # In order to aggregate over the properties of the nested documents,
+            # a child aggregation must be added. We use the `multi_terms` child
+            # aggregation to produce a result bucket for every distinct nested
+            # document, based on the values of its properties. For each bucket,
+            # the number of occurrences of such a nested document is returned.
+            # Duplicate nested documents, either in a single containing document
+            # or spread out over multiple containing documents, would be counted
+            # individually. We do want to count duplicates occurring in
+            # different containing documents, but we don't want to count
+            # duplicates occurring in the same containing document. To
+            # eliminate the latter, we deduplicated at indexing time.
             nested_agg.bucket(name=values_agg_name,
-                              agg_type='terms',
-                              field=dotted_field_path,
+                              agg_type='multi_terms',
+                              terms=[
+                                  {'field': dotted(facet_path, field, 'keyword')}
+                                  for field in field_type.properties
+                              ],
                               size=config.terms_aggregation_size)
-            nested_agg.bucket(untagged_agg_name, 'missing', field=dotted_field_path)
+            # We use a sibling aggregation in order to count the documents that
+            # don't contain any nested documents for this field. For normal
+            # fields we can use the `missing` aggregation, but this is currently
+            # not possible in combination with the `nested` aggregation:
+            # https://github.com/elastic/elasticsearch/issues/9571
+            #
+            # As a workaround, we use a `filter` aggregation instead.
+            agg.bucket(name=untagged_agg_name,
+                       agg_type='filter',
+                       filter=Q('bool',
+                                must_not=[
+                                    Q('nested',
+                                      path=dotted_facet_path,
+                                      query=Q('exists', field=dotted_facet_path))
+                                ]))
         else:
             dotted_facet_path = dotted(facet_path, 'keyword')
             agg.bucket(name=values_agg_name,
@@ -365,14 +401,27 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         the response.
         """
 
+        def convert_path(path: DottedFieldPath) -> FieldPath:
+            p = undotted(path)
+            assert p[-1] == 'keyword', path
+            return p[:-1]
+
         def annotate(agg: Agg):
-            if isinstance(agg, Terms):
-                path = agg.field.split('.')
-                if path[-1] == 'keyword':
-                    path.pop()
+            if isinstance(agg, (Terms, MultiTerms)):
                 if not hasattr(agg, 'meta'):
                     agg.meta = {}
-                agg.meta['path'] = path
+                agg.meta['paths'] = []
+                if isinstance(agg, Terms):
+                    # A Terms agg is for a single field, so we only need to
+                    # annotate with the one FieldPath for the field.
+                    agg.meta['paths'].append(convert_path(agg.field))
+                else:
+                    # A MultiTerms agg contains multiple fields, so we need the
+                    # FieldPath of each one. By storing these in the same order
+                    # that the fields occur in `agg.terms`, we can later pair
+                    # these FieldPaths to the values in the aggregation buckets.
+                    for term in agg.terms:
+                        agg.meta['paths'].append(convert_path(term['field']))
             if hasattr(agg, 'aggs'):
                 subs = agg.aggs
                 for sub_name in subs:
@@ -405,13 +454,25 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                         translate(k, v)
             else:
                 try:
-                    path = v['meta']['path']
+                    # `paths` is a key we added to `meta` to have available here
+                    # when processing the response. Each path is a FieldPath
+                    # (e.g. ['contents', 'projects', 'document_id']). There will
+                    # be only one FieldPath in the case of a Terms aggregation,
+                    # and multiple in the case of a MultiTerms aggregation.
+                    paths = v['meta']['paths']
                 except KeyError:
                     pass
                 else:
-                    field_type = self.service.field_type(self.catalog, tuple(path))
+                    for i, path in enumerate(paths):
+                        field_type = self.service.field_type(self.catalog, tuple(path))
+                        for bucket in buckets:
+                            if isinstance(bucket['key'], list):
+                                # The bucket is from a MultiTerms aggregation
+                                bucket['key'][i] = field_type.from_index(bucket['key'][i])
+                            else:
+                                # The bucket is from a Terms aggregation
+                                bucket['key'] = field_type.from_index(bucket['key'])
                     for bucket in buckets:
-                        bucket['key'] = field_type.from_index(bucket['key'])
                         translate(k, bucket)
 
         for k, v in aggs.items():
