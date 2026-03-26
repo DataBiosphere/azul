@@ -17,7 +17,7 @@ more-itertools==10.8.0
 msgpack==1.1.2  # versioned independently from the type stub dependency but when updating one, the other should be updated, too, if posssible
 opensearch-py==2.8.0  # < 3 to match server
 referencing==0.36.2  # < 0.37.0, see https://github.com/DataBiosphere/azul/issues/7832
-requests==2.32.5
+requests==2.33.0
 resumablehash==1.4  # match version with --find-links above
 rsa==4.7.2  # < 4.8, see https://github.com/DataBiosphere/azul/issues/6774. Resolve build-time dependency ambguity
 setuptools==82.0.1  # Match requirements.pip.txt. Python 3.12 removed distutils, which we depended on transitively. Luckily, setuptools includes a vendored copy.
