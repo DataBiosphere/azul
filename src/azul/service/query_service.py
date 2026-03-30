@@ -343,16 +343,19 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
             nested_agg = agg.bucket(name=nested_agg_name,
                                     agg_type='nested',
                                     path=dotted(facet_path))
-            facet_path = dotted(facet_path, field_type.agg_property)
+            dotted_field_path = dotted(facet_path, field_type.agg_property, 'keyword')
+            nested_agg.bucket(name=values_agg_name,
+                              agg_type='terms',
+                              field=dotted_field_path,
+                              size=config.terms_aggregation_size)
+            nested_agg.bucket(untagged_agg_name, 'missing', field=dotted_field_path)
         else:
-            nested_agg = agg
-        # Make an inner agg that will contain the terms in question
-        path = dotted(facet_path, 'keyword')
-        nested_agg.bucket(name=values_agg_name,
-                          agg_type='terms',
-                          field=path,
-                          size=config.terms_aggregation_size)
-        nested_agg.bucket(untagged_agg_name, 'missing', field=path)
+            dotted_facet_path = dotted(facet_path, 'keyword')
+            agg.bucket(name=values_agg_name,
+                       agg_type='terms',
+                       field=dotted_facet_path,
+                       size=config.terms_aggregation_size)
+            agg.bucket(untagged_agg_name, 'missing', field=dotted_facet_path)
         return agg
 
     def _annotate_aggs_for_translation(self, request: Search):
