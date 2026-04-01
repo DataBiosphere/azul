@@ -334,8 +334,6 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
             nested_agg = agg
         # Make an inner agg that will contain the terms in question
         path = dotted(facet_path, 'keyword')
-        # FIXME: Approximation errors for terms aggregation are unchecked
-        #        https://github.com/DataBiosphere/azul/issues/3413
         nested_agg.bucket(name='myTerms',
                           agg_type='terms',
                           field=path,
