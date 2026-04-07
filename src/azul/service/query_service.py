@@ -53,6 +53,7 @@ from azul.field_type import (
 )
 from azul.indexer.document import (
     DocumentType,
+    FieldPath,
     IndexName,
 )
 from azul.indexer.document_service import (
@@ -77,7 +78,6 @@ from azul.opensearch import (
 )
 from azul.plugins import (
     DocumentSlice,
-    FieldPath,
     MetadataPlugin,
     dotted,
 )
