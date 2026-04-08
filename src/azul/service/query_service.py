@@ -225,7 +225,7 @@ class FilterStage(_OpenSearchStage[Response, Response]):
             translated_filters[field] = {operator: list(values)}
         return translated_filters
 
-    def prepare_query(self, skip_field_paths: tuple[FieldPath] = ()) -> Query:
+    def prepare_query(self, skip_field_paths: tuple[FieldPath, ...] = ()) -> Query:
         """
         Converts the given filters into an OpenSearch DSL Query object.
         """
