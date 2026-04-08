@@ -231,7 +231,9 @@ class FilterStage(_OpenSearchStage[Response, Response]):
             field_path = field_mapping[field_name]
             operator, values = one(filter.items())
             field_type = self.service.field_type(catalog, field_path)
-            values: JSONArray = list(field_type.filter(operator, values))
+            # FIXME: remove `type: ignore`
+            #        https://github.com/DataBiosphere/azul/issues/6821
+            values: JSONArray = list(field_type.filter(operator, values))  # type: ignore
             return field_path, {operator: values}
 
         return dict(
