@@ -12,6 +12,7 @@ from dataclasses import (
 from datetime import (
     datetime,
 )
+import logging
 from typing import (
     Any,
 )
@@ -27,7 +28,7 @@ from furl import (
 from more_itertools import (
     one,
 )
-import requests
+import urllib3
 
 from azul import (
     config,
@@ -37,6 +38,9 @@ from azul.drs import (
     AccessMethod,
     drs_object_uri,
     drs_object_url_path,
+)
+from azul.http import (
+    HasCachedHttpClient,
 )
 from azul.lib import (
     cached_property,
@@ -62,8 +66,10 @@ from azul.service.index_service import (
     IndexService,
 )
 
+log = logging.getLogger(__name__)
 
-class DRSController(ServiceController):
+
+class DRSController(ServiceController, HasCachedHttpClient):
 
     @cached_property
     def _service(self) -> IndexService:
@@ -207,7 +213,7 @@ class DRSController(ServiceController):
             # We only want direct URLs for Google
             extra_params = dict(query_params, directurl=access_method.replica == 'gcp')
             response = self._dss_get_file(file_uuid, access_method.replica, **extra_params)
-            if response.status_code == 301:
+            if response.status == 301:
                 retry_url = response.headers['location']
                 query = urllib.parse.urlparse(retry_url).query
                 query = urllib.parse.parse_qs(query, strict_parsing=True)
@@ -215,14 +221,14 @@ class DRSController(ServiceController):
                 # We use the encoded token string as the key for our access ID.
                 access_id = encode_access_id(token, access_method.replica)
                 drs_object.add_access_method(access_method, access_id=access_id)
-            elif response.status_code == 302:
+            elif response.status == 302:
                 retry_url = response.headers['location']
                 if access_method.replica == 'gcp':
                     assert retry_url.startswith('gs:')
                 drs_object.add_access_method(access_method, url=retry_url)
             else:
                 # For errors, just proxy DSS response
-                return Response(response.text, status_code=response.status_code)
+                return Response(response.data, status_code=response.status)
         return Response(drs_object.to_json())
 
     def get_object_access(self, access_id, file_uuid, query_params):
@@ -240,24 +246,32 @@ class DRSController(ServiceController):
                 'directurl': replica == 'gcp',
                 'token': token
             })
-            if response.status_code == 301:
-                headers = {'retry-after': response.headers['retry-after']}
+            if response.status == 301:
+                header_name = 'retry-after'
+                retry_after = response.headers[header_name]
                 # DRS says no body for 202 responses
-                return Response(body='', status_code=202, headers=headers)
-            elif response.status_code == 302:
+                return Response(body='', status_code=202, headers={header_name: retry_after})
+            elif response.status == 302:
                 retry_url = response.headers['location']
                 return Response(self._access_url(retry_url))
             else:
                 # For errors, just proxy DSS response
-                return Response(response.text, status_code=response.status_code)
+                return Response(response.data, status_code=response.status)
 
-    def _dss_get_file(self, file_uuid, replica, **kwargs):
+    def _dss_get_file(self,
+                      file_uuid,
+                      replica,
+                      **kwargs
+                      ) -> urllib3.BaseHTTPResponse:
         dss_params = {
             'replica': replica,
             **kwargs
         }
         url = self.dss_file_url(file_uuid)
-        return requests.api.get(str(url), params=dss_params, allow_redirects=False)
+        return self._http_client.request('GET',
+                                         str(url),
+                                         fields=dss_params,
+                                         redirect=False)
 
     @classmethod
     def dss_file_url(cls, file_uuid: str) -> mutable_furl:
@@ -269,7 +283,7 @@ class GatewayTimeoutError(ChaliceViewError):
 
 
 @dataclass
-class DRSObject:
+class DRSObject(HasCachedHttpClient):
     """"
     Used to build up a https://ga4gh.github.io/data-repository-service-schemas/docs/#_drsobject
     """
@@ -295,7 +309,7 @@ class DRSObject:
     def to_json(self) -> JSON:
         args = _url_query(replica='aws', version=self.version)
         url = DRSController.dss_file_url(self.uuid).add(args=args)
-        headers = requests.api.head(str(url)).headers
+        headers = self._http_client.request('HEAD', str(url)).headers
         version = headers['x-dss-version']
         if self.version is not None:
             assert version == self.version
