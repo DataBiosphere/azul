@@ -8,7 +8,6 @@ from collections import (
 from collections.abc import (
     Iterable,
     Mapping,
-    Sequence,
 )
 from functools import (
     partial,
@@ -66,6 +65,7 @@ from azul.lib import (
 from azul.lib.types import (
     AnyJSON,
     JSON,
+    JSONArray,
     JSONTypedDict,
     JSONs,
     MutableJSON,
@@ -168,7 +168,7 @@ class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
         return OpenSearchChain(inner=other, outer=self)
 
 
-TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[PrimitiveJSON]]]
+TranslatedFilters = Mapping[FieldPath, Mapping[str, JSONArray]]
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
