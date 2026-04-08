@@ -412,10 +412,12 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         special_fields = plugin.special_fields
         agg = aggs.pop(special_fields.source_id.name)
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
-        for bucket in agg['myTerms']['buckets']:
+        terms = agg['myTerms']
+        buckets = terms['buckets']
+        for bucket in buckets:
             accessible = bucket['key'] in source_ids
             counts_by_accessibility[accessible] += bucket['doc_count']
-        agg['myTerms']['buckets'] = [
+        terms['buckets'] = [
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]
