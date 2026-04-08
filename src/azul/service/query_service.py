@@ -9,9 +9,6 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
-from functools import (
-    partial,
-)
 import json
 import logging
 from typing import (
@@ -592,35 +589,35 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         """
         Returns hits and pagination as dict
         """
-        hits = self._extract_hits(response)
+        hits, total = self._extract_hits(response)
+        pagination = self._process_pagination(hits, total)
         hits = self._translate_hits(hits)
-        pagination = self._process_pagination(response)
         aggregations = response.get('aggregations', {})
         return hits, pagination, aggregations
 
-    def _extract_hits(self, response):
-        # The slice is necessary because we may have fetched an extra entry to
-        # determine if there is a previous or next page.
-        hits = response['hits']['hits'][0:self.pagination.size]
-        if self.pagination.search_before is not None:
-            hits = reversed(hits)
-        hits = [hit['_source'] for hit in hits]
-        return hits
-
-    def _translate_hits(self, hits):
-        f = partial(self.service.translate_fields, self.catalog, forward=False)
-        hits = list(map(f, hits))
-        return hits
-
-    def _process_pagination(self, response: JSON) -> MutableJSON:
-        total = response['hits']['total']
+    def _extract_hits(self, response: JSON) -> tuple[JSONs, int]:
+        hits = response['hits']
+        total = hits['total']
         # FIXME: Handle other relations
         #        https://github.com/DataBiosphere/azul/issues/3770
         assert total['relation'] == 'eq'
-        pages = -(-total['value'] // self.pagination.size)
+        return hits['hits'], total['value']
+
+    def _translate_hits(self, hits: JSONs) -> JSONs:
+        # The slice is necessary because we may have fetched an extra entry to
+        # determine if there is a previous or next page.
+        hits = hits[0:self.pagination.size]
+        if self.pagination.search_before is not None:
+            hits = reversed(hits)
+        return [
+            self.service.translate_fields(self.catalog, hit['_source'], forward=False)
+            for hit in hits
+        ]
+
+    def _process_pagination(self, hits: JSONs, total: int) -> MutableJSON:
+        pages = -(-total // self.pagination.size)
 
         # ... else use search_after/search_before pagination
-        hits: JSONs = response['hits']['hits']
         count = len(hits)
         if self.pagination.search_before is None:
             # hits are normal sorted
@@ -656,7 +653,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
             return None if url is None else str(url)
 
         return ResponsePagination(count=count,
-                                  total=total['value'],
+                                  total=total,
                                   size=pagination.size,
                                   next=page_link(previous=False),
                                   previous=page_link(previous=True),
