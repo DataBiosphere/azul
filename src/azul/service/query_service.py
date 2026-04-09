@@ -549,12 +549,12 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
 
     def prepare_request(self, request: Search) -> Search:
         sort_order = self.pagination.order
-        sort_field = self.plugin.field_mapping[self.pagination.sort]
-        field_type = self.service.field_type(self.catalog, sort_field)
+        sort_field_path = self.plugin.field_mapping[self.pagination.sort]
+        field_type = self.service.field_type(self.catalog, sort_field_path)
         sort_mode = field_type.es_sort_mode
-        sort_field = dotted(sort_field, 'keyword')
+        sort_field = dotted(sort_field_path, 'keyword')
 
-        def sort(order):
+        def sort(order: str) -> tuple[JSON, JSON]:
             assert order in ('asc', 'desc'), order
             return (
                 {
@@ -665,7 +665,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         pagination = self.pagination.advance(search_before=search_before,
                                              search_after=search_after)
 
-        def page_link(*, previous):
+        def page_link(*, previous: bool) -> str | None:
             url = pagination.link(previous=previous,
                                   catalog=self.catalog,
                                   filters=json.dumps(self.filters.explicit))
