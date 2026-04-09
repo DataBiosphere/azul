@@ -52,6 +52,8 @@ class Accumulator[V, A](metaclass=ABCMeta):
     type.
     """
 
+    allow_overflow: bool = False
+
     def __init__(self):
         self.dropped = 0
 
@@ -556,9 +558,23 @@ class UniqueValueCountAccumulator[V:Hashable](Accumulator[V, int]):
 
 class EntityAggregator(metaclass=ABCMeta):
 
-    def __init__(self, outer_entity_type: EntityType, entity_type: EntityType):
+    def __init__(self,
+                 outer_entity_type: EntityType,
+                 entity_type: EntityType,
+                 is_hot: bool = False):
+        """
+        :param outer_entity_type: The entity type of the aggregate document.
+
+        :param entity_type: The entity type of the inner entities being
+                            accumulated.
+
+        :param is_hot: If the inner entity is a "hot" entity type. If true,
+                       complete accumulation of `document_id` will be enforced,
+                       since replicas for these entities don't track hub IDs.
+        """
         self.outer_entity_type = outer_entity_type
         self.entity_type = entity_type
+        self.is_hot = is_hot
 
     def _transform_entity(self, entity: JSON) -> JSON:
         return entity
@@ -603,6 +619,16 @@ class SimpleAggregator(EntityAggregator):
                 accumulator.accumulate(value)
 
     def _aggregate(self, aggregate: Aggregate) -> JSON:
+        if self.is_hot is True:
+            accumulator = aggregate.get('document_id')
+            assert accumulator is not None, R(
+                'Hot entity types must always accumulate document_id',
+                self.entity_type, aggregate.keys()
+            )
+            assert not accumulator.allow_overflow, R(
+                'allow_overflow is not permitted when accumulating document_id '
+                'from hot entity types', self.entity_type
+            )
         result = {}
         for k, accumulator in aggregate.items():
             if accumulator is not None:
@@ -612,7 +638,7 @@ class SimpleAggregator(EntityAggregator):
                         f'Values were dropped {accumulator.dropped} times while aggregating '
                         f'{self.entity_type}.{k} into {self.outer_entity_type}'
                     )
-                    if isinstance(accumulator, SetAccumulator) and accumulator.allow_overflow:
+                    if accumulator.allow_overflow:
                         log.warning(message)
                     else:
                         assert False, R(message)
