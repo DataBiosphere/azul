@@ -590,8 +590,6 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         """
         Returns hits and pagination as dict
         """
-        # The slice is necessary because we may have fetched an extra entry to
-        # determine if there is a previous or next page.
         hits = self._extract_hits(response)
         hits = self._translate_hits(hits)
         pagination = self._process_pagination(response)
@@ -599,6 +597,8 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         return hits, pagination, aggregations
 
     def _extract_hits(self, response):
+        # The slice is necessary because we may have fetched an extra entry to
+        # determine if there is a previous or next page.
         hits = response['hits']['hits'][0:self.pagination.size]
         if self.pagination.search_before is not None:
             hits = reversed(hits)
