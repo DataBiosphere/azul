@@ -513,7 +513,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             agg_cls = DateAggregator
         else:
             agg_cls = SimpleAggregator
-        return agg_cls(cls.entity_type(), entity_type)
+        return agg_cls(cls.entity_type(), entity_type,
+                       is_hot=(issubclass(cls, ReplicaTransformer)
+                               and entity_type in cls.hot_entity_types().values()))
 
     def _deduplicate[V: AnyJSON](self,
                                  *,

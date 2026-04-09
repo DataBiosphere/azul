@@ -181,7 +181,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             agg_cls = FileAggregator
         else:
             assert False, entity_type
-        return agg_cls(cls.entity_type(), entity_type)
+        return agg_cls(cls.entity_type(), entity_type,
+                       is_hot=(issubclass(cls, ReplicaTransformer)
+                               and entity_type in cls.hot_entity_types().values()))
 
     def estimate(self, partition: BundlePartition) -> int:
         # Orphans are not considered when deciding whether to partition the
