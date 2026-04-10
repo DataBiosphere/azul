@@ -618,6 +618,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
             filters = self._manifest_filters(catalog)
             execution_ids = set()
             coin_flip = bool(self.random.getrandbits(1))
+            num_old_executions = 0
             for i, fetch in enumerate([coin_flip, coin_flip, not coin_flip]):
                 with self.subTest('manifest', catalog=catalog, format=format, i=i, fetch=fetch):
                     args = dict(catalog=catalog, filters=json.dumps(filters))
@@ -655,15 +656,18 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     bucket, key = one(self._manifest_objects(responses))
                     if i == 0:
                         aws.s3.delete_object(Bucket=bucket, Key=key)
-                        # One execution to generate the manifest
-                        self.assertEqual(1, len(execution_ids))
+                        # One execution to generate the manifest. However, if
+                        # this test was recently run using the same seed,
+                        # previous executions will be tracked in the token.
+                        self.assertLessEqual(1, len(execution_ids))
+                        num_old_executions = len(execution_ids) - 1
                     elif i == 1:
                         # One more execution to re-generate the manifest
-                        self.assertEqual(2, len(execution_ids))
+                        self.assertEqual(num_old_executions + 2, len(execution_ids))
                     elif i == 2:
                         # Only fetch mode changed, cached manifest will be used,
                         # and no additional executions are expected
-                        self.assertEqual(2, len(execution_ids))
+                        self.assertEqual(num_old_executions + 2, len(execution_ids))
                     else:
                         assert False
 
