@@ -194,6 +194,11 @@ def json_sorted(vs: Iterable[PrimitiveJSON]) -> MutableJSONArray:
     return sorted(vs, key=none_safe_key(none_last=True))
 
 
+def json_primitive(v: AnyJSON) -> PrimitiveJSON:
+    assert v is None or isinstance(v, (str, int, float, bool)), type(v)
+    return v
+
+
 def json_str(v: AnyMutableJSON | AnyJSON) -> str:
     return any_str(v)
 
