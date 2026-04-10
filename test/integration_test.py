@@ -649,7 +649,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
                         self.assertEqual(2, len(execution_ids))
                     elif i == 2:
                         # Only fetch mode changed, cached manifest will be used,
-                        # and no additional executions are expectect
+                        # and no additional executions are expected
                         self.assertEqual(2, len(execution_ids))
                     else:
                         assert False
