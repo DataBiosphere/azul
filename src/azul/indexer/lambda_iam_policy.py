@@ -131,6 +131,7 @@ policy = {
                             aws.mirror_bucket,
                             config.mirror_bucket,
                             aws.ma_mirror_bucket,
+                            config.ma_mirror_bucket
                         )
                         for resource in [bucket, f'{bucket}/*']
                     ]

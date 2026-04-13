@@ -621,6 +621,11 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_MIRROR_BUCKET': None,
 
+        # The name of an external bucket to use for mirroring managed access
+        # files. If None, a provisioned bucket will be used.
+        #
+        'AZUL_MANAGED_ACEESS_MIRROR_BUCKET': None,
+
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed
         # together but separately from resources in other components. They are
