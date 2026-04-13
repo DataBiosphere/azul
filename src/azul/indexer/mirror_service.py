@@ -472,8 +472,9 @@ class MirrorService:
         if self.may_mirror_files_from_source(source):
             file = file_cls.from_index(file_json)
             if self.may_mirror(0 if file.size is None else file.size):
+                storage = self._storage
                 return str(furl(scheme='s3',
-                                netloc=self._storage.bucket_name,
+                                netloc=storage.bucket_name,
                                 path=self._file_object_key(file)))
             else:
                 return None
@@ -481,18 +482,22 @@ class MirrorService:
             return None
 
     def mirror_url(self, file: File) -> str:
-        return self._storage.get_presigned_url(object_key=self._file_object_key(file),
-                                               file_name=file.name,
-                                               content_type=file.content_type)
+        storage = self._storage
+        return storage.get_presigned_url(object_key=self._file_object_key(file),
+                                         file_name=file.name,
+                                         content_type=file.content_type)
 
     def info(self, file: File) -> MutableJSON:
-        return json.loads(self._storage.get_object(self._info_object_key(file)))
+        storage = self._storage
+        return json.loads(storage.get_object(self._info_object_key(file)))
 
     def info_exists(self, file: File) -> bool:
-        return self._storage.object_exists(self._info_object_key(file))
+        storage = self._storage
+        return storage.object_exists(self._info_object_key(file))
 
     def _file_exists(self, file: File) -> bool:
-        return self._storage.object_exists(self._file_object_key(file))
+        storage = self._storage
+        return storage.object_exists(self._file_object_key(file))
 
     info_prefix, file_prefix = 'info', 'file'
 
@@ -526,9 +531,10 @@ class MirrorService:
             'Not an IT catalog', self.catalog)
         prefix = self._mirror_prefix
         assert len(prefix) > 1 and prefix.endswith('/'), prefix
-        object_keys = self._storage.list_objects(prefix)
+        storage = self._storage
+        object_keys = storage.list_objects(prefix)
         assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
-        self._storage.delete_objects(object_keys, batch_size=100)
+        storage.delete_objects(object_keys, batch_size=100)
 
 
 @attrs.frozen(kw_only=True, slots=False)
@@ -636,17 +642,19 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         file_content = self._download(file)
         hasher.update(file_content)
         self._verify_digest(file, hasher)
-        self._storage.put_object(object_key=self._file_object_key(file),
-                                 data=file_content,
-                                 content_type=self._file_object_content_type,
-                                 overwrite=False)
+        storage = self._storage
+        storage.put_object(object_key=self._file_object_key(file),
+                           data=file_content,
+                           content_type=self._file_object_content_type,
+                           overwrite=False)
         self._create_info(file)
 
     def _create_upload(self, file: File) -> FileUpload:
         object_key = self._file_object_key(file)
         content_type = self._file_object_content_type
-        upload_id = self._storage.create_multipart_upload(object_key=object_key,
-                                                          content_type=content_type)
+        storage = self._storage
+        upload_id = storage.create_multipart_upload(object_key=object_key,
+                                                    content_type=content_type)
         return FileUpload(upload_id=upload_id,
                           hasher=get_resumable_hasher(file.digest.type),
                           etags=[])
@@ -666,10 +674,11 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         log.info('Uploading part #%d of file %r', part.index, file)
         content = self._download(file, part)
         upload.hasher.update(content)
-        etag = self._storage.upload_multipart_part(object_key=self._file_object_key(file),
-                                                   upload_id=upload.upload_id,
-                                                   part_number=part.index + 1,
-                                                   buffer=content)
+        storage = self._storage
+        etag = storage.upload_multipart_part(object_key=self._file_object_key(file),
+                                             upload_id=upload.upload_id,
+                                             part_number=part.index + 1,
+                                             buffer=content)
         upload.etags.append(etag)
         next_part = part.next(file)
         return next_part
@@ -690,15 +699,16 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert len(a.upload.etags) > 0
         self._verify_digest(a.file, a.upload.hasher)
         object_key = self._file_object_key(a.file)
+        storage = self._storage
         try:
-            self._storage.complete_multipart_upload(object_key=object_key,
-                                                    upload_id=a.upload.upload_id,
-                                                    etags=a.upload.etags,
-                                                    overwrite=False)
+            storage.complete_multipart_upload(object_key=object_key,
+                                              upload_id=a.upload.upload_id,
+                                              etags=a.upload.etags,
+                                              overwrite=False)
         except StorageObjectExists:
             log.info('Discarding redundant upload %r of %r', a.upload.upload_id, a.file)
-            self._storage.abort_multipart_upload(object_key=object_key,
-                                                 upload_id=a.upload.upload_id)
+            storage.abort_multipart_upload(object_key=object_key,
+                                           upload_id=a.upload.upload_id)
         self._create_info(a.file)
         log.info('Successfully mirrored file via multi-part upload: %r', a.file)
         return iter(())
@@ -733,15 +743,17 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             return json.dumps(self._info(file, json.loads(data))).encode()
 
         key = self._info_object_key(file)
-        self._storage.update_object(key, update, content_type='application/json')
+        storage = self._storage
+        storage.update_object(key, update, content_type='application/json')
 
     def _create_info(self, file: File):
         object_key = self._info_object_key(file)
         info = self._info(file)
-        self._storage.put_object(object_key=object_key,
-                                 data=json.dumps(info).encode(),
-                                 content_type='application/json',
-                                 overwrite=False)
+        storage = self._storage
+        storage.put_object(object_key=object_key,
+                           data=json.dumps(info).encode(),
+                           content_type='application/json',
+                           overwrite=False)
 
     def _repository_url(self, file: File) -> furl:
         assert config.is_tdr_enabled(self.catalog), R(
