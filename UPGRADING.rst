@@ -19,6 +19,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#7927 Use MA mirror bucket for MA files
+=======================================
+
+Add the ``no_mirror`` flag to all managed-access sources in all catalogs in
+the ``environment.py`` files for each of your personal deployments. As always,
+use the sandbox deployment's ``environment.py`` as a model when upgrading
+personal deployments.
+
 
 #7954 Implement authorization code flow with Azul and Data Browser
 ==================================================================
