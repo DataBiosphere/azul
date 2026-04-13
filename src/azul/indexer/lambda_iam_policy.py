@@ -127,7 +127,11 @@ policy = {
                     ],
                     'Resource': [
                         f'arn:aws:s3:::{resource}'
-                        for bucket in alist(aws.mirror_bucket, config.mirror_bucket)
+                        for bucket in alist(
+                            aws.mirror_bucket,
+                            config.mirror_bucket,
+                            aws.ma_mirror_bucket,
+                        )
                         for resource in [bucket, f'{bucket}/*']
                     ]
                 },

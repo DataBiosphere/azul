@@ -204,6 +204,8 @@ class Config:
 
     mirror_term = 'mirror'
 
+    ma_mirror_term = 'mamirror'
+
     current = Sentinel()
 
     def alb_access_log_path_prefix(self,
