@@ -349,6 +349,14 @@ class MirrorService:
             bucket = aws.mirror_bucket
         return StorageService(bucket)
 
+    def _is_public(self, source_spec: SourceSpec) -> bool:
+        public_sources = self._source_service.list_sources(self.catalog,
+                                                           authentication=None)
+        return any(
+            source_spec == source.ref.spec
+            for source in public_sources
+        )
+
     @cached_property
     def _source_service(self) -> SourceService:
         return SourceService()
@@ -364,13 +372,7 @@ class MirrorService:
             plugin = self.repository_plugin
             source_config = plugin.sources[source_spec]
             if source_config.mirror:
-                public_sources = self._source_service.list_sources(self.catalog,
-                                                                   authentication=None)
-                is_public = any(
-                    source_spec == source.ref.spec
-                    for source in public_sources
-                )
-                return is_public
+                return self._is_public(source_spec)
             else:
                 return False
         else:
