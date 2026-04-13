@@ -271,7 +271,7 @@ class TestMirrorController(DCP2TestCase,
 
     def _get_content_types_from_info_object(self, file) -> list[str]:
         service = self._service
-        info = json.loads(service._storage.get_object(service._info_object_key(file)))
+        info = service.info(file)
         jsonschema.validate(info, self._info_schema)
         content_types = info['content-type']
         self.assertIsInstance(content_types, list)
