@@ -192,19 +192,51 @@ class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
         assert redirects >= 0
         helper.add_passthru(str(self.base_url))
         if redirects == 0:
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=True, _301=False))
-            helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=True, _301=False))
+            helper.add(self._dss_response(file_uuid,
+                                          file_version,
+                                          'aws',
+                                          initial=True,
+                                          _301=False))
+            helper.add(self._dss_response(file_uuid,
+                                          file_version,
+                                          'gcp',
+                                          initial=True,
+                                          _301=False))
             helper.add(self._dss_response(file_uuid, file_version, 'aws', head=True))
         else:
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=True, _301=True))
-            helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=True, _301=True))
+            helper.add(self._dss_response(file_uuid,
+                                          file_version,
+                                          'aws',
+                                          initial=True,
+                                          _301=True))
+            helper.add(self._dss_response(file_uuid,
+                                          file_version,
+                                          'gcp',
+                                          initial=True,
+                                          _301=True))
             helper.add(self._dss_response(file_uuid, file_version, 'aws', head=True))
             redirects -= 1
             for _ in range(redirects):
-                helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=False, _301=True))
-                helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=False, _301=True))
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=False, _301=False))
-            helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=False, _301=False))
+                helper.add(self._dss_response(file_uuid,
+                                              file_version,
+                                              'aws',
+                                              initial=False,
+                                              _301=True))
+                helper.add(self._dss_response(file_uuid,
+                                              file_version,
+                                              'gcp',
+                                              initial=False,
+                                              _301=True))
+            helper.add(self._dss_response(file_uuid,
+                                          file_version,
+                                          'aws',
+                                          initial=False,
+                                          _301=False))
+            helper.add(self._dss_response(file_uuid,
+                                          file_version,
+                                          'gcp',
+                                          initial=False,
+                                          _301=False))
 
     def test_data_object_not_found(self):
         file_uuid = 'NOT_A_GOOD_IDEA'
