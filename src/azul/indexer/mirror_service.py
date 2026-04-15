@@ -372,6 +372,11 @@ class MirrorService:
             plugin = self.repository_plugin
             source_config = plugin.sources[source_spec]
             if source_config.mirror:
+                # This method is only used by the index and manifest services
+                # to determine whether to populate a file's mirror URI in the
+                # index response/manifest or not. We deliberately return a false
+                # negative for managed-access files since we don't want the
+                # service to know about them yet.
                 return self._is_public(source_spec)
             else:
                 return False
@@ -572,10 +577,6 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorSourceAction) -> Iterator[MirrorAction]:
-        public_sources = self._source_service.list_source_ids(self.catalog,
-                                                              authentication=None)
-        assert a.source.id in public_sources, R(
-            'Cannot mirror non-public source', a.source)
         plugin = self.repository_plugin
         # The desired partition size depends on the maximum number of messages
         # we can send in one Lambda invocation, because queueing the individual
@@ -761,7 +762,13 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
-        object = self.repository_plugin.drs_object(file.drs_uri)
+        assert file.source is not None, R(
+            'File source unknown', file)
+        if self._is_public(file.source.spec):
+            auth = Config.ServiceAccount.public
+        else:
+            auth = Config.ServiceAccount.indexer
+        object = self.repository_plugin.drs_object(file.drs_uri, auth)
         access = object.get(AccessMethod.gs)
         assert access.method is AccessMethod.https, access
         return furl(access.url)
