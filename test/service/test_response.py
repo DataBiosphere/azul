@@ -446,7 +446,7 @@ class TestIndexResponse(IndexResponseTestCase):
                 ]
             }
         },
-        'disease': {
+        'sampleDisease': {
             'doc_count': 21,
             'untagged': {
                 'doc_count': 12
@@ -490,7 +490,7 @@ class TestIndexResponse(IndexResponseTestCase):
                 'total': 21,
                 'type': 'terms'
             },
-            'disease': {
+            'sampleDisease': {
                 'terms': [
                     {
                         'term': 'silver',
@@ -709,7 +709,7 @@ class TestIndexResponse(IndexResponseTestCase):
                 'total': 2
             },
             'termFacets': {
-                'disease': {
+                'sampleDisease': {
                     'terms': [
                         {
                             'count': 9,
