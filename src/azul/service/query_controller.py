@@ -7,9 +7,6 @@ from collections.abc import (
 )
 import json
 import logging
-from typing import (
-    Mapping,
-)
 
 from chalice.app import (
     BadRequestError as BRE,
@@ -26,9 +23,7 @@ from azul import (
     CatalogName,
 )
 from azul.field_type import (
-    FieldType,
     Mode,
-    pass_thru_bool,
 )
 from azul.lib import (
     cache,
@@ -165,7 +160,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
 
     @cache
     def _filter_schema(self, catalog: CatalogName, mode: Mode) -> JSON:
-        types = self._field_types(catalog)
+        types = self._service.mapped_field_types(catalog)
 
         def _filter_schema(field_type):
             operators = field_type.supported_filter_operators
@@ -221,22 +216,3 @@ class QueryController(ServiceController, metaclass=ABCMeta):
                                  ) -> jsonschema.protocols.Validator:
         schema = self._filter_schema(catalog, Mode.jsonschema)
         return jsonschema.validators.validator_for(schema)(schema)
-
-    @cache
-    def _field_types(self, catalog: CatalogName) -> Mapping[str, FieldType]:
-        """
-        Returns the field type for each supported sort and filter field, using
-        the name of the field as provided by clients.
-        """
-        result = {}
-        plugin = self._metadata_plugin
-        for field, path in plugin.field_mapping.items():
-            field_type = self._service.field_type(catalog, path)
-            if isinstance(field_type, FieldType):
-                result[field] = field_type
-        # This field is a synthetic element of the response and will never be
-        # null. Including it here helps to streamline request validation.
-        accessible_field = plugin.special_fields.accessible.name
-        assert accessible_field not in result, result
-        result[accessible_field] = pass_thru_bool
-        return result

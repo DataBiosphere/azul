@@ -21,6 +21,7 @@ from azul.field_type import (
     FieldTypes,
     FieldTypes1,
     Nested,
+    pass_thru_bool,
 )
 from azul.indexer.document import (
     Aggregate,
@@ -43,6 +44,7 @@ from azul.lib.types import (
     json_dict,
 )
 from azul.plugins import (
+    FieldName,
     MetadataPlugin,
 )
 
@@ -121,6 +123,24 @@ class DocumentService:
             # Replicas are intentionally omitted here because their contents
             # does not undergo translation
         )
+
+    @cache
+    def mapped_field_types(self, catalog: CatalogName) -> Mapping[FieldName, FieldType]:
+        """
+        Returns the field type for each supported sort and filter field, keyed
+        to the name of the field as provided by clients. Unlike field_types(),
+        this is a flat mapping and includes synthetic fields like 'accessible'
+        that lack an entry in the plugin's field_mapping.
+        """
+        plugin = self.metadata_plugin(catalog)
+        result = {}
+        for field, path in plugin.field_mapping.items():
+            field_type = self.field_type(catalog, path)
+            result[field] = field_type
+        accessible_field = plugin.special_fields.accessible.name
+        assert accessible_field not in result, result
+        result[accessible_field] = pass_thru_bool
+        return result
 
     def catalogued_field_types(self) -> CataloguedFieldTypes:
         return {
