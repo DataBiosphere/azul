@@ -231,7 +231,7 @@ class MirrorAction(Action, metaclass=ABCMeta):
         """
         # Since different catalogs may be configured to handle the same file in
         # different ways, we can't conflate two messages that only differ in
-        # the catalog they are targetting.
+        # the catalog they are targeting.
         return str(type(self)), self.catalog, self.operation_id
 
     def to_sqs(self) -> SQSFifoMessage:
@@ -453,7 +453,7 @@ class MirrorService:
                    file_json: JSON
                    ) -> str | None:
         """
-        Return the the URI of the mirror copy of the given file from the current
+        Return the URI of the mirror copy of the given file from the current
         catalog. If this method returns None, the file was not mirrored, and no
         such URI exists. Otherwise, a mirror copy of the file may or may not
         exist under the returned URI.
