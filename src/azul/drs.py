@@ -414,12 +414,13 @@ class DRSObject:
                 assert scheme == access_method.scheme, R(
                     'Unexpected access URL scheme', scheme)
                 access_url = json_str(response_data['url'])
-                headers = response_data.get('headers')
-                if headers is None:
-                    access_headers = None
-                else:
-                    access_headers = {k: json_str(v) for k, v in json_dict(headers).items()}
-                return Access(method=access_method, url=access_url, headers=access_headers)
+                access_headers = response_data.get('headers')
+                return Access(method=access_method,
+                              url=access_url,
+                              headers=None if access_headers is None else {
+                                  k: json_str(v)
+                                  for k, v in json_dict(access_headers).items()
+                              })
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
