@@ -152,17 +152,17 @@ class TestMirrorController(DCP2TestCase,
                     with self.subTest('mirror_file (fresh upload)'):
                         self._test_mirror_file(file, file_message)
 
-                    with self.subTest('mirror_file (update existing info)'):
-                        self._test_content_type_update(file, file_message)
+                        with self.subTest('mirror_file (update existing info)'):
+                            self._test_content_type_update(file, file_message)
 
-                    self._s3.delete_object(Bucket=self.mirror_bucket,
-                                           Key=self._service._info_object_key(file))
+                        self._s3.delete_object(Bucket=self.mirror_bucket,
+                                               Key=self._service._info_object_key(file))
 
-                    with self.subTest('mirror_file (corrupted contents)'):
-                        self._test_corrupted_download(file_message)
+                        with self.subTest('mirror_file (corrupted contents)'):
+                            self._test_corrupted_download(file_message)
 
-                    with self.subTest('mirror_file (exception on overwrite)'):
-                        self._test_reuploaded_file(file_message)
+                        with self.subTest('mirror_file (exception on overwrite)'):
+                            self._test_reuploaded_file(file_message)
 
     @property
     def _mirror_controller(self) -> MirrorController:
