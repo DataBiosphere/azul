@@ -130,6 +130,12 @@ class TestMirrorController(DCP2TestCase,
                     sha256=hashlib.sha256(_file_contents).hexdigest(),
                     source=DCP2TestCase.source.ref)
 
+    def _bucket_name(self, file: HCAFile) -> str:
+        if file.source.id == self.source.ref.id:
+            return self.mirror_bucket
+        else:
+            assert False, file
+
     def _mirror_file_message(self, file: HCAFile) -> MutableJSON:
         return dict(action='MirrorFileAction',
                     catalog=self.catalog,
@@ -147,7 +153,7 @@ class TestMirrorController(DCP2TestCase,
         self.queues.send_messages(self._service._mirror_queue(), [message])
 
     def _validate_file_contents(self, file: HCAFile, contents: bytes):
-        response = self._s3.get_object(Bucket=self.mirror_bucket,
+        response = self._s3.get_object(Bucket=self._bucket_name(file),
                                        Key=self._service._file_object_key(file))
         file_contents = response['Body'].read()
         self.assertEqual(file_contents, contents)
@@ -170,7 +176,7 @@ class TestMirrorController(DCP2TestCase,
                         with self.subTest('mirror_file (update existing info)'):
                             self._test_content_type_update(file, file_message)
 
-                        self._s3.delete_object(Bucket=self.mirror_bucket,
+                        self._s3.delete_object(Bucket=self._bucket_name(file),
                                                Key=self._service._info_object_key(file))
 
                         with self.subTest('mirror_file (corrupted contents)'):
