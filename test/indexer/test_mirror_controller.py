@@ -171,7 +171,7 @@ class TestMirrorController(DCP2TestCase,
                     file_message = self._test_mirror_partition(partition_message, [file])
 
                     with self.subTest('mirror_file (fresh upload)'):
-                        self._test_mirror_file(file, file_message)
+                        self._test_mirror_file(file, file_message, self._file_contents)
 
                         with self.subTest('mirror_file (update existing info)'):
                             self._test_content_type_update(file, file_message)
@@ -240,11 +240,11 @@ class TestMirrorController(DCP2TestCase,
         self.assertEqual(expected_message, file_message)
         return file_message
 
-    def _test_mirror_file(self, file, file_message):
+    def _test_mirror_file(self, file, file_message, file_contents):
         event = self._mirror_event(file_message)
-        with self._patch_download(return_value=self._file_contents):
+        with self._patch_download(return_value=file_contents):
             self._mirror_controller.mirror(event)
-        self._validate_file_contents(file, self._file_contents)
+        self._validate_file_contents(file, file_contents)
         content_types = self._get_content_types_from_info_object(file)
         self.assertEqual([file.content_type], content_types)
 
