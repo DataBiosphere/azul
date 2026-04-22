@@ -1776,7 +1776,10 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 )
             ]
             sources_by_catalog = {
-                catalog: [self._select_source(catalog, public=True, mirror=True)]
+                catalog: alist(
+                    self._select_source(catalog, public=True, mirror=True),
+                    self._select_source(catalog, public=False, mirror=True),
+                )
                 for catalog in catalogs
             }
 
@@ -1785,8 +1788,9 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     # This potentially causes redundant ListObjects requests,
                     # since each IT catalog currently uses the same mirror
                     # prefix and bucket
-                    for catalog in catalogs:
-                        self._mirror_service(catalog=catalog).delete_it_files()
+                    for catalog, sources in sources_by_catalog.items():
+                        for source_ref, source_config in sources:
+                            self._mirror_service(catalog=catalog).delete_it_files(source_ref.spec)
 
             self._assert_queues_empty([config.mirror_queue.name,
                                        config.mirror_queue.to_fail.name])
@@ -1796,6 +1800,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
             with self.subTest('mirror_sources_and_files'):
                 for catalog, sources in sources_by_catalog.items():
                     mirror_service = self._mirror_service(catalog)
+                    # _get_one_mirrorable_file uses the public service account,
+                    # so the file will always be from the public source
                     repository_file, source, file_response = self._get_one_mirrorable_file(catalog)
                     indexed_files[repository_file] = source, file_response
                     for _ in range(2):

@@ -68,7 +68,12 @@ from azul.service.source_service import (
     SourceService,
 )
 from azul.source import (
+    Prefix,
     SourceConfig,
+)
+from azul.terra import (
+    TDRSourceRef,
+    TDRSourceSpec,
 )
 from azul_test_case import (
     DCP2TestCase,
@@ -92,6 +97,9 @@ class TestMirrorController(DCP2TestCase,
                            LocalAppTestCase,
                            WorkQueueTestCase,
                            MirrorTestCase):
+    ma_source = TDRSourceRef(id='05440319-fb54-4ac6-bff2-95bbf2cac068',
+                             spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_hca_ma_project:hca_ma_snapshot'),
+                             prefix=Prefix.parse('/0'))
 
     @classmethod
     def app_name(cls) -> str:
@@ -109,6 +117,8 @@ class TestMirrorController(DCP2TestCase,
                             ) -> set[str]:
             if authentication is Config.ServiceAccount.public:
                 return {cls.source.ref.id}
+            elif authentication is Config.ServiceAccount.indexer:
+                return {cls.source.ref.id, cls.ma_source.id}
             else:
                 assert False, authentication
 
@@ -130,9 +140,22 @@ class TestMirrorController(DCP2TestCase,
                     sha256=hashlib.sha256(_file_contents).hexdigest(),
                     source=DCP2TestCase.source.ref)
 
+    _ma_file_contents = b'Quisque vel dignissim erat\n'
+
+    _ma_file = HCAFile(uuid='92473d77-493d-4735-bd79-0f8557e051d5',
+                       name='bar.csv',
+                       version=None,
+                       drs_uri='drs://fake-domain.lan/bar',
+                       size=len(_ma_file_contents),
+                       content_type='text/csv',
+                       sha256=hashlib.sha256(_ma_file_contents).hexdigest(),
+                       source=ma_source)
+
     def _bucket_name(self, file: HCAFile) -> str:
         if file.source.id == self.source.ref.id:
             return self.mirror_bucket
+        elif file.source.id == self.ma_source.id:
+            return self.ma_mirror_bucket
         else:
             assert False, file
 
@@ -184,6 +207,13 @@ class TestMirrorController(DCP2TestCase,
 
                         with self.subTest('mirror_file (exception on overwrite)'):
                             self._test_reuploaded_file(file_message)
+
+    def test_managed_access(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        file = self._ma_file
+        self._test_mirror_file(file,
+                               self._mirror_file_message(file),
+                               self._ma_file_contents)
 
     @property
     def _mirror_controller(self) -> MirrorController:

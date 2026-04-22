@@ -350,6 +350,28 @@ class MirrorService:
             bucket = aws.mirror_bucket
         return StorageService(bucket)
 
+    @cached_property
+    def _ma_storage(self) -> StorageService:
+        bucket = config.ma_mirror_bucket
+        if bucket is None or self.catalog in config.integration_test_catalogs:
+            bucket = aws.ma_mirror_bucket
+        return StorageService(bucket)
+
+    def _storage_for_file(self, file: File) -> StorageService:
+        # Currently, :py:attr:`source` will never be none during mirroring (see
+        # the implementations of :meth:`RepositoryPlugin.list-files`), but will
+        # always be None when downloading files via the service.
+        if file.source is None:
+            return self._storage
+        else:
+            return self._storage_for_source(file.source.spec)
+
+    def _storage_for_source(self, source: SourceSpec) -> StorageService:
+        if self._is_public(source):
+            return self._storage
+        else:
+            return self._ma_storage
+
     def _is_public(self, source_spec: SourceSpec) -> bool:
         public_sources = self._source_service.list_sources(self.catalog,
                                                            authentication=None)
@@ -482,7 +504,7 @@ class MirrorService:
         if self.may_mirror_files_from_source(source):
             file = file_cls.from_index(file_json)
             if self.may_mirror(0 if file.size is None else file.size):
-                storage = self._storage
+                storage = self._storage_for_source(source)
                 return str(furl(scheme='s3',
                                 netloc=storage.bucket_name,
                                 path=self._file_object_key(file)))
@@ -492,21 +514,21 @@ class MirrorService:
             return None
 
     def mirror_url(self, file: File) -> str:
-        storage = self._storage
+        storage = self._storage_for_file(file)
         return storage.get_presigned_url(object_key=self._file_object_key(file),
                                          file_name=file.name,
                                          content_type=file.content_type)
 
     def info(self, file: File) -> MutableJSON:
-        storage = self._storage
+        storage = self._storage_for_file(file)
         return json.loads(storage.get_object(self._info_object_key(file)))
 
     def info_exists(self, file: File) -> bool:
-        storage = self._storage
+        storage = self._storage_for_file(file)
         return storage.object_exists(self._info_object_key(file))
 
     def _file_exists(self, file: File) -> bool:
-        storage = self._storage
+        storage = self._storage_for_file(file)
         return storage.object_exists(self._file_object_key(file))
 
     info_prefix, file_prefix = 'info', 'file'
@@ -529,7 +551,7 @@ class MirrorService:
     def _mirror_prefix(self) -> str:
         return '_it/' if self.catalog in config.integration_test_catalogs else ''
 
-    def delete_it_files(self):
+    def delete_it_files(self, source: SourceSpec):
         """
         Delete all objects (both file/ and info/) with the given catalog's
         mirror prefix. Currently, the mirror prefix is only used to distinguish
@@ -541,7 +563,7 @@ class MirrorService:
             'Not an IT catalog', self.catalog)
         prefix = self._mirror_prefix
         assert len(prefix) > 1 and prefix.endswith('/'), prefix
-        storage = self._storage
+        storage = self._storage_for_source(source)
         object_keys = storage.list_objects(prefix)
         assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
         storage.delete_objects(object_keys, batch_size=100)
@@ -649,7 +671,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         file_content = self._download(file)
         hasher.update(file_content)
         self._verify_digest(file, hasher)
-        storage = self._storage
+        storage = self._storage_for_file(file)
         storage.put_object(object_key=self._file_object_key(file),
                            data=file_content,
                            content_type=self._file_object_content_type,
@@ -659,7 +681,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     def _create_upload(self, file: File) -> FileUpload:
         object_key = self._file_object_key(file)
         content_type = self._file_object_content_type
-        storage = self._storage
+        storage = self._storage_for_file(file)
         upload_id = storage.create_multipart_upload(object_key=object_key,
                                                     content_type=content_type)
         return FileUpload(upload_id=upload_id,
@@ -681,7 +703,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         log.info('Uploading part #%d of file %r', part.index, file)
         content = self._download(file, part)
         upload.hasher.update(content)
-        storage = self._storage
+        storage = self._storage_for_file(file)
         etag = storage.upload_multipart_part(object_key=self._file_object_key(file),
                                              upload_id=upload.upload_id,
                                              part_number=part.index + 1,
@@ -706,7 +728,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert len(a.upload.etags) > 0
         self._verify_digest(a.file, a.upload.hasher)
         object_key = self._file_object_key(a.file)
-        storage = self._storage
+        storage = self._storage_for_file(a.file)
         try:
             storage.complete_multipart_upload(object_key=object_key,
                                               upload_id=a.upload.upload_id,
@@ -750,13 +772,13 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             return json.dumps(self._info(file, json.loads(data))).encode()
 
         key = self._info_object_key(file)
-        storage = self._storage
+        storage = self._storage_for_file(file)
         storage.update_object(key, update, content_type='application/json')
 
     def _create_info(self, file: File):
         object_key = self._info_object_key(file)
         info = self._info(file)
-        storage = self._storage
+        storage = self._storage_for_file(file)
         storage.put_object(object_key=object_key,
                            data=json.dumps(info).encode(),
                            content_type='application/json',
