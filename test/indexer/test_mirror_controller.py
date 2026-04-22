@@ -21,7 +21,12 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
+    CatalogName,
+    Config,
     config,
+)
+from azul.auth import (
+    Authentication,
 )
 from azul.deployment import (
     aws,
@@ -97,9 +102,19 @@ class TestMirrorController(DCP2TestCase,
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        def list_source_ids(self,
+                            catalog: CatalogName,
+                            authentication: Authentication
+                            ) -> set[str]:
+            if authentication is Config.ServiceAccount.public:
+                return {cls.source.ref.id}
+            else:
+                assert False, authentication
+
         cls.addClassPatch(patch.object(SourceService,
                                        'list_source_ids',
-                                       return_value={cls.source.ref.id}))
+                                       new=list_source_ids))
         cls.addClassPatch(patch.object(MirrorAction,
                                        '_operation_id',
                                        return_value=cls._operation_id))
