@@ -568,8 +568,12 @@ class MirrorService:
         prefix = self._mirror_prefix
         assert len(prefix) > 1 and prefix.endswith('/'), prefix
         storage = self._storage_for_source(source)
+        assert storage.bucket_name not in [config.mirror_bucket,
+                                           config.ma_mirror_bucket]
         object_keys = storage.list_objects(prefix)
         assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
+        for object_key in object_keys:
+            assert object_key.startswith(prefix), (object_key, prefix)
         storage.delete_objects(object_keys, batch_size=100)
 
 
