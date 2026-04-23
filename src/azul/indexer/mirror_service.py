@@ -378,6 +378,10 @@ class MirrorService:
                 # index response/manifest or not. We deliberately return a false
                 # negative for managed-access files since we don't want the
                 # service to know about them yet.
+                #
+                # FIXME: Expose access to mirrored MA files via /repository/files
+                #        https://github.com/DataBiosphere/azul/issues/7931
+                #
                 return self._is_public(source_spec)
             else:
                 return False
