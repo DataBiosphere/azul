@@ -127,7 +127,10 @@ class CatalogController(ServiceController):
         if issubclass(plugin_cls, RepositoryPlugin):
             repository_plugin = plugin_cls.create(catalog)
             return {
-                'sources': list(map(str, repository_plugin.sources))
+                'sources': {
+                    str(source): cfg.to_json()
+                    for source, cfg in repository_plugin.sources.items()
+                }
             }
         elif issubclass(plugin_cls, MetadataPlugin):
             metadata_plugin = plugin_cls.create()

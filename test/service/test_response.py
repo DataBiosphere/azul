@@ -3731,9 +3731,11 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
                         },
                         'repository': {
                             'name': 'dss',
-                            'sources': [
-                                'https://fake_dss_instance/v1'
-                            ],
+                            'sources': {
+                                'https://fake_dss_instance/v1': {
+                                    'mirror': True
+                                }
+                            },
                         }
                     }
                 }
