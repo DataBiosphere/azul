@@ -36,21 +36,6 @@ from azul.lib import (
 
 log = logging.getLogger(__name__)
 
-TokenCredentials = google.oauth2.credentials.Credentials
-ServiceAccountCredentials = google.oauth2.service_account.Credentials
-ScopedCredentials = ServiceAccountCredentials | TokenCredentials
-
-
-class CredentialsProvider(metaclass=ABCMeta):
-
-    @abstractmethod
-    def scoped_credentials(self) -> ScopedCredentials:
-        raise NotImplementedError
-
-    @abstractmethod
-    def oauth2_scopes(self) -> Sequence[str]:
-        raise NotImplementedError
-
 
 class TokenInfo(TypedDict):
     azp: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
@@ -78,6 +63,22 @@ class OAuth2Client(HasCachedHttpClient):
         assert response.status == 200, R('Unexpected response status', response.status)
         token_info: TokenInfo = json.loads(response.data)
         return token_info
+
+
+TokenCredentials = google.oauth2.credentials.Credentials
+ServiceAccountCredentials = google.oauth2.service_account.Credentials
+ScopedCredentials = ServiceAccountCredentials | TokenCredentials
+
+
+class CredentialsProvider(metaclass=ABCMeta):
+
+    @abstractmethod
+    def scoped_credentials(self) -> ScopedCredentials:
+        raise NotImplementedError
+
+    @abstractmethod
+    def oauth2_scopes(self) -> Sequence[str]:
+        raise NotImplementedError
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
