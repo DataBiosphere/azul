@@ -370,7 +370,7 @@ class MirrorService:
                                                                    authentication=None)
                 is_public = any(
                     source_spec == source.spec
-                    for source in public_sources
+                    for source, _ in public_sources
                 )
                 return is_public
             else:

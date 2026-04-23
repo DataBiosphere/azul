@@ -92,6 +92,10 @@ def json_item_sequences(vs: AnyJSON) -> Iterable[tuple[str, JSONArray]]:
         yield k, json_sequence(v)
 
 
+def json_element_sequences(vs: AnyJSON) -> Iterable[JSONArray]:
+    return map(json_sequence, json_sequence(vs))
+
+
 def json_element_mappings(vs: AnyJSON) -> Iterable[JSON]:
     return map(json_mapping, json_sequence(vs))
 

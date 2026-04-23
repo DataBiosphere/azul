@@ -52,7 +52,7 @@ class SourceController(Controller):
         except TooManyRequestsException as e:
             raise TooManyRequestsError(*e.args)
         else:
-            authoritative_source_ids = {source.id for source in sources}
+            authoritative_source_ids = {source.id for source, _ in sources}
             cached_source_ids = self._list_source_ids(catalog, authentication)
             # For optimized performance, the cache may include source IDs that
             # are accessible but are not configured for indexing. Therefore, we
@@ -64,7 +64,7 @@ class SourceController(Controller):
                 raise BadGatewayError('Inconsistent response from repository')
             return [
                 {'sourceId': source.id, 'sourceSpec': str(source.spec)}
-                for source in sources
+                for source, cfg in sources
             ]
 
     def _list_source_ids(self,

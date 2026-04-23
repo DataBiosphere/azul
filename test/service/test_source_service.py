@@ -141,7 +141,7 @@ class TestPublicSources(DCP2TestCase):
             test()
 
         self.assertEqual(*outsourced)
-        self.assertEqual([{self.catalog: [self.source]}] * 2, actuals)
+        self.assertEqual([{self.catalog: [(self.source, self.source_config)]}] * 2, actuals)
 
 
 class TestListSources(DCP2TestCase, LocalAppTestCase):
@@ -182,12 +182,15 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
         )
 
     @classmethod
-    def _sources_by_catalog(cls) -> dict[str, list[TDRSourceRef]]:
+    def _sources_by_catalog(cls) -> dict[str, list[tuple[TDRSourceRef, SourceConfig]]]:
         return {
             cls.catalog: [
-                TDRSourceRef(id=id,
-                             spec=TDRSourceSpec.parse(cls.make_spec_str(snapshot['name'])),
-                             prefix=None)
+                (
+                    TDRSourceRef(id=id,
+                                 spec=TDRSourceSpec.parse(cls.make_spec_str(snapshot['name'])),
+                                 prefix=None),
+                    cls.source_config
+                )
                 for id, snapshot in cls.snapshots_by_id.items()
                 if snapshot['name'] not in cls.extra_sources
             ]}

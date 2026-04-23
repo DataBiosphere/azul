@@ -425,7 +425,7 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         cls.addClassPatch(patch.object(SourceService,
                                        '_public_sources',
                                        new_callable=PropertyMock,
-                                       return_value={cls.catalog: [cls.source]}))
+                                       return_value={cls.catalog: [(cls.source, cls.source_config)]}))
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
