@@ -361,6 +361,10 @@ class MirrorService:
         # Currently, :py:attr:`source` will never be none during mirroring (see
         # the implementations of :meth:`RepositoryPlugin.list-files`), but will
         # always be None when downloading files via the service.
+        #
+        # FIXME: Expose access to mirrored MA files via /repository/files
+        #        https://github.com/DataBiosphere/azul/issues/7931
+        #
         if file.source is None:
             return self._storage
         else:
