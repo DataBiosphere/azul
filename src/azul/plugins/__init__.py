@@ -964,6 +964,9 @@ class File(DiscriminatingPolymorphicSerializableAttrs,
     #: The file's MIME content type, if known
     content_type: str | None = None
 
+    #: The file's source, if known
+    source: SourceRef | None = None
+
     @classmethod
     @abstractmethod
     def from_index(cls, hit: JSON) -> Self:

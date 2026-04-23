@@ -112,13 +112,14 @@ class TestMirrorController(DCP2TestCase,
                     drs_uri='drs://fake-domain.lan/foo',
                     size=len(_file_contents),
                     content_type='text/plain',
-                    sha256=hashlib.sha256(_file_contents).hexdigest())
+                    sha256=hashlib.sha256(_file_contents).hexdigest(),
+                    source=DCP2TestCase.source.ref)
 
     def _mirror_file_message(self, file: HCAFile) -> MutableJSON:
         return dict(action='MirrorFileAction',
                     catalog=self.catalog,
                     operation_id=self._operation_id,
-                    source=self.source.ref.to_json(),
+                    source=file.source.to_json(),
                     prefix='00',
                     file=file.to_json())
 

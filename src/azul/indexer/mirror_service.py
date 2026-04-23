@@ -603,6 +603,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     def _(self, a: MirrorPartitionAction) -> Iterator[MirrorAction]:
         files = self.repository_plugin.list_files(a.source, a.prefix)
         for file in files:
+            assert file.source is not None, R('File source unknown', file)
             assert file.size is not None, R('File size unknown', file)
             assert file.size <= self.max_file_size, R(
                 'File too big', file, self.max_file_size)
