@@ -63,7 +63,11 @@ class SourceController(Controller):
                 log.debug(diff)
                 raise BadGatewayError('Inconsistent response from repository')
             return [
-                {'sourceId': source.id, 'sourceSpec': str(source.spec)}
+                {
+                    'sourceId': source.id,
+                    'sourceSpec': str(source.spec),
+                    'sourceConfig': cfg.to_json()
+                }
                 for source, cfg in sources
             ]
 

@@ -215,7 +215,8 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
                     'sources': [
                         {
                             'sourceId': id,
-                            'sourceSpec': self.make_spec_str(snapshot['name'])
+                            'sourceSpec': self.make_spec_str(snapshot['name']),
+                            'sourceConfig': self.source_config.to_json()
                         }
                         for id, snapshot in self.snapshots_by_id.items()
                         if snapshot['name'] not in self.extra_sources
