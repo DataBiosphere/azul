@@ -65,7 +65,7 @@ class TokenInfo(TypedDict):
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class OAuth2Client(HasCachedHttpClient):
+class CredentialedClient(HasCachedHttpClient):
     credentials_provider: CredentialsProvider
 
     @property
