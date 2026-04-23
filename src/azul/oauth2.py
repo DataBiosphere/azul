@@ -64,9 +64,33 @@ class TokenInfo(TypedDict):
     access_type: str  # "online"
 
 
+class OAuth2Client(HasCachedHttpClient):
+    """
+    A client for Google's implementation of the OAuth 2.0 authorization server
+    API.
+    """
+
+    def tokeninfo(self, access_token: str) -> TokenInfo:
+        url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
+                   args=dict(access_token=access_token))
+        response = self._http_client.request('GET', str(url))
+        assert response.status != 400, R('The token is not valid')
+        assert response.status == 200, R('Unexpected response status', response.status)
+        token_info: TokenInfo = json.loads(response.data)
+        return token_info
+
+
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class CredentialedClient(HasCachedHttpClient):
+    """
+    Instances of this class have a cached, authenticating HTTP client.
+    """
+
     credentials_provider: CredentialsProvider
+
+    @cached_property
+    def _oauth_client(self) -> OAuth2Client:
+        return OAuth2Client()
 
     @property
     def credentials(self) -> ScopedCredentials:
@@ -107,13 +131,6 @@ class CredentialedClient(HasCachedHttpClient):
                               self._PoolManagerAdapter(super()._create_http_client()),
                               refresh_status_codes=())
 
-    @cached_property
-    def _http_client_without_credentials(self) -> HttpClient:
-        """
-        A urllib3 HTTP client for making unauthenticated requests
-        """
-        return super()._create_http_client()
-
     def validate(self):
         """
         Validate the credentials from the provider this client was initialized
@@ -138,13 +155,7 @@ class CredentialedClient(HasCachedHttpClient):
         :raise Exception: if the validity of the token cannot be determined
         """
         credentials = self.credentials
-        url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
-                   args=dict(access_token=str(credentials.token)))
-        response = self._http_client_without_credentials.request('GET', str(url))
-        assert response.status != 400, R('The token is not valid')
-        assert response.status == 200, R(
-            'Unexpected response status', response.status)
-        token_info: TokenInfo = json.loads(response.data)
+        token_info = self._oauth_client.tokeninfo(str(credentials.token))
         # The error messages here intentionally lack detail, for confidentiality
         if isinstance(credentials, ServiceAccountCredentials):
             # Actual service account credentials
