@@ -33,11 +33,14 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.types import (
+    is_of_type,
+)
 
 log = logging.getLogger(__name__)
 
 
-class TokenInfo(TypedDict):
+class TokenInfoResponse(TypedDict):
     azp: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
     aud: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
     sub: str  # "105096702580025601450",
@@ -55,13 +58,14 @@ class OAuth2Client(HasCachedHttpClient):
     API.
     """
 
-    def token_info(self, access_token: str) -> TokenInfo:
+    def token_info(self, access_token: str) -> TokenInfoResponse:
         url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args=dict(access_token=access_token))
         response = self._http_client.request('GET', str(url))
         assert response.status != 400, R('The token is not valid')
         assert response.status == 200, R('Unexpected response status', response.status)
-        response: TokenInfo = json.loads(response.data)
+        response = json.loads(response.data)
+        assert is_of_type(response, TokenInfoResponse)
         return response
 
 
