@@ -57,6 +57,12 @@ generic with minimal need for project-specific behavior.
   so the easiest method of installation is to download the binary and put it in
   a directory mentioned in the `PATH` environment variable.
 
+- [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
+  available on PyPI, it must be installed separately. Install the version pinned
+  by Azul defined in a variable called `azul_awscli_version` in
+  [environment.py](environment.py). Follow the [AWS instructions for
+  installing past releases][AWS CLI v2].
+
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
 - [git-secrets](#211-git-secrets)
@@ -79,7 +85,7 @@ generic with minimal need for project-specific behavior.
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
-
+[AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
 
 ### 2.1.1 git-secrets
 

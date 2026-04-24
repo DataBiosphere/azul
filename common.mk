@@ -79,8 +79,19 @@ check_docker:
 		false; \
 	fi
 
+.PHONY: check_awscli
+check_awscli: check_env
+	@if ! hash aws; then \
+		echo -e "\nLooks like the AWS CLI is not installed.\n"; \
+		false; \
+	fi
+	@if ! aws --version 2>&1 | grep -qF "aws-cli/$$azul_awscli_version "; then \
+		echo -e "\nLooks like the wrong version of the AWS CLI is installed.\n"; \
+		false; \
+	fi
+
 .PHONY: check_aws
-check_aws: check_python
+check_aws: check_python check_awscli
 	@if ! python -c "import os, sys, boto3 as b; \
 		             expected = os.environ['AZUL_AWS_ACCOUNT_ID']; \
 		             actual = b.client('sts').get_caller_identity()['Account']; \

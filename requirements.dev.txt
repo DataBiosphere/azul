@@ -1,22 +1,21 @@
 --find-links https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+20  # match version of chalice requirement below
 --find-links https://github.com/DataBiosphere/azul-requirements-parser/releases/expanded_assets/v0.13.0+6  # match version of requirements-parser requirement below
 atomicwrites==1.4.1
-awscli==1.44.69
-boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.42.79  # match this with the version of the `boto3` runtime dendency
+boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.42.89  # match this with the version of the `boto3` runtime dendency
 chalice==1.32.0+20  # match version with find-links entry above
 coverage==7.13.5
 docker==7.1.0
 flake8==7.3.0
-gevent==25.9.1
+gevent==26.4.0
 gitpython==3.1.46
-google-api-python-client==2.193.0
+google-api-python-client==2.194.0
 google-cloud-bigquery-reservation==1.23.0
 google-cloud-storage==3.10.1
 isort==8.0.1
 jq==1.11.0
 msgpack-types==0.7.0  # versioned independently from the corresponding runtime dependency but when updating one, the other should be updated, too
 moto[s3,sqs,sns,dynamodb,iam]==5.1.22  # match the extras with the backends listed in AzulUnitTestCase._reset_moto
-mypy==1.20.0
+mypy==1.20.1
 openapi-spec-validator==0.7.2  # < 0.8.0, see https://github.com/DataBiosphere/azul/issues/7832
 openpyxl==3.1.5
 posix_ipc==1.3.2
@@ -28,7 +27,7 @@ requirements-parser==v0.13.0+6  # match version with find-links entry above
 responses==0.26.0
 strict-rfc3339==0.7
 types-chevron==0.14.2  # match with chevron in requirements.txt
-types-jsonschema==4.26.0.20260325
+types-jsonschema==4.26.0.20260408
 watchdog==6.0.0
 -r requirements.dev.trans.txt
 -r requirements.txt

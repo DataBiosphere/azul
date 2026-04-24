@@ -3,5 +3,6 @@
 !common.mk
 !requirements*.txt
 !environment
+!bin/keys/awscli-public-key.asc
 !bin/keys/docker-apt-keyring.pgp
 requirements.all.txt

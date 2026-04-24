@@ -1,5 +1,5 @@
 """
-Delete all versions of a Lambda function prior to the specified one.
+Delete Lambda function versions older than a specified version
 """
 import argparse
 import logging
@@ -36,13 +36,18 @@ def main(argv: list[str]):
     parser.add_argument('--function-version', '-v',
                         type=int,
                         required=True,
-                        help='The Lambda function version to keep. Must be an '
-                             'integer.')
+                        help='A numeric version of the Lambda function. The '
+                             'specified version will be kept, as will '
+                             'the preceding one. All versions preceding those '
+                             'two versions will be deleted.')
     args = parser.parse_args(argv)
-    log.info('Deleting function %r versions older than %r',
-             args.function_name, args.function_version)
     functions = LambdaFunctions()
-    functions.delete_older_versions(args.function_name, args.function_version)
+    functions.delete_older_versions(args.function_name,
+                                    args.function_version,
+                                    # Keep a previous version to guard against a
+                                    # race condition due to eventual consistency
+                                    # of alias updates.
+                                    num_older_versions_to_keep=1)
 
 
 if __name__ == '__main__':

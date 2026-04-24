@@ -259,17 +259,17 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see "Updating the AMI
 # for GitLab instances" section in OPERATOR.rst.
 #
-# CIS Amazon Linux 2023 Benchmark - Level 1 - v03 -prod-fvm47vekg24oc
+# CIS Amazon Linux 2023 Benchmark - Level 1 - v04 -prod-fvm47vekg24oc
 #
 ami_id = {
-    'us-east-1': 'ami-01682587bb0e86174'
+    'us-east-1': 'ami-0ab667a62d55ac8d0'
 }
 
 # For instructions on finding the latest Amazon Linux 2023 release, see
 # "Updating software packages via release version upgrade in AL2023 instances"
 # section in OPERATOR.rst.
 #
-AL2023_release = '2023.10.20260325'
+AL2023_release = '2023.11.20260413'
 
 # Cloud-init's cc_mounts module does not support the UUID=<uuid> device
 # specification format. We use the /dev/disk/by-uuid/<uuid> symlink as a
@@ -1235,6 +1235,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'root_certificate_chain_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}'
                 },
                 'session_timeout_hours': 8,
+                'disconnect_on_session_timeout': True,
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'connection_log_options': {
                     'enabled': True,

@@ -1,7 +1,7 @@
 certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.7
-cryptography==46.0.6
+cryptography==46.0.7
 events==0.5
 google-cloud-core==2.5.1
 google-crc32c==1.8.0
@@ -13,7 +13,7 @@ idna==3.11
 jsonschema-specifications==2025.9.1
 markupsafe==3.0.3
 orderedmultidict==1.0.2
-packaging==26.0
+packaging==26.1
 proto-plus==1.27.2
 protobuf==6.33.6
 pyasn1==0.6.3

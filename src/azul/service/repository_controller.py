@@ -30,7 +30,7 @@ from azul.auth import (
     Authentication,
 )
 from azul.chalice import (
-    ServiceUnavailableError,
+    TemporaryRedirectError,
 )
 from azul.drs import (
     DRSStatusException,
@@ -414,7 +414,7 @@ class RepositoryController(ServiceController):
         try:
             download.update(authentication)
         except LimitedTimeoutException as e:
-            raise ServiceUnavailableError(*e.args)
+            raise TemporaryRedirectError(*e.args)
         except TooManyRequestsException as e:
             raise TooManyRequestsError(*e.args)
         except DRSStatusException as e:

@@ -9,10 +9,10 @@ SHELL ["/bin/bash", "-c"]
 # Increment the value of this argument to ensure that all installed OS packages
 # are updated.
 #
-ARG azul_image_version=1
+ARG azul_image_version=2
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get -y install build-essential curl unzip
+    && apt-get -y install build-essential curl gnupg unzip
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
@@ -37,6 +37,26 @@ RUN mkdir terraform \
         && unzip terraform.zip \
         && mv terraform /usr/local/bin) \
     && rm -rf terraform
+
+# Install AWS CLI v2
+#
+COPY bin/keys/awscli-public-key.asc /tmp/awscli-public-key.asc
+ARG azul_awscli_version
+RUN gpg --import /tmp/awscli-public-key.asc \
+    && rm /tmp/awscli-public-key.asc \
+    && case "$TARGETARCH" in \
+           amd64) arch=x86_64 ;; \
+           arm64) arch=aarch64 ;; \
+           *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+       esac \
+    && curl -s -o awscliv2.zip \
+       https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${azul_awscli_version}.zip \
+    && curl -s -o awscliv2.sig \
+       https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${azul_awscli_version}.zip.sig \
+    && gpg --verify awscliv2.sig awscliv2.zip \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip awscliv2.sig aws
 
 # Install Docker from apt repository. The statically linked binaries don't
 # include buildx or buildkit.

@@ -49,7 +49,7 @@ def azul_urlsafe_b64decode(s: str) -> bytes:
     >>> azul_urlsafe_b64decode('AQI==')
     Traceback (most recent call last):
     ...
-    binascii.Error: Excess data after padding
+    binascii.Error: Excess padding not allowed
 
     >>> azul_urlsafe_b64decode('-_')
     b'\xfb'
