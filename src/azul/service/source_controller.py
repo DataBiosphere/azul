@@ -14,7 +14,7 @@ from azul.auth import (
 from azul.chalice import (
     BadGatewayError,
     Controller,
-    TerraTimeoutError,
+    TemporaryRedirectError,
 )
 from azul.http import (
     LimitedTimeoutException,
@@ -48,7 +48,7 @@ class SourceController(Controller):
         except PermissionError:
             raise UnauthorizedError
         except LimitedTimeoutException as e:
-            raise TerraTimeoutError(*e.args)
+            raise TemporaryRedirectError(*e.args)
         except TooManyRequestsException as e:
             raise TooManyRequestsError(*e.args)
         else:
@@ -76,7 +76,7 @@ class SourceController(Controller):
         except PermissionError:
             raise UnauthorizedError
         except LimitedTimeoutException as e:
-            raise TerraTimeoutError(*e.args)
+            raise TemporaryRedirectError(*e.args)
         except TooManyRequestsException as e:
             raise TooManyRequestsError(*e.args)
         else:

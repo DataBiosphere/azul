@@ -19,6 +19,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#6774 Install AWS CLI v2
+========================
+
+Update the AWS CLI on your developer machine to the pinned version in
+``environment.boot``. Refer to section 2.1 (Development Prerequisites) under
+``AWS CLI v2`` in ``README.md`` for installation instructions.
+
+
 #7862 Add ECM endpoints to browser CSP
 ======================================
 

@@ -96,7 +96,7 @@ from azul.resources import (
 log = logging.getLogger(__name__)
 
 
-class TerraTimeoutError(ChaliceViewError):
+class TemporaryRedirectError(ChaliceViewError):
     STATUS_CODE = 307
 
 
