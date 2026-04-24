@@ -54,6 +54,9 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.indexer import (
+    SourceConfig,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -360,6 +363,7 @@ class AzulUnitTestCase(AzulTestCase):
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     catalog: CatalogName = 'test'
     source: SourceRef
+    source_config: SourceConfig = SourceConfig(mirror=True)
 
     @classmethod
     @abstractmethod
@@ -475,7 +479,7 @@ class DCP1TestCase(DSSTestCase):
                                         mirror_limit=None,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                                      repository=config.Catalog.Plugin(name='dss')),
-                                        sources={str(cls.source.spec): {'mirror': True}})
+                                        sources={str(cls.source.spec): cls.source_config.to_json()})
         }
 
 
@@ -499,7 +503,7 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
 
     @classmethod
     def _sources(cls):
-        return {str(cls.source.spec): {'mirror': True}}
+        return {str(cls.source.spec): cls.source_config.to_json()}
 
     @classmethod
     def _patch_source_cache(cls):
@@ -541,7 +545,7 @@ class AnvilTestCase(TDRTestCase):
                                         mirror_limit=None,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='anvil'),
                                                      repository=config.Catalog.Plugin(name='tdr_anvil')),
-                                        sources={str(cls.source.spec): {'mirror': True}})
+                                        sources={str(cls.source.spec): cls.source_config.to_json()})
         }
 
 

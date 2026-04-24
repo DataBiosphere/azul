@@ -168,7 +168,7 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
     @classmethod
     def _sources(cls):
         return {
-            cls.make_spec_str(n): {'mirror': True}
+            cls.make_spec_str(n): cls.source_config.to_json()
             for n in cls.snapshot_names
         }
 
