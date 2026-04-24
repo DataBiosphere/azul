@@ -55,7 +55,7 @@ class OAuth2Client(HasCachedHttpClient):
     API.
     """
 
-    def tokeninfo(self, access_token: str) -> TokenInfo:
+    def token_info(self, access_token: str) -> TokenInfo:
         url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args=dict(access_token=access_token))
         response = self._http_client.request('GET', str(url))
@@ -156,7 +156,7 @@ class CredentialedClient(HasCachedHttpClient):
         :raise Exception: if the validity of the token cannot be determined
         """
         credentials = self.credentials
-        token_info = self._oauth_client.tokeninfo(str(credentials.token))
+        token_info = self._oauth_client.token_info(str(credentials.token))
         # The error messages here intentionally lack detail, for confidentiality
         if isinstance(credentials, ServiceAccountCredentials):
             # Actual service account credentials
