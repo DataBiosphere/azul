@@ -61,8 +61,8 @@ class OAuth2Client(HasCachedHttpClient):
         response = self._http_client.request('GET', str(url))
         assert response.status != 400, R('The token is not valid')
         assert response.status == 200, R('Unexpected response status', response.status)
-        token_info: TokenInfo = json.loads(response.data)
-        return token_info
+        response: TokenInfo = json.loads(response.data)
+        return response
 
 
 TokenCredentials = google.oauth2.credentials.Credentials
