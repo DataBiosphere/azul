@@ -2,7 +2,7 @@
     "openapi": "3.0.1",
     "info": {
         "title": "azul-service-dev",
-        "version": "17.0",
+        "version": "17.1",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n\n\n## Contact us\n\nFor technical support please file an issue at\n[GitHub](https://github.com/DataBiosphere/azul/issues) or email\n`azul-group@ucsc.edu`. To report a security concern or misconduct please email\n`azul-group@ucsc.edu`.\n"
     },
     "tags": [
@@ -13881,6 +13881,106 @@
                         },
                         "description": "The name of the catalog to query."
                     }
+                ]
+            }
+        },
+        "/user/authorize": {
+            "post": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nThe authorization code flow was completed successfully\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "description": "\nA fresh access token for the user\n"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "description": "\nExpiration of the access token, in seconds\n"
+                                        },
+                                        "scope": {
+                                            "type": "string",
+                                            "description": "\nThe scopes granted by the user\n"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "description": "\nAlways 'Bearer'\n"
+                                        },
+                                        "id_token": {
+                                            "type": "string",
+                                            "description": "\nThe OIDC ID token identifying the user\n"
+                                        }
+                                    },
+                                    "required": [
+                                        "access_token",
+                                        "expires_in",
+                                        "scope",
+                                        "token_type",
+                                        "id_token"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "Obtain an OAuth 2.0 access token in exchange for an authorization code",
+                "description": "\nInvoke this endpoint as part of the authorization code flow\nfrom a single-page app.\n\nNote that while this endpoint is part of the authorization\ncode flow, which typically yields a refresh token along with\nthe access token, this endpoint returns only the access\ntoken. Doing so is an aspect of the commonly adopted\nsecurity best practice known as [Backend For Frontend](\nhttps://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).\n\n**When initiating the authorization code flow, be\nsure to request the `openid` scope.**\n",
+                "requestBody": {
+                    "description": "\nJSON conforming to the Google Sign-In [CodeResponse](\nhttps://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse),\nexcept for the error-related parts. Those should be\nhandled client-side.\n",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "description": "\nThe authorization code of a successful token\nresponse.\n"
+                                    },
+                                    "scope": {
+                                        "type": "string",
+                                        "description": "\nA space-delimited list of scopes that are\napproved by the user. Must contain `openid`.\n"
+                                    },
+                                    "state": {
+                                        "type": "string",
+                                        "description": "\nThe string value that your application uses to\nmaintain state between your authorization\nrequest and the response.\n"
+                                    }
+                                },
+                                "required": [
+                                    "code",
+                                    "scope"
+                                ],
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "User"
                 ]
             }
         }

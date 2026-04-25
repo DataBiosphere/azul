@@ -600,8 +600,10 @@ values given here still apply in principle.
 
 5. Click *CREATE*
 
-6. For *App name*, enter `Azul {stage}`, where `{stage}` is the last component
-   of the Google project name, e.g. `dev` or `prod`
+6. For *App name*, enter `UCSC Data Explorer {stage}`, where `{stage}` is the
+   last component of the Google project name, e.g. `dev`. For production
+   deployment, you may want to consider omitting the stage, and instead mention
+   the funding project, e.g. "HCA"
 
 7. Provide appropriate email addresses for *App information* -> 
    *User support email* and *Developer contact information* -> 
@@ -634,12 +636,18 @@ These steps are performed once per deployment (multiple times per project).
 
 4. For *Name*, enter `azul-{stage}` where stage is the name of the deployment
 
-5. Add an entry to *Authorized JavaScript origins* and enter the output from
-   `python -m azul config.service_endpoint`
+5. Add the following entries to *Authorized JavaScript origins*
+ 
+   - `https://` followed by the output of `python -m azul config.data_browser_domain`
 
-6. Add an entry to *Authorized redirect URIs*. Append
-   `/swagger/oauth2-redirect.html` to the value of the previous field and enter
-   the resulting value.
+   - The output of `python -m azul config.service_endpoint`
+   
+   - `http://localhost:3000`
+
+6. Add the following entry to *Authorized redirect URIs*: Append
+
+   - The output of `python -m azul config.service_endpoint`, followed by 
+     `/swagger/oauth2-redirect.html`
    
 7. Click *Create*
 
