@@ -136,6 +136,8 @@ class UserController(Controller):
     def _authorize(self) -> JSON:
         try:
             request: JSON = json_mapping(self.current_request.json_body)
+            # FIXME: Use PEP 728 extra TypedDict items instead of removing them
+            #        https://github.com/DataBiosphere/azul/issues/7625
             request = {
                 k: v
                 for k, v in request.items()
