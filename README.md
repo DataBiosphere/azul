@@ -585,7 +585,9 @@ be created for each deployment.
 
 ### 3.2.1 Google OAuth 2.0 consent screen
 
-These steps are performed once per Google project.
+These steps are performed once per Google project. Note that while the specific
+steps have changed since these instructions were written, the configuration
+values given here still apply in principle.
 
 1. Log into the Google Cloud console and select the desired project, e.g. `dev` 
    or `prod`
