@@ -87,12 +87,12 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-1c2c69d9', 'hca_dev_24c654a5caa5440a8f02582921f2db4a__20210830_20210903'),
     source('bigquery', 'datarepo-dev-38f08cd8', 'hca_dev_2a64db431b554639aabb8dba0145689d__20210830_20210903'),
     source('bigquery', 'datarepo-dev-4cf05ce2', 'hca_dev_2a72a4e566b2405abb7c1e463e8febb0__20210901_20210903'),
-    source('bigquery', 'datarepo-dev-3041c2cf', 'hca_dev_2af52a1365cb4973b51339be38f2df3f__20210830_20210903', no_mirror),  # noqa E501
+    source('bigquery', 'datarepo-dev-3041c2cf', 'hca_dev_2af52a1365cb4973b51339be38f2df3f__20210830_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-311340f6', 'hca_dev_2d8460958a334f3c97d4585bafac13b4__20210902_20210907'),
     source('bigquery', 'datarepo-dev-766bfb76', 'hca_dev_2ef3655a973d4d699b4121fa4041eed7__20210827_20210903'),
     source('bigquery', 'datarepo-dev-1720b3c5', 'hca_dev_379ed69ebe0548bcaf5ea7fc589709bf__20210827_20210902'),
     source('bigquery', 'datarepo-dev-ac6efd3f', 'hca_dev_38449aea70b540db84b31e08f32efe34__20210830_20210903'),
-    source('bigquery', 'datarepo-dev-40283c27', 'hca_dev_3a69470330844ece9abed935fd5f6748__20210901_20210903', no_mirror),  # noqa E501
+    source('bigquery', 'datarepo-dev-40283c27', 'hca_dev_3a69470330844ece9abed935fd5f6748__20210901_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-b08233fa', 'hca_dev_3cfcdff5dee14a7ba591c09c6e850b11__20210827_20210903'),
     source('bigquery', 'datarepo-dev-bdc9f342', 'hca_dev_3e329187a9c448ec90e3cc45f7c2311c__20210901_20210903'),
     source('bigquery', 'datarepo-dev-ec07c8d8', 'hca_dev_4037007b0eff4e6db7bd8dd8eec80143__20210831_20210903'),
@@ -126,7 +126,7 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-0c5c20b5', 'hca_dev_8c3c290ddfff4553886854ce45f4ba7f__20210902_20210907'),
     source('bigquery', 'datarepo-dev-29509483', 'hca_dev_90bd693340c048d48d76778c103bf545__20210827_20211110'),
     source('bigquery', 'datarepo-dev-59d37b9a', 'hca_dev_946c5add47d1402a97bba5af97e8bce7__20210831_20210903'),
-    source('bigquery', 'datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', no_mirror),  # noqa E501
+    source('bigquery', 'datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-4b88b45b', 'hca_dev_962bd805eb894c54bad2008e497d1307__20210830_20210903'),
     source('bigquery', 'datarepo-dev-02c59b72', 'hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903'),
     source('bigquery', 'datarepo-dev-a6312a94', 'hca_dev_992aad5e7fab46d9a47ddf715e8cfd24__20210830_20210903'),
