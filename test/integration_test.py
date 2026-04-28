@@ -16,6 +16,9 @@ from io import (
     TextIOWrapper,
 )
 import json
+from operator import (
+    is_not_none,
+)
 import os
 from pathlib import (
     PurePath,
@@ -1767,20 +1770,19 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     def _test_mirroring(self, *, delete: bool):
         with self.subTest('mirroring'):
-            catalogs = [
-                catalog.name
-                for catalog in config.catalogs.values()
-                if (
-                    catalog.is_integration_test_catalog
-                    and self._mirror_service(catalog.name).may_mirror()
-                )
-            ]
+
+            service_by_catalog = {}
+            for catalog in config.catalogs.values():
+                service = self._mirror_service(catalog.name)
+                if catalog.is_integration_test_catalog and service.may_mirror():
+                    service_by_catalog[catalog.name] = service
+
             sources_by_catalog = {
-                catalog: alist(
-                    self._select_source(catalog, public=True, mirror=True),
-                    self._select_source(catalog, public=False, mirror=True),
-                )
-                for catalog in catalogs
+                catalog: list(filter(is_not_none, (
+                    self._select_source(catalog, public=public, mirror=True)
+                    for public in [True, False]
+                )))
+                for catalog in service_by_catalog
             }
 
             def _delete():
@@ -1789,24 +1791,25 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     # since each IT catalog currently uses the same mirror
                     # prefix and bucket
                     for catalog, sources in sources_by_catalog.items():
-                        for source_ref, source_config in sources:
-                            self._mirror_service(catalog=catalog).delete_it_files(source_ref.spec)
+                        for source in sources:
+                            service = service_by_catalog[catalog]
+                            service.delete_it_files(source.ref.spec)
 
             self._assert_queues_empty([config.mirror_queue.name,
                                        config.mirror_queue.to_fail.name])
             _delete()
 
             indexed_files: dict[File, tuple[SourceRef, JSON]] = {}
-            with self.subTest('mirror_sources_and_files'):
-                for catalog, sources in sources_by_catalog.items():
-                    mirror_service = self._mirror_service(catalog)
+            for catalog, sources in sources_by_catalog.items():
+                with self.subTest('mirror_sources_and_files', catalog=catalog):
+                    service = service_by_catalog[catalog]
                     # _get_one_mirrorable_file uses the public service account,
                     # so the file will always be from the public source
                     repository_file, source, file_response = self._get_one_mirrorable_file(catalog)
                     indexed_files[repository_file] = source, file_response
                     for _ in range(2):
-                        mirror_service.mirror_sources(sources)
-                        mirror_service.mirror_file(source, repository_file)
+                        service.mirror_sources(sources)
+                        service.mirror_file(source, repository_file)
                         self.azul_client.wait_for_mirroring()
                         self._assert_queues_empty([config.mirror_queue.to_fail.name])
 
@@ -1822,7 +1825,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
                         self.assertEqual(expected_url, actual_url)
 
                 with self.subTest('validate_info_schemas'):
-                    service = self._mirror_service(catalog)
+                    service = service_by_catalog[catalog]
                     info_objects = [service.info(file) for file in indexed_files.keys()]
                     schema_url = info_objects[0]['$schema']
                     self.assertTrue(schema_url.endswith(f'/v{service.info_schema_version}.json'))
