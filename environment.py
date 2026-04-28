@@ -244,7 +244,7 @@ def env() -> Mapping[str, str | None]:
         # `make -C terraform update_schema`, and committing the resulting
         # changes.
         #
-        'azul_terraform_version': '1.14.8',
+        'azul_terraform_version': '1.14.9',
 
         # The version of the AWS CLI v2 used throughout the system.
         #
