@@ -27,6 +27,7 @@ from azul import (
 from azul.auth import (
     Authentication,
     OAuth2,
+    indexer_authentication,
 )
 from azul.drs import (
     AccessMethod,
@@ -131,6 +132,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
     def list_sources(self,
                      authentication: Authentication | None
                      ) -> list[TDRSourceRef]:
+
         def list_snapshots(tdr: TDRClient):
             return tdr.list_snapshots(filter=self._common_source_filter)
 
@@ -183,6 +185,8 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                                 ) -> TDRClient:
         if authentication is None:
             tdr = TDRClient.for_anonymous_user()
+        elif authentication is indexer_authentication:
+            tdr = TDRClient.for_indexer()
         elif isinstance(authentication, OAuth2):
             tdr = TDRClient.for_registered_user(authentication)
         else:

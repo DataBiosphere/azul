@@ -37,6 +37,7 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
+    indexer_authentication,
 )
 from azul.deployment import (
     aws,
@@ -765,10 +766,10 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert file.source is not None, R(
             'File source unknown', file)
         if self._is_public(file.source.spec):
-            auth = Config.ServiceAccount.public
+            authentication = None
         else:
-            auth = Config.ServiceAccount.indexer
-        object = self.repository_plugin.drs_object(file.drs_uri, auth)
+            authentication = indexer_authentication
+        object = self.repository_plugin.drs_object(file.drs_uri, authentication)
         access = object.get(AccessMethod.gs)
         assert access.method is AccessMethod.https, access
         return furl(access.url)

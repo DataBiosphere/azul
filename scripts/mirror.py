@@ -14,6 +14,9 @@ from azul.args import (
     AzulArgumentHelpFormatter,
     get_sources,
 )
+from azul.auth import (
+    indexer_authentication,
+)
 from azul.azulclient import (
     AzulClient,
 )
@@ -30,17 +33,18 @@ log = logging.getLogger(__name__)
 def mirror_catalog(azul: AzulClient,
                    catalog: CatalogName,
                    source_globs: set[str],
-                   wait: bool):
+                   wait: bool
+                   ) -> None:
     fail_queue = config.mirror_queue.to_fail.name
     assert azul.is_queue_empty(fail_queue), R(
         'Cannot begin mirroring because a previous operation failed: '
         'there are still messages in the fail queue.',
         fail_queue)
-    sources = azul.source_service.list_sources(catalog,
-                                               config.ServiceAccount.indexer)
+
+    sources = azul.source_service.list_sources(catalog, indexer_authentication)
     if '*' not in source_globs:
         matching_sources = azul.matching_sources([catalog], source_globs)[catalog]
-        sources = [src for src in sources if src.ref.spec in matching_sources]
+        sources = [source for source in sources if source.ref.spec in matching_sources]
 
     azul.mirror_service(catalog).mirror_sources(sources)
 
