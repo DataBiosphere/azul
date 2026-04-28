@@ -393,7 +393,7 @@ class MirrorService:
         Test whether it makes sense to request the mirroring of files from the
         given source. If this method returns True, files from the source may or
         may not be mirrored. If this method returns False, the service will
-        definitely refuse to mirror all files from the source.
+        definitely not mirror any files from the source.
         """
         if self.may_mirror():
             plugin = self.repository_plugin
@@ -419,8 +419,8 @@ class MirrorService:
         Test whether it makes sense to request the mirroring of files from the
         current catalog if they are of the given size or larger. If this method
         returns True, such files may or may not be mirrored. If this method
-        returns False, the service will definitely refuse to mirror such files,
-        although it may accept smaller files.
+        returns False, the service will definitely skip mirroring such files,
+        although it may mirror smaller files.
         """
         if config.enable_mirroring:
             max_size = config.catalogs[self.catalog].mirror_limit
@@ -428,7 +428,14 @@ class MirrorService:
         else:
             return False
 
-    def mirror_sources(self, sources: Iterable[Source]):
+    def mirror_sources(self, sources: Iterable[Source]) -> None:
+        """
+        Of the given sources, mirror those that are configured to be mirrored,
+        ignoring those that are not. When mirroring a source, only files
+        satisfying certain size constraints will be mirrored. These constraints
+        are configured per catalog, and may depend on factors like whether the
+        catalog is an IT catalog, or whether the deployment is stable or not.
+        """
         if self.may_mirror():
             def actions():
                 for source in sources:
