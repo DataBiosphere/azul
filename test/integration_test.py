@@ -943,7 +943,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         if endpoint is None:
             endpoint = config.service_endpoint
         args = {} if args is None else {k: str(v) for k, v in args.items()}
-        url = furl(url=endpoint, path=path, args=args)
+        url = mutable_furl(url=endpoint, path=path, args=args)
         if fetch:
             url.path.segments.insert(0, 'fetch')
             while True:
