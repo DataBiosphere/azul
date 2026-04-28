@@ -1909,7 +1909,6 @@ def env() -> Mapping[str, str | None]:
                                                     repository=dict(name='tdr_hca')),
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit in [
-                ('hca', 'dcp58', dcp58_sources, None, int(1.5 * 1024 ** 3)),
                 ('hca', 'dcp59', dcp59_sources, None, int(1.5 * 1024 ** 3)),
                 ('lungmap', 'lm10', lm10_sources, -1, -1)
             ]
