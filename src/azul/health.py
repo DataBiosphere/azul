@@ -46,13 +46,15 @@ from azul.lib import (
     cached_property,
     lru_cache,
 )
+from azul.lib.strings import (
+    format_and_dedent,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
     json_bool,
 )
 from azul.openapi import (
-    format_description,
     params,
     responses,
     schema,
@@ -345,14 +347,14 @@ class HealthApp(AzulChaliceApp):
         _app_name = self.unqualified_app_name
 
         _up_key = {
-            'up': format_description('''
+            'up': format_and_dedent('''
                 indicates the overall result of the health check
             '''),
         }
 
         _fast_keys = {
             **{
-                prop.key: format_description(prop.description)
+                prop.key: format_and_dedent(prop.description)
                 for prop in Health.fast_properties[_app_name]
             },
             **_up_key
@@ -360,7 +362,7 @@ class HealthApp(AzulChaliceApp):
 
         _all_keys = {
             **{
-                prop.key: format_description(prop.description)
+                prop.key: format_and_dedent(prop.description)
                 for prop in Health.all_properties
             },
             **_up_key
@@ -370,18 +372,18 @@ class HealthApp(AzulChaliceApp):
             return {
                 'responses': {
                     f'{200 if up else 503}': {
-                        'description': format_description(f'''
+                        'description': format_and_dedent(f'''
                             {'The' if up else 'At least one of the'} checked resources
                             {'are' if up else 'is not'} healthy.
 
                             The response consists of the following keys:
 
-                        ''') + ''.join(f'* `{k}` {v}' for k, v in health_keys.items()) + format_description(f'''
+                        ''') + ''.join(f'* `{k}` {v}' for k, v in health_keys.items()) + format_and_dedent(f'''
 
                             The top-level `up` key of the response is
                             `{'true' if up else 'false'}`.
 
-                        ''') + (format_description(f'''
+                        ''') + (format_and_dedent(f'''
                             {'All' if up else 'At least one'} of the nested `up` keys
                             {'are `true`' if up else 'is `false`'}.
                         ''') if len(health_keys) > 1 else ''),
@@ -408,7 +410,7 @@ class HealthApp(AzulChaliceApp):
             cors=True,
             spec={
                 'summary': 'Complete health check',
-                'description': format_description(f'''
+                'description': format_and_dedent(f'''
                             Health check of the {_app_name} REST API and all
                             resources it depends on. This may take long time to complete
                             and exerts considerable load on the API. For that reason it
@@ -430,7 +432,7 @@ class HealthApp(AzulChaliceApp):
             cors=True,
             spec={
                 'summary': 'Basic health check',
-                'description': format_description(f'''
+                'description': format_and_dedent(f'''
                                 Health check of only the REST API itself, excluding other
                                 resources that it depends on. A 200 response indicates that
                                 the {_app_name} is reachable via HTTP(S) but nothing
@@ -448,7 +450,7 @@ class HealthApp(AzulChaliceApp):
             cors=True,
             spec={
                 'summary': 'Cached health check for continuous monitoring',
-                'description': format_description(f'''
+                'description': format_and_dedent(f'''
                                 Return a cached copy of the
                                 [`/health/fast`](#operations-Auxiliary-get_health_fast)
                                 response. This endpoint is optimized for continuously
@@ -469,7 +471,7 @@ class HealthApp(AzulChaliceApp):
             cors=True,
             spec={
                 'summary': 'Fast health check',
-                'description': format_description('''
+                'description': format_and_dedent('''
                                 Performance-optimized health check of the REST API and other
                                 critical resources tht it depends on. This endpoint can be
                                 requested more frequently than
@@ -489,7 +491,7 @@ class HealthApp(AzulChaliceApp):
             cors=True,
             spec={
                 'summary': 'Selective health check',
-                'description': format_description('''
+                'description': format_and_dedent('''
                                 This endpoint allows clients to request a health check on a
                                 specific set of resources. Each resource is identified by a
                                 *key*, the same key under which the resource appears in a

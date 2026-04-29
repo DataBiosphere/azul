@@ -338,7 +338,7 @@ class AWS:
     def get_hmac_key_and_id(self) -> tuple[bytes, str]:
         # Note: dict contains 'key' and 'key_id' as keys and is provisioned in
         # scripts/provision_credentials.py
-        secret_id = config.secrets_manager_secret_name('indexer', 'hmac')
+        secret_id = config.hmac_secret_path()
         response = self.secretsmanager.get_secret_value(SecretId=secret_id)
         secret_dict = json.loads(response['SecretString'])
         return secret_dict['key'].encode(), secret_dict['key_id']
@@ -384,7 +384,7 @@ class AWS:
         credentials is prevented by patching the environment variable
         GOOGLE_APPLICATION_CREDENTIALS to the empty string.
         """
-        secret_name = config.secrets_manager_secret_name(service_account.secret_name)
+        secret_name = config.secret_path(service_account.secret_name)
         secret = self._service_account_creds(secret_name)['SecretString']
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(secret)

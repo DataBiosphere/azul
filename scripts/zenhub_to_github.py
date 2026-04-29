@@ -43,6 +43,9 @@ from azul.lib import (
 from azul.lib.json import (
     dig,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     AnyJSON,
     JSON,
@@ -57,9 +60,6 @@ from azul.lib.types import (
 )
 from azul.logging import (
     configure_script_logging,
-)
-from azul.openapi import (
-    format_description as fd,
 )
 
 log = logging.getLogger(__name__)

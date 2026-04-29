@@ -51,6 +51,9 @@ from azul.lib.functions import (
 from azul.lib.objects import (
     Sentinel,
 )
+from azul.lib.strings import (
+    format_and_dedent,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -59,9 +62,6 @@ from azul.lib.types import (
     json_mapping,
     json_str,
     optional,
-)
-from azul.openapi import (
-    format_description,
 )
 from azul.resources import (
     NotInLambdaContextException,
@@ -1358,8 +1358,24 @@ class Config:
     def validate_qualifier(cls, qualifier: str) -> None:
         cls._validate_term(qualifier, name='qualifier')
 
-    def secrets_manager_secret_name(self, *args):
+    def secret_path(self, *args):
+        """
+        The fully qualified name of a secret in AWS Secrets Manager. Internally,
+        we use the term "secret path" for this in order to better distinguish
+        fully qualified names ("paths") from unqualified ones ("names"). Also
+        note that AWS Secrets Manager uses the term "secret ID" as well. These
+        can be either a fully qualified name or the ARN of a secret. The latter
+        is made up of the secrets's account ID, its fully qualified name and an
+        optional suffix consisting of a dash followed by six characters. We
+        don't use ARNs in Azul to refer to secrets.
+        """
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
+
+    def hmac_secret_path(self):
+        return self.secret_path('indexer', 'hmac')
+
+    def oauth2_client_secret_path(self):
+        return self.secret_path('service', 'google_oauth2_client_secret')
 
     def enable_gcp(self):
         return self.google_project() is not None
@@ -1641,7 +1657,7 @@ class Config:
     @property
     def contact_us(self) -> str:
         email = self.monitoring_email
-        return format_description(f'''
+        return format_and_dedent(f'''
 
             ## Contact us
 

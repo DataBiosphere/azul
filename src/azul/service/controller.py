@@ -28,10 +28,10 @@ from azul.lib import (
     mutable_furl,
 )
 from azul.lib.strings import (
+    format_and_dedent as fd,
     pluralize,
 )
 from azul.openapi import (
-    format_description as fd,
     params,
     schema,
 )

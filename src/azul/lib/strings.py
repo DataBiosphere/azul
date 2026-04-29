@@ -1,3 +1,6 @@
+from textwrap import (
+    dedent,
+)
 from typing import (
     Iterable,
     Sequence,
@@ -11,6 +14,33 @@ from more_itertools import (
 from azul.lib import (
     R,
 )
+
+
+def format_and_dedent(string: str, **kwargs) -> str:
+    """
+    Remove common leading whitespace from every line in text.
+    Useful for processing triple-quote strings.
+
+    If keyword arguments are supplied, they will serve as arguments for
+    formatting the dedented string using str.format().
+
+    :param string: The string to unwrap
+
+    >>> format_and_dedent(" c'est \\n une chaine \\n de plusieurs lignes. ")
+    "c'est \\nune chaine \\nde plusieurs lignes. "
+
+    >>> format_and_dedent('''
+    ...     Multi-lined,
+    ...     indented,
+    ...     triple-quoted string.
+    ... ''')
+    '\\nMulti-lined,\\nindented,\\ntriple-quoted string.\\n'
+
+    >>> format_and_dedent('{foo}{bar!r}', foo=123, bar={})
+    '123{}'
+    """
+    dedented = dedent(string)
+    return dedented.format(**kwargs) if kwargs else dedented
 
 
 def to_camel_case(text: str) -> str:

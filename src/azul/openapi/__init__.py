@@ -1,41 +1,14 @@
-from textwrap import (
-    dedent,
-)
 from typing import (
     Any,
 )
 
+from azul.lib.strings import (
+    format_and_dedent,
+)
 from azul.lib.types import (
     AnyJSON,
     JSON,
 )
-
-
-def format_description(string: str, **kwargs) -> str:
-    """
-    Remove common leading whitespace from every line in text.
-    Useful for processing triple-quote strings.
-
-    If keyword arguments are supplied, they will serve as arguments for
-    formatting the dedented string using str.format().
-
-    :param string: The string to unwrap
-
-    >>> format_description(" c'est \\n une chaine \\n de plusieurs lignes. ")
-    "c'est \\nune chaine \\nde plusieurs lignes. "
-
-    >>> format_description('''
-    ...     Multi-lined,
-    ...     indented,
-    ...     triple-quoted string.
-    ... ''')
-    '\\nMulti-lined,\\nindented,\\ntriple-quoted string.\\n'
-
-    >>> format_description('{foo}{bar!r}', foo=123, bar={})
-    '123{}'
-    """
-    dedented = dedent(string)
-    return dedented.format(**kwargs) if kwargs else dedented
 
 
 def format_description_key(kwargs: dict[str, Any]) -> None:
@@ -63,7 +36,7 @@ def format_description_key(kwargs: dict[str, Any]) -> None:
     }
     """
     try:
-        unwrapped = format_description(kwargs['description'])
+        unwrapped = format_and_dedent(kwargs['description'])
     except KeyError:
         pass
     else:

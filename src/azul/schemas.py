@@ -14,11 +14,13 @@ from azul.chalice import (
 from azul.lib import (
     mutable_furl,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     JSON,
 )
 from azul.openapi import (
-    format_description as fd,
     params,
     responses,
     schema,

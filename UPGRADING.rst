@@ -19,6 +19,29 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#7950 Store OAuth2 client secret in AWS Secrets Manager
+=======================================================
+
+Everyone
+--------
+
+For each of your personal deployments that have
+``AZUL_GOOGLE_OAUTH2_CLIENT_ID`` configured, run::
+
+    python scripts/provision_credentials.py oauth2_client_secret --create
+
+Follow the prompts to store the OAuth2 client secret. The prompts include steps
+to test the application and wait before disabling the secret. Because the
+application does not actually use the secret just yet, you can ignore the
+testing and waiting steps, but only those.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments.
+
+
 #6774 Install AWS CLI v2
 ========================
 
