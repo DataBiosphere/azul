@@ -144,7 +144,7 @@ from azul.modules import (
     load_script,
 )
 from azul.oauth2 import (
-    OAuth2Client,
+    CredentialedClient,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -895,36 +895,36 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     @property
     def _service_account_credentials(self) -> ContextManager:
-        client = self._service_account_oauth2_client
+        client = self._service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _service_account_oauth2_client(self):
+    def _service_account_client(self):
         provider = self._tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @property
     def _public_service_account_credentials(self) -> ContextManager:
-        client = self._public_service_account_oauth2_client
+        client = self._public_service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _public_service_account_oauth2_client(self):
+    def _public_service_account_client(self):
         provider = self._public_tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @property
     def _unregistered_service_account_credentials(self) -> ContextManager:
-        client = self._unregistered_service_account_oauth2_client
+        client = self._unregistered_service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _unregistered_service_account_oauth2_client(self):
+    def _unregistered_service_account_client(self):
         provider = self._unregistered_tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @contextmanager
-    def _authorization_context(self, oauth2_client: OAuth2Client) -> ContextManager:
+    def _authorization_context(self, oauth2_client: CredentialedClient) -> ContextManager:
         old_http = self._http
         try:
             self._http = oauth2_client._http_client
@@ -1509,7 +1509,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
-        invalid_client = OAuth2Client(credentials_provider=invalid_provider)
+        invalid_client = CredentialedClient(credentials_provider=invalid_provider)
         with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 

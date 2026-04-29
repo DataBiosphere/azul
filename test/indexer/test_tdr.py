@@ -300,7 +300,6 @@ class TDRPluginTestCase(TDRTestCase,
         bq.insert_rows(table=table, selected_fields=schema, rows=map(dump_row, rows))
 
     def _bq_schema_from_row(self, row: BigQueryRow) -> list[bigquery.SchemaField]:
-
         def field_type(key: str, value: AnyJSON) -> str:
             if key == 'version':
                 return 'TIMESTAMP'
@@ -496,7 +495,17 @@ class TestTDRSourceList(AzulUnitTestCase):
         return _mock_urlopen
 
     def _mock_google_oauth_tokeninfo(self):
-        body = json.dumps({'azp': config.google_oauth2_client_id}).encode()
+        body = json.dumps({
+            'azp': config.google_oauth2_client_id,
+            'aud': config.google_oauth2_client_id,
+            'sub': config.google_oauth2_client_id.split('.')[0].split('-')[0],
+            'scope': 'https://www.googleapis.com/auth/userinfo.email openid',
+            'exp': '1689645319',
+            'expires_in': '3511',
+            'email': 'hannes@ucsc.edu',
+            'email_verified': 'true',
+            'access_type': 'online'
+        }).encode()
         response = urllib3.HTTPResponse(status=200, body=BytesIO(body))
         mock_urlopen = Mock()
         mock_urlopen.return_value = response
