@@ -40,8 +40,10 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.openapi import (
-    format_description as fd,
     params,
     schema,
 )

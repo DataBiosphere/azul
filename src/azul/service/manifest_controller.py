@@ -35,6 +35,9 @@ from azul.lib import (
     cached_property,
     mutable_furl,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     AnyJSON,
     FlatJSON,
@@ -47,7 +50,6 @@ from azul.lib.types import (
     optional,
 )
 from azul.openapi import (
-    format_description as fd,
     params,
     responses,
     schema,

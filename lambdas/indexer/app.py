@@ -35,15 +35,15 @@ from azul.indexer.mirror_controller import (
 from azul.lib import (
     cached_property,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     JSON,
     not_none,
 )
 from azul.logging import (
     configure_app_logging,
-)
-from azul.openapi import (
-    format_description as fd,
 )
 
 log = logging.getLogger(__name__)

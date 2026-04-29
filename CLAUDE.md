@@ -35,3 +35,7 @@
 
 - Passing `--config-file .mypy.ini` to `mypy` is unnecessary; since `.mypy.ini` 
   is the default config
+
+- Do not quote type hints in annotations. The project uses Python 3.14, which
+  defers evaluation of annotations by default (PEP 649), so forward references
+  and `TYPE_CHECKING`-guarded imports work without quotes

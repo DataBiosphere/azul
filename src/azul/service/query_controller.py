@@ -36,13 +36,15 @@ from azul.lib import (
 from azul.lib.collections import (
     OrderedSet,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
 )
 from azul.openapi import (
     application_json,
-    format_description as fd,
     params,
     schema,
 )

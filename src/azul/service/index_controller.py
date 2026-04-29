@@ -28,6 +28,9 @@ from azul.lib import (
 from azul.lib.functions import (
     iif,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     JSON,
     PrimitiveJSON,
@@ -37,7 +40,6 @@ from azul.lib.uuids import (
     InvalidUUIDError,
 )
 from azul.openapi import (
-    format_description as fd,
     params,
     responses,
     schema,

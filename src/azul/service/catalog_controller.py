@@ -18,11 +18,13 @@ from azul import (
 from azul.lib import (
     cache,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     JSON,
 )
 from azul.openapi import (
-    format_description as fd,
     responses,
     schema,
 )

@@ -183,4 +183,9 @@ def env() -> Mapping[str, str | None]:
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '561542988117-cpo2avhomdh6t7fetp91js78cdhm9p47.apps.googleusercontent.com',
 
         'AZUL_ENABLE_MIRRORING': '1',
+
+        # FIXME: Revert, once the underlying issue with requester-pays is fixed
+        #        https://github.com/DataBiosphere/azul/issues/7955
+        #
+        'azul_it_flags': 'no_mirror',
     }

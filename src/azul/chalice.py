@@ -66,6 +66,7 @@ from azul.lib.json import (
     copy_json,
 )
 from azul.lib.strings import (
+    format_and_dedent,
     join_words as jw,
 )
 from azul.lib.types import (
@@ -84,7 +85,6 @@ from azul.modules import (
     module_loaded_dynamically,
 )
 from azul.openapi import (
-    format_description,
     params,
     responses,
     schema,
@@ -805,7 +805,7 @@ class AzulChaliceApp(Chalice):
             cors=True,
             spec={
                 'summary': 'Return OpenAPI specifications for this REST API',
-                'description': format_description('''
+                'description': format_and_dedent('''
                                 This endpoint returns the [OpenAPI specifications]'
                                 (https://github.com/OAI/OpenAPI-Specification) for this REST
                                 API. These are the specifications used to generate the page
@@ -869,7 +869,7 @@ class AzulChaliceApp(Chalice):
                 'tags': ['Auxiliary'],
                 'responses': {
                     '200': {
-                        'description': format_description('''
+                        'description': format_and_dedent('''
                             The robots.txt resource according to
                             [RFC9309](https://datatracker.ietf.org/doc/html/rfc9309)
                         '''),
@@ -892,11 +892,11 @@ class AzulChaliceApp(Chalice):
         return locals()
 
     def default_specs(self):
-        retry_after = format_description('''
+        retry_after = format_and_dedent('''
             Clients should wait the number of seconds specified in the
             Retry-After response header and then retry the request.
         ''')
-        do_not_retry = format_description('''
+        do_not_retry = format_and_dedent('''
             It is unlikely that a retry will be successful until the problem is
             resolved by an operator.
         ''')

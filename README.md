@@ -650,6 +650,14 @@ These steps are performed once per deployment (multiple times per project).
 
 9. `_refresh`
 
+10. Provision the OAuth2 client secret in AWS Secrets Manager:
+
+    ```
+    python scripts/provision_credentials.py oauth2_client_secret --create
+    ```
+
+    Follow the prompts to store the client secret.
+
 ## 3.3 Provisioning cloud infrastructure
 
 Once you've configured the project and your personal deployment or a shared
@@ -909,69 +917,92 @@ process.
 
 ## 4.2 Running the Data Browser locally
 
-Follow the steps in the [Data Browser's README] to install the prerequisites
-and launch a local version of the Data Browser's server. For the Node.js
-prerequisite, a specific version of Node.js can be installed on macOS or Linux
-using the Node.js version management tool "[n]".
+Follow the steps in the [Data Browser's README] to install its prerequisites and
+launch a local instance of the Data Browser. On on macOS an Linux, the version
+management tool [n] is a convenient way to install the required version of the
+Node.js prerequisite.
 
 [Data Browser's README]: https://github.com/DataBiosphere/data-browser/blob/main/README.md
 [n]: https://www.npmjs.com/package/n#third-party-installers
 
-When running the Data Browser locally, the argument specified in the `npm run`
-command controls which site config is used, and by extension, which deployment
-of Azul the Data Browser will connect to. In your clone of the Data Browser
-repository, the full list of command arguments can be found in `/package.json`.
-However, since the names of the arguments can be confusing, it is recommended
-that you reference one of the GitLab configurations found at
-`/.gitlab/sites/{deployment}/{atlas}/base.yaml` to help identify the correct
-command argument to use.
+The `npm run` example in the [Data Browser's README] is outdated. Instead,
+follow the steps below in order to compose a suitable `npm run` invocation for
+launching a local instance of the Data Browser backed by a main deployment of
+Azul, say, a LungMAP instance backed by Azul `dev`:
 
-For example, to run a Data Browser for the `dev` deployment and `hca` atlas:
+1. Open `.gitlab/sites/{deployment}/{atlas}/base.yaml`, e.g,
+   `.gitlab/sites/dev/lungmap/base.yaml`, and note the value of
+   `data_browser_build_script`, in this case `build-dev:lungmap`. This is the
+   key of an `npm` script, which is what `npm run` expects as its argument. The
+   script we noted here is for *building* the Data Browser, which we'll use to
+   infer the key of the corresponding `npm` script for *launching* a local
+   instance.
 
-1. Navigate to your clone of the Data Browser repository.
+2. In the same file, note the value of `data_browser_build_env`, e.g. `dev`.
 
-2. Open `/.gitlab/sites/dev/hca/base.yaml` and note the variables
-   `data_browser_build_script` and `data_browser_build_env`, with values
-   `build-ma-dev:hca-dcp` and `ma-dev` respectively. The value
-   `build-ma-dev:hca-dcp` is made of two parts, however it is only the second
-   part (`hca-dcp`) that is needed for our purposes.
+3. Under `scripts` in `package.json`, locate the entry for the build script
+   using the key noted in step 1, e.g., `build-dev:lungmap`. The value of that
+   entry should start with the path to a shell script, in this case
+   `./scripts/common-build.sh`, followed by one or two arguments. Note the first
+   argument, e.g., `lungmap`.
 
-3. Open `/package.json`, and under the `scripts` section, find the key of a
-   value that mentions `dev.sh hca-dcp ma-dev`, which is the script used when
-   running the Data Browser locally, and the two values obtained in step 2.
+4. Under `scripts` in `package.json`, locate the entry whose value starts with
+   `./scripts/dev.sh` followed by the same first argument as the build script,
+   followed by the value of `data_browser_build_env` from step 2 above. In this
+   example the key of that entry is `dev:lungmap` and its value begins with
+   `./scripts/dev.sh lungmap dev && …`
 
-4. If no such line can be found in `/package.json`, you can temporarily add one
-   using one of the existing lines that mention `dev.sh` as a guide. Be sure to
-   give the new line a unique key.
+5. Invoke the launch script by passing its key to `npm run`, e.g., `npm run
+   dev:lungmap`.
 
-5. Run `npm run {key}`, where `{key}` is the key of the line you found, or
-   added.
+In some cases, there may be no matching launch script entry. For example, there
+is no launch script entry for running a LungMAP instance backed by Azul `prod`.
+There is only a build script for it (`build-prod:lungmap`), but no launch
+script. You can easily compose a launch script entry by duplicating and
+adjusting an existing entry.
 
-To run a Data Browser that connects to a personal deployment of Azul:
+Furthermore, there are no entries in `.gitlab/sites` for personal deployments of
+Azul, and of course no launch scripts for them either. In order to launch a
+local instance of the Data Browser that is backed by a personal or sandbox
+deployment, pick the `.gitlab/sites` subdirectory for a collocated main
+deployment and follow the steps above to identify or create a suitable launch
+script entry. The `hannes2` deployment, for example, is collocated with
+`anvildev`. The matching launch script entry is `dev:anvil-cmg`, passing the two
+arguments `anvil-cmg` and `dev` to `./scripts/dev.sh`. These arguments refer to
+a file under `site-config`, in this case `site-config/anvil-cmg/dev/config.ts`.
+Modify that file as outlined in the patch below:
 
-1. Navigate to your clone of the Data Browser repository.
+```patch
+diff --git a/site-config/anvil-cmg/dev/config.ts b/site-config/anvil-cmg/dev/config.ts
+--- a/site-config/anvil-cmg/dev/config.ts (revision 082664c20b2ab8e7c757ceb42067654793880d0a)
++++ b/site-config/anvil-cmg/dev/config.ts (date 1776841405660)
+@@ -26,7 +26,7 @@
+ 
+ // Template constants
+ const APP_TITLE = "AnVIL Data Explorer";
+-const DATA_URL = "https://service.anvil.gi.ucsc.edu";
++const DATA_URL = "https://service.hannes2.anvil.gi.ucsc.edu";
+ const BROWSER_URL = "https://explore.anvil.gi.ucsc.edu";
+ const PORTAL_URL = "https://anvilproject.dev.clevercanary.com";
+ 
+@@ -35,7 +35,7 @@
+   portalUrl: string,
+   dataUrl: string,
+   gitHubUrl: string,
+-  catalog: string = CATALOG_DEFAULT
++  catalog: string = 'anvil-it'
+ ): SiteConfig {
+   return {
+     analytics: {
+```
 
-2. Open `/.gitlab/sites/{deployment}/{atlas}/base.yaml` for a GitLab colocated
-   with your personal deployment, and note the values of the variables
-   `data_browser_build_script` and `data_browser_build_env`.
+With those modifications in place, running `npm run dev:anvil-cmg` will launch a
+Data Browser instance that is backed by `hannes2` instead of `anvildev`, using
+`anvil-it` as the default catalog.
 
-3. Locate and open `/.site-config/{foo}/{bar}/config.ts`, where `{foo}` is the
-   second part of the `data_browser_build_script` value, and `{bar}` is the
-   `data_browser_build_env` value.
-
-4. In `config.ts`, change `CATALOG` and `DATA_URL` to values appropriate for
-   your personal deployment.
-
-5. Open `/package.json`, and under the `scripts` section, find (or add) a line
-   that mentions `dev.sh` and the values obtained in step 2 (e.g. `hca-dcp` and
-   `ma-dev`).
-
-6. Run `npm run {key}`, where `{key}` is the key of the line you found, or
-   added.
-
-Note that when run locally, the Data Browser will make duplicate requests to
+Note that when run locally, the Data Browser may make duplicate requests to
 Azul on every page load. This is due to React being run in `dev` mode with
-`StrictMode` enabled. To disable this behavior, modify `/next.config.mjs` and
+`StrictMode` enabled. To disable this behavior, modify `next.config.mjs` and
 set the `reactStrictMode` property to false.
 
 
@@ -1062,7 +1093,7 @@ diverging to reflect different states on PyPI. This can be fixed by incrementing
 `azul_image_version` in the Dockerfile.
 
 
-##  Unable to re-register service account with SAM
+## Unable to re-register service account with SAM
 
 If you have destroyed your deployment and are rebuilding it, it's possible that
 SAM will not allow the Google service account to be registered again because

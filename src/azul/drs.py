@@ -423,6 +423,8 @@ class DRSObject:
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
+            elif response.status == 400 and b'requires an x-user-project' in response.data:
+                raise DRSRequesterPaysRequired(url, response)
             else:
                 raise DRSStatusException(url, response)
 
@@ -434,4 +436,11 @@ class DRSStatusException(Exception):
 
     def __init__(self, url: furl, response: urllib3.BaseHTTPResponse) -> None:
         super().__init__(f'Unexpected response from {url}',
+                         response.status, response.data)
+
+
+class DRSRequesterPaysRequired(Exception):
+
+    def __init__(self, url: furl, response: urllib3.BaseHTTPResponse) -> None:
+        super().__init__(f'DRS server requires requester-pays for {url}',
                          response.status, response.data)

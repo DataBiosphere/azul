@@ -485,7 +485,11 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     # If test_mirroring is run for the catalog, ensure that the
                     # source is not flagged as no_mirror so that we can test
                     # downloading a mirrored file
-                    mirror=mirror and self._mirror_service(catalog.name).may_mirror()
+                    #
+                    # FIXME: Revert, once the underlying issue with requester-pays is fixed
+                    #        https://github.com/DataBiosphere/azul/issues/7955
+                    #
+                    mirror=True and self._mirror_service(catalog.name).may_mirror()
                 )
                 ma_source = self._select_source(catalog.name, public=False)
                 if ma_source is not None:
@@ -1200,6 +1204,13 @@ class IndexingIntegrationTest(IntegrationTestCase):
             prefix = 'Unexpected response from '
             self.assertEqual(prefix, msg[:len(prefix)])
             self.assertNotIn(str(config.tdr_service_url), msg)
+            return None
+        elif response.status == 403:
+            # FIXME: Treat this as an error if requester-pays is enabled
+            #        https://github.com/DataBiosphere/azul/issues/7794
+            msg = json.loads(response.data)['Message']
+            prefix = 'DRS server requires requester-pays for '
+            self.assertEqual(prefix, msg[:len(prefix)])
             return None
         else:
             self.assertEqual(200, response.status)
