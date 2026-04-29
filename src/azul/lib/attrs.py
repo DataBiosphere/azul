@@ -677,7 +677,15 @@ class SerializableAttrs(Serializable, attrs.AttrsInstance):
                 f'{x} = {var_name}({x})'
             ]
 
+    @attrs.frozen(slots=False)
     class Serializer(Strategy[str]):
+
+        def __attrs_post_init__(self):
+            def _assert_not_in(key: str, json: dict) -> dict:
+                assert key not in json, (key, json)
+                return json
+
+            self.globals['_assert_not_in'] = _assert_not_in
 
         @property
         def enabled(self) -> bool:
@@ -696,7 +704,8 @@ class SerializableAttrs(Serializable, attrs.AttrsInstance):
             return f'{x}.to_json()'
 
         def _polymorphic(self, x: str, base_cls: str) -> str:
-            return f'dict({x}.to_json(), {self.discriminator}={x}.cls_to_json())'
+            d = self.discriminator
+            return f'dict({d}={x}.cls_to_json(), **_assert_not_in("{d}", {x}.to_json()))'
 
         def _list(self, x: str, item_type: type) -> str:
             depth = next(self.depth)
@@ -760,8 +769,8 @@ class DiscriminatingPolymorphicSerializableAttrs(
         discriminator = self.discriminator()
         assert discriminator not in json, (discriminator, json)
         return {
-            **json,
-            discriminator: self.cls_to_json()
+            discriminator: self.cls_to_json(),
+            **json
         }
 
 
@@ -859,22 +868,34 @@ def polymorphic[T](field: T | None = None,
     >>> assert_json(outer.to_json())
     {
         "inner": {
-            "x": 42,
-            "type": "InnerWithInt"
+            "type": "InnerWithInt",
+            "x": 42
         },
         "inners": [
             {
-                "y": "foo",
-                "_cls": "InnerWithStr"
+                "_cls": "InnerWithStr",
+                "y": "foo"
             },
             {
-                "x": 7,
-                "_cls": "InnerWithInt"
+                "_cls": "InnerWithInt",
+                "x": 7
             }
         ]
     }
     >>> Outer.from_json(outer.to_json()) == outer
     True
+
+    If a subclass has a field whose name matches the discriminator,
+    serialization of the enclosing object will fail:
+
+    >>> @attrs.frozen
+    ... class InnerWithType(Inner):
+    ...     type: str
+
+    >>> Outer(inner=InnerWithType(type='foo'), inners=[]).to_json()
+    Traceback (most recent call last):
+        ...
+    AssertionError: ('type', {'type': 'foo'})
 
     In order to enable polymorphic serialization of the value of a given field,
     the discriminator property needs to be specified explicitly, otherwise the
