@@ -76,7 +76,7 @@ def main(argv):
     body = body.replace('#0000', f'#{issue_number}', 1)
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, 'Status of PR is *In progress*')
-    body = _check_task(body, 'PR is linked to all issues it (partially) resolves')
+    body = _check_task(body, 'Status of linked issues is *In progress*')
     body = _check_task(body, 'PR description links to linked issues')
 
     result = subprocess.run(
@@ -94,30 +94,31 @@ def main(argv):
         sys.exit(result.returncode)
 
     pr_url = result.stdout.strip()
-    _set_pr_status(pr_url, 'In Progress')
+    pr_node_id = _node_id('pr', pr_url)
+    issue_node_id = _node_id('issue', str(issue_number))
+    _set_status(pr_node_id, 'In Progress')
+    _set_status(issue_node_id, 'In Progress')
 
 
-def _set_pr_status(pr_url: str, status: str) -> None:
+def _node_id(kind: str, ref: str) -> str:
     result = subprocess.run(
-        [
-            'gh', 'pr', 'view', pr_url,
-            '--json', 'id',
-            '--jq', '.id',
-        ],
+        ['gh', kind, 'view', ref, '--json', 'id', '--jq', '.id'],
         capture_output=True, text=True, check=True
     )
-    pr_node_id = result.stdout.strip()
+    return result.stdout.strip()
 
+
+def _set_status(node_id: str, status: str) -> None:
     project_id = _project_id()
 
     query = fd('''
         mutation {{
             addProjectV2ItemById(input: {{
                 projectId: "{project_id}",
-                contentId: "{pr_node_id}"
+                contentId: "{node_id}"
             }}) {{ item {{ id }} }}
         }}
-    ''', project_id=project_id, pr_node_id=pr_node_id)
+    ''', project_id=project_id, node_id=node_id)
     result = subprocess.run(
         ['gh', 'api', 'graphql', '-f', f'query={query}'],
         capture_output=True, text=True, check=True
