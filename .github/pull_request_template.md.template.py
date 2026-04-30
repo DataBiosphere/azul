@@ -353,7 +353,7 @@ def emit(t: T, target_branch: str):
                     '*Stable*'
                 )
             },
-            iif(t not in (T.backport, T.upgrade), {
+            iif(t is not T.backport, {
                 'type': 'cli',
                 'content': f'PR description links to linked {t.issues}'
             }),
