@@ -17,7 +17,7 @@ from azul.lib.strings import (
 _project_root = Path(__file__).resolve().parent.parent
 _template_dir = _project_root / '.github' / 'PULL_REQUEST_TEMPLATE'
 _project_owner = 'DataBiosphere'
-_project_number = 3
+_project_title = 'Azul'
 
 
 def _current_branch() -> str:
@@ -206,6 +206,22 @@ def _set_status(node_id: str, status: str) -> None:
     )
 
 
+def _project() -> dict:
+    result = subprocess.run(
+        [
+            'gh', 'project', 'list',
+            '--owner', _project_owner,
+            '--format', 'json',
+        ],
+        capture_output=True, text=True, check=True
+    )
+    projects = json.loads(result.stdout)['projects']
+    for project in projects:
+        if project['title'] == _project_title:
+            return project
+    assert False, R('Project not found', _project_title)
+
+
 def _project_id() -> str:
     query = fd('''
         {{
@@ -213,7 +229,7 @@ def _project_id() -> str:
                 projectV2(number: {number}) {{ id }}
             }}
         }}
-    ''', owner=_project_owner, number=_project_number)
+    ''', owner=_project_owner, number=_project()['number'])
     result = subprocess.run(
         ['gh', 'api', 'graphql', '-f', f'query={query}'],
         capture_output=True, text=True, check=True
@@ -224,7 +240,7 @@ def _project_id() -> str:
 def _status_field() -> dict:
     result = subprocess.run(
         [
-            'gh', 'project', 'field-list', str(_project_number),
+            'gh', 'project', 'field-list', str(_project()['number']),
             '--owner', _project_owner,
             '--format', 'json',
         ],
