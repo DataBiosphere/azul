@@ -217,7 +217,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRBundleFQID]):
             for entity_type, entity_cls in api.entity_types.items()
             if entity_type.endswith('_file')
         ))
-        return list(map(self._file_from_row, rows))
+        return [self._file_from_row(row, source) for row in rows]
 
     def _query_unique_sorted(self,
                              query: str,
@@ -279,11 +279,15 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRBundleFQID]):
             content = json.loads(content)
         bundle.metadata[str(entity)] = content
 
-    def _file_from_row(self, row: BigQueryRow) -> HCAFile:
+    def _file_from_row(self,
+                       row: BigQueryRow,
+                       source: TDRSourceRef | None = None
+                       ) -> HCAFile:
         return HCAFile.from_metadata(catalog=self.catalog,
                                      metadata=json.loads(any_str(row['content'])),
                                      descriptor=json.loads(any_str(row['descriptor'])),
-                                     drs_uri=optional(any_str, row['file_id']))
+                                     drs_uri=optional(any_str, row['file_id']),
+                                     source=source)
 
     def _stitch_bundles(self,
                         root_bundle: TDRHCABundle

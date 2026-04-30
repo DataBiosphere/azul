@@ -211,7 +211,8 @@ class Plugin(RepositoryPlugin[
             HCAFile.from_metadata(catalog=self.catalog,
                                   metadata=staging_area.metadata[file_uuid].content,
                                   descriptor=descriptor.content,
-                                  drs_uri=None)
+                                  drs_uri=None,
+                                  source=source)
             for file_uuid, descriptor in staging_area.descriptors.items()
             if descriptor.content['sha256'].lower().startswith(prefix)
         ]

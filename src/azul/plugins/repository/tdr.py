@@ -27,6 +27,7 @@ from azul import (
 from azul.auth import (
     Authentication,
     OAuth2,
+    indexer_authentication,
 )
 from azul.drs import (
     AccessMethod,
@@ -108,7 +109,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
         """
         # The line below raises UnauthorizedError for invalid tokens. We don't
         # want to fall back to anonymous authentication in that case.
-        tdr = self._user_authenticated_tdr(authentication)
+        tdr = self._authenticated_tdr(authentication)
         try:
             return tdr_callback(tdr)
         except UnauthorizedError:
@@ -116,7 +117,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                 raise
             else:
                 log.info('Falling back to anonymous access')
-                tdr = self._user_authenticated_tdr(None)
+                tdr = self._authenticated_tdr(None)
                 return tdr_callback(tdr)
 
     @cached_property
@@ -178,17 +179,15 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
 
     @classmethod
     @cache_per_thread
-    def _user_authenticated_tdr(cls,
-                                authentication: Authentication | None
-                                ) -> TDRClient:
+    def _authenticated_tdr(cls, authentication: Authentication | None) -> TDRClient:
         if authentication is None:
-            tdr = TDRClient.for_anonymous_user()
+            return TDRClient.for_anonymous_user()
+        elif authentication is indexer_authentication:
+            return cls._tdr()
         elif isinstance(authentication, OAuth2):
-            tdr = TDRClient.for_registered_user(authentication)
+            return TDRClient.for_registered_user(authentication)
         else:
-            raise PermissionError('Unsupported authentication format',
-                                  type(authentication))
-        return tdr
+            raise PermissionError('Unsupported authentication', type(authentication))
 
     def _lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec)
@@ -224,7 +223,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
         # Authenticate only if the DRS server is TDR so that we don't leak user
         # or service account tokens to untrusted servers.
         if (drs_url.scheme, drs_url.host) == (tdr_url.scheme, tdr_url.host):
-            drs_client = self._user_authenticated_tdr(authentication)
+            drs_client = self._authenticated_tdr(authentication)
         else:
             drs_client = self._unauthenticated_drs
         return drs_client.drs_object(drs_url)

@@ -204,6 +204,8 @@ class Config:
 
     mirror_term = 'mirror'
 
+    ma_mirror_term = 'mamirror'
+
     current = Sentinel()
 
     def alb_access_log_path_prefix(self,
@@ -1821,6 +1823,10 @@ class Config:
     @property
     def mirror_bucket(self) -> str | None:
         return self.environ.get('AZUL_MIRROR_BUCKET')
+
+    @property
+    def ma_mirror_bucket(self) -> str | None:
+        return self.environ.get('AZUL_MANAGED_ACCESS_MIRROR_BUCKET')
 
     @property
     def enable_bundle_notifications(self):

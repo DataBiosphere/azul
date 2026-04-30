@@ -244,6 +244,7 @@ class StorageServiceTestCase(S3TestCase):
 
 class MirrorTestCase(S3TestCase):
     mirror_bucket = 'test-mirror-bucket'
+    ma_mirror_bucket = 'test-ma-mirror-bucket'
 
     def setUp(self):
         super().setUp()
@@ -253,7 +254,11 @@ class MirrorTestCase(S3TestCase):
         self.addPatch(patch.object(type(config),
                                    'mirror_bucket',
                                    new=PropertyMock(return_value=self.mirror_bucket)))
+        self.addPatch(patch.object(type(config),
+                                   'ma_mirror_bucket',
+                                   new=PropertyMock(return_value=self.ma_mirror_bucket)))
         self._create_test_bucket(self.mirror_bucket)
+        self._create_test_bucket(self.ma_mirror_bucket)
 
     @classmethod
     def _patch_mirror_limit(cls,
