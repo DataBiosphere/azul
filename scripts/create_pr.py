@@ -34,16 +34,31 @@ def _issue_number(branch: str) -> int:
     return int(m.group(1))
 
 
-def _issue_title(issue_number: int) -> str:
+def _issue_info(issue_number: int) -> tuple[str, str]:
     result = subprocess.run(
-        ['gh', 'issue', 'view', str(issue_number), '--json', 'title', '--jq', '.title'],
+        [
+            'gh', 'api', 'graphql',
+            '-f', 'query=' + fd('''
+                {{
+                    repository(owner: "{owner}", name: "azul") {{
+                        issue(number: {number}) {{
+                            title
+                            issueType {{ name }}
+                        }}
+                    }}
+                }}
+            ''', owner=_project_owner, number=issue_number),
+        ],
         capture_output=True, text=True, check=True
     )
-    return result.stdout.strip()
+    issue = json.loads(result.stdout)['data']['repository']['issue']
+    issue_type = issue['issueType']
+    return issue['title'], issue_type['name'] if issue_type else ''
 
 
-def _pr_title(issue_number: int, issue_title: str) -> str:
-    return f'{issue_title} (#{issue_number})'
+def _pr_title(issue_number: int, issue_title: str, fix: bool) -> str:
+    prefix = 'Fix: ' if fix else ''
+    return f'{prefix}{issue_title} (#{issue_number})'
 
 
 def _check_task(body: str, task: str) -> str:
@@ -61,6 +76,13 @@ def main(argv):
                         choices=templates,
                         help='Name of the PR template to use. '
                              'If omitted, the default template is used.')
+    fix_group = parser.add_mutually_exclusive_group()
+    fix_group.add_argument('--fix',
+                           action='store_true', default=None,
+                           help='Prefix the PR title with "Fix: ".')
+    fix_group.add_argument('--no-fix',
+                           action='store_false', dest='fix',
+                           help='Do not prefix the PR title with "Fix: ".')
     args = parser.parse_args(argv)
 
     if args.template is None:
@@ -70,7 +92,12 @@ def main(argv):
 
     branch = _current_branch()
     issue_number = _issue_number(branch)
-    title = _pr_title(issue_number, _issue_title(issue_number))
+    issue_title, issue_type = _issue_info(issue_number)
+    if args.fix is None:
+        fix = issue_type == 'Defect'
+    else:
+        fix = args.fix
+    title = _pr_title(issue_number, issue_title, fix)
 
     body = template_path.read_text()
     body = body.replace('#0000', f'#{issue_number}', 1)
