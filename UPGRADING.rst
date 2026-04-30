@@ -19,6 +19,30 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#7794 Use requester-pays for mirroring in AnVIL deployments
+===========================================================
+
+For each of your personal deployments colocated with ``anvildev``:
+
+1. Ask the system administrator to add both your deployment's public service
+   account and indexer service account to the ``azul-requester_pays-anvilbox``
+   Terra workspace and assign them the role of "Writer". You can find the
+   service accounts' emails by running ::
+
+    # public service account
+    python -c 'from azul.terra import TDRClient; print(TDRClient.for_anonymous_user().credentials.service_account_email)'
+
+    # indexer service account
+    python -c 'from azul.terra import TDRClient; print(TDRClient.for_indexer().credentials.service_account_email)'
+
+2. Ask the system administrator to add your deployment's public service account
+   to the ``azul-anvil-public-dev`` Terra group.
+
+3. Set the ``AZUL_TDR_REQUESTER_PAYS_PROJECT`` variable in ``environment.py``
+   to the Google Project ID of the Terra workspace ``azul-requester_pays-anvilbox``.
+   As always, use the sandbox deployment's ``environment.py`` as a model when
+   upgrading personal deployments.
+
 
 #7993 Tighten verification of access tokens
 ===========================================
