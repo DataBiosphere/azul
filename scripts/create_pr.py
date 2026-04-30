@@ -64,8 +64,10 @@ def _pr_title(issue_number: int, issue_title: str, fix: bool) -> str:
 def _check_task(body: str, task: str) -> str:
     old = f'- [ ] {task}'
     new = f'- [x] {task}'
-    assert old in body, R('Task item not found in template', task)
-    return body.replace(old, new, 1)
+    if old in body:
+        return body.replace(old, new, 1)
+    assert new in body, R('Task item not found in template', task)
+    return body
 
 
 def main(argv):
@@ -99,32 +101,64 @@ def main(argv):
         fix = args.fix
     title = _pr_title(issue_number, issue_title, fix)
 
-    body = template_path.read_text()
-    body = body.replace('#0000', f'#{issue_number}', 1)
+    existing_pr = _existing_pr()
+
+    if existing_pr is None:
+        body = template_path.read_text()
+    else:
+        body = existing_pr['body']
+    body, n = re.subn(r'^Linked issues: *#\d{1,5}',
+                      f'Linked issues: #{issue_number}',
+                      body, flags=re.MULTILINE)
+    assert n > 0, R('Linked issues reference not found in body')
+
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, 'Status of PR is *In progress*')
     body = _check_task(body, 'Status of linked issues is *In progress*')
     body = _check_task(body, 'PR description links to linked issues')
 
-    result = subprocess.run(
-        [
-            'gh', 'pr', 'create',
-            '--title', title,
-            '--body', body,
-            '--assignee', '@me',
-        ],
-        capture_output=True, text=True
-    )
-    sys.stdout.write(result.stdout)
-    sys.stderr.write(result.stderr)
-    if result.returncode != 0:
-        sys.exit(result.returncode)
+    if existing_pr is None:
+        result = subprocess.run(
+            [
+                'gh', 'pr', 'create',
+                '--title', title,
+                '--body', body,
+                '--assignee', '@me',
+            ],
+            capture_output=True, text=True
+        )
+        sys.stdout.write(result.stdout)
+        sys.stderr.write(result.stderr)
+        if result.returncode != 0:
+            sys.exit(result.returncode)
+        pr_url = result.stdout.strip()
+    else:
+        pr_url = existing_pr['url']
+        subprocess.run(
+            [
+                'gh', 'pr', 'edit', pr_url,
+                '--title', title,
+                '--body', body,
+                '--add-assignee', '@me',
+            ],
+            capture_output=True, text=True, check=True
+        )
+        print(pr_url)
 
-    pr_url = result.stdout.strip()
     pr_node_id = _node_id('pr', pr_url)
     issue_node_id = _node_id('issue', str(issue_number))
     _set_status(pr_node_id, 'In Progress')
     _set_status(issue_node_id, 'In Progress')
+
+
+def _existing_pr() -> dict | None:
+    result = subprocess.run(
+        ['gh', 'pr', 'view', '--json', 'url,body'],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        return None
+    return json.loads(result.stdout)
 
 
 def _node_id(kind: str, ref: str) -> str:
