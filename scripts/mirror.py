@@ -5,6 +5,9 @@ mirroring bucket.
 import argparse
 import logging
 import sys
+from typing import (
+    Iterable,
+)
 
 from azul import (
     CatalogName,
@@ -23,6 +26,9 @@ from azul.lib import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.source import (
+    Source,
+)
 
 log = logging.getLogger(__name__)
 
@@ -36,31 +42,32 @@ def mirror_catalog(azul: AzulClient,
         'Cannot begin mirroring because a previous operation failed: '
         'there are still messages in the fail queue.',
         fail_queue)
+    public_sources = azul.source_service.list_sources(catalog,
+                                                      authentication=None)
     public_sources_by_spec = {
-        source.spec: source
-        for source in azul.source_service.list_sources(catalog, authentication=None)
+        source.ref.spec: source
+        for source in public_sources
     }
+
     # When the user doesn't specify a source or provides "*" as a source glob,
     # we implicitly filter out managed-access sources. This lets us assert that
     # all sources matching the provided globs are public, without forcing the
     # user to manually specify every public source.
+    sources: Iterable[Source]
     if '*' in source_globs:
-        source_specs = azul.repository_plugin(catalog).sources
-        source_refs = {
-            source: source_specs[spec]
-            for spec, source in public_sources_by_spec.items()
-        }
+        sources = public_sources_by_spec.values()
     else:
-        source_specs = azul.matching_sources([catalog], source_globs)[catalog]
+        configs_by_spec = azul.matching_sources([catalog], source_globs)[catalog]
         try:
-            source_refs = {
-                public_sources_by_spec[spec]: cfg
-                for spec, cfg in source_specs.items()
-            }
+            sources = [
+                public_sources_by_spec[spec]
+                for spec in configs_by_spec.keys()
+            ]
         except KeyError as e:
             assert False, R(
                 'Cannot mirror managed-access source', e.args[0])
-    azul.mirror_service(catalog).mirror_sources(source_refs.items())
+
+    azul.mirror_service(catalog).mirror_sources(sources)
 
     if wait:
         azul.wait_for_mirroring()

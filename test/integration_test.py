@@ -103,7 +103,6 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
-    SourceConfig,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -145,7 +144,7 @@ from azul.modules import (
     load_script,
 )
 from azul.oauth2 import (
-    OAuth2Client,
+    CredentialedClient,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -174,6 +173,8 @@ from azul.service.manifest_service import (
 )
 from azul.source import (
     Prefix,
+    Source,
+    SourceConfig,
     SourceRef,
     SourceSpec,
 )
@@ -311,7 +312,7 @@ class IntegrationTestCase(AzulTestCase):
                        *,
                        public: bool | None = None,
                        mirror: bool = False,
-                       ) -> tuple[SourceRef, SourceConfig] | None:
+                       ) -> Source | None:
         """
         Choose an indexed source at random.
 
@@ -363,8 +364,8 @@ class IntegrationTestCase(AzulTestCase):
             assert public is False, 'An IT catalog must contain at least one public source'
             return None
         else:
-            source, cfg = self.random.choice(sorted(sources.items()))
-            return plugin.resolve_source(source), cfg
+            source, config = self.random.choice(sorted(sources.items()))
+            return Source(ref=plugin.resolve_source(source), config=config)
 
 
 class IndexingIntegrationTest(IntegrationTestCase):
@@ -479,7 +480,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         catalogs: list[Catalog] = []
         for catalog in config.integration_test_catalogs.values():
             if index:
-                public_source, _ = self._select_source(
+                public_source = self._select_source(
                     catalog.name,
                     public=True,
                     # If test_mirroring is run for the catalog, ensure that the
@@ -490,10 +491,9 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     #        https://github.com/DataBiosphere/azul/issues/7955
                     #
                     mirror=True and self._mirror_service(catalog.name).may_mirror()
-                )
+                ).ref
                 ma_source = self._select_source(catalog.name, public=False)
-                if ma_source is not None:
-                    ma_source = ma_source[0]
+                ma_source = None if ma_source is None else ma_source.ref
                 sources = alist(public_source, ma_source)
                 notifications, fqids = self._prepare_notifications(catalog.name, sources)
             else:
@@ -895,36 +895,36 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     @property
     def _service_account_credentials(self) -> ContextManager:
-        client = self._service_account_oauth2_client
+        client = self._service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _service_account_oauth2_client(self):
+    def _service_account_client(self):
         provider = self._tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @property
     def _public_service_account_credentials(self) -> ContextManager:
-        client = self._public_service_account_oauth2_client
+        client = self._public_service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _public_service_account_oauth2_client(self):
+    def _public_service_account_client(self):
         provider = self._public_tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @property
     def _unregistered_service_account_credentials(self) -> ContextManager:
-        client = self._unregistered_service_account_oauth2_client
+        client = self._unregistered_service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _unregistered_service_account_oauth2_client(self):
+    def _unregistered_service_account_client(self):
         provider = self._unregistered_tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @contextmanager
-    def _authorization_context(self, oauth2_client: OAuth2Client) -> ContextManager:
+    def _authorization_context(self, oauth2_client: CredentialedClient) -> ContextManager:
         old_http = self._http
         try:
             self._http = oauth2_client._http_client
@@ -1509,7 +1509,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
-        invalid_client = OAuth2Client(credentials_provider=invalid_provider)
+        invalid_client = CredentialedClient(credentials_provider=invalid_provider)
         with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 
@@ -1995,7 +1995,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        source, _ = self._select_source(catalog)
+        source = self._select_source(catalog).ref
         # The plugin will raise an exception if the source lacks a prefix
         source = source.with_prefix(Prefix.of_everything)
         bundle_fqids = self.azul_client.repository_service.list_bundles(catalog, source, prefix='')

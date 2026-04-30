@@ -29,9 +29,6 @@ from azul.deployment import (
 from azul.http import (
     http_client,
 )
-from azul.indexer import (
-    SourceConfig,
-)
 from azul.indexer.mirror_controller import (
     MirrorController,
 )
@@ -64,6 +61,9 @@ from azul.queues import (
 )
 from azul.service.source_service import (
     SourceService,
+)
+from azul.source import (
+    SourceConfig,
 )
 from azul_test_case import (
     DCP2TestCase,
@@ -99,7 +99,7 @@ class TestMirrorController(DCP2TestCase,
         super().setUpClass()
         cls.addClassPatch(patch.object(SourceService,
                                        'list_source_ids',
-                                       return_value={cls.source.id}))
+                                       return_value={cls.source.ref.id}))
         cls.addClassPatch(patch.object(MirrorAction,
                                        '_operation_id',
                                        return_value=cls._operation_id))
@@ -118,7 +118,7 @@ class TestMirrorController(DCP2TestCase,
         return dict(action='MirrorFileAction',
                     catalog=self.catalog,
                     operation_id=self._operation_id,
-                    source=self.source.to_json(),
+                    source=self.source.ref.to_json(),
                     prefix='00',
                     file=file.to_json())
 
@@ -174,8 +174,10 @@ class TestMirrorController(DCP2TestCase,
     def _mirror_event(self, body: JSON) -> list[SQSRecord]:
         return [self._mock_sqs_record(body, fifo=True)]
 
-    def _mirror_sources(self, source_config=SourceConfig(mirror=True)) -> MutableJSONs:
-        self._service.mirror_sources([(self.source, source_config)])
+    def _mirror_sources(self, *, enable=True) -> MutableJSONs:
+        source_config = SourceConfig(mirror=enable)
+        source = attrs.evolve(self.source, config=source_config)
+        self._service.mirror_sources([source])
         return self._read_mirror_queue()
 
     def _patch_download(self, **kwargs) -> ContextManager:
@@ -186,7 +188,7 @@ class TestMirrorController(DCP2TestCase,
         expected_message = dict(action='MirrorSourceAction',
                                 catalog=self.catalog,
                                 operation_id=self._operation_id,
-                                source=self.source.to_json())
+                                source=self.source.ref.to_json())
         self.assertEqual(expected_message, source_message)
         return source_message
 
@@ -201,9 +203,9 @@ class TestMirrorController(DCP2TestCase,
             self.assertEqual(dict(action='MirrorPartitionAction',
                                   catalog=self.catalog,
                                   operation_id=self._operation_id,
-                                  source=self.source.to_json()),
+                                  source=self.source.ref.to_json()),
                              message)
-        self.assertEqual(list(self.source.prefix.partition_prefixes()), partitions)
+        self.assertEqual(list(self.source.ref.prefix.partition_prefixes()), partitions)
         return partition_message
 
     def _test_mirror_partition(self, partition_message, files: list[HCAFile]):
@@ -315,7 +317,7 @@ class TestMirrorController(DCP2TestCase,
         self._create_mock_queues(config.mirror_queue_names)
 
         with self.subTest(no_mirror=True):
-            messages = self._mirror_sources(SourceConfig(mirror=False))
+            messages = self._mirror_sources(enable=False)
             self.assertEqual([], messages)
 
         with self.subTest(mirror_limit=-1):

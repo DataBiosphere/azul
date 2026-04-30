@@ -537,3 +537,7 @@ def nullable(t: Form, for_openapi: bool = True) -> JSON:
         return {**schema(t), 'nullable': True}
     else:
         return union(None, t, for_openapi=False)
+
+
+def describe(t: Form, description: str) -> JSON:
+    return {**schema(t), 'description': description}

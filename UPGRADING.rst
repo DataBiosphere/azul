@@ -20,6 +20,24 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#7954 Implement authorization code flow with Azul and Data Browser
+==================================================================
+
+Everyone
+--------
+
+Make sure that the OAuth 2.0 client for each of your personal deployments has
+the authorized JavaScript origins and redirect URIs specified in README section
+3.2.2. There should be one entry for the Swagger UI, one for the deployed
+instance of the Data Browser and one for a locally running instance of the
+latter.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments.
+
+
 #7950 Store OAuth2 client secret in AWS Secrets Manager
 =======================================================
 

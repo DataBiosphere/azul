@@ -8,6 +8,7 @@ from collections.abc import (
 import json
 import logging
 from typing import (
+    NotRequired,
     TypedDict,
 )
 
@@ -33,8 +34,123 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.types import (
+    JSONTypedDict,
+    is_of_type,
+)
 
 log = logging.getLogger(__name__)
+
+
+class Authorization(JSONTypedDict):
+    """
+    The response from the authorization server's authorization endpoint
+    (https://accounts.google.com/o/oauth2/v2/auth) in case the user has
+    granted the authorization request. In a traditional authorization code
+    flow, this information is encoded in the redirect URL as query
+    parameters. With the Google Sign-In Javascript library, the callback is
+    invoked with a JSON object of this shape, as documented in
+
+    https://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse
+    """
+    #: The authorization code, a temporary secret that indicates the user's
+    #: consent, authorizing the application represented by the client ID to
+    #: access resources owned by the user
+    code: str
+    #: Space-separated list of scopes granted by the user, which may be a subset
+    #: of those requested by the application
+    scope: str
+    #: Optional, application-defined state that the authorization server passes
+    #: through to from the request to the response
+    state: NotRequired[str]
+
+
+class TokenResponse(JSONTypedDict):
+    access_token: str
+    expires_in: int
+    #: See `:attr:Authorization.scope`
+    scope: str
+    #: Should always be 'Bearer'
+    token_type: str
+    #: A JWT token identifying the user, only present if the authorization code
+    #: was requested for the `openid` scope, and if the user granted that scope
+    id_token: NotRequired[str]
+
+
+class TokenForCodeResponse(TokenResponse):
+    #: A long term secret that can be used to obtain more access tokens
+    refresh_token: str
+    #: Only present when the user grants time-based access
+    refresh_token_expires_in: NotRequired[int]
+
+
+class TokenInfoResponse(TypedDict):
+    azp: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
+    aud: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
+    sub: str  # "105096702580025601450",
+    scope: str  # "https://www.googleapis.com/auth/userinfo.email openid",
+    exp: str  # "1689645319",
+    expires_in: str  # "3511",
+    email: str  # "hannes@ucsc.edu",
+    email_verified: str  # "true",
+    access_type: str  # "online"
+
+
+class OAuth2Client(HasCachedHttpClient):
+    """
+    A client for Google's implementation of the OAuth 2.0 authorization server
+    API.
+    """
+
+    def token_for_code(self,
+                       *,
+                       authorization_code: str,
+                       client_id: str,
+                       client_secret: str,
+                       ) -> TokenForCodeResponse:
+        """
+        Obtain an OAuth 2.0 refresh token in exchange for an authorization code.
+        This interaction is part of the authorization code flow. Note that this
+        method does not support redirects. In other words, it only considers a
+        200 status response to indicate success.
+
+        :param authorization_code: a temporary secret that indicates the user's
+                                   consent, authorizing the application
+                                   represented by the client ID to access
+                                   resources owned by the user
+
+        :param client_id: identifies the application authorized by the user
+
+        :param client_secret: proof that the requestor is part of the application
+        """
+        fields = {
+            'grant_type': 'authorization_code',
+            'code': authorization_code,
+            'client_id': client_id,
+            'client_secret': client_secret,
+            # crucial, but barely documented
+            # https://stackoverflow.com/a/48121098/4171119
+            'redirect_uri': 'postmessage'
+        }
+        url = furl('https://oauth2.googleapis.com/token')
+        response = self._http_client.request('POST', str(url), fields=fields)
+        assert response.status == 200, R(
+            'Unexpected status of response from authorization server', response.status)
+        response = json.loads(response.data)
+        assert is_of_type(response, TokenForCodeResponse)
+        assert response['token_type'] == 'Bearer'
+        return response
+
+    def token_info(self, access_token: str) -> TokenInfoResponse:
+        url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
+                   args=dict(access_token=access_token))
+        response = self._http_client.request('GET', str(url))
+        assert response.status != 400, R('The token is not valid')
+        assert response.status == 200, R('Unexpected response status', response.status)
+        response = json.loads(response.data)
+        assert is_of_type(response, TokenInfoResponse)
+        return response
+
 
 TokenCredentials = google.oauth2.credentials.Credentials
 ServiceAccountCredentials = google.oauth2.service_account.Credentials
@@ -52,21 +168,17 @@ class CredentialsProvider(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class TokenInfo(TypedDict):
-    azp: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
-    aud: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
-    sub: str  # "105096702580025601450",
-    scope: str  # "https://www.googleapis.com/auth/userinfo.email openid",
-    exp: str  # "1689645319",
-    expires_in: str  # "3511",
-    email: str  # "hannes@ucsc.edu",
-    email_verified: str  # "true",
-    access_type: str  # "online"
-
-
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class OAuth2Client(HasCachedHttpClient):
+class CredentialedClient(HasCachedHttpClient):
+    """
+    Instances of this class have a cached, authenticating HTTP client.
+    """
+
     credentials_provider: CredentialsProvider
+
+    @cached_property
+    def _oauth_client(self) -> OAuth2Client:
+        return OAuth2Client()
 
     @property
     def credentials(self) -> ScopedCredentials:
@@ -107,13 +219,6 @@ class OAuth2Client(HasCachedHttpClient):
                               self._PoolManagerAdapter(super()._create_http_client()),
                               refresh_status_codes=())
 
-    @cached_property
-    def _http_client_without_credentials(self) -> HttpClient:
-        """
-        A urllib3 HTTP client for making unauthenticated requests
-        """
-        return super()._create_http_client()
-
     def validate(self):
         """
         Validate the credentials from the provider this client was initialized
@@ -138,13 +243,7 @@ class OAuth2Client(HasCachedHttpClient):
         :raise Exception: if the validity of the token cannot be determined
         """
         credentials = self.credentials
-        url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
-                   args=dict(access_token=str(credentials.token)))
-        response = self._http_client_without_credentials.request('GET', str(url))
-        assert response.status != 400, R('The token is not valid')
-        assert response.status == 200, R(
-            'Unexpected response status', response.status)
-        token_info: TokenInfo = json.loads(response.data)
+        token_info = self._oauth_client.token_info(str(credentials.token))
         # The error messages here intentionally lack detail, for confidentiality
         if isinstance(credentials, ServiceAccountCredentials):
             # Actual service account credentials

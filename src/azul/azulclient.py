@@ -39,9 +39,6 @@ from azul.hmac import (
 from azul.http import (
     HasCachedHttpClient,
 )
-from azul.indexer import (
-    SourceConfig,
-)
 from azul.indexer.index_queue_service import (
     IndexQueueService,
 )
@@ -77,6 +74,7 @@ from azul.service.source_service import (
     SourceService,
 )
 from azul.source import (
+    SourceConfig,
     SourceSpec,
 )
 

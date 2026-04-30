@@ -125,7 +125,7 @@ class Config:
         self.environ['AZUL_DEBUG'] = str(debug)
 
     def _validate_debug(self, debug):
-        assert debug in (0, 1, 2), R('AZUL_DEBUG must be either 0, 1 or 2')
+        assert debug in (0, 1, 2, 3), R('AZUL_DEBUG must be either 0, 1, 2 or 3')
 
     _opensearch_endpoint_env_name = 'AZUL_OPENSEARCH_ENDPOINT'
 

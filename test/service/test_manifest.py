@@ -280,7 +280,7 @@ class ManifestTestCase(WebServiceTestCase,
         super().tearDown()
 
     def _filters(self, filters: FiltersJSON) -> Filters:
-        return Filters(explicit=filters, source_ids={self.source.id})
+        return Filters(explicit=filters, source_ids={self.source.ref.id})
 
     @property
     def _controller(self) -> ManifestController:
@@ -520,8 +520,8 @@ class TestManifests(DCP1ManifestTestCase):
 
     def test_compact_manifest(self):
         expected = [
-            ('source_id', self.source.id, self.source.id),
-            ('source_spec', str(self.source.spec), str(self.source.spec)),
+            ('source_id', self.source.ref.id, self.source.ref.id),
+            ('source_spec', str(self.source.ref.spec), str(self.source.ref.spec)),
             ('bundle_uuid',
              'b81656cf-231b-47a3-9317-10f1e501a05c || f79257a7-dfc6-46d6-ae00-ba4b25313c10',
              'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
@@ -1386,7 +1386,7 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
                     expect_relations = (
                         enable_relations
                         and expect_orphans
-                        and not self.source.prefix.common
+                        and not self.source.ref.prefix.common
                     )
                     expected_manifest = self._expected_pfb_manifest(expect_orphans, expect_relations)
                     expected_schema, expected_entities = expected_manifest
@@ -1813,7 +1813,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 with self._patch_mirror_limit(self.catalog, mirror_limit):
                     response = self._get_manifest(ManifestFormat.curl,
                                                   # Redundant filter to avoid caching
-                                                  filters={'source_id': {'is': [self.source.id] * i}})
+                                                  filters={'source_id': {'is': [self.source.ref.id] * i}})
                 self.assertEqual(200, response.status_code)
                 base_url = str(self.base_url.set(path='/repository/files'))
                 expected_body = [
@@ -1959,7 +1959,6 @@ class TestVerbatimJSONLManifestPartitioningBySource(DCP1ManifestTestCase):
                        })
 
     def test_manifest_partitioning_by_source(self):
-
         # We can't assert the presence of every entity from the indexed bundles
         # because some HCA entities still lack replicas.
         #

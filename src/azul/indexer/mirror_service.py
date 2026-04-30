@@ -47,9 +47,6 @@ from azul.drs import (
 from azul.http import (
     HasCachedHttpClient,
 )
-from azul.indexer import (
-    SourceConfig,
-)
 from azul.lib import (
     R,
     cached_property,
@@ -93,6 +90,7 @@ from azul.service.storage_service import (
     StorageService,
 )
 from azul.source import (
+    Source,
     SourceRef,
     SourceSpec,
 )
@@ -369,7 +367,7 @@ class MirrorService:
                 public_sources = self._source_service.list_sources(self.catalog,
                                                                    authentication=None)
                 is_public = any(
-                    source_spec == source.spec
+                    source_spec == source.ref.spec
                     for source in public_sources
                 )
                 return is_public
@@ -392,18 +390,18 @@ class MirrorService:
         else:
             return False
 
-    def mirror_sources(self, sources: Iterable[tuple[SourceRef, SourceConfig]]):
+    def mirror_sources(self, sources: Iterable[Source]):
         if self.may_mirror():
             def actions():
-                for source, source_config in sources:
-                    if source_config.mirror:
+                for source in sources:
+                    if source.config.mirror:
                         log.info('Mirroring files in source %r from catalog %r',
-                                 str(source.spec), self.catalog)
-                        yield MirrorSourceAction(catalog=self.catalog, source=source)
+                                 str(source.ref.spec), self.catalog)
+                        yield MirrorSourceAction(catalog=self.catalog, source=source.ref)
                     else:
                         log.info('Not mirroring any files in source %r from catalog %r because '
                                  'mirroring is explicitly disabled',
-                                 str(source.spec), self.catalog)
+                                 str(source.ref.spec), self.catalog)
 
             self._queue_actions(actions())
         else:

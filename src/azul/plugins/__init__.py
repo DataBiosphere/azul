@@ -44,7 +44,6 @@ from azul.drs import (
 )
 from azul.indexer import (
     Bundle,
-    SourceConfig,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -89,6 +88,7 @@ from azul.lib.uuids import (
 )
 from azul.source import (
     Prefix,
+    SourceConfig,
     SourceRef,
     SourceSpec,
 )
@@ -319,7 +319,7 @@ class Plugin[BUNDLE: Bundle](metaclass=ABCMeta):
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = getattr(plugin_module, 'Plugin')
-        assert issubclass(plugin_cls, cls)
+        assert issubclass(plugin_cls, cls), (plugin_cls, cls)
         return plugin_cls
 
 
@@ -633,10 +633,25 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         raise NotImplementedError
 
 
+# Without slots=False, attrs creates a copy of the class as opposed to
+# augmenting the original. A weak reference to the original remains present in
+# the __subclasses__ attribute of the superclass until a GC run is performed.
+# The attrs documentation explicitly mentions this caveat:
+#
+# > The type.__subclasses__ attribute needs a garbage collection run (which can
+# > be manually triggered using gc.collect()), for the original class to be
+# > removed.
+#
+# https://www.attrs.org/en/stable/glossary.html#term-slotted-classes
+#
+# In our case, __subclasses__ is used by Plugin.types(), so any caller of that
+# may temporarily observe the left-over. This will cause problems like false
+# negatives in subclass checks like the one in Plugin._load.
+#
 # FIXME: Maybe remove the defaults after enabling mypy's disallow_any_generics
 #        https://github.com/DataBiosphere/azul/issues/7495
-
-@attrs.frozen(auto_attribs=True, kw_only=True)
+#
+@attrs.frozen(auto_attribs=True, kw_only=True, slots=False)
 class RepositoryPlugin[BUNDLE: Bundle = Bundle[SourcedBundleFQID],
                        SOURCE_SPEC: SourceSpec = SourceSpec,
                        SOURCE_REF: SourceRef = SourceRef[SourceSpec],

@@ -107,7 +107,7 @@ def setUpModule():
 @mock_aws
 class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
     source = DCP2TestCase.source.with_prefix(
-        attrs.evolve(DCP2TestCase.source.prefix,
+        attrs.evolve(DCP2TestCase.source.ref.prefix,
                      partition=0)
     )
 
@@ -149,7 +149,7 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
     @patch.object(RepositoryPlugin, 'partition_source_for_indexing')
     @patch.object(TDRPlugin, 'resolve_source')
     def test_index_catalog(self, resolve_source, partition_source):
-        source = self.source
+        source = self.source.ref
         resolve_source.return_value = attrs.evolve(source, prefix=None)
         partition_source.return_value = source
         plugin = self.index_repository_service.repository_plugin(self.catalog)
@@ -192,7 +192,7 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
         """
         self.maxDiff = None
         self._create_mock_queues(config.indexer_queue_names)
-        source = self.source
+        source = self.source.ref
         fqids = [
             TDRBundleFQID(source=source,
                           uuid='4426adc5-b3c5-5aab-ab86-51d8ce44dfbe',
