@@ -100,8 +100,8 @@ def _check_task(body: str, task: str) -> str:
                           body, count=1, flags=re.MULTILINE)
     if n > 0:
         return body_new
-    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), \
-        R('Task item not found in template', task)
+    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), R(
+        'Task item not found in template', task)
     return body
 
 
