@@ -107,11 +107,11 @@ def _check_task(body: str, task: str) -> str:
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Create a pull request')
-    parser.add_argument('--template', '-t',
+    parser.add_argument('--type', '-t',
                         default=None,
                         choices=['upgrade', 'promotion'],
-                        help='Name of the PR template to use. '
-                             'If omitted, the default template is used.')
+                        help='Type of PR to create. '
+                             'If omitted, a regular PR is created.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -120,21 +120,21 @@ def main(argv):
                            action='store_false', dest='fix',
                            help='Do not prefix the PR title with "Fix: ".')
     args = parser.parse_args(argv)
-    if args.template is not None and args.fix is not None:
-        parser.error('--fix/--no-fix cannot be used with --template')
+    if args.type is not None and args.fix is not None:
+        parser.error('--fix/--no-fix cannot be used with --type')
 
     branch = _current_branch()
     title_suffix = ''
-    if args.template is None:
+    if args.type is None:
         template_path = _project_root / '.github' / 'pull_request_template.md'
         issue_number = _issue_number(branch)
-    elif args.template == 'upgrade':
+    elif args.type == 'upgrade':
         template_path = _template_dir / 'upgrade.md'
         date = _upgrade_date(branch)
         issue_number = _issue_number_by_title(
             f'Upgrade software dependencies {date}'
         )
-    elif args.template == 'promotion':
+    elif args.type == 'promotion':
         date, target = _promotion_date_and_target(branch)
         template_path = _template_dir / f'{target}-promotion.md'
         issue_number = _issue_number_by_title(
@@ -142,7 +142,7 @@ def main(argv):
         )
         title_suffix = f' {target}'
     else:
-        assert False, R('Unsupported template', args.template)
+        assert False, R('Unsupported template', args.type)
     issue_title, issue_type = _issue_info(issue_number)
     if args.fix is None:
         fix = issue_type == 'Defect'
