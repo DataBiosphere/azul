@@ -96,11 +96,10 @@ def _check_task(body: str, task: str) -> str:
 
 
 def main(argv):
-    templates = sorted(p.stem for p in _template_dir.glob('*.md'))
     parser = argparse.ArgumentParser(description='Create a pull request')
     parser.add_argument('--template', '-t',
                         default=None,
-                        choices=templates,
+                        choices=['upgrade'],
                         help='Name of the PR template to use. '
                              'If omitted, the default template is used.')
     fix_group = parser.add_mutually_exclusive_group()
