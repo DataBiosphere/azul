@@ -62,11 +62,13 @@ def _pr_title(issue_number: int, issue_title: str, fix: bool) -> str:
 
 
 def _check_task(body: str, task: str) -> str:
-    old = f'- [ ] {task}'
-    new = f'- [x] {task}'
-    if old in body:
-        return body.replace(old, new, 1)
-    assert new in body, R('Task item not found in template', task)
+    body_new, n = re.subn(r'^- \[ ] (' + task + ')$',
+                          r'- [x] \1',
+                          body, count=1, flags=re.MULTILINE)
+    if n > 0:
+        return body_new
+    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), \
+        R('Task item not found in template', task)
     return body
 
 
@@ -107,14 +109,16 @@ def main(argv):
         body = template_path.read_text()
     else:
         body = existing_pr['body']
+    # Normalize line endings from GitHub API responses
+    body = '\n'.join(body.splitlines())
     body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
                       rf'\1#{issue_number}',
                       body, flags=re.MULTILINE)
     assert n > 0, R('Linked issues reference not found in body')
 
     body = _check_task(body, 'PR is assigned to the author')
-    body = _check_task(body, 'Status of PR is *In progress*')
-    body = _check_task(body, 'Status of linked issues is *In progress*')
+    body = _check_task(body, r'Status of PR is \*In progress\*')
+    body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues')
 
     if existing_pr is None:
