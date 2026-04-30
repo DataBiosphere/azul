@@ -34,6 +34,29 @@ def _issue_number(branch: str) -> int:
     return int(m.group(1))
 
 
+def _upgrade_date(branch: str) -> str:
+    m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', branch)
+    assert m is not None, R('Cannot extract date from branch name', branch)
+    return m.group(1)
+
+
+def _issue_number_by_title(title: str) -> int:
+    result = subprocess.run(
+        [
+            'gh', 'issue', 'list',
+            '--search', f'{title} in:title',
+            '--state', 'all',
+            '--json', 'number,title',
+        ],
+        capture_output=True, text=True, check=True
+    )
+    issues = json.loads(result.stdout)
+    for issue in issues:
+        if issue['title'] == title:
+            return issue['number']
+    assert False, R('Issue not found with title', title)
+
+
 def _issue_info(issue_number: int) -> tuple[str, str]:
     result = subprocess.run(
         [
@@ -88,6 +111,8 @@ def main(argv):
                            action='store_false', dest='fix',
                            help='Do not prefix the PR title with "Fix: ".')
     args = parser.parse_args(argv)
+    if args.template is not None and args.fix is not None:
+        parser.error('--fix/--no-fix cannot be used with --template')
 
     if args.template is None:
         template_path = _project_root / '.github' / 'pull_request_template.md'
@@ -95,7 +120,13 @@ def main(argv):
         template_path = _template_dir / f'{args.template}.md'
 
     branch = _current_branch()
-    issue_number = _issue_number(branch)
+    if args.template == 'upgrade':
+        date = _upgrade_date(branch)
+        issue_number = _issue_number_by_title(
+            f'Upgrade software dependencies {date}'
+        )
+    else:
+        issue_number = _issue_number(branch)
     issue_title, issue_type = _issue_info(issue_number)
     if args.fix is None:
         fix = issue_type == 'Defect'
