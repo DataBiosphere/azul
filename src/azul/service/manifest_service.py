@@ -125,6 +125,7 @@ from azul.lib.collections import (
 )
 from azul.lib.functions import (
     compose,
+    iif,
 )
 from azul.lib.json import (
     copy_json,
@@ -573,13 +574,16 @@ class CachedManifestNotFound(Exception):
     manifest_key: ManifestKey
 
 
-@attrs.frozen(kw_only=True)
-class ManifestService(QueryService):
-    file_url_func: FileUrlFunc
+class BaseManifestService:
 
     @cached_property
     def storage_service(self) -> StorageService:
         return StorageService()
+
+
+@attrs.frozen(kw_only=True)
+class ManifestService(BaseManifestService, QueryService):
+    file_url_func: FileUrlFunc
 
     def get_manifest(self,
                      *,
@@ -787,7 +791,25 @@ class ManifestService(QueryService):
 type Cells = dict[str, str]
 
 
-class ManifestGenerator(metaclass=ABCMeta):
+class ManifestAccessor:
+    service: BaseManifestService
+
+    def __init__(self, service: BaseManifestService):
+        self.service = service
+
+    @property
+    def storage(self) -> StorageService:
+        return self.service.storage_service
+
+    @classmethod
+    def _manifest_prefix(cls, is_it: bool) -> str:
+        return 'manifests/' + iif(is_it, '_it/')
+
+    def delete_it_files(self):
+        self.storage.delete_prefix(self._manifest_prefix(is_it=True))
+
+
+class ManifestGenerator(ManifestAccessor, metaclass=ABCMeta):
     """
     A generator for manifests. A manifest is an exhaustive representation of
     the documents in the aggregate index for a particular entity type. The
@@ -798,6 +820,8 @@ class ManifestGenerator(metaclass=ABCMeta):
     # Note to implementors: all property getters in this class and its
     # descendants must be inexpensive. If a property getter performs and
     # expensive computation or I/O, it should cache its return value.
+
+    service: ManifestService
 
     @classmethod
     @abstractmethod
@@ -961,8 +985,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
         :param service: the service to use when querying the index
         """
-        super().__init__()
-        self.service = service
+        super().__init__(service)
         self.catalog = catalog
         self.filters = filters
         self.file_url_func = service.file_url_func
@@ -1009,7 +1032,8 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @classmethod
     def s3_object_key(cls, manifest_key: ManifestKey) -> str:
-        return 'manifests' + '/' + cls.s3_object_key_base(manifest_key)
+        is_it = config.catalogs[manifest_key.catalog].is_integration_test_catalog
+        return cls._manifest_prefix(is_it) + cls.s3_object_key_base(manifest_key)
 
     @classmethod
     def s3_object_key_base(cls, manifest_key: ManifestKey) -> str:
@@ -1265,10 +1289,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         :param partition: The partition to write.
         """
         raise NotImplementedError
-
-    @property
-    def storage(self) -> StorageService:
-        return self.service.storage_service
 
 
 class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
