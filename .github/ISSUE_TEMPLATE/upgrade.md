@@ -17,9 +17,21 @@ _period: 14 days
   - [ ] GH Action workflow succeeded
   - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm/tags) 
 - [ ] Update [BigQuery Emulator image](https://github.com/DataBiosphere/azul-bigquery-emulator)
-  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=trixie) `-slim` tag, if possible
-  - [ ] Bump internal version 
-  - [ ] Push commit to GitHub (directly to `azul` branch, no PR needed)
+  - [ ] Upgrade Go SDK in [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql)'s `go.mod` & `build.yml` <sub>or no update available</sub>
+  - [ ] Bump base image tag in [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql)'s `build.yml` <sub>or no update available</sub>
+  - [ ] Bump internal version in [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql)'s `build.yml`
+  - [ ] Commit and push to [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql) (directly to `azul` branch, no PR needed)
+  - [ ] Upgrade the `replace` directive for [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql) in [azul-go-zetasqlite](https://github.com/DataBiosphere/azul-go-zetasqlite)'s `go.mod`
+  - [ ] Upgrade Go SDK in [azul-go-zetasqlite](https://github.com/DataBiosphere/azul-go-zetasqlite)'s `go.mod` <sub>or no update available</sub>
+  - [ ] Update all dependencies in [azul-go-zetasqlite](https://github.com/DataBiosphere/azul-go-zetasqlite)'s `go.mod`
+  - [ ] Commit and push to [azul-go-zetasqlite](https://github.com/DataBiosphere/azul-go-zetasqlite) (directly to `azul` branch, no PR needed)
+  - [ ] Upgrade the `replace` directive for [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql) and [azul-go-zetasqlite](https://github.com/DataBiosphere/azul-go-zetasqlite) in [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator)'s `go.mod`
+  - [ ] Upgrade Go SDK in [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator)'s `go.mod` <sub>or no update available</sub>
+  - [ ] Update all dependencies in [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator)'s `go.mod`
+  - [ ] Upgrade base image reference to [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql) in [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator)'s `build.yml`
+  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=trixie) `-slim` tag in [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator)'s `build.yml`
+  - [ ] Bump internal version in [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator)'s `build.yml`
+  - [ ] Commit and push to [azul-bigquery-emulator](https://github.com/DataBiosphere/azul-bigquery-emulator) (directly to `azul` branch, no PR needed)
   - [ ] GH Action workflow succeeded
   - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator/tags) 
 - [ ] Create Azul PR, linked to this issue, with … 
