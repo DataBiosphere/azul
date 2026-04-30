@@ -150,7 +150,7 @@ def main(argv):
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
-    body = _check_task(body, 'PR description links to linked issues')
+    body = _check_task(body, 'PR description links to linked issues?')
 
     if existing_pr is None:
         result = subprocess.run(
