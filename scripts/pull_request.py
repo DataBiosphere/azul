@@ -107,8 +107,8 @@ def main(argv):
         body = template_path.read_text()
     else:
         body = existing_pr['body']
-    body, n = re.subn(r'^Linked issues: *#\d{1,5}',
-                      f'Linked issues: #{issue_number}',
+    body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
+                      rf'\1#{issue_number}',
                       body, flags=re.MULTILINE)
     assert n > 0, R('Linked issues reference not found in body')
 
