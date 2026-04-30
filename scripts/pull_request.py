@@ -40,6 +40,12 @@ def _upgrade_date(branch: str) -> str:
     return m.group(1)
 
 
+def _promotion_date_and_target(branch: str) -> tuple[str, str]:
+    m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', branch)
+    assert m is not None, R('Cannot extract date and target from branch name', branch)
+    return m.group(1), m.group(2)
+
+
 def _issue_number_by_title(title: str) -> int:
     result = subprocess.run(
         [
@@ -79,9 +85,13 @@ def _issue_info(issue_number: int) -> tuple[str, str]:
     return issue['title'], issue_type['name'] if issue_type else ''
 
 
-def _pr_title(issue_number: int, issue_title: str, fix: bool) -> str:
+def _pr_title(issue_number: int,
+              issue_title: str,
+              fix: bool,
+              suffix: str = ''
+              ) -> str:
     prefix = 'Fix: ' if fix else ''
-    return f'{prefix}{issue_title} (#{issue_number})'
+    return f'{prefix}{issue_title}{suffix} (#{issue_number})'
 
 
 def _check_task(body: str, task: str) -> str:
@@ -99,7 +109,7 @@ def main(argv):
     parser = argparse.ArgumentParser(description='Create a pull request')
     parser.add_argument('--template', '-t',
                         default=None,
-                        choices=['upgrade'],
+                        choices=['upgrade', 'promotion'],
                         help='Name of the PR template to use. '
                              'If omitted, the default template is used.')
     fix_group = parser.add_mutually_exclusive_group()
@@ -113,25 +123,32 @@ def main(argv):
     if args.template is not None and args.fix is not None:
         parser.error('--fix/--no-fix cannot be used with --template')
 
+    branch = _current_branch()
+    title_suffix = ''
     if args.template is None:
         template_path = _project_root / '.github' / 'pull_request_template.md'
-    else:
-        template_path = _template_dir / f'{args.template}.md'
-
-    branch = _current_branch()
-    if args.template == 'upgrade':
+        issue_number = _issue_number(branch)
+    elif args.template == 'upgrade':
+        template_path = _template_dir / 'upgrade.md'
         date = _upgrade_date(branch)
         issue_number = _issue_number_by_title(
             f'Upgrade software dependencies {date}'
         )
+    elif args.template == 'promotion':
+        date, target = _promotion_date_and_target(branch)
+        template_path = _template_dir / f'{target}-promotion.md'
+        issue_number = _issue_number_by_title(
+            f'Promotion {date}'
+        )
+        title_suffix = f' {target}'
     else:
-        issue_number = _issue_number(branch)
+        assert False, R('Unsupported template', args.template)
     issue_title, issue_type = _issue_info(issue_number)
     if args.fix is None:
         fix = issue_type == 'Defect'
     else:
         fix = args.fix
-    title = _pr_title(issue_number, issue_title, fix)
+    title = _pr_title(issue_number, issue_title, fix, suffix=title_suffix)
 
     existing_pr = _existing_pr()
 
