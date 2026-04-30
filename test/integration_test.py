@@ -1209,12 +1209,13 @@ class IndexingIntegrationTest(IntegrationTestCase):
             self.assertNotIn(str(config.tdr_service_url), msg)
             return None
         elif response.status == 403:
-            # FIXME: Treat this as an error if requester-pays is enabled
-            #        https://github.com/DataBiosphere/azul/issues/7794
             msg = json.loads(response.data)['Message']
             prefix = 'DRS server requires requester-pays for '
             self.assertEqual(prefix, msg[:len(prefix)])
-            return None
+            if config.tdr_requester_pays_project is None:
+                return None
+            else:
+                self.fail(msg)
         else:
             self.assertEqual(200, response.status)
             response = json.loads(response.data)
