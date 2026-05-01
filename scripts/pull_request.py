@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 from pathlib import (
     Path,
 )
@@ -13,6 +14,11 @@ from azul.lib import (
 from azul.lib.strings import (
     format_and_dedent as fd,
 )
+from azul.logging import (
+    configure_script_logging,
+)
+
+log = logging.getLogger(__name__)
 
 _project_root = Path(__file__).resolve().parent.parent
 _template_dir = _project_root / '.github' / 'PULL_REQUEST_TEMPLATE'
@@ -40,6 +46,7 @@ def main(argv):
 
     branch = _current_branch()
     _check_working_copy()
+    log.info('Checking remote branch …')
     _check_remote_branch(branch)
     title_suffix = ''
     if args.type is None:
@@ -48,18 +55,21 @@ def main(argv):
     elif args.type == 'upgrade':
         template_path = _template_dir / 'upgrade.md'
         date = _upgrade_date(branch)
+        log.info('Searching for upgrade issue …')
         issue_number = _issue_number_by_title(
             f'Upgrade software dependencies {date}'
         )
     elif args.type == 'promotion':
         date, target = _promotion_date_and_target(branch)
         template_path = _template_dir / f'{target}-promotion.md'
+        log.info('Searching for promotion issue …')
         issue_number = _issue_number_by_title(
             f'Promotion {date}'
         )
         title_suffix = f' {target}'
     else:
         assert False, R('Unsupported template', args.type)
+    log.info('Fetching issue #%d …', issue_number)
     issue_title, issue_type = _issue_info(issue_number)
     if args.fix is None:
         fix = issue_type == 'Defect'
@@ -67,6 +77,7 @@ def main(argv):
         fix = args.fix
     title = _pr_title(issue_number, issue_title, fix, suffix=title_suffix)
 
+    log.info('Checking for existing PR …')
     existing_pr = _existing_pr()
 
     if existing_pr is None:
@@ -85,6 +96,7 @@ def main(argv):
 
     if args.type is None:
         handle = _branch_handle(branch)
+        log.info('Verifying GitHub user …')
         assert handle == _github_user(), R(
             'Branch name does not match GitHub user', handle)
 
@@ -92,6 +104,7 @@ def main(argv):
     body = _check_task(body, 'PR description links to linked issues?')
 
     if existing_pr is None:
+        log.info('Creating PR …')
         result = subprocess.run(
             [
                 'gh', 'pr', 'create',
@@ -108,6 +121,7 @@ def main(argv):
         pr_url = result.stdout.strip()
     else:
         pr_url = existing_pr['url']
+        log.info('Updating PR …')
         subprocess.run(
             [
                 'gh', 'pr', 'edit', pr_url,
@@ -117,11 +131,13 @@ def main(argv):
             ],
             capture_output=True, text=True, check=True
         )
-        print(pr_url)
+        log.info('PR URL is %r', pr_url)
 
+    log.info('Setting PR status …')
     pr_node_id = _node_id('pr', pr_url)
-    issue_node_id = _node_id('issue', str(issue_number))
     _set_status(pr_node_id, 'In Progress')
+    log.info('Setting issue status …')
+    issue_node_id = _node_id('issue', str(issue_number))
     _set_status(issue_node_id, 'In Progress')
 
 
@@ -139,8 +155,7 @@ def _check_working_copy() -> None:
         capture_output=True, text=True, check=True
     )
     if result.stdout.strip():
-        print('Warning: Working copy has uncommitted changes.',
-              file=sys.stderr)
+        log.warning('Working copy has uncommitted changes')
 
 
 def _check_remote_branch(branch: str) -> None:
@@ -167,11 +182,9 @@ def _check_remote_branch(branch: str) -> None:
             capture_output=True, text=True
         )
         if result.returncode == 0:
-            print('Warning: Remote branch is behind local.'
-                  ' A push is needed.', file=sys.stderr)
+            log.warning('Remote branch is behind local. A push is needed')
         else:
-            print('Warning: Remote branch has diverged from local.'
-                  ' A force push is needed.', file=sys.stderr)
+            log.warning('Remote and local branch diverge. A force push is needed')
 
 
 def _issue_number(branch: str) -> int:
@@ -385,4 +398,5 @@ def _project() -> dict:
 
 
 if __name__ == '__main__':
+    configure_script_logging(log)
     main(sys.argv[1:])
