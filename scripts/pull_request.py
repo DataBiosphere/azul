@@ -28,6 +28,16 @@ def _current_branch() -> str:
     return result.stdout.strip()
 
 
+def _check_working_copy() -> None:
+    result = subprocess.run(
+        ['git', 'status', '--porcelain'],
+        capture_output=True, text=True, check=True
+    )
+    if result.stdout.strip():
+        print('Warning: Working copy has uncommitted changes.',
+              file=sys.stderr)
+
+
 def _check_remote_branch(branch: str) -> None:
     result = subprocess.run(
         ['git', 'ls-remote', '--heads', 'github', branch],
@@ -169,6 +179,7 @@ def main(argv):
         parser.error('--fix/--no-fix cannot be used with --type')
 
     branch = _current_branch()
+    _check_working_copy()
     _check_remote_branch(branch)
     title_suffix = ''
     if args.type is None:
