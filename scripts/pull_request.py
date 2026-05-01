@@ -20,147 +20,6 @@ _project_owner = 'DataBiosphere'
 _project_title = 'Azul'
 
 
-def _current_branch() -> str:
-    result = subprocess.run(
-        ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-        capture_output=True, text=True, check=True
-    )
-    return result.stdout.strip()
-
-
-def _check_working_copy() -> None:
-    result = subprocess.run(
-        ['git', 'status', '--porcelain'],
-        capture_output=True, text=True, check=True
-    )
-    if result.stdout.strip():
-        print('Warning: Working copy has uncommitted changes.',
-              file=sys.stderr)
-
-
-def _check_remote_branch(branch: str) -> None:
-    result = subprocess.run(
-        ['git', 'ls-remote', '--heads', 'github', branch],
-        capture_output=True, text=True, check=True
-    )
-    assert result.stdout.strip(), R(
-        'Branch does not exist on the github remote', branch)
-
-    remote_sha = result.stdout.split()[0]
-    local_sha = subprocess.run(
-        ['git', 'rev-parse', 'HEAD'],
-        capture_output=True, text=True, check=True
-    ).stdout.strip()
-
-    if local_sha != remote_sha:
-        subprocess.run(
-            ['git', 'fetch', 'github', branch],
-            capture_output=True, text=True, check=True
-        )
-        result = subprocess.run(
-            ['git', 'merge-base', '--is-ancestor', remote_sha, local_sha],
-            capture_output=True, text=True
-        )
-        if result.returncode == 0:
-            print('Warning: Remote branch is behind local.'
-                  ' A push is needed.', file=sys.stderr)
-        else:
-            print('Warning: Remote branch has diverged from local.'
-                  ' A force push is needed.', file=sys.stderr)
-
-
-def _issue_number(branch: str) -> int:
-    m = re.fullmatch(r'issues/[^/]+/(\d+)-.*', branch)
-    assert m is not None, R('Cannot extract issue number from branch name', branch)
-    return int(m.group(1))
-
-
-def _branch_handle(branch: str) -> str:
-    m = re.fullmatch(r'issues/([^/]+)/\d+-.*', branch)
-    assert m is not None, R('Cannot extract handle from branch name', branch)
-    return m.group(1)
-
-
-def _github_user() -> str:
-    result = subprocess.run(
-        ['gh', 'api', 'user', '--jq', '.login'],
-        capture_output=True, text=True, check=True
-    )
-    return result.stdout.strip()
-
-
-def _upgrade_date(branch: str) -> str:
-    m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', branch)
-    assert m is not None, R('Cannot extract date from branch name', branch)
-    return m.group(1)
-
-
-def _promotion_date_and_target(branch: str) -> tuple[str, str]:
-    m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', branch)
-    assert m is not None, R('Cannot extract date and target from branch name', branch)
-    return m.group(1), m.group(2)
-
-
-def _issue_number_by_title(title: str) -> int:
-    result = subprocess.run(
-        [
-            'gh', 'issue', 'list',
-            '--search', f'{title} in:title',
-            '--state', 'all',
-            '--json', 'number,title',
-        ],
-        capture_output=True, text=True, check=True
-    )
-    issues = json.loads(result.stdout)
-    for issue in issues:
-        if issue['title'] == title:
-            return issue['number']
-    assert False, R('Issue not found with title', title)
-
-
-def _issue_info(issue_number: int) -> tuple[str, str]:
-    result = subprocess.run(
-        [
-            'gh', 'api', 'graphql',
-            '-f', 'query=' + fd('''
-                {{
-                    repository(owner: "{owner}", name: "azul") {{
-                        issue(number: {number}) {{
-                            title
-                            issueType {{ name }}
-                        }}
-                    }}
-                }}
-            ''', owner=_project_owner, number=issue_number),
-        ],
-        capture_output=True, text=True, check=True
-    )
-    issue = json.loads(result.stdout)['data']['repository']['issue']
-    issue_type = issue['issueType']
-    return issue['title'], issue_type['name'] if issue_type else ''
-
-
-def _pr_title(issue_number: int,
-              issue_title: str,
-              fix: bool,
-              suffix: str = ''
-              ) -> str:
-    prefix = 'Fix: ' if fix else ''
-    return f'{prefix}{issue_title}{suffix} (#{issue_number})'
-
-
-def _check_task(body: str, task: str) -> str:
-    body_new, n = re.subn(r'^- \[ ] (' + task + ')$',
-                          r'- [x] \1',
-                          body, flags=re.MULTILINE)
-    assert n < 2, R('Multiple matching task items found', task)
-    if n > 0:
-        return body_new
-    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), R(
-        'Task item not found in template', task)
-    return body
-
-
 def main(argv):
     parser = argparse.ArgumentParser(description='Create a pull request')
     parser.add_argument('--type', '-t',
@@ -266,13 +125,119 @@ def main(argv):
     _set_status(issue_node_id, 'In Progress')
 
 
-def _reference_issue_in_body(body: str, issue_number: int) -> str:
-    body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
-                      rf'\1#{issue_number}',
-                      body, flags=re.MULTILINE)
-    assert n > 0, R('Linked issues reference not found in body')
-    assert n < 2, R('Multiple linked issues references found in body')
-    return body
+def _current_branch() -> str:
+    result = subprocess.run(
+        ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+        capture_output=True, text=True, check=True
+    )
+    return result.stdout.strip()
+
+
+def _check_working_copy() -> None:
+    result = subprocess.run(
+        ['git', 'status', '--porcelain'],
+        capture_output=True, text=True, check=True
+    )
+    if result.stdout.strip():
+        print('Warning: Working copy has uncommitted changes.',
+              file=sys.stderr)
+
+
+def _check_remote_branch(branch: str) -> None:
+    result = subprocess.run(
+        ['git', 'ls-remote', '--heads', 'github', branch],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip(), R(
+        'Branch does not exist on the github remote', branch)
+
+    remote_sha = result.stdout.split()[0]
+    local_sha = subprocess.run(
+        ['git', 'rev-parse', 'HEAD'],
+        capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    if local_sha != remote_sha:
+        subprocess.run(
+            ['git', 'fetch', 'github', branch],
+            capture_output=True, text=True, check=True
+        )
+        result = subprocess.run(
+            ['git', 'merge-base', '--is-ancestor', remote_sha, local_sha],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            print('Warning: Remote branch is behind local.'
+                  ' A push is needed.', file=sys.stderr)
+        else:
+            print('Warning: Remote branch has diverged from local.'
+                  ' A force push is needed.', file=sys.stderr)
+
+
+def _issue_number(branch: str) -> int:
+    m = re.fullmatch(r'issues/[^/]+/(\d+)-.*', branch)
+    assert m is not None, R('Cannot extract issue number from branch name', branch)
+    return int(m.group(1))
+
+
+def _upgrade_date(branch: str) -> str:
+    m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', branch)
+    assert m is not None, R('Cannot extract date from branch name', branch)
+    return m.group(1)
+
+
+def _issue_number_by_title(title: str) -> int:
+    result = subprocess.run(
+        [
+            'gh', 'issue', 'list',
+            '--search', f'{title} in:title',
+            '--state', 'all',
+            '--json', 'number,title',
+        ],
+        capture_output=True, text=True, check=True
+    )
+    issues = json.loads(result.stdout)
+    for issue in issues:
+        if issue['title'] == title:
+            return issue['number']
+    assert False, R('Issue not found with title', title)
+
+
+def _promotion_date_and_target(branch: str) -> tuple[str, str]:
+    m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', branch)
+    assert m is not None, R('Cannot extract date and target from branch name', branch)
+    return m.group(1), m.group(2)
+
+
+def _issue_info(issue_number: int) -> tuple[str, str]:
+    result = subprocess.run(
+        [
+            'gh', 'api', 'graphql',
+            '-f', 'query=' + fd('''
+                {{
+                    repository(owner: "{owner}", name: "azul") {{
+                        issue(number: {number}) {{
+                            title
+                            issueType {{ name }}
+                        }}
+                    }}
+                }}
+            ''', owner=_project_owner, number=issue_number),
+        ],
+        capture_output=True, text=True, check=True
+    )
+    issue = json.loads(result.stdout)['data']['repository']['issue']
+    issue_type = issue['issueType']
+    return issue['title'], issue_type['name'] if issue_type else ''
+
+
+def _pr_title(issue_number: int,
+              issue_title: str,
+              fix: bool,
+              suffix: str = ''
+              ) -> str:
+    prefix = 'Fix: ' if fix else ''
+    return f'{prefix}{issue_title}{suffix} (#{issue_number})'
 
 
 def _existing_pr() -> dict | None:
@@ -283,6 +248,41 @@ def _existing_pr() -> dict | None:
     if result.returncode != 0:
         return None
     return json.loads(result.stdout)
+
+
+def _reference_issue_in_body(body: str, issue_number: int) -> str:
+    body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
+                      rf'\1#{issue_number}',
+                      body, flags=re.MULTILINE)
+    assert n > 0, R('Linked issues reference not found in body')
+    assert n < 2, R('Multiple linked issues references found in body')
+    return body
+
+
+def _check_task(body: str, task: str) -> str:
+    body_new, n = re.subn(r'^- \[ ] (' + task + ')$',
+                          r'- [x] \1',
+                          body, flags=re.MULTILINE)
+    assert n < 2, R('Multiple matching task items found', task)
+    if n > 0:
+        return body_new
+    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), R(
+        'Task item not found in template', task)
+    return body
+
+
+def _branch_handle(branch: str) -> str:
+    m = re.fullmatch(r'issues/([^/]+)/\d+-.*', branch)
+    assert m is not None, R('Cannot extract handle from branch name', branch)
+    return m.group(1)
+
+
+def _github_user() -> str:
+    result = subprocess.run(
+        ['gh', 'api', 'user', '--jq', '.login'],
+        capture_output=True, text=True, check=True
+    )
+    return result.stdout.strip()
 
 
 def _node_id(kind: str, ref: str) -> str:
@@ -330,22 +330,6 @@ def _set_status(node_id: str, status: str) -> None:
     )
 
 
-def _project() -> dict:
-    result = subprocess.run(
-        [
-            'gh', 'project', 'list',
-            '--owner', _project_owner,
-            '--format', 'json',
-        ],
-        capture_output=True, text=True, check=True
-    )
-    projects = json.loads(result.stdout)['projects']
-    for project in projects:
-        if project['title'] == _project_title:
-            return project
-    assert False, R('Project not found', _project_title)
-
-
 def _project_id() -> str:
     query = fd('''
         {{
@@ -382,6 +366,22 @@ def _status_option_id(status_field: dict, status: str) -> str:
         if option['name'] == status:
             return option['id']
     assert False, R('Status option not found', status)
+
+
+def _project() -> dict:
+    result = subprocess.run(
+        [
+            'gh', 'project', 'list',
+            '--owner', _project_owner,
+            '--format', 'json',
+        ],
+        capture_output=True, text=True, check=True
+    )
+    projects = json.loads(result.stdout)['projects']
+    for project in projects:
+        if project['title'] == _project_title:
+            return project
+    assert False, R('Project not found', _project_title)
 
 
 if __name__ == '__main__':
