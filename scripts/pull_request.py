@@ -152,7 +152,8 @@ def _pr_title(issue_number: int,
 def _check_task(body: str, task: str) -> str:
     body_new, n = re.subn(r'^- \[ ] (' + task + ')$',
                           r'- [x] \1',
-                          body, count=1, flags=re.MULTILINE)
+                          body, flags=re.MULTILINE)
+    assert n < 2, R('Multiple matching task items found', task)
     if n > 0:
         return body_new
     assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), R(
@@ -270,6 +271,7 @@ def _reference_issue_in_body(body: str, issue_number: int) -> str:
                       rf'\1#{issue_number}',
                       body, flags=re.MULTILINE)
     assert n > 0, R('Linked issues reference not found in body')
+    assert n < 2, R('Multiple linked issues references found in body')
     return body
 
 
