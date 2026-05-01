@@ -28,6 +28,37 @@ def _current_branch() -> str:
     return result.stdout.strip()
 
 
+def _check_remote_branch(branch: str) -> None:
+    result = subprocess.run(
+        ['git', 'ls-remote', '--heads', 'github', branch],
+        capture_output=True, text=True, check=True
+    )
+    assert result.stdout.strip(), R(
+        'Branch does not exist on the github remote', branch)
+
+    remote_sha = result.stdout.split()[0]
+    local_sha = subprocess.run(
+        ['git', 'rev-parse', 'HEAD'],
+        capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    if local_sha != remote_sha:
+        subprocess.run(
+            ['git', 'fetch', 'github', branch],
+            capture_output=True, text=True, check=True
+        )
+        result = subprocess.run(
+            ['git', 'merge-base', '--is-ancestor', remote_sha, local_sha],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            print('Warning: Remote branch is behind local.'
+                  ' A push is needed.', file=sys.stderr)
+        else:
+            print('Warning: Remote branch has diverged from local.'
+                  ' A force push is needed.', file=sys.stderr)
+
+
 def _issue_number(branch: str) -> int:
     m = re.fullmatch(r'issues/[^/]+/(\d+)-.*', branch)
     assert m is not None, R('Cannot extract issue number from branch name', branch)
@@ -138,6 +169,7 @@ def main(argv):
         parser.error('--fix/--no-fix cannot be used with --type')
 
     branch = _current_branch()
+    _check_remote_branch(branch)
     title_suffix = ''
     if args.type is None:
         template_path = _project_root / '.github' / 'pull_request_template.md'
