@@ -1,3 +1,16 @@
+"""
+Create or update a PR for the current branch, takeing care of some of the CL
+items in the template. Uses the default PR template unless the --type option is
+passed. Use --help to see which types are currently supported.
+
+The script infers the linked issue from the name of the currently checked out
+branch, so make sure that the branch name matches our conventions. The inferral
+is straight-forward for the default type, but it also supports the other types.
+
+For the default type, the script guesses whether to prefix the PR title with
+"Fix: " but since there is some ambiguity for debt issues you can override the
+guess with the --fix or --no-fix options.
+"""
 import argparse
 import json
 import logging
@@ -27,7 +40,7 @@ _project_title = 'Azul'
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description='Create a pull request')
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--type', '-t',
                         default=None,
                         choices=['upgrade', 'promotion'],
