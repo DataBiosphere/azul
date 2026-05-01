@@ -34,6 +34,20 @@ def _issue_number(branch: str) -> int:
     return int(m.group(1))
 
 
+def _branch_handle(branch: str) -> str:
+    m = re.fullmatch(r'issues/([^/]+)/\d+-.*', branch)
+    assert m is not None, R('Cannot extract handle from branch name', branch)
+    return m.group(1)
+
+
+def _github_user() -> str:
+    result = subprocess.run(
+        ['gh', 'api', 'user', '--jq', '.login'],
+        capture_output=True, text=True, check=True
+    )
+    return result.stdout.strip()
+
+
 def _upgrade_date(branch: str) -> str:
     m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', branch)
     assert m is not None, R('Cannot extract date from branch name', branch)
@@ -165,6 +179,11 @@ def main(argv):
 
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
+    body = _check_task(body, 'Name of PR branch matches .*')
+    if args.type is None:
+        handle = _branch_handle(branch)
+        assert handle == _github_user(), R(
+            'Branch handle does not match GitHub user', handle)
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues?')
 
