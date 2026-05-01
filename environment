@@ -439,3 +439,13 @@ _complete_env() {
 }
 
 complete -F _complete_env _select _link _validate_link
+
+# Adds an az_foo convenience function for every scripts/foo.py
+#
+# Only meant for interactive use: type az and hit TAB for auto-complete.
+#
+for _script in "${project_root}/scripts/"*.py ; do
+	_func="az_$(basename "$_script" .py)"
+	eval "${_func}() { python \"${_script}\" \"\$@\" ; }"
+done
+unset _script _func
