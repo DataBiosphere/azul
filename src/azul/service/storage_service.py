@@ -273,6 +273,12 @@ class StorageService:
                                   etags: Sequence[str],
                                   overwrite: bool = True,
                                   ) -> None:
+        if len(etags) == 0:
+            # S3 requires at least one part, even for empty files
+            etags = [self.upload_multipart_part(object_key=object_key,
+                                                upload_id=upload_id,
+                                                part_number=1,
+                                                buffer=b'')]
         parts: list[CompletedPartTypeDef] = [
             {
                 'PartNumber': index + 1,
