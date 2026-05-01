@@ -213,20 +213,21 @@ def main(argv):
         body = template_path.read_text()
     else:
         body = existing_pr['body']
+
     # Normalize line endings from GitHub API responses
     body = '\n'.join(body.splitlines())
-    body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
-                      rf'\1#{issue_number}',
-                      body, flags=re.MULTILINE)
-    assert n > 0, R('Linked issues reference not found in body')
+
+    body = _reference_issue_in_body(body, issue_number)
 
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, 'Name of PR branch matches .*')
+
     if args.type is None:
         handle = _branch_handle(branch)
         assert handle == _github_user(), R(
-            'Branch handle does not match GitHub user', handle)
+            'Branch name does not match GitHub user', handle)
+
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues?')
 
@@ -262,6 +263,14 @@ def main(argv):
     issue_node_id = _node_id('issue', str(issue_number))
     _set_status(pr_node_id, 'In Progress')
     _set_status(issue_node_id, 'In Progress')
+
+
+def _reference_issue_in_body(body: str, issue_number: int) -> str:
+    body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
+                      rf'\1#{issue_number}',
+                      body, flags=re.MULTILINE)
+    assert n > 0, R('Linked issues reference not found in body')
+    return body
 
 
 def _existing_pr() -> dict | None:
