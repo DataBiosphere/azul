@@ -38,15 +38,10 @@ def delete_files(catalog: CatalogName, diff: Iterable[tuple[str, str]]):
     mirror_service: MirrorService = AzulClient().mirror_service(catalog)
     service: StorageService = mirror_service._storage
     keys = set()
-    if config.is_anvil_enabled(catalog):
-        file_extension = 'md5'
-    elif config.is_hca_enabled(catalog):
-        file_extension = 'sha256'
-    else:
-        assert False, catalog
+    assert config.is_anvil_enabled(catalog)
     for checksum in checksums:
+        keys.add(f'file/{checksum}.md5')
         keys.add(f'info/{checksum}.json')
-        keys.add(f'file/{checksum}.{file_extension}')
 
     assert len(keys) == 2 * len(checksums), R('There are duplicate checksums')
     total_size = sum(map(int, sizes))
