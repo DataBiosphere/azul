@@ -34,6 +34,7 @@ log = logging.getLogger(__name__)
 
 
 def delete_files(catalog: CatalogName, diff: Iterable[tuple[str, str]]):
+    assert False
     checksums, sizes = zip(*diff)
     mirror_service: MirrorService = AzulClient().mirror_service(catalog)
     service: StorageService = mirror_service._storage
