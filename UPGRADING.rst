@@ -19,6 +19,31 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#7963 Disabled secrets cause OAuth clients to be flagged
+========================================================
+
+Everyone
+--------
+
+Make sure that the OAuth 2.0 client for each of your personal deployments has
+exactly one secret, and that that secret is enabled. Any secrets that have
+already been disabled for at least one hour can be immediately deleted. If there
+are still more than one secret left, disable all but the newest secret, wait one
+hour and ten minutes, and delete the previously disabled secrets.
+
+If you're OK with potentially breaking the login functionality on the Swagger UI
+of your personal deployment, and the login functionality of any Data Browser
+instance backed by your deployment, you don't need to wait between disabling and
+deleting a secret.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments. The waiting period between
+disabling and deleting secrets should be observed.
+
+
 #7927 Use MA mirror bucket for MA files
 =======================================
 
