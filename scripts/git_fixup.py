@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 EXPERIMENTAL — written by Claude Code (claude-opus-4-6).
 
