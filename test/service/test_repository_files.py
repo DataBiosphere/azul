@@ -123,6 +123,7 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
                        version=file_version,
                        drs_uri=drs_uri,
                        size=1,
+                       source=self.source.ref,
                        content_type='text/plain',
                        sha256='123',
                        crc32c='abc')
@@ -196,6 +197,7 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
                        version=file_version,
                        drs_uri=f'drs://{self._drs_domain_name}/{file_uuid}?version={file_version}',
                        size=3,
+                       source=self.source.ref,
                        content_type='text/plain',
                        sha256='123',
                        crc32c='abc')
@@ -318,6 +320,7 @@ class TestRepositoryFilesWithMirroring(DCP2TestCase,
                        drs_uri=None,
                        size=len(file_content),
                        content_type='text/plain',
+                       source=self.source.ref,
                        sha256=hashlib.sha256(file_content).hexdigest(),
                        crc32c=None)
 

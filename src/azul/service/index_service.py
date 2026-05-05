@@ -64,6 +64,7 @@ from azul.service.query_service import (
     _OpenSearchStage,
 )
 from azul.source import (
+    SourceRef,
     SourceSpec,
 )
 
@@ -355,8 +356,10 @@ class IndexService(QueryService):
             # Can't have more than one hit with the same version
             assert file_version is None, len(hits)
 
-        file = one(first(hits)['contents']['files'])
-        file = plugin.file_class.from_index(file)
+        hit = first(hits)
+        source = SourceRef.from_json(one(hit['sources']))
+        file = one(hit['contents']['files'])
+        file = plugin.file_class.from_index(file, source=source)
         if file_version is not None:
             assert file_version == file.version
         return file
