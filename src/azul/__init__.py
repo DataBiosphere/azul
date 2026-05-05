@@ -1610,6 +1610,10 @@ class Config:
         return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
+    def dynamo_users_table_name(self) -> str:
+        return self.qualified_resource_name('users')
+
+    @property
     def current_sources(self) -> list[str] | None:
         try:
             sources = self.environ['azul_current_sources']
