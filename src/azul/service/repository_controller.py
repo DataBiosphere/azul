@@ -393,7 +393,10 @@ class RepositoryController(ServiceController):
         plugin = self._repository_plugin(catalog)
 
         mirror_url = None
-        if config.enable_mirroring:
+        # The file's content type and source would be None on subsequent
+        # requests since they aren't propagated via query parametesr.
+        # `MirrorFileDownload` will always be ready immediately.
+        if request_index == 0 and config.enable_mirroring:
             mirror_service = self._mirror_service(catalog)
             if mirror_service.info_exists(file):
                 mirror_url = mirror_service.mirror_url(file)
@@ -402,9 +405,6 @@ class RepositoryController(ServiceController):
             download_cls = plugin.file_download_class()
             download = download_cls(plugin=plugin, file=file, replica=replica, token=token)
         else:
-            # The file's content type would be None on subsequent requests since
-            # it isn't propagated via a query parameter. `MirrorFileDownload`
-            # will always be ready immediately.
             assert request_index == 0, request_index
             download = MirrorFileDownload(
                 plugin=plugin,
