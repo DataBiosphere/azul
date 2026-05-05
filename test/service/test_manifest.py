@@ -989,6 +989,12 @@ class TestManifests(DCP1ManifestTestCase):
         expected = self._load_canned_manifest(*path)
         self._assert_jsonl(expected, response)
 
+    def test_verbatim_jsonl_manifest_empty(self):
+        filters = {'projectId': {'is': ['00000000-0000-0000-0000-000000000000']}}
+        response = self._get_manifest(ManifestFormat.verbatim_jsonl, filters)
+        self.assertEqual(200, response.status_code)
+        self._assert_jsonl([], response)
+
     def test_verbatim_pfb_manifest(self):
         response = self._get_manifest(ManifestFormat.verbatim_pfb, filters={})
         self.assertEqual(200, response.status_code)
