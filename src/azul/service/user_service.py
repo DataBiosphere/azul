@@ -2,6 +2,9 @@ import logging
 from time import (
     time,
 )
+from typing import (
+    TypedDict,
+)
 
 import jwt
 
@@ -30,8 +33,16 @@ from azul.oauth2 import (
 log = logging.getLogger(__name__)
 
 
-class UserService:
+class User(TypedDict):
+    #: The OAuth 2.0 access token issued by the authorization server
+    access_token: str
+    #: The OAuth 2.0 refresh token used to obtain new access tokens
+    refresh_token: str
+    #: The Unix timestamp after which the refresh token expires
+    expiration: int
 
+
+class UserService:
     key_attribute = 'identity'
     ttl_attribute = 'expiration'
 
@@ -70,6 +81,22 @@ class UserService:
         assert 'id_token' in response, response
         self._store_tokens(response)
         return response
+
+    def get_user(self, iss: str, sub: str) -> User | None:
+        key = self._key_separator.join([iss, sub])
+        response = self._dynamodb.get_item(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': key}}
+        )
+        item = response.get('Item')
+        if item is None:
+            return None
+        else:
+            return User(
+                access_token=item['access_token']['S'],
+                refresh_token=item['refresh_token']['S'],
+                expiration=int(item[self.ttl_attribute]['N'])
+            )
 
     def _store_tokens(self, response: TokenForCodeResponse) -> None:
         # Signature verification is unnecessary per OIDC 3.1.3.7 since the
