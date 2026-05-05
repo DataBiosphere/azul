@@ -504,6 +504,14 @@ class MirrorService:
             return None
 
     def mirror_url(self, file: File) -> str | None:
+
+        # FIXME: Expose access to mirrored MA files via /repository/files
+        #        https://github.com/DataBiosphere/azul/issues/7931
+        #
+        assert file.source is not None, file
+        if not self._is_public(file.source.spec):
+            return None
+
         if self._info_exists(file):
             storage = self._storage_for_file(file)
             return storage.get_presigned_url(object_key=self._file_object_key(file),
