@@ -358,17 +358,8 @@ class MirrorService:
         return StorageService(bucket)
 
     def _storage_for_file(self, file: File) -> StorageService:
-        # Currently, :py:attr:`source` will never be none during mirroring (see
-        # the implementations of :meth:`RepositoryPlugin.list-files`), but will
-        # always be None when downloading files via the service.
-        #
-        # FIXME: Expose access to mirrored MA files via /repository/files
-        #        https://github.com/DataBiosphere/azul/issues/7931
-        #
-        if file.source is None:
-            return self._storage
-        else:
-            return self._storage_for_source(file.source.spec)
+        assert file.source is not None, file
+        return self._storage_for_source(file.source.spec)
 
     def _storage_for_source(self, source: SourceSpec) -> StorageService:
         if self._is_public(source):
@@ -398,19 +389,7 @@ class MirrorService:
         if self.may_mirror():
             plugin = self.repository_plugin
             source_config = plugin.sources[source_spec]
-            if source_config.mirror:
-                # This method is only used by the index and manifest services
-                # to determine whether to populate a file's mirror URI in the
-                # index response/manifest or not. We deliberately return a false
-                # negative for managed-access files since we don't want the
-                # service to know about them yet.
-                #
-                # FIXME: Expose access to mirrored MA files via /repository/files
-                #        https://github.com/DataBiosphere/azul/issues/7931
-                #
-                return self._is_public(source_spec)
-            else:
-                return False
+            return source_config.mirror
         else:
             return False
 
@@ -513,7 +492,7 @@ class MirrorService:
         :param file_json: the index representation of the file
         """
         if self.may_mirror_files_from_source(source):
-            file = file_cls.from_index(file_json)
+            file = file_cls.from_index(file_json, source=None)
             if self.may_mirror(0 if file.size is None else file.size):
                 storage = self._storage_for_source(source)
                 return str(furl(scheme='s3',
