@@ -38,11 +38,17 @@ class User(TypedDict):
     access_token: str
     #: The OAuth 2.0 refresh token used to obtain new access tokens
     refresh_token: str
+    #: The user's email address from the ID token
+    email: str
+    #: Whether the email address has been verified by the identity provider
+    email_verified: bool
     #: The Unix timestamp after which the refresh token expires
     expiration: int
 
 
 class UserService:
+    required_scopes = {'openid', 'email'}
+
     key_attribute = 'identity'
     ttl_attribute = 'expiration'
 
@@ -69,10 +75,10 @@ class UserService:
         return aws.dynamodb
 
     def authorize(self, authorization: Authorization) -> TokenForCodeResponse:
-        assert 'openid' in authorization['scope'].split(), R(
-            'The authorization server did not return an OpenID Connect ID '
-            'token in the response. Be sure to include the "openid" scope '
-            'when requesting the authorization code.')
+        scopes = set(authorization['scope'].split())
+        assert self.required_scopes.issubset(scopes), R(
+            'Be sure to include the required scopes when requesting the '
+            'authorization code:', self.required_scopes)
         response = self._oauth_client.token_for_code(
             authorization_code=authorization['code'],
             client_id=self._client_id,
@@ -95,6 +101,8 @@ class UserService:
             return User(
                 access_token=item['access_token']['S'],
                 refresh_token=item['refresh_token']['S'],
+                email=item['email']['S'],
+                email_verified=item['email_verified']['BOOL'],
                 expiration=int(item[self.ttl_attribute]['N'])
             )
 
@@ -109,18 +117,24 @@ class UserService:
         key = self._key_separator.join([iss, sub])
         expiration = response.get('refresh_token_expires_in',
                                   self._default_expiration)
+        email = id_claims['email']
+        email_verified = id_claims['email_verified']
         self._dynamodb.update_item(
             TableName=self._table_name,
             Key={self.key_attribute: {'S': key}},
             UpdateExpression=fd('''
                 SET access_token = :access_token,
                     refresh_token = :refresh_token,
+                    email = :email,
+                    email_verified = :email_verified,
                     #expiration = :expiration
             '''),
             ExpressionAttributeNames={'#expiration': self.ttl_attribute},
             ExpressionAttributeValues={
                 ':access_token': {'S': response['access_token']},
                 ':refresh_token': {'S': response['refresh_token']},
+                ':email': {'S': email},
+                ':email_verified': {'BOOL': email_verified},
                 ':expiration': {'N': str(self._now() + expiration)},
             }
         )

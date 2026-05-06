@@ -72,6 +72,7 @@ class TestUserController(DCP2TestCase,
 
     _mock_iss = 'https://accounts.google.com'
     _mock_sub = '105096702580025601450'
+    _mock_email = 'user@example.com'
     _mock_access_token = 'ya29.mock_access_token'
     _mock_refresh_token = '1//mock_refresh_token'
 
@@ -91,14 +92,18 @@ class TestUserController(DCP2TestCase,
                              refresh_token: str | None = None,
                              refresh_token_expires_in: int | None = None
                              ) -> TokenForCodeResponse:
-        id_token = jwt.encode(payload={'iss': self._mock_iss, 'sub': self._mock_sub},
-                              key='a' * 32,
-                              algorithm='HS256')
+        id_token = {
+            'iss': self._mock_iss,
+            'sub': self._mock_sub,
+            'email': self._mock_email,
+            'email_verified': True,
+        }
+        id_token = jwt.encode(payload=id_token, key='a' * 32, algorithm='HS256')
         response: TokenForCodeResponse = {
             'access_token': access_token or self._mock_access_token,
             'refresh_token': refresh_token or self._mock_refresh_token,
             'expires_in': 3600,
-            'scope': 'openid',
+            'scope': 'openid email',
             'token_type': 'Bearer',
             'id_token': id_token,
         }
@@ -106,7 +111,7 @@ class TestUserController(DCP2TestCase,
             response['refresh_token_expires_in'] = refresh_token_expires_in
         return response
 
-    def _authorize(self, *, scope='openid'):
+    def _authorize(self, *, scope='openid email'):
         client = self._http_client
         url = str(self.base_url.set(path='/user/authorize'))
         body = json.dumps({
@@ -138,6 +143,8 @@ class TestUserController(DCP2TestCase,
         user = self._get_user()
         self.assertEqual(self._mock_access_token, user['access_token'])
         self.assertEqual(self._mock_refresh_token, user['refresh_token'])
+        self.assertEqual(self._mock_email, user['email'])
+        self.assertTrue(user['email_verified'])
 
     @patch.object(OAuth2Client, 'token_for_code')
     def test_authorize_with_refresh_token_expiration(self, mock_token_for_code):
@@ -177,6 +184,8 @@ class TestUserController(DCP2TestCase,
         self.assertEqual(new_access_token, user['access_token'])
         self.assertEqual(new_refresh_token, user['refresh_token'])
 
-    def test_authorize_missing_openid_scope(self):
-        response = self._authorize(scope='email')
-        self.assertEqual(400, response.status)
+    def test_authorize_missing_required_scope(self):
+        for scope in ('email', 'openid', 'profile'):
+            with self.subTest(scope=scope):
+                response = self._authorize(scope=scope)
+                self.assertEqual(400, response.status)
