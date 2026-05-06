@@ -1285,6 +1285,59 @@ anvil13_sources = union(anvil12_sources, 375, delta([
     source('4e167035', 'OurHealth_GRU_R2_20260122_ANV5_202601222246', no_ma_mirror),
 ]))
 
+anvil14_sources = union(anvil13_sources, 423, delta([
+    source('0a558357', 'ADOPT_PGx_Depression_GRU_R1_20260416_ANV5_202604162237', no_ma_mirror),
+    source('ff9197c5', 'ADOPT_PGx_Depression_HMB_R1_20260416_ANV5_202604162243', no_ma_mirror),
+    source('aa61b981', 'CCDG_Broad_CVD_AF_PEGASUS_HMB_WES_20260406_ANV5_202604162052', no_ma_mirror),
+    source('4bfb394d', 'CCDG_Broad_CVD_AF_Swiss_Cases_DS_MDS_Arrays_20260406_ANV5_202604162109', no_ma_mirror),
+    source('57a4ca0d', 'CCDG_Broad_CVD_AF_Swiss_Cases_DS_MDS_WES_20260406_ANV5_202604162127', no_ma_mirror),
+    source('46034213', 'CCDG_Broad_CVD_Stroke_BRAVE_WGS_20260406_ANV5_202604162141', no_ma_mirror),
+    source('96c31f17', 'CCDG_NYGC_NP_Autism_AFS_DS_WGS_20260406_ANV5_202604162202', no_ma_mirror),
+    source('6015db0f', 'CCDG_WashU_CVD_MultiEthnic_WGS_HMB_PUB_20260406_ANV5_202604162213', no_ma_mirror),
+    source('f056bb6a', 'CCDG_WashU_CVD_MultiEthnic_WGS_HMB_PUB_COL_20260406_ANV5_202604162302', no_ma_mirror),
+    source('64ce5b39', 'GREGoR_R01_GRU_20260423_ANV5_202604282029', no_ma_mirror),
+    source('58e69153', 'GREGoR_R02_HMB_20260423_ANV5_202604282042', no_ma_mirror),
+    source('3789d09c', 'GREGoR_R03_GRU_20260423_ANV5_202604301343', no_ma_mirror),
+    source('f22fcad8', 'GREGoR_R03_HMB_20260423_ANV5_202604282119', no_ma_mirror),
+    source('519c3ce5', 'GREGoR_R04_GRU_20260423_ANV5_202604301351', no_ma_mirror),
+    source('a28ac209', 'GREGoR_R04_HMB_20260423_ANV5_202604282153', no_ma_mirror),
+    source('3f45d8d3', 'GREGoR_R05_GRU_20260402_ANV5_202604171312', no_ma_mirror),
+    source('bb3aa1e6', 'GREGoR_R05_HMB_20260402_ANV5_202604171325', no_ma_mirror),
+    source('ba97a39c', 'GUARDD_US_GRU_R1_20260416_ANV5_202604162249', no_ma_mirror),
+    source('9d6d7c88', 'GUARDD_US_HMB_R1_20260416_ANV5_202604162255', no_ma_mirror),
+    source('c4d45673', 'HPRC_R2_20260428_ANV5_202604281434'),
+    source('0677c238', 'IGVF_Mouse_R1_20260416_ANV5_202604162312'),
+    source('6a662954', 'ccdg_asc_ndd_daly_talkowski_cdcseed_asd_gsa_md_20260416_ANV5_202604162010', no_ma_mirror),
+    source('6873ba6d', 'ccdg_asc_ndd_daly_talkowski_cdcseed_asd_hmb_wes_20260416_ANV5_202604162026', no_ma_mirror),
+    source('f7842705', 'ccdg_asc_ndd_daly_talkowski_schloesser_asd_gsa_md_20250516_ANV5_202604281921', no_ma_mirror),
+    source('7cb53f81', 'ccdg_broad_daly_igsr_1kg_twist_gsa_20260406_ANV5_202604162227', no_ma_mirror),
+    source('8d554a38', 'ccdg_broad_daly_igsr_1kg_twist_wes_20260406_ANV5_202604162152', no_ma_mirror),
+    source('76853350', 'dGTEx_GRU_v1_20260416_ANV5_202604162324', no_ma_mirror),
+    source('e495825f', 'eMERGE_GWAS_DS_CHILDD_20260403_ANV5_202604220445', no_ma_mirror),
+    source('ac203a21', 'eMERGE_GWAS_DS_DEM_20260403_ANV5_202604220455', no_ma_mirror),
+    source('1e8d7397', 'eMERGE_GWAS_GRU_20260403_ANV5_202604220509', no_ma_mirror),
+    source('710af7cf', 'eMERGE_GWAS_GRU_IRB_NPU_20260403_ANV5_202604220524', no_ma_mirror),
+    source('72dd495b', 'eMERGE_GWAS_GRU_IRB_PUB_20260403_ANV5_202604220539', no_ma_mirror),
+    source('270745f9', 'eMERGE_GWAS_GRU_IRB_PUB_GSO_20260403_ANV5_202604220552', no_ma_mirror),
+    source('f74e7ccd', 'eMERGE_GWAS_HMB_20260403_ANV5_202604220604', no_ma_mirror),
+    source('9a5610f6', 'eMERGE_GWAS_HMB_GSO_20260403_ANV5_202604220618', no_ma_mirror),
+    source('530f9165', 'eMERGE_GWAS_HMB_MDS_20260403_ANV5_202604220632', no_ma_mirror),
+    source('b4533498', 'eMERGE_GWAS_HMB_PUB_GSO_20260403_ANV5_202604220648', no_ma_mirror),
+    source('598c1da0', 'eMERGE_PGRNseq_DS_DEM_20260403_ANV5_202604220703', no_ma_mirror),
+    source('887d4fe9', 'eMERGE_PGRNseq_GRU_20260403_ANV5_202604220713', no_ma_mirror),
+    source('bd09562d', 'eMERGE_PGRNseq_HMB_20260403_ANV5_202604220723', no_ma_mirror),
+    source('b24aea3e', 'eMERGE_eMERGEseq_GRU_20260403_ANV5_202604220248', no_ma_mirror),
+    source('0fa59695', 'eMERGE_eMERGEseq_GRU_IRB_20260403_ANV5_202604220313', no_ma_mirror),
+    source('ec3b506b', 'eMERGE_eMERGEseq_GRU_IRB_NPU_20260403_ANV5_202604220325', no_ma_mirror),
+    source('676de9d6', 'eMERGE_eMERGEseq_GRU_IRB_PUB_NPU_20260403_ANV5_202604220335', no_ma_mirror),
+    source('86ddf7f0', 'eMERGE_eMERGEseq_GRU_NPU_20260403_ANV5_202604220347', no_ma_mirror),
+    source('81d56a5b', 'eMERGE_eMERGEseq_HMB_20260403_ANV5_202604220402', no_ma_mirror),
+    source('4e5838c4', 'eMERGE_eMERGEseq_HMB_GSO_20260403_ANV5_202604220413', no_ma_mirror),
+    source('5365fa97', 'eMERGE_eMERGEseq_HMB_IRB_PUB_20260403_ANV5_202604220424', no_ma_mirror),
+    source('5e75a098', 'eMERGE_eMERGEseq_HMB_NPU_20260403_ANV5_202604220434', no_ma_mirror),
+    source('c57b8824', 'nhp_dGTEx_V1_20260416_ANV5_202604170018'),
+]))
+
 
 def env() -> Mapping[str, str | None]:
     """
@@ -1327,6 +1380,7 @@ def env() -> Mapping[str, str | None]:
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit in [
                 ('anvil', 'anvil13', anvil13_sources, None, int(1.5 * 1024 ** 3)),
+                ('anvil', 'anvil14', anvil14_sources, None, int(1.5 * 1024 ** 3)),
             ]
             for suffix, is_it in [
                 ('', False),
