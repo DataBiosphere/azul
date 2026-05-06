@@ -524,11 +524,14 @@ class MirrorService:
         else:
             return None
 
-    def mirror_url(self, file: File) -> str:
-        storage = self._storage_for_file(file)
-        return storage.get_presigned_url(object_key=self._file_object_key(file),
-                                         file_name=file.name,
-                                         content_type=file.content_type)
+    def mirror_url(self, file: File) -> str | None:
+        if self.info_exists(file):
+            storage = self._storage_for_file(file)
+            return storage.get_presigned_url(object_key=self._file_object_key(file),
+                                             file_name=file.name,
+                                             content_type=file.content_type)
+        else:
+            return None
 
     def info(self, file: File) -> MutableJSON:
         storage = self._storage_for_file(file)

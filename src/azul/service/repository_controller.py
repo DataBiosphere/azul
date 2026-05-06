@@ -397,9 +397,7 @@ class RepositoryController(ServiceController):
         # requests since they aren't propagated via query parameters.
         # `MirrorFileDownload` will always be ready immediately.
         if request_index == 0 and config.enable_mirroring:
-            mirror_service = self._mirror_service(catalog)
-            if mirror_service.info_exists(file):
-                mirror_url = mirror_service.mirror_url(file)
+            mirror_url = self._mirror_service(catalog).mirror_url(file)
 
         if mirror_url is None:
             download_cls = plugin.file_download_class()
