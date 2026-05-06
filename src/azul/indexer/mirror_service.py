@@ -524,17 +524,20 @@ class MirrorService:
         else:
             return None
 
-    def mirror_url(self, file: File) -> str:
-        storage = self._storage_for_file(file)
-        return storage.get_presigned_url(object_key=self._file_object_key(file),
-                                         file_name=file.name,
-                                         content_type=file.content_type)
+    def mirror_url(self, file: File) -> str | None:
+        if self._info_exists(file):
+            storage = self._storage_for_file(file)
+            return storage.get_presigned_url(object_key=self._file_object_key(file),
+                                             file_name=file.name,
+                                             content_type=file.content_type)
+        else:
+            return None
 
     def info(self, file: File) -> MutableJSON:
         storage = self._storage_for_file(file)
         return json.loads(storage.get_object(self._info_object_key(file)))
 
-    def info_exists(self, file: File) -> bool:
+    def _info_exists(self, file: File) -> bool:
         storage = self._storage_for_file(file)
         return storage.object_exists(self._info_object_key(file))
 
@@ -660,7 +663,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     @_mirror.register
     def _(self, a: MirrorFileAction) -> Iterator[MirrorAction]:
         assert a.file.size is not None, R('File size unknown', a.file)
-        if self.info_exists(a.file):
+        if self._info_exists(a.file):
             log.info('File is already mirrored, skipping upload: %r', a.file)
             self._update_info(a.file)
         elif self._file_exists(a.file):
