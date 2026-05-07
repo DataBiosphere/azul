@@ -394,7 +394,7 @@ class RepositoryController(ServiceController):
 
         mirror_url = None
         # The file's content type and source would be None on subsequent
-        # requests since they aren't propagated via query parametesr.
+        # requests since they aren't propagated via query parameters.
         # `MirrorFileDownload` will always be ready immediately.
         if request_index == 0 and config.enable_mirroring:
             mirror_service = self._mirror_service(catalog)
