@@ -212,7 +212,6 @@ class T(Enum):
             'deploy:gitlab',
             'deploy:runner',
             *iif(self is T.upgrade, ['backup:gitlab'], [
-                'API',
                 'reindex:partial',
                 *('reindex:' + d for d in self.downstream_deployments(target_branch)),
                 'mirror:partial',
@@ -896,6 +895,12 @@ def emit(t: T, target_branch: str):
                         'content': f'Reviewed build logs for anomalies in `{s}` deployment',
                         'alt': iif(t is T.upgrade, None, 'or PR is labeled `no sandbox`')
                     },
+                    iif(t not in (T.hotfix, T.backport), {
+                        'type': 'cli',
+                        'content': f'Applied upgrade instructions from UPGRADING.rst to `{s}`',
+                        'alt': f'or this PR is not labeled `upgrade`, '
+                               f'or upgrade instructions do not apply to `{s}`'
+                    }),
                     *iif(t is not T.upgrade, [
                         {
                             'type': 'cli',
@@ -999,6 +1004,24 @@ def emit(t: T, target_branch: str):
                 ]
                 for d, s in t.target_deployments(target_branch).items()
             ),
+            *iif(t not in (T.hotfix, T.backport), [
+                *[
+                    {
+                        'type': 'cli',
+                        'content': f'Applied upgrade instructions from UPGRADING.rst to `{d}`',
+                        'alt': f'or this PR is not labeled `upgrade`, '
+                               f'or upgrade instructions do not apply to `{d}`'
+                    }
+                    for d in t.target_deployments(target_branch)
+                ],
+                iif(target_branch == 'develop', {
+                    'type': 'cli',
+                    'content': 'Notified developers to apply upgrade instructions '
+                               'from UPGRADING.rst to their personal deployments',
+                    'alt': 'or this PR is not labeled `upgrade`, '
+                           'or upgrade instructions do not apply to personal deployments'
+                })
+            ]),
             *iif(t.needs_shared_deploy and t.shared_deploy_is_two_phase(target_branch), [
                 {
                     'type': 'cli',
@@ -1182,6 +1205,13 @@ def emit(t: T, target_branch: str):
                 }
             ]),
             *iif(target_branch == 'develop' and t is not T.backport, [
+                {
+                    'type': 'cli',
+                    'content': (
+                        'Propagated the `upgrade` and `API` labels to the next promotion PRs'
+                    ),
+                    'alt': 'or this PR carries neither of these labels'
+                },
                 {
                     'type': 'cli',
                     'content': (

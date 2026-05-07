@@ -91,6 +91,7 @@ Linked issue: #0000
 - [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Applied upgrade instructions from UPGRADING.rst to `hammerbox` <sub>or this PR is not labeled `upgrade`, or upgrade instructions do not apply to `hammerbox`</sub>
 - [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `hammerbox`</sub>
 - [ ] Started reindex in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
@@ -113,6 +114,7 @@ Linked issue: #0000
 - [ ] Pushed merge commit to GitLab `anvilprod`
 - [ ] Build passes on GitLab `anvilprod`
 - [ ] Reviewed build logs for anomalies on GitLab `anvilprod`
+- [ ] Applied upgrade instructions from UPGRADING.rst to `anvilprod` <sub>or this PR is not labeled `upgrade`, or upgrade instructions do not apply to `anvilprod`</sub>
 - [ ] Ran `_select anvilprod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] PR is assigned to only the operator
