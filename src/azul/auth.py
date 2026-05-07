@@ -35,7 +35,7 @@ class Authentication(metaclass=ABCMeta):
 
 
 @attr.s(auto_attribs=True, frozen=True)
-class OAuth2(Authentication):
+class AccessTokenAuthentication(Authentication):
     access_token: str
 
     def identity(self) -> str:

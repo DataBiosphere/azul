@@ -8,7 +8,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    OAuth2,
+    AccessTokenAuthentication,
 )
 from azul.health import (
     HealthApp,
@@ -260,7 +260,7 @@ class ServiceApp(HealthApp):
                          globals=globals(),
                          spec=spec)
 
-    def _authenticate(self) -> OAuth2 | None:
+    def _authenticate(self) -> AccessTokenAuthentication | None:
         try:
             header = self.current_request.headers['Authorization']
         except KeyError:
@@ -272,7 +272,7 @@ class ServiceApp(HealthApp):
                 raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return OAuth2(auth_token)
+                    return AccessTokenAuthentication(auth_token)
                 else:
                     raise UnauthorizedError(header)
 

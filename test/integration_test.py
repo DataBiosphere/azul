@@ -83,7 +83,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    OAuth2,
+    AccessTokenAuthentication,
 )
 from azul.azulclient import (
     AzulClient,
@@ -1515,7 +1515,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         with self._unregistered_service_account_credentials:
             self.assertEqual(public_source_ids, list_source_ids())
         self.assertEqual(public_source_ids, list_source_ids())
-        invalid_auth = OAuth2('foo')
+        invalid_auth = AccessTokenAuthentication('foo')
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
