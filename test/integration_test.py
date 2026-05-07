@@ -1592,16 +1592,19 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 }
             })
         inner_files = [one(file['files']) for file in files]
-        mirror_limit = config.catalogs[catalog].mirror_limit
+        mirror_service = self._mirror_service(catalog)
         for file in inner_files:
             mirror_uri = file['azul_mirror_uri']
             file_size = lookup(file, 'file_size', 'size')
-            if file_size > mirror_limit or not ma_source.config.mirror:
-                self.assertIsNone(mirror_uri)
-            else:
+            if (
+                mirror_service.may_mirror_files_from_source(ma_source.spec)
+                and mirror_service.may_mirror(file_size)
+            ):
                 self.assertIsNotNone(mirror_uri)
                 mirror_uri = furl(mirror_uri)
                 self.assertEqual(aws.ma_mirror_bucket, mirror_uri.host)
+            else:
+                self.assertIsNone(mirror_uri)
         managed_access_file_urls = {
             file['azul_url']
             for file in inner_files
