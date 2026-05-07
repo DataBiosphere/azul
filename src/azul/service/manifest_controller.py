@@ -23,6 +23,7 @@ from azul import (
     config,
 )
 from azul.auth import (
+    AccessTokenAuthentication,
     Authentication,
 )
 from azul.chalice import (
@@ -82,6 +83,10 @@ from azul.service.manifest_service import (
 from azul.service.query_controller import (
     QueryController,
 )
+from azul.service.user_service import (
+    UnknownUserException,
+    UserService,
+)
 
 manifest_state_key = 'manifest'
 
@@ -105,6 +110,10 @@ class ManifestController(QueryController):
     @cached_property
     def _service(self) -> ManifestService:
         return ManifestService(file_url_func=self._file_url)
+
+    @cached_property
+    def _user_service(self) -> UserService:
+        return UserService()
 
     @property
     def _formats(self) -> Sequence[ManifestFormat]:
@@ -577,6 +586,13 @@ class ManifestController(QueryController):
                 url = self._manifest_url(fetch=False, token_or_key=manifest_key.encode())
             else:
                 url = furl(self._service.get_manifest_url(manifest))
+            if isinstance(authentication, AccessTokenAuthentication):
+                try:
+                    authentication = self._user_service.mint_personal_access_token(authentication)
+                except UnknownUserException:
+                    # Fall back to access token auth, but this will render the
+                    # command line useless when the access token expires.
+                    pass
             body = {
                 'Status': 302,
                 'Location': str(url),

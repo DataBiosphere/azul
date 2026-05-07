@@ -45,6 +45,10 @@ class AccessTokenAuthentication(Authentication):
         return f'Authorization: Bearer {self.access_token}'
 
 
+class PersonalAccessTokenAuthentication(AccessTokenAuthentication):
+    pass
+
+
 @attr.s(auto_attribs=True, frozen=True)
 class HMACAuthentication(Authentication):
     key_id: str

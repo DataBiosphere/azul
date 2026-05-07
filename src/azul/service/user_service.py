@@ -11,6 +11,10 @@ import jwt
 from azul import (
     config,
 )
+from azul.auth import (
+    AccessTokenAuthentication,
+    PersonalAccessTokenAuthentication,
+)
 from azul.deployment import (
     aws,
 )
@@ -44,6 +48,10 @@ class User(TypedDict):
     email_verified: bool
     #: The Unix timestamp after which the refresh token expires
     expiration: int
+
+
+class UnknownUserException(Exception):
+    pass
 
 
 class UserService:
@@ -105,6 +113,20 @@ class UserService:
                 email_verified=item['email_verified']['BOOL'],
                 expiration=int(item[self.ttl_attribute]['N'])
             )
+
+    _google_issuer = 'https://accounts.google.com'
+
+    def mint_personal_access_token(self,
+                                   authentication: AccessTokenAuthentication
+                                   ) -> PersonalAccessTokenAuthentication:
+        token_info = self._oauth_client.token_info(authentication.access_token)
+        assert token_info['aud'] == self._client_id, R(
+            'Token was not issued for this application')
+        iss, sub = self._google_issuer, token_info['sub']
+        user = self.get_user(iss, sub)
+        if user is None:
+            raise UnknownUserException(iss, sub)
+        raise NotImplementedError('APAT minting')
 
     def _store_tokens(self, response: TokenForCodeResponse) -> None:
         # Signature verification is unnecessary per OIDC 3.1.3.7 since the
