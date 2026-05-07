@@ -2,11 +2,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from inspect import (
-    isabstract,
-)
 from typing import (
-    ClassVar,
     Final,
 )
 
@@ -14,12 +10,6 @@ import attr
 
 from azul import (
     config,
-)
-from azul.lib.json import (
-    copy_json,
-)
-from azul.lib.types import (
-    JSON,
 )
 
 
@@ -42,47 +32,6 @@ class Authentication(metaclass=ABCMeta):
         does not support such a representation.
         """
         raise NotImplementedError
-
-    _cls_field: ClassVar[str] = '_cls'
-
-    def to_json(self) -> JSON:
-        """
-        >>> @attr.s(auto_attribs=True, frozen=True)
-        ... class Foo(Authentication):
-        ...     foo: str
-        ...     def identity(self) -> str:
-        ...         # noinspection PyUnresolvedReferences
-        ...         return self.foo
-        ...     def as_http_header(self) -> str:
-        ...         raise NotImplementedError
-        >>> f = Foo('bar')
-        >>> f
-        Foo(foo='bar')
-        >>> f.to_json()
-        {'foo': 'bar', '_cls': 'Foo'}
-        >>> Authentication.from_json(f.to_json())
-        Foo(foo='bar')
-        """
-        json = attr.asdict(self)
-        json[self._cls_field] = type(self).__name__
-        return json
-
-    @classmethod
-    def from_json(cls, json: JSON) -> Authentication:
-        json = copy_json(json)
-        cls_name = json.pop(cls._cls_field)
-        assert isinstance(cls_name, str)
-        return cls._cls_for_name[cls_name](**json)
-
-    _cls_for_name: ClassVar[dict[str, type[Authentication]]] = {}
-
-    def __init_subclass__(cls) -> None:
-        super().__init_subclass__()
-        if not isabstract(cls):
-            name = cls.__name__
-            assert name not in cls._cls_for_name, cls
-            assert cls._cls_field not in attr.fields_dict(cls), cls
-            cls._cls_for_name[name] = cls
 
 
 @attr.s(auto_attribs=True, frozen=True)
