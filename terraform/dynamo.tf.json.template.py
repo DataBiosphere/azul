@@ -7,6 +7,9 @@ from azul.infra.terraform import (
 from azul.service.source_service import (
     SourceService,
 )
+from azul.service.user_service import (
+    UserService,
+)
 
 emit_tf(
     {
@@ -25,6 +28,21 @@ emit_tf(
                         ],
                         "ttl": {
                             "attribute_name": SourceService.ttl_attribute,
+                            "enabled": True
+                        }
+                    },
+                    "users": {
+                        "name": config.dynamo_users_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": UserService.key_attribute,
+                        "attribute": [
+                            {
+                                "name": UserService.key_attribute,
+                                "type": "S"
+                            }
+                        ],
+                        "ttl": {
+                            "attribute_name": UserService.ttl_attribute,
                             "enabled": True
                         }
                     }

@@ -386,36 +386,26 @@ _hibernate() {
 # Launch Claude Code in a loop, reloading the environment between invocations.
 # Each invocation will pick up where the previous one left off.
 #
-# Usage: _claude [session_id] [claude_args...]
+# Usage: _claude [session_id]
 #
 # To exit the loop, exit Claude and then hit any key within 3 seconds.
 #
 _claude() {
-	local session_id resume
+	local session_id flag
 	if [ -n "$1" ] ; then
 		session_id="$1"
-		shift
-		resume=true
+		flag=--resume
 	else
 		session_id="$(python -c 'import uuid; print(uuid.uuid4())')"
-		resume=false
+		flag=--session-id
 	fi
-	while true ; do
-		local flag
-		if $resume ; then
-			flag=--resume
-		else
-			flag=--session-id
-			resume=true
-		fi
-		if ! claude "$flag" "$session_id" "$@" ; then
-			return 1
-		fi
+	while claude "$flag" "$session_id" ; do
 		echo >&2 'Reloading environment in 3 seconds. Press any key to exit …'
 		if read -r -t 3 -n 1 ; then
 			break
 		fi
 		_refresh
+		flag=--resume
 	done
 }
 

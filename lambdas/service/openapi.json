@@ -13948,7 +13948,7 @@
                     }
                 },
                 "summary": "Obtain an OAuth 2.0 access token in exchange for an authorization code",
-                "description": "\nInvoke this endpoint as part of the authorization code flow\nfrom a single-page app.\n\nNote that while this endpoint is part of the authorization\ncode flow, which typically yields a refresh token along with\nthe access token, this endpoint returns only the access\ntoken. Doing so is an aspect of the commonly adopted\nsecurity best practice known as [Backend For Frontend](\nhttps://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).\n\n**When initiating the authorization code flow, be\nsure to request the `openid` scope.**\n",
+                "description": "\nInvoke this endpoint as part of the authorization code flow\nfrom a single-page app.\n\nNote that while this endpoint is part of the authorization\ncode flow, which typically yields a refresh token along with\nthe access token, this endpoint returns only the access\ntoken. Doing so is an aspect of the commonly adopted\nsecurity best practice known as [Backend For Frontend](\nhttps://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).\n\n**When initiating the authorization code flow, be\nsure to request the `email` and `openid` scopes.**\n",
                 "requestBody": {
                     "description": "\nJSON conforming to the Google Sign-In [CodeResponse](\nhttps://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse),\nexcept for the error-related parts. Those should be\nhandled client-side.\n",
                     "required": true,
@@ -13963,7 +13963,7 @@
                                     },
                                     "scope": {
                                         "type": "string",
-                                        "description": "\nA space-delimited list of scopes that are\napproved by the user. Must contain `openid`.\n"
+                                        "description": "\nA space-delimited list of scopes that are\napproved by the user. Must contain\n`email` and `openid`.\n"
                                     },
                                     "state": {
                                         "type": "string",
