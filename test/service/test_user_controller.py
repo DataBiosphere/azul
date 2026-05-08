@@ -97,7 +97,7 @@ class TestUserController(DCP2TestCase,
         super().setUp()
         key = aws.kms.create_key(KeyUsage='SIGN_VERIFY',
                                  CustomerMasterKeySpec='RSA_2048')
-        aws.kms.create_alias(AliasName=config.apat_kms_alias,
+        aws.kms.create_alias(AliasName=config.apat_kms_key.alias,
                              TargetKeyId=key['KeyMetadata']['KeyId'])
 
     def _mock_token_info(self) -> TokenInfoResponse:
@@ -237,7 +237,7 @@ class TestUserController(DCP2TestCase,
         expected_sub = '#'.join([self._mock_iss, self._mock_sub])
         self.assertEqual(expected_sub, claims['sub'])
         now = UserService()._now()
-        self.assertAlmostEqual(config.apat_expiration,
+        self.assertAlmostEqual(UserService._apat_expiration,
                                claims['exp'] - now,
                                delta=5)
 

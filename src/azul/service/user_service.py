@@ -122,6 +122,7 @@ class UserService:
     _google_issuer = 'https://accounts.google.com'
 
     _apat_algorithm = 'RS256'
+    _apat_expiration = 30 * 24 * 60 * 60
 
     @cached_property
     def _jwt(self) -> PyJWT:
@@ -144,14 +145,14 @@ class UserService:
         payload = {
             'iss': str(config.service_endpoint),
             'sub': self._key_separator.join([iss, sub]),
-            'exp': now + config.apat_expiration,
+            'exp': now + self._apat_expiration,
             'iat': now
         }
         token = self._jwt.encode(payload,
-                                 key=config.apat_kms_alias,
+                                 key=config.apat_kms_key.alias,
                                  algorithm=self._apat_algorithm)
         self._jwt.decode(token,
-                         key=config.apat_kms_alias,
+                         key=config.apat_kms_key.alias,
                          algorithms=[self._apat_algorithm])
         return PersonalAccessTokenAuthentication(access_token=token)
 

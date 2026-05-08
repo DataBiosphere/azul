@@ -183,21 +183,14 @@ policy = {
             'Effect': 'Allow',
             'Action': [
                 'kms:GenerateMac',
+                'kms:GetPublicKey',
+                'kms:Sign',
+                'kms:Verify',
                 'kms:VerifyMac'
             ],
             'Resource': [
-                '${aws_kms_key.%s.arn}' % config.manifest_kms_key_tf_name
-            ]
-        },
-        {
-            'Effect': 'Allow',
-            'Action': [
-                'kms:Sign',
-                'kms:Verify',
-                'kms:GetPublicKey'
-            ],
-            'Resource': [
-                '${aws_kms_key.%s.arn}' % config.apat_kms_key_tf_name
+                '${aws_kms_key.%s.arn}' % key.name
+                for key in config.kms_keys
             ]
         },
         {

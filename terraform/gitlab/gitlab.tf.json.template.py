@@ -401,6 +401,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'kms:GetParametersForImport',
                             'kms:DescribeKey',
                             'kms:GenerateMac',
+                            'kms:GetPublicKey',
+                            'kms:Sign',
+                            'kms:Verify',
                             'kms:VerifyMac'
                         ],
                         'resources': [
