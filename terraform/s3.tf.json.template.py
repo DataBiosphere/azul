@@ -56,7 +56,7 @@ tf_config = {
             },
             **iif(config.enable_mirroring, {
                 term: {
-                    'bucket': '${aws_s3_bucket.%s.id}' % config.mirror_term,
+                    'bucket': '${aws_s3_bucket.%s.id}' % term,
                     'rule': {
                         'id': 'mirror_cleanup',
                         'status': 'Enabled',
