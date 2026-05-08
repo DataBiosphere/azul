@@ -243,20 +243,12 @@ class Config:
             deployment = self.deployment_stage
         return '/'.join([*prefix, *atuple(deployment), *component])
 
-    @property
-    def manifest_expiration(self) -> int:
-        """
-        Number of days before a manifest will be deleted from the storage bucket
-        """
-        return 7
+    #: Number of days before a manifest will be deleted from the storage bucket
+    manifest_expiration = 7
 
-    @property
-    def manifest_expiration_margin(self) -> float:
-        """
-        Minimum duration (in seconds) before a manifest in the storage bucket
-        is considered too close to expiration for use
-        """
-        return 60 * 15
+    #: Minimum duration (in seconds) before a manifest in the storage bucket
+    #: is considered too close to expiration for use
+    manifest_expiration_margin = 60 * 15
 
     manifest_kms_key_tf_name = 'manifest'
 
