@@ -77,7 +77,7 @@ tf_config = {
             }
             for bucket in (
                 config.storage_term,
-                *iif(config.enable_mirroring, [config.mirror_term])
+                *iif(config.enable_mirroring, [config.mirror_term, config.ma_mirror_term])
             )
         }
     }
