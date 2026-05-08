@@ -94,6 +94,8 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                 body_log_level, body_log_message = logs.pop()  # asserted separately
                 request_headers = {
                     'host': url.netloc,
+                    # FIXME: Use compressed encoding
+                    #        https://github.com/DataBiosphere/azul/issues/7990
                     'accept-encoding': 'identity',
                     'content-length': str(len(body)),
                     'user-agent': 'python-urllib3/2.7.0',
