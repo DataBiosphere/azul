@@ -146,9 +146,12 @@ class TestUserController(DCP2TestCase,
                               body=body,
                               headers={'Content-Type': 'application/json'})
 
+    @cached_property
+    def _service(self) -> UserService:
+        return self._app.user_controller._service  # type: ignore[attr-defined]
+
     def _get_user(self) -> User:
-        service = self._app.user_controller._service  # type: ignore[attr-defined]
-        return service.get_user(self._mock_iss, self._mock_sub)
+        return self._service.get_user(self._mock_iss, self._mock_sub)
 
     @patch.object(OAuth2Client, 'token_for_code')
     def test_authorize(self, mock_token_for_code):
@@ -222,9 +225,8 @@ class TestUserController(DCP2TestCase,
         mock_token_for_code.return_value = self._mock_token_response()
         self._authorize()
         mock_token_info.return_value = self._mock_token_info()
-        service = self._app.user_controller._service  # type: ignore[attr-defined]
         authentication = AccessTokenAuthentication(self._mock_access_token)
-        apat = service.mint_personal_access_token(authentication)
+        apat = self._service.mint_personal_access_token(authentication)
         mock_token_info.assert_called_once_with(self._mock_access_token)
         header = jwt.get_unverified_header(apat.access_token)
         self.assertEqual('RS256', header['alg'])
@@ -241,7 +243,6 @@ class TestUserController(DCP2TestCase,
     @patch.object(OAuth2Client, 'token_info')
     def test_mint_personal_access_token_unknown_user(self, mock_token_info):
         mock_token_info.return_value = self._mock_token_info()
-        service = self._app.user_controller._service  # type: ignore[attr-defined]
         authentication = AccessTokenAuthentication(self._mock_access_token)
         with self.assertRaises(UnknownUserException):
-            service.mint_personal_access_token(authentication)
+            self._service.mint_personal_access_token(authentication)
