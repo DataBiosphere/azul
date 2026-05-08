@@ -15,6 +15,7 @@ from chalice.app import (
     BadRequestError,
     ForbiddenError,
     NotFoundError,
+    Request,
     Response,
     TooManyRequestsError,
     UnauthorizedError,
@@ -28,6 +29,7 @@ from azul import (
     config,
 )
 from azul.auth import (
+    AccessTokenAuthentication,
     Authentication,
 )
 from azul.chalice import (
@@ -80,6 +82,10 @@ from azul.service.controller import (
 )
 from azul.service.index_service import (
     IndexService,
+)
+from azul.service.user_service import (
+    InvalidPersonalAccessTokenError,
+    UserService,
 )
 
 log = logging.getLogger(__name__)
@@ -300,6 +306,26 @@ class RepositoryController(ServiceController):
             return Response(body={'sources': sources}, status_code=200)
 
         return locals()
+
+    def _authentication(self, request: Request) -> Authentication | None:
+        authentication = super()._authentication(request)
+        if isinstance(authentication, AccessTokenAuthentication):
+            try:
+                authentication = self._user_service.narrow_token(authentication)
+            except TypeError:
+                # It must be a regular access token, not an APAT
+                pass
+            else:
+                # It might be an APAT, but it could still be a forged JWT of some kind
+                try:
+                    authentication = self._user_service.exchange_token(authentication)
+                except InvalidPersonalAccessTokenError:
+                    raise UnauthorizedError('Invalid personal access token')
+        return authentication
+
+    @cached_property
+    def _user_service(self) -> UserService:
+        return UserService()
 
     def download_file(self, file_uuid: str, fetch: bool) -> MutableJSON:
         request = self.current_request

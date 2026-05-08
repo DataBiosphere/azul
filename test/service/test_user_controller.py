@@ -27,9 +27,6 @@ from azul.deployment import (
 from azul.http import (
     HasCachedHttpClient,
 )
-from azul.lib.types import (
-    not_none,
-)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -151,7 +148,7 @@ class TestUserController(DCP2TestCase,
 
     def _get_user(self) -> User:
         service = self._app.user_controller._service  # type: ignore[attr-defined]
-        return not_none(service.get_user(self._mock_iss, self._mock_sub))
+        return service.get_user(self._mock_iss, self._mock_sub)
 
     @patch.object(OAuth2Client, 'token_for_code')
     def test_authorize(self, mock_token_for_code):

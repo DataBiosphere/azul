@@ -141,6 +141,27 @@ class OAuth2Client(HasCachedHttpClient):
         assert response['token_type'] == 'Bearer'
         return response
 
+    def token_for_refresh(self,
+                          *,
+                          refresh_token: str,
+                          client_id: str,
+                          client_secret: str
+                          ) -> TokenResponse:
+        fields = {
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            'client_id': client_id,
+            'client_secret': client_secret,
+        }
+        url = furl('https://oauth2.googleapis.com/token')
+        response = self._http_client.request('POST', str(url), fields=fields)
+        assert response.status == 200, R(
+            'Unexpected status of response from authorization server', response.status)
+        response = json.loads(response.data)
+        assert is_of_type(response, TokenResponse)
+        assert response['token_type'] == 'Bearer'
+        return response
+
     def token_info(self, access_token: str) -> TokenInfoResponse:
         url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args=dict(access_token=access_token))

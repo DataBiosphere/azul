@@ -6,12 +6,12 @@ from typing import (
     TypedDict,
 )
 
-from jwt.algorithms import (
-    Algorithm,
-)
+import jwt.algorithms
 from jwt.api_jwt import (
     PyJWT,
 )
+import jwt.exceptions
+import jwt.types
 
 from azul import (
     config,
@@ -51,11 +51,17 @@ class User(TypedDict):
     email: str
     #: Whether the email address has been verified by the identity provider
     email_verified: bool
+    #: The Unix timestamp after which the access token expires
+    access_token_expiration: int
     #: The Unix timestamp after which the refresh token expires
     expiration: int
 
 
 class UnknownUserException(Exception):
+    pass
+
+
+class InvalidPersonalAccessTokenError(Exception):
     pass
 
 
@@ -101,7 +107,7 @@ class UserService:
         self._store_tokens(response)
         return response
 
-    def get_user(self, iss: str, sub: str) -> User | None:
+    def get_user(self, iss: str, sub: str) -> User:
         key = self._key_separator.join([iss, sub])
         response = self._dynamodb.get_item(
             TableName=self._table_name,
@@ -109,13 +115,18 @@ class UserService:
         )
         item = response.get('Item')
         if item is None:
-            return None
+            raise UnknownUserException(iss, sub)
         else:
+            try:
+                access_token_expiration = int(item['access_token_expiration']['N'])
+            except KeyError:
+                access_token_expiration = 0
             return User(
                 access_token=item['access_token']['S'],
                 refresh_token=item['refresh_token']['S'],
                 email=item['email']['S'],
                 email_verified=item['email_verified']['BOOL'],
+                access_token_expiration=access_token_expiration,
                 expiration=int(item[self.ttl_attribute]['N'])
             )
 
@@ -134,13 +145,12 @@ class UserService:
     def mint_personal_access_token(self,
                                    authentication: AccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
+        assert not isinstance(authentication, PersonalAccessTokenAuthentication)
         token_info = self._oauth_client.token_info(authentication.access_token)
         assert token_info['aud'] == self._client_id, R(
             'Token was not issued for this application')
         iss, sub = self._google_issuer, token_info['sub']
-        user = self.get_user(iss, sub)
-        if user is None:
-            raise UnknownUserException(iss, sub)
+        self.get_user(iss, sub)
         now = self._now()
         payload = {
             'iss': str(config.service_endpoint),
@@ -156,25 +166,74 @@ class UserService:
                          algorithms=[self._apat_algorithm])
         return PersonalAccessTokenAuthentication(access_token=token)
 
+    def narrow_token(self,
+                     authentication: AccessTokenAuthentication
+                     ) -> PersonalAccessTokenAuthentication:
+        """
+        Check wether the given access token is actually a personal access token.
+        If it is, return a copy of the argument, but of the more specific type.
+        Otherwise, raise TypeError. Note that the returned token might still be
+        a forged JWT of some kind, it hasn't been validated yet.
+        """
+        token = authentication.access_token
+        try:
+            options = jwt.types.Options(verify_signature=False, verify_exp=False)
+            unverified = self._jwt.decode(token, options=options)
+        except Exception:
+            raise TypeError(authentication)
+        else:
+            if unverified.get('iss') == str(config.service_endpoint):
+                return PersonalAccessTokenAuthentication(access_token=token)
+            else:
+                raise TypeError(authentication)
+
+    def exchange_token(self,
+                       authentication: PersonalAccessTokenAuthentication
+                       ) -> AccessTokenAuthentication:
+        """
+        Return a usable access token in exchange for an APAT if valid and not
+        yet expired.
+        """
+        try:
+            claims = self._jwt.decode(authentication.access_token,
+                                      key=config.apat_kms_key.alias,
+                                      algorithms=[self._apat_algorithm],
+                                      issuer=str(config.service_endpoint))
+        except jwt.exceptions.PyJWTError as e:
+            raise InvalidPersonalAccessTokenError from e
+        else:
+            identity = claims['sub']
+            iss, sub = identity.split(self._key_separator, 1)
+            assert iss == self._google_issuer, iss
+            user = self.get_user(iss, sub)
+            access_token = user['access_token']
+            if user['access_token_expiration'] < self._now() + 60:
+                response = self._oauth_client.token_for_refresh(
+                    refresh_token=user['refresh_token'],
+                    client_id=self._client_id,
+                    client_secret=self._client_secret
+                )
+                access_token, expires_in = response['access_token'], response['expires_in']
+                self._update_access_token(identity, access_token, expires_in)
+            return AccessTokenAuthentication(access_token)
+
     def _store_tokens(self, response: TokenForCodeResponse) -> None:
         # Signature verification is unnecessary per OIDC 3.1.3.7 since the
         # token was received directly from the token endpoint over TLS.
-        id_claims = self._jwt.decode(response['id_token'],
-                                     options={'verify_signature': False})
+        options = jwt.types.Options(verify_signature=False)
+        id_claims = self._jwt.decode(response['id_token'], options=options)
         iss, sub = id_claims['iss'], id_claims['sub']
-        assert iss == self._google_issuer, R(
-            'Unexpected issuer', iss)
-        assert self._key_separator not in iss, R(
-            'Unexpected separator in issuer', iss)
+        assert iss == self._google_issuer, R('Unexpected issuer', iss)
+        assert self._key_separator not in iss, R('Unexpected separator in issuer', iss)
         key = self._key_separator.join([iss, sub])
-        expiration = response.get('refresh_token_expires_in', self._default_expiration)
-        email = id_claims['email']
-        email_verified = id_claims['email_verified']
+        email, email_verified = id_claims['email'], id_claims['email_verified']
+        now = self._now()
         self._dynamodb.update_item(
             TableName=self._table_name,
             Key={self.key_attribute: {'S': key}},
             UpdateExpression=fd('''
                 SET access_token = :access_token,
+                    access_token_expiration = :access_token_expiration,
                     refresh_token = :refresh_token,
                     email = :email,
                     email_verified = :email_verified,
@@ -183,10 +242,30 @@ class UserService:
             ExpressionAttributeNames={'#expiration': self.ttl_attribute},
             ExpressionAttributeValues={
                 ':access_token': {'S': response['access_token']},
+                ':access_token_expiration': {'N': str(now + response['expires_in'])},
                 ':refresh_token': {'S': response['refresh_token']},
                 ':email': {'S': email},
                 ':email_verified': {'BOOL': email_verified},
-                ':expiration': {'N': str(self._now() + expiration)},
+                ':expiration': {'N': str(now + response.get('refresh_token_expires_in',
+                                                            self._default_expiration))},
+            }
+        )
+
+    def _update_access_token(self,
+                             key: str,
+                             access_token: str,
+                             expires_in: int
+                             ) -> None:
+        self._dynamodb.update_item(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': key}},
+            UpdateExpression=fd('''
+                SET access_token = :access_token,
+                    access_token_expiration = :access_token_expiration
+            '''),
+            ExpressionAttributeValues={
+                ':access_token': {'S': access_token},
+                ':access_token_expiration': {'N': str(self._now() + expires_in)},
             }
         )
 
@@ -194,7 +273,7 @@ class UserService:
         return int(time())
 
 
-class KMSSigningAlgorithm(Algorithm):
+class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
 
     def prepare_key(self, key: str) -> str:
         return key
