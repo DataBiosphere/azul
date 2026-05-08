@@ -370,7 +370,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       version=self._version,
                       size=row['file_size'],
                       md5=row['file_md5sum'],
-                      drs_uri=row['file_ref'])
+                      drs_uri=row['file_ref'],
+                      source=source)
             for ref, row in batch
             if not missing_md5(row)
         ]

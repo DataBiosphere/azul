@@ -97,8 +97,8 @@ from azul.lib.types import (
     json_str,
 )
 from azul.oauth2 import (
+    CredentialedClient,
     CredentialsProvider,
-    OAuth2Client,
     ServiceAccountCredentials,
     TokenCredentials,
 )
@@ -282,7 +282,7 @@ class TerraConcurrentModificationException(TerraClientException):
 
 
 @attrs.frozen(kw_only=True)
-class TerraClient(OAuth2Client):
+class TerraClient(CredentialedClient):
     """
     A client to a service in the Broad Institute's Terra ecosystem.
     """

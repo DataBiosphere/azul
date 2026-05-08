@@ -154,11 +154,13 @@ def _configure_log_levels(*loggers):
 
 
 def root_log_level():
-    return [logging.WARN, logging.INFO, logging.DEBUG][azul.config.debug]
+    levels = [logging.WARN, logging.INFO, logging.DEBUG, logging.DEBUG]
+    return levels[azul.config.debug]
 
 
 def azul_log_level():
-    return [logging.INFO, logging.DEBUG, logging.DEBUG][azul.config.debug]
+    levels = [logging.INFO, logging.DEBUG, logging.DEBUG, logging.DEBUG]
+    return levels[azul.config.debug]
 
 
 def opensearch_log_level():
@@ -166,7 +168,8 @@ def opensearch_log_level():
 
 
 def silent_opensearch_log_level():
-    return [logging.ERROR, logging.INFO, logging.DEBUG][azul.config.debug]
+    levels = [logging.ERROR, logging.INFO, logging.DEBUG, logging.DEBUG]
+    return levels[azul.config.debug]
 
 
 opensearch_log = logging.getLogger('opensearch')

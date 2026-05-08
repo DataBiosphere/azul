@@ -7,7 +7,8 @@ from typing import (
 )
 
 pop = 1  # remove snapshot
-no_mirror = 2  # do not mirror files from snapshot (redundant for managed access snapshots)
+no_ma_mirror = 2  # do not mirror snapshot because it is MA and has yet to be nominated
+no_mirror = 2  # do not mirror snapshot for other reasons
 
 type DatasetName = str
 type SourceSpec = str
@@ -75,7 +76,7 @@ anvil_sources = union({}, 3, delta([
     # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
     #        https://github.com/DataBiosphere/azul/issues/7634
     source('e53e74aa', '1000G_2019_Dev_20230609_ANV5_202306121732', no_mirror),
-    source('42c70e6a', 'CCDG_Sample_1_20230228_ANV5_202302281520'),
+    source('42c70e6a', 'CCDG_Sample_1_20230228_ANV5_202302281520', no_ma_mirror),
     source('dd576076', 'CMG_Sample_1_20230225_ANV5_202512031111')
 ]))
 

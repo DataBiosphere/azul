@@ -164,7 +164,7 @@ class DCP1CannedBundleTestCase(DCP1TestCase, CannedBundleTestCase[DSSBundle]):
 
     @classmethod
     def bundle_fqid(cls, *, uuid: str, version: str) -> DSSBundleFQID:
-        return DSSBundleFQID(source=cls.source,
+        return DSSBundleFQID(source=cls.source.ref,
                              uuid=uuid,
                              version=version)
 
@@ -184,7 +184,7 @@ class DCP2CannedBundleTestCase(DCP2TestCase, CannedBundleTestCase[TDRHCABundle])
 
     @classmethod
     def bundle_fqid(cls, *, uuid: str, version: str) -> TDRBundleFQID:
-        return TDRBundleFQID(source=cls.source,
+        return TDRBundleFQID(source=cls.source.ref,
                              uuid=uuid,
                              version=version)
 
@@ -204,7 +204,7 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
                     uuid: str,
                     table_name: str = BundleType.primary.value,
                     ) -> TDRAnvilBundleFQID:
-        return TDRAnvilBundleFQID(source=cls.source,
+        return TDRAnvilBundleFQID(source=cls.source.ref,
                                   uuid=uuid,
                                   version=cls.version,
                                   table_name=table_name,

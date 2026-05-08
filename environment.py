@@ -216,7 +216,7 @@ def env() -> Mapping[str, str | None]:
         # `gitlab` components, as well as building and pushing the executor
         # image (see terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '29.4.0',
+        'azul_docker_version': '29.4.1',
 
         # The version of Python used throughout the system.
         #
@@ -244,7 +244,7 @@ def env() -> Mapping[str, str | None]:
         # `make -C terraform update_schema`, and committing the resulting
         # changes.
         #
-        'azul_terraform_version': '1.14.8',
+        'azul_terraform_version': '1.14.9',
 
         # The version of the AWS CLI v2 used throughout the system.
         #
@@ -257,7 +257,7 @@ def env() -> Mapping[str, str | None]:
         # Modifying this variable requires running `make environment.boot` and
         # committing the resulting changes.
         #
-        'azul_awscli_version': '2.34.30',
+        'azul_awscli_version': '2.34.38',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -278,7 +278,7 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6-78',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6.1-79',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
@@ -288,7 +288,7 @@ def env() -> Mapping[str, str | None]:
                 'is_custom': False
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-61',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-62',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
@@ -299,11 +299,11 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:18.10.3-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:18.11.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v18.10.1',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v18.11.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
@@ -620,6 +620,11 @@ def env() -> Mapping[str, str | None]:
         # If None, a provisioned bucket will be used.
         #
         'AZUL_MIRROR_BUCKET': None,
+
+        # The name of an external bucket to use for mirroring managed access
+        # files. If None, a provisioned bucket will be used.
+        #
+        'AZUL_MANAGED_ACCESS_MIRROR_BUCKET': None,
 
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed

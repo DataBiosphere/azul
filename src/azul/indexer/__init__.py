@@ -169,14 +169,6 @@ class BundleFQID(SerializableAttrs):
         return self._nucleus() < other._nucleus()
 
 
-@attrs.frozen(kw_only=True)
-class SourceConfig(SerializableAttrs):
-    """
-    Configuration on how to index or mirror a specific source.
-    """
-    mirror: bool
-
-
 @attrs.frozen(kw_only=True, eq=False)
 class SourcedBundleFQID[SOURCE_REF: SourceRef](BundleFQID):
     """

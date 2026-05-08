@@ -177,7 +177,7 @@ class TDRPluginTestCase(TDRTestCase,
 
     @classmethod
     def _patch_tdr_client(cls):
-        source = cls.source.spec
+        source = cls.source.ref.spec
         credentials_provider = MockCredentialsProvider(project_id=source.subdomain)
         tdr = MockTDRClient(credentials_provider=credentials_provider)
         assert cls.netloc is not None
@@ -200,8 +200,8 @@ class TDRPluginTestCase(TDRTestCase,
                                            command=[
                                                '--log-level=debug',
                                                '--port=9050',
-                                               '--project=' + cls.source.spec.subdomain,
-                                               '--dataset=' + cls.source.spec.name
+                                               '--project=' + cls.source.ref.spec.subdomain,
+                                               '--dataset=' + cls.source.ref.spec.name
                                            ])
         cls._patch_tdr_client()
         cls._patch_timestamp_conversion()
@@ -300,7 +300,6 @@ class TDRPluginTestCase(TDRTestCase,
         bq.insert_rows(table=table, selected_fields=schema, rows=map(dump_row, rows))
 
     def _bq_schema_from_row(self, row: BigQueryRow) -> list[bigquery.SchemaField]:
-
         def field_type(key: str, value: AnyJSON) -> str:
             if key == 'version':
                 return 'TIMESTAMP'
@@ -327,7 +326,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         return tdr_hca.Plugin
 
     def test_list_and_count_bundles(self):
-        source = self.source
+        source = self.source.ref
         current_version = '2001-01-01T00:00:00.100001Z'
         links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
         self._make_mock_table(source=source.spec,
@@ -357,7 +356,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
             self.assertEqual(len(expected_bundle_ids), actual_bundle_count)
 
     def test_list_and_count_files(self):
-        source = self.source
+        source = self.source.ref
         self._make_mock_tables(source)
         tables = self._load_canned_file_version(uuid=source.id,
                                                 version=None,
@@ -398,7 +397,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         # Test valid links
         self._test_fetch_bundle(bundle, load_tables=True)
         # Test invalid links by modifying the canned bundle
-        spec = self.source.spec
+        spec = self.source.ref.spec
         plugin = self.plugin
         links_id = bundle.uuid
         links = one(plugin.tdr.run_sql(f'''
@@ -496,7 +495,17 @@ class TestTDRSourceList(AzulUnitTestCase):
         return _mock_urlopen
 
     def _mock_google_oauth_tokeninfo(self):
-        body = json.dumps({'azp': config.google_oauth2_client_id}).encode()
+        body = json.dumps({
+            'azp': config.google_oauth2_client_id,
+            'aud': config.google_oauth2_client_id,
+            'sub': config.google_oauth2_client_id.split('.')[0].split('-')[0],
+            'scope': 'https://www.googleapis.com/auth/userinfo.email openid',
+            'exp': '1689645319',
+            'expires_in': '3511',
+            'email': 'hannes@ucsc.edu',
+            'email_verified': 'true',
+            'access_type': 'online'
+        }).encode()
         response = urllib3.HTTPResponse(status=200, body=BytesIO(body))
         mock_urlopen = Mock()
         mock_urlopen.return_value = response

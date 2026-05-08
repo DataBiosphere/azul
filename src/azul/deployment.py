@@ -628,6 +628,11 @@ class AWS:
         return self.qualified_bucket_name(config.mirror_term,
                                           deployment_name=config.deployment_stage)
 
+    @property
+    def ma_mirror_bucket(self):
+        return self.qualified_bucket_name(config.ma_mirror_term,
+                                          deployment_name=config.deployment_stage)
+
     # An ELB account ID, which varies depending on region, is needed to specify
     # the principal in bucket policies for buckets storing LB access logs.
     #

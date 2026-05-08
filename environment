@@ -383,6 +383,42 @@ _hibernate() {
   } fi
 }
 
+# Launch Claude Code in a loop, reloading the environment between invocations.
+# Each invocation will pick up where the previous one left off.
+#
+# Usage: _claude [session_id] [claude_args...]
+#
+# To exit the loop, exit Claude and then hit any key within 3 seconds.
+#
+_claude() {
+	local session_id resume
+	if [ -n "$1" ] ; then
+		session_id="$1"
+		shift
+		resume=true
+	else
+		session_id="$(python -c 'import uuid; print(uuid.uuid4())')"
+		resume=false
+	fi
+	while true ; do
+		local flag
+		if $resume ; then
+			flag=--resume
+		else
+			flag=--session-id
+			resume=true
+		fi
+		if ! claude "$flag" "$session_id" "$@" ; then
+			return 1
+		fi
+		echo >&2 'Reloading environment in 3 seconds. Press any key to exit …'
+		if read -r -t 3 -n 1 ; then
+			break
+		fi
+		_refresh
+	done
+}
+
 # We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
 # `export_environment.py`, too. We could also pass -S to `python` but that
 # causes problems on Travis (`importlib.util` failing to import `contextlib`).
@@ -403,3 +439,13 @@ _complete_env() {
 }
 
 complete -F _complete_env _select _link _validate_link
+
+# Adds an az_foo convenience function for every scripts/foo.py
+#
+# Only meant for interactive use: type az and hit TAB for auto-complete.
+#
+for _script in "${project_root}/scripts/"*.py ; do
+	_func="az_$(basename "$_script" .py)"
+	eval "${_func}() { python \"${_script}\" \"\$@\" ; }"
+done
+unset _script _func

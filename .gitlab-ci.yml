@@ -67,7 +67,7 @@ build_image:
 setup:
   extends: .base_on_push
   stage: setup
-  timeout: 30s
+  timeout: 45s
   script:
     - python scripts/github_status_check.py "${status_context}" pending
 

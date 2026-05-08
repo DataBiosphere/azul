@@ -37,7 +37,7 @@ from azul.resources import (
     open_resource,
 )
 from azul.source import (
-    SourceRef,
+    Source,
 )
 
 log = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class SourceService:
         the result is then cached until the instance is destroyed.
         """
         if authentication is None:
-            source_ids = {source.id for source in self._public_sources[catalog]}
+            source_ids = {source.ref.id for source in self._public_sources[catalog]}
         else:
             plugin = self.repository_plugin(catalog)
             cache_key = (catalog, authentication.identity())
@@ -107,7 +107,7 @@ class SourceService:
     def list_sources(self,
                      catalog: CatalogName,
                      authentication: Authentication | None
-                     ) -> Iterable[SourceRef]:
+                     ) -> Iterable[Source]:
         """
         List the sources in the given catalog that are accessible using the
         provided authentication.
@@ -130,20 +130,20 @@ class SourceService:
     def _list_sources(self,
                       catalog: CatalogName,
                       authentication: Authentication | None
-                      ) -> Iterable[SourceRef]:
+                      ) -> Iterable[Source]:
         plugin = self.repository_plugin(catalog)
         refs = plugin.list_sources(authentication)
-        specs = plugin.sources.keys()
+        configs_by_spec = plugin.sources
 
-        specs_by_name = {spec.name: spec for spec in specs}
-        assert len(specs) == len(specs_by_name), R(
-            'Duplicate source names in catalog configuration', list(specs))
+        specs_by_name = {spec.name: spec for spec in configs_by_spec.keys()}
+        assert len(configs_by_spec) == len(specs_by_name), R(
+            'Duplicate source names in catalog configuration', configs_by_spec)
 
         refs_by_name = {ref.spec.name: ref for ref in refs}
         assert len(refs) == len(refs_by_name), R(
             'Duplicate source names in repository', refs)
 
-        matching_refs = []
+        sources = []
         for ref in refs:
             try:
                 spec = specs_by_name[ref.spec.name]
@@ -151,9 +151,10 @@ class SourceService:
                 pass
             else:
                 assert spec == ref.spec, R('Misconfigured source', spec, ref)
-                matching_refs.append(ref)
+                source = Source(ref=ref, config=configs_by_spec[spec])
+                sources.append(source)
 
-        return matching_refs
+        return sources
 
     table_name = config.dynamo_sources_cache_table_name
 
@@ -199,7 +200,7 @@ class SourceService:
         return int(time())
 
     @cached_property
-    def _public_sources(self) -> Mapping[CatalogName, Iterable[SourceRef]]:
+    def _public_sources(self) -> Mapping[CatalogName, Iterable[Source]]:
         """
         The set of all sources included in any catalog in the current
         deployment that are accessible to the public service account. When
@@ -216,7 +217,7 @@ class SourceService:
             }
         else:
             return {
-                catalog: [SourceRef.from_json(source) for source in sources]
+                catalog: [Source.from_json(source) for source in sources]
                 for catalog, sources in json_item_sequences(public_sources)
             }
 

@@ -81,7 +81,7 @@ class DUOSTestCase(TDRTestCase, ABC):
         return [
             # TDR's /snapshots/{snapshot_id} response:
             {
-                'name': self.source.spec.name,
+                'name': self.source.ref.spec.name,
                 'duosFirecloudGroup': {'duosId': duos_id}
             },
             # DUOS' /dataset/registration/{duos_id}:
@@ -145,7 +145,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
 
     def test_list_and_fetch_bundles(self):
         self._mock_normal_duos()
-        source_ref = self.source
+        source_ref = self.source.ref
         self._make_mock_tables(source_ref)
         canned_bundle_fqids = [
             self.primary_bundle(),
@@ -185,21 +185,21 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                 self.assertEqual(canned_bundle.orphans, bundle.orphans)
 
     def test_absent_duos_id(self):
-        source_ref = self.source
+        source_ref = self.source.ref
         self._make_mock_tables(source_ref)
         cases = {
             'Absent duosFirecloudGroup': [
-                {'name': self.source.spec.name}
+                {'name': self.source.ref.spec.name}
             ],
             'Empty duosFirecloudGroup': [
                 {
-                    'name': self.source.spec.name,
+                    'name': self.source.ref.spec.name,
                     'duosFirecloudGroup': {}
                 }
             ],
             'Null duosId': [
                 {
-                    'name': self.source.spec.name,
+                    'name': self.source.ref.spec.name,
                     'duosFirecloudGroup': {'duosId': None}
                 }
             ]

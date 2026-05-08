@@ -14,9 +14,7 @@ from datetime import (
 from email.utils import (
     parsedate_to_datetime,
 )
-from logging import (
-    getLogger,
-)
+import logging
 import random
 import time
 from typing import (
@@ -58,14 +56,13 @@ if TYPE_CHECKING:
         CompleteMultipartUploadRequestTypeDef,
         CompletedPartTypeDef,
         CreateMultipartUploadRequestTypeDef,
-        DeleteObjectsRequestTypeDef,
         GetObjectOutputTypeDef,
         HeadObjectOutputTypeDef,
         PutObjectRequestTypeDef,
         PutObjectTaggingRequestTypeDef,
     )
 
-log = getLogger(__name__)
+log = logging.getLogger(__name__)
 
 Tagging = Mapping[str, str]
 
@@ -196,15 +193,38 @@ class StorageService:
                        object_keys: Collection[str],
                        batch_size: int = 1000
                        ) -> None:
+        """
+        Delete the objects with the given keys, in batches of the given size.
+        This method is idempotent: passing the key of an object that was already
+        deleted, or that never existed, will not cause an error. This method is
+        not atomic: a requirement error will be raised for the first batch with
+        an object that failed to be deleted, and any subsequent batches will be
+        ignored.
+
+        :param object_keys: a collection of keys of objects to be deleted
+
+        :param batch_size: the number of objects to delete per request
+        """
         assert batch_size <= 1000, R('Batch size must <= 1000', batch_size)
-        num_keys = len(object_keys)
+        num_keys, num_deleted = len(object_keys), 0
         for batch in chunked(object_keys, batch_size):
-            log.debug('Deleting batch of objects: %r', batch)
-            request: DeleteObjectsRequestTypeDef
-            request = dict(Bucket=self.bucket_name,
-                           Delete=dict(Objects=[dict(Key=key) for key in batch]))
-            self._s3.delete_objects(**request)
-        log.info('Deleted %d objects overall', num_keys)
+            if log.isEnabledFor(logging.DEBUG):
+                log.debug('Deleting batch of objects: %r', batch)
+            else:
+                log.info('Deleting batch of %d object(s)', len(batch))
+            response = self._s3.delete_objects(
+                Bucket=self.bucket_name,
+                Delete=dict(Quiet=True,
+                            Objects=[dict(Key=key) for key in batch])
+            )
+            try:
+                errors = response['Errors']
+            except KeyError:
+                num_deleted += len(batch)
+            else:
+                assert False, R('Failed to delete some objects', errors)
+        assert num_deleted == num_keys, (num_deleted, num_keys)
+        log.info('Deleted %d objects overall', num_deleted)
 
     def list_objects(self, prefix: str) -> OrderedSet[str]:
         keys: OrderedSet[str] = OrderedSet()
@@ -253,6 +273,12 @@ class StorageService:
                                   etags: Sequence[str],
                                   overwrite: bool = True,
                                   ) -> None:
+        if len(etags) == 0:
+            # S3 requires at least one part, even for empty files
+            etags = [self.upload_multipart_part(object_key=object_key,
+                                                upload_id=upload_id,
+                                                part_number=1,
+                                                buffer=b'')]
         parts: list[CompletedPartTypeDef] = [
             {
                 'PartNumber': index + 1,

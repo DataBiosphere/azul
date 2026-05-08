@@ -16,6 +16,9 @@ from io import (
     TextIOWrapper,
 )
 import json
+from operator import (
+    is_not_none,
+)
 import os
 from pathlib import (
     PurePath,
@@ -103,7 +106,6 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
-    SourceConfig,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -145,7 +147,7 @@ from azul.modules import (
     load_script,
 )
 from azul.oauth2 import (
-    OAuth2Client,
+    CredentialedClient,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -174,6 +176,8 @@ from azul.service.manifest_service import (
 )
 from azul.source import (
     Prefix,
+    Source,
+    SourceConfig,
     SourceRef,
     SourceSpec,
 )
@@ -311,7 +315,7 @@ class IntegrationTestCase(AzulTestCase):
                        *,
                        public: bool | None = None,
                        mirror: bool = False,
-                       ) -> tuple[SourceRef, SourceConfig] | None:
+                       ) -> Source | None:
         """
         Choose an indexed source at random.
 
@@ -363,8 +367,8 @@ class IntegrationTestCase(AzulTestCase):
             assert public is False, 'An IT catalog must contain at least one public source'
             return None
         else:
-            source, cfg = self.random.choice(sorted(sources.items()))
-            return plugin.resolve_source(source), cfg
+            source, config = self.random.choice(sorted(sources.items()))
+            return Source(ref=plugin.resolve_source(source), config=config)
 
 
 class IndexingIntegrationTest(IntegrationTestCase):
@@ -479,7 +483,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         catalogs: list[Catalog] = []
         for catalog in config.integration_test_catalogs.values():
             if index:
-                public_source, _ = self._select_source(
+                public_source = self._select_source(
                     catalog.name,
                     public=True,
                     # If test_mirroring is run for the catalog, ensure that the
@@ -490,10 +494,9 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     #        https://github.com/DataBiosphere/azul/issues/7955
                     #
                     mirror=True and self._mirror_service(catalog.name).may_mirror()
-                )
+                ).ref
                 ma_source = self._select_source(catalog.name, public=False)
-                if ma_source is not None:
-                    ma_source = ma_source[0]
+                ma_source = None if ma_source is None else ma_source.ref
                 sources = alist(public_source, ma_source)
                 notifications, fqids = self._prepare_notifications(catalog.name, sources)
             else:
@@ -895,36 +898,36 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     @property
     def _service_account_credentials(self) -> ContextManager:
-        client = self._service_account_oauth2_client
+        client = self._service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _service_account_oauth2_client(self):
+    def _service_account_client(self):
         provider = self._tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @property
     def _public_service_account_credentials(self) -> ContextManager:
-        client = self._public_service_account_oauth2_client
+        client = self._public_service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _public_service_account_oauth2_client(self):
+    def _public_service_account_client(self):
         provider = self._public_tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @property
     def _unregistered_service_account_credentials(self) -> ContextManager:
-        client = self._unregistered_service_account_oauth2_client
+        client = self._unregistered_service_account_client
         return self._authorization_context(client)
 
     @cached_property
-    def _unregistered_service_account_oauth2_client(self):
+    def _unregistered_service_account_client(self):
         provider = self._unregistered_tdr_client.credentials_provider
-        return OAuth2Client(credentials_provider=provider)
+        return CredentialedClient(credentials_provider=provider)
 
     @contextmanager
-    def _authorization_context(self, oauth2_client: OAuth2Client) -> ContextManager:
+    def _authorization_context(self, oauth2_client: CredentialedClient) -> ContextManager:
         old_http = self._http
         try:
             self._http = oauth2_client._http_client
@@ -943,7 +946,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         if endpoint is None:
             endpoint = config.service_endpoint
         args = {} if args is None else {k: str(v) for k, v in args.items()}
-        url = furl(url=endpoint, path=path, args=args)
+        url = mutable_furl(url=endpoint, path=path, args=args)
         if fetch:
             url.path.segments.insert(0, 'fetch')
             while True:
@@ -1509,7 +1512,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
-        invalid_client = OAuth2Client(credentials_provider=invalid_provider)
+        invalid_client = CredentialedClient(credentials_provider=invalid_provider)
         with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 
@@ -1767,17 +1770,19 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     def _test_mirroring(self, *, delete: bool):
         with self.subTest('mirroring'):
-            catalogs = [
-                catalog.name
-                for catalog in config.catalogs.values()
-                if (
-                    catalog.is_integration_test_catalog
-                    and self._mirror_service(catalog.name).may_mirror()
-                )
-            ]
+
+            service_by_catalog = {}
+            for catalog in config.catalogs.values():
+                service = self._mirror_service(catalog.name)
+                if catalog.is_integration_test_catalog and service.may_mirror():
+                    service_by_catalog[catalog.name] = service
+
             sources_by_catalog = {
-                catalog: [self._select_source(catalog, public=True, mirror=True)]
-                for catalog in catalogs
+                catalog: list(filter(is_not_none, (
+                    self._select_source(catalog, public=public, mirror=True)
+                    for public in [True, False]
+                )))
+                for catalog in service_by_catalog
             }
 
             def _delete():
@@ -1785,22 +1790,26 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     # This potentially causes redundant ListObjects requests,
                     # since each IT catalog currently uses the same mirror
                     # prefix and bucket
-                    for catalog in catalogs:
-                        self._mirror_service(catalog=catalog).delete_it_files()
+                    for catalog, sources in sources_by_catalog.items():
+                        for source in sources:
+                            service = service_by_catalog[catalog]
+                            service.delete_it_files(source.ref.spec)
 
             self._assert_queues_empty([config.mirror_queue.name,
                                        config.mirror_queue.to_fail.name])
             _delete()
 
             indexed_files: dict[File, tuple[SourceRef, JSON]] = {}
-            with self.subTest('mirror_sources_and_files'):
-                for catalog, sources in sources_by_catalog.items():
-                    mirror_service = self._mirror_service(catalog)
+            for catalog, sources in sources_by_catalog.items():
+                with self.subTest('mirror_sources_and_files', catalog=catalog):
+                    service = service_by_catalog[catalog]
+                    # _get_one_mirrorable_file uses the public service account,
+                    # so the file will always be from the public source
                     repository_file, source, file_response = self._get_one_mirrorable_file(catalog)
                     indexed_files[repository_file] = source, file_response
                     for _ in range(2):
-                        mirror_service.mirror_sources(sources)
-                        mirror_service.mirror_file(source, repository_file)
+                        service.mirror_sources(sources)
+                        service.mirror_file(source, repository_file)
                         self.azul_client.wait_for_mirroring()
                         self._assert_queues_empty([config.mirror_queue.to_fail.name])
 
@@ -1816,7 +1825,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
                         self.assertEqual(expected_url, actual_url)
 
                 with self.subTest('validate_info_schemas'):
-                    service = self._mirror_service(catalog)
+                    service = service_by_catalog[catalog]
                     info_objects = [service.info(file) for file in indexed_files.keys()]
                     schema_url = info_objects[0]['$schema']
                     self.assertTrue(schema_url.endswith(f'/v{service.info_schema_version}.json'))
@@ -1995,7 +2004,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        source, _ = self._select_source(catalog)
+        source = self._select_source(catalog).ref
         # The plugin will raise an exception if the source lacks a prefix
         source = source.with_prefix(Prefix.of_everything)
         bundle_fqids = self.azul_client.repository_service.list_bundles(catalog, source, prefix='')

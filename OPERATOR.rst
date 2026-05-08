@@ -17,13 +17,13 @@ Getting started as operator
     ``anvilprod`` and ``prod`` instances
 
   - assign to you the ``Editor`` role on the Google Cloud
-    projects ``platform-hca-prod`` and ``platform-hca-anvilprod``
+    projects ``platform-hca-prod`` and ``platform-anvil-prod``
 
   - remove the ``Editor`` role in those projects from the previous operator
 
 * Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Ben and Hannes) to:
 
-  - grant you developer access to AWS accounts ``platform-hca-prod`` and ``platform-anvil-prod`
+  - grant you developer access to AWS accounts ``platform-hca-prod`` and ``platform-anvil-prod``
 
   - revoke that access from the previous operator (mention them by name)
 

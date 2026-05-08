@@ -43,6 +43,9 @@ from azul.service.manifest_controller import (
 from azul.service.repository_controller import (
     RepositoryController,
 )
+from azul.service.user_controller import (
+    UserController,
+)
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +58,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '16.1',
+        'version': '17.1',
         'description': fd(f'''
             # Overview
 
@@ -248,6 +251,10 @@ class ServiceApp(HealthApp):
     def manifest_controller(self) -> ManifestController:
         return ManifestController(app=self)
 
+    @cached_property
+    def user_controller(self) -> UserController:
+        return UserController(app=self)
+
     def __init__(self):
         super().__init__(app_name=config.service_name,
                          globals=globals(),
@@ -284,3 +291,5 @@ globals().update(app.manifest_controller.handlers())
 globals().update(app.repository_controller.handlers())
 
 globals().update(app.drs_controller.handlers())
+
+globals().update(app.user_controller.handlers())
