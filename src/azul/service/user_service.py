@@ -6,6 +6,9 @@ from typing import (
     TypedDict,
 )
 
+from jwt.algorithms import (
+    Algorithm,
+)
 from jwt.api_jwt import (
     PyJWT,
 )
@@ -118,9 +121,14 @@ class UserService:
 
     _google_issuer = 'https://accounts.google.com'
 
+    _apat_algorithm = 'RS256'
+
     @cached_property
     def _jwt(self) -> PyJWT:
-        return PyJWT()
+        jwt = PyJWT()
+        jwt._jws.unregister_algorithm(self._apat_algorithm)
+        jwt._jws.register_algorithm(self._apat_algorithm, KMSSigningAlgorithm())
+        return jwt
 
     def mint_personal_access_token(self,
                                    authentication: AccessTokenAuthentication
@@ -132,7 +140,20 @@ class UserService:
         user = self.get_user(iss, sub)
         if user is None:
             raise UnknownUserException(iss, sub)
-        raise NotImplementedError('APAT minting')
+        now = self._now()
+        payload = {
+            'iss': str(config.service_endpoint),
+            'sub': self._key_separator.join([iss, sub]),
+            'exp': now + config.apat_expiration,
+            'iat': now
+        }
+        token = self._jwt.encode(payload,
+                                 key=config.apat_kms_alias,
+                                 algorithm=self._apat_algorithm)
+        self._jwt.decode(token,
+                         key=config.apat_kms_alias,
+                         algorithms=[self._apat_algorithm])
+        return PersonalAccessTokenAuthentication(access_token=token)
 
     def _store_tokens(self, response: TokenForCodeResponse) -> None:
         # Signature verification is unnecessary per OIDC 3.1.3.7 since the
@@ -140,11 +161,12 @@ class UserService:
         id_claims = self._jwt.decode(response['id_token'],
                                      options={'verify_signature': False})
         iss, sub = id_claims['iss'], id_claims['sub']
+        assert iss == self._google_issuer, R(
+            'Unexpected issuer', iss)
         assert self._key_separator not in iss, R(
             'Unexpected separator in issuer', iss)
         key = self._key_separator.join([iss, sub])
-        expiration = response.get('refresh_token_expires_in',
-                                  self._default_expiration)
+        expiration = response.get('refresh_token_expires_in', self._default_expiration)
         email = id_claims['email']
         email_verified = id_claims['email_verified']
         self._dynamodb.update_item(
@@ -169,3 +191,36 @@ class UserService:
 
     def _now(self) -> int:
         return int(time())
+
+
+class KMSSigningAlgorithm(Algorithm):
+
+    def prepare_key(self, key: str) -> str:
+        return key
+
+    @staticmethod
+    def from_jwk(jwk):
+        raise NotImplementedError
+
+    @staticmethod
+    def to_jwk(key, as_dict=False):
+        raise NotImplementedError
+
+    def sign(self, msg: bytes, key: str) -> bytes:
+        response = aws.kms.sign(KeyId=key,
+                                Message=msg,
+                                MessageType='RAW',
+                                SigningAlgorithm='RSASSA_PKCS1_V1_5_SHA_256')
+        return response['Signature']
+
+    def verify(self, msg: bytes, key: str, sig: bytes) -> bool:
+        try:
+            response = aws.kms.verify(KeyId=key,
+                                      Message=msg,
+                                      MessageType='RAW',
+                                      Signature=sig,
+                                      SigningAlgorithm='RSASSA_PKCS1_V1_5_SHA_256')
+        except aws.kms.exceptions.KMSInvalidSignatureException:
+            return False
+        else:
+            return response['SignatureValid']

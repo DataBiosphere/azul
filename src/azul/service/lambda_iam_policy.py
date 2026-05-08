@@ -192,6 +192,17 @@ policy = {
         {
             'Effect': 'Allow',
             'Action': [
+                'kms:Sign',
+                'kms:Verify',
+                'kms:GetPublicKey'
+            ],
+            'Resource': [
+                '${aws_kms_key.%s.arn}' % config.apat_kms_key_tf_name
+            ]
+        },
+        {
+            'Effect': 'Allow',
+            'Action': [
                 'ssm:GetParameter'
             ],
             'Resource': [

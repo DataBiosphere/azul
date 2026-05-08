@@ -8,15 +8,21 @@ from unittest.mock import (
 )
 
 import jwt
-from moto import (
-    mock_aws,
-)
 from mypy_boto3_dynamodb.literals import (
     ScalarAttributeTypeType,
 )
 
 from app_test_case import (
     LocalAppTestCase,
+)
+from azul import (
+    config,
+)
+from azul.auth import (
+    AccessTokenAuthentication,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.http import (
     HasCachedHttpClient,
@@ -31,8 +37,10 @@ from azul.logging import (
 from azul.oauth2 import (
     OAuth2Client,
     TokenForCodeResponse,
+    TokenInfoResponse,
 )
 from azul.service.user_service import (
+    UnknownUserException,
     User,
     UserService,
 )
@@ -51,7 +59,6 @@ def setUpModule():
     configure_test_logging(log)
 
 
-@mock_aws
 class TestUserController(DCP2TestCase,
                          LocalAppTestCase,
                          DynamoDBTestCase,
@@ -85,6 +92,26 @@ class TestUserController(DCP2TestCase,
         cls.addClassPatch(patch.object(UserService, '_client_secret',
                                        new_callable=PropertyMock,
                                        return_value='mock_client_secret'))
+
+    def setUp(self):
+        super().setUp()
+        key = aws.kms.create_key(KeyUsage='SIGN_VERIFY',
+                                 CustomerMasterKeySpec='RSA_2048')
+        aws.kms.create_alias(AliasName=config.apat_kms_alias,
+                             TargetKeyId=key['KeyMetadata']['KeyId'])
+
+    def _mock_token_info(self) -> TokenInfoResponse:
+        return TokenInfoResponse(
+            azp='mock_client_id',
+            aud='mock_client_id',
+            sub=self._mock_sub,
+            scope='https://www.googleapis.com/auth/userinfo.email openid',
+            exp='9999999999',
+            expires_in='3600',
+            email=self._mock_email,
+            email_verified='true',
+            access_type='online'
+        )
 
     def _mock_token_response(self,
                              *,
@@ -189,3 +216,35 @@ class TestUserController(DCP2TestCase,
             with self.subTest(scope=scope):
                 response = self._authorize(scope=scope)
                 self.assertEqual(400, response.status)
+
+    @patch.object(OAuth2Client, 'token_info')
+    @patch.object(OAuth2Client, 'token_for_code')
+    def test_mint_personal_access_token(self,
+                                        mock_token_for_code,
+                                        mock_token_info):
+        mock_token_for_code.return_value = self._mock_token_response()
+        self._authorize()
+        mock_token_info.return_value = self._mock_token_info()
+        service = self._app.user_controller._service  # type: ignore[attr-defined]
+        authentication = AccessTokenAuthentication(self._mock_access_token)
+        apat = service.mint_personal_access_token(authentication)
+        mock_token_info.assert_called_once_with(self._mock_access_token)
+        header = jwt.get_unverified_header(apat.access_token)
+        self.assertEqual('RS256', header['alg'])
+        claims = jwt.decode(apat.access_token,
+                            options={'verify_signature': False})
+        self.assertEqual(str(config.service_endpoint), claims['iss'])
+        expected_sub = '#'.join([self._mock_iss, self._mock_sub])
+        self.assertEqual(expected_sub, claims['sub'])
+        now = UserService()._now()
+        self.assertAlmostEqual(config.apat_expiration,
+                               claims['exp'] - now,
+                               delta=5)
+
+    @patch.object(OAuth2Client, 'token_info')
+    def test_mint_personal_access_token_unknown_user(self, mock_token_info):
+        mock_token_info.return_value = self._mock_token_info()
+        service = self._app.user_controller._service  # type: ignore[attr-defined]
+        authentication = AccessTokenAuthentication(self._mock_access_token)
+        with self.assertRaises(UnknownUserException):
+            service.mint_personal_access_token(authentication)

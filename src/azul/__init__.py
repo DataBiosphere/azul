@@ -260,6 +260,14 @@ class Config:
         # KMS requires that aliases start with '/alias'
         return 'alias/' + self.qualified_resource_name(self.manifest_kms_key_tf_name)
 
+    apat_kms_key_tf_name = 'apat'
+
+    @property
+    def apat_kms_alias(self) -> str:
+        return 'alias/' + self.qualified_resource_name(self.apat_kms_key_tf_name)
+
+    apat_expiration = 7 * 24 * 60 * 60
+
     audit_log_retention_days = 365
 
     @property
