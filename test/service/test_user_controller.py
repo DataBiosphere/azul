@@ -20,12 +20,16 @@ from azul import (
 )
 from azul.auth import (
     AccessTokenAuthentication,
+    PersonalAccessTokenAuthentication,
 )
 from azul.deployment import (
     aws,
 )
 from azul.http import (
     HasCachedHttpClient,
+)
+from azul.lib import (
+    cached_property,
 )
 from azul.logging import (
     configure_test_logging,
@@ -35,8 +39,10 @@ from azul.oauth2 import (
     OAuth2Client,
     TokenForCodeResponse,
     TokenInfoResponse,
+    TokenResponse,
 )
 from azul.service.user_service import (
+    InvalidPersonalAccessTokenError,
     UnknownUserException,
     User,
     UserService,
@@ -246,3 +252,87 @@ class TestUserController(DCP2TestCase,
         authentication = AccessTokenAuthentication(self._mock_access_token)
         with self.assertRaises(UnknownUserException):
             self._service.mint_personal_access_token(authentication)
+
+    @patch.object(OAuth2Client, 'token_info')
+    @patch.object(OAuth2Client, 'token_for_code')
+    def _authorize_and_mint(self,
+                            mock_token_for_code,
+                            mock_token_info
+                            ) -> PersonalAccessTokenAuthentication:
+        mock_token_for_code.return_value = self._mock_token_response()
+        self._authorize()
+        mock_token_info.return_value = self._mock_token_info()
+        authentication = AccessTokenAuthentication(self._mock_access_token)
+        return self._service.mint_personal_access_token(authentication)
+
+    def test_narrow_token(self):
+        apat = self._authorize_and_mint()
+        result = self._service.narrow_token(AccessTokenAuthentication(apat.access_token))
+        self.assertIsInstance(result, PersonalAccessTokenAuthentication)
+        self.assertEqual(apat.access_token, result.access_token)
+
+    def test_narrow_token_regular_access_token(self):
+        authentication = AccessTokenAuthentication(self._mock_access_token)
+        with self.assertRaises(TypeError):
+            self._service.narrow_token(authentication)
+
+    def test_narrow_token_wrong_issuer(self):
+        token = jwt.encode({'iss': 'https://other.example.com'},
+                           key='a' * 32,
+                           algorithm='HS256')
+        authentication = AccessTokenAuthentication(token)
+        with self.assertRaises(TypeError):
+            self._service.narrow_token(authentication)
+
+    def test_exchange_token(self):
+        apat = self._authorize_and_mint()
+        result = self._service.exchange_token(apat)
+        self.assertIsInstance(result, AccessTokenAuthentication)
+        self.assertEqual(self._mock_access_token, result.access_token)
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_exchange_token_refreshes_expired(self, mock_token_for_refresh):
+        apat = self._authorize_and_mint()
+        refreshed_token = 'ya29.refreshed_access_token'
+        mock_token_for_refresh.return_value = TokenResponse(
+            access_token=refreshed_token,
+            expires_in=3600,
+            scope='openid email',
+            token_type='Bearer'
+        )
+        with patch.object(UserService, '_now', return_value=2 ** 31):
+            result = self._service.exchange_token(apat)
+        self.assertEqual(refreshed_token, result.access_token)
+        mock_token_for_refresh.assert_called_once_with(
+            refresh_token=self._mock_refresh_token,
+            client_id='mock_client_id',
+            client_secret='mock_client_secret'
+        )
+        user = self._get_user()
+        self.assertEqual(refreshed_token, user['access_token'])
+
+    def test_exchange_token_invalid_jwt(self):
+        authentication = PersonalAccessTokenAuthentication(access_token='not.a.jwt')
+        with self.assertRaises(InvalidPersonalAccessTokenError):
+            self._service.exchange_token(authentication)
+
+    def test_exchange_token_forged_jwt(self):
+        token = jwt.encode(
+            {'iss': str(config.service_endpoint), 'sub': 'x#y'},
+            key='a' * 32,
+            algorithm='HS256'
+        )
+        authentication = PersonalAccessTokenAuthentication(access_token=token)
+        with self.assertRaises(InvalidPersonalAccessTokenError):
+            self._service.exchange_token(authentication)
+
+    @patch.object(OAuth2Client, 'token_for_code')
+    def test_authorize_stores_access_token_expiration(self,
+                                                      mock_token_for_code):
+        mock_token_for_code.return_value = self._mock_token_response()
+        self._authorize()
+        user = self._get_user()
+        now = UserService()._now()
+        self.assertAlmostEqual(3600,
+                               user['access_token_expiration'] - now,
+                               delta=5)
