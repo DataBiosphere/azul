@@ -6,7 +6,9 @@ from typing import (
     TypedDict,
 )
 
-import jwt
+from jwt.api_jwt import (
+    PyJWT,
+)
 
 from azul import (
     config,
@@ -116,6 +118,10 @@ class UserService:
 
     _google_issuer = 'https://accounts.google.com'
 
+    @cached_property
+    def _jwt(self) -> PyJWT:
+        return PyJWT()
+
     def mint_personal_access_token(self,
                                    authentication: AccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
@@ -131,8 +137,8 @@ class UserService:
     def _store_tokens(self, response: TokenForCodeResponse) -> None:
         # Signature verification is unnecessary per OIDC 3.1.3.7 since the
         # token was received directly from the token endpoint over TLS.
-        id_claims = jwt.decode(response['id_token'],
-                               options={'verify_signature': False})
+        id_claims = self._jwt.decode(response['id_token'],
+                                     options={'verify_signature': False})
         iss, sub = id_claims['iss'], id_claims['sub']
         assert self._key_separator not in iss, R(
             'Unexpected separator in issuer', iss)
