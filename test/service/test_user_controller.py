@@ -100,7 +100,7 @@ class TestUserController(DCP2TestCase,
     def setUp(self):
         super().setUp()
         key = aws.kms.create_key(KeyUsage='SIGN_VERIFY',
-                                 CustomerMasterKeySpec='RSA_2048')
+                                 CustomerMasterKeySpec='ECC_NIST_P256')
         aws.kms.create_alias(AliasName=config.apat_kms_key.alias,
                              TargetKeyId=key['KeyMetadata']['KeyId'])
 
@@ -236,7 +236,7 @@ class TestUserController(DCP2TestCase,
         apat = self._service.mint_personal_access_token(authentication)
         mock_token_info.assert_called_once_with(self._mock_access_token)
         header = jwt.get_unverified_header(apat.access_token)
-        self.assertEqual('RS256', header['alg'])
+        self.assertEqual('ES256', header['alg'])
         claims = jwt.decode(apat.access_token,
                             options={'verify_signature': False})
         self.assertEqual(str(config.service_endpoint), claims['iss'])

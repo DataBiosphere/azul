@@ -277,7 +277,7 @@ class Config:
         return self.KMSKey(config=self,
                            name='apat',
                            usage='SIGN_VERIFY',
-                           spec='RSA_2048')
+                           spec='ECC_NIST_P256')
 
     @cached_property
     def kms_keys(self) -> tuple[KMSKey, ...]:

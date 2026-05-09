@@ -165,7 +165,7 @@ class UserService:
 
     _google_issuer = 'https://accounts.google.com'
 
-    _apat_algorithm = 'RS256'
+    _apat_algorithm = 'ES256'
     _apat_expiration = 30 * 24 * 60 * 60
 
     @cached_property
@@ -333,7 +333,7 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
         response = aws.kms.sign(KeyId=key,
                                 Message=msg,
                                 MessageType='RAW',
-                                SigningAlgorithm='RSASSA_PKCS1_V1_5_SHA_256')
+                                SigningAlgorithm='ECDSA_SHA_256')
         return response['Signature']
 
     def verify(self, msg: bytes, key: str, sig: bytes) -> bool:
@@ -342,7 +342,7 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
                                       Message=msg,
                                       MessageType='RAW',
                                       Signature=sig,
-                                      SigningAlgorithm='RSASSA_PKCS1_V1_5_SHA_256')
+                                      SigningAlgorithm='ECDSA_SHA_256')
         except aws.kms.exceptions.KMSInvalidSignatureException:
             return False
         else:
