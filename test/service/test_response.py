@@ -338,11 +338,13 @@ class TestIndexResponse(IndexResponseTestCase):
                         ],
                     }
                 ],
-                'sources': [{
-                    'sourceId': self.source.id,
-                    'sourcePrefix': str(self.source.prefix),
-                    'sourceSpec': str(self.source.spec)
-                }],
+                'sources': [
+                    {
+                        'sourceId': self.source.ref.id,
+                        'sourcePrefix': str(self.source.ref.prefix),
+                        'sourceSpec': str(self.source.ref.spec)
+                    }
+                ],
                 'specimens': [
                     {
                         'disease': ['normal'],
@@ -665,11 +667,13 @@ class TestIndexResponse(IndexResponseTestCase):
                             ],
                         }
                     ],
-                    'sources': [{
-                        'sourceId': self.source.id,
-                        'sourcePrefix': str(self.source.prefix),
-                        'sourceSpec': str(self.source.spec)
-                    }],
+                    'sources': [
+                        {
+                            'sourceId': self.source.ref.id,
+                            'sourcePrefix': str(self.source.ref.prefix),
+                            'sourceSpec': str(self.source.ref.spec)
+                        }
+                    ],
                     'specimens': [
                         {
                             'disease': ['normal'],
@@ -932,11 +936,13 @@ class TestIndexResponse(IndexResponseTestCase):
                         ],
                     }
                 ],
-                'sources': [{
-                    'sourceId': self.source.id,
-                    'sourcePrefix': str(self.source.prefix),
-                    'sourceSpec': str(self.source.spec)
-                }],
+                'sources': [
+                    {
+                        'sourceId': self.source.ref.id,
+                        'sourcePrefix': str(self.source.ref.prefix),
+                        'sourceSpec': str(self.source.ref.spec)
+                    }
+                ],
                 'specimens': [
                     {
                         'disease': ['H syndrome'],
@@ -3732,7 +3738,10 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
                         'repository': {
                             'name': 'dss',
                             'sources': [
-                                'https://fake_dss_instance/v1'
+                                {
+                                    'sourceSpec': 'https://fake_dss_instance/v1',
+                                    'sourceConfig': {'mirror': True}
+                                }
                             ],
                         }
                     }
@@ -3777,7 +3786,7 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
             source = TDRSourceRef(id=source[id_field],
                                   spec=TDRSourceSpec.parse(source[spec_field]),
                                   prefix=Prefix.parse(source[prefix_field]))
-            self.assertEqual(self.source, source)
+            self.assertEqual(self.source.ref, source)
 
     def get_file(self, entry_id: str) -> JSON:
         url = self.base_url.set(path=('index', 'files', entry_id))
@@ -3793,7 +3802,7 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
                                                            version='2019-09-24T09:35:06.958773Z')))
             expected_drs_uri = str(furl(scheme='drs',
                                         netloc=self.mock_tdr_service_url.netloc,
-                                        path=f'v1_{self.source.id}_9d6f268f-f484-5381-9095-f0998fa0c961'))
+                                        path=f'v1_{self.source.ref.id}_9d6f268f-f484-5381-9095-f0998fa0c961'))
 
             self.assertEqual(expected_url, file['azul_url'])
             self.assertEqual(expected_drs_uri, file['drs_uri'])

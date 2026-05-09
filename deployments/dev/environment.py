@@ -7,7 +7,8 @@ from typing import (
 )
 
 pop = 1  # remove snapshot
-no_mirror = 2  # do not mirror files from snapshot (redundant for managed access snapshots)
+no_ma_mirror = 2  # do not mirror snapshot because it is MA and has yet to be nominated
+no_mirror = 2  # do not mirror snapshot for other reasons
 
 type DatasetName = str
 type SourceSpec = str
@@ -85,12 +86,12 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-1c2c69d9', 'hca_dev_24c654a5caa5440a8f02582921f2db4a__20210830_20210903'),
     source('bigquery', 'datarepo-dev-38f08cd8', 'hca_dev_2a64db431b554639aabb8dba0145689d__20210830_20210903'),
     source('bigquery', 'datarepo-dev-4cf05ce2', 'hca_dev_2a72a4e566b2405abb7c1e463e8febb0__20210901_20210903'),
-    source('bigquery', 'datarepo-dev-3041c2cf', 'hca_dev_2af52a1365cb4973b51339be38f2df3f__20210830_20210903', no_mirror),  # noqa E501
+    source('bigquery', 'datarepo-dev-3041c2cf', 'hca_dev_2af52a1365cb4973b51339be38f2df3f__20210830_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-311340f6', 'hca_dev_2d8460958a334f3c97d4585bafac13b4__20210902_20210907'),
     source('bigquery', 'datarepo-dev-766bfb76', 'hca_dev_2ef3655a973d4d699b4121fa4041eed7__20210827_20210903'),
     source('bigquery', 'datarepo-dev-1720b3c5', 'hca_dev_379ed69ebe0548bcaf5ea7fc589709bf__20210827_20210902'),
     source('bigquery', 'datarepo-dev-ac6efd3f', 'hca_dev_38449aea70b540db84b31e08f32efe34__20210830_20210903'),
-    source('bigquery', 'datarepo-dev-40283c27', 'hca_dev_3a69470330844ece9abed935fd5f6748__20210901_20210903', no_mirror),  # noqa E501
+    source('bigquery', 'datarepo-dev-40283c27', 'hca_dev_3a69470330844ece9abed935fd5f6748__20210901_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-b08233fa', 'hca_dev_3cfcdff5dee14a7ba591c09c6e850b11__20210827_20210903'),
     source('bigquery', 'datarepo-dev-bdc9f342', 'hca_dev_3e329187a9c448ec90e3cc45f7c2311c__20210901_20210903'),
     source('bigquery', 'datarepo-dev-ec07c8d8', 'hca_dev_4037007b0eff4e6db7bd8dd8eec80143__20210831_20210903'),
@@ -124,12 +125,14 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-0c5c20b5', 'hca_dev_8c3c290ddfff4553886854ce45f4ba7f__20210902_20210907'),
     source('bigquery', 'datarepo-dev-29509483', 'hca_dev_90bd693340c048d48d76778c103bf545__20210827_20211110'),
     source('bigquery', 'datarepo-dev-59d37b9a', 'hca_dev_946c5add47d1402a97bba5af97e8bce7__20210831_20210903'),
-    source('bigquery', 'datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', no_mirror),  # noqa E501
+    source('bigquery', 'datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-4b88b45b', 'hca_dev_962bd805eb894c54bad2008e497d1307__20210830_20210903'),
+    # FIXME: Make this no_ma_mirror again, once the underlying issue with requester-pays is fixed
+    #        https://github.com/DataBiosphere/azul/issues/7955
     source('bigquery', 'datarepo-dev-02c59b72', 'hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903'),
     source('bigquery', 'datarepo-dev-a6312a94', 'hca_dev_992aad5e7fab46d9a47ddf715e8cfd24__20210830_20210903'),
     source('bigquery', 'datarepo-dev-75589244', 'hca_dev_996120f9e84f409fa01e732ab58ca8b9__20210827_20210903'),
-    source('bigquery', 'datarepo-dev-d4b988d6', 'hca_dev_a004b1501c364af69bbd070c06dbc17d__20210830_20210903'),
+    source('bigquery', 'datarepo-dev-d4b988d6', 'hca_dev_a004b1501c364af69bbd070c06dbc17d__20210830_20210903', no_ma_mirror),  # noqa: E501
     source('bigquery', 'datarepo-dev-9ec7beb6', 'hca_dev_a29952d9925e40f48a1c274f118f1f51__20210827_20210902'),
     source('bigquery', 'datarepo-dev-d3d5bbfa', 'hca_dev_a39728aa70a04201b0a281b7badf3e71__20210830_20210903'),
     source('bigquery', 'datarepo-dev-7b7daff7', 'hca_dev_a96b71c078a742d188ce83c78925cfeb__20210827_20210902'),
@@ -175,18 +178,18 @@ dcp3_sources = union(dcp2_sources, 111, delta([
     source('bigquery', 'datarepo-dev-3d6d24ad', 'hca_dev_05657a599f9d4bb9b77b24be13aa5cea__20210827_20230215'),
     source('bigquery', 'datarepo-dev-76de829d', 'hca_dev_2043c65a1cf84828a6569e247d4e64f1__20210831_20210907', pop),
     source('bigquery', 'datarepo-dev-b46086a9', 'hca_dev_51f02950ee254f4b8d0759aa99bb3498__20210827_20230215'),
-    source('bigquery', 'datarepo-dev-8a52f620', 'hca_dev_6307bc2662764b85bd26c403d52b6eb2__20251110_dcp2_20251110_dcp99'),  # noqa E501
-    source('bigquery', 'datarepo-dev-fba5d628', 'hca_dev_8c4e43fbf7f344468367a3fe9e0b8fd7__20250828_dcp2_20250829_dcp53'),  # noqa E501
-    source('bigquery', 'datarepo-dev-857f1dfe', 'hca_dev_8f1f653d3ea14d8eb4a7b97dc852c2b1__20230815_dcp2_20250829_dcp53'),  # noqa E501
-    source('bigquery', 'datarepo-dev-55e5c791', 'hca_dev_aca93e287d874aa4b8ae498b9b235f46__20250730_dcp2_20250801_dcp52'),  # noqa E501
-    source('bigquery', 'datarepo-dev-e9a7254b', 'hca_dev_c05184453b3b49c6b8fcc41daa4eacba__20220213_dcp2_20250514_dcp49'),  # noqa E501
-    source('bigquery', 'datarepo-dev-71abe9ae', 'hca_dev_c4e1136978d44d29ba8eb67907c4c65c__20220630_dcp2_20241107_dcp44'),  # noqa E501
+    source('bigquery', 'datarepo-dev-8a52f620', 'hca_dev_6307bc2662764b85bd26c403d52b6eb2__20251110_dcp2_20251110_dcp99'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-fba5d628', 'hca_dev_8c4e43fbf7f344468367a3fe9e0b8fd7__20250828_dcp2_20250829_dcp53'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-857f1dfe', 'hca_dev_8f1f653d3ea14d8eb4a7b97dc852c2b1__20230815_dcp2_20250829_dcp53'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-55e5c791', 'hca_dev_aca93e287d874aa4b8ae498b9b235f46__20250730_dcp2_20250801_dcp52'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-e9a7254b', 'hca_dev_c05184453b3b49c6b8fcc41daa4eacba__20220213_dcp2_20250514_dcp49'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-71abe9ae', 'hca_dev_c4e1136978d44d29ba8eb67907c4c65c__20220630_dcp2_20241107_dcp44'),  # noqa: E501
     source('bigquery', 'datarepo-dev-27c50fbc', 'hca_dev_c5f4661568de4cf4bbc2a0ae10f08243__20210827_20230215'),
     source('bigquery', 'datarepo-dev-2a4ab485', 'hca_dev_d2111fac3fc44f429b6d32cd6a828267__20210830_20230215'),
     source('bigquery', 'datarepo-dev-1005632d', 'hca_dev_d3ac7c1b53024804b611dad9f89c049d__20210827_20230215'),
     source('bigquery', 'datarepo-dev-8709b362', 'hca_dev_df88f39f01a84b5b92f43177d6c0f242__20210827_20230215'),
     source('bigquery', 'datarepo-dev-e1712bfa', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20230215'),
-    source('bigquery', 'datarepo-dev-1d06e80a', 'hca_dev_edc54c5d82404681844462a086d1d1be__20240410_dcp2_20240410_dcpPilot'),  # noqa E501
+    source('bigquery', 'datarepo-dev-1d06e80a', 'hca_dev_edc54c5d82404681844462a086d1d1be__20240410_dcp2_20240410_dcpPilot', no_ma_mirror),  # noqa: E501
     # @formatter:on
 ]))
 

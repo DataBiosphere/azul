@@ -134,13 +134,11 @@ class CredentialsProvisioner:
             print(format_and_dedent('''
                 Visit {url} and …
 
-                1) Delete any disabled secrets, leaving only the current secret
+                1) Add a new secret
 
-                2) Add a new secret
+                2) Copy the secret value
 
-                3) Copy the secret value
-
-                4) Paste the secret value into the prompt below
+                3) Paste the secret value into the prompt below
             ''', url=url))
             secret_value = getpass.getpass('OAuth2 client secret (input will not be echoed back): ')
             assert secret_value, R('No secret value provided')
@@ -148,16 +146,16 @@ class CredentialsProvisioner:
             print(format_and_dedent('''
                 The secret was successfully stored. Now it's time to …
 
-                1) Deploy this Azul instance, unless you already did so before
-                   invoking this script
+                4) Deploy this Azul instance
 
-                2) Test logging into the Swagger UI and any Data Browser
+                5) Test logging into the Swagger UI and any Data Browser
                    instance backed by this Azul deployment
 
-                3) Wait 1 hour and 10 minutes for all access tokens to expire
+                6) Wait 1 hour and 10 minutes
 
-                4) Repeat the tests from step 2, then disable (do not delete)
-                   the old secret
+                7) Repeat the tests from step 5
+
+                8) Disable and delete the old secret
             '''))
         else:
             self._destroy_secret(secret_path)

@@ -7,10 +7,14 @@ from inspect import (
 )
 from typing import (
     ClassVar,
+    Final,
 )
 
 import attr
 
+from azul import (
+    config,
+)
 from azul.lib.json import (
     copy_json,
 )
@@ -101,3 +105,17 @@ class HMACAuthentication(Authentication):
 
     def as_http_header(self) -> str:
         raise NotImplementedError
+
+
+class _IndexerAuthentication(Authentication):
+
+    def identity(self) -> str:
+        return config.ServiceAccount.indexer.id(config)
+
+    def as_http_header(self) -> str:
+        raise NotImplementedError
+
+
+indexer_authentication: Final = _IndexerAuthentication()
+
+del _IndexerAuthentication

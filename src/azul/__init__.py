@@ -125,7 +125,7 @@ class Config:
         self.environ['AZUL_DEBUG'] = str(debug)
 
     def _validate_debug(self, debug):
-        assert debug in (0, 1, 2), R('AZUL_DEBUG must be either 0, 1 or 2')
+        assert debug in (0, 1, 2, 3), R('AZUL_DEBUG must be either 0, 1, 2 or 3')
 
     _opensearch_endpoint_env_name = 'AZUL_OPENSEARCH_ENDPOINT'
 
@@ -203,6 +203,8 @@ class Config:
     storage_term = 'storage'
 
     mirror_term = 'mirror'
+
+    ma_mirror_term = 'mamirror'
 
     current = Sentinel()
 
@@ -1821,6 +1823,10 @@ class Config:
     @property
     def mirror_bucket(self) -> str | None:
         return self.environ.get('AZUL_MIRROR_BUCKET')
+
+    @property
+    def ma_mirror_bucket(self) -> str | None:
+        return self.environ.get('AZUL_MANAGED_ACCESS_MIRROR_BUCKET')
 
     @property
     def enable_bundle_notifications(self):

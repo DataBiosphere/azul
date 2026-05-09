@@ -29,6 +29,9 @@ tf_config = {
                 {
                     config.mirror_term: {
                         'bucket': aws.mirror_bucket,
+                    },
+                    config.ma_mirror_term: {
+                        'bucket': aws.ma_mirror_bucket,
                     }
                 }
                 if config.enable_mirroring else
@@ -54,7 +57,7 @@ tf_config = {
             },
             **(
                 {
-                    config.mirror_term: {
+                    term: {
                         'bucket': '${aws_s3_bucket.%s.id}' % config.mirror_term,
                         'rule': {
                             'id': 'mirror_cleanup',
@@ -63,7 +66,7 @@ tf_config = {
                                 'days_after_initiation': 1
                             }
                         }
-                    }
+                    } for term in [config.mirror_term, config.ma_mirror_term]
                 }
                 if config.enable_mirroring else
                 {}

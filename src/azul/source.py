@@ -23,6 +23,7 @@ from azul.lib import (
 )
 from azul.lib.attrs import (
     DiscriminatingPolymorphicSerializableAttrs,
+    SerializableAttrs,
 )
 from azul.lib.json import (
     DynamicPolymorphicSerializable,
@@ -359,3 +360,20 @@ class SourceRef[SOURCE_SPEC: SourceSpec](
             'prefix': pass_thru_str,
             cls.discriminator(): pass_thru_str,
         }
+
+
+@attrs.frozen(kw_only=True)
+class SourceConfig(SerializableAttrs):
+    """
+    Configuration on how to index or mirror a specific source.
+    """
+    mirror: bool
+
+
+@attrs.frozen(kw_only=True)
+class Source(SerializableAttrs):
+    ref: SourceRef
+    config: SourceConfig
+
+    def with_prefix(self, prefix: Prefix) -> Self:
+        return attrs.evolve(self, ref=self.ref.with_prefix(prefix=prefix))

@@ -79,6 +79,9 @@ from azul.plugins.metadata.hca.service.response import (
     HCASearchResponseStage,
     HCASummaryResponseStage,
 )
+from azul.source import (
+    SourceRef,
+)
 from humancellatlas.data.metadata import (
     api,
 )
@@ -530,7 +533,8 @@ class HCAFile(File):
                       catalog: CatalogName,
                       metadata: JSON,
                       descriptor: JSON,
-                      drs_uri: str | None
+                      drs_uri: str | None,
+                      source: SourceRef | None,
                       ) -> Self:
         # FIXME: Move validation of descriptor to the metadata API
         #        https://github.com/DataBiosphere/azul/issues/6299
@@ -566,7 +570,8 @@ class HCAFile(File):
                    crc32c=json_str(descriptor['crc32c']),
                    sha1=optional(json_str, descriptor.get('sha1')),
                    s3_etag=optional(json_str, descriptor.get('s3_etag')),
-                   drs_uri=drs_uri)
+                   drs_uri=drs_uri,
+                   source=source)
 
     @property
     def digest(self) -> Digest:
@@ -575,6 +580,7 @@ class HCAFile(File):
     def to_manifest_entry(self) -> JSON:
         entry = self.to_json()
         entry.pop(self.discriminator())
+        entry.pop('source')
         entry['content-type'] = entry.pop('content_type')
         entry['indexed'] = False
         return entry

@@ -21,16 +21,18 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
+    CatalogName,
+    Config,
     config,
+)
+from azul.auth import (
+    Authentication,
 )
 from azul.deployment import (
     aws,
 )
 from azul.http import (
     http_client,
-)
-from azul.indexer import (
-    SourceConfig,
 )
 from azul.indexer.mirror_controller import (
     MirrorController,
@@ -65,6 +67,14 @@ from azul.queues import (
 from azul.service.source_service import (
     SourceService,
 )
+from azul.source import (
+    Prefix,
+    SourceConfig,
+)
+from azul.terra import (
+    TDRSourceRef,
+    TDRSourceSpec,
+)
 from azul_test_case import (
     DCP2TestCase,
 )
@@ -87,6 +97,9 @@ class TestMirrorController(DCP2TestCase,
                            LocalAppTestCase,
                            WorkQueueTestCase,
                            MirrorTestCase):
+    ma_source = TDRSourceRef(id='05440319-fb54-4ac6-bff2-95bbf2cac068',
+                             spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_hca_ma_project:hca_ma_snapshot'),
+                             prefix=Prefix.parse('/0'))
 
     @classmethod
     def app_name(cls) -> str:
@@ -97,9 +110,21 @@ class TestMirrorController(DCP2TestCase,
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        def list_source_ids(self,
+                            catalog: CatalogName,
+                            authentication: Authentication
+                            ) -> set[str]:
+            if authentication is Config.ServiceAccount.public:
+                return {cls.source.ref.id}
+            elif authentication is Config.ServiceAccount.indexer:
+                return {cls.source.ref.id, cls.ma_source.id}
+            else:
+                assert False, authentication
+
         cls.addClassPatch(patch.object(SourceService,
                                        'list_source_ids',
-                                       return_value={cls.source.id}))
+                                       new=list_source_ids))
         cls.addClassPatch(patch.object(MirrorAction,
                                        '_operation_id',
                                        return_value=cls._operation_id))
@@ -112,13 +137,33 @@ class TestMirrorController(DCP2TestCase,
                     drs_uri='drs://fake-domain.lan/foo',
                     size=len(_file_contents),
                     content_type='text/plain',
-                    sha256=hashlib.sha256(_file_contents).hexdigest())
+                    sha256=hashlib.sha256(_file_contents).hexdigest(),
+                    source=DCP2TestCase.source.ref)
+
+    _ma_file_contents = b'Quisque vel dignissim erat\n'
+
+    _ma_file = HCAFile(uuid='92473d77-493d-4735-bd79-0f8557e051d5',
+                       name='bar.csv',
+                       version=None,
+                       drs_uri='drs://fake-domain.lan/bar',
+                       size=len(_ma_file_contents),
+                       content_type='text/csv',
+                       sha256=hashlib.sha256(_ma_file_contents).hexdigest(),
+                       source=ma_source)
+
+    def _bucket_name(self, file: HCAFile) -> str:
+        if file.source.id == self.source.ref.id:
+            return self.mirror_bucket
+        elif file.source.id == self.ma_source.id:
+            return self.ma_mirror_bucket
+        else:
+            assert False, file
 
     def _mirror_file_message(self, file: HCAFile) -> MutableJSON:
         return dict(action='MirrorFileAction',
                     catalog=self.catalog,
                     operation_id=self._operation_id,
-                    source=self.source.to_json(),
+                    source=file.source.to_json(),
                     prefix='00',
                     file=file.to_json())
 
@@ -131,7 +176,7 @@ class TestMirrorController(DCP2TestCase,
         self.queues.send_messages(self._service._mirror_queue(), [message])
 
     def _validate_file_contents(self, file: HCAFile, contents: bytes):
-        response = self._s3.get_object(Bucket=self.mirror_bucket,
+        response = self._s3.get_object(Bucket=self._bucket_name(file),
                                        Key=self._service._file_object_key(file))
         file_contents = response['Body'].read()
         self.assertEqual(file_contents, contents)
@@ -149,19 +194,26 @@ class TestMirrorController(DCP2TestCase,
                     file_message = self._test_mirror_partition(partition_message, [file])
 
                     with self.subTest('mirror_file (fresh upload)'):
-                        self._test_mirror_file(file, file_message)
+                        self._test_mirror_file(file, file_message, self._file_contents)
 
-                    with self.subTest('mirror_file (update existing info)'):
-                        self._test_content_type_update(file, file_message)
+                        with self.subTest('mirror_file (update existing info)'):
+                            self._test_content_type_update(file, file_message)
 
-                    self._s3.delete_object(Bucket=self.mirror_bucket,
-                                           Key=self._service._info_object_key(file))
+                        self._s3.delete_object(Bucket=self._bucket_name(file),
+                                               Key=self._service._info_object_key(file))
 
-                    with self.subTest('mirror_file (corrupted contents)'):
-                        self._test_corrupted_download(file_message)
+                        with self.subTest('mirror_file (corrupted contents)'):
+                            self._test_corrupted_download(file_message)
 
-                    with self.subTest('mirror_file (exception on overwrite)'):
-                        self._test_reuploaded_file(file_message)
+                        with self.subTest('mirror_file (exception on overwrite)'):
+                            self._test_reuploaded_file(file_message)
+
+    def test_managed_access(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        file = self._ma_file
+        self._test_mirror_file(file,
+                               self._mirror_file_message(file),
+                               self._ma_file_contents)
 
     @property
     def _mirror_controller(self) -> MirrorController:
@@ -174,8 +226,10 @@ class TestMirrorController(DCP2TestCase,
     def _mirror_event(self, body: JSON) -> list[SQSRecord]:
         return [self._mock_sqs_record(body, fifo=True)]
 
-    def _mirror_sources(self, source_config=SourceConfig(mirror=True)) -> MutableJSONs:
-        self._service.mirror_sources([(self.source, source_config)])
+    def _mirror_sources(self, *, enable=True) -> MutableJSONs:
+        source_config = SourceConfig(mirror=enable)
+        source = attrs.evolve(self.source, config=source_config)
+        self._service.mirror_sources([source])
         return self._read_mirror_queue()
 
     def _patch_download(self, **kwargs) -> ContextManager:
@@ -186,7 +240,7 @@ class TestMirrorController(DCP2TestCase,
         expected_message = dict(action='MirrorSourceAction',
                                 catalog=self.catalog,
                                 operation_id=self._operation_id,
-                                source=self.source.to_json())
+                                source=self.source.ref.to_json())
         self.assertEqual(expected_message, source_message)
         return source_message
 
@@ -201,9 +255,9 @@ class TestMirrorController(DCP2TestCase,
             self.assertEqual(dict(action='MirrorPartitionAction',
                                   catalog=self.catalog,
                                   operation_id=self._operation_id,
-                                  source=self.source.to_json()),
+                                  source=self.source.ref.to_json()),
                              message)
-        self.assertEqual(list(self.source.prefix.partition_prefixes()), partitions)
+        self.assertEqual(list(self.source.ref.prefix.partition_prefixes()), partitions)
         return partition_message
 
     def _test_mirror_partition(self, partition_message, files: list[HCAFile]):
@@ -216,11 +270,11 @@ class TestMirrorController(DCP2TestCase,
         self.assertEqual(expected_message, file_message)
         return file_message
 
-    def _test_mirror_file(self, file, file_message):
+    def _test_mirror_file(self, file, file_message, file_contents):
         event = self._mirror_event(file_message)
-        with self._patch_download(return_value=self._file_contents):
+        with self._patch_download(return_value=file_contents):
             self._mirror_controller.mirror(event)
-        self._validate_file_contents(file, self._file_contents)
+        self._validate_file_contents(file, file_contents)
         content_types = self._get_content_types_from_info_object(file)
         self.assertEqual([file.content_type], content_types)
 
@@ -269,7 +323,7 @@ class TestMirrorController(DCP2TestCase,
 
     def _get_content_types_from_info_object(self, file) -> list[str]:
         service = self._service
-        info = json.loads(service._storage.get_object(service._info_object_key(file)))
+        info = service.info(file)
         jsonschema.validate(info, self._info_schema)
         content_types = info['content-type']
         self.assertIsInstance(content_types, list)
@@ -315,7 +369,7 @@ class TestMirrorController(DCP2TestCase,
         self._create_mock_queues(config.mirror_queue_names)
 
         with self.subTest(no_mirror=True):
-            messages = self._mirror_sources(SourceConfig(mirror=False))
+            messages = self._mirror_sources(enable=False)
             self.assertEqual([], messages)
 
         with self.subTest(mirror_limit=-1):

@@ -20,6 +20,57 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#7963 Disabled secrets cause OAuth clients to be flagged
+========================================================
+
+Everyone
+--------
+
+Make sure that the OAuth 2.0 client for each of your personal deployments has
+exactly one secret, and that that secret is enabled. Any secrets that have
+already been disabled for at least one hour can be immediately deleted. If there
+are still more than one secret left, disable all but the newest secret, wait one
+hour and ten minutes, and delete the previously disabled secrets.
+
+If you're OK with potentially breaking the login functionality on the Swagger UI
+of your personal deployment, and the login functionality of any Data Browser
+instance backed by your deployment, you don't need to wait between disabling and
+deleting a secret.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments. The waiting period between
+disabling and deleting secrets should be observed.
+
+
+#7927 Use MA mirror bucket for MA files
+=======================================
+
+Add the ``no_mirror`` flag to all managed-access sources in all catalogs in
+the ``environment.py`` files for each of your personal deployments. As always,
+use the sandbox deployment's ``environment.py`` as a model when upgrading
+personal deployments.
+
+
+#7954 Implement authorization code flow with Azul and Data Browser
+==================================================================
+
+Everyone
+--------
+
+Make sure that the OAuth 2.0 client for each of your personal deployments has
+the authorized JavaScript origins and redirect URIs specified in README section
+3.2.2. There should be one entry for the Swagger UI, one for the deployed
+instance of the Data Browser and one for a locally running instance of the
+latter.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments.
+
+
 #7950 Store OAuth2 client secret in AWS Secrets Manager
 =======================================================
 

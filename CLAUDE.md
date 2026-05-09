@@ -24,6 +24,9 @@
   path in the `modules` section of that file, or *implicitly*, by listing its
   parent or ancestor package in the `packages` section
 
+- When adding a module to the `modules` list in `.mypy.ini`, always append it
+  at the end of the list
+
 - Prefer to use `git mv` when renaming or moving files
 
 - Do not commit any changes unless explicitly asked to do so. However, it's OK
@@ -39,3 +42,16 @@
 - Do not quote type hints in annotations. The project uses Python 3.14, which
   defers evaluation of annotations by default (PEP 649), so forward references
   and `TYPE_CHECKING`-guarded imports work without quotes
+
+- When using `assert` with `R()` and at least one assertion in the function
+  needs line wrapping, wrap all of them consistently. The convention is:
+  ```python
+  assert condition, R(
+      'message', value)
+  ```
+  `R(` goes at the end of the `assert` line, the closing `)` at the end of
+  the following line
+
+- For pairs of symmetric assignments like `a = foo(x)` and `b = foo(y)`, use
+  tuple assignment: `a, b = foo(x), foo(y)`. Do not apply this when it would
+  require wrapping the line

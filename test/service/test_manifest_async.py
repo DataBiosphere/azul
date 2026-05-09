@@ -213,7 +213,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                      [True, False]):
             with self.subTest(format=format, fetch=fetch):
                 filters = {'fileFormat': {'is': ['txt']}, 'organ': {'is': ['heart', 'lung']}}
-                filters = Filters(explicit=filters, source_ids={self.source.id})
+                filters = Filters(explicit=filters, source_ids={self.source.ref.id})
                 params = {
                     'catalog': self.catalog,
                     'format': format.value,
