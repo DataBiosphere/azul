@@ -326,10 +326,12 @@ class TestUserController(DCP2TestCase,
             self._service.exchange_token(authentication)
 
     def test_exchange_token_forged_jwt(self):
+        from cryptography.hazmat.primitives.asymmetric import ec
+        private_key = ec.generate_private_key(ec.SECP256R1())
         token = jwt.encode(
             {'sub': '#y'},
-            key='a' * 32,
-            algorithm='HS256'
+            key=private_key,
+            algorithm='ES256'
         )
         authentication = PersonalAccessTokenAuthentication(access_token=token)
         with self.assertRaises(InvalidPersonalAccessTokenError):
