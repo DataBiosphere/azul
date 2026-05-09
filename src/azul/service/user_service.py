@@ -141,7 +141,7 @@ class UserService:
 
         :param sub: The user's identity
         """
-        key = self._key_separator.join([iss, sub])
+        key = self._encode_identity(iss, sub)
         response = self._dynamodb.get_item(
             TableName=self._table_name,
             Key={self.key_attribute: {'S': key}}
@@ -164,6 +164,18 @@ class UserService:
             )
 
     _google_issuer = 'https://accounts.google.com'
+
+    def _encode_identity(self, iss: str, sub: str) -> str:
+        assert iss, iss
+        if iss == self._google_issuer:
+            iss = ''
+        return self._key_separator.join([iss, sub])
+
+    def _decode_identity(self, identity: str) -> tuple[str, str]:
+        iss, sub = identity.split(self._key_separator, 1)
+        if iss == '':
+            iss = self._google_issuer
+        return iss, sub
 
     _apat_algorithm = 'ES256'
     _apat_expiration = 30 * 24 * 60 * 60
@@ -196,8 +208,7 @@ class UserService:
             self.get_user(iss, sub)
             now = self._now()
             payload = {
-                'iss': str(config.service_endpoint),
-                'sub': self._key_separator.join([iss, sub]),
+                'sub': self._encode_identity(iss, sub),
                 'exp': now + self._apat_expiration,
                 'iat': now
             }
@@ -225,7 +236,7 @@ class UserService:
         except Exception:
             raise TypeError(auth)
         else:
-            if unverified.get('iss') == str(config.service_endpoint):
+            if unverified.get('sub', '').startswith(self._key_separator):
                 return PersonalAccessTokenAuthentication(access_token=token)
             else:
                 raise TypeError(auth)
@@ -240,14 +251,12 @@ class UserService:
         try:
             claims = self._jwt.decode(apat_auth.access_token,
                                       key=config.apat_kms_key.alias,
-                                      algorithms=[self._apat_algorithm],
-                                      issuer=str(config.service_endpoint))
+                                      algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:
             raise InvalidPersonalAccessTokenError from e
         else:
             identity = claims['sub']
-            iss, sub = identity.split(self._key_separator, 1)
-            assert iss == self._google_issuer, iss
+            iss, sub = self._decode_identity(identity)
             user = self.get_user(iss, sub)
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
@@ -267,8 +276,7 @@ class UserService:
         id_claims = self._jwt.decode(response['id_token'], options=options)
         iss, sub = id_claims['iss'], id_claims['sub']
         assert iss == self._google_issuer, R('Unexpected issuer', iss)
-        assert self._key_separator not in iss, R('Unexpected separator in issuer', iss)
-        key = self._key_separator.join([iss, sub])
+        key = self._encode_identity(iss, sub)
         email, email_verified = id_claims['email'], id_claims['email_verified']
         now = self._now()
         self._dynamodb.update_item(

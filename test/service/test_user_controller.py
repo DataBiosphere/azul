@@ -239,9 +239,8 @@ class TestUserController(DCP2TestCase,
         self.assertEqual('ES256', header['alg'])
         claims = jwt.decode(apat.access_token,
                             options={'verify_signature': False})
-        self.assertEqual(str(config.service_endpoint), claims['iss'])
-        expected_sub = '#'.join([self._mock_iss, self._mock_sub])
-        self.assertEqual(expected_sub, claims['sub'])
+        self.assertNotIn('iss', claims)
+        self.assertEqual('#' + self._mock_sub, claims['sub'])
         now = UserService()._now()
         self.assertAlmostEqual(UserService._apat_expiration,
                                claims['exp'] - now,
@@ -286,8 +285,8 @@ class TestUserController(DCP2TestCase,
         with self.assertRaises(TypeError):
             self._service.narrow_token(authentication)
 
-    def test_narrow_token_wrong_issuer(self):
-        token = jwt.encode({'iss': 'https://other.example.com'},
+    def test_narrow_token_foreign_jwt(self):
+        token = jwt.encode({'sub': 'some_user'},
                            key='a' * 32,
                            algorithm='HS256')
         authentication = AccessTokenAuthentication(token)
@@ -328,7 +327,7 @@ class TestUserController(DCP2TestCase,
 
     def test_exchange_token_forged_jwt(self):
         token = jwt.encode(
-            {'iss': str(config.service_endpoint), 'sub': 'x#y'},
+            {'sub': '#y'},
             key='a' * 32,
             algorithm='HS256'
         )
