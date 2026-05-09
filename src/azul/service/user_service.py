@@ -176,7 +176,7 @@ class UserService:
         return jwt
 
     def mint_personal_access_token(self,
-                                   authentication: AccessTokenAuthentication
+                                   at_auth: AccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
         """
         Given a valid access token for a user, issue a long-lived,
@@ -187,8 +187,8 @@ class UserService:
         perform. The APAT can be thought of as a proxy secret for the user's
         refresh token.
         """
-        assert not isinstance(authentication, PersonalAccessTokenAuthentication)
-        token_info = self._oauth_client.token_info(authentication.access_token)
+        assert not isinstance(at_auth, PersonalAccessTokenAuthentication)
+        token_info = self._oauth_client.token_info(at_auth.access_token)
         if token_info['aud'] != self._client_id:
             raise ForeignTokenException(token_info['aud'])
         else:
@@ -210,7 +210,7 @@ class UserService:
             return PersonalAccessTokenAuthentication(access_token=token)
 
     def narrow_token(self,
-                     authentication: AccessTokenAuthentication
+                     auth: AccessTokenAuthentication
                      ) -> PersonalAccessTokenAuthentication:
         """
         Check whether the given access token is actually a personal access
@@ -218,27 +218,27 @@ class UserService:
         type. Otherwise, raise TypeError. Note that the returned token might
         still be a forged JWT of some kind. It hasn't been validated yet.
         """
-        token = authentication.access_token
+        token = auth.access_token
         try:
             options = jwt.types.Options(verify_signature=False, verify_exp=False)
             unverified = self._jwt.decode(token, options=options)
         except Exception:
-            raise TypeError(authentication)
+            raise TypeError(auth)
         else:
             if unverified.get('iss') == str(config.service_endpoint):
                 return PersonalAccessTokenAuthentication(access_token=token)
             else:
-                raise TypeError(authentication)
+                raise TypeError(auth)
 
     def exchange_token(self,
-                       authentication: PersonalAccessTokenAuthentication
+                       apat_auth: PersonalAccessTokenAuthentication
                        ) -> AccessTokenAuthentication:
         """
         Return a usable access token in exchange for an APAT if valid and not
         yet expired.
         """
         try:
-            claims = self._jwt.decode(authentication.access_token,
+            claims = self._jwt.decode(apat_auth.access_token,
                                       key=config.apat_kms_key.alias,
                                       algorithms=[self._apat_algorithm],
                                       issuer=str(config.service_endpoint))
