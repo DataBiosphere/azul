@@ -42,6 +42,7 @@ from azul.oauth2 import (
     TokenResponse,
 )
 from azul.service.user_service import (
+    ForeignTokenException,
     InvalidPersonalAccessTokenError,
     UnknownUserException,
     User,
@@ -251,6 +252,15 @@ class TestUserController(DCP2TestCase,
         mock_token_info.return_value = self._mock_token_info()
         authentication = AccessTokenAuthentication(self._mock_access_token)
         with self.assertRaises(UnknownUserException):
+            self._service.mint_personal_access_token(authentication)
+
+    @patch.object(OAuth2Client, 'token_info')
+    def test_mint_personal_access_token_foreign_token(self, mock_token_info):
+        token_info = self._mock_token_info()
+        token_info['aud'] = 'some_other_client_id'
+        mock_token_info.return_value = token_info
+        authentication = AccessTokenAuthentication(self._mock_access_token)
+        with self.assertRaises(ForeignTokenException):
             self._service.mint_personal_access_token(authentication)
 
     @patch.object(OAuth2Client, 'token_info')

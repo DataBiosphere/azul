@@ -84,6 +84,7 @@ from azul.service.query_controller import (
     QueryController,
 )
 from azul.service.user_service import (
+    ForeignTokenException,
     UnknownUserException,
     UserService,
 )
@@ -589,7 +590,7 @@ class ManifestController(QueryController):
             if isinstance(authentication, AccessTokenAuthentication):
                 try:
                     authentication = self._user_service.mint_personal_access_token(authentication)
-                except UnknownUserException:
+                except (ForeignTokenException, UnknownUserException):
                     # Fall back to access token auth, but this will render the
                     # command line useless when the access token expires.
                     pass

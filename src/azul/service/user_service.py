@@ -61,6 +61,14 @@ class UnknownUserException(Exception):
     pass
 
 
+class ForeignTokenException(Exception):
+    """
+    The access token was not issued to this application. It could be a rogue
+    token or a token belonging to one of our service accounts, during
+    integration tests.
+    """
+
+
 class InvalidPersonalAccessTokenError(Exception):
     pass
 
@@ -147,24 +155,25 @@ class UserService:
                                    ) -> PersonalAccessTokenAuthentication:
         assert not isinstance(authentication, PersonalAccessTokenAuthentication)
         token_info = self._oauth_client.token_info(authentication.access_token)
-        assert token_info['aud'] == self._client_id, R(
-            'Token was not issued for this application')
-        iss, sub = self._google_issuer, token_info['sub']
-        self.get_user(iss, sub)
-        now = self._now()
-        payload = {
-            'iss': str(config.service_endpoint),
-            'sub': self._key_separator.join([iss, sub]),
-            'exp': now + self._apat_expiration,
-            'iat': now
-        }
-        token = self._jwt.encode(payload,
-                                 key=config.apat_kms_key.alias,
-                                 algorithm=self._apat_algorithm)
-        self._jwt.decode(token,
-                         key=config.apat_kms_key.alias,
-                         algorithms=[self._apat_algorithm])
-        return PersonalAccessTokenAuthentication(access_token=token)
+        if token_info['aud'] != self._client_id:
+            raise ForeignTokenException(token_info['aud'])
+        else:
+            iss, sub = self._google_issuer, token_info['sub']
+            self.get_user(iss, sub)
+            now = self._now()
+            payload = {
+                'iss': str(config.service_endpoint),
+                'sub': self._key_separator.join([iss, sub]),
+                'exp': now + self._apat_expiration,
+                'iat': now
+            }
+            token = self._jwt.encode(payload,
+                                     key=config.apat_kms_key.alias,
+                                     algorithm=self._apat_algorithm)
+            self._jwt.decode(token,
+                             key=config.apat_kms_key.alias,
+                             algorithms=[self._apat_algorithm])
+            return PersonalAccessTokenAuthentication(access_token=token)
 
     def narrow_token(self,
                      authentication: AccessTokenAuthentication
