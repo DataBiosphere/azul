@@ -321,12 +321,14 @@ class TestUserController(DCP2TestCase,
         self.assertEqual(refreshed_token, user['access_token'])
 
     def test_exchange_token_invalid_jwt(self):
-        authentication = PersonalAccessTokenAuthentication(access_token='not.a.jwt')
+        authentication = PersonalAccessTokenAuthentication(access_token='eyJ.not.a.jwt')
         with self.assertRaises(InvalidPersonalAccessTokenError):
             self._service.exchange_token(authentication)
 
     def test_exchange_token_forged_jwt(self):
-        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives.asymmetric import (
+            ec,
+        )
         private_key = ec.generate_private_key(ec.SECP256R1())
         token = jwt.encode(
             {'sub': '#y'},

@@ -2,9 +2,6 @@ import logging
 from time import (
     time,
 )
-from typing import (
-    TypedDict,
-)
 
 import jwt.algorithms
 from jwt.api_jwt import (
@@ -27,10 +24,15 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.json import (
+    redact_json,
+)
 from azul.lib.strings import (
     format_and_dedent as fd,
 )
 from azul.lib.types import (
+    JSONTypedDict,
+    json_untyped_dict,
     not_none,
 )
 from azul.oauth2 import (
@@ -42,7 +44,7 @@ from azul.oauth2 import (
 log = logging.getLogger(__name__)
 
 
-class User(TypedDict):
+class User(JSONTypedDict):
     #: The OAuth 2.0 access token issued by the authorization server
     access_token: str
     #: The OAuth 2.0 refresh token used to obtain new access tokens
@@ -116,6 +118,7 @@ class UserService:
         must have included the ``openid`` scope. The return value will contain
         all three tokens: ID, refresh and access.
         """
+        log.info("Authorizing app, using code %r", redact_json(authorization['code']))
         scopes = set(authorization['scope'].split())
         assert self.required_scopes.issubset(scopes), R(
             'Be sure to include the required scopes when requesting the '
@@ -141,6 +144,7 @@ class UserService:
 
         :param sub: The user's identity
         """
+        log.info('Retrieving user %r from %r', sub, iss)
         key = self._encode_identity(iss, sub)
         response = self._dynamodb.get_item(
             TableName=self._table_name,
@@ -148,13 +152,14 @@ class UserService:
         )
         item = response.get('Item')
         if item is None:
+            log.warning('No user %r from %r', sub, iss)
             raise UnknownUserException(iss, sub)
         else:
             try:
                 access_token_expiration = int(item['access_token_expiration']['N'])
             except KeyError:
                 access_token_expiration = 0
-            return User(
+            user = User(
                 access_token=item['access_token']['S'],
                 refresh_token=item['refresh_token']['S'],
                 email=item['email']['S'],
@@ -162,6 +167,8 @@ class UserService:
                 access_token_expiration=access_token_expiration,
                 expiration=int(item[self.ttl_attribute]['N'])
             )
+            log.info('Retrieved user %r', redact_json(json_untyped_dict(user)))
+            return user
 
     _google_issuer = 'https://accounts.google.com'
 
@@ -199,10 +206,14 @@ class UserService:
         perform. The APAT can be thought of as a proxy secret for the user's
         refresh token.
         """
+        log.info('Minting APAT for %r', at_auth.redacted())
         assert not isinstance(at_auth, PersonalAccessTokenAuthentication)
         token_info = self._oauth_client.token_info(at_auth.access_token)
-        if token_info['aud'] != self._client_id:
-            raise ForeignTokenException(token_info['aud'])
+        aud = token_info['aud']
+        if aud != self._client_id:
+            log.warning('Unexpected access token audience %r for token %r',
+                        aud, at_auth.redacted())
+            raise ForeignTokenException(aud)
         else:
             iss, sub = self._google_issuer, token_info['sub']
             self.get_user(iss, sub)
@@ -212,13 +223,16 @@ class UserService:
                 'exp': now + self._apat_expiration,
                 'iat': now
             }
-            token = self._jwt.encode(payload,
-                                     key=config.apat_kms_key.alias,
-                                     algorithm=self._apat_algorithm)
-            self._jwt.decode(token,
+            apat = self._jwt.encode(payload,
+                                    key=config.apat_kms_key.alias,
+                                    algorithm=self._apat_algorithm)
+            self._jwt.decode(apat,
                              key=config.apat_kms_key.alias,
                              algorithms=[self._apat_algorithm])
-            return PersonalAccessTokenAuthentication(access_token=token)
+            apat_auth = PersonalAccessTokenAuthentication(access_token=apat)
+            log.info('Minted APAT %r for access token %r',
+                     apat_auth.redacted(), at_auth.redacted())
+            return apat_auth
 
     def narrow_token(self,
                      auth: AccessTokenAuthentication
@@ -248,15 +262,16 @@ class UserService:
         Return a usable access token in exchange for an APAT if valid and not
         yet expired.
         """
+        log.info('Getting access token for APAT %r', apat_auth.redacted())
         try:
             claims = self._jwt.decode(apat_auth.access_token,
                                       key=config.apat_kms_key.alias,
                                       algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:
+            log.warning('Invalid APAT %r', apat_auth.redacted(), exc_info=e)
             raise InvalidPersonalAccessTokenError from e
         else:
-            identity = claims['sub']
-            iss, sub = self._decode_identity(identity)
+            iss, sub = self._decode_identity(claims['sub'])
             user = self.get_user(iss, sub)
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
@@ -266,10 +281,13 @@ class UserService:
                     client_secret=self._client_secret
                 )
                 access_token, expires_in = response['access_token'], response['expires_in']
-                self._update_access_token(identity, access_token, expires_in)
-            return AccessTokenAuthentication(access_token)
+                self._update_access_token(iss, sub, access_token, expires_in)
+            at_auth = AccessTokenAuthentication(access_token)
+            log.info('Exchanged %r for APAT %r', at_auth.redacted(), apat_auth.redacted())
+            return at_auth
 
     def _store_tokens(self, response: TokenForCodeResponse) -> None:
+        log.debug('Storing tokens %r', redact_json(json_untyped_dict(response)))
         # Signature verification is unnecessary per OIDC 3.1.3.7 since the
         # token was received directly from the token endpoint over TLS.
         options = jwt.types.Options(verify_signature=False)
@@ -303,13 +321,16 @@ class UserService:
         )
 
     def _update_access_token(self,
-                             key: str,
+                             iss: str,
+                             sub: str,
                              access_token: str,
                              expires_in: int
                              ) -> None:
+        log.debug('Updating access token of user %r at %r to %r',
+                  sub, iss, redact_json(access_token))
         self._dynamodb.update_item(
             TableName=self._table_name,
-            Key={self.key_attribute: {'S': key}},
+            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
             UpdateExpression=fd('''
                 SET access_token = :access_token,
                     access_token_expiration = :access_token_expiration
@@ -338,6 +359,7 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
         raise NotImplementedError
 
     def sign(self, msg: bytes, key: str) -> bytes:
+        log.debug('Signing %d bytes with key %r', len(msg), key)
         response = aws.kms.sign(KeyId=key,
                                 Message=msg,
                                 MessageType='RAW',
@@ -345,6 +367,7 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
         return response['Signature']
 
     def verify(self, msg: bytes, key: str, sig: bytes) -> bool:
+        log.debug('Verifying %d bytes with key %r', len(msg), key)
         try:
             response = aws.kms.verify(KeyId=key,
                                       Message=msg,

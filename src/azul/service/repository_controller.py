@@ -320,7 +320,7 @@ class RepositoryController(ServiceController):
                 try:
                     authentication = self._user_service.exchange_token(authentication)
                 except InvalidPersonalAccessTokenError:
-                    raise UnauthorizedError('Invalid personal access token')
+                    raise UnauthorizedError('Invalid token')
         return authentication
 
     @cached_property

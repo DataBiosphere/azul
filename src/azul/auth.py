@@ -2,7 +2,12 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Sequence,
+)
 from typing import (
+    Callable,
+    ClassVar,
     Final,
 )
 
@@ -10,6 +15,14 @@ import attr
 
 from azul import (
     config,
+)
+from azul.lib import (
+    R,
+)
+from azul.lib.strings import (
+    redact,
+    redactable_access_token,
+    redactable_jwt,
 )
 
 
@@ -33,10 +46,22 @@ class Authentication(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def redacted(self) -> str:
+        return redact(self.identity())
+
 
 @attr.s(auto_attribs=True, frozen=True)
 class AccessTokenAuthentication(Authentication):
     access_token: str
+
+    redactables: ClassVar[Sequence[Callable[[str], bool]]] = (
+        redactable_access_token,
+        redactable_jwt
+    )
+
+    def __attrs_post_init__(self):
+        token = self.access_token
+        assert any(f(token) for f in self.redactables), R('Unredactable token syntax')
 
     def identity(self) -> str:
         return self.access_token
@@ -46,7 +71,7 @@ class AccessTokenAuthentication(Authentication):
 
 
 class PersonalAccessTokenAuthentication(AccessTokenAuthentication):
-    pass
+    redactables = (redactable_jwt,)
 
 
 @attr.s(auto_attribs=True, frozen=True)
