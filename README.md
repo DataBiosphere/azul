@@ -772,10 +772,16 @@ It is possible that this also works when changing `AZUL_PRIVATE_API` from `0` to
 
 ### Troubleshooting
 
+
+#### Transient SQS errors during `make deploy`
+
 Transient errors might be encountered during the deploy such as `SQS Error Code:
 AWS.SimpleQueueService.NonExistentQueue. SQS Error Message: The specified queue
 does not exist for this wsdl version` In such cases rerunning `make deploy`
 should resolve the issue.
+
+
+#### CloudWatch log group `ResourceAlreadyExistsException`
 
 [aws_cloudwatch_log_group]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group
 
@@ -793,12 +799,18 @@ exists` is encountered, follow the steps below to import the
 
 5. `make deploy`
 
+
+#### Service account SAM access causes `azul.RequirementError`
+
 If the error `azul.RequirementError: The service account (SA) '...' is not
 authorized to access ... or that resource does not exist. Make sure that it
 exists, that the SA is registered with SAM and has been granted read access to
 the resource` is encountered, ask an administrator of the Terra group `azul-dev`
 to add the service account as specified in the error messaged to that group. See
 [2.3.4 Google Cloud, TDR, and SAM](#234-google-cloud-tdr-and-sam) for details.
+
+
+#### Unresponsive deployment caused by `KMSAccessDeniedException`
 
 [KMSAccessDeniedException]: https://aws.amazon.com/premiumsupport/knowledge-center/lambda-kmsaccessdeniedexception-errors/
 
