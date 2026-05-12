@@ -58,7 +58,10 @@ class User(TypedDict):
 
 
 class UnknownUserException(Exception):
-    pass
+    """
+    The access token was issued to this application but the user hasn't invoked
+    the authorization code flow.
+    """
 
 
 class ForeignTokenException(Exception):
@@ -70,7 +73,9 @@ class ForeignTokenException(Exception):
 
 
 class InvalidPersonalAccessTokenError(Exception):
-    pass
+    """
+    The token is a JWT but not a valid APAT (expired, tampered with, forged, …).
+    """
 
 
 class UserService:
@@ -102,6 +107,15 @@ class UserService:
         return aws.dynamodb
 
     def authorize(self, authorization: Authorization) -> TokenForCodeResponse:
+        """
+        Use the given authorization by a user to request an access and a refresh
+        token from the authorization server. Persist information about the user,
+        including both tokens, under the user's identity so that it can be
+        retrieved later. Return the response from the authorization server. The
+        authorization must have been requested by the client, and that request
+        must have included the ``openid`` scope. The return value will contain
+        all three tokens: ID, refresh and access.
+        """
         scopes = set(authorization['scope'].split())
         assert self.required_scopes.issubset(scopes), R(
             'Be sure to include the required scopes when requesting the '
@@ -116,6 +130,17 @@ class UserService:
         return response
 
     def get_user(self, iss: str, sub: str) -> User:
+        """
+        Retrieve previously stored information about the user of the given
+        identity. The identity of a user can be obtained from the ``iss` and
+        ``sub`` claims of a valid ID token, or from the ``iss`` and ``sub``
+        properties of a response from the authorization server's /tokeninfo
+        endpoint.
+
+        :param iss: The issuer of the user's identity
+
+        :param sub: The user's identity
+        """
         key = self._key_separator.join([iss, sub])
         response = self._dynamodb.get_item(
             TableName=self._table_name,
@@ -153,6 +178,15 @@ class UserService:
     def mint_personal_access_token(self,
                                    authentication: AccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
+        """
+        Given a valid access token for a user, issue a long-lived,
+        application-specific, personal access token (APAT) for the same user.
+        The token must be kept confidential, not because it contains secrets,
+        but because it can be used to authenticate a request to the application,
+        thereby providing access to any operation the user is permitted to
+        perform. The APAT can be thought of as a proxy secret for the user's
+        refresh token.
+        """
         assert not isinstance(authentication, PersonalAccessTokenAuthentication)
         token_info = self._oauth_client.token_info(authentication.access_token)
         if token_info['aud'] != self._client_id:
@@ -179,10 +213,10 @@ class UserService:
                      authentication: AccessTokenAuthentication
                      ) -> PersonalAccessTokenAuthentication:
         """
-        Check wether the given access token is actually a personal access token.
-        If it is, return a copy of the argument, but of the more specific type.
-        Otherwise, raise TypeError. Note that the returned token might still be
-        a forged JWT of some kind, it hasn't been validated yet.
+        Check whether the given access token is actually a personal access
+        token. If it is, return a copy of the argument, but of the more specific
+        type. Otherwise, raise TypeError. Note that the returned token might
+        still be a forged JWT of some kind. It hasn't been validated yet.
         """
         token = authentication.access_token
         try:
