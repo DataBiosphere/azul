@@ -17,6 +17,7 @@ import chevron
 
 from azul.auth import (
     AccessTokenAuthentication,
+    PersonalAccessTokenAuthentication,
 )
 from azul.chalice import (
     Controller,
@@ -276,13 +277,10 @@ class UserController(Controller):
 
     def _token(self) -> JSON:
         auth = self._authentication(self.current_request)
-        if not isinstance(auth, AccessTokenAuthentication):
-            raise UnauthorizedError('Valid access token required')
+        if isinstance(auth, PersonalAccessTokenAuthentication):
+            raise BadRequestError('Cannot exchange a personal access token for another')
+        elif isinstance(auth, AccessTokenAuthentication):
+            apat_auth = self._service.mint_personal_access_token(auth)
+            return {'token': apat_auth.token}
         else:
-            try:
-                self._service.narrow_token(auth)
-            except TypeError:
-                apat_auth = self._service.mint_personal_access_token(auth)
-                return {'token': apat_auth.access_token}
-            else:
-                raise BadRequestError('Cannot exchange a personal access token for another')
+            raise UnauthorizedError('Valid access token required')

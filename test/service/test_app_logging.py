@@ -75,7 +75,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                               authenticated=authenticated,
                               body_len=len(body)):
                 url = self.base_url.set(path='/index/projects')
-                request_headers = {'authorization': 'Bearer foo_token'} if authenticated else {}
+                request_headers = {'authorization': 'Bearer ya29.foo_token'} if authenticated else {}
                 level = [INFO, DEBUG, DEBUG][debug]
                 with self.assertLogs(logger=log, level=level) as logs:
                     with patch.object(Config, 'debug', new=PropertyMock(return_value=debug)):
@@ -134,7 +134,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                         ),
                         (
                             INFO,
-                            "Authenticated request as AccessTokenAuthentication(access_token='foo_token')"
+                            "Authenticated request as AccessTokenAuthentication(token='ya29.foo_token')"
                             if authenticated else
                             'Did not authenticate request.'
                         ),

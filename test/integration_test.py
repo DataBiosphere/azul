@@ -1515,7 +1515,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         with self._unregistered_service_account_credentials:
             self.assertEqual(public_source_ids, list_source_ids())
         self.assertEqual(public_source_ids, list_source_ids())
-        invalid_auth = AccessTokenAuthentication('foo')
+        invalid_auth = AccessTokenAuthentication('ya29.invalid')
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)

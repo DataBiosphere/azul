@@ -212,8 +212,7 @@ class UserService:
         refresh token.
         """
         log.info('Minting APAT for %r', at_auth.redacted())
-        assert not isinstance(at_auth, PersonalAccessTokenAuthentication)
-        token_info = self._oauth_client.token_info(at_auth.access_token)
+        token_info = self._oauth_client.token_info(at_auth.token)
         aud = token_info['aud']
         if aud != self._client_id:
             log.warning('Unexpected access token audience %r for token %r',
@@ -234,31 +233,10 @@ class UserService:
             self._jwt.decode(apat,
                              key=config.apat_kms_key.alias,
                              algorithms=[self._apat_algorithm])
-            apat_auth = PersonalAccessTokenAuthentication(access_token=apat)
+            apat_auth = PersonalAccessTokenAuthentication(token=apat)
             log.info('Minted APAT %r for access token %r',
                      apat_auth.redacted(), at_auth.redacted())
             return apat_auth
-
-    def narrow_token(self,
-                     auth: AccessTokenAuthentication
-                     ) -> PersonalAccessTokenAuthentication:
-        """
-        Check whether the given access token is actually a personal access
-        token. If it is, return a copy of the argument, but of the more specific
-        type. Otherwise, raise TypeError. Note that the returned token might
-        still be a forged JWT of some kind. It hasn't been validated yet.
-        """
-        token = auth.access_token
-        try:
-            options = jwt.types.Options(verify_signature=False, verify_exp=False)
-            unverified = self._jwt.decode(token, options=options)
-        except Exception:
-            raise TypeError(auth)
-        else:
-            if unverified.get('sub', '').startswith(self._key_separator):
-                return PersonalAccessTokenAuthentication(access_token=token)
-            else:
-                raise TypeError(auth)
 
     def exchange_token(self,
                        apat_auth: PersonalAccessTokenAuthentication
@@ -269,7 +247,7 @@ class UserService:
         """
         log.info('Getting access token for APAT %r', apat_auth.redacted())
         try:
-            claims = self._jwt.decode(apat_auth.access_token,
+            claims = self._jwt.decode(apat_auth.token,
                                       key=config.apat_kms_key.alias,
                                       algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:

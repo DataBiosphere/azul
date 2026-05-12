@@ -29,8 +29,8 @@ from azul import (
     config,
 )
 from azul.auth import (
-    AccessTokenAuthentication,
     Authentication,
+    PersonalAccessTokenAuthentication,
 )
 from azul.chalice import (
     TemporaryRedirectError,
@@ -309,18 +309,11 @@ class RepositoryController(ServiceController):
 
     def _authentication(self, request: Request) -> Authentication | None:
         authentication = super()._authentication(request)
-        if isinstance(authentication, AccessTokenAuthentication):
+        if isinstance(authentication, PersonalAccessTokenAuthentication):
             try:
-                authentication = self._user_service.narrow_token(authentication)
-            except TypeError:
-                # It must be a regular access token, not an APAT
-                pass
-            else:
-                # It might be an APAT, but it could still be a forged JWT of some kind
-                try:
-                    authentication = self._user_service.exchange_token(authentication)
-                except InvalidPersonalAccessTokenError:
-                    raise UnauthorizedError('Invalid token')
+                authentication = self._user_service.exchange_token(authentication)
+            except InvalidPersonalAccessTokenError:
+                raise UnauthorizedError('Invalid token')
         return authentication
 
     @cached_property

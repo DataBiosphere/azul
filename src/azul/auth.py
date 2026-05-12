@@ -2,12 +2,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections.abc import (
-    Sequence,
-)
 from typing import (
-    Callable,
-    ClassVar,
     Final,
 )
 
@@ -51,27 +46,31 @@ class Authentication(metaclass=ABCMeta):
 
 
 @attr.s(auto_attribs=True, frozen=True)
-class AccessTokenAuthentication(Authentication):
-    access_token: str
+class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
+    token: str
 
-    redactables: ClassVar[Sequence[Callable[[str], bool]]] = (
-        redactable_access_token,
-        redactable_jwt
-    )
-
-    def __attrs_post_init__(self):
-        token = self.access_token
-        assert any(f(token) for f in self.redactables), R('Unredactable token syntax')
+    @classmethod
+    def for_token(cls, token: str) -> BearerTokenAuthentication:
+        if redactable_jwt(token):
+            return PersonalAccessTokenAuthentication(token)
+        elif redactable_access_token(token):
+            return AccessTokenAuthentication(token)
+        else:
+            assert False, R('Unexpected token syntax')
 
     def identity(self) -> str:
-        return self.access_token
+        return self.token
 
     def as_http_header(self) -> str:
-        return f'Authorization: Bearer {self.access_token}'
+        return f'Authorization: Bearer {self.token}'
 
 
-class PersonalAccessTokenAuthentication(AccessTokenAuthentication):
-    redactables = (redactable_jwt,)
+class AccessTokenAuthentication(BearerTokenAuthentication):
+    pass
+
+
+class PersonalAccessTokenAuthentication(BearerTokenAuthentication):
+    pass
 
 
 @attr.s(auto_attribs=True, frozen=True)

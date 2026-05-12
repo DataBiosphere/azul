@@ -241,12 +241,12 @@ class TestUserController(DCP2TestCase,
         mock_token_for_code.return_value = self._mock_token_response()
         self._authorize()
         mock_token_info.return_value = self._mock_token_info()
-        authentication = AccessTokenAuthentication(self._mock_access_token)
-        apat = self._service.mint_personal_access_token(authentication)
+        auth = AccessTokenAuthentication(self._mock_access_token)
+        apat_auth = self._service.mint_personal_access_token(auth)
         mock_token_info.assert_called_once_with(self._mock_access_token)
-        header = jwt.get_unverified_header(apat.access_token)
+        header = jwt.get_unverified_header(apat_auth.token)
         self.assertEqual('ES256', header['alg'])
-        claims = jwt.decode(apat.access_token,
+        claims = jwt.decode(apat_auth.token,
                             options={'verify_signature': False})
         self.assertNotIn('iss', claims)
         self.assertEqual('#' + self._mock_sub, claims['sub'])
@@ -258,18 +258,18 @@ class TestUserController(DCP2TestCase,
     @patch.object(OAuth2Client, 'token_info')
     def test_mint_personal_access_token_unknown_user(self, mock_token_info):
         mock_token_info.return_value = self._mock_token_info()
-        authentication = AccessTokenAuthentication(self._mock_access_token)
+        auth = AccessTokenAuthentication(self._mock_access_token)
         with self.assertRaises(UnknownUserException):
-            self._service.mint_personal_access_token(authentication)
+            self._service.mint_personal_access_token(auth)
 
     @patch.object(OAuth2Client, 'token_info')
     def test_mint_personal_access_token_foreign_token(self, mock_token_info):
         token_info = self._mock_token_info()
         token_info['aud'] = 'some_other_client_id'
         mock_token_info.return_value = token_info
-        authentication = AccessTokenAuthentication(self._mock_access_token)
+        auth = AccessTokenAuthentication(self._mock_access_token)
         with self.assertRaises(ForeignTokenException):
-            self._service.mint_personal_access_token(authentication)
+            self._service.mint_personal_access_token(auth)
 
     @patch.object(OAuth2Client, 'token_info')
     @patch.object(OAuth2Client, 'token_for_code')
@@ -280,33 +280,14 @@ class TestUserController(DCP2TestCase,
         mock_token_for_code.return_value = self._mock_token_response()
         self._authorize()
         mock_token_info.return_value = self._mock_token_info()
-        authentication = AccessTokenAuthentication(self._mock_access_token)
-        return self._service.mint_personal_access_token(authentication)
-
-    def test_narrow_token(self):
-        apat = self._authorize_and_mint()
-        result = self._service.narrow_token(AccessTokenAuthentication(apat.access_token))
-        self.assertIsInstance(result, PersonalAccessTokenAuthentication)
-        self.assertEqual(apat.access_token, result.access_token)
-
-    def test_narrow_token_regular_access_token(self):
-        authentication = AccessTokenAuthentication(self._mock_access_token)
-        with self.assertRaises(TypeError):
-            self._service.narrow_token(authentication)
-
-    def test_narrow_token_foreign_jwt(self):
-        token = jwt.encode({'sub': 'some_user'},
-                           key='a' * 32,
-                           algorithm='HS256')
-        authentication = AccessTokenAuthentication(token)
-        with self.assertRaises(TypeError):
-            self._service.narrow_token(authentication)
+        auth = AccessTokenAuthentication(self._mock_access_token)
+        return self._service.mint_personal_access_token(auth)
 
     def test_exchange_token(self):
         apat = self._authorize_and_mint()
         result = self._service.exchange_token(apat)
         self.assertIsInstance(result, AccessTokenAuthentication)
-        self.assertEqual(self._mock_access_token, result.access_token)
+        self.assertEqual(self._mock_access_token, result.token)
 
     @patch.object(OAuth2Client, 'token_for_refresh')
     def test_exchange_token_refreshes_expired(self, mock_token_for_refresh):
@@ -320,7 +301,7 @@ class TestUserController(DCP2TestCase,
         )
         with patch.object(UserService, '_now', return_value=2 ** 31):
             result = self._service.exchange_token(apat)
-        self.assertEqual(refreshed_token, result.access_token)
+        self.assertEqual(refreshed_token, result.token)
         mock_token_for_refresh.assert_called_once_with(
             refresh_token=self._mock_refresh_token,
             client_id='mock_client_id',
@@ -330,9 +311,9 @@ class TestUserController(DCP2TestCase,
         self.assertEqual(refreshed_token, user['access_token'])
 
     def test_exchange_token_invalid_jwt(self):
-        authentication = PersonalAccessTokenAuthentication(access_token='eyJ.not.a.jwt')
+        auth = PersonalAccessTokenAuthentication(token='eyJ.not.a.jwt')
         with self.assertRaises(InvalidPersonalAccessTokenError):
-            self._service.exchange_token(authentication)
+            self._service.exchange_token(auth)
 
     def test_exchange_token_forged_jwt(self):
         from cryptography.hazmat.primitives.asymmetric import (
@@ -344,9 +325,9 @@ class TestUserController(DCP2TestCase,
             key=private_key,
             algorithm='ES256'
         )
-        authentication = PersonalAccessTokenAuthentication(access_token=token)
+        auth = PersonalAccessTokenAuthentication(token=token)
         with self.assertRaises(InvalidPersonalAccessTokenError):
-            self._service.exchange_token(authentication)
+            self._service.exchange_token(auth)
 
     @patch.object(OAuth2Client, 'token_for_code')
     def test_authorize_stores_access_token_expiration(self,
@@ -378,9 +359,9 @@ class TestUserController(DCP2TestCase,
         mock_token_for_code.return_value = self._mock_token_response()
         self._authorize()
         mock_token_info.return_value = self._mock_token_info()
-        authentication = AccessTokenAuthentication(self._mock_access_token)
-        apat = self._service.mint_personal_access_token(authentication)
-        response = self._get_token(apat.access_token)
+        auth = AccessTokenAuthentication(self._mock_access_token)
+        apat = self._service.mint_personal_access_token(auth)
+        response = self._get_token(apat.token)
         self.assertEqual(400, response.status)
 
     def test_token_unauthenticated(self):
