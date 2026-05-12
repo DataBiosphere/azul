@@ -197,7 +197,7 @@ class TestUserController(DCP2TestCase,
         response = self._authorize()
         self.assertEqual(200, response.status)
         user = self._get_user()
-        now = UserService()._now()
+        now = self._service._now()
         self.assertAlmostEqual(86400, user['expiration'] - now, delta=5)
 
     @patch.object(OAuth2Client, 'token_for_code')
@@ -206,7 +206,7 @@ class TestUserController(DCP2TestCase,
         response = self._authorize()
         self.assertEqual(200, response.status)
         user = self._get_user()
-        now = UserService()._now()
+        now = self._service._now()
         self.assertAlmostEqual(UserService._default_expiration,
                                user['expiration'] - now,
                                delta=5)
@@ -250,7 +250,7 @@ class TestUserController(DCP2TestCase,
                             options={'verify_signature': False})
         self.assertNotIn('iss', claims)
         self.assertEqual('#' + self._mock_sub, claims['sub'])
-        now = UserService()._now()
+        now = self._service._now()
         self.assertAlmostEqual(UserService._apat_expiration,
                                claims['exp'] - now,
                                delta=5)
@@ -354,7 +354,7 @@ class TestUserController(DCP2TestCase,
         mock_token_for_code.return_value = self._mock_token_response()
         self._authorize()
         user = self._get_user()
-        now = UserService()._now()
+        now = self._service._now()
         self.assertAlmostEqual(3600,
                                user['access_token_expiration'] - now,
                                delta=5)
