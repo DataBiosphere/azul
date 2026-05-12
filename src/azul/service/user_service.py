@@ -108,7 +108,11 @@ class UserService:
     def _dynamodb(self):
         return aws.dynamodb
 
-    def authorize(self, authorization: Authorization) -> TokenForCodeResponse:
+    def authorize(self,
+                  authorization: Authorization,
+                  *,
+                  redirect_uri: str | None = None
+                  ) -> TokenForCodeResponse:
         """
         Use the given authorization by a user to request an access and a refresh
         token from the authorization server. Persist information about the user,
@@ -126,7 +130,8 @@ class UserService:
         response = self._oauth_client.token_for_code(
             authorization_code=authorization['code'],
             client_id=self._client_id,
-            client_secret=self._client_secret
+            client_secret=self._client_secret,
+            redirect_uri=redirect_uri
         )
         assert 'id_token' in response, response
         self._store_tokens(response)

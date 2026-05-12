@@ -58,7 +58,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '17.1',
+        'version': '17.2',
         'description': fd(f'''
             # Overview
 
@@ -210,15 +210,16 @@ class ServiceApp(HealthApp):
         }
 
     def _oauth2_spec(self) -> JSON:
-        scopes = ('email',)
+        scopes = ('openid', 'email')
         return {
             'components': {
                 'securitySchemes': {
                     self.app_name: {
                         'type': 'oauth2',
                         'flows': {
-                            'implicit': {
+                            'authorizationCode': {
                                 'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
+                                'tokenUrl': '/user/authorize',
                                 'scopes': {scope: scope for scope in scopes}
                             }
                         }

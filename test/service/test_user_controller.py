@@ -168,7 +168,8 @@ class TestUserController(DCP2TestCase,
         mock_token_for_code.assert_called_once_with(
             authorization_code='mock_auth_code',
             client_id='mock_client_id',
-            client_secret='mock_client_secret'
+            client_secret='mock_client_secret',
+            redirect_uri=None
         )
         body = json.loads(response.data)
         self.assertEqual(self._mock_access_token, body['access_token'])

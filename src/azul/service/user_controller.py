@@ -1,17 +1,24 @@
 from copy import (
     copy,
 )
+import json
 import logging
 from typing import (
     Any,
 )
+import urllib.parse
 
 from chalice.app import (
     BadRequestError,
+    Response,
 )
+import chevron
 
 from azul.chalice import (
     Controller,
+)
+from azul.csp import (
+    CSP,
 )
 from azul.lib import (
     R,
@@ -47,6 +54,8 @@ log = logging.getLogger(__name__)
 
 
 class UserController(Controller):
+    _json_content_type = 'application/json'
+    _form_content_type = 'application/x-www-form-urlencoded'
 
     @cached_property
     def _service(self) -> UserService:
@@ -54,10 +63,31 @@ class UserController(Controller):
 
     def handlers(self) -> dict[str, Any]:
         @self.app.route(
+            '/swagger/oauth2-redirect.html',
+            interactive=False,
+            cors=True,
+            spec={
+                'summary': 'Used internally by the Swagger UI',
+                'tags': ['Auxiliary'],
+                'responses': {
+                    '200': {
+                        'description': 'The response body is an HTML page'
+                    }
+                }
+            }
+        )
+        def oauth2_redirect():
+            return self._oauth2_redirect()
+
+        @self.app.route(
             '/user/authorize',
             methods=['POST'],
             interactive=False,
             cors=True,
+            content_types=[
+                self._json_content_type,
+                self._form_content_type
+            ],
             spec={
                 'summary': 'Obtain an OAuth 2.0 access token in exchange for an authorization code',
                 'description': fd('''
@@ -142,18 +172,54 @@ class UserController(Controller):
         scopes = list(map(back_quote, scopes))
         return join_grammatically(scopes)
 
+    def _oauth2_redirect(self) -> Response:
+        params = self._query_params(self.current_request)
+        nonce = CSP.new_nonce()
+        template = self.app.load_static_resource(
+            'swagger', 'oauth2-redirect.html.template.mustache'
+        )
+        body = chevron.render(template, {
+            'NONCE': nonce,
+            'CODE': json.dumps(params['code']),
+            'STATE': json.dumps(params.get('state', '')),
+        })
+        csp = CSP.for_azul(nonce=nonce)
+        return Response(status_code=200,
+                        body=body,
+                        headers={
+                            'Content-Type': 'text/html',
+                            'Content-Security-Policy': str(csp),
+                        })
+
     def _authorize(self) -> JSON:
         try:
-            request: JSON = json_mapping(self.current_request.json_body)
-            # FIXME: Use PEP 728 extra TypedDict items instead of removing them
-            #        https://github.com/DataBiosphere/azul/issues/7625
-            request = {
-                k: v
-                for k, v in request.items()
-                if k in Authorization.__annotations__.keys()
-            }
-            assert is_of_type(request, Authorization), R('Invalid request')
-            response = copy(self._service.authorize(request))
+            content_type, charset = self._request_content_type()
+            if content_type == self._form_content_type:
+                body = self.current_request.raw_body
+                if isinstance(body, bytes):
+                    body = body.decode(charset)
+                params = urllib.parse.parse_qs(body)
+                authorization = Authorization(
+                    code=params['code'][0],
+                    scope=' '.join(sorted(self._service.required_scopes))
+                )
+                redirect_uri = params['redirect_uri'][0]
+            elif content_type == self._json_content_type:
+                request: JSON = json_mapping(self.current_request.json_body)
+                # FIXME: Use PEP 728 extra TypedDict items instead of removing them
+                #        https://github.com/DataBiosphere/azul/issues/7625
+                request = {
+                    k: v
+                    for k, v in request.items()
+                    if k in Authorization.__annotations__.keys()
+                }
+                assert is_of_type(request, Authorization), R('Invalid request')
+                authorization = request
+                redirect_uri = None
+            else:
+                raise BadRequestError('Unsupported content type')
+            response = copy(self._service.authorize(authorization,
+                                                    redirect_uri=redirect_uri))
             # Withhold refresh token from client for security reasons. The property
             # is required so we need to override the type checker on that. This is
             # safe because we made copy above.

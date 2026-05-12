@@ -52,6 +52,9 @@ from azul.auth import (
 from azul.csp import (
     CSP,
 )
+from azul.http import (
+    parse_header,
+)
 from azul.lib import (
     R,
     mutable_furl,
@@ -954,3 +957,10 @@ class Controller:
             params = MultiDict({})
             request.query_params = params
         return params
+
+    def _request_content_type(self) -> tuple[str, str]:
+        header_name = 'content-type'
+        content_type = self.current_request.headers.get(header_name, '')
+        content_type, options = parse_header(header_name, content_type)
+        charset = options.get('charset', 'utf8')
+        return content_type, charset
