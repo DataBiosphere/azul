@@ -218,13 +218,17 @@ class UserController(Controller):
 
     def _oauth2_redirect(self) -> Response:
         params = self._query_params(self.current_request)
+        try:
+            code = params['code']
+        except KeyError:
+            raise BadRequestError('Missing authorization code')
         nonce = CSP.new_nonce()
         template = self.app.load_static_resource(
             'swagger', 'oauth2-redirect.html.template.mustache'
         )
         body = chevron.render(template, {
             'NONCE': nonce,
-            'CODE': json.dumps(params['code']),
+            'CODE': json.dumps(code),
             'STATE': json.dumps(params.get('state', '')),
         })
         csp = CSP.for_azul(nonce=nonce)
