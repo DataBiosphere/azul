@@ -153,6 +153,14 @@ class TestUserController(DCP2TestCase,
                               body=body,
                               headers={'Content-Type': 'application/json'})
 
+    def _get_token(self, access_token: str | None = None):
+        client = self._http_client
+        url = str(self.base_url.set(path='/user/token'))
+        headers = {}
+        if access_token is not None:
+            headers['Authorization'] = f'Bearer {access_token}'
+        return client.request('GET', url, headers=headers)
+
     @cached_property
     def _service(self) -> UserService:
         return self._app.user_controller._service  # type: ignore[attr-defined]
@@ -350,3 +358,31 @@ class TestUserController(DCP2TestCase,
         self.assertAlmostEqual(3600,
                                user['access_token_expiration'] - now,
                                delta=5)
+
+    @patch.object(OAuth2Client, 'token_info')
+    @patch.object(OAuth2Client, 'token_for_code')
+    def test_token(self, mock_token_for_code, mock_token_info):
+        mock_token_for_code.return_value = self._mock_token_response()
+        self._authorize()
+        mock_token_info.return_value = self._mock_token_info()
+        response = self._get_token(self._mock_access_token)
+        self.assertEqual(200, response.status)
+        body = json.loads(response.data)
+        self.assertIn('token', body)
+        header = jwt.get_unverified_header(body['token'])
+        self.assertEqual('ES256', header['alg'])
+
+    @patch.object(OAuth2Client, 'token_info')
+    @patch.object(OAuth2Client, 'token_for_code')
+    def test_token_rejects_pat(self, mock_token_for_code, mock_token_info):
+        mock_token_for_code.return_value = self._mock_token_response()
+        self._authorize()
+        mock_token_info.return_value = self._mock_token_info()
+        authentication = AccessTokenAuthentication(self._mock_access_token)
+        apat = self._service.mint_personal_access_token(authentication)
+        response = self._get_token(apat.access_token)
+        self.assertEqual(400, response.status)
+
+    def test_token_unauthenticated(self):
+        response = self._get_token()
+        self.assertEqual(401, response.status)

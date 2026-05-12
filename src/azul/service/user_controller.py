@@ -11,9 +11,13 @@ import urllib.parse
 from chalice.app import (
     BadRequestError,
     Response,
+    UnauthorizedError,
 )
 import chevron
 
+from azul.auth import (
+    AccessTokenAuthentication,
+)
 from azul.chalice import (
     Controller,
 )
@@ -164,6 +168,45 @@ class UserController(Controller):
         def authorize():
             return self._authorize()
 
+        @self.app.route(
+            '/user/token',
+            interactive=True,
+            cors=True,
+            spec={
+                'summary': 'Obtain a personal access token',
+                'description': fd('''
+                    Obtain a long-lived, application-specific personal access
+                    token (APAT) in exchange for a valid OAuth 2.0 access token.
+                    The access token must be passed in the `Authorization`
+                    header as a Bearer token. The user must have previously
+                    completed the authorization code flow. In the Swagger UI,
+                    this can be done by clicking the Authorize button above.
+                '''),
+                'tags': ['User'],
+                'responses': {
+                    '200': {
+                        'description': fd('''
+                            A personal access token was successfully minted
+                        '''),
+                        **json_content(
+                            object(
+                                token=describe(str, fd('''
+                                    The personal access token
+                                '''))
+                            )
+                        )
+                    },
+                    '401': {
+                        'description': fd('''
+                            No valid OAuth 2.0 access token was provided
+                        ''')
+                    }
+                }
+            }
+        )
+        def token():
+            return self._token()
+
         return locals()
 
     @cached_property
@@ -230,3 +273,16 @@ class UserController(Controller):
                 raise BadRequestError(e.args)
             else:
                 raise
+
+    def _token(self) -> JSON:
+        auth = self._authentication(self.current_request)
+        if not isinstance(auth, AccessTokenAuthentication):
+            raise UnauthorizedError('Valid access token required')
+        else:
+            try:
+                self._service.narrow_token(auth)
+            except TypeError:
+                apat_auth = self._service.mint_personal_access_token(auth)
+                return {'token': apat_auth.access_token}
+            else:
+                raise BadRequestError('Cannot exchange a personal access token for another')
