@@ -137,6 +137,10 @@ from azul.lib.types import (
     JSONs,
     MutableJSON,
     MutableJSONs,
+    json_int,
+    json_list_of_dicts,
+    json_str,
+    optional,
 )
 from azul.logging import (
     configure_test_logging,
@@ -1129,7 +1133,10 @@ class IndexingIntegrationTest(IntegrationTestCase):
             fields_expected = set(f['name'] for f in fields)
             self.assertEqual(fields_present, fields_expected)
             for relation in cast(MutableJSONs, record['relations']):
-                relations.add((relation['dst_name'], relation['dst_id']))
+                relations.add((
+                    json_str(relation['dst_name']),
+                    json_str(relation['dst_id'])
+                ))
         # We expect to observe the special `Metadata` entity record and at least
         # one additional entity record
         self.assertGreater(len(record_fqids), 1)
@@ -1591,11 +1598,11 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     'is': [ma_source.id]
                 }
             })
-        inner_files = [one(file['files']) for file in files]
+        inner_files = [one(json_list_of_dicts(file['files'])) for file in files]
         mirror_service = self._mirror_service(catalog)
         for file in inner_files:
-            mirror_uri = file['azul_mirror_uri']
-            file_size = lookup(file, 'file_size', 'size')
+            mirror_uri = optional(json_str, file['azul_mirror_uri'])
+            file_size = json_int(lookup(file, 'file_size', 'size'))
             if mirror_service.will_mirror_file(file_size, ma_source.spec):
                 self.assertIsNotNone(mirror_uri)
                 mirror_uri = furl(mirror_uri)
@@ -1603,7 +1610,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
             else:
                 self.assertIsNone(mirror_uri)
         managed_access_file_urls = {
-            file['azul_url']
+            json_str(file['azul_url'])
             for file in inner_files
         }
         file_url = furl(self.random.choice(sorted(managed_access_file_urls)))
