@@ -1,7 +1,5 @@
 import functools
 from typing import (
-    Callable,
-    Hashable,
     TYPE_CHECKING,
     final,
 )
@@ -20,19 +18,7 @@ cached_property = CachedProperty
 
 lru_cache = functools.lru_cache
 
-if TYPE_CHECKING:
-    # Work around https://github.com/python/typeshed/issues/15139
-    @final
-    class CacheWrapper[_T]:
-
-        def __call__(self, *args: Hashable, **kwargs: Hashable) -> _T:
-            ...
-
-
-    def cache[_T](f: Callable[..., _T], /) -> CacheWrapper[_T]:  # noqa: E303
-        ...
-else:
-    cache = functools.cache
+cache = functools.cache
 
 
 def cache_per_thread(f, /):
