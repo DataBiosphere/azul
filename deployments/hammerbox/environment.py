@@ -1287,7 +1287,7 @@ anvil13_sources = union(anvil12_sources, 375, delta([
     source('4e167035', 'OurHealth_GRU_R2_20260122_ANV5_202601222246', no_ma_mirror),
 ]))
 
-anvil14_sources = union(anvil13_sources, 421, delta([
+anvil14_sources = union(anvil13_sources, 423, delta([
     source('0a558357', 'ADOPT_PGx_Depression_GRU_R1_20260416_ANV5_202604162237', no_ma_mirror),
     source('ff9197c5', 'ADOPT_PGx_Depression_HMB_R1_20260416_ANV5_202604162243', no_ma_mirror),
     source('aa61b981', 'CCDG_Broad_CVD_AF_PEGASUS_HMB_WES_20260406_ANV5_202604162052', no_ma_mirror),
@@ -1307,6 +1307,8 @@ anvil14_sources = union(anvil13_sources, 421, delta([
     source('bb3aa1e6', 'GREGoR_R05_HMB_20260402_ANV5_202604171325', no_ma_mirror),
     source('ba97a39c', 'GUARDD_US_GRU_R1_20260416_ANV5_202604162249', no_ma_mirror),
     source('9d6d7c88', 'GUARDD_US_HMB_R1_20260416_ANV5_202604162255', no_ma_mirror),
+    source('c4d45673', 'HPRC_R2_20260428_ANV5_202604281434'),
+    source('0677c238', 'IGVF_Mouse_R1_20260416_ANV5_202604162312'),
     source('6a662954', 'ccdg_asc_ndd_daly_talkowski_cdcseed_asd_gsa_md_20260416_ANV5_202604162010', no_ma_mirror),
     source('6873ba6d', 'ccdg_asc_ndd_daly_talkowski_cdcseed_asd_hmb_wes_20260416_ANV5_202604162026', no_ma_mirror),
     source('f7842705', 'ccdg_asc_ndd_daly_talkowski_schloesser_asd_gsa_md_20250516_ANV5_202604281921', no_ma_mirror),
@@ -1335,6 +1337,7 @@ anvil14_sources = union(anvil13_sources, 421, delta([
     source('4e5838c4', 'eMERGE_eMERGEseq_HMB_GSO_20260403_ANV5_202604220413', no_ma_mirror),
     source('5365fa97', 'eMERGE_eMERGEseq_HMB_IRB_PUB_20260403_ANV5_202604220424', no_ma_mirror),
     source('5e75a098', 'eMERGE_eMERGEseq_HMB_NPU_20260403_ANV5_202604220434', no_ma_mirror),
+    source('c57b8824', 'nhp_dGTEx_V1_20260416_ANV5_202604170018'),
 ]))
 
 
