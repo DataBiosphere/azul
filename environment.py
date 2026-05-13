@@ -216,7 +216,7 @@ def env() -> Mapping[str, str | None]:
         # `gitlab` components, as well as building and pushing the executor
         # image (see terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '29.4.1',
+        'azul_docker_version': '29.4.3',
 
         # The version of Python used throughout the system.
         #
