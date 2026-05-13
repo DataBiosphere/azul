@@ -498,6 +498,8 @@ class MirrorService:
         #
         if self.will_mirror(source.spec, file_size=0):
             file = file_cls.from_index(file_json, source=source)
+            # FIXME: Remove file size default
+            #        https://github.com/DataBiosphere/azul/issues/8024
             if self.will_mirror(source.spec, 0 if file.size is None else file.size):
                 storage = self._storage_for_source(source.spec)
                 return str(furl(scheme='s3',
