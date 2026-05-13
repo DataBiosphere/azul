@@ -781,8 +781,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
             # source with no files below the mirror limit, in which case the
             # test will fail. For now, we consider that to be an acceptable risk
             # given the cost associated with mirroring larger files.
-            outer_file, inner_file = self._get_one_file(catalog,
-                                                        max_size=config.catalogs[catalog].mirror_limit)
+            max_size = config.catalogs[catalog].mirror_limit
+            outer_file, inner_file = self._get_one_file(catalog, max_size=max_size)
         # Order matters here because sha256 is present in the file response for
         # AnVIL, but is always set to the empty string
         file_digest = lookup(inner_file, 'file_md5sum', 'sha256')
