@@ -493,6 +493,9 @@ class MirrorService:
         # file from a source that was configured to not be mirrored because the
         # file metadata in that source is incomplete or broken.
         #
+        # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+        #        https://github.com/DataBiosphere/azul/issues/7634
+        #
         if self.will_mirror(source.spec, file_size=0):
             file = file_cls.from_index(file_json, source=source)
             if self.will_mirror(source.spec, 0 if file.size is None else file.size):
