@@ -480,7 +480,7 @@ class MirrorService:
     assert 1.5 * 1024 ** 4 <= max_file_size
 
     def mirror_uri(self,
-                   source: SourceSpec,
+                   source: SourceRef,
                    file_cls: type[File],
                    file_json: JSON
                    ) -> str | None:
@@ -499,10 +499,10 @@ class MirrorService:
 
         :param file_json: the index representation of the file
         """
-        if self.may_mirror_files_from_source(source):
-            file = file_cls.from_index(file_json, source=None)
+        if self.may_mirror_files_from_source(source.spec):
+            file = file_cls.from_index(file_json, source=source)
             if self.may_mirror(0 if file.size is None else file.size):
-                storage = self._storage_for_source(source)
+                storage = self._storage_for_source(source.spec)
                 return str(furl(scheme='s3',
                                 netloc=storage.bucket_name,
                                 path=self._file_object_key(file)))

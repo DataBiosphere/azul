@@ -65,7 +65,6 @@ from azul.service.query_service import (
 )
 from azul.source import (
     SourceRef,
-    SourceSpec,
 )
 
 log = logging.getLogger(__name__)
@@ -96,7 +95,7 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
                                           file_uuid=uuid,
                                           version=version))
 
-    def _file_mirror_uri(self, source: SourceSpec, file: JSON) -> str | None:
+    def _file_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
         file_cls = self.plugin.file_class
         mirror_service = self.service.mirror_service(self.catalog)
         return mirror_service.mirror_uri(source, file_cls, file)

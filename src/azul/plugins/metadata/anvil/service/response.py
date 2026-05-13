@@ -46,7 +46,6 @@ from azul.service.query_service import (
 )
 from azul.source import (
     SourceRef,
-    SourceSpec,
 )
 
 
@@ -179,7 +178,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
         contents = json_mapping(es_hit['contents'])
         sources = json_sequence_of_mappings(es_hit['sources'])
         bundles = json_element_mappings(es_hit['bundles'])
-        source = SourceRef[SourceSpec].from_json(one(sources)).spec
+        source: SourceRef = SourceRef.from_json(one(sources))
         return {
             'entryId': json_str(es_hit['entity_id']),
             # Note that there is a brittle coupling that must be maintained
@@ -207,7 +206,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             self._special_fields.bundle_version.name_in_hit: json_str(es_bundle['version'])
         }
 
-    def _make_contents(self, source: SourceSpec, es_contents: JSON) -> MutableJSON:
+    def _make_contents(self, source: SourceRef, es_contents: JSON) -> MutableJSON:
         return {
             inner_entity_type: (
                 [
@@ -222,7 +221,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
         }
 
     def _pivotal_entity(self,
-                        source: SourceSpec,
+                        source: SourceRef,
                         inner_entity_type: str,
                         inner_entity: JSON,
                         ) -> MutableJSON:

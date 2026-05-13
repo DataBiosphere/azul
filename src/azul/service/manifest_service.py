@@ -189,7 +189,6 @@ from azul.service.storage_service import (
 from azul.source import (
     Prefix,
     SourceRef,
-    SourceSpec,
 )
 from azul.vendored.frozendict import (
     frozendict,
@@ -1154,7 +1153,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                                           fetch=False,
                                           **args))
 
-    def _azul_mirror_uri(self, source: SourceSpec, file: JSON) -> str | None:
+    def _azul_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
         file_cls = self.metadata_plugin.file_class
         return self.mirror_service.mirror_uri(source, file_cls, file)
 
@@ -1748,7 +1747,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                 assert isinstance(doc, dict)
                 contents = json_mapping(doc['contents'])
                 sources = json_element_mappings(doc['sources'])
-                source: SourceSpec = SourceRef.from_json(one(sources)).spec
+                source: SourceRef = SourceRef.from_json(one(sources))
                 if len(project_short_names) < 2 and 'projects' in contents:
                     project = one(json_sequence_of_mappings(contents['projects']))
                     short_names = json_element_strings(project['project_short_name'])
