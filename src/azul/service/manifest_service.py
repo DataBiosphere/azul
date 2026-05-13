@@ -1595,9 +1595,9 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 # ensure that the signed URL of the manifest expired after one
                 # hour.
                 #
-                if not config.is_anvil_enabled(self.catalog) or (
-                    self.mirror_service.may_mirror_files_from_source(source.spec)
-                    and self.mirror_service.may_mirror(json_int(file['file_size']))
+                if (
+                    not config.is_anvil_enabled(self.catalog)
+                    or self.mirror_service.will_mirror(source.spec, json_int(file['file_size']))
                 ):
                     _write(file)
                     if config.is_hca_enabled(self.catalog):

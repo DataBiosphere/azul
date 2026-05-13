@@ -379,37 +379,30 @@ class MirrorService:
     def _source_service(self) -> SourceService:
         return SourceService()
 
-    def will_mirror_file(self, file_size: int, source: SourceSpec) -> bool:
+    def will_mirror(self, source: SourceSpec, file_size: int) -> bool:
         """
         Test whether files from the given source, that are of the given size or
-        less, will be mirrored when :meth:``mirror_sources`` is invoked with
-        that source, or when :meth:``mirror_file`` is invoked with such a file.
+        less, will be mirrored when :meth:`mirror_sources` is invoked with
+        that source, or when :meth:`mirror_file` is invoked with such a file.
         """
-        return self.may_mirror(file_size) and self.may_mirror_files_from_source(source)
-
-    def may_mirror_files_from_source(self, source_spec: SourceSpec) -> bool:
-        """
-        Test whether it makes sense to request the mirroring of files from the
-        given source. If this method returns True, files from the source may or
-        may not be mirrored. If this method returns False, the service will
-        definitely not mirror any files from the source.
-        """
-        if self.may_mirror():
-            plugin = self.repository_plugin
-            source_config = plugin.sources[source_spec]
+        if self._may_mirror(file_size):
+            source_config = self.repository_plugin.sources[source]
             return source_config.mirror
         else:
             return False
 
-    def may_mirror(self, file_size: int = 0) -> bool:
+    def may_mirror(self) -> bool:
         """
         Test whether it makes sense to request the mirroring of files from the
-        current catalog if they are of the given size or larger. If this method
-        returns True, such files may or may not be mirrored. If this method
-        returns False, the service will definitely skip mirroring such files,
-        although it may mirror smaller files.
+        current catalog. If this method returns True, such files may or may not
+        be mirrored, depending on their size and source. If this method returns
+        False, the service will definitely skip mirroring such files.
         """
+        return self._may_mirror(0)
+
+    def _may_mirror(self, file_size: int) -> bool:
         if config.enable_mirroring:
+            # A mirror limit of -1 disables mirroring of an entire catalog
             max_size = config.catalogs[self.catalog].mirror_limit
             return max_size is None or file_size <= max_size
         else:
@@ -492,16 +485,17 @@ class MirrorService:
 
         :param source: The source of the file
 
-        :param file_cls: The type of the file. This parameter is needed in order
-                         to avoid deserializing a file from a source that was
-                         configured to not be mirrored because the file metadata
-                         in that source is incomplete or broken
+        :param file_cls: The type of the file.
 
         :param file_json: the index representation of the file
         """
-        if self.may_mirror_files_from_source(source.spec):
+        # We have to call will_mirror() twice in order to avoid deserializing a
+        # file from a source that was configured to not be mirrored because the
+        # file metadata in that source is incomplete or broken.
+        #
+        if self.will_mirror(source.spec, file_size=0):
             file = file_cls.from_index(file_json, source=source)
-            if self.may_mirror(0 if file.size is None else file.size):
+            if self.will_mirror(source.spec, 0 if file.size is None else file.size):
                 storage = self._storage_for_source(source.spec)
                 return str(furl(scheme='s3',
                                 netloc=storage.bucket_name,
@@ -648,7 +642,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             assert file.size is not None, R('File size unknown', file)
             assert file.size <= self.max_file_size, R(
                 'File too big', file, self.max_file_size)
-            if self.may_mirror(file.size):
+            if self.will_mirror(file.source.spec, file.size):
                 yield devolve(MirrorFileAction, a, file=file)
             else:
                 log.info('Not mirroring file to save cost: %r', file)

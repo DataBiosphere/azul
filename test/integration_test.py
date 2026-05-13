@@ -1603,7 +1603,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         for file in inner_files:
             mirror_uri = optional(json_str, file['azul_mirror_uri'])
             file_size = json_int(lookup(file, 'file_size', 'size'))
-            if mirror_service.will_mirror_file(file_size, ma_source.spec):
+            if mirror_service.will_mirror(ma_source.spec, file_size):
                 self.assertIsNotNone(mirror_uri)
                 mirror_uri = furl(mirror_uri)
                 self.assertEqual(aws.ma_mirror_bucket, mirror_uri.host)
@@ -1788,9 +1788,10 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
             service_by_catalog = {}
             for catalog in config.catalogs.values():
-                service = self._mirror_service(catalog.name)
-                if catalog.is_integration_test_catalog and service.may_mirror():
-                    service_by_catalog[catalog.name] = service
+                if catalog.is_integration_test_catalog:
+                    service = self._mirror_service(catalog.name)
+                    if service.may_mirror():
+                        service_by_catalog[catalog.name] = service
 
             sources_by_catalog = {
                 catalog: list(filter(is_not_none, (
