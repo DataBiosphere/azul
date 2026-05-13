@@ -379,14 +379,11 @@ class MirrorService:
     def _source_service(self) -> SourceService:
         return SourceService()
 
-    def should_mirror_file(self, file_size: int, source: SourceSpec) -> bool:
+    def will_mirror_file(self, file_size: int, source: SourceSpec) -> bool:
         """
-        Test whether a file of the given size from the given source should be
-        mirrored. If this method returns True, either the file is currently
-        mirrored, or it will be mirrored the next time the mirror script is
-        run targeting the file's catalog/source. If this method returns False,
-        either the file is not currently mirrored, or it was mirrored previously
-        but ought to be deleted, and should be ignored in the meantime.
+        Test whether files from the given source, that are of the given size or
+        less, will be mirrored when :meth:``mirror_sources`` is invoked with
+        that source, or when :meth:``mirror_file`` is invoked with such a file.
         """
         return self.may_mirror(file_size) and self.may_mirror_files_from_source(source)
 

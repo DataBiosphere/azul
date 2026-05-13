@@ -1596,7 +1596,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         for file in inner_files:
             mirror_uri = file['azul_mirror_uri']
             file_size = lookup(file, 'file_size', 'size')
-            if mirror_service.should_mirror_file(file_size, ma_source.spec):
+            if mirror_service.will_mirror_file(file_size, ma_source.spec):
                 self.assertIsNotNone(mirror_uri)
                 mirror_uri = furl(mirror_uri)
                 self.assertEqual(aws.ma_mirror_bucket, mirror_uri.host)
