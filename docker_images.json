@@ -31,18 +31,18 @@
             }
         }
     },
-    "docker.io/ucscgi/azul-pycharm:2025.2.6.1-79": {
-        "digest": "sha256:85cf4848538003deff1b5769276fa95e54e2c7bdf306c48ebbfe8a172f442830",
-        "mirror_digest": "sha256:9dffecfa1ef13c5b42ef2030bba2c7fc7549cbf10855cbe3fb298f4c48cdb4b3",
+    "docker.io/ucscgi/azul-pycharm:2025.2.6.1-80": {
+        "digest": "sha256:20e416cd8d95d6bac3464e3ec85571d84735e26cf4c8f9b398a0cd07f50a0cdd",
+        "mirror_digest": "sha256:1952581ff78c3d46f0595a335150618a743a30332f51c4689ebdd06a63006383",
         "parts": {
             "linux/amd64": {
-                "digest": "sha256:821c18c35425d0016b0f0fe4da50e1bf84646e2874a12ff8a9a2b585fcf1b932",
-                "id": "sha256:b28f05ee9bde7e506ee883c7536ac0ebf9d5a3a21c5b8fbef911bcb0ea72a279",
+                "digest": "sha256:65dcc9a8b75f832af3420a10447ec590ceab002ba0e53a54872b05c4dd425619",
+                "id": "sha256:9c13defeba0163553064e03ae32cd859b5f79d18eaedbd3816c124c2a2d71f09",
                 "platform": "linux/amd64"
             },
             "linux/arm64": {
-                "digest": "sha256:c81c66cae4089bdd531792a4547d99e5597c3c98c778df26b5ef79a21bb0adbc",
-                "id": "sha256:0f977a98830dc183034a285db8f79430ae93f8f0ce98d6563887640577d837f8",
+                "digest": "sha256:8fc65f2fe1ff03d59015360a05079589a7c3e8af57ee7fd114f067323e8cca01",
+                "id": "sha256:3577285104dc5396d05aeced965e4de76a5adda9c8e6c3421b59cbe5c47f155a",
                 "platform": "linux/arm64"
             }
         }
