@@ -57,7 +57,6 @@ from azul.service.query_service import (
 )
 from azul.source import (
     SourceRef,
-    SourceSpec,
 )
 
 log = logging.getLogger(__name__)
@@ -349,7 +348,7 @@ class HCASearchResponseStage(SearchResponseStage):
             for dates in entry['contents']['dates']
         ]
 
-    def make_projects(self, source: SourceSpec, entry) -> MutableJSONs:
+    def make_projects(self, source: SourceRef, entry) -> MutableJSONs:
         projects = []
         contents = entry['contents']
         for project in contents['projects']:
@@ -389,7 +388,7 @@ class HCASearchResponseStage(SearchResponseStage):
     # FIXME: Move this to during aggregation
     #        https://github.com/DataBiosphere/azul/issues/2415
 
-    def make_matrices_(self, source: SourceSpec, matrices: JSONs) -> JSON:
+    def make_matrices_(self, source: SourceRef, matrices: JSONs) -> JSON:
         files: list[JSON] = []
         if matrices:
             for file in json_element_mappings(one(matrices)['file']):
@@ -400,14 +399,14 @@ class HCASearchResponseStage(SearchResponseStage):
                 files.append(translated_file)
         return make_stratification_tree(files)
 
-    def make_files(self, source: SourceSpec, entry: JSON) -> JSONs:
+    def make_files(self, source: SourceRef, entry: JSON) -> JSONs:
         files = []
         for _file in json_element_mappings(json_mapping(entry['contents'])['files']):
             translated_file = self.make_file(source, _file)
             files.append(translated_file)
         return files
 
-    def make_file(self, source: SourceSpec, file: JSON) -> JSON:
+    def make_file(self, source: SourceRef, file: JSON) -> JSON:
         translated_file = {
             'contentDescription': file.get('content_description'),
             'format': file.get('file_format'),
@@ -517,7 +516,7 @@ class HCASearchResponseStage(SearchResponseStage):
         return list(map(self.make_hit, hits))
 
     def make_hit(self, es_hit) -> SummarizedHit | CompleteHit:
-        source: SourceSpec = SourceRef.from_json(one(es_hit['sources'])).spec
+        source: SourceRef = SourceRef.from_json(one(es_hit['sources']))
         hit = Hit(protocols=self.make_protocols(es_hit),
                   entryId=es_hit['entity_id'],
                   sources=self.make_sources(es_hit),
