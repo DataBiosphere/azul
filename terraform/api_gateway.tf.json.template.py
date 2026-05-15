@@ -494,6 +494,19 @@ emit_tf({
                                                 'action_to_use': {
                                                     'count': {}
                                                 }
+                                            },
+                                            {
+                                                # This rule blocks requests whose
+                                                # body contains localhost or
+                                                # 127.0.0.1. The /user/authorize
+                                                # endpoint legitimately accepts a
+                                                # localhost redirect URI as part of
+                                                # the OAuth2 authorization code flow
+                                                # for local development.
+                                                'name': 'EC2MetaDataSSRF_BODY',
+                                                'action_to_use': {
+                                                    'count': {}
+                                                }
                                             }
                                         ]
                                     }
