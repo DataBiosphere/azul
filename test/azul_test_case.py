@@ -148,10 +148,6 @@ class AzulTestCase(TestCase):
                     'and will be removed in .*. Instead use .*'
                 ),
 
-                # FIXME: DeprecationWarning for datetime methods in Python 3.12
-                #        https://github.com/DataBiosphere/azul/issues/5953
-                'datetime.datetime.utcnow() is deprecated',
-
                 # FIXME: DeprecationWarning for patch_source_cache
                 #        https://github.com/DataBiosphere/azul/issues/7838
                 'Instead of decorating your test case, or its test methods in '

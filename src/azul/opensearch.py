@@ -5,32 +5,22 @@ import logging
 from typing import (
     Any,
     Mapping,
-    cast,
 )
 from urllib.parse import (
     urlencode,
 )
 
-from aws_requests_auth.boto_utils import (
-    BotoAWSRequestsAuth,
-)
 from opensearchpy import (
-    Connection,
     OpenSearch,
+    Urllib3AWSV4SignerAuth,
     Urllib3HttpConnection,
 )
-import requests
-import requests.auth
-import urllib3
 
 from azul import (
     config,
 )
 from azul.deployment import (
     aws,
-)
-from azul.http import (
-    HttpClient,
 )
 from azul.lib import (
     lru_cache,
@@ -43,16 +33,7 @@ from azul.logging import (
 log = logging.getLogger(__name__)
 
 
-class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        credentials = aws.boto3_session.get_credentials()
-        assert credentials is not None, R'Need credentials'
-        self._refreshable_credentials = credentials
-
-
-class AzulConnection(Connection):
+class AzulUrllib3HttpConnection(Urllib3HttpConnection):
     """
     Improves the request logging by the OpenSearch client library with
     respect to performance and utility. Most importantly, this class logs a
@@ -134,80 +115,6 @@ class AzulConnection(Connection):
         opensearch_log.log(log_level, http_body_log_message('response', response))
 
 
-class AWSAuthHttpClient(HttpClient):
-    """
-    Decorates a urllib3 HTTPConnectionPool instance so that requests are
-    signed with AWS's Signature Version 4 flavor of HMAC.
-    """
-
-    def __init__(self,
-                 pool: urllib3.HTTPConnectionPool,
-                 http_auth: BotoAWSRequestsAuth):
-        super().__init__()
-        self._inner = pool
-        self._http_auth = http_auth
-
-    def urlopen(self,  # type: ignore[override]
-                method: str,
-                url: str,
-                body: bytes | None = None,
-                headers: Mapping[str, str] | None = None,
-                **kwargs
-                ) -> urllib3.BaseHTTPResponse:
-        # self._http_auth is an instance of BotoAWSRequestsAuth, a subclass of
-        # AuthBase from the Requests library. To use that instance with urllib3
-        # directly, we need to prepare a Requests request object, sign it with
-        # self._http_auth and pass the resulting signature header to urllib3's
-        # urlopen() method.
-        request = requests.models.PreparedRequest()
-        request.method = method
-        # Because urllib3 connection pools are host-specific, URLs passed to a
-        # connection pool's urlencode() must be relative and path-absolute. And
-        # while PreparedRequest.prepare() requires an absolute URL, we can sneak
-        # a relative one in by setting the attribute directly. This neatly
-        # avoids having to compose an absolute URL and the URL-encoding
-        # ambiguities that entails. The OpenSearch client, for example,
-        # encodes colons in absolute paths even though the leading slash in such
-        # a path makes that unnecessary. These ambiguities could lead to an
-        # invalid signature. The AWS signature algorithm only looks at path and
-        # query of URLs.
-        assert url.startswith('/'), url
-        request.url = url
-        request.headers = headers
-        request.body = body
-        request = self._http_auth(request)
-        # Note that the various urlopen() implementations in urllib3 declare the
-        # `body` argument with a default value, making it a keyword argument,
-        # the ES client passes it as a positional. If this were ever to change,
-        # this method would get a duplicate of the `body` argument as part of
-        # `kwargs`, resulting in a TypeError.
-        return self._inner.urlopen(method, url, body, headers=request.headers, **kwargs)
-
-    def close(self):
-        self._inner.close()
-
-
-class AzulUrllib3HttpConnection(AzulConnection, Urllib3HttpConnection):
-
-    def __init__(self,
-                 *args,
-                 http_auth: BotoAWSRequestsAuth | None = None,
-                 **kwargs
-                 ) -> None:
-        super().__init__(*args, **kwargs)
-        if http_auth is not None:
-            # We can't extend the pool class because we don't control the
-            # instantiation. We therefore have to decorate the pool instance.
-            # Looking at the source of Urllib3HttpConnection we notice that only
-            # the methods `urlopen()` and `close()` are called. This means that
-            # the decorating class doesn't need to implement (or extend) a full
-            # HTTPConnectionPool, only the much slimmer RequestMethods.
-            client = AWSAuthHttpClient(self.pool, http_auth)
-            # We still need the cast because the stub declares `self.pool` to be
-            # an instance of HTTPConnectionPool.
-            self.pool = cast(urllib3.HTTPConnectionPool, client)
-
-
 class OpenSearchClientFactory:
 
     @classmethod
@@ -230,9 +137,9 @@ class OpenSearchClientFactory:
                              timeout=timeout,
                              max_retries=0)
         if host.endswith('.amazonaws.com'):
-            aws_auth = CachedBotoAWSRequestsAuth(aws_host=host,
-                                                 aws_region=aws.region_name,
-                                                 aws_service='es')
+            refreshable_credentials = aws.boto3_session.get_credentials()
+            assert refreshable_credentials is not None, R'Need credentials'
+            aws_auth = Urllib3AWSV4SignerAuth(refreshable_credentials, aws.region_name)
             return OpenSearch(http_auth=aws_auth,
                               use_ssl=True,
                               verify_certs=True,
