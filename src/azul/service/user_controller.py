@@ -18,7 +18,9 @@ from azul.lib import (
     cached_property,
 )
 from azul.lib.strings import (
+    back_quote,
     format_and_dedent as fd,
+    join_grammatically,
 )
 from azul.lib.types import (
     JSON,
@@ -70,8 +72,8 @@ class UserController(Controller):
                     https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).
 
                     **When initiating the authorization code flow, be
-                    sure to request the `openid` scope.**
-                '''),
+                    sure to request the {required_scopes} scopes.**
+                ''', required_scopes=self._required_scopes),
                 'requestBody': {
                     'description': fd('''
                         JSON conforming to the Google Sign-In [CodeResponse](
@@ -88,8 +90,9 @@ class UserController(Controller):
                             ''')),
                             scope=describe(str, fd('''
                                 A space-delimited list of scopes that are
-                                approved by the user. Must contain `openid`.
-                            ''')),
+                                approved by the user. Must contain
+                                {required_scopes}.
+                            ''', required_scopes=self._required_scopes)),
                             state=optional(describe(str, fd('''
                                 The string value that your application uses to
                                 maintain state between your authorization
@@ -132,6 +135,12 @@ class UserController(Controller):
             return self._authorize()
 
         return locals()
+
+    @cached_property
+    def _required_scopes(self) -> str:
+        scopes = sorted(self._service.required_scopes)
+        scopes = list(map(back_quote, scopes))
+        return join_grammatically(scopes)
 
     def _authorize(self) -> JSON:
         try:

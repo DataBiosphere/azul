@@ -1606,12 +1606,12 @@ class Config:
         return 'lambda_layers'
 
     @property
-    def dynamo_object_version_table_name(self) -> str:
-        return self.qualified_resource_name('object_versions')
-
-    @property
     def dynamo_sources_cache_table_name(self) -> str:
         return self.qualified_resource_name('sources_cache_by_auth')
+
+    @property
+    def dynamo_users_table_name(self) -> str:
+        return self.qualified_resource_name('users')
 
     @property
     def current_sources(self) -> list[str] | None:
