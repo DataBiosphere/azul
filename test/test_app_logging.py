@@ -82,6 +82,8 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertEqual(5, len(azul_log.output))
                     info = {
                         'host': f'{host}:{port}',
+                        # FIXME: Use compressed encoding
+                        #        https://github.com/DataBiosphere/azul/issues/7990
                         'accept-encoding': 'identity',
                         'user-agent': 'python-urllib3/2.7.0',
                     }
