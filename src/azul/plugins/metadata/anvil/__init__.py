@@ -90,6 +90,9 @@ from azul.plugins.metadata.anvil.service.response import (
     AnvilSearchResponseStage,
     AnvilSummaryResponseStage,
 )
+from azul.source import (
+    SourceRef,
+)
 
 
 class Plugin(MetadataPlugin[AnvilBundle]):
@@ -549,12 +552,13 @@ class AnvilFile(File):
     md5: str
 
     @classmethod
-    def from_index(cls, hit: JSON) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
         return cls(uuid=json_str(hit['document_id']),
                    version=json_str(hit['version']),
                    name=json_str(hit['file_name']),
                    size=json_int(hit['file_size']),
                    drs_uri=optional(json_str, hit['drs_uri']),
+                   source=source,
                    md5=json_str(hit['file_md5sum']))
 
     @property

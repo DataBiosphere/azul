@@ -605,6 +605,18 @@ class LookupDefault(Enum):
     RAISE = 0
 
 
+@overload
+def lookup[K, V](d: Mapping[K, V], k: K, *ks: K, default: V | LookupDefault) -> V: ...
+
+
+@overload
+def lookup[K, V](d: Mapping[K, V], k: K, *ks: K, default: None) -> V | None: ...
+
+
+@overload
+def lookup[K, V](d: Mapping[K, V], k: K, *ks: K) -> V | None: ...
+
+
 def lookup[K, V](d: Mapping[K, V],
                  k: K,
                  *ks: K,

@@ -498,13 +498,14 @@ class HCAFile(File):
     s3_etag: str | None = None
 
     @classmethod
-    def from_index(cls, hit: JSON) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
         return cls(uuid=json_str(hit['uuid']),
                    version=json_str(hit['version']),
                    name=json_str(hit['name']),
                    size=json_int(hit['size']),
                    drs_uri=optional(json_str, hit['drs_uri']),
                    content_type=json_str(hit['content-type']),
+                   source=source,
                    sha256=json_str(hit['sha256']),
                    crc32c=json_str(hit['crc32c']),
                    sha1=optional(json_str, hit.get('sha1')),
