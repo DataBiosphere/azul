@@ -21,7 +21,7 @@ emit_tf(tag_resources=False, config={
             },
             'google': {
                 'source': 'hashicorp/google',
-                'version': '4.85.0'
+                'version': '7.31.0'
             },
             'aws': {
                 'source': 'hashicorp/aws',

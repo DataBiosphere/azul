@@ -657,7 +657,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': [
                             'states:ListStateMachines',
-                            'states:CreateStateMachine'
+                            'states:CreateStateMachine',
+                            'states:ValidateStateMachineDefinition'
                         ],
                         'resources': [
                             '*'
