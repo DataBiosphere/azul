@@ -21,6 +21,7 @@ from typing import (
     Mapping,
     Sequence,
 )
+import uuid
 
 import attrs
 
@@ -202,9 +203,9 @@ class MoveSessionCommand(Command):
     @classmethod
     def add_subparser(cls, subparsers: argparse._SubParsersAction) -> None:
         parser = subparsers.add_parser('session', help=cls.__doc__)
-        parser.add_argument('session_id',
-                            metavar='SESSION_ID',
-                            help='The UUID of the session to move')
+        parser.add_argument('session',
+                            metavar='SESSION',
+                            help='The UUID or name of the session to move')
         parser.add_argument('src_project',
                             metavar='SOURCE',
                             help='The path of the source project directory')
@@ -214,7 +215,6 @@ class MoveSessionCommand(Command):
         parser.set_defaults(command_class=cls)
 
     def execute(self) -> None:
-        session_id = self._args.session_id
         src_project_dir = Path(self._args.src_project).resolve()
         dst_project_dir = Path(self._args.dst_project).resolve()
         assert src_project_dir.is_dir(), R(
@@ -233,6 +233,12 @@ class MoveSessionCommand(Command):
         assert src_context_dir != dst_context_dir, R(
             'Source and destination projects are the same', src_project_dir)
 
+        session = self._args.session
+        if self._is_uuid(session):
+            session_id = session
+        else:
+            session_id = self._find_session_by_name(src_context_dir, session)
+            log.info('Resolved session name %r to %r', session, session_id)
         session_base_name = session_id + '.jsonl'
         src_session_file = src_context_dir / session_base_name
         dst_session_file = dst_context_dir / session_base_name
@@ -257,6 +263,36 @@ class MoveSessionCommand(Command):
 
         log.info('Rewriting session paths')
         self._rewrite_session(dst_session_file, src_project_dir, dst_project_dir)
+
+    def _is_uuid(self, session: str) -> bool:
+        try:
+            uuid.UUID(session)
+        except ValueError:
+            return False
+        else:
+            return True
+
+    def _find_session_by_name(self,
+                              context_dir: Path,
+                              name: str
+                              ) -> str:
+        matches: set[str] = set()
+        for session_file in context_dir.glob('*.jsonl'):
+            session_id = session_file.stem
+            title = None
+            for line in session_file.open():
+                entry = json.loads(line)
+                if entry.get('type') == 'custom-title':
+                    title = json_str(entry['customTitle'])
+            if title == name:
+                matches.add(session_id)
+        match tuple(matches):
+            case (session_id, ):
+                return session_id
+            case ():
+                assert False, R('No session with this name', name)
+            case _:
+                assert False, R('Multiple sessions with this name', name, matches)
 
     def _read_session_index(self, context_dir: Path) -> MutableJSON | None:
         index_file = context_dir / 'sessions-index.json'
