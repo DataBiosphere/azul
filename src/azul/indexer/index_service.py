@@ -890,7 +890,7 @@ class IndexWriter:
 
     def _write_bulk(self, documents: Iterable[Document]):
         # FIXME: document this quirk
-        documents: dict[DocumentCoordinates, Document] = {
+        docs_by_coordinates: dict[DocumentCoordinates, Document] = {
             doc.coordinates.with_catalog(self.catalog): doc
             for doc in documents
         } if self.catalog is not None else {
@@ -935,7 +935,7 @@ class IndexWriter:
         # method immediately maps the value of the `expand_action_callback`
         # parameter over the list passed in the `actions` parameter.
         response = streaming_bulk(client=self.opensearch,
-                                  actions=list(documents.values()),
+                                  actions=list(docs_by_coordinates.values()),
                                   expand_action_callback=expand_action,
                                   refresh=self.refresh,
                                   raise_on_error=False,
@@ -944,7 +944,7 @@ class IndexWriter:
             op_type, info = one(info.items())
             assert op_type in OpType.__members__, op_type
             coordinates = DocumentCoordinates.from_hit(info)
-            doc = documents[coordinates]
+            doc = docs_by_coordinates[coordinates]
             if success:
                 self._on_success(doc)
             else:

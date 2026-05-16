@@ -1,3 +1,4 @@
+ast_serialize==0.5.0
 blessed==1.41.0
 botocore-stubs==1.42.41
 click==8.4.0
