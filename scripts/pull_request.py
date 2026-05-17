@@ -21,6 +21,8 @@ import re
 import subprocess
 import sys
 
+import attrs
+
 from azul.lib import (
     R,
 )
@@ -83,12 +85,12 @@ def main(argv):
     else:
         assert False, R('Unsupported template', args.type)
     log.info('Fetching issue #%d …', issue_number)
-    issue_title, issue_type = _issue_info(issue_number)
+    issue = _issue_info(issue_number)
     if args.fix is None:
-        fix = issue_type == 'Defect'
+        fix = issue.type == 'Defect'
     else:
         fix = args.fix
-    title = _pr_title(issue_number, issue_title, fix, suffix=title_suffix)
+    title = _pr_title(issue_number, issue.title, fix, suffix=title_suffix)
 
     log.info('Checking for existing PR …')
     existing_pr = _existing_pr()
@@ -170,7 +172,7 @@ def main(argv):
     pr_node_id = _node_id('pr', pr_url)
     _set_status(pr_node_id, 'In Progress')
     log.info('Setting issue status …')
-    issue_node_id = _node_id('issue', str(issue_number))
+    issue_node_id = _node_id('issue', issue.url)
     _set_status(issue_node_id, 'In Progress')
 
 
@@ -255,7 +257,14 @@ def _promotion_date_and_target(branch: str) -> tuple[str, str]:
     return m.group(1), m.group(2)
 
 
-def _issue_info(issue_number: int) -> tuple[str, str]:
+@attrs.frozen
+class _IssueInfo:
+    title: str
+    type: str
+    url: str
+
+
+def _issue_info(issue_number: int) -> _IssueInfo:
     result = subprocess.run(
         [
             'gh', 'api', 'graphql',
@@ -264,6 +273,7 @@ def _issue_info(issue_number: int) -> tuple[str, str]:
                     repository(owner: "{owner}", name: "azul") {{
                         issue(number: {number}) {{
                             title
+                            url
                             issueType {{ name }}
                         }}
                     }}
@@ -274,7 +284,11 @@ def _issue_info(issue_number: int) -> tuple[str, str]:
     )
     issue = json.loads(result.stdout)['data']['repository']['issue']
     issue_type = issue['issueType']
-    return issue['title'], issue_type['name'] if issue_type else ''
+    return _IssueInfo(
+        title=issue['title'],
+        type=issue_type['name'] if issue_type else '',
+        url=issue['url']
+    )
 
 
 def _pr_title(issue_number: int,
