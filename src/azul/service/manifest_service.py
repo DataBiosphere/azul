@@ -959,7 +959,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         self.service = service
         self.catalog = catalog
         self.filters = filters
-        self.file_url_func = service.file_url_func
 
     manifest_namespace = UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
 
@@ -1137,31 +1136,10 @@ class ManifestGenerator(metaclass=ABCMeta):
                        file: JSON,
                        args: Mapping = frozendict()
                        ) -> str | None:
-        # FIXME: Redundant implementations of file URLs and mirror URIs
-        #        https://github.com/DataBiosphere/azul/issues/8042
-        if file['drs_uri'] is None:
-            # To download a file we need its DRS URI
-            return None
-        elif json_str(file['drs_uri']).startswith('drs://dg.4503'):
-            # LungMAP contains files not hosted on TDR. Downloading these files
-            # requires authentication that can't be provided by Azul.
-            #
-            # FIXME: We shouldn't hard-code compact identifier namespaces
-            #        https://github.com/DataBiosphere/azul/issues/8236
-            return None
-        else:
-            special_fields = self.metadata_plugin.special_fields
-            return str(self.file_url_func(catalog=self.catalog,
-                                          file_uuid=json_str(file[special_fields.file_uuid.name_in_hit]),
-                                          version=json_str(file['version']),
-                                          fetch=False,
-                                          **args))
+        return self.service.azul_file_url(self.catalog, file, args)
 
     def _azul_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
-        # FIXME: Redundant implementations of file URLs and mirror URIs
-        #        https://github.com/DataBiosphere/azul/issues/8042
-        file_cls = self.metadata_plugin.file_class
-        return self.mirror_service.mirror_uri(source, file_cls, file)
+        return self.service.azul_mirror_uri(self.catalog, source, file)
 
     @cache
     def _content_hash(self, *, by_bundle: bool) -> str:

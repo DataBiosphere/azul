@@ -79,6 +79,7 @@ from azul.lib.types import (
     MutableJSON,
     PrimitiveJSON,
     json_str,
+    optional,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -93,6 +94,12 @@ from azul.plugins import (
 )
 from azul.service import (
     FileUrlFunc,
+)
+from azul.source import (
+    SourceRef,
+)
+from azul.vendored.frozendict import (
+    frozendict,
 )
 
 log = logging.getLogger(__name__)
@@ -828,3 +835,38 @@ class FileUrlService(QueryService):
     @cache
     def mirror_service(self, catalog: CatalogName) -> MirrorService:
         return MirrorService(catalog=catalog)
+
+    def azul_mirror_uri(self,
+                        catalog: CatalogName,
+                        source: SourceRef,
+                        file: JSON
+                        ) -> str | None:
+        file_cls = self.metadata_plugin(catalog).file_class
+        return self.mirror_service(catalog).mirror_uri(source, file_cls, file)
+
+    def azul_file_url(self,
+                      catalog: CatalogName,
+                      file: JSON,
+                      args: Mapping = frozendict()
+                      ) -> str | None:
+        drs_uri = optional(json_str, file['drs_uri'])
+        if drs_uri is None:
+            # To download a file we need its DRS URI
+            return None
+        elif (
+            config.catalogs[catalog].atlas == 'lungmap'
+            and file['drs_uri'].startswith('drs://dg.4503:')
+        ):
+            # LungMAP contains files not hosted on TDR. Downloading these files
+            # requires authentication that can't be provided by Azul.
+            #
+            # FIXME: We shouldn't hard-code compact identifier namespaces
+            #        https://github.com/DataBiosphere/azul/issues/8236
+            return None
+        else:
+            special_fields = self.metadata_plugin(catalog).special_fields
+            return str(self.file_url_func(catalog=catalog,
+                                          file_uuid=json_str(file[special_fields.file_uuid.name_in_hit]),
+                                          version=json_str(file['version']),
+                                          fetch=False,
+                                          **args))
