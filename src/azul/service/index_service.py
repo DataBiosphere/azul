@@ -77,7 +77,6 @@ class EntityNotFoundError(Exception):
 class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
                           metaclass=ABCMeta):
     service: IndexService
-    file_url_func: FileUrlFunc
 
     def prepare_request(self, request: Search) -> Search:
         return request
@@ -96,10 +95,10 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
             #        https://github.com/DataBiosphere/azul/issues/8236
             return None
         else:
-            return str(self.file_url_func(catalog=self.catalog,
-                                          fetch=False,
-                                          file_uuid=uuid,
-                                          version=version))
+            return str(self.service.file_url_func(catalog=self.catalog,
+                                                  fetch=False,
+                                                  file_uuid=uuid,
+                                                  version=version))
 
     def _file_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
         # FIXME: Redundant implementations of file URLs and mirror URIs
@@ -121,13 +120,14 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
         return request
 
 
+@attrs.frozen(auto_attribs=True, kw_only=True)
 class IndexService(QueryService):
+    file_url_func: FileUrlFunc
 
     def search(self,
                *,
                catalog: CatalogName,
                entity_type: str,
-               file_url_func: FileUrlFunc,
                item_id: str | None,
                filters: Filters,
                pagination: Pagination
@@ -139,9 +139,6 @@ class IndexService(QueryService):
         :param pagination: A dictionary with pagination information as return from `_get_pagination()`
         :param filters: parsed JSON filters from the request
         :param item_id: If item_id is specified, only a single item is searched for
-        :param file_url_func: A function that is used only when getting a *list* of files data.
-        It creates the files URL based on info from the request. It should have the type
-        signature `(uuid: str, **params) -> str`
         :return: The OpenSearch JSON response
         """
         if item_id is not None:
@@ -152,8 +149,7 @@ class IndexService(QueryService):
                                 filters=filters,
                                 pagination=pagination,
                                 aggregate=item_id is None,
-                                entity_type=entity_type,
-                                file_url_func=file_url_func)
+                                entity_type=entity_type)
 
         special_fields = self.metadata_plugin(catalog).special_fields
         for hit in response['hits']:
@@ -173,7 +169,6 @@ class IndexService(QueryService):
                 aggregate: bool,
                 filters: Filters,
                 pagination: Pagination,
-                file_url_func: FileUrlFunc
                 ) -> MutableJSON:
         """
         This function does the whole transformation process. It takes the path
@@ -229,8 +224,7 @@ class IndexService(QueryService):
         response_stage_cls = plugin.search_response_stage
         chain = response_stage_cls(service=self,
                                    catalog=catalog,
-                                   entity_type=entity_type,
-                                   file_url_func=file_url_func).wrap(chain)
+                                   entity_type=entity_type).wrap(chain)
 
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)

@@ -217,8 +217,7 @@ class TestIndexResponse(IndexResponseTestCase):
     def _response_stage(self, entity_type: str) -> HCASearchResponseStage:
         return HCASearchResponseStage(service=self._service_index_service,
                                       entity_type=entity_type,
-                                      catalog=self.catalog,
-                                      file_url_func=self.file_url_func)
+                                      catalog=self.catalog)
 
     @property
     def paginations(self):
