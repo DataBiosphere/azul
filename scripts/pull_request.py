@@ -107,6 +107,21 @@ def main(argv):
 
     body = _reference_issue_in_body(body, issue_number)
 
+    m = re.search(r'^- \[[ x]] Target branch is `(.+?)`$',
+                  template, flags=re.MULTILINE)
+    assert m is not None, R('Target branch task not found in template')
+    target_branch = m.group(1)
+    target_branch_task = r'Target branch is `' + re.escape(target_branch) + '`'
+    if existing_pr is None:
+        body = _check_task(body, target_branch_task)
+    else:
+        base = existing_pr['baseRefName']
+        if base == target_branch:
+            body = _check_task(body, target_branch_task)
+        else:
+            log.warning('Target branch is %r, expected %r', base, target_branch)
+            body = _check_task(body, target_branch_task, checked=False)
+
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, 'Name of PR branch matches .*')
@@ -125,6 +140,7 @@ def main(argv):
         result = subprocess.run(
             [
                 'gh', 'pr', 'create',
+                '--base', target_branch,
                 '--title', title,
                 '--body', body,
                 '--assignee', '@me',
@@ -272,7 +288,7 @@ def _pr_title(issue_number: int,
 
 def _existing_pr() -> dict | None:
     result = subprocess.run(
-        ['gh', 'pr', 'view', '--json', 'url,body'],
+        ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
         capture_output=True, text=True
     )
     if result.returncode != 0:
@@ -289,15 +305,13 @@ def _reference_issue_in_body(body: str, issue_number: int) -> str:
     return body
 
 
-def _check_task(body: str, task: str) -> str:
-    body_new, n = re.subn(r'^- \[ ] (' + task + ')$',
-                          r'- [x] \1',
-                          body, flags=re.MULTILINE)
+def _check_task(body: str, task: str, checked: bool = True) -> str:
+    mark = 'x' if checked else ' '
+    body, n = re.subn(r'^- \[[ x]] (' + task + ')$',
+                      r'- [' + mark + r'] \1',
+                      body, flags=re.MULTILINE)
+    assert n > 0, R('Task item not found in template', task)
     assert n < 2, R('Multiple matching task items found', task)
-    if n > 0:
-        return body_new
-    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), R(
-        'Task item not found in template', task)
     return body
 
 
