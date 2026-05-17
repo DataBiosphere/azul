@@ -77,13 +77,13 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
     def prepare_request(self, request: Search) -> Search:
         return request
 
-    def _file_url(self, *, uuid: str, version: str, drs_uri: str | None) -> str | None:
+    def _file_url(self, file: JSON) -> str | None:
         # FIXME: Redundant implementations of file URLs and mirror URIs
         #        https://github.com/DataBiosphere/azul/issues/8042
-        if drs_uri is None:
+        if file['drs_uri'] is None:
             # To download a file we need its DRS URI
             return None
-        elif drs_uri.startswith('drs://dg.4503'):
+        elif file['drs_uri'].startswith('drs://dg.4503'):
             # LungMAP contains files not hosted on TDR. Downloading these files
             # requires authentication that can't be provided by Azul.
             #
@@ -91,10 +91,11 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
             #        https://github.com/DataBiosphere/azul/issues/8236
             return None
         else:
+            special_fields = self.plugin.special_fields
             return str(self.service.file_url_func(catalog=self.catalog,
                                                   fetch=False,
-                                                  file_uuid=uuid,
-                                                  version=version))
+                                                  file_uuid=file[special_fields.file_uuid.name_in_hit],
+                                                  version=file['version']))
 
     def _file_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
         # FIXME: Redundant implementations of file URLs and mirror URIs
