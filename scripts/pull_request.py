@@ -92,11 +92,15 @@ def main(argv):
 
     log.info('Checking for existing PR …')
     existing_pr = _existing_pr()
+    template = template_path.read_text()
 
     if existing_pr is None:
-        body = template_path.read_text()
+        body = template
     else:
         body = existing_pr['body']
+        expected_comment = template.split('-->', maxsplit=1)[0]
+        assert body.startswith(expected_comment), R(
+            'Existing PR was created with a different template')
 
     # Normalize line endings from GitHub API responses
     body = '\n'.join(body.splitlines())
