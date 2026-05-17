@@ -105,17 +105,18 @@ emit_tf({
                 }
             },
             'aws_kms_key': {
-                config.manifest_kms_key_tf_name: {
-                    'key_usage': 'GENERATE_VERIFY_MAC',
-                    'customer_master_key_spec': 'HMAC_256',
-                    'deletion_window_in_days': min(max(config.manifest_expiration, 7), 30)
+                key.name: {
+                    'key_usage': key.usage,
+                    'customer_master_key_spec': key.spec,
                 }
+                for key in config.kms_keys
             },
             'aws_kms_alias': {
-                config.manifest_kms_key_tf_name: {
-                    'name': config.manifest_kms_alias,
-                    'target_key_id': '${aws_kms_key.%s.key_id}' % config.manifest_kms_key_tf_name
+                key.name: {
+                    'name': key.alias,
+                    'target_key_id': '${aws_kms_key.%s.key_id}' % key.name
                 }
+                for key in config.kms_keys
             }
         },
     ]

@@ -60,7 +60,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    OAuth2,
+    AccessTokenAuthentication,
 )
 from azul.docker import (
     resolve_docker_image_for_launch,
@@ -525,7 +525,7 @@ class TestTDRSourceList(AzulUnitTestCase):
         for token in ('mock_token_1', 'mock_token_2'):
             with self._patch_client_id():
                 with self._patch_urlopen(new=self._mock_google_oauth_tokeninfo()):
-                    tdr_client = TDRClient.for_registered_user(OAuth2(token))
+                    tdr_client = TDRClient.for_registered_user(AccessTokenAuthentication(token))
             expected_snapshots = {
                 snapshot['id']: snapshot
                 for snapshot in self._mock_snapshots(token)

@@ -933,6 +933,12 @@ def env() -> Mapping[str, str | None]:
         # the seed, so running the IT again with the seed pinned should produce
         # the same test results.
         #
+        # The 'unattended' flag ensures that running the IT requires no user
+        # intervention. If the unattended flag is set, service account
+        # credentials will be used for the tests that would otherwise have used
+        # an access token for the current user. The downside of unattended mode
+        # is therefore that no APAT functionality will be covered by the IT.
+        #
         'azul_it_flags': None,
 
         # Wether to enable bot control in AWS WAF. Setting this to 1 will enable

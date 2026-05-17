@@ -26,7 +26,7 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
-    OAuth2,
+    BearerTokenAuthentication,
     indexer_authentication,
 )
 from azul.drs import (
@@ -184,7 +184,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
             return TDRClient.for_anonymous_user()
         elif authentication is indexer_authentication:
             return cls._tdr()
-        elif isinstance(authentication, OAuth2):
+        elif isinstance(authentication, BearerTokenAuthentication):
             return TDRClient.for_registered_user(authentication)
         else:
             raise PermissionError('Unsupported authentication', type(authentication))

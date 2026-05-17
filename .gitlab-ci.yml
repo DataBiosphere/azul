@@ -122,6 +122,7 @@ integration_test:
   stage: integration_test
   timeout: 2h
   script:
+    - export azul_it_flags="${azul_it_flags:+$azul_it_flags }unattended"
     - make integration_test
 
 on_success:
