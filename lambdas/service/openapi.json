@@ -13884,37 +13884,6 @@
                 ]
             }
         },
-        "/swagger/oauth2-redirect.html": {
-            "get": {
-                "responses": {
-                    "400": {
-                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
-                    },
-                    "429": {
-                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
-                    },
-                    "500": {
-                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "502": {
-                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "503": {
-                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
-                    },
-                    "504": {
-                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "200": {
-                        "description": "The response body is an HTML page"
-                    }
-                },
-                "summary": "Used internally by the Swagger UI",
-                "tags": [
-                    "Auxiliary"
-                ]
-            }
-        },
         "/user/authorize": {
             "post": {
                 "responses": {
@@ -14062,6 +14031,37 @@
                 },
                 "summary": "Obtain a personal access token",
                 "description": "\nObtain a long-lived, application-specific personal access\ntoken (APAT) in exchange for a valid OAuth 2.0 access token.\nThe access token must be passed in the `Authorization`\nheader as a Bearer token. The user must have previously\ncompleted the authorization code flow. In the Swagger UI,\nthis can be done by clicking the Authorize button above.\n",
+                "tags": [
+                    "User"
+                ]
+            }
+        },
+        "/swagger/oauth2-redirect.html": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "The response body is an HTML page"
+                    }
+                },
+                "summary": "Used for logging into the the Swagger UI",
                 "tags": [
                     "User"
                 ]

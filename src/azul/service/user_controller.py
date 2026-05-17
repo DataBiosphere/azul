@@ -67,23 +67,6 @@ class UserController(Controller):
 
     def handlers(self) -> dict[str, Any]:
         @self.app.route(
-            '/swagger/oauth2-redirect.html',
-            interactive=False,
-            cors=True,
-            spec={
-                'summary': 'Used internally by the Swagger UI',
-                'tags': ['Auxiliary'],
-                'responses': {
-                    '200': {
-                        'description': 'The response body is an HTML page'
-                    }
-                }
-            }
-        )
-        def oauth2_redirect():
-            return self._oauth2_redirect()
-
-        @self.app.route(
             '/user/authorize',
             methods=['POST'],
             interactive=False,
@@ -206,6 +189,23 @@ class UserController(Controller):
         )
         def token():
             return self._token()
+
+        @self.app.route(
+            '/swagger/oauth2-redirect.html',
+            interactive=False,
+            cors=True,
+            spec={
+                'summary': 'Used for logging into the the Swagger UI',
+                'tags': ['User'],
+                'responses': {
+                    '200': {
+                        'description': 'The response body is an HTML page'
+                    }
+                }
+            }
+        )
+        def oauth2_redirect():
+            return self._oauth2_redirect()
 
         return locals()
 
