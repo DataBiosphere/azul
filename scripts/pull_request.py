@@ -20,14 +20,23 @@ from pathlib import (
 import re
 import subprocess
 import sys
+from typing import (
+    Literal,
+)
 
 import attrs
+from furl import (
+    furl,
+)
 
 from azul.lib import (
     R,
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
+)
+from azul.lib.types import (
+    check_type,
 )
 from azul.logging import (
     configure_script_logging,
@@ -124,6 +133,10 @@ def main(argv):
             log.warning('Target branch is %r, expected %r', base, target_branch)
             body = _check_task(body, target_branch_task, checked=False)
 
+    has_u_tag = _has_commit_tag(target_branch, 'u')
+    body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
+    body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
+
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, 'Name of PR branch matches .*')
@@ -168,11 +181,13 @@ def main(argv):
         )
         log.info('PR URL is %r', pr_url)
 
+    _label(pr_url, 'upgrade', mode='add' if has_u_tag else 'remove')
+
     log.info('Setting PR status …')
-    pr_node_id = _node_id('pr', pr_url)
+    pr_node_id = _node_id(pr_url)
     _set_status(pr_node_id, 'In Progress')
     log.info('Setting issue status …')
-    issue_node_id = _node_id('issue', issue.url)
+    issue_node_id = _node_id(issue.url)
     _set_status(issue_node_id, 'In Progress')
 
 
@@ -220,6 +235,25 @@ def _check_remote_branch(branch: str) -> None:
             log.warning('Remote branch is behind local. A push is needed')
         else:
             log.warning('Remote and local branch diverge. A force push is needed')
+
+
+def _commit_title_tags(title: str) -> set[str]:
+    m = re.match(r'^\[([^]]*)]', title)
+    if m is None:
+        return set()
+    else:
+        return set(m.group(1).split())
+
+
+def _has_commit_tag(target_branch: str, tag: str) -> bool:
+    result = subprocess.run(
+        ['git', 'log', '--format=%s', f'{target_branch}..HEAD'],
+        capture_output=True, text=True, check=True
+    )
+    return any(
+        tag in _commit_title_tags(title)
+        for title in result.stdout.splitlines()
+    )
 
 
 def _issue_number(branch: str) -> int:
@@ -343,12 +377,33 @@ def _github_user() -> str:
     return result.stdout.strip()
 
 
-def _node_id(kind: str, ref: str) -> str:
+def _gh_item_type(url: str) -> str:
+    path_kind = furl(url).path.segments[2]
+    result = {'pull': 'pr', 'issues': 'issue'}.get(path_kind)
+    assert result is not None, R('Cannot determine issue or PR from URL', url)
+    return result
+
+
+def _node_id(url: str) -> str:
+    item_type = _gh_item_type(url)
     result = subprocess.run(
-        ['gh', kind, 'view', ref, '--json', 'id', '--jq', '.id'],
+        ['gh', item_type, 'view', url, '--json', 'id', '--jq', '.id'],
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
+
+
+type LabelMode = Literal['add', 'remove']
+
+
+def _label(item_url: str, label: str, *, mode: LabelMode) -> None:
+    assert check_type(LabelMode, mode)
+    item_type = _gh_item_type(item_url)
+    log.info('%s label %r to %r …', mode.title() + 'ing', label, item_url)
+    subprocess.run(
+        ['gh', item_type, 'edit', item_url, f'--{mode}-label', label],
+        capture_output=True, text=True
+    )
 
 
 def _set_status(node_id: str, status: str) -> None:
