@@ -19,6 +19,10 @@
             "description": "\nAccess to data files in the underlying repository\n"
         },
         {
+            "name": "User",
+            "description": "\nAuthentication and authorization\n"
+        },
+        {
             "name": "Auxiliary",
             "description": "\nDescribes various aspects of the Azul service\n"
         }

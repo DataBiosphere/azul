@@ -186,6 +186,12 @@ spec = {
             ''')
         },
         {
+            'name': 'User',
+            'description': fd('''
+                Authentication and authorization
+            ''')
+        },
+        {
             'name': 'Auxiliary',
             'description': fd('''
                 Describes various aspects of the Azul service
