@@ -177,8 +177,8 @@ class TestUserController(DCP2TestCase,
     def _service(self) -> UserService:
         return self._app.user_controller._service  # type: ignore[attr-defined]
 
-    def _get_user(self) -> User:
-        return self._service.get_user(self._mock_iss, self._mock_sub)
+    def _load_user(self) -> User:
+        return self._service._load_user(self._mock_iss, self._mock_sub)
 
     def test_authorize(self):
         with self._mock_token_for_code() as token_for_code:
@@ -194,7 +194,7 @@ class TestUserController(DCP2TestCase,
             self.assertEqual(self._mock_access_token, body['access_token'])
             self.assertNotIn('refresh_token', body)
             self.assertIn('id_token', body)
-            user = self._get_user()
+            user = self._load_user()
             self.assertEqual(self._mock_access_token, user['access_token'])
             self.assertEqual(self._mock_refresh_token, user['refresh_token'])
             self.assertEqual(self._mock_email, user['email'])
@@ -204,7 +204,7 @@ class TestUserController(DCP2TestCase,
         with self._mock_token_for_code(refresh_token_expires_in=86400):
             response = self._authorize()
             self.assertEqual(200, response.status)
-            user = self._get_user()
+            user = self._load_user()
             now = self._service._now()
             self.assertAlmostEqual(86400, user['expiration'] - now, delta=5)
 
@@ -212,7 +212,7 @@ class TestUserController(DCP2TestCase,
         with self._mock_token_for_code():
             response = self._authorize()
             self.assertEqual(200, response.status)
-            user = self._get_user()
+            user = self._load_user()
             now = self._service._now()
             self.assertAlmostEqual(UserService._default_expiration,
                                    user['expiration'] - now,
@@ -229,7 +229,7 @@ class TestUserController(DCP2TestCase,
             )
             response = self._authorize()
             self.assertEqual(200, response.status)
-            user = self._get_user()
+            user = self._load_user()
             self.assertEqual(new_access_token, user['access_token'])
             self.assertEqual(new_refresh_token, user['refresh_token'])
 
@@ -301,7 +301,7 @@ class TestUserController(DCP2TestCase,
             client_id='mock_client_id',
             client_secret='mock_client_secret'
         )
-        user = self._get_user()
+        user = self._load_user()
         self.assertEqual(refreshed_token, user['access_token'])
 
     def test_exchange_token_invalid_jwt(self):
@@ -326,7 +326,7 @@ class TestUserController(DCP2TestCase,
     def test_authorize_stores_access_token_expiration(self):
         with self._mock_token_for_code():
             self._authorize()
-            user = self._get_user()
+            user = self._load_user()
             now = self._service._now()
             self.assertAlmostEqual(3600,
                                    user['access_token_expiration'] - now,

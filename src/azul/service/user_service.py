@@ -108,6 +108,9 @@ class UserService:
     def _dynamodb(self):
         return aws.dynamodb
 
+    def _now(self) -> int:
+        return int(time())
+
     def authorize(self,
                   authorization: Authorization,
                   *,
@@ -154,44 +157,6 @@ class UserService:
         self._store_user(iss, sub, user)
         return response
 
-    def get_user(self, iss: str, sub: str) -> User:
-        """
-        Retrieve previously stored information about the user of the given
-        identity. The identity of a user can be obtained from the ``iss` and
-        ``sub`` claims of a valid ID token, or from the ``iss`` and ``sub``
-        properties of a response from the authorization server's /tokeninfo
-        endpoint.
-
-        :param iss: The issuer of the user's identity
-
-        :param sub: The user's identity
-        """
-        log.info('Retrieving user %r from %r', sub, iss)
-        key = self._encode_identity(iss, sub)
-        response = self._dynamodb.get_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': key}}
-        )
-        item = response.get('Item')
-        if item is None:
-            log.warning('No user %r from %r', sub, iss)
-            raise UnknownUserException(iss, sub)
-        else:
-            try:
-                access_token_expiration = int(item['access_token_expiration']['N'])
-            except KeyError:
-                access_token_expiration = 0
-            user = User(
-                access_token=item['access_token']['S'],
-                refresh_token=item['refresh_token']['S'],
-                email=item['email']['S'],
-                email_verified=item['email_verified']['BOOL'],
-                access_token_expiration=access_token_expiration,
-                expiration=int(item[self.ttl_attribute]['N'])
-            )
-            log.info('Retrieved user %r', redact_json(json_untyped_dict(user)))
-            return user
-
     _google_issuer = 'https://accounts.google.com'
 
     def _encode_identity(self, iss: str, sub: str) -> str:
@@ -237,7 +202,7 @@ class UserService:
             raise ForeignTokenException(aud)
         else:
             iss, sub = self._google_issuer, token_info['sub']
-            self.get_user(iss, sub)
+            self._load_user(iss, sub)
             now = self._now()
             payload = {
                 'sub': self._encode_identity(iss, sub),
@@ -272,7 +237,7 @@ class UserService:
             raise InvalidPersonalAccessTokenError from e
         else:
             iss, sub = self._decode_identity(claims['sub'])
-            user = self.get_user(iss, sub)
+            user = self._load_user(iss, sub)
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
                 response = self._oauth_client.token_for_refresh(
@@ -310,6 +275,44 @@ class UserService:
             }
         )
 
+    def _load_user(self, iss: str, sub: str) -> User:
+        """
+        Retrieve previously stored information about the user of the given
+        identity. The identity of a user can be obtained from the ``iss` and
+        ``sub`` claims of a valid ID token, or from the ``iss`` and ``sub``
+        properties of a response from the authorization server's /tokeninfo
+        endpoint.
+
+        :param iss: The issuer of the user's identity
+
+        :param sub: The user's identity
+        """
+        log.info('Retrieving user %r from %r', sub, iss)
+        key = self._encode_identity(iss, sub)
+        response = self._dynamodb.get_item(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': key}}
+        )
+        item = response.get('Item')
+        if item is None:
+            log.warning('No user %r from %r', sub, iss)
+            raise UnknownUserException(iss, sub)
+        else:
+            try:
+                access_token_expiration = int(item['access_token_expiration']['N'])
+            except KeyError:
+                access_token_expiration = 0
+            user = User(
+                access_token=item['access_token']['S'],
+                refresh_token=item['refresh_token']['S'],
+                email=item['email']['S'],
+                email_verified=item['email_verified']['BOOL'],
+                access_token_expiration=access_token_expiration,
+                expiration=int(item[self.ttl_attribute]['N'])
+            )
+            log.info('Retrieved user %r', redact_json(json_untyped_dict(user)))
+            return user
+
     def _update_access_token(self,
                              iss: str,
                              sub: str,
@@ -330,9 +333,6 @@ class UserService:
                 ':access_token_expiration': {'N': str(self._now() + expires_in)},
             }
         )
-
-    def _now(self) -> int:
-        return int(time())
 
 
 class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
