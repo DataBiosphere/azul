@@ -134,7 +134,24 @@ class UserService:
             redirect_uri=redirect_uri
         )
         assert 'id_token' in response, response
-        self._store_tokens(response)
+        # Signature verification is unnecessary per OIDC 3.1.3.7 since the
+        # token was received directly from the token endpoint over TLS.
+        options = jwt.types.Options(verify_signature=False)
+        id_claims = self._jwt.decode(response['id_token'], options=options)
+        iss, sub = id_claims['iss'], id_claims['sub']
+        assert iss == self._google_issuer, R('Unexpected issuer', iss)
+        now = self._now()
+        expiration = response.get('refresh_token_expires_in',
+                                  self._default_expiration)
+        user = User(
+            access_token=response['access_token'],
+            refresh_token=response['refresh_token'],
+            email=id_claims['email'],
+            email_verified=id_claims['email_verified'],
+            access_token_expiration=now + response['expires_in'],
+            expiration=now + expiration
+        )
+        self._store_user(iss, sub, user)
         return response
 
     def get_user(self, iss: str, sub: str) -> User:
@@ -269,20 +286,11 @@ class UserService:
             log.info('Exchanged %r for APAT %r', at_auth.redacted(), apat_auth.redacted())
             return at_auth
 
-    def _store_tokens(self, response: TokenForCodeResponse) -> None:
-        log.debug('Storing tokens %r', redact_json(json_untyped_dict(response)))
-        # Signature verification is unnecessary per OIDC 3.1.3.7 since the
-        # token was received directly from the token endpoint over TLS.
-        options = jwt.types.Options(verify_signature=False)
-        id_claims = self._jwt.decode(response['id_token'], options=options)
-        iss, sub = id_claims['iss'], id_claims['sub']
-        assert iss == self._google_issuer, R('Unexpected issuer', iss)
-        key = self._encode_identity(iss, sub)
-        email, email_verified = id_claims['email'], id_claims['email_verified']
-        now = self._now()
+    def _store_user(self, iss: str, sub: str, user: User) -> None:
+        log.debug('Storing user %r', redact_json(json_untyped_dict(user)))
         self._dynamodb.update_item(
             TableName=self._table_name,
-            Key={self.key_attribute: {'S': key}},
+            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
             UpdateExpression=fd('''
                 SET access_token = :access_token,
                     access_token_expiration = :access_token_expiration,
@@ -293,13 +301,12 @@ class UserService:
             '''),
             ExpressionAttributeNames={'#expiration': self.ttl_attribute},
             ExpressionAttributeValues={
-                ':access_token': {'S': response['access_token']},
-                ':access_token_expiration': {'N': str(now + response['expires_in'])},
-                ':refresh_token': {'S': response['refresh_token']},
-                ':email': {'S': email},
-                ':email_verified': {'BOOL': email_verified},
-                ':expiration': {'N': str(now + response.get('refresh_token_expires_in',
-                                                            self._default_expiration))},
+                ':access_token': {'S': user['access_token']},
+                ':access_token_expiration': {'N': str(user['access_token_expiration'])},
+                ':refresh_token': {'S': user['refresh_token']},
+                ':email': {'S': user['email']},
+                ':email_verified': {'BOOL': user['email_verified']},
+                ':expiration': {'N': str(user['expiration'])},
             }
         )
 
