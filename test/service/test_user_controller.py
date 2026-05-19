@@ -173,6 +173,14 @@ class TestUserController(DCP2TestCase,
             headers['Authorization'] = f'Bearer {access_token}'
         return client.request('GET', url, headers=headers)
 
+    def _revoke(self, access_token: str | None = None):
+        client = self._http_client
+        url = str(self.base_url.set(path='/user/revoke'))
+        headers = {}
+        if access_token is not None:
+            headers['Authorization'] = f'Bearer {access_token}'
+        return client.request('POST', url, headers=headers)
+
     @cached_property
     def _service(self) -> UserService:
         return self._app.user_controller._service  # type: ignore[attr-defined]
@@ -252,6 +260,7 @@ class TestUserController(DCP2TestCase,
                                     options={'verify_signature': False})
                 self.assertNotIn('iss', claims)
                 self.assertEqual('#' + self._mock_sub, claims['sub'])
+                self.assertEqual('0', claims['jti'])
                 now = self._service._now()
                 self.assertAlmostEqual(UserService._apat_expiration,
                                        claims['exp'] - now,
@@ -323,6 +332,33 @@ class TestUserController(DCP2TestCase,
         with self.assertRaises(InvalidPersonalAccessTokenError):
             self._service.exchange_token(auth)
 
+    def test_exchange_token_survives_reauthorization(self):
+        apat = self._authorize_and_mint()
+        with self._mock_token_for_code(refresh_token='1//new_refresh_token'):
+            self._authorize()
+        result = self._service.exchange_token(apat)
+        self.assertIsInstance(result, AccessTokenAuthentication)
+
+    def test_exchange_token_revoked(self):
+        apat = self._authorize_and_mint()
+        with self._mock_token_info():
+            auth = AccessTokenAuthentication(self._mock_access_token)
+            self._service.revoke_personal_access_tokens(auth)
+        with self.assertRaises(InvalidPersonalAccessTokenError):
+            self._service.exchange_token(apat)
+
+    def test_multiple_apats(self):
+        with self._mock_token_for_code():
+            self._authorize()
+            with self._mock_token_info():
+                auth = AccessTokenAuthentication(self._mock_access_token)
+                apat1 = self._service.mint_personal_access_token(auth)
+                apat2 = self._service.mint_personal_access_token(auth)
+        result1 = self._service.exchange_token(apat1)
+        result2 = self._service.exchange_token(apat2)
+        self.assertIsInstance(result1, AccessTokenAuthentication)
+        self.assertIsInstance(result2, AccessTokenAuthentication)
+
     def test_authorize_stores_access_token_expiration(self):
         with self._mock_token_for_code():
             self._authorize()
@@ -354,4 +390,28 @@ class TestUserController(DCP2TestCase,
 
     def test_token_unauthenticated(self):
         response = self._get_token()
+        self.assertEqual(401, response.status)
+
+    def test_revoke(self):
+        with self._mock_token_for_code():
+            self._authorize()
+            with self._mock_token_info():
+                response = self._revoke(self._mock_access_token)
+                self.assertEqual(204, response.status)
+
+    def test_revoke_invalidates_apat(self):
+        apat = self._authorize_and_mint()
+        with self._mock_token_info():
+            response = self._revoke(self._mock_access_token)
+            self.assertEqual(204, response.status)
+        with self.assertRaises(InvalidPersonalAccessTokenError):
+            self._service.exchange_token(apat)
+
+    def test_revoke_rejects_pat(self):
+        apat = self._authorize_and_mint()
+        response = self._revoke(apat.token)
+        self.assertEqual(400, response.status)
+
+    def test_revoke_unauthenticated(self):
+        response = self._revoke()
         self.assertEqual(401, response.status)

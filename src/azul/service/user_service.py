@@ -3,6 +3,7 @@ from time import (
     time,
 )
 from typing import (
+    NotRequired,
     TYPE_CHECKING,
 )
 
@@ -34,6 +35,9 @@ from azul.lib.json import (
 from azul.lib.objects import (
     Sentinel,
     absent,
+)
+from azul.lib.strings import (
+    format_and_dedent as fd,
 )
 from azul.lib.types import (
     FlatJSON,
@@ -71,6 +75,10 @@ class User(JSONTypedDict):
     access_token_expiration: int
     #: The Unix timestamp after which the refresh token expires
     expiration: int
+    #: APATs with a jti below this value are considered revoked
+    min_jti: NotRequired[int]
+    #: The jti to assign to the APAT requested next
+    max_jti: NotRequired[int]
 
 
 class UnknownUserException(Exception):
@@ -195,6 +203,20 @@ class UserService:
         jwt._jws.register_algorithm(self._apat_algorithm, KMSSigningAlgorithm())
         return jwt
 
+    def _verify_access_token(self,
+                             at_auth: AccessTokenAuthentication
+                             ) -> tuple[str, str]:
+        token_info = self._oauth_client.token_info(at_auth.token)
+        aud = token_info['aud']
+        if aud != self._client_id:
+            log.warning('Unexpected access token audience %r for token %r',
+                        aud, at_auth.redacted())
+            raise ForeignTokenException(aud)
+        else:
+            iss, sub = self._google_issuer, token_info['sub']
+            self._load_user(iss, sub)
+            return iss, sub
+
     def mint_personal_access_token(self,
                                    at_auth: AccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
@@ -208,31 +230,25 @@ class UserService:
         refresh token.
         """
         log.info('Minting APAT for %r', at_auth.redacted())
-        token_info = self._oauth_client.token_info(at_auth.token)
-        aud = token_info['aud']
-        if aud != self._client_id:
-            log.warning('Unexpected access token audience %r for token %r',
-                        aud, at_auth.redacted())
-            raise ForeignTokenException(aud)
-        else:
-            iss, sub = self._google_issuer, token_info['sub']
-            self._load_user(iss, sub)
-            now = self._now()
-            payload = {
-                'sub': self._encode_identity(iss, sub),
-                'exp': now + self._apat_expiration,
-                'iat': now
-            }
-            apat = self._jwt.encode(payload,
-                                    key=config.apat_kms_key.alias,
-                                    algorithm=self._apat_algorithm)
-            self._jwt.decode(apat,
-                             key=config.apat_kms_key.alias,
-                             algorithms=[self._apat_algorithm])
-            apat_auth = PersonalAccessTokenAuthentication(token=apat)
-            log.info('Minted APAT %r for access token %r',
-                     apat_auth.redacted(), at_auth.redacted())
-            return apat_auth
+        iss, sub = self._verify_access_token(at_auth)
+        jti = self._next_jti(iss, sub)
+        now = self._now()
+        payload = {
+            'sub': self._encode_identity(iss, sub),
+            'exp': now + self._apat_expiration,
+            'iat': now,
+            'jti': str(jti)
+        }
+        apat = self._jwt.encode(payload,
+                                key=config.apat_kms_key.alias,
+                                algorithm=self._apat_algorithm)
+        self._jwt.decode(apat,
+                         key=config.apat_kms_key.alias,
+                         algorithms=[self._apat_algorithm])
+        apat_auth = PersonalAccessTokenAuthentication(token=apat)
+        log.info('Minted APAT %r for access token %r',
+                 apat_auth.redacted(), at_auth.redacted())
+        return apat_auth
 
     def exchange_token(self,
                        apat_auth: PersonalAccessTokenAuthentication
@@ -252,6 +268,11 @@ class UserService:
         else:
             iss, sub = self._decode_identity(claims['sub'])
             user = self._load_user(iss, sub)
+            jti = claims.get('jti')
+            if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
+                log.warning('APAT jti %r out of range [%d, %d) for %r',
+                            jti, user['min_jti'], user['max_jti'], apat_auth.redacted())
+                raise InvalidPersonalAccessTokenError
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
                 response = self._oauth_client.token_for_refresh(
@@ -265,19 +286,31 @@ class UserService:
             log.info('Exchanged %r for APAT %r', at_auth.redacted(), apat_auth.redacted())
             return at_auth
 
+    def revoke_personal_access_tokens(self,
+                                      at_auth: AccessTokenAuthentication
+                                      ) -> None:
+        """
+        Revoke all APATs for the user identified by the given access token.
+        """
+        log.info('Revoking all APATs for %r', at_auth.redacted())
+        iss, sub = self._verify_access_token(at_auth)
+        self._revoke_jti(iss, sub)
+
     def _store_user(self, iss: str, sub: str, user: User) -> None:
-        user_ = json_untyped_flat_dict(user)
-        log.debug('Storing user %r', redact_json(user_))
+        user = json_untyped_flat_dict(user)
+        log.debug('Storing user %r', redact_json(user))
         update = DynamoDBItemUpdate(
             table_name=self._table_name,
             key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
         )
-        update.set_from(user_, 'access_token')
-        update.set_from(user_, 'access_token_expiration')
-        update.set_from(user_, 'refresh_token')
-        update.set_from(user_, 'email')
-        update.set_from(user_, 'email_verified')
-        update.set_from(user_, 'expiration', alias=True)
+        update.set_from(user, 'access_token')
+        update.set_from(user, 'access_token_expiration')
+        update.set_from(user, 'refresh_token')
+        update.set_from(user, 'email')
+        update.set_from(user, 'email_verified')
+        update.set_from(user, 'expiration', alias=True)
+        update.set_from(user, 'min_jti', default=0)
+        update.set_from(user, 'max_jti', default=0)
         self._dynamodb.update_item(**update.to_update_item_input())
 
     def _load_user(self, iss: str, sub: str) -> User:
@@ -303,20 +336,32 @@ class UserService:
             log.warning('No user %r from %r', sub, iss)
             raise UnknownUserException(iss, sub)
         else:
-            try:
-                access_token_expiration = int(item['access_token_expiration']['N'])
-            except KeyError:
-                access_token_expiration = 0
             user = User(
                 access_token=item['access_token']['S'],
                 refresh_token=item['refresh_token']['S'],
                 email=item['email']['S'],
                 email_verified=item['email_verified']['BOOL'],
-                access_token_expiration=access_token_expiration,
-                expiration=int(item[self.ttl_attribute]['N'])
+                access_token_expiration=int(item['access_token_expiration']['N']),
+                expiration=int(item[self.ttl_attribute]['N']),
+                min_jti=int(item['min_jti']['N']),
+                max_jti=int(item['max_jti']['N'])
             )
             log.info('Retrieved user %r', redact_json(json_untyped_dict(user)))
             return user
+
+    def _next_jti(self, iss: str, sub: str) -> int:
+        response = self._dynamodb.update_item(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
+            UpdateExpression=fd('''
+                SET max_jti = max_jti + :one
+            '''),
+            ExpressionAttributeValues={
+                ':one': {'N': '1'},
+            },
+            ReturnValues='UPDATED_OLD'
+        )
+        return int(response['Attributes']['max_jti']['N'])
 
     def _update_access_token(self,
                              iss: str,
@@ -333,6 +378,18 @@ class UserService:
         update.set('access_token', {'S': access_token})
         update.set('access_token_expiration', {'N': str(self._now() + expires_in)})
         self._dynamodb.update_item(**update.to_update_item_input())
+
+    def _revoke_jti(self, iss: str, sub: str) -> None:
+        response = self._dynamodb.update_item(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
+            UpdateExpression=fd('''
+                SET min_jti = max_jti
+            '''),
+            ReturnValues='ALL_NEW'
+        )
+        min_jti = response['Attributes']['min_jti']['N']
+        log.info('Set min_jti for user %r from %r to %s', sub, iss, min_jti)
 
 
 @attrs.frozen(kw_only=True)
