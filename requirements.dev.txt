@@ -1,7 +1,7 @@
 --find-links https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+20  # match version of chalice requirement below
 --find-links https://github.com/DataBiosphere/azul-requirements-parser/releases/expanded_assets/v0.13.0+6  # match version of requirements-parser requirement below
 atomicwrites==1.4.1
-boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.6  # match this with the version of the `boto3` runtime dendency
+boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.10  # match this with the version of the `boto3` runtime dendency
 chalice==1.32.0+20  # match version with find-links entry above
 coverage==7.14.0
 docker==7.1.0
@@ -27,7 +27,7 @@ requirements-parser==v0.13.0+6  # match version with find-links entry above
 responses==0.26.0
 strict-rfc3339==0.7
 types-chevron==0.14.2  # match with chevron in requirements.txt
-types-jsonschema==4.26.0.20260508
+types-jsonschema==4.26.0.20260518
 watchdog==6.0.0
 -r requirements.dev.trans.txt
 -r requirements.txt

@@ -1,17 +1,17 @@
 atomicwrites==1.4.1
 attrs==26.1.0
 aws-requests-auth==0.4.3
-blessed==1.39.0
-boto3==1.43.6
-boto3-stubs-lite==1.43.6
-botocore==1.43.6
+blessed==1.40.0
+boto3==1.43.10
+boto3-stubs-lite==1.43.10
+botocore==1.43.10
 botocore-stubs==1.42.41
 certifi==2026.4.22
 cffi==2.0.0
 chalice==1.32.0+20
 charset-normalizer==3.4.7
 chevron==0.14.0
-click==8.3.3
+click==8.4.0
 coverage==7.14.0
 cryptography==48.0.0
 docker==7.1.0
@@ -26,7 +26,7 @@ gitdb==4.0.12
 gitpython==3.1.50
 google-api-core==2.30.3
 google-api-python-client==2.196.0
-google-auth==2.52.0
+google-auth==2.53.0
 google-auth-httplib2==0.4.0
 google-cloud-bigquery==3.41.0
 google-cloud-bigquery-reservation==1.24.0
@@ -45,6 +45,7 @@ httplib2==0.31.2
 idna==3.15
 inquirer==3.4.1
 isort==8.0.1
+jinxed==2.0.0
 jmespath==1.1.0
 jq==1.11.0
 jsonschema==4.26.0
@@ -62,7 +63,7 @@ mypy==1.20.2
 mypy-boto3-apigateway==1.43.0
 mypy-boto3-cloudwatch==1.43.2
 mypy-boto3-dynamodb==1.43.0
-mypy-boto3-ec2==1.43.7
+mypy-boto3-ec2==1.43.10
 mypy-boto3-ecr==1.43.0
 mypy-boto3-iam==1.43.2
 mypy-boto3-kms==1.43.0
@@ -122,7 +123,7 @@ strict-rfc3339==0.7
 tqdm==4.67.3
 types-awscrt==0.31.3
 types-chevron==0.14.2
-types-jsonschema==4.26.0.20260508
+types-jsonschema==4.26.0.20260518
 types-s3transfer==0.16.0
 typing_extensions==4.15.0
 uritemplate==4.2.0

@@ -1,6 +1,6 @@
-blessed==1.39.0
+blessed==1.40.0
 botocore-stubs==1.42.41
-click==8.3.3
+click==8.4.0
 editor==1.8.0
 et_xmlfile==2.0.0
 gitdb==4.0.12
@@ -9,6 +9,7 @@ greenlet==3.5.0
 grpc-google-iam-v1==0.14.4
 httplib2==0.31.2
 inquirer==3.4.1
+jinxed==2.0.0
 jsonschema-path==0.3.4
 lazy-object-proxy==1.12.0
 librt==0.11.0
@@ -16,7 +17,7 @@ mccabe==0.7.0
 mypy-boto3-apigateway==1.43.0
 mypy-boto3-cloudwatch==1.43.2
 mypy-boto3-dynamodb==1.43.0
-mypy-boto3-ec2==1.43.7
+mypy-boto3-ec2==1.43.10
 mypy-boto3-ecr==1.43.0
 mypy-boto3-iam==1.43.2
 mypy-boto3-kms==1.43.0

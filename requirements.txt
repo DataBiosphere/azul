@@ -1,13 +1,13 @@
 --find-links  https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5  # match version of resumablehash requirement below
 attrs==26.1.0
 aws-requests-auth==0.4.3
-boto3==1.43.6  # Match version of the `boto3-stubs` dev dependency
-botocore==1.43.6
+boto3==1.43.10  # Match version of the `boto3-stubs` dev dependency
+botocore==1.43.10
 chevron==0.14.0  # Match with types-chevron in requirements.dev.txt
 fastavro==1.12.2
 furl==2.1.4
 google-api-core==2.30.3
-google-auth[pyopenssl]==2.52.0
+google-auth[pyopenssl]==2.53.0
 google-cloud-bigquery==3.41.0
 http-message-signatures==2.0.1
 http_sfv==0.9.9
