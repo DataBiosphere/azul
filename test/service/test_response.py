@@ -3798,7 +3798,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
         }, response.json())
 
 
-class TestResponseWithHCADCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
+class DCP2ResponseTestCase(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -3809,6 +3809,15 @@ class TestResponseWithHCADCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
     def tearDownClass(cls):
         cls._teardown_indices()
         super().tearDownClass()
+
+    def get_file(self, entry_id: str) -> JSON:
+        url = self.base_url.set(path=('index', 'files', entry_id))
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        return one(response.json()['files'])
+
+
+class TestResponseWithHCADCP2Cans(DCP2ResponseTestCase):
 
     @classmethod
     def bundles(cls) -> list[SourcedBundleFQID]:
@@ -3835,12 +3844,6 @@ class TestResponseWithHCADCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
                                   spec=TDRSourceSpec.parse(source[spec_field]),
                                   prefix=Prefix.parse(source[prefix_field]))
             self.assertEqual(self.source.ref, source)
-
-    def get_file(self, entry_id: str) -> JSON:
-        url = self.base_url.set(path=('index', 'files', entry_id))
-        response = self._http_client.request('GET', str(url))
-        raise_on_status(response)
-        return one(response.json()['files'])
 
     def test_file_urls(self):
         with self.subTest(phantom=False):
