@@ -253,6 +253,12 @@ def json_untyped_dict(v: JSONTypedDict) -> MutableJSON:
     return cast(MutableJSON, v)
 
 
+def json_untyped_flat_dict(v: JSONTypedDict) -> MutableFlatJSON:
+    # FIXME: json_untyped_dict is unsafe
+    #        https://github.com/DataBiosphere/azul/issues/7381
+    return cast(MutableFlatJSON, v)
+
+
 class LambdaContext:
     """
     A stub for the AWS Lambda context

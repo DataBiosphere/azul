@@ -2,7 +2,11 @@ import logging
 from time import (
     time,
 )
+from typing import (
+    TYPE_CHECKING,
+)
 
+import attrs
 import jwt.algorithms
 from jwt.api_jwt import (
     PyJWT,
@@ -27,12 +31,16 @@ from azul.lib import (
 from azul.lib.json import (
     redact_json,
 )
-from azul.lib.strings import (
-    format_and_dedent as fd,
+from azul.lib.objects import (
+    Sentinel,
+    absent,
 )
 from azul.lib.types import (
+    FlatJSON,
     JSONTypedDict,
+    PrimitiveJSON,
     json_untyped_dict,
+    json_untyped_flat_dict,
     not_none,
 )
 from azul.oauth2 import (
@@ -40,6 +48,12 @@ from azul.oauth2 import (
     OAuth2Client,
     TokenForCodeResponse,
 )
+
+if TYPE_CHECKING:
+    from mypy_boto3_dynamodb.type_defs import (
+        AttributeValueTypeDef,
+        UpdateItemInputTypeDef,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -252,28 +266,19 @@ class UserService:
             return at_auth
 
     def _store_user(self, iss: str, sub: str, user: User) -> None:
-        log.debug('Storing user %r', redact_json(json_untyped_dict(user)))
-        self._dynamodb.update_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
-            UpdateExpression=fd('''
-                SET access_token = :access_token,
-                    access_token_expiration = :access_token_expiration,
-                    refresh_token = :refresh_token,
-                    email = :email,
-                    email_verified = :email_verified,
-                    #expiration = :expiration
-            '''),
-            ExpressionAttributeNames={'#expiration': self.ttl_attribute},
-            ExpressionAttributeValues={
-                ':access_token': {'S': user['access_token']},
-                ':access_token_expiration': {'N': str(user['access_token_expiration'])},
-                ':refresh_token': {'S': user['refresh_token']},
-                ':email': {'S': user['email']},
-                ':email_verified': {'BOOL': user['email_verified']},
-                ':expiration': {'N': str(user['expiration'])},
-            }
+        user_ = json_untyped_flat_dict(user)
+        log.debug('Storing user %r', redact_json(user_))
+        update = DynamoDBItemUpdate(
+            table_name=self._table_name,
+            key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
         )
+        update.set_from(user_, 'access_token')
+        update.set_from(user_, 'access_token_expiration')
+        update.set_from(user_, 'refresh_token')
+        update.set_from(user_, 'email')
+        update.set_from(user_, 'email_verified')
+        update.set_from(user_, 'expiration', alias=True)
+        self._dynamodb.update_item(**update.to_update_item_input())
 
     def _load_user(self, iss: str, sub: str) -> User:
         """
@@ -321,17 +326,97 @@ class UserService:
                              ) -> None:
         log.debug('Updating access token of user %r at %r to %r',
                   sub, iss, redact_json(access_token))
-        self._dynamodb.update_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
-            UpdateExpression=fd('''
-                SET access_token = :access_token,
-                    access_token_expiration = :access_token_expiration
-            '''),
-            ExpressionAttributeValues={
-                ':access_token': {'S': access_token},
-                ':access_token_expiration': {'N': str(self._now() + expires_in)},
-            }
+        update = DynamoDBItemUpdate(
+            table_name=self._table_name,
+            key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+        )
+        update.set('access_token', {'S': access_token})
+        update.set('access_token_expiration', {'N': str(self._now() + expires_in)})
+        self._dynamodb.update_item(**update.to_update_item_input())
+
+
+@attrs.frozen(kw_only=True)
+class DynamoDBItemUpdate:
+    table_name: str
+    key: dict[str, dict[str, str]]
+    assignments: list[str] = attrs.field(init=False, factory=list)
+    attributes: dict[str, AttributeValueTypeDef] = attrs.field(init=False, factory=dict)
+    aliases: dict[str, str] = attrs.field(init=False, factory=dict)
+
+    def set(self,
+            attribute: str,
+            value: AttributeValueTypeDef | tuple[str, AttributeValueTypeDef],
+            *,
+            alias: bool = False
+            ) -> None:
+        """
+        Instruct this item update to set the item's attribute of the given name
+        to the given value. If the value is a tuple, set the attribute to the
+        custom expression (the 1st tuple element). The custom expression, can
+        reference the given value (the 2n tuple element) using the attribute
+        name prefixed with a colon.
+
+        To set attributes whose name is reserved, pass alias=True.
+        """
+        if alias:
+            lhs = f'#{attribute}'
+            self.aliases[lhs] = attribute
+        else:
+            lhs = attribute
+        if isinstance(value, tuple):
+            rhs, value = value
+            self.assignments.append(f'{lhs} = {rhs}')
+        else:
+            self.assignments.append(f'{lhs} = :{attribute}')
+        self.attributes[f':{attribute}'] = value
+
+    def set_from(self,
+                 mapping: FlatJSON,
+                 attribute: str,
+                 alias: bool = False,
+                 default: PrimitiveJSON | Sentinel = absent
+                 ) -> None:
+        """
+        Instruct this item update to set the item's attribute of the given name
+        to the corresponding value from the given mapping, if present, or the
+        given default. Raise a KeyError if no default was given.
+
+        Note that the default is only used if the attribute is also absent from
+        the item. In other words, an existing attribute of an existing item will
+        only be overwritten with a value the mapping, never the default.
+        """
+        if absent.is_(default):
+            value = self._attribute_value(mapping[attribute])
+            self.set(attribute, value, alias=alias)
+        else:
+            try:
+                value = mapping[attribute]
+            except KeyError:
+                value = f'if_not_exists({attribute}, :{attribute})', self._attribute_value(default)
+            else:
+                value = self._attribute_value(value)
+            self.set(attribute, value, alias=alias)
+
+    @staticmethod
+    def _attribute_value(value: PrimitiveJSON) -> AttributeValueTypeDef:
+        if isinstance(value, str):
+            return {'S': value}
+        elif isinstance(value, bool):
+            return {'BOOL': value}
+        elif isinstance(value, (int, float)):
+            return {'N': str(value)}
+        elif value is None:
+            return {'NULL': True}
+        else:
+            assert False, R('Unexpected type', type(value))
+
+    def to_update_item_input(self) -> UpdateItemInputTypeDef:
+        return dict(
+            TableName=self.table_name,
+            Key=self.key,
+            UpdateExpression='SET ' + ', '.join(self.assignments),
+            ExpressionAttributeValues=self.attributes,
+            ExpressionAttributeNames=self.aliases
         )
 
 
