@@ -4,6 +4,7 @@ from time import (
 )
 from typing import (
     NotRequired,
+    Self,
     TYPE_CHECKING,
 )
 
@@ -300,19 +301,21 @@ class UserService:
     def _store_user(self, iss: str, sub: str, user: User) -> None:
         user = json_untyped_flat_dict(user)
         log.debug('Storing user %r', redact_json(user))
-        update = DynamoDBItemUpdate(
-            table_name=self._table_name,
-            key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+        self._dynamodb.update_item(
+            **DynamoDBItemUpdate(
+                table_name=self._table_name,
+                key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+            )
+            .set_from(user, 'access_token')
+            .set_from(user, 'access_token_expiration')
+            .set_from(user, 'refresh_token')
+            .set_from(user, 'email')
+            .set_from(user, 'email_verified')
+            .set_from(user, 'expiration', alias=True)
+            .set_from(user, 'min_jti', default=0)
+            .set_from(user, 'max_jti', default=0)
+            .to_update_item_input()
         )
-        update.set_from(user, 'access_token')
-        update.set_from(user, 'access_token_expiration')
-        update.set_from(user, 'refresh_token')
-        update.set_from(user, 'email')
-        update.set_from(user, 'email_verified')
-        update.set_from(user, 'expiration', alias=True)
-        update.set_from(user, 'min_jti', default=0)
-        update.set_from(user, 'max_jti', default=0)
-        self._dynamodb.update_item(**update.to_update_item_input())
 
     def _load_user(self, iss: str, sub: str) -> User:
         """
@@ -372,13 +375,15 @@ class UserService:
                              ) -> None:
         log.debug('Updating access token of user %r at %r to %r',
                   sub, iss, redact_json(access_token))
-        update = DynamoDBItemUpdate(
-            table_name=self._table_name,
-            key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+        self._dynamodb.update_item(
+            **DynamoDBItemUpdate(
+                table_name=self._table_name,
+                key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+            )
+            .set('access_token', {'S': access_token})
+            .set('access_token_expiration', {'N': str(self._now() + expires_in)})
+            .to_update_item_input()
         )
-        update.set('access_token', {'S': access_token})
-        update.set('access_token_expiration', {'N': str(self._now() + expires_in)})
-        self._dynamodb.update_item(**update.to_update_item_input())
 
     def _revoke_jti(self, iss: str, sub: str) -> None:
         response = self._dynamodb.update_item(
@@ -406,7 +411,7 @@ class DynamoDBItemUpdate:
             value: AttributeValueTypeDef | tuple[str, AttributeValueTypeDef],
             *,
             alias: bool = False
-            ) -> None:
+            ) -> Self:
         """
         Instruct this item update to set the item's attribute of the given name
         to the given value. If the value is a tuple, set the attribute to the
@@ -427,13 +432,14 @@ class DynamoDBItemUpdate:
         else:
             self.assignments.append(f'{lhs} = :{attribute}')
         self.attributes[f':{attribute}'] = value
+        return self
 
     def set_from(self,
                  mapping: FlatJSON,
                  attribute: str,
                  alias: bool = False,
                  default: PrimitiveJSON | Sentinel = absent
-                 ) -> None:
+                 ) -> Self:
         """
         Instruct this item update to set the item's attribute of the given name
         to the corresponding value from the given mapping, if present, or the
@@ -454,6 +460,7 @@ class DynamoDBItemUpdate:
             else:
                 value = self._attribute_value(value)
             self.set(attribute, value, alias=alias)
+        return self
 
     @staticmethod
     def _attribute_value(value: PrimitiveJSON) -> AttributeValueTypeDef:
