@@ -107,6 +107,7 @@ class UserService:
 
     key_attribute = 'identity'
     ttl_attribute = 'expiration'
+    assert ttl_attribute in User.__annotations__
 
     _table_name = config.dynamo_users_table_name
     _key_separator = '#'
