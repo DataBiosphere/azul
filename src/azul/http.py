@@ -180,7 +180,7 @@ class DisableCrossHostRedirectClient(HttpClientDecorator):
 
 def http_client(log: logging.Logger | None = None) -> HttpClient:
     client = urllib3.PoolManager(ca_certs=certifi.where())
-    client: HttpClient = DisableCrossHostRedirectClient(client)
+    client = DisableCrossHostRedirectClient(client)
     if log is not None:
         client = LoggingHttpClient(client, log)
     return StatusRetryHttpClient(client)

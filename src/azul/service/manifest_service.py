@@ -1580,8 +1580,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 contents = json_mapping(doc['contents'])
                 files = json_sequence(contents['files'])
                 file = json_mapping(one(files))
-                source: JSON = one(json_sequence_of_mappings(doc['sources']))
-                source: SourceRef = SourceRef.from_json(source)
+                source_json = json_mapping(one(json_sequence(doc['sources'])))
+                source: SourceRef = SourceRef.from_json(source_json)
 
                 # On AnVIL, and for political reasons, we are not permitted to
                 # include managed-access files, even if they are accessible to

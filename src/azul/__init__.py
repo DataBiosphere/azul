@@ -858,11 +858,12 @@ class Config:
 
         _it_catalog_suffix: ClassVar[str] = '-it'
 
-        _catalog_re: str = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
-        _catalog_re = r'(?=.{1,64}$)' + _catalog_re
-        _it_catalog_re: str = _catalog_re + rf'(?<={re.escape(_it_catalog_suffix)})'
-        _it_catalog_re: ClassVar[re.Pattern] = re.compile(_it_catalog_re)
-        _catalog_re: ClassVar[re.Pattern] = re.compile(_catalog_re)
+        _catalog_re = re.compile(
+            r'(?=.{1,64}$)([a-z][a-z0-9]*(-[a-z0-9]+)*)'
+        )
+        _it_catalog_re = re.compile(
+            _catalog_re.pattern + rf'(?<={re.escape(_it_catalog_suffix)})'
+        )
 
         def __attrs_post_init__(self):
             self.validate_name(self.name)
