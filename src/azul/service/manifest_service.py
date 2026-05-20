@@ -1269,8 +1269,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
 class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
     """
-    A mixin for manifest generators that use client-side paging to query
-    OpenSearch.
+    A manifest generator that uses client-side paging to query OpenSearch.
     """
     page_size = 500
 
@@ -1426,7 +1425,7 @@ class PagedManifestGenerator(ClientSidePagingManifestGenerator):
                 return partition
 
 
-class FileBasedManifestGenerator(ManifestGenerator):
+class FileBasedManifestGenerator(ClientSidePagingManifestGenerator):
     """
     A manifest generator that writes its output to a file.
 
@@ -1847,8 +1846,7 @@ Bundle = dict[Qualifier, Groups]
 Bundles = dict[FQID, Bundle]
 
 
-class PFBManifestGenerator(FileBasedManifestGenerator,
-                           ClientSidePagingManifestGenerator):
+class PFBManifestGenerator(FileBasedManifestGenerator):
 
     @classmethod
     def format(cls) -> ManifestFormat:
