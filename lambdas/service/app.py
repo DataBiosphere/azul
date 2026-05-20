@@ -8,7 +8,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    OAuth2,
+    BearerTokenAuthentication,
 )
 from azul.health import (
     HealthApp,
@@ -58,7 +58,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '17.1',
+        'version': '17.4',
         'description': fd(f'''
             # Overview
 
@@ -186,6 +186,12 @@ spec = {
             ''')
         },
         {
+            'name': 'User',
+            'description': fd('''
+                Authentication and authorization
+            ''')
+        },
+        {
             'name': 'Auxiliary',
             'description': fd('''
                 Describes various aspects of the Azul service
@@ -210,15 +216,16 @@ class ServiceApp(HealthApp):
         }
 
     def _oauth2_spec(self) -> JSON:
-        scopes = ('email',)
+        scopes = ('openid', 'email')
         return {
             'components': {
                 'securitySchemes': {
                     self.app_name: {
                         'type': 'oauth2',
                         'flows': {
-                            'implicit': {
+                            'authorizationCode': {
                                 'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
+                                'tokenUrl': '/user/authorize',
                                 'scopes': {scope: scope for scope in scopes}
                             }
                         }
@@ -260,7 +267,7 @@ class ServiceApp(HealthApp):
                          globals=globals(),
                          spec=spec)
 
-    def _authenticate(self) -> OAuth2 | None:
+    def _authenticate(self) -> BearerTokenAuthentication | None:
         try:
             header = self.current_request.headers['Authorization']
         except KeyError:
@@ -272,7 +279,7 @@ class ServiceApp(HealthApp):
                 raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return OAuth2(auth_token)
+                    return BearerTokenAuthentication.for_token(auth_token)
                 else:
                     raise UnauthorizedError(header)
 

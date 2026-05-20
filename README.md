@@ -644,11 +644,19 @@ These steps are performed once per deployment (multiple times per project).
    
    - `http://localhost:3000`
 
-6. Add the following entry to *Authorized redirect URIs*: Append
+6. Add the following entries to *Authorized redirect URIs*:
 
    - The output of `python -m azul config.service_endpoint`, followed by 
      `/swagger/oauth2-redirect.html`
-   
+
+   - `http://localhost:8088` (this is used during the integration test)
+
+   - If you'd like to be able to sign into a locally running Swagger UI for your
+     deployment, add `http://127.0.0.1:8000/swagger/oauth2-redirect.html` to the
+     *Authorized redirect URIs* of your deployment's OAuth 2.0 client. After
+     that, you will be able to use the *Authorize* button on the Swagger UI
+     launched by `make -C lambdas/service local`.
+
 7. Click *Create*
 
 8. Copy the OAuth Client ID (_not_ the client secret) and insert it into the

@@ -2,7 +2,6 @@ import doctest
 import unittest
 
 import azul
-import azul.auth
 import azul.csp
 import azul.docker
 import azul.drs
@@ -70,7 +69,6 @@ def load_tests(_loader,
     root = azul.config.project_root
     for module in [
         azul,
-        azul.auth,
         azul.csp,
         azul.docker,
         azul.drs,

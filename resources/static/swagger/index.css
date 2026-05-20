@@ -14,3 +14,11 @@ body {
     margin: 0;
     background: #fafafa;
 }
+
+/* 
+ * The client secret is managed server-side (BFF pattern) so there is no need to
+ * display the corresponding form field in the Swagger UI's login dialog.
+ */
+.auth-container .wrapper:has(label[for^="client_secret"]) {
+    display: none;
+}

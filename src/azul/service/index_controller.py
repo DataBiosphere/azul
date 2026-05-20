@@ -137,15 +137,10 @@ class IndexController(QueryController):
                 Search an index for entities of interest
                 {", with filters provided in the request body" if post else ""}.
             '''),
-            'deprecated': post,
             'description':
                 iif(post, self._parameter_hoisting_note('GET', '/index/files', 'POST') + fd('''
 
                 Note that the Swagger UI can't currently be used to pass a body.
-
-                Please also note that this endpoint should be considered beta and
-                may change or disappear in the future. That is the reason for the
-                deprecation.
             ''')),
             'tags': ['Index'],
             'parameters': self._search_entities_params_spec(),

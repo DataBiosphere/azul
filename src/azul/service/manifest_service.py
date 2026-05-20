@@ -668,7 +668,7 @@ class ManifestService(QueryService):
         verified to have not been tamplered with.
         """
         response = aws.kms.generate_mac(Message=manifest_key.pack(),
-                                        KeyId=config.manifest_kms_alias,
+                                        KeyId=config.manifest_kms_key.alias,
                                         MacAlgorithm='HMAC_SHA_256')
         return SignedManifestKey(value=manifest_key,
                                  signature=response['Mac'])
@@ -680,7 +680,7 @@ class ManifestService(QueryService):
         signature have been tampered with, an exception will be raised.
         """
         try:
-            response = aws.kms.verify_mac(KeyId=config.manifest_kms_alias,
+            response = aws.kms.verify_mac(KeyId=config.manifest_kms_key.alias,
                                           MacAlgorithm='HMAC_SHA_256',
                                           Message=manifest_key.value.pack(),
                                           Mac=manifest_key.signature)

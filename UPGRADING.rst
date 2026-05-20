@@ -20,6 +20,33 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8007 Mint and use APAT for file downloads in curl manifest
+============================================================
+
+Everyone
+--------
+
+Add ``http://localhost:8088`` to the *Authorized redirect URIs* of the OAuth 2.0
+client for each of your personal deployments. This redirect URI is used by the
+integration test to complete an interactive OAuth2 authorization code flow. Also
+note that the IT will now open a browser tab at the start, asking you to
+authorize Azul with your @ucsc.edu account. You can disable this behaviour by
+running the IT with the ``unattended`` flag. Passing this flag, which is also
+used on GitLab, should be a last resort, as it eliminates IT coverage of the new
+APAT (Azul Personal Access Token) functionality.
+
+If you'd like to be able to sign into the locally running service app for your
+deployment, add ``http://127.0.0.1:8000/swagger/oauth2-redirect.html`` to the
+*Authorized redirect URIs* of your deployment's OAuth 2.0 client. After that,
+you will be able to use the *Authorize* button on the Swagger UI launched by
+``make -C lambdas/service local``.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments, skipping the 2nd paragraph.
+
+
 #7963 Disabled secrets cause OAuth clients to be flagged
 ========================================================
 

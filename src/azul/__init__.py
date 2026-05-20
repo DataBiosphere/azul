@@ -243,30 +243,45 @@ class Config:
             deployment = self.deployment_stage
         return '/'.join([*prefix, *atuple(deployment), *component])
 
-    @property
-    def manifest_expiration(self) -> int:
-        """
-        Number of days before a manifest will be deleted from the storage bucket
-        """
-        return 7
+    #: Number of days before a manifest will be deleted from the storage bucket
+    manifest_expiration = 7
 
-    @property
-    def manifest_expiration_margin(self) -> float:
-        """
-        Minimum duration (in seconds) before a manifest in the storage bucket
-        is considered too close to expiration for use
-        """
-        return 60 * 15
+    #: Minimum duration (in seconds) before a manifest in the storage bucket
+    #: is considered too close to expiration for use
+    manifest_expiration_margin = 60 * 15
 
-    manifest_kms_key_tf_name = 'manifest'
+    @frozen(kw_only=True, slots=False)
+    class KMSKey:
+        #: The Config instance that owns this key
+        config: Config
+        #: The Terraform resource name and alias suffix for this key
+        name: str
+        #: The AWS KMS key usage, e.g. 'SIGN_VERIFY' or 'GENERATE_VERIFY_MAC'
+        usage: str
+        #: The AWS KMS key spec, e.g. 'RSA_2048' or 'HMAC_256'
+        spec: str
 
-    @property
-    def manifest_kms_alias(self) -> str:
-        """
-        The name of the KMS key that is used to sign manifest keys.
-        """
-        # KMS requires that aliases start with '/alias'
-        return 'alias/' + self.qualified_resource_name(self.manifest_kms_key_tf_name)
+        @cached_property
+        def alias(self) -> str:
+            return 'alias/' + self.config.qualified_resource_name(self.name)
+
+    @cached_property
+    def manifest_kms_key(self) -> KMSKey:
+        return self.KMSKey(config=self,
+                           name='manifest',
+                           usage='GENERATE_VERIFY_MAC',
+                           spec='HMAC_256')
+
+    @cached_property
+    def apat_kms_key(self) -> KMSKey:
+        return self.KMSKey(config=self,
+                           name='apat',
+                           usage='SIGN_VERIFY',
+                           spec='ECC_NIST_P256')
+
+    @cached_property
+    def kms_keys(self) -> tuple[KMSKey, ...]:
+        return self.manifest_kms_key, self.apat_kms_key
 
     audit_log_retention_days = 365
 

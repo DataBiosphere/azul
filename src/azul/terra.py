@@ -60,7 +60,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    OAuth2,
+    BearerTokenAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -235,7 +235,7 @@ class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider
 
 class UserCredentialsProvider(TerraCredentialsProvider):
 
-    def __init__(self, authentication: OAuth2):
+    def __init__(self, authentication: BearerTokenAuthentication):
         self.token = authentication.identity()
 
     def oauth2_scopes(self) -> Sequence[str]:
@@ -629,7 +629,7 @@ class TDRClient(SAMClient, DRSClient):
         )
 
     @classmethod
-    def for_registered_user(cls, authentication: OAuth2) -> Self:
+    def for_registered_user(cls, authentication: BearerTokenAuthentication) -> Self:
         self = cls(credentials_provider=UserCredentialsProvider(authentication))
         try:
             self.validate()
