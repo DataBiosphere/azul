@@ -1139,6 +1139,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                        file: JSON,
                        args: Mapping = frozendict()
                        ) -> str | None:
+        # FIXME: Redundant implementations of file URLs and mirror URIs
+        #        https://github.com/DataBiosphere/azul/issues/8042
         if file['drs_uri'] is None:
             # To download a file we need its DRS URI
             return None
@@ -1151,6 +1153,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                                           **args))
 
     def _azul_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
+        # FIXME: Redundant implementations of file URLs and mirror URIs
+        #        https://github.com/DataBiosphere/azul/issues/8042
         file_cls = self.metadata_plugin.file_class
         return self.mirror_service.mirror_uri(source, file_cls, file)
 

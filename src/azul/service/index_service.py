@@ -83,6 +83,8 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
         return request
 
     def _file_url(self, *, uuid: str, version: str, drs_uri: str | None) -> str | None:
+        # FIXME: Redundant implementations of file URLs and mirror URIs
+        #        https://github.com/DataBiosphere/azul/issues/8042
         if drs_uri is None:
             # To download a file we need its DRS URI
             return None
@@ -93,6 +95,8 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
                                           version=version))
 
     def _file_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
+        # FIXME: Redundant implementations of file URLs and mirror URIs
+        #        https://github.com/DataBiosphere/azul/issues/8042
         file_cls = self.plugin.file_class
         mirror_service = MirrorService.for_catalog(self.catalog)
         return mirror_service.mirror_uri(source, file_cls, file)
