@@ -1585,6 +1585,7 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
         Returns inner entity values (contents) read from the stratification
         values provided by a supplementary file project-level matrix.
         """
+        matrix_namespace = UUID('3bdeb34f-cfd2-428c-bea2-2350258edad0')
         contents: dict[str, list[MutableJSON]] = defaultdict(list)
         file_description = optional(json_str, file.json.get('file_description'))
         if file_description:
@@ -1603,6 +1604,9 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
                     donor.update(
                         {
                             'biomaterial_id': f'donor_organism_{file_name}',
+                            # Donors are a hot entity type, so they are required
+                            # to have a document_id.
+                            'document_id': str(uuid5(matrix_namespace, str(donor)))
                         }
                     )
                     contents['donors'].append(donor)
@@ -1618,9 +1622,13 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
                 library = optional(json_element_strings,
                                    stratum.get('libraryConstructionApproach'))
                 if library is not None:
+                    library = json_sorted(library)
                     contents['library_preparation_protocols'].append(
                         {
-                            'library_construction_approach': json_sorted(library),
+                            # Library preparation protocols are a hot entity
+                            # type, so they are required to have a document_id.
+                            'document_id': str(uuid5(matrix_namespace, str(library))),
+                            'library_construction_approach': library,
                         }
                     )
         return contents
