@@ -1273,24 +1273,22 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
     """
     page_size = 500
 
-    def _paginate_hits(self,
-                       request_factory: Callable[[SortKey | None], Search]
-                       ) -> Iterable[Hit]:
-        """
-        Yield all hits in every page of OpenSearch hits in responses to
-        requests that use client-side paging.
+    #: A paginator is a function that, given a ``search_after`` value, returns a
+    #: fully populated OpenSearch request for one page worth of sorted hits with
+    #: the first hit's sort key matching that ``search_after`` value. If the
+    #: ``search_after`` value is None, the request for the first page is
+    #: returned.
+    #:
+    type Paginator = Callable[[SortKey | None], Search]
 
-        :param request_factory:  A callable that returns a prepared OpenSearch
-                                 request for the given search-after key, with the
-                                 appropriate filters and sorting applied. The
-                                 returned request should yield one page worth of
-                                 hits, starting at the first page (if the argument
-                                 is None), or the hit right after the hit with
-                                 given search-after key
+    def _paginate_hits(self, paginator: Paginator) -> Iterable[Hit]:
+        """
+        Yield all hits in every page of OpenSearch hits obtained using the
+        given paginator.
         """
         search_after = None
         while True:
-            request = request_factory(search_after)
+            request = paginator(search_after)
             response = request.execute()
             if response.hits:
                 hit = None
@@ -1301,13 +1299,16 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
             else:
                 break
 
-    def _paginate_hits_sorted(self,
-                              request: Search,
-                              sort: Sequence[str]
-                              ) -> Iterable[Hit]:
+    def _custom_paginator(self, request: Search, sort: Sequence[str]) -> Paginator:
         """
-        Wrapper around :meth:`_paginate_hits` for simple cases where the request
-        does not require any additional setup between pages
+        Copies the given request, sets up the copy for pagination using the
+        given sort, and returns a paginator that uses the copy to produce
+        requests for individual pages. The sort is specified as a sequence of
+        one or two field names: the primary field to sort by and an optional tie
+        breaker. The length of the ``sort`` argument must be equal to the length
+        of the ``search_after`` value the returned paginator is called with.
+
+        Note that this method *returns* a paginator.
         """
         request = request.extra(size=self.page_size)
         request = request.sort(*sort)
@@ -1318,9 +1319,17 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
             else:
                 return request.extra(search_after=search_after)
 
-        return self._paginate_hits(request_factory)
+        return request_factory
 
-    def _create_paged_request(self, search_after: SortKey | None) -> Search:
+    def _default_paginator(self, search_after: SortKey | None) -> Search:
+        """
+        Creates an OpenSearch request for finding aggregates of the current
+        entity type, matching the current filters, sorting the hits by entity ID
+        and returning one page of worth of hits, starting at the hit with the
+        given key, or, if the key is None, starting at the first hit.
+
+        Note that this method *is* a Paginator.
+        """
         pagination = Pagination(sort='entryId',
                                 order='asc',
                                 size=self.page_size,
@@ -1613,7 +1622,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             output.write('\n\n'.join(curl_options))
             output.write('\n\n')
 
-        request = self._create_paged_request(partition.search_after)
+        request = self._default_paginator(partition.search_after)
         response = request.execute()
         if response.hits:
             hit = None
@@ -1779,7 +1788,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
         if partition.page_index == 0:
             writer.writeheader()
 
-        request = self._create_paged_request(partition.search_after)
+        request = self._default_paginator(partition.search_after)
         response = request.execute()
         if response.hits:
             project_short_names: set[str] = set()
@@ -1874,7 +1883,9 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
 
     def _all_docs_sorted(self) -> Iterable[JSON]:
         request = self._create_request(self.entity_type)
-        hits = self._paginate_hits_sorted(request, sort=['entity_id.keyword'])
+        sort = ['entity_id.keyword']
+        paginator = self._custom_paginator(request, sort)
+        hits = self._paginate_hits(paginator)
         return map(self._hit_to_doc, hits)
 
     def create_file(self) -> tuple[str, str | None]:
@@ -1970,7 +1981,8 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         replica_ids: list[str]
 
     def _list_replica_keys(self) -> Iterable[ReplicaKeys]:
-        for hit in self._paginate_hits(self._create_paged_request):
+        paginator = self._default_paginator
+        for hit in self._paginate_hits(paginator):
             document_ids = [
                 document_id
                 for entity_type in self.hot_entity_types
@@ -2026,7 +2038,8 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         #        https://github.com/DataBiosphere/azul/issues/7290
         #
         sort = ['entity_id.keyword', '_id']
-        return self._paginate_hits_sorted(request, sort)
+        paginator = self._custom_paginator(request, sort)
+        return self._paginate_hits(paginator)
 
 
 class JSONLVerbatimManifestGenerator(PagedManifestGenerator,
