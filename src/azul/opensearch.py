@@ -47,10 +47,6 @@ class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # We use the botocore session from Boto3 since it is pre-configured by
-        # envhook.py to use cached credentials for the AssumeRoleProvider. This
-        # avoids repeated entry of MFA tokens when running this code locally.
-        # noinspection PyProtectedMember
         credentials = aws.boto3_session.get_credentials()
         assert credentials is not None, R'Need credentials'
         self._refreshable_credentials = credentials

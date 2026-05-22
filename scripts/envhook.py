@@ -6,9 +6,6 @@ similar to that of interpreters started from that shell. The hook is also active
 in Python interpreters launched by the shell but it doesn't modify os.environ in
 that case. Instead, it prints a warning to stderr if the environment it
 inherited from the shell is stale.
-
-The hook also propagates AWS credentials cached by the AWS CLI to botocore and
-boto3.
 """
 
 from collections.abc import (
