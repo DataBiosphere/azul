@@ -192,6 +192,37 @@ class UserController(Controller):
             return self._token()
 
         @self.app.route(
+            '/user/revoke',
+            methods=['POST'],
+            interactive=True,
+            cors=True,
+            spec={
+                'summary': 'Revoke all personal access tokens',
+                'description': fd('''
+                    Revoke all personal access tokens (APATs) for the
+                    authenticated user. The user must provide a valid OAuth 2.0
+                    access token in the `Authorization` header as a Bearer
+                    token.
+                '''),
+                'tags': ['User'],
+                'responses': {
+                    '204': {
+                        'description': fd('''
+                            All personal access tokens were revoked
+                        ''')
+                    },
+                    '401': {
+                        'description': fd('''
+                            No valid OAuth 2.0 access token was provided
+                        ''')
+                    }
+                }
+            }
+        )
+        def revoke():
+            return self._revoke()
+
+        @self.app.route(
             '/swagger/oauth2-redirect.html',
             interactive=False,
             cors=True,
@@ -286,5 +317,15 @@ class UserController(Controller):
         elif isinstance(auth, AccessTokenAuthentication):
             apat_auth = self._service.mint_personal_access_token(auth)
             return {'token': apat_auth.token}
+        else:
+            raise UnauthorizedError('Valid access token required')
+
+    def _revoke(self) -> Response:
+        auth = self._authentication(self.current_request)
+        if isinstance(auth, PersonalAccessTokenAuthentication):
+            raise BadRequestError('Cannot revoke using a personal access token')
+        elif isinstance(auth, AccessTokenAuthentication):
+            self._service.revoke_personal_access_tokens(auth)
+            return Response(status_code=204, body='')
         else:
             raise UnauthorizedError('Valid access token required')
