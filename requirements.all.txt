@@ -1,7 +1,6 @@
 ast_serialize==0.5.0
 atomicwrites==1.4.1
 attrs==26.1.0
-aws-requests-auth==0.4.3
 blessed==1.42.0
 boto3==1.43.10
 boto3-stubs-lite==1.43.10
@@ -9,10 +8,10 @@ botocore==1.43.10
 botocore-stubs==1.42.41
 certifi==2026.5.20
 cffi==2.0.0
-chalice==1.32.0+20
+chalice==1.32.0+21
 charset-normalizer==3.4.7
 chevron==0.14.0
-click==8.4.0
+click==8.4.1
 coverage==7.14.0
 cryptography==48.0.0
 docker==7.1.0
@@ -43,10 +42,10 @@ grpcio-status==1.80.0
 http-message-signatures==2.0.1
 http_sfv==0.9.9
 httplib2==0.31.2
-idna==3.15
+idna==3.16
 inquirer==3.4.1
 isort==8.0.1
-jinxed==2.0.0
+jinxed==2.0.1
 jmespath==1.1.0
 jq==1.11.0
 jsonschema==4.26.0
