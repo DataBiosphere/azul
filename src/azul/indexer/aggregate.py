@@ -140,8 +140,8 @@ class SetAccumulator[V: Hashable](Accumulator[V, list[V]]):
         :param key: The key to be used for sorting the accumulated set of
                     values. If this value is None, a default None-safe key will
                     be used. With that default key, if any None values were
-                    placed in the accumulator, the first element, and only the
-                    first element of the returned list will be None.
+                    placed in the accumulator, the last element, and only the
+                    last element of the returned list will be None.
         """
         super().__init__()
         self.value: set[V] = set()
