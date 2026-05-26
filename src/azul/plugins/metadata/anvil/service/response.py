@@ -261,8 +261,12 @@ class AnvilSearchResponseStage(SearchResponseStage):
                 'donor_age_at_collection',
             },
             'datasets': {
+                'consent_group',
+                'data_modality',
                 'dataset_id',
+                'data_use_permission',
                 'duos_id',
+                'registered_identifier',
                 'title'
             },
             'diagnoses': {

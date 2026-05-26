@@ -86,7 +86,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
@@ -157,7 +161,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
@@ -354,7 +362,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
@@ -570,7 +582,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
@@ -1027,7 +1043,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
@@ -1233,7 +1253,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
@@ -1312,7 +1336,11 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
+                                'consent_group': ['DS-BDIS'],
+                                'data_modality': [None],
+                                'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
                         ],
