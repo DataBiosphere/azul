@@ -65,6 +65,7 @@ from azul.indexer import (
 )
 from azul.indexer.aggregate import (
     EntityAggregator,
+    SetAccumulator,
     SimpleAggregator,
 )
 from azul.indexer.document import (
@@ -96,6 +97,7 @@ from azul.lib.time import (
     parse_dcp2_version,
 )
 from azul.lib.types import (
+    AnyJSON,
     JSON,
     MutableJSON,
     json_element_mappings,
@@ -513,6 +515,23 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             agg_cls = SimpleAggregator
         return agg_cls(cls.entity_type(), entity_type)
 
+    def _deduplicate[V: AnyJSON](self,
+                                 *,
+                                 entity_type: str,
+                                 field_name: str,
+                                 values: Iterable[V]
+                                 ) -> list[V]:
+        """
+        Collects the given values in the appropriate accumulator for the given
+        field name and inner entity type and returns the resulting accumulate.
+        Only works for fields that use a :class:`SetAccumulator`.
+        """
+        aggregator = not_none(self.aggregator(entity_type))
+        accumulator = aggregator._accumulator(field_name)
+        assert isinstance(accumulator, SetAccumulator)
+        accumulator.accumulate(list(values))
+        return accumulator.get()
+
     def _replica_contents(self, entity: EntityReference) -> JSON:
         if entity == self.api_bundle.ref:
             return self.bundle.links
@@ -701,17 +720,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         contact_names: OrderedSet[str] = OrderedSet()
         publication_titles: OrderedSet[str] = OrderedSet()
 
-        # We deduplicate the tissue_atlas values before adding them to the index
-        # because the project inner entity is copied as-is, not aggregated, when
-        # it is part of a project outer entity. We need the values to be unique
-        # for tissue_atlas because a nested aggregation is used, and term counts
-        # reflect matching sub-documents, not root documents.
-        aggregator = self.aggregator('projects')
-        assert aggregator is not None
-        tissue_atlas_acc = aggregator._accumulator('tissue_atlas')
-        assert tissue_atlas_acc is not None
-        tissue_atlas_acc.accumulate(list(map(self._tissue_atlas, project.bionetworks)))
-
         for contributor in project.contributors:
             if contributor.laboratory:
                 laboratories.add(contributor.laboratory)
@@ -746,7 +754,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'accessions': list(map(self._accession, project.accessions)),
             'is_tissue_atlas_project': any(bionetwork.atlas_project
                                            for bionetwork in project.bionetworks),
-            'tissue_atlas': tissue_atlas_acc.get(),
+            # There can be multiple bionetworks with the same atlas and version.
+            # The accumulator for this field automatically deduplicates during
+            # aggregation, except when inner and outer entity type are the same,
+            # in which case aggregation is skipped entirely. That's why we need
+            # to deduplicate explicitly here.
+            'tissue_atlas': self._deduplicate(entity_type='projects',
+                                              field_name='tissue_atlas',
+                                              values=map(self._tissue_atlas, project.bionetworks)),
             'bionetwork_name': json_sorted(bionetwork.name
                                            for bionetwork in project.bionetworks),
             'estimated_cell_count': project.estimated_cell_count,
