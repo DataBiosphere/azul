@@ -2,6 +2,7 @@ import os
 import sys
 
 from github import (
+    Auth,
     Github,
 )
 
@@ -10,7 +11,7 @@ from azul import (
 )
 
 if __name__ == '__main__':
-    gh = Github(config.github_access_token)
+    gh = Github(auth=Auth.Token(config.github_access_token))
     repo = gh.get_repo(config.github_project)
     commit = repo.get_commit(sha=os.environ['CI_COMMIT_SHA'])
     context, status = sys.argv[1:]
