@@ -554,6 +554,14 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def azul_slug(self, document: JSON) -> str:
+        """
+        A collision-resistant slug derived from the title of the project (HCA)
+        or dataset (AnVIL).
+        """
+        raise NotImplementedError
+
     @property
     def root_entity_type(self) -> EntityType:
         """

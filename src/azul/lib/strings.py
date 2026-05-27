@@ -1,3 +1,4 @@
+import hashlib
 import re
 from textwrap import (
     dedent,
@@ -7,6 +8,7 @@ from typing import (
     Sequence,
     overload,
 )
+import unicodedata
 
 from more_itertools import (
     minmax,
@@ -592,3 +594,157 @@ def _redact(secret: str, *, num_show: int = 3, mask='REDACTED'):
     back = reveal // 2
     front = reveal - back
     return secret[:front] + mask + secret[n - back:]
+
+
+def azul_slug(title: str,
+              *,
+              words_left: int | None,
+              words_right: int | None,
+              word_length: int | None,
+              hash_length: int
+              ) -> str:
+    """
+    Return a collision-resistant slug derived from a project / dataset title.
+
+    >>> import functools
+    >>> slug = functools.partial(azul_slug,
+    ...                          words_left=5,
+    ...                          words_right=2,
+    ...                          word_length=12,
+    ...                          hash_length=6)
+
+    >>> slug('')
+    ''
+
+    >>> slug('FooBarBaz')
+    'foobarbaz--pxidyq'
+
+    Words are split on space or underscore
+
+    >>> slug('Foo Bar_Baz')
+    'foo-bar-baz--uft5x2'
+
+    Extra spaces / underscore are collapsed, however it is the full original
+    title that is used to calculate the hash.
+
+    >>> slug('Foo  Bar__Baz')
+    'foo-bar-baz--li3m7h'
+
+    Long titles are shortened based on `words_left` and `words_right` params
+
+    >>> slug("aa bb cc dd ee ff gg hh ii jj kk ll mm")
+    'aa-bb-cc-dd-ee--ll-mm--6jv2x9'
+
+    Each word is truncated to `word_length` letters
+
+    >>> slug('abcdefghijklmnopqrstuvwxyz 12345678901234567890')
+    'abcdefghijkl-123456789012--genvsj'
+
+    Non-alphanumeric characters are removed (comma, apostrophe, dash, etc.)
+
+    >>> slug("The Hobbit, or There And Back Again A Hobbit's Tale")
+    'the-hobbit-or-there-and--hobbits-tale--gmfr54'
+
+    Accents are removed from accented characters
+
+    >>> slug("Le Fantôme de l'Opéra")
+    'le-fantome-de-lopera--r0ovr9'
+
+    Non-latin letters are converted to a latin equivalent, symbols are removed
+
+    >>> slug('α-waves β-blockers γ-rays ❤-healthy')
+    'alphawaves-betablockers-gammarays-healthy--on4w79'
+
+    `words_left`, `words_right`, or `hash_length` can be zero to omit that part
+    of the output
+
+    >>> azul_slug('one two three four five',
+    ...           words_left=0, words_right=3,
+    ...           word_length=4, hash_length=0)
+    'thre-four-five'
+
+    `word_length` cannot be zero ...
+
+    >>> azul_slug('FooBarBaz',
+    ...           words_left=2, words_right=3,
+    ...           word_length=0, hash_length=6)
+    Traceback (most recent call last):
+    ...
+    AssertionError: R('words_left must be 0 when word_length is 0', 2)
+
+    ... unless `words_left` and `words_right` are also zero
+
+    >>> azul_slug('FooBarBaz',
+    ...           words_left=0, words_right=0,
+    ...           word_length=0, hash_length=6)
+    'pxidyq'
+
+    `None` can be used to indicate no limit on the number of words and/or length
+    of the words
+
+    >>> azul_slug('aa bb cccccccccccccccccccc dd ee ff gg hh ii jj',
+    ...              words_left=None, words_right=None,
+    ...              word_length=None, hash_length=4)
+    'aa-bb-cccccccccccccccccccc-dd-ee-ff-gg-hh-ii-jj--xe1u'
+    """
+    if title == '':
+        return title
+
+    if word_length == 0:
+        assert words_left == 0, R(
+            'words_left must be 0 when word_length is 0', words_left)
+        assert words_right == 0, R(
+            'words_right must be 0 when word_length is 0', words_right)
+        assert hash_length > 0, R(
+            'hash_length must be positive when word_length is 0', hash_length)
+    else:
+        assert word_length is None or word_length > 0, R(
+            'word_length cannot be negative', word_length)
+        assert hash_length >= 0, R(
+            'hash_length cannot be negative', hash_length)
+        if words_left is None or words_right is None:
+            assert words_left is None and words_right is None, R(
+                'words_right and words_left must both be None if one is None', words_right)
+        else:
+            assert words_left >= 0, R(
+                'words_left cannot be negative', words_left)
+            assert words_right >= 0, R(
+                'words_right cannot be negative', words_right)
+            assert words_left != 0 or words_right != 0, R(
+                'words_left and words_right cannot both be 0 when word_length is not 0',
+                words_left, words_right)
+
+    chars = []
+    for c in unicodedata.normalize('NFKD', title):
+        if not unicodedata.combining(c):
+            if unicodedata.category(c).startswith('L'):  # L for a letter
+                name = unicodedata.name(c)
+                m = re.search(r'LETTER (\S+)', name)
+                if m:
+                    c = m.group(1)
+            chars.append(c.lower())
+
+    words = re.split(r'[\s_]+', ''.join(chars))
+    words = [re.sub(r'[^a-zA-Z0-9]', '', w) for w in words]
+    words = [w[:word_length] for w in words if w]
+
+    parts = []
+    if words_left is None or words_right is None or len(words) <= words_left + words_right:
+        parts.append('-'.join(words))
+    else:
+        if words_left > 0:
+            parts.append('-'.join(words[0:words_left]))
+        if words_right > 0:
+            parts.append('-'.join(words[-words_right:]))
+
+    if hash_length > 0:
+        alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
+        n = int.from_bytes(hashlib.sha1(title.encode()).digest())
+        postfix = []
+        for _ in range(hash_length):
+            n, r = divmod(n, len(alphabet))
+            assert n > 0, R('hash_length exceeds digest entropy', hash_length)
+            postfix.append(alphabet[r])
+        parts.append(''.join(postfix))
+
+    return '--'.join(filter(None, parts))

@@ -1570,7 +1570,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
                       output: IO[str]
                       ) -> ManifestPartition:
 
-        def _write(file: JSON, is_related_file: bool = False):
+        def _write(file: JSON, azul_slug: str, is_related_file: bool = False):
             special_fields = self.metadata_plugin.special_fields
             file_name_field = special_fields.file_name.name_in_hit
             file_uuid_field = special_fields.file_uuid.name_in_hit
@@ -1598,7 +1598,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 # the one with the most recent version.
                 bundle = max(json_element_mappings(doc['bundles']),
                              key=itemgetter('version', 'uuid'))
-                output_name = json_str(bundle['uuid']) + '/' + file_name
+                output_name = azul_slug + '/' + json_str(bundle['uuid']) + '/' + file_name
                 output_name = self._sanitize_path(output_name)
                 output.write(f'url={self._option(file_url)}\n'
                              f'output={self._option(output_name)}\n\n')
@@ -1626,6 +1626,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             hit = None
             for hit in response.hits:
                 doc = self._hit_to_doc(hit)
+                azul_slug = self.metadata_plugin.azul_slug(doc)
                 contents = json_mapping(doc['contents'])
                 files = json_sequence(contents['files'])
                 file = json_mapping(one(files))
@@ -1641,10 +1642,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
                     not config.is_anvil_enabled(self.catalog)
                     or self.mirror_service.will_mirror(source.spec, json_int(file['file_size']))
                 ):
-                    _write(file)
+                    _write(file, azul_slug)
                     if config.is_hca_enabled(self.catalog):
                         for related_file in json_element_mappings(file['related_files']):
-                            _write(related_file, is_related_file=True)
+                            _write(related_file, azul_slug, is_related_file=True)
             assert hit is not None
             return partition.next_page(file_name=None,
                                        search_after=self._search_after(hit))
