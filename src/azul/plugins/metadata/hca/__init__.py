@@ -17,6 +17,9 @@ from azul import (
 from azul.drs import (
     HostBasedDRSURI,
 )
+from azul.field_type import (
+    pass_thru_str,
+)
 from azul.indexer.document import (
     Aggregate,
     DocumentType,
@@ -309,13 +312,13 @@ class Plugin(MetadataPlugin[HCABundle]):
         }
 
     special_fields = SpecialFields(
-        source_id=SpecialField.symmetric('sourceId'),
-        source_spec=SpecialField.symmetric('sourceSpec'),
-        source_prefix=SpecialField.symmetric('sourcePrefix'),
-        bundle_uuid=SpecialField.symmetric('bundleUuid'),
-        bundle_version=SpecialField.symmetric('bundleVersion'),
-        file_uuid=SpecialField(name='fileId', name_in_hit='uuid'),
-        file_name=SpecialField(name='fileName', name_in_hit='name')
+        source_id=SpecialField.symmetric('sourceId', pass_thru_str),
+        source_spec=SpecialField.symmetric('sourceSpec', pass_thru_str),
+        source_prefix=SpecialField.symmetric('sourcePrefix', pass_thru_str),
+        bundle_uuid=SpecialField.symmetric('bundleUuid', pass_thru_str),
+        bundle_version=SpecialField.symmetric('bundleVersion', pass_thru_str),
+        file_uuid=SpecialField(name='fileId', name_in_hit='uuid', type=pass_thru_str),
+        file_name=SpecialField(name='fileName', name_in_hit='name', type=pass_thru_str)
     )
 
     @property

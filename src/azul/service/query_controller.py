@@ -81,7 +81,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
 
     @property
     def _synthetic_fields(self) -> Sequence[str]:
-        return self._metadata_plugin.special_fields.accessible.name,
+        return tuple(f.name for f in self._metadata_plugin.special_fields.synthetics)
 
     def _hoist_parameters(self, request: Request) -> MultiDict:
         query_params = self._query_params(request)

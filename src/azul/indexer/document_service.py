@@ -21,7 +21,6 @@ from azul.field_type import (
     FieldTypes,
     FieldTypes1,
     Nested,
-    pass_thru_bool,
 )
 from azul.indexer.document import (
     Aggregate,
@@ -136,9 +135,9 @@ class DocumentService:
         for field, path in plugin.field_mapping.items():
             field_type = self.field_type(catalog, path)
             result[field] = field_type
-        accessible_field = plugin.special_fields.accessible.name
-        assert accessible_field not in result, result
-        result[accessible_field] = pass_thru_bool
+        for field in plugin.special_fields.synthetics:
+            assert field.name not in result, result
+            result[field.name] = field.type
         return result
 
     def catalogued_field_types(self) -> CataloguedFieldTypes:
