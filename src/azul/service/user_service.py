@@ -9,6 +9,13 @@ from typing import (
 )
 
 import attrs
+from cryptography.hazmat.primitives.asymmetric.ec import (
+    SECP256R1,
+)
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    decode_dss_signature,
+    encode_dss_signature,
+)
 import jwt.algorithms
 from jwt.api_jwt import (
     PyJWT,
@@ -498,23 +505,37 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
     def to_jwk(key, as_dict=False):
         raise NotImplementedError
 
+    # ES256 uses the P-256 curve (RFC 7518 Section 3.4), a.k.a. SECP256R1
+    _sig_component_size = SECP256R1.key_size // 8
+
     def sign(self, msg: bytes, key: str) -> bytes:
         log.debug('Signing %d bytes with key %r', len(msg), key)
         response = aws.kms.sign(KeyId=key,
                                 Message=msg,
                                 MessageType='RAW',
                                 SigningAlgorithm='ECDSA_SHA_256')
-        return response['Signature']
+        # KMS returns DER-encoded signatures, but JWS requires raw r||s
+        return self._der_to_raw(response['Signature'])
 
     def verify(self, msg: bytes, key: str, sig: bytes) -> bool:
         log.debug('Verifying %d bytes with key %r', len(msg), key)
+        # KMS expects DER-encoded signatures, but JWS uses raw r||s
         try:
             response = aws.kms.verify(KeyId=key,
                                       Message=msg,
                                       MessageType='RAW',
-                                      Signature=sig,
+                                      Signature=self._raw_to_der(sig),
                                       SigningAlgorithm='ECDSA_SHA_256')
         except aws.kms.exceptions.KMSInvalidSignatureException:
             return False
         else:
             return response['SignatureValid']
+
+    def _der_to_raw(self, der_sig: bytes) -> bytes:
+        r, s = decode_dss_signature(der_sig)
+        return r.to_bytes(self._sig_component_size, 'big') + s.to_bytes(self._sig_component_size, 'big')
+
+    def _raw_to_der(self, raw_sig: bytes) -> bytes:
+        r = int.from_bytes(raw_sig[:self._sig_component_size], 'big')
+        s = int.from_bytes(raw_sig[self._sig_component_size:], 'big')
+        return encode_dss_signature(r, s)
