@@ -1,4 +1,5 @@
 ﻿from collections import (
+    Counter,
     defaultdict,
 )
 from collections.abc import (
@@ -438,6 +439,17 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
             metadata.setdefault('file_path', None)
         target[entity] = metadata
 
+    def reject_duplicate_file_names(self) -> None:
+        file_names = Counter(
+            metadata['file_name']
+            for entity, metadata in itertools.chain(self.entities.items(),
+                                                    self.orphans.items())
+            if entity.entity_type == 'anvil_file'
+        )
+        duplicates = sorted(name for name, count in file_names.items() if count > 1)
+        assert not duplicates, R(
+            'Bundle contains duplicate file names', self.fqid, duplicates)
+
     def add_links(self, links: Iterable[EntityLink]):
         self.links.update(links)
         # Merge links that share the same (non-null) activity
@@ -564,13 +576,15 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         if bundle_fqid.table_name == BundleType.primary.table_name:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
-            return self._primary_bundle(bundle_fqid)
+            bundle = self._primary_bundle(bundle_fqid)
         elif bundle_fqid.table_name == BundleType.supplementary.table_name:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
-            return self._supplementary_bundle(bundle_fqid)
+            bundle = self._supplementary_bundle(bundle_fqid)
         else:
             log.info('Bundle %r is a replica bundle', bundle_fqid.uuid)
-            return self._replica_bundle(bundle_fqid)
+            bundle = self._replica_bundle(bundle_fqid)
+        bundle.reject_duplicate_file_names()
+        return bundle
 
     def _batch_tables(self,
                       source: TDRSourceSpec,
