@@ -36,6 +36,9 @@ from azul.indexer.document import (
     DocumentType,
     EntityReference,
 )
+from azul.lib import (
+    R,
+)
 from azul.lib.types import (
     JSONs,
     MutableJSONs,
@@ -215,6 +218,25 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     self.assertIsInstance(bundle, TDRAnvilBundle)
                     self.assertEqual({}, bundle.entities)
                     self.assertEqual(1, len(bundle.orphans))
+
+    def test_reject_duplicate_file_names(self):
+        bundle_fqid = self.primary_bundle()
+        source_ref = self.source.ref
+        canned_file = self._load_canned_file_version(uuid=source_ref.id,
+                                                     version=None,
+                                                     extension='tables.tdr')
+        # Create a bundle with duplicated file names
+        file_name = 'dup-file-name-test.txt'
+        file_rows = canned_file['tables']['anvil_file']['rows']
+        file_rows[0]['file_name'] = file_name
+        file_rows[1]['file_name'] = file_name
+        for name, table in canned_file['tables'].items():
+            self._make_mock_table(source_ref.spec, name, table['rows'], table.get('schema'))
+        with self.assertRaises(AssertionError) as cm:
+            self.plugin.fetch_bundle(bundle_fqid)
+        self.assertTrue(R.caused(cm.exception))
+        expected = ('Bundle contains duplicate file names', bundle_fqid, [file_name])
+        self.assertEqual(expected, one(cm.exception.args).args)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
