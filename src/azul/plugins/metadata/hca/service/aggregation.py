@@ -26,6 +26,7 @@ from azul.lib.types import (
 )
 from azul.plugins import (
     dotted,
+    undotted,
 )
 from azul.service.query_service import (
     AggregationStage,
@@ -66,7 +67,7 @@ class HCASummaryAggregationStage(HCAAggregationStage):
         entity_type = self.entity_type
 
         def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
-            parent_field_type = self.service.field_type(self.catalog, tuple(parent_field.split('.')))
+            parent_field_type = self.service.field_type(self.catalog, undotted(parent_field))
             null_value = parent_field_type.to_index(None)
             request.aggs.bucket(
                 parent_bucket,

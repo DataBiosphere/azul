@@ -147,8 +147,8 @@ def manifest_config_to_json(c: ManifestConfig) -> AnyJSON:
 type MutableColumnMapping = dict[FieldPathElement, FieldName]
 type MutableManifestConfig = dict[FieldPath, MutableColumnMapping]
 
-DottedFieldPath = str
-FieldGlobs = list[DottedFieldPath]
+type DottedFieldPath = str
+type FieldGlobs = list[DottedFieldPath]
 
 
 def dotted(path_or_element: FieldPathElement | FieldPath,
@@ -156,12 +156,17 @@ def dotted(path_or_element: FieldPathElement | FieldPath,
            ) -> DottedFieldPath:
     dot = '.'
     if isinstance(path_or_element, FieldPathElement):
+        assert dot not in path_or_element, path_or_element
         # The dotted('field') case is pointless, so we won't special-case it
         return dot.join((path_or_element, *elements))
     elif elements:
         return dot.join((*path_or_element, *elements))
     else:
         return dot.join(path_or_element)
+
+
+def undotted(path: DottedFieldPath) -> FieldPath:
+    return tuple(path.split('.'))
 
 
 class DocumentSlice(TypedDict, total=False):
