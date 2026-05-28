@@ -569,6 +569,31 @@ class DCP2TestCase(TDRTestCase):
         }
 
 
+class LungmapTestCase(TDRTestCase):
+    source_spec = ('tdr:bigquery:gcp:datarepo-dev-5d9526e0:'
+                   'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404')
+    source = Source(
+        config=SourceConfig(mirror=False),
+        ref=TDRSourceRef(
+            id='96c6482b-7949-4d6e-894b-371149e85134',
+            spec=TDRSourceSpec.parse(source_spec),
+            prefix=Prefix.of_everything
+        )
+    )
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, Config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='lungmap',
+                                        internal=False,
+                                        mirror_limit=-1,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
+                                        sources=cls._catalog_sources())
+        }
+
+
 class AnvilTestCase(TDRTestCase):
     source = Source(
         config=SourceConfig(mirror=True),

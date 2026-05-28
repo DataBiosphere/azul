@@ -1,0 +1,1572 @@
+{
+    "manifest": {
+        "sequence_file/002ebcd6-722d-434d-b21b-13a06e659a67": {
+            "uuid": "002ebcd6-722d-434d-b21b-13a06e659a67",
+            "name": "ACD3_snRNA_S33_L001_R2_001.fastq.gz",
+            "version": "2025-01-07T21:14:38.055401Z",
+            "drs_uri": "drs://dg.4503:696f302b-ecd9-4bcc-a750-56c22b496f02",
+            "size": 4845312460,
+            "sha256": "d9440b3d1d7dbaa98b93fa6e8686f0334fcc271e4621a77b75cdab3dde46b110",
+            "crc32c": "808a4ad6",
+            "sha1": null,
+            "s3_etag": null,
+            "content-type": ".gz",
+            "indexed": false
+        },
+        "sequence_file/563ab2c6-6a71-474b-859b-206cb49ad5e3": {
+            "uuid": "563ab2c6-6a71-474b-859b-206cb49ad5e3",
+            "name": "ACD1_snATAC.demultiplexed.R1.fastq.gz",
+            "version": "2025-01-07T21:14:38.102511Z",
+            "drs_uri": "drs://dg.4503:d184f3fb-4544-4ba8-850f-3ce366e28901",
+            "size": 15144424495,
+            "sha256": "90e585e99ac28ef24cb5feae76e981abbf61b983048252adf5b3ee338d48f028",
+            "crc32c": "e32d7982",
+            "sha1": null,
+            "s3_etag": null,
+            "content-type": ".gz",
+            "indexed": false
+        },
+        "sequence_file/9c41c821-ebb1-49c7-9fbf-f76000fd2a39": {
+            "uuid": "9c41c821-ebb1-49c7-9fbf-f76000fd2a39",
+            "name": "ACD4_Multiome_RNA_S4_L001_R1_001.fastq.gz",
+            "version": "2025-01-07T21:14:38.463212Z",
+            "drs_uri": "drs://dg.4503:3872df96-cfbb-48fd-b5d6-19307dc302d1",
+            "size": 4698100692,
+            "sha256": "337ee1ec1dc7ffcc0c1f03c6f3c2f83768474cdf38b05286efe2c0661749e90c",
+            "crc32c": "d6e430a7",
+            "sha1": null,
+            "s3_etag": null,
+            "content-type": ".gz",
+            "indexed": false
+        },
+        "analysis_file/005f71ed-fcba-4026-bc97-a8c9707f26ee": {
+            "uuid": "005f71ed-fcba-4026-bc97-a8c9707f26ee",
+            "name": "ACD2_snATAC_barcodes.tsv.gz",
+            "version": "2023-10-31T16:42:42.419707Z",
+            "drs_uri": "drs://jade.datarepo-dev.broadinstitute.org/v2_85c93a64-a9d0-4331-ad36-53a6498e57fc",
+            "size": 189802,
+            "sha256": "18e814695d3d05b73895119d534104ce79b8efad8e1a7a5f257aa8fc1154b1ff",
+            "crc32c": "421fb97c",
+            "sha1": null,
+            "s3_etag": null,
+            "content-type": "application/x-gzip",
+            "indexed": false
+        },
+        "analysis_file/2f62e136-c6ab-483d-a172-e06e288e706a": {
+            "uuid": "2f62e136-c6ab-483d-a172-e06e288e706a",
+            "name": "ACD2_snRNA_filtered_feature_bc_matrix.h5",
+            "version": "2023-10-31T19:24:27.330500Z",
+            "drs_uri": "drs://jade.datarepo-dev.broadinstitute.org/v2_cd90c770-0be8-4032-b2fb-e27b9920d597",
+            "size": 32215589,
+            "sha256": "0b2caff39994274cf22f5b1951720895578acc975ddf2dff7816c1e1ee159899",
+            "crc32c": "251a8c8b",
+            "sha1": null,
+            "s3_etag": null,
+            "content-type": "application/octet-stream",
+            "indexed": false
+        },
+        "analysis_file/74070236-1a1b-4bbe-bb56-08ac6bc7f96f": {
+            "uuid": "74070236-1a1b-4bbe-bb56-08ac6bc7f96f",
+            "name": "ACD3_snATAC_barcodes.tsv.gz",
+            "version": "2023-10-31T16:42:42.404063Z",
+            "drs_uri": "drs://jade.datarepo-dev.broadinstitute.org/v2_64e708cb-76a6-447a-8459-57bf4254d7cc",
+            "size": 236750,
+            "sha256": "d47addd264d62eb5cd3d93d3b1b2b9c3aba0b76506377f50ee60168a7a2ca250",
+            "crc32c": "e13bb9ff",
+            "sha1": null,
+            "s3_etag": null,
+            "content-type": "application/x-gzip",
+            "indexed": false
+        }
+    },
+    "metadata": {
+        "sequence_file/002ebcd6-722d-434d-b21b-13a06e659a67": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.3.0/sequence_file",
+            "file_core": {
+                "checksum": "cf9bfa79726cea64ce6dd108d1ea9ada",
+                "describedBy": "https://schema.humancellatlas.org/core/file/6.2.0/file_core",
+                "file_name": "ACD3_snRNA_S33_L001_R2_001.fastq.gz",
+                "file_source": "LungMAP",
+                "format": "fastq.gz"
+            },
+            "lane_index": 1,
+            "library_prep_id": "ACD3_snRNA_S33",
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "002ebcd6-722d-434d-b21b-13a06e659a67",
+                "submission_date": "2022-11-14T15:49:13.374432Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2025-01-07T21:14:38.055401Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "read_index": "read2",
+            "schema_type": "file",
+            "schema_version": "9.3.0"
+        },
+        "sequence_file/563ab2c6-6a71-474b-859b-206cb49ad5e3": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.3.0/sequence_file",
+            "file_core": {
+                "checksum": "368eb50aa056bcc37aaca065f3021494",
+                "describedBy": "https://schema.humancellatlas.org/core/file/6.2.0/file_core",
+                "file_name": "ACD1_snATAC.demultiplexed.R1.fastq.gz",
+                "file_source": "LungMAP",
+                "format": "fastq.gz"
+            },
+            "lane_index": 1,
+            "library_prep_id": "ACD1_snATAC",
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "563ab2c6-6a71-474b-859b-206cb49ad5e3",
+                "submission_date": "2022-11-14T15:43:50.799759Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2025-01-07T21:14:38.102511Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "read_index": "read1",
+            "schema_type": "file",
+            "schema_version": "9.3.0"
+        },
+        "sequence_file/9c41c821-ebb1-49c7-9fbf-f76000fd2a39": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.3.0/sequence_file",
+            "file_core": {
+                "checksum": "374070d742f5e8f61860aa91e8d43695",
+                "describedBy": "https://schema.humancellatlas.org/core/file/6.2.0/file_core",
+                "file_name": "ACD4_Multiome_RNA_S4_L001_R1_001.fastq.gz",
+                "file_source": "LungMAP",
+                "format": "fastq.gz"
+            },
+            "lane_index": 1,
+            "library_prep_id": "ACD4_Multiome_S4_RNA",
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "9c41c821-ebb1-49c7-9fbf-f76000fd2a39",
+                "submission_date": "2022-11-14T15:46:24.851947Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2025-01-07T21:14:38.463212Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "read_index": "read1",
+            "schema_type": "file",
+            "schema_version": "9.3.0"
+        },
+        "analysis_file/005f71ed-fcba-4026-bc97-a8c9707f26ee": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.3.0/analysis_file",
+            "file_core": {
+                "checksum": "ee79675cefde50c47ab7d669faee69a3",
+                "describedBy": "https://schema.humancellatlas.org/core/file/6.2.0/file_core",
+                "file_name": "ACD2_snATAC_barcodes.tsv.gz",
+                "file_source": "LungMAP",
+                "format": "tsv.gz",
+                "schema_version": "6.2.0"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "005f71ed-fcba-4026-bc97-a8c9707f26ee",
+                "schema_major_version": 1,
+                "schema_minor_version": 1,
+                "schema_version": "1.1.0",
+                "submission_date": "2023-08-21T18:58:33.340386Z",
+                "submitter_id": "Shuyang.Zhao@cchmc.org",
+                "update_date": "2023-10-31T16:42:42.419707Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "file",
+            "schema_version": "6.3.0"
+        },
+        "analysis_file/2f62e136-c6ab-483d-a172-e06e288e706a": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.3.0/analysis_file",
+            "file_core": {
+                "checksum": "60fb52c05f09b17c1a79b0aee457a913",
+                "describedBy": "https://schema.humancellatlas.org/core/file/6.2.0/file_core",
+                "file_name": "ACD2_snRNA_filtered_feature_bc_matrix.h5",
+                "file_source": "LungMAP",
+                "format": "h5",
+                "schema_version": "6.2.0"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "2f62e136-c6ab-483d-a172-e06e288e706a",
+                "schema_major_version": 1,
+                "schema_minor_version": 1,
+                "schema_version": "1.1.0",
+                "submission_date": "2023-08-21T18:58:54.570982Z",
+                "submitter_id": "Shuyang.Zhao@cchmc.org",
+                "update_date": "2023-10-31T19:24:27.330500Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "file",
+            "schema_version": "6.3.0"
+        },
+        "analysis_file/74070236-1a1b-4bbe-bb56-08ac6bc7f96f": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.3.0/analysis_file",
+            "file_core": {
+                "checksum": "e6118c625dd2cefec7e571c6913e1e38",
+                "describedBy": "https://schema.humancellatlas.org/core/file/6.2.0/file_core",
+                "file_name": "ACD3_snATAC_barcodes.tsv.gz",
+                "file_source": "LungMAP",
+                "format": "tsv.gz",
+                "schema_version": "6.2.0"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "74070236-1a1b-4bbe-bb56-08ac6bc7f96f",
+                "schema_major_version": 1,
+                "schema_minor_version": 1,
+                "schema_version": "1.1.0",
+                "submission_date": "2023-08-21T18:59:18.551852Z",
+                "submitter_id": "Shuyang.Zhao@cchmc.org",
+                "update_date": "2023-10-31T16:42:42.404063Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "file",
+            "schema_version": "6.3.0"
+        },
+        "cell_suspension/0c422f39-b2b1-4cf9-9096-b48517c72191": {
+            "biomaterial_core": {
+                "biomaterial_id": "0c422f39-b2b1-4cf9-9096-b48517c72191",
+                "biomaterial_name": "ACD5 Cells",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "0c422f39-b2b1-4cf9-9096-b48517c72191",
+                "submission_date": "2022-11-15T21:33:40.760875Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:39:12.341323Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/22433fb5-60b1-4a35-80ac-189fd2b26850": {
+            "biomaterial_core": {
+                "biomaterial_id": "22433fb5-60b1-4a35-80ac-189fd2b26850",
+                "biomaterial_name": "ACD2 Cells (snATAC)",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "22433fb5-60b1-4a35-80ac-189fd2b26850",
+                "submission_date": "2022-11-15T21:29:46.551786Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.578442Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/48771554-42be-4151-9303-3189ddd66260": {
+            "biomaterial_core": {
+                "biomaterial_id": "48771554-42be-4151-9303-3189ddd66260",
+                "biomaterial_name": "ACD4 Cells",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "48771554-42be-4151-9303-3189ddd66260",
+                "submission_date": "2022-11-15T21:31:24.458000Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:39:12.338347Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/6f3291e6-d60c-475b-ae6b-661b25fc41de": {
+            "biomaterial_core": {
+                "biomaterial_id": "6f3291e6-d60c-475b-ae6b-661b25fc41de",
+                "biomaterial_name": "ACD3 Cells (snATAC)",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "6f3291e6-d60c-475b-ae6b-661b25fc41de",
+                "submission_date": "2022-11-15T21:30:07.666008Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.580702Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/736e10c0-85db-4f18-a7e1-f7eaa6cb6372": {
+            "biomaterial_core": {
+                "biomaterial_id": "736e10c0-85db-4f18-a7e1-f7eaa6cb6372",
+                "biomaterial_name": "ACD1 Cells (snRNA)",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "736e10c0-85db-4f18-a7e1-f7eaa6cb6372",
+                "submission_date": "2022-12-15T12:57:09.142805Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.582812Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/877b6440-7d77-4b58-9f44-e2cad80ada6d": {
+            "biomaterial_core": {
+                "biomaterial_id": "877b6440-7d77-4b58-9f44-e2cad80ada6d",
+                "biomaterial_name": "ACD1 Cells (snATAC)",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "877b6440-7d77-4b58-9f44-e2cad80ada6d",
+                "submission_date": "2022-11-15T21:29:30.716679Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.573556Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/c2feb442-7900-4e62-baea-7974593a679e": {
+            "biomaterial_core": {
+                "biomaterial_id": "c2feb442-7900-4e62-baea-7974593a679e",
+                "biomaterial_name": "ACD3 Cells (snRNA)",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "c2feb442-7900-4e62-baea-7974593a679e",
+                "submission_date": "2022-12-15T12:57:16.013546Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.568022Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "cell_suspension/e08b4629-6e99-4e08-a80a-dd38bdb73ae6": {
+            "biomaterial_core": {
+                "biomaterial_id": "e08b4629-6e99-4e08-a80a-dd38bdb73ae6",
+                "biomaterial_name": "ACD2 Cells (snRNA)",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "e08b4629-6e99-4e08-a80a-dd38bdb73ae6",
+                "submission_date": "2022-12-15T12:57:12.415811Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.584997Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "process/1a4f34f2-bb3a-45c5-b7b1-a3d0bbe79e54": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "1a4f34f2-bb3a-45c5-b7b1-a3d0bbe79e54"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "1a4f34f2-bb3a-45c5-b7b1-a3d0bbe79e54",
+                "submission_date": "2022-11-15T21:38:24.490934Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-11-15T21:38:24.490934Z",
+                "updater_id": "Shuyang.Zhao.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/39bbd553-237d-43d1-bd9c-b17525b7d9ce": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "39bbd553-237d-43d1-bd9c-b17525b7d9ce"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "39bbd553-237d-43d1-bd9c-b17525b7d9ce",
+                "submission_date": "2022-11-15T21:38:24.426670Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-11-15T21:38:24.426670Z",
+                "updater_id": "Shuyang.Zhao.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/53d7ef73-9885-4d3e-9a53-3d3d5cb84fa2": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "53d7ef73-9885-4d3e-9a53-3d3d5cb84fa2"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "53d7ef73-9885-4d3e-9a53-3d3d5cb84fa2",
+                "submission_date": "2022-12-15T12:34:55.729768Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.729768Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/5adec5c1-db34-48c7-8965-0eeec5ba95fb": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "5adec5c1-db34-48c7-8965-0eeec5ba95fb"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "5adec5c1-db34-48c7-8965-0eeec5ba95fb",
+                "submission_date": "2022-12-15T12:34:55.706203Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.706203Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/63f5d0eb-cb89-4f58-ab60-23fb51690747": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "63f5d0eb-cb89-4f58-ab60-23fb51690747"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "63f5d0eb-cb89-4f58-ab60-23fb51690747",
+                "submission_date": "2022-11-15T21:38:24.472150Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-11-15T21:38:24.472150Z",
+                "updater_id": "Shuyang.Zhao.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/7ede3e76-518a-4e38-9deb-5cd4f2fc4ff4": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "7ede3e76-518a-4e38-9deb-5cd4f2fc4ff4"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "7ede3e76-518a-4e38-9deb-5cd4f2fc4ff4",
+                "submission_date": "2022-11-15T21:38:24.533177Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-11-15T21:38:24.533177Z",
+                "updater_id": "Shuyang.Zhao.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/810b6201-9e0f-4df2-950e-f0c9fca63334": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "810b6201-9e0f-4df2-950e-f0c9fca63334"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "810b6201-9e0f-4df2-950e-f0c9fca63334",
+                "submission_date": "2022-12-15T12:57:31.707099Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.707099Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/977d701f-29a4-4fc5-b8a1-5094592d49ae": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "977d701f-29a4-4fc5-b8a1-5094592d49ae"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "977d701f-29a4-4fc5-b8a1-5094592d49ae",
+                "submission_date": "2022-12-15T12:34:55.751566Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.751566Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/9f6e00f4-76db-4a6e-9d06-c213b8726f42": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "9f6e00f4-76db-4a6e-9d06-c213b8726f42"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "9f6e00f4-76db-4a6e-9d06-c213b8726f42",
+                "submission_date": "2022-12-15T12:34:55.744662Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.744662Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/a3e0f751-d823-43af-b2d6-e477523b3859": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "a3e0f751-d823-43af-b2d6-e477523b3859"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "a3e0f751-d823-43af-b2d6-e477523b3859",
+                "submission_date": "2022-12-15T12:57:31.698674Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.698674Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/adaa99c9-360b-4b9e-b4f0-26fdbff63f76": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "adaa99c9-360b-4b9e-b4f0-26fdbff63f76"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "adaa99c9-360b-4b9e-b4f0-26fdbff63f76",
+                "submission_date": "2022-11-15T21:38:24.517028Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2022-11-15T21:38:24.517028Z",
+                "updater_id": "Shuyang.Zhao.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/cfd710c6-b796-4dad-931b-866e21af816a": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "cfd710c6-b796-4dad-931b-866e21af816a"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "cfd710c6-b796-4dad-931b-866e21af816a",
+                "submission_date": "2022-12-15T12:57:31.683001Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:57:31.683001Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "process/ec16af14-b4f0-4e1e-8159-98b6a5c249ad": {
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "process_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/process/10.0.0/process_core",
+                "process_id": "ec16af14-b4f0-4e1e-8159-98b6a5c249ad"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "ec16af14-b4f0-4e1e-8159-98b6a5c249ad",
+                "submission_date": "2022-12-15T12:34:55.722198Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.722198Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "process"
+        },
+        "specimen_from_organism/1aa2900c-7572-4bda-b518-2d458d789ff5": {
+            "biomaterial_core": {
+                "biomaterial_id": "1aa2900c-7572-4bda-b518-2d458d789ff5",
+                "biomaterial_name": "ACD3 Lung",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.7/organ_ontology",
+                "ontology": "UBERON:0002048",
+                "ontology_label": "Lung",
+                "text": "Lung"
+            },
+            "preservation_storage": {
+                "describedBy": "https://schema.humancellatlas.org/module/biomaterial/6.1.1/preservation_storage",
+                "storage_method": "frozen at -80C"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "1aa2900c-7572-4bda-b518-2d458d789ff5",
+                "submission_date": "2022-12-15T12:33:03.922626Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.602005Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "specimen_from_organism/60470e37-8335-4802-b6a6-db43b03b9099": {
+            "biomaterial_core": {
+                "biomaterial_id": "60470e37-8335-4802-b6a6-db43b03b9099",
+                "biomaterial_name": "ACD2 Lung",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.7/organ_ontology",
+                "ontology": "UBERON:0002048",
+                "ontology_label": "Lung",
+                "text": "Lung"
+            },
+            "preservation_storage": {
+                "describedBy": "https://schema.humancellatlas.org/module/biomaterial/6.1.1/preservation_storage",
+                "storage_method": "frozen at -80C"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "60470e37-8335-4802-b6a6-db43b03b9099",
+                "submission_date": "2022-12-15T12:32:59.649554Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.599245Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "specimen_from_organism/6b238b29-6db5-40a1-9cc5-4290d009b312": {
+            "biomaterial_core": {
+                "biomaterial_id": "6b238b29-6db5-40a1-9cc5-4290d009b312",
+                "biomaterial_name": "ACD4 Lung",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.7/organ_ontology",
+                "ontology": "UBERON:0002048",
+                "ontology_label": "Lung",
+                "text": "Lung"
+            },
+            "preservation_storage": {
+                "describedBy": "https://schema.humancellatlas.org/module/biomaterial/6.1.1/preservation_storage",
+                "storage_method": "frozen at -80C"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "6b238b29-6db5-40a1-9cc5-4290d009b312",
+                "submission_date": "2022-12-15T12:33:09.211320Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.604849Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "specimen_from_organism/9a82f545-639a-4c3a-a2b8-53c3a5163fb6": {
+            "biomaterial_core": {
+                "biomaterial_id": "9a82f545-639a-4c3a-a2b8-53c3a5163fb6",
+                "biomaterial_name": "ACD5 Lung",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.7/organ_ontology",
+                "ontology": "UBERON:0002048",
+                "ontology_label": "Lung",
+                "text": "Lung"
+            },
+            "preservation_storage": {
+                "describedBy": "https://schema.humancellatlas.org/module/biomaterial/6.1.1/preservation_storage",
+                "storage_method": "frozen at -80C"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "9a82f545-639a-4c3a-a2b8-53c3a5163fb6",
+                "submission_date": "2022-12-15T12:33:14.015524Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.607117Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "specimen_from_organism/aedbc237-e962-4584-b99e-75a7b9656974": {
+            "biomaterial_core": {
+                "biomaterial_id": "aedbc237-e962-4584-b99e-75a7b9656974",
+                "biomaterial_name": "ACD1 lung",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": [
+                    9606
+                ]
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+            "diseases": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.8/disease_ontology",
+                    "ontology": "MONDO:0009934",
+                    "ontology_label": "congenital alveolar capillary dysplasia",
+                    "text": "congenital alveolar capillary dysplasia"
+                }
+            ],
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.7/organ_ontology",
+                "ontology": "UBERON:0002048",
+                "ontology_label": "Lung",
+                "text": "Lung"
+            },
+            "preservation_storage": {
+                "describedBy": "https://schema.humancellatlas.org/module/biomaterial/6.1.1/preservation_storage",
+                "storage_method": "frozen at -80C"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "aedbc237-e962-4584-b99e-75a7b9656974",
+                "submission_date": "2022-12-15T12:32:55.338580Z",
+                "submitter_id": "josh.fortriede.cchmc@lungmap.net",
+                "update_date": "2022-12-15T12:34:55.591879Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial"
+        },
+        "dissociation_protocol/269595be-8020-4fa3-9c6c-849c0f665884": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+            "method": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/process_type_ontology",
+                "text": ""
+            },
+            "protocol_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/protocol/5.2.5/protocol_core",
+                "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884",
+                "protocol_name": "Cell Dissociation Protocol"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "269595be-8020-4fa3-9c6c-849c0f665884",
+                "schema_major_version": 1,
+                "schema_minor_version": 1,
+                "schema_version": "1.1.0",
+                "submission_date": "2022-12-15T12:22:02.636955Z",
+                "submitter_id": "Joshua.Fortriede@cchmc.org",
+                "update_date": "2022-12-15T12:22:08.686424Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "reagents": [],
+            "schema_type": "protocol",
+            "schema_version": "6.2.0"
+        },
+        "donor_organism/3051e591-8ee0-4c39-810f-c4fe6a92e3a3": {
+            "biomaterial_core": {
+                "biomaterial_description": "ACD2",
+                "biomaterial_id": "3051e591-8ee0-4c39-810f-c4fe6a92e3a3",
+                "biomaterial_name": "ACD2",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": []
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+            "development_stage": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.6/development_stage_ontology",
+                "ontology": "HsapDv:0000097",
+                "ontology_label": "3-year-old human stage",
+                "text": "3-year-old human stage"
+            },
+            "diseases": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.8/disease_ontology",
+                    "ontology": "MONDO:0009934",
+                    "ontology_label": "congenital alveolar capillary dysplasia",
+                    "text": "congenital alveolar capillary dysplasia"
+                }
+            ],
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "is_living": "unknown",
+            "organism_age": "3.5",
+            "organism_age_unit": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/time_unit_ontology",
+                "ontology": "UO:0000036",
+                "ontology_label": "year",
+                "text": "year"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "3051e591-8ee0-4c39-810f-c4fe6a92e3a3",
+                "submission_date": "2022-11-15T21:08:20.333899Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2024-05-20T19:59:14.832520Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial",
+            "sex": "male"
+        },
+        "donor_organism/55333c14-5093-4419-9c84-76ef16033927": {
+            "biomaterial_core": {
+                "biomaterial_description": "ACD4",
+                "biomaterial_id": "55333c14-5093-4419-9c84-76ef16033927",
+                "biomaterial_name": "ACD4",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": []
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+            "development_stage": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.6/development_stage_ontology",
+                "ontology": "HsapDv:0000174",
+                "ontology_label": "1-month-old human stage",
+                "text": "1-month-old human stage"
+            },
+            "diseases": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.8/disease_ontology",
+                    "ontology": "MONDO:0009934",
+                    "ontology_label": "congenital alveolar capillary dysplasia",
+                    "text": "congenital alveolar capillary dysplasia"
+                }
+            ],
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "is_living": "unknown",
+            "organism_age": "5",
+            "organism_age_unit": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/time_unit_ontology",
+                "ontology": "UO:0000034",
+                "ontology_label": "week",
+                "text": "week"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "55333c14-5093-4419-9c84-76ef16033927",
+                "submission_date": "2022-11-15T21:08:25.334848Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2024-05-20T19:59:14.818212Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial",
+            "sex": "male"
+        },
+        "donor_organism/9da94063-7cc7-4286-a2b0-ef006bcfa9b0": {
+            "biomaterial_core": {
+                "biomaterial_description": "ACD5",
+                "biomaterial_id": "9da94063-7cc7-4286-a2b0-ef006bcfa9b0",
+                "biomaterial_name": "ACD5",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": []
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+            "development_stage": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.6/development_stage_ontology",
+                "ontology": "HsapDv:0000174",
+                "ontology_label": "1-month-old human stage",
+                "text": "1-month-old human stage"
+            },
+            "diseases": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.8/disease_ontology",
+                    "ontology": "MONDO:0009934",
+                    "ontology_label": "congenital alveolar capillary dysplasia",
+                    "text": "congenital alveolar capillary dysplasia"
+                }
+            ],
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "is_living": "unknown",
+            "organism_age": "1",
+            "organism_age_unit": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/time_unit_ontology",
+                "ontology": "UO:0000035",
+                "ontology_label": "month",
+                "text": "month"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "9da94063-7cc7-4286-a2b0-ef006bcfa9b0",
+                "submission_date": "2022-11-15T21:08:27.869712Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2024-05-20T19:59:14.847175Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial",
+            "sex": "male"
+        },
+        "donor_organism/d7ec7c39-146f-40dd-9c61-3d73bf908445": {
+            "biomaterial_core": {
+                "biomaterial_description": "ACD3",
+                "biomaterial_id": "d7ec7c39-146f-40dd-9c61-3d73bf908445",
+                "biomaterial_name": "ACD3",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": []
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+            "development_stage": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.6/development_stage_ontology",
+                "ontology": "HsapDv:0000182",
+                "ontology_label": "9-month-old human stage",
+                "text": "9-month-old human stage"
+            },
+            "diseases": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.8/disease_ontology",
+                    "ontology": "MONDO:0009934",
+                    "ontology_label": "congenital alveolar capillary dysplasia",
+                    "text": "congenital alveolar capillary dysplasia"
+                }
+            ],
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "is_living": "unknown",
+            "organism_age": "9",
+            "organism_age_unit": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/time_unit_ontology",
+                "ontology": "UO:0000035",
+                "ontology_label": "month",
+                "text": "month"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "d7ec7c39-146f-40dd-9c61-3d73bf908445",
+                "submission_date": "2022-11-15T21:08:22.735348Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2024-05-20T19:59:14.838012Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial",
+            "sex": "male"
+        },
+        "donor_organism/ee1f02ff-cfee-4f99-ab44-6ac896965815": {
+            "biomaterial_core": {
+                "biomaterial_description": "ACD1",
+                "biomaterial_id": "ee1f02ff-cfee-4f99-ab44-6ac896965815",
+                "biomaterial_name": "ACD1",
+                "describedBy": "https://schema.humancellatlas.org/core/biomaterial/8.2.0/biomaterial_core",
+                "ncbi_taxon_id": []
+            },
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+            "development_stage": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.6/development_stage_ontology",
+                "ontology": "HsapDv:0000082",
+                "ontology_label": "newborn human stage",
+                "text": "newborn human stage"
+            },
+            "diseases": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.8/disease_ontology",
+                    "ontology": "MONDO:0009934",
+                    "ontology_label": "congenital alveolar capillary dysplasia",
+                    "text": "congenital alveolar capillary dysplasia"
+                }
+            ],
+            "genus_species": [
+                {
+                    "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/species_ontology",
+                    "ontology": "NCBITaxon:9606",
+                    "ontology_label": "Homo sapiens",
+                    "text": "Homo sapiens"
+                }
+            ],
+            "is_living": "unknown",
+            "organism_age": "2",
+            "organism_age_unit": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/time_unit_ontology",
+                "ontology": "UO:0000034",
+                "ontology_label": "week",
+                "text": "week"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "ee1f02ff-cfee-4f99-ab44-6ac896965815",
+                "submission_date": "2022-11-15T21:08:17.062047Z",
+                "submitter_id": "Shuyang.Zhao.cchmc@lungmap.net",
+                "update_date": "2024-05-20T19:59:14.828160Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "biomaterial",
+            "sex": "male"
+        },
+        "collection_protocol/3e396673-63c9-4fdb-b869-012fdd638137": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "method": {
+                "describedBy": "https://schema.humancellatlas.org/module/ontology/5.3.5/process_type_ontology",
+                "text": ""
+            },
+            "protocol_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/protocol/5.2.5/protocol_core",
+                "protocol_id": "3e396673-63c9-4fdb-b869-012fdd638137",
+                "protocol_name": "Sample Collection Protocol from Donors"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "3e396673-63c9-4fdb-b869-012fdd638137",
+                "schema_major_version": 1,
+                "schema_minor_version": 1,
+                "schema_version": "1.1.0",
+                "submission_date": "2022-12-15T12:21:34.326538Z",
+                "submitter_id": "Joshua.Fortriede@cchmc.org",
+                "update_date": "2022-12-15T12:21:55.021543Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "schema_type": "protocol",
+            "schema_version": "9.2.0"
+        },
+        "project/fdadee7e-2097-45d5-bf81-cc280bd8348e": {
+            "array_express_accessions": [],
+            "biostudies_accessions": [],
+            "contributors": [
+                {
+                    "corresponding_contributor": false,
+                    "describedBy": "https://schema.humancellatlas.org/module/project/8.0.1/contact",
+                    "email": "jeffrey.whitsett@cchmc.org",
+                    "institution": "Cincinnati Children's Hospital Medical Center",
+                    "laboratory": "Division of Neonatology, Perinatal and Pulmonary Biology",
+                    "name": "Jeffrey A. Whitsett",
+                    "project_role": {
+                        "describedBy": "https://schema.humancellatlas.org/module/ontology/1.0.0/contributor_role_ontology",
+                        "text": "principal investigator"
+                    }
+                },
+                {
+                    "corresponding_contributor": true,
+                    "describedBy": "https://schema.humancellatlas.org/module/project/8.0.1/contact",
+                    "email": "minzhe.guo@cchmc.org",
+                    "institution": "Cincinnati Children's Hospital Medical Center",
+                    "laboratory": "Division of Neonatology, Perinatal and Pulmonary Biology",
+                    "name": "Minzhe Guo",
+                    "project_role": {
+                        "describedBy": "https://schema.humancellatlas.org/module/ontology/1.0.0/contributor_role_ontology",
+                        "ontology": "EFO:0009742",
+                        "ontology_label": "computational scientist",
+                        "text": "computational scientist"
+                    }
+                },
+                {
+                    "corresponding_contributor": false,
+                    "describedBy": "https://schema.humancellatlas.org/module/project/8.0.1/contact",
+                    "email": "Kathryn.Wikenheiser-Brokamp@cchmc.org",
+                    "institution": "Cincinnati Children's Hospital Medical Center",
+                    "laboratory": "Division of Pathology & Laboratory Medicine",
+                    "name": "Kathryn A Wikenheiser-Brokamp",
+                    "project_role": {
+                        "describedBy": "https://schema.humancellatlas.org/module/ontology/1.0.0/contributor_role_ontology",
+                        "ontology": "EFO:0009738",
+                        "ontology_label": "pathologist",
+                        "text": "pathologist"
+                    }
+                },
+                {
+                    "corresponding_contributor": false,
+                    "describedBy": "https://schema.humancellatlas.org/module/project/8.0.1/contact",
+                    "email": "Yan.Xu@cchmc.org",
+                    "institution": "Cincinnati Children's Hospital Medical Center",
+                    "laboratory": "Neonatology & Pulmonary Biology Perinatal Institute",
+                    "name": "Yan Xu",
+                    "project_role": {
+                        "describedBy": "https://schema.humancellatlas.org/module/ontology/1.0.0/contributor_role_ontology",
+                        "ontology": "EFO:0001739",
+                        "ontology_label": "investigator",
+                        "text": "investigator"
+                    }
+                },
+                {
+                    "corresponding_contributor": false,
+                    "describedBy": "https://schema.humancellatlas.org/module/project/8.0.1/contact",
+                    "email": "kevin.burns@cchmc.org",
+                    "institution": "DMCC",
+                    "name": "Kevin Burns",
+                    "project_role": {
+                        "describedBy": "https://schema.humancellatlas.org/module/ontology/1.0.0/contributor_role_ontology",
+                        "ontology": "EFO:0009737",
+                        "ontology_label": "data curator",
+                        "text": "data curator"
+                    }
+                }
+            ],
+            "describedBy": "https://schema.humancellatlas.org/type/project/15.0.0/project",
+            "funders": [],
+            "geo_series_accessions": [],
+            "insdc_project_accessions": [],
+            "insdc_study_accessions": [],
+            "project_core": {
+                "describedBy": "https://schema.humancellatlas.org/core/project/7.0.5/project_core",
+                "project_description": "ACDMPV is a lethal developmental disorder of lung morphogenesis caused by insufficiency of FOXF1 (forkhead box F1) transcription factor function. The cellular and transcriptional mechanisms by which FOXF1 deficiency disrupts human lung formation are unknown. To identify cell types, gene networks, and cell-cell interactions underlying the pathogenesis of ACDMPV.  We used single-nucleus RNA and assay for transposase-accessible chromatin sequencing, immunofluorescence confocal microscopy, and RNA in situ hybridization to identify cell types and molecular networks influenced by FOXF1 in ACDMPV lungs.  Pathogenic single-nucleotide variants and copy-number variant deletions involving the FOXF1 gene locus in all subjects with ACDMPV (n = 6) were accompanied by marked changes in lung structure, including deficient alveolar development and a paucity of pulmonary microvasculature. Single-nucleus RNA and assay for transposase-accessible chromatin sequencing identified alterations in cell number and gene expression in endothelial cells (ECs), pericytes, fibroblasts, and epithelial cells in ACDMPV lungs. Distinct cell-autonomous roles for FOXF1 in capillary ECs and pericytes were identified. Pathogenic variants involving the FOXF1 gene locus disrupt gene expression in EC progenitors, inhibiting the differentiation or survival of capillary 2 ECs and cell-cell interactions necessary for both pulmonary vasculogenesis and alveolar type 1 cell differentiation. Loss of the pulmonary microvasculature was associated with increased VEGFA (vascular endothelial growth factor A) signaling and marked expansion of systemic bronchial ECs expressing COL15A1 (collagen type XV \u03b1 1 chain). Distinct FOXF1 gene regulatory networks were identified in subsets of pulmonary endothelial and fibroblast progenitors, providing both cellular and molecular targets for the development of therapies for ACDMPV and other diffuse lung diseases of infancy.",
+                "project_short_name": "Alveolar capillary dysplasia with misalignment of the pulmonary veins (ACDMPV)",
+                "project_title": "Alveolar capillary dysplasia with misalignment of the pulmonary veins (ACDMPV)"
+            },
+            "provenance": {
+                "describedBy": "https://schema.humancellatlas.org/system/1.1.0/provenance",
+                "document_id": "fdadee7e-2097-45d5-bf81-cc280bd8348e",
+                "schema_major_version": 1,
+                "schema_minor_version": 1,
+                "schema_version": "1.1.0",
+                "submission_date": "2022-11-10T16:57:48.457844Z",
+                "submitter_id": "Shuyang.Zhao@cchmc.org",
+                "update_date": "2024-06-25T15:12:06.304736Z",
+                "updater_id": "josh.fortriede.cchmc@lungmap.net"
+            },
+            "publications": [
+                {
+                    "authors": [],
+                    "describedBy": "https://schema.humancellatlas.org/module/project/7.0.0/publication",
+                    "doi": "10.1164/rccm.202210-2015OC",
+                    "official_hca_publication": false,
+                    "pmid": 37463497,
+                    "title": "Single Cell Multiomics Identifies Cells and Genetic Networks Underlying Alveolar Capillary Dysplasia",
+                    "url": "https://www.atsjournals.org/doi/10.1164/rccm.202210-2015OC"
+                }
+            ],
+            "schema_type": "project",
+            "schema_version": "15.0.0",
+            "supplementary_links": []
+        }
+    },
+    "links": {
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_type": "links",
+        "schema_version": "2.1.1",
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "1a4f34f2-bb3a-45c5-b7b1-a3d0bbe79e54",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "1aa2900c-7572-4bda-b518-2d458d789ff5"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "6f3291e6-d60c-475b-ae6b-661b25fc41de"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "53d7ef73-9885-4d3e-9a53-3d3d5cb84fa2",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "d7ec7c39-146f-40dd-9c61-3d73bf908445"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "1aa2900c-7572-4bda-b518-2d458d789ff5"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3e396673-63c9-4fdb-b869-012fdd638137"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "7ede3e76-518a-4e38-9deb-5cd4f2fc4ff4",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "9a82f545-639a-4c3a-a2b8-53c3a5163fb6"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "0c422f39-b2b1-4cf9-9096-b48517c72191"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "977d701f-29a4-4fc5-b8a1-5094592d49ae",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "9da94063-7cc7-4286-a2b0-ef006bcfa9b0"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "9a82f545-639a-4c3a-a2b8-53c3a5163fb6"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3e396673-63c9-4fdb-b869-012fdd638137"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "cfd710c6-b796-4dad-931b-866e21af816a",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "aedbc237-e962-4584-b99e-75a7b9656974"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "736e10c0-85db-4f18-a7e1-f7eaa6cb6372"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "810b6201-9e0f-4df2-950e-f0c9fca63334",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "1aa2900c-7572-4bda-b518-2d458d789ff5"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "c2feb442-7900-4e62-baea-7974593a679e"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "5adec5c1-db34-48c7-8965-0eeec5ba95fb",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "ee1f02ff-cfee-4f99-ab44-6ac896965815"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "aedbc237-e962-4584-b99e-75a7b9656974"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3e396673-63c9-4fdb-b869-012fdd638137"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "adaa99c9-360b-4b9e-b4f0-26fdbff63f76",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "6b238b29-6db5-40a1-9cc5-4290d009b312"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "48771554-42be-4151-9303-3189ddd66260"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "63f5d0eb-cb89-4f58-ab60-23fb51690747",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "60470e37-8335-4802-b6a6-db43b03b9099"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "22433fb5-60b1-4a35-80ac-189fd2b26850"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "ec16af14-b4f0-4e1e-8159-98b6a5c249ad",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "3051e591-8ee0-4c39-810f-c4fe6a92e3a3"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "60470e37-8335-4802-b6a6-db43b03b9099"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3e396673-63c9-4fdb-b869-012fdd638137"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "39bbd553-237d-43d1-bd9c-b17525b7d9ce",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "aedbc237-e962-4584-b99e-75a7b9656974"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "877b6440-7d77-4b58-9f44-e2cad80ada6d"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "a3e0f751-d823-43af-b2d6-e477523b3859",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "60470e37-8335-4802-b6a6-db43b03b9099"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "e08b4629-6e99-4e08-a80a-dd38bdb73ae6"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "269595be-8020-4fa3-9c6c-849c0f665884"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "9f6e00f4-76db-4a6e-9d06-c213b8726f42",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "55333c14-5093-4419-9c84-76ef16033927"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "6b238b29-6db5-40a1-9cc5-4290d009b312"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3e396673-63c9-4fdb-b869-012fdd638137"
+                    }
+                ]
+            }
+        ]
+    },
+    "stitched": []
+}

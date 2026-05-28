@@ -101,6 +101,9 @@ from azul.terra import (
     TDRSourceRef,
     TDRSourceSpec,
 )
+from azul_test_case import (
+    LungmapTestCase,
+)
 from indexer import (
     DCP1CannedBundleTestCase,
     DCP2CannedBundleTestCase,
@@ -3907,3 +3910,30 @@ class TestResponseWithHCADCP2Cans(DCP2ResponseTestCase):
             }}
         }
         self.assertEqual(expected_tree, project['contributedAnalyses'])
+
+
+class TestResponseWithLungmapCans(LungmapTestCase, DCP2ResponseTestCase):
+
+    @classmethod
+    def bundles(cls) -> list[SourcedBundleFQID]:
+        return [
+            cls.bundle_fqid(uuid='1928ae54-dbba-33e6-9e40-6a9b3fe8585f',
+                            version='2024-06-25T15:12:06.304736Z'),
+        ]
+
+    def test_file_with_host_based_drs_uri(self):
+        file = self.get_file('005f71ed-fcba-4026-bc97-a8c9707f26ee')
+        self.assertEqual('drs://jade.datarepo-dev.broadinstitute.org/v2_85c93a64-a9d0-4331-ad36-53a6498e57fc',
+                         file['drs_uri'])
+        expected_file_url = str(self.base_url.set(
+            path='/repository/files/005f71ed-fcba-4026-bc97-a8c9707f26ee',
+            args=dict(catalog=self.catalog,
+                      version='2023-10-31T16:42:42.419707Z')
+        ))
+        self.assertEqual(expected_file_url, file['azul_url'])
+
+    def test_file_with_compact_drs_uri(self):
+        file = self.get_file('002ebcd6-722d-434d-b21b-13a06e659a67')
+        self.assertEqual('drs://dg.4503:696f302b-ecd9-4bcc-a750-56c22b496f02',
+                         file['drs_uri'])
+        self.assertIsNone(file['azul_url'])
