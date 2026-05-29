@@ -428,7 +428,7 @@ class TestIndexResponse(IndexResponseTestCase):
     canned_aggs = {
         'organ': {
             'doc_count': 21,
-            'untagged': {
+            'myUntagged': {
                 'doc_count': 0
             },
             'myTerms': {
@@ -448,7 +448,7 @@ class TestIndexResponse(IndexResponseTestCase):
         },
         'sampleDisease': {
             'doc_count': 21,
-            'untagged': {
+            'myUntagged': {
                 'doc_count': 12
             },
             'myTerms': {

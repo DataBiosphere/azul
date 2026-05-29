@@ -95,11 +95,11 @@ values_agg_name = 'myTerms'
 #: The name of the `nested` aggregation bucket, used only for facets backed by a
 #: nested field.
 #:
-nested_agg_name = 'nested'
+nested_agg_name = 'myNested'
 
 #: The name of the bucket counting documents with no value for the facet.
 #:
-untagged_agg_name = 'untagged'
+untagged_agg_name = 'myUntagged'
 
 
 class IndexNotFoundError(Exception):

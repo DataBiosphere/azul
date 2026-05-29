@@ -361,7 +361,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
                         'path': ['path', 'to', 'foo']
                     }
                 },
-                'untagged': {
+                'myUntagged': {
                     'missing': {
                         'field': 'path.to.foo.keyword'
                     }
