@@ -60,6 +60,9 @@ def main(argv):
     parser.add_argument('--no-partial',
                         action='store_true', default=False,
                         help='Remove partial label and check partiality tasks.')
+    parser.add_argument('--no-mirror',
+                        action='store_true', default=False,
+                        help='Remove mirror labels and check mirror tasks.')
     parser.add_argument('--no-reindex',
                         action='store_true', default=False,
                         help='Remove reindex labels and check reindex tasks.')
@@ -75,6 +78,8 @@ def main(argv):
         parser.error('--fix/--no-fix cannot be used with --type')
     if args.type is not None and args.no_partial:
         parser.error('--no-partial cannot be used with --type')
+    if args.type is not None and args.no_mirror:
+        parser.error('--no-mirror cannot be used with --type')
     if args.type is not None and args.no_reindex:
         parser.error('--no-reindex cannot be used with --type')
 
@@ -162,6 +167,11 @@ def main(argv):
         for label in reindex_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
 
+    if args.no_mirror:
+        mirror_labels = _mirror_labels(body)
+        for label in mirror_labels:
+            body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, 'Name of PR branch matches .*')
@@ -213,6 +223,10 @@ def main(argv):
 
     if args.no_reindex:
         for label in reindex_labels:
+            _label(pr_url, label, mode='remove')
+
+    if args.no_mirror:
+        for label in mirror_labels:
             _label(pr_url, label, mode='remove')
 
     log.info('Setting PR status …')
@@ -387,6 +401,11 @@ def _reference_issue_in_body(body: str, issue_number: int) -> str:
 
 def _reindex_labels(body: str) -> list[str]:
     return re.findall(r'^- \[[ x]] This PR is labeled `(reindex:\w+)`',
+                      body, flags=re.MULTILINE)
+
+
+def _mirror_labels(body: str) -> list[str]:
+    return re.findall(r'^- \[[ x]] This PR is labeled `(mirror:\w+)`',
                       body, flags=re.MULTILINE)
 
 
