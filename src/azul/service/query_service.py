@@ -87,6 +87,20 @@ from azul.plugins import (
 
 log = logging.getLogger(__name__)
 
+#: The name of the bucket holding one entry per distinct facet value, with its
+#: document count.
+#:
+values_agg_name = 'myTerms'
+
+#: The name of the `nested` aggregation bucket, used only for facets backed by a
+#: nested field.
+#:
+nested_agg_name = 'nested'
+
+#: The name of the bucket counting documents with no value for the facet.
+#:
+untagged_agg_name = 'untagged'
+
 
 class IndexNotFoundError(Exception):
 
@@ -326,7 +340,7 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
         field_type = self.service.field_type(self.catalog, facet_path)
         if isinstance(field_type, Nested):
-            nested_agg = agg.bucket(name='nested',
+            nested_agg = agg.bucket(name=nested_agg_name,
                                     agg_type='nested',
                                     path=dotted(facet_path))
             facet_path = dotted(facet_path, field_type.agg_property)
@@ -334,11 +348,11 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
             nested_agg = agg
         # Make an inner agg that will contain the terms in question
         path = dotted(facet_path, 'keyword')
-        nested_agg.bucket(name='myTerms',
+        nested_agg.bucket(name=values_agg_name,
                           agg_type='terms',
                           field=path,
                           size=config.terms_aggregation_size)
-        nested_agg.bucket('untagged', 'missing', field=path)
+        nested_agg.bucket(untagged_agg_name, 'missing', field=path)
         return agg
 
     def _annotate_aggs_for_translation(self, request: Search):
@@ -367,7 +381,7 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
     def _flatten_nested_aggs(self, aggs: MutableJSON):
         for facet, agg in aggs.items():
             try:
-                nested_agg = agg.pop('nested')
+                nested_agg = agg.pop(nested_agg_name)
             except KeyError:
                 pass
             else:
@@ -409,10 +423,10 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         special_fields = plugin.special_fields
         agg = aggs.pop(special_fields.source_id.name)
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
-        for bucket in agg['myTerms']['buckets']:
+        for bucket in agg[values_agg_name]['buckets']:
             accessible = bucket['key'] in source_ids
             counts_by_accessibility[accessible] += bucket['doc_count']
-        agg['myTerms']['buckets'] = [
+        agg[values_agg_name]['buckets'] = [
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]

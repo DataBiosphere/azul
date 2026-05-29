@@ -54,6 +54,8 @@ from azul.service.index_service import (
 from azul.service.query_service import (
     ResponsePagination,
     ResponseTriple,
+    untagged_agg_name,
+    values_agg_name,
 )
 from azul.source import (
     SourceRef,
@@ -248,7 +250,7 @@ class HCASummaryResponseStage(SummaryResponseStage):
             organTypes=agg_values(organ_type, 'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(file_type_summary,
                                          'fileFormat',
-                                         'myTerms',
+                                         values_agg_name,
                                          'buckets'),
             cellCountSummaries=agg_values(organ_cell_count_summary,
                                           'cellCountSummaries',
@@ -571,7 +573,7 @@ class HCASearchResponseStage(SearchResponseStage):
                 return str(term_key)
 
         terms: list[Term] = []
-        for bucket in agg['myTerms']['buckets']:
+        for bucket in agg[values_agg_name]['buckets']:
             term = Term(term=choose_entry(bucket),
                         count=bucket['doc_count'])
             try:
@@ -584,7 +586,7 @@ class HCASearchResponseStage(SearchResponseStage):
                 term['projectId'] = project_ids
             terms.append(term)
 
-        untagged_count = agg['untagged']['doc_count']
+        untagged_count = agg[untagged_agg_name]['doc_count']
 
         # Add the untagged_count to the existing termObj for a None value, or
         # add a new one
@@ -598,7 +600,7 @@ class HCASearchResponseStage(SearchResponseStage):
             terms.append(Term(term=None, count=untagged_count))
 
         return Terms(terms=terms,
-                     total=0 if len(agg['myTerms']['buckets']) == 0 else agg['doc_count'],
+                     total=0 if len(agg[values_agg_name]['buckets']) == 0 else agg['doc_count'],
                      # FIXME: Remove type from termsFacets in /index responses
                      #        https://github.com/DataBiosphere/azul/issues/2460
                      type='terms')

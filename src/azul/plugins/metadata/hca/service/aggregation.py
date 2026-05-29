@@ -29,6 +29,8 @@ from azul.plugins import (
 )
 from azul.service.query_service import (
     AggregationStage,
+    untagged_agg_name,
+    values_agg_name,
 )
 
 
@@ -39,17 +41,17 @@ class HCAAggregationStage(AggregationStage):
 
         if facet == 'project':
             sub_path = dotted(self.plugin.field_mapping['projectId'], 'keyword')
-            agg.aggs['myTerms'].bucket(name='myProjectIds',
-                                       agg_type='terms',
-                                       field=sub_path,
-                                       size=config.terms_aggregation_size)
+            agg.aggs[values_agg_name].bucket(name='myProjectIds',
+                                             agg_type='terms',
+                                             field=sub_path,
+                                             size=config.terms_aggregation_size)
         elif facet == 'fileFormat':
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
                 path = dotted(self.plugin.field_mapping[field]) + '_'
-                agg.aggs['myTerms'].metric(bucket, 'sum', field=path)
-                agg.aggs['untagged'].metric(bucket, 'sum', field=path)
+                agg.aggs[values_agg_name].metric(bucket, 'sum', field=path)
+                agg.aggs[untagged_agg_name].metric(bucket, 'sum', field=path)
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
