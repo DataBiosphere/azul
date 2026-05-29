@@ -3798,7 +3798,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
         }, response.json())
 
 
-class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
+class TestResponseWithHCADCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):
