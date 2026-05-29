@@ -100,6 +100,7 @@ Linked issue: #0000
 - [ ] Pushed merge commit to GitLab `prod`
 - [ ] Build passes on GitLab `prod`
 - [ ] Reviewed build logs for anomalies on GitLab `prod`
+- [ ] Applied upgrade instructions from UPGRADING.rst to `prod` <sub>or this PR is not labeled `upgrade`, or upgrade instructions do not apply to `prod`</sub>
 - [ ] Ran `_select prod.shared && make -C terraform/shared apply` <sub>or this PR is not labeled `deploy:shared`</sub>
 - [ ] Deleted PR branch from GitHub
 - [ ] PR is assigned to only the operator

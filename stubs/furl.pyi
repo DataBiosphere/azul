@@ -43,6 +43,7 @@ class MultiMapping[K, V](
     Mapping[K, V],
     metaclass=abc.ABCMeta
 ):
+
     def getlist(self, k: K) -> Sequence[V]: ...
 
     def allitems(self) -> Iterable[tuple[K, V]]: ...
@@ -53,6 +54,7 @@ class MutableMultiMapping[K, V](
     MutableMapping[K, V],
     metaclass=abc.ABCMeta
 ):
+
     def setlist(self, k: K, vs: Iterable[V]) -> Self: ...
 
     def addlist(self, k: K, vs: Iterable[V]) -> Self: ...
@@ -60,6 +62,8 @@ class MutableMultiMapping[K, V](
 
 class Query:
     params: MultiMapping[str, str]
+
+    def __str__(self) -> str: ...
 
 
 class MutableQuery(Query):
@@ -71,6 +75,8 @@ class MutableQuery(Query):
 class Path:
     segments: Sequence[str]
 
+    def __str__(self) -> str: ...
+
 
 class MutablePath(Path):
     segments: list[str]
@@ -79,7 +85,8 @@ class MutablePath(Path):
 
 
 class Fragment:
-    pass
+
+    def __str__(self) -> str: ...
 
 
 class MutableFragment(Fragment):
@@ -108,6 +115,8 @@ class furl:
                  query: _Args | None = None,
                  fragment: _Fragment | None = None,
                  ): ...
+
+    def __str__(self) -> str: ...
 
     def copy(self) -> _mutable_furl: ...
 

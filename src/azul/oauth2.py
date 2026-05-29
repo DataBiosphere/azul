@@ -107,12 +107,11 @@ class OAuth2Client(HasCachedHttpClient):
                        authorization_code: str,
                        client_id: str,
                        client_secret: str,
+                       redirect_uri: str | None = None
                        ) -> TokenForCodeResponse:
         """
-        Obtain an OAuth 2.0 refresh token in exchange for an authorization code.
-        This interaction is part of the authorization code flow. Note that this
-        method does not support redirects. In other words, it only considers a
-        200 status response to indicate success.
+        Obtain OAuth 2.0 tokens in exchange for an authorization code. This
+        interaction is part of the authorization code flow.
 
         :param authorization_code: a temporary secret that indicates the user's
                                    consent, authorizing the application
@@ -122,15 +121,23 @@ class OAuth2Client(HasCachedHttpClient):
         :param client_id: identifies the application authorized by the user
 
         :param client_secret: proof that the requestor is part of the application
+
+        :param redirect_uri: the redirect URI that was used when the
+                             ``authorization code`` was requested or None, if
+                             the authorization code was requested without
+                             specifying a redirect URI, e.g., when using the
+                             Google Sign-In (GSI) library's authorizationCode
+                             flow.
         """
+        if redirect_uri is None:
+            # Undocumented but crucial (https://stackoverflow.com/a/48121098/4171119)
+            redirect_uri = 'postmessage'
         fields = {
             'grant_type': 'authorization_code',
             'code': authorization_code,
             'client_id': client_id,
             'client_secret': client_secret,
-            # crucial, but barely documented
-            # https://stackoverflow.com/a/48121098/4171119
-            'redirect_uri': 'postmessage'
+            'redirect_uri': redirect_uri
         }
         url = furl('https://oauth2.googleapis.com/token')
         response = self._http_client.request('POST', str(url), fields=fields)
@@ -138,6 +145,27 @@ class OAuth2Client(HasCachedHttpClient):
             'Unexpected status of response from authorization server', response.status)
         response = json.loads(response.data)
         assert is_of_type(response, TokenForCodeResponse)
+        assert response['token_type'] == 'Bearer'
+        return response
+
+    def token_for_refresh(self,
+                          *,
+                          refresh_token: str,
+                          client_id: str,
+                          client_secret: str
+                          ) -> TokenResponse:
+        fields = {
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            'client_id': client_id,
+            'client_secret': client_secret,
+        }
+        url = furl('https://oauth2.googleapis.com/token')
+        response = self._http_client.request('POST', str(url), fields=fields)
+        assert response.status == 200, R(
+            'Unexpected status of response from authorization server', response.status)
+        response = json.loads(response.data)
+        assert is_of_type(response, TokenResponse)
         assert response['token_type'] == 'Bearer'
         return response
 

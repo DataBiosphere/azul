@@ -84,7 +84,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                 'aws_untaggable_resource': {'foo': {}}
             }
         }
-        expected: JSON = {
+        expected = {
             'resource': [
                 {'aws_untaggable_resource': [{'foo': {}}]}
             ]

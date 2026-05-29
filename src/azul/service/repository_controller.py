@@ -15,6 +15,7 @@ from chalice.app import (
     BadRequestError,
     ForbiddenError,
     NotFoundError,
+    Request,
     Response,
     TooManyRequestsError,
     UnauthorizedError,
@@ -29,6 +30,7 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
+    PersonalAccessTokenAuthentication,
 )
 from azul.chalice import (
     TemporaryRedirectError,
@@ -80,6 +82,10 @@ from azul.service.controller import (
 )
 from azul.service.index_service import (
     IndexService,
+)
+from azul.service.user_service import (
+    InvalidPersonalAccessTokenError,
+    UserService,
 )
 
 log = logging.getLogger(__name__)
@@ -301,6 +307,19 @@ class RepositoryController(ServiceController):
 
         return locals()
 
+    def _authentication(self, request: Request) -> Authentication | None:
+        authentication = super()._authentication(request)
+        if isinstance(authentication, PersonalAccessTokenAuthentication):
+            try:
+                authentication = self._user_service.exchange_token(authentication)
+            except InvalidPersonalAccessTokenError:
+                raise UnauthorizedError('Invalid token')
+        return authentication
+
+    @cached_property
+    def _user_service(self) -> UserService:
+        return UserService()
+
     def download_file(self, file_uuid: str, fetch: bool) -> MutableJSON:
         request = self.current_request
         query_params = self._query_params(request)
@@ -393,18 +412,16 @@ class RepositoryController(ServiceController):
         plugin = self._repository_plugin(catalog)
 
         mirror_url = None
-        if config.enable_mirroring:
-            mirror_service = self._mirror_service(catalog)
-            if mirror_service.info_exists(file):
-                mirror_url = mirror_service.mirror_url(file)
+        # The file's content type and source would be None on subsequent
+        # requests since they aren't propagated via query parameters.
+        # `MirrorFileDownload` will always be ready immediately.
+        if request_index == 0 and config.enable_mirroring:
+            mirror_url = self._mirror_service(catalog).mirror_url(file)
 
         if mirror_url is None:
             download_cls = plugin.file_download_class()
             download = download_cls(plugin=plugin, file=file, replica=replica, token=token)
         else:
-            # The file's content type would be None on subsequent requests since
-            # it isn't propagated via a query parameter. `MirrorFileDownload`
-            # will always be ready immediately.
             assert request_index == 0, request_index
             download = MirrorFileDownload(
                 plugin=plugin,

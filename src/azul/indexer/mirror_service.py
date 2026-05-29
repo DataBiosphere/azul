@@ -358,17 +358,8 @@ class MirrorService:
         return StorageService(bucket)
 
     def _storage_for_file(self, file: File) -> StorageService:
-        # Currently, :py:attr:`source` will never be none during mirroring (see
-        # the implementations of :meth:`RepositoryPlugin.list-files`), but will
-        # always be None when downloading files via the service.
-        #
-        # FIXME: Expose access to mirrored MA files via /repository/files
-        #        https://github.com/DataBiosphere/azul/issues/7931
-        #
-        if file.source is None:
-            return self._storage
-        else:
-            return self._storage_for_source(file.source.spec)
+        assert file.source is not None, file
+        return self._storage_for_source(file.source.spec)
 
     def _storage_for_source(self, source: SourceSpec) -> StorageService:
         if self._is_public(source):
@@ -388,41 +379,30 @@ class MirrorService:
     def _source_service(self) -> SourceService:
         return SourceService()
 
-    def may_mirror_files_from_source(self, source_spec: SourceSpec) -> bool:
+    def will_mirror(self, source: SourceSpec, file_size: int) -> bool:
         """
-        Test whether it makes sense to request the mirroring of files from the
-        given source. If this method returns True, files from the source may or
-        may not be mirrored. If this method returns False, the service will
-        definitely not mirror any files from the source.
+        Test whether files from the given source, that are of the given size or
+        less, will be mirrored when :meth:`mirror_sources` is invoked with
+        that source, or when :meth:`mirror_file` is invoked with such a file.
         """
-        if self.may_mirror():
-            plugin = self.repository_plugin
-            source_config = plugin.sources[source_spec]
-            if source_config.mirror:
-                # This method is only used by the index and manifest services
-                # to determine whether to populate a file's mirror URI in the
-                # index response/manifest or not. We deliberately return a false
-                # negative for managed-access files since we don't want the
-                # service to know about them yet.
-                #
-                # FIXME: Expose access to mirrored MA files via /repository/files
-                #        https://github.com/DataBiosphere/azul/issues/7931
-                #
-                return self._is_public(source_spec)
-            else:
-                return False
+        if self._may_mirror(file_size):
+            source_config = self.repository_plugin.sources[source]
+            return source_config.mirror
         else:
             return False
 
-    def may_mirror(self, file_size: int = 0) -> bool:
+    def may_mirror(self) -> bool:
         """
         Test whether it makes sense to request the mirroring of files from the
-        current catalog if they are of the given size or larger. If this method
-        returns True, such files may or may not be mirrored. If this method
-        returns False, the service will definitely skip mirroring such files,
-        although it may mirror smaller files.
+        current catalog. If this method returns True, such files may or may not
+        be mirrored, depending on their size and source. If this method returns
+        False, the service will definitely skip mirroring such files.
         """
+        return self._may_mirror(0)
+
+    def _may_mirror(self, file_size: int) -> bool:
         if config.enable_mirroring:
+            # A mirror limit of -1 disables mirroring of an entire catalog
             max_size = config.catalogs[self.catalog].mirror_limit
             return max_size is None or file_size <= max_size
         else:
@@ -493,7 +473,7 @@ class MirrorService:
     assert 1.5 * 1024 ** 4 <= max_file_size
 
     def mirror_uri(self,
-                   source: SourceSpec,
+                   source: SourceRef,
                    file_cls: type[File],
                    file_json: JSON
                    ) -> str | None:
@@ -505,17 +485,23 @@ class MirrorService:
 
         :param source: The source of the file
 
-        :param file_cls: The type of the file. This parameter is needed in order
-                         to avoid deserializing a file from a source that was
-                         configured to not be mirrored because the file metadata
-                         in that source is incomplete or broken
+        :param file_cls: The type of the file.
 
         :param file_json: the index representation of the file
         """
-        if self.may_mirror_files_from_source(source):
-            file = file_cls.from_index(file_json)
-            if self.may_mirror(0 if file.size is None else file.size):
-                storage = self._storage_for_source(source)
+        # We have to call will_mirror() twice in order to avoid deserializing a
+        # file from a source that was configured to not be mirrored because the
+        # file metadata in that source is incomplete or broken.
+        #
+        # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+        #        https://github.com/DataBiosphere/azul/issues/7634
+        #
+        if self.will_mirror(source.spec, file_size=0):
+            file = file_cls.from_index(file_json, source=source)
+            # FIXME: Remove file size default
+            #        https://github.com/DataBiosphere/azul/issues/8024
+            if self.will_mirror(source.spec, 0 if file.size is None else file.size):
+                storage = self._storage_for_source(source.spec)
                 return str(furl(scheme='s3',
                                 netloc=storage.bucket_name,
                                 path=self._file_object_key(file)))
@@ -524,17 +510,28 @@ class MirrorService:
         else:
             return None
 
-    def mirror_url(self, file: File) -> str:
-        storage = self._storage_for_file(file)
-        return storage.get_presigned_url(object_key=self._file_object_key(file),
-                                         file_name=file.name,
-                                         content_type=file.content_type)
+    def mirror_url(self, file: File) -> str | None:
+
+        # FIXME: Expose access to mirrored MA files via /repository/files
+        #        https://github.com/DataBiosphere/azul/issues/7931
+        #
+        assert file.source is not None, file
+        if not self._is_public(file.source.spec):
+            return None
+
+        if self._info_exists(file):
+            storage = self._storage_for_file(file)
+            return storage.get_presigned_url(object_key=self._file_object_key(file),
+                                             file_name=file.name,
+                                             content_type=file.content_type)
+        else:
+            return None
 
     def info(self, file: File) -> MutableJSON:
         storage = self._storage_for_file(file)
         return json.loads(storage.get_object(self._info_object_key(file)))
 
-    def info_exists(self, file: File) -> bool:
+    def _info_exists(self, file: File) -> bool:
         storage = self._storage_for_file(file)
         return storage.object_exists(self._info_object_key(file))
 
@@ -650,7 +647,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             assert file.size is not None, R('File size unknown', file)
             assert file.size <= self.max_file_size, R(
                 'File too big', file, self.max_file_size)
-            if self.may_mirror(file.size):
+            if self.will_mirror(file.source.spec, file.size):
                 yield devolve(MirrorFileAction, a, file=file)
             else:
                 log.info('Not mirroring file to save cost: %r', file)
@@ -660,7 +657,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     @_mirror.register
     def _(self, a: MirrorFileAction) -> Iterator[MirrorAction]:
         assert a.file.size is not None, R('File size unknown', a.file)
-        if self.info_exists(a.file):
+        if self._info_exists(a.file):
             log.info('File is already mirrored, skipping upload: %r', a.file)
             self._update_info(a.file)
         elif self._file_exists(a.file):

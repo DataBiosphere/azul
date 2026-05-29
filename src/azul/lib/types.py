@@ -13,6 +13,7 @@ from typing import (
     Any,
     Callable,
     ForwardRef,
+    Literal,
     NotRequired,
     Optional,
     Protocol,
@@ -250,6 +251,12 @@ def json_untyped_dict(v: JSONTypedDict) -> MutableJSON:
     # FIXME: json_untyped_dict is unsafe
     #        https://github.com/DataBiosphere/azul/issues/7381
     return cast(MutableJSON, v)
+
+
+def json_untyped_flat_dict(v: JSONTypedDict) -> MutableFlatJSON:
+    # FIXME: json_untyped_dict is unsafe
+    #        https://github.com/DataBiosphere/azul/issues/7381
+    return cast(MutableFlatJSON, v)
 
 
 class LambdaContext:
@@ -767,6 +774,12 @@ def check_type(type_expression: TypeExpression, value: Any) -> bool:
     >>> check_type(G, {'x': 22, 'z': 44})
     False
 
+    >>> check_type(Literal['a', 'b'], 'a')
+    True
+    >>> check_type(Literal['a', 'b'], 'c')
+    False
+    >>> check_type(Literal[42], 'c')
+    False
     """
     return _check_type(type_expression, value, {})
 
@@ -796,6 +809,8 @@ def _check_type(t: TypeExpression | TypeVar,
         ot, ats = not_none(get_origin(t)), get_args(t)
         if ot in (ReadOnly, Required, NotRequired):
             return _check_type(one(ats), x, tvs)
+        elif ot is Literal:
+            return x in ats
         else:
             tps = getattr(ot, '__type_params__', ())
             if tps:
