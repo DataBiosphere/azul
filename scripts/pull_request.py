@@ -57,6 +57,9 @@ def main(argv):
                         choices=['upgrade', 'promotion'],
                         help='Type of PR to create. '
                              'If omitted, a regular PR is created.')
+    parser.add_argument('--no-reindex',
+                        action='store_true', default=False,
+                        help='Remove reindex labels and check reindex tasks.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -67,6 +70,8 @@ def main(argv):
     args = parser.parse_args(argv)
     if args.type is not None and args.fix is not None:
         parser.error('--fix/--no-fix cannot be used with --type')
+    if args.type is not None and args.no_reindex:
+        parser.error('--no-reindex cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
@@ -137,6 +142,14 @@ def main(argv):
     body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
     body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
 
+    if args.no_reindex:
+        assert not _has_commit_tag(target_branch, 'r'), R(
+            '--no-reindex cannot be used when a commit is tagged `r`')
+        body = _check_task(body, r'Added `r` tag to commit title.*')
+        reindex_labels = _reindex_labels(body)
+        for label in reindex_labels:
+            body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, 'Name of PR branch matches .*')
@@ -182,6 +195,10 @@ def main(argv):
         log.info('PR URL is %r', pr_url)
 
     _label(pr_url, 'upgrade', mode='add' if has_u_tag else 'remove')
+
+    if args.no_reindex:
+        for label in reindex_labels:
+            _label(pr_url, label, mode='remove')
 
     log.info('Setting PR status …')
     pr_node_id = _node_id(pr_url)
@@ -353,6 +370,11 @@ def _reference_issue_in_body(body: str, issue_number: int) -> str:
     return body
 
 
+def _reindex_labels(body: str) -> list[str]:
+    return re.findall(r'^- \[[ x]] This PR is labeled `(reindex:\w+)`',
+                      body, flags=re.MULTILINE)
+
+
 def _check_task(body: str, task: str, checked: bool = True) -> str:
     mark = 'x' if checked else ' '
     body, n = re.subn(r'^- \[[ x]] (' + task + ')$',
@@ -399,7 +421,9 @@ type LabelMode = Literal['add', 'remove']
 def _label(item_url: str, label: str, *, mode: LabelMode) -> None:
     assert check_type(LabelMode, mode)
     item_type = _gh_item_type(item_url)
-    log.info('%s label %r to %r …', mode.title() + 'ing', label, item_url)
+    verb = {'add': 'Adding', 'remove': 'Removing'}[mode]
+    preposition = {'add': 'to', 'remove': 'from'}[mode]
+    log.info('%s label %r %s %r …', verb, label, preposition, item_url)
     subprocess.run(
         ['gh', item_type, 'edit', item_url, f'--{mode}-label', label],
         capture_output=True, text=True
