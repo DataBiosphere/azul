@@ -287,10 +287,8 @@ class CredentialedClient(HasCachedHttpClient):
                 azul_client_id = config.google_oauth2_client_id
                 assert azul_client_id is not None, R(
                     'Acceptance of OAuth 2.0 user access tokens is disabled')
-                project_id = self._project_id_from_client_id(azul_client_id)
-                authorized_project_id = self._project_id_from_client_id(authorized_party)
-                assert project_id == authorized_project_id, R(
-                    'OAuth 2.0 client project does not match')
+                assert authorized_party == azul_client_id, R(
+                    'OAuth 2.0 client does not match')
             elif email is not None and email.endswith('.iam.gserviceaccount.com'):
                 # A service account's bare access token
                 assert token_info['email_verified'] == 'true', R(
@@ -303,6 +301,3 @@ class CredentialedClient(HasCachedHttpClient):
                 assert False, 'Unexpected type of authorized party'
         else:
             assert False, type(credentials)
-
-    def _project_id_from_client_id(self, client_id):
-        return client_id.split('-', 1)[0]
