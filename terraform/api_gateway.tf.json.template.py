@@ -342,8 +342,8 @@ emit_tf({
                 # that of the machine deploying the set because those are the
                 # machines most likely to run integration tests.
                 #
-                'it_v4_ips': {
-                    'name': config.qualified_resource_name('it_v4_ips'),
+                config.it_ips_term: {
+                    'name': config.qualified_resource_name(config.it_ips_term),
                     'scope': 'REGIONAL',
                     'ip_address_version': 'IPV4',
                     'addresses': [
@@ -651,7 +651,7 @@ emit_tf({
                                 ]
                             ],
                             {
-                                # See it_v4_ips above
+                                # See aws_wafv2_ip_set.{config.it_ips_term} above
                                 'name': 'allow_it_requests',
                                 'statement': {
                                     'and_statement': [
@@ -659,7 +659,7 @@ emit_tf({
                                             'statement': [
                                                 {
                                                     'ip_set_reference_statement': {
-                                                        'arn': '${aws_wafv2_ip_set.%s.arn}' % 'it_v4_ips'
+                                                        'arn': '${aws_wafv2_ip_set.%s.arn}' % config.it_ips_term
                                                     }
                                                 },
                                                 waf_match_method('PUT'),
