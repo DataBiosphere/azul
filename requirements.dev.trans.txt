@@ -23,7 +23,7 @@ mypy-boto3-ecr==1.43.0
 mypy-boto3-iam==1.43.2
 mypy-boto3-kms==1.43.12
 mypy-boto3-lambda==1.43.0
-mypy-boto3-opensearch==1.43.7
+mypy-boto3-opensearch==1.43.16
 mypy-boto3-s3==1.43.14
 mypy-boto3-secretsmanager==1.43.0
 mypy-boto3-securityhub==1.43.5

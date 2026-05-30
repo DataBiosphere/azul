@@ -3,6 +3,7 @@ attrs==26.1.0
 boto3==1.43.10  # Match version of the `boto3-stubs` dev dependency
 botocore==1.43.10
 chevron==0.14.0  # Match with types-chevron in requirements.dev.txt
+cryptography==48.0.0
 fastavro==1.12.2
 furl==2.1.4
 google-api-core==2.30.3
