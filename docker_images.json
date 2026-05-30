@@ -63,18 +63,18 @@
             }
         }
     },
-    "docker.io/ucscgi/azul-bigquery-emulator:0.4.4-63": {
-        "digest": "sha256:6e75dc1d4cd348b8105fc989980cfc85bb20f738041e6750c803d3428c163aee",
-        "mirror_digest": "sha256:55887505d17286dd8678a332fa3d911236eeacfa491637550f07266e2f794f84",
+    "docker.io/ucscgi/azul-bigquery-emulator:0.4.4-64": {
+        "digest": "sha256:8906cc53d173b1ea2e784df7d7a606def66e8bfe3ab320d51498125545ae75e1",
+        "mirror_digest": "sha256:0d6978a460db82310189c65a5bae2e0d2586fabee2fd3d4a841a5676adac88cf",
         "parts": {
             "linux/amd64": {
-                "digest": "sha256:7eda9d26b1bf7aeae592eaf2e836b018c19f3bcb23603172c7eb6e5b431c37b4",
-                "id": "sha256:6b56ebdf7ea3e8ba7b4b1902647025bba9197733a113c61f94b4378cc694d971",
+                "digest": "sha256:2bf0c8808e228e2d80cd736ae4096979e8fe0b8ef1ad1b47ea642e67b9e7e97c",
+                "id": "sha256:e1f0ad3566014a60cc8032eff610459d374123dde3dd3fb562cd8925e7018b7c",
                 "platform": "linux/amd64"
             },
             "linux/arm64": {
-                "digest": "sha256:83527ecd223482eb41f2badb3f4661e1aeeb427fdde48c2ce337bd7ca795a76d",
-                "id": "sha256:d11096320b9d189cd393374b82760f39084a20db48a638c7e4ead6afa29004ad",
+                "digest": "sha256:a8edc83dfcb8427585c45b57cd18be863ae5fd129a3acce6c913cd49cb910251",
+                "id": "sha256:fb4b47130dbfa5778d906968e517da947ad91cacd38afb2befe952a0dffe5d3e",
                 "platform": "linux/arm64"
             }
         }
