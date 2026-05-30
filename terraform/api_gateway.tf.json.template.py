@@ -16,7 +16,6 @@ from azul.chalice import (
 )
 from azul.deployment import (
     aws,
-    public_ip,
 )
 from azul.infra.terraform import (
     chalice,
@@ -338,21 +337,19 @@ emit_tf({
             'aws_wafv2_ip_set': {
                 # The IPs in this set are exempt from the rate limit on service
                 # API requests so as to prevent integration tests from tripping
-                # them. In the set, we include the IP of the GitLab instance and
-                # that of the machine deploying the set because those are the
-                # machines most likely to run integration tests.
+                # them. In the set, we include the public IPs of the GitLab
+                # instance. The integration test will also dynamically add the
+                # IP of the machine running the IT during setup, and remove it
+                # again during teardown, unless the IT is run on GitLab.
                 #
                 config.it_ips_term: {
                     'name': config.qualified_resource_name(config.it_ips_term),
                     'scope': 'REGIONAL',
                     'ip_address_version': 'IPV4',
                     'addresses': [
-                        f'{public_ip()}/32',
-                        *[
-                            # Data source defined in data_sources.tf.json
-                            f'${{data.aws_nat_gateway.gitlab_{zone}.public_ip}}/32'
-                            for zone in range(vpc.num_zones)
-                        ]
+                        # Data source defined in data_sources.tf.json
+                        f'${{data.aws_nat_gateway.gitlab_{zone}.public_ip}}/32'
+                        for zone in range(vpc.num_zones)
                     ]
                 }
             },
