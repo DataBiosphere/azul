@@ -1,13 +1,12 @@
 --find-links  https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5  # match version of resumablehash requirement below
 attrs==26.1.0
-aws-requests-auth==0.4.3
-boto3==1.42.97  # Match version of the `boto3-stubs` dev dependency
-botocore==1.42.97
+boto3==1.43.10  # Match version of the `boto3-stubs` dev dependency
+botocore==1.43.10
 chevron==0.14.0  # Match with types-chevron in requirements.dev.txt
 fastavro==1.12.2
 furl==2.1.4
 google-api-core==2.30.3
-google-auth[pyopenssl]==2.49.2
+google-auth[pyopenssl]==2.53.0
 google-cloud-bigquery==3.41.0
 http-message-signatures==2.0.1
 http_sfv==0.9.9
@@ -21,6 +20,6 @@ referencing==0.36.2  # < 0.37.0, see https://github.com/DataBiosphere/azul/issue
 requests==2.33.1
 resumablehash==1.5  # match version with --find-links above
 setuptools==82.0.1  # Match requirements.pip.txt. Python 3.12 removed distutils, which we depended on transitively. Luckily, setuptools includes a vendored copy.
-urllib3==2.6.3
+urllib3==2.7.0
 werkzeug==3.1.8
 -r requirements.trans.txt

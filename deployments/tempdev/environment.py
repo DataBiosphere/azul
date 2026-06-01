@@ -157,7 +157,7 @@ def env() -> Mapping[str, str | None]:
 
         'GOOGLE_PROJECT': 'platform-temp-dev',
 
-        'AZUL_DEPLOYMENT_INCARNATION': '1',
+        'AZUL_DEPLOYMENT_INCARNATION': '2',
 
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '807674395527-erth0gf1m7qme5pe6bu384vpdfjh06dg.apps.googleusercontent.com',
 

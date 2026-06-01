@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<body>
+<script nonce="{{{NONCE}}}">
+(function () {
+    var oauth2 = window.opener.swaggerUIRedirectOauth2;
+    var isValid = {{{STATE}}} === oauth2.state;
+    oauth2.auth.code = {{{CODE}}};
+    oauth2.callback({
+        auth: oauth2.auth,
+        redirectUrl: oauth2.redirectUrl,
+        isValid: isValid
+    });
+    window.close();
+})();
+</script>
+</body>
+</html>

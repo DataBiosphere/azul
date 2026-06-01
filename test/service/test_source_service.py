@@ -196,7 +196,7 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
 
         def _test(*, authenticate: bool, cache: bool):
             with self.subTest(authenticate=authenticate, cache=cache):
-                headers = {'Authorization': 'Bearer foo_token'} if authenticate else {}
+                headers = {'Authorization': 'Bearer ya29.foo_token'} if authenticate else {}
                 response = client.request('GET', str(azul_url), headers=headers)
                 self.assertEqual(response.status, 200)
                 actual = json.loads(response.data)
@@ -217,7 +217,7 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
         _test(authenticate=True, cache=True)
         _test(authenticate=False, cache=True)
         mock_source_cache_get.return_value = None
-        mock_source_cache_get.side_effect = NotFound('foo_token')
+        mock_source_cache_get.side_effect = NotFound('ya29.foo_token')
         with patch('azul.terra.TDRClient.list_snapshot_ids',
                    return_value=self.mock_list_snapshots_response.keys() | {'not_indexed'}):
             _test(authenticate=True, cache=False)

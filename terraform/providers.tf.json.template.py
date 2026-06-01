@@ -21,11 +21,11 @@ emit_tf(tag_resources=False, config={
             },
             'google': {
                 'source': 'hashicorp/google',
-                'version': '4.85.0'
+                'version': '7.31.0'
             },
             'aws': {
                 'source': 'hashicorp/aws',
-                'version': '6.42.0'
+                'version': '6.44.0'
             },
         },
     },

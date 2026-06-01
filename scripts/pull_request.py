@@ -20,12 +20,23 @@ from pathlib import (
 import re
 import subprocess
 import sys
+from typing import (
+    Literal,
+)
+
+import attrs
+from furl import (
+    furl,
+)
 
 from azul.lib import (
     R,
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
+)
+from azul.lib.types import (
+    check_type,
 )
 from azul.logging import (
     configure_script_logging,
@@ -83,25 +94,48 @@ def main(argv):
     else:
         assert False, R('Unsupported template', args.type)
     log.info('Fetching issue #%d …', issue_number)
-    issue_title, issue_type = _issue_info(issue_number)
+    issue = _issue_info(issue_number)
     if args.fix is None:
-        fix = issue_type == 'Defect'
+        fix = issue.type == 'Defect'
     else:
         fix = args.fix
-    title = _pr_title(issue_number, issue_title, fix, suffix=title_suffix)
+    title = _pr_title(issue_number, issue.title, fix, suffix=title_suffix)
 
     log.info('Checking for existing PR …')
     existing_pr = _existing_pr()
+    template = template_path.read_text()
 
     if existing_pr is None:
-        body = template_path.read_text()
+        body = template
     else:
         body = existing_pr['body']
+        expected_comment = template.split('-->', maxsplit=1)[0]
+        assert body.startswith(expected_comment), R(
+            'Existing PR was created with a different template')
 
     # Normalize line endings from GitHub API responses
     body = '\n'.join(body.splitlines())
 
     body = _reference_issue_in_body(body, issue_number)
+
+    m = re.search(r'^- \[[ x]] Target branch is `(.+?)`$',
+                  template, flags=re.MULTILINE)
+    assert m is not None, R('Target branch task not found in template')
+    target_branch = m.group(1)
+    target_branch_task = r'Target branch is `' + re.escape(target_branch) + '`'
+    if existing_pr is None:
+        body = _check_task(body, target_branch_task)
+    else:
+        base = existing_pr['baseRefName']
+        if base == target_branch:
+            body = _check_task(body, target_branch_task)
+        else:
+            log.warning('Target branch is %r, expected %r', base, target_branch)
+            body = _check_task(body, target_branch_task, checked=False)
+
+    has_u_tag = _has_commit_tag(target_branch, 'u')
+    body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
+    body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
 
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
@@ -121,6 +155,7 @@ def main(argv):
         result = subprocess.run(
             [
                 'gh', 'pr', 'create',
+                '--base', target_branch,
                 '--title', title,
                 '--body', body,
                 '--assignee', '@me',
@@ -146,11 +181,13 @@ def main(argv):
         )
         log.info('PR URL is %r', pr_url)
 
+    _label(pr_url, 'upgrade', mode='add' if has_u_tag else 'remove')
+
     log.info('Setting PR status …')
-    pr_node_id = _node_id('pr', pr_url)
+    pr_node_id = _node_id(pr_url)
     _set_status(pr_node_id, 'In Progress')
     log.info('Setting issue status …')
-    issue_node_id = _node_id('issue', str(issue_number))
+    issue_node_id = _node_id(issue.url)
     _set_status(issue_node_id, 'In Progress')
 
 
@@ -200,6 +237,25 @@ def _check_remote_branch(branch: str) -> None:
             log.warning('Remote and local branch diverge. A force push is needed')
 
 
+def _commit_title_tags(title: str) -> set[str]:
+    m = re.match(r'^\[([^]]*)]', title)
+    if m is None:
+        return set()
+    else:
+        return set(m.group(1).split())
+
+
+def _has_commit_tag(target_branch: str, tag: str) -> bool:
+    result = subprocess.run(
+        ['git', 'log', '--format=%s', f'{target_branch}..HEAD'],
+        capture_output=True, text=True, check=True
+    )
+    return any(
+        tag in _commit_title_tags(title)
+        for title in result.stdout.splitlines()
+    )
+
+
 def _issue_number(branch: str) -> int:
     m = re.fullmatch(r'issues/[^/]+/(\d+)-.*', branch)
     assert m is not None, R('Cannot extract issue number from branch name', branch)
@@ -235,7 +291,14 @@ def _promotion_date_and_target(branch: str) -> tuple[str, str]:
     return m.group(1), m.group(2)
 
 
-def _issue_info(issue_number: int) -> tuple[str, str]:
+@attrs.frozen
+class _IssueInfo:
+    title: str
+    type: str
+    url: str
+
+
+def _issue_info(issue_number: int) -> _IssueInfo:
     result = subprocess.run(
         [
             'gh', 'api', 'graphql',
@@ -244,6 +307,7 @@ def _issue_info(issue_number: int) -> tuple[str, str]:
                     repository(owner: "{owner}", name: "azul") {{
                         issue(number: {number}) {{
                             title
+                            url
                             issueType {{ name }}
                         }}
                     }}
@@ -254,7 +318,11 @@ def _issue_info(issue_number: int) -> tuple[str, str]:
     )
     issue = json.loads(result.stdout)['data']['repository']['issue']
     issue_type = issue['issueType']
-    return issue['title'], issue_type['name'] if issue_type else ''
+    return _IssueInfo(
+        title=issue['title'],
+        type=issue_type['name'] if issue_type else '',
+        url=issue['url']
+    )
 
 
 def _pr_title(issue_number: int,
@@ -268,7 +336,7 @@ def _pr_title(issue_number: int,
 
 def _existing_pr() -> dict | None:
     result = subprocess.run(
-        ['gh', 'pr', 'view', '--json', 'url,body'],
+        ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
         capture_output=True, text=True
     )
     if result.returncode != 0:
@@ -285,15 +353,13 @@ def _reference_issue_in_body(body: str, issue_number: int) -> str:
     return body
 
 
-def _check_task(body: str, task: str) -> str:
-    body_new, n = re.subn(r'^- \[ ] (' + task + ')$',
-                          r'- [x] \1',
-                          body, flags=re.MULTILINE)
+def _check_task(body: str, task: str, checked: bool = True) -> str:
+    mark = 'x' if checked else ' '
+    body, n = re.subn(r'^- \[[ x]] (' + task + ')$',
+                      r'- [' + mark + r'] \1',
+                      body, flags=re.MULTILINE)
+    assert n > 0, R('Task item not found in template', task)
     assert n < 2, R('Multiple matching task items found', task)
-    if n > 0:
-        return body_new
-    assert re.search(r'^- \[x] ' + task + '$', body, flags=re.MULTILINE), R(
-        'Task item not found in template', task)
     return body
 
 
@@ -311,12 +377,33 @@ def _github_user() -> str:
     return result.stdout.strip()
 
 
-def _node_id(kind: str, ref: str) -> str:
+def _gh_item_type(url: str) -> str:
+    path_kind = furl(url).path.segments[2]
+    result = {'pull': 'pr', 'issues': 'issue'}.get(path_kind)
+    assert result is not None, R('Cannot determine issue or PR from URL', url)
+    return result
+
+
+def _node_id(url: str) -> str:
+    item_type = _gh_item_type(url)
     result = subprocess.run(
-        ['gh', kind, 'view', ref, '--json', 'id', '--jq', '.id'],
+        ['gh', item_type, 'view', url, '--json', 'id', '--jq', '.id'],
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
+
+
+type LabelMode = Literal['add', 'remove']
+
+
+def _label(item_url: str, label: str, *, mode: LabelMode) -> None:
+    assert check_type(LabelMode, mode)
+    item_type = _gh_item_type(item_url)
+    log.info('%s label %r to %r …', mode.title() + 'ing', label, item_url)
+    subprocess.run(
+        ['gh', item_type, 'edit', item_url, f'--{mode}-label', label],
+        capture_output=True, text=True
+    )
 
 
 def _set_status(node_id: str, status: str) -> None:

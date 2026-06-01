@@ -11,6 +11,10 @@ from contextlib import (
 )
 import csv
 import gzip
+from http.server import (
+    BaseHTTPRequestHandler,
+    HTTPServer,
+)
 from io import (
     BytesIO,
     TextIOWrapper,
@@ -28,6 +32,7 @@ from random import (
     randint,
 )
 import re
+import subprocess
 import sys
 import tempfile
 import threading
@@ -35,6 +40,7 @@ import time
 from typing import (
     Any,
     Callable,
+    ClassVar,
     ContextManager,
     IO,
     Protocol,
@@ -47,6 +53,7 @@ from unittest.mock import (
     PropertyMock,
 )
 import uuid
+import webbrowser
 
 import attr
 from chalice import (
@@ -83,7 +90,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    OAuth2,
+    AccessTokenAuthentication,
 )
 from azul.azulclient import (
     AzulClient,
@@ -100,9 +107,13 @@ from azul.deployment import (
 )
 from azul.drs import (
     AccessMethod,
+    CompactDRSURI,
+    DRSURI,
+    HostBasedDRSURI,
 )
 from azul.http import (
     HttpClient,
+    HttpClientDecorator,
     http_client,
 )
 from azul.indexer import (
@@ -113,7 +124,6 @@ from azul.indexer.document import (
     EntityType,
 )
 from azul.indexer.index_service import (
-    IndexExistsAndDiffersException,
     IndexService,
 )
 from azul.indexer.mirror_service import (
@@ -137,6 +147,10 @@ from azul.lib.types import (
     JSONs,
     MutableJSON,
     MutableJSONs,
+    json_int,
+    json_list_of_dicts,
+    json_str,
+    optional,
 )
 from azul.logging import (
     configure_test_logging,
@@ -198,14 +212,7 @@ log = get_test_logger(__name__)
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(log)
-    for catalog in config.integration_test_catalogs:
-        try:
-            IndexService().create_indices(catalog)
-        except IndexExistsAndDiffersException:
-            log.debug('Properties of the catalog %s have changed, the catalog '
-                      'will be deleted and recreated', catalog)
-            IndexService().delete_indices(catalog)
-            IndexService().create_indices(catalog)
+    IndexingIntegrationTest.early_setup()
 
 
 class ReadableFileObject(Protocol):
@@ -393,6 +400,17 @@ class IndexingIntegrationTest(IntegrationTestCase):
     #:
     _http: HttpClient
 
+    _user_access_token: ClassVar[str]
+
+    @classmethod
+    def early_setup(cls) -> None:
+        # Getting a user access token requires user intervention. We'll get it
+        # out of the way early so that the rest of the IT can run unattended.
+        # See the documentation on the `unattended` flag in environment.py for
+        # more information.
+        if 'unattended' not in config.it_flags:
+            cls._user_access_token = cls.__user_access_token()
+
     def setUp(self) -> None:
         super().setUp()
         self._plain_http = http_client(log)
@@ -459,7 +477,6 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 self.assertEqual(snapshots, paged_snapshots)
 
     def test_indexing(self):
-
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
             name: CatalogName
@@ -528,6 +545,10 @@ class IndexingIntegrationTest(IntegrationTestCase):
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
+            # FIXME: Revert, once the underlying issue with requester-pays is fixed
+            #        https://github.com/DataBiosphere/azul/issues/7955
+            if mirror:
+                self._test_curl_manifest(catalog.name)
             self._test_drs(catalog.name)
             self._test_repository_files(catalog.name)
             self._test_managed_access(catalog=catalog.name,
@@ -630,7 +651,6 @@ class IndexingIntegrationTest(IntegrationTestCase):
                         return response
 
                     with mock.patch.object(self, '_get_url', new=get_url):
-
                         # Make multiple identical concurrent requests to test
                         # the idempotence of manifest generation, and its
                         # resilience against DOS attacks.
@@ -767,6 +787,55 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 urls.append(furl(response.headers['Location']))
         return urls
 
+    def _test_curl_manifest(self, catalog: CatalogName):
+        supported_formats = self._manifest_formats(catalog)
+        if ManifestFormat.curl in supported_formats:
+            with self.subTest('curl_manifest', catalog=catalog):
+                if 'unattended' in config.it_flags:
+                    credentials = self._service_account_credentials
+                else:
+                    credentials = self._user_credentials
+                with credentials:
+                    max_size = 512 * 2 ** 20
+                    outer_file, inner_file = self._get_one_file(catalog,
+                                                                max_size=max_size,
+                                                                downloadable=True)
+                    file_uuid = lookup(inner_file, 'document_id', 'uuid')
+                    special_fields = self.metadata_plugin(catalog).special_fields
+                    filters = {special_fields.file_uuid.name: {'is': [file_uuid]}}
+                    manifest_url = mutable_furl(
+                        url=config.service_endpoint,
+                        path='/manifest/files',
+                        args=dict(catalog=catalog,
+                                  filters=json.dumps(filters),
+                                  format=ManifestFormat.curl.value)
+                    )
+                    method = PUT
+                    while True:
+                        response = self._get_url_unchecked(method, manifest_url)
+                        if response.status == 302:
+                            break
+                        else:
+                            self.assertEqual(response.status, 301)
+                            time.sleep(float(response.headers['Retry-After']))
+                            manifest_url = furl(response.headers['Location'])
+                            method = GET
+                command_lines = self._curl_manifest_command_lines(response.data)
+                bash_command = command_lines[-1]
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    log.info('Running %r in %r', bash_command, tmpdir)
+                    result = subprocess.run(bash_command,
+                                            shell=True,
+                                            executable='bash',
+                                            cwd=tmpdir,
+                                            timeout=600)
+                    self.assertEqual(0, result.returncode)
+                    num_files = sum(
+                        len(filenames)
+                        for dirpath, _, filenames in os.walk(tmpdir)
+                    )
+                    self.assertEqual(1, num_files)
+
     def _get_one_mirrorable_file(self,
                                  catalog: CatalogName
                                  ) -> tuple[File, SourceRef, JSON]:
@@ -777,8 +846,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
             # source with no files below the mirror limit, in which case the
             # test will fail. For now, we consider that to be an acceptable risk
             # given the cost associated with mirroring larger files.
-            outer_file, inner_file = self._get_one_file(catalog,
-                                                        max_size=config.catalogs[catalog].mirror_limit)
+            max_size = config.catalogs[catalog].mirror_limit
+            outer_file, inner_file = self._get_one_file(catalog, max_size=max_size)
         # Order matters here because sha256 is present in the file response for
         # AnVIL, but is always set to the empty string
         file_digest = lookup(inner_file, 'file_md5sum', 'sha256')
@@ -800,32 +869,51 @@ class IndexingIntegrationTest(IntegrationTestCase):
                       catalog: CatalogName,
                       *,
                       max_size: int | None = None,
+                      downloadable: bool | None = None
                       ) -> tuple[JSON, JSON]:
         # Try to filter for an easy-to-parse format to verify its contents
         file_size_facet = self._file_size_facet(catalog)
-        for filters in [self._fastq_filter(catalog), {}]:
-            if max_size is not None:
+        for s1, filters in [('FASTQ', self._fastq_filter(catalog)), ('any', {})]:
+            if max_size is None:
+                s2 = 'of any size'
+            else:
+                s2 = f'up to {max_size} bytes in size'
                 filters.update({
                     file_size_facet: {
                         'within': [[1, max_size]],
                     }
                 })
+            log.info('Looking for %s files %s', s1, s2)
             response = self._check_endpoint(method=GET,
                                             path='/index/files',
                                             args=dict(catalog=catalog,
                                                       filters=json.dumps(filters),
-                                                      size=1,
+                                                      size=1 if downloadable is None else 100,
                                                       order='asc',
                                                       sort=file_size_facet))
-            hits = json.loads(response)['hits']
-            if hits:
-                break
+            for outer_file in json.loads(response)['hits']:
+                inner_files: JSONs = outer_file['files']
+                inner_file = one(inner_files)
+                if downloadable is None:
+                    return outer_file, inner_file
+                else:
+                    if downloadable == self._downloadable(inner_file):
+                        return outer_file, inner_file
+        self.fail('No files found')
+
+    def _downloadable(self, inner_file: JSON) -> bool:
+        drs_uri = DRSURI.parse(json_str(inner_file['drs_uri']))
+        if isinstance(drs_uri, HostBasedDRSURI):
+            return drs_uri.server == config.tdr_service_url.netloc
+        elif isinstance(drs_uri, CompactDRSURI):
+            # As of May 2026, this namespace resolves to TDR, but this may
+            # change. For that reason, …
+            #
+            # FIXME: … we shouldn't hard-code compact identifier namespaces
+            #        https://github.com/DataBiosphere/azul/issues/8063
+            return drs_uri.namespace == 'drs.anv0'
         else:
-            self.fail('No files found')
-        outer_file = one(hits)
-        inner_files: JSONs = outer_file['files']
-        inner_file = one(inner_files)
-        return outer_file, inner_file
+            assert False, inner_file
 
     def _source_spec(self, catalog: CatalogName, entity: JSON) -> SourceSpec:
         source = self._source_from_response(catalog, one(entity['sources']))
@@ -898,8 +986,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     @property
     def _service_account_credentials(self) -> ContextManager:
-        client = self._service_account_client
-        return self._authorization_context(client)
+        http = self._service_account_client._http_client
+        return self._authorization_context(http)
 
     @cached_property
     def _service_account_client(self):
@@ -908,8 +996,8 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     @property
     def _public_service_account_credentials(self) -> ContextManager:
-        client = self._public_service_account_client
-        return self._authorization_context(client)
+        http = self._public_service_account_client._http_client
+        return self._authorization_context(http)
 
     @cached_property
     def _public_service_account_client(self):
@@ -918,22 +1006,81 @@ class IndexingIntegrationTest(IntegrationTestCase):
 
     @property
     def _unregistered_service_account_credentials(self) -> ContextManager:
-        client = self._unregistered_service_account_client
-        return self._authorization_context(client)
+        http = self._unregistered_service_account_client._http_client
+        return self._authorization_context(http)
 
     @cached_property
     def _unregistered_service_account_client(self):
         provider = self._unregistered_tdr_client.credentials_provider
         return CredentialedClient(credentials_provider=provider)
 
-    @contextmanager
-    def _authorization_context(self, oauth2_client: CredentialedClient) -> ContextManager:
-        old_http = self._http
-        try:
-            self._http = oauth2_client._http_client
-            yield
-        finally:
-            self._http = old_http
+    @property
+    def _user_credentials(self) -> ContextManager:
+        http = self._user_client
+        return self._authorization_context(http)
+
+    @cached_property
+    def _user_client(self) -> HttpClient:
+        return BearerTokenHttpClient(self._plain_http,
+                                     self._user_access_token)
+
+    def _authorization_context(self, http: HttpClient) -> ContextManager:
+        return mock.patch.object(self, '_http', http)
+
+    @classmethod
+    def __user_access_token(cls) -> str:
+        # The host name of the redirect URL must resolve to a local interface.
+        # The port should be free. The URL must be set as an authorized redirect
+        # URI in the OAuth client of the selected deployment. Note that the URL
+        # is duplicated in README.md as well.
+        redirect_url = furl('http://localhost:8088')
+        auth_url = furl(url='https://accounts.google.com/o/oauth2/v2/auth',
+                        args=dict(client_id=config.google_oauth2_client_id,
+                                  redirect_uri=str(redirect_url),
+                                  response_type='code',
+                                  scope='openid email',
+                                  access_type='offline',
+                                  prompt='consent'))
+        auth_code = None
+
+        class Handler(BaseHTTPRequestHandler):
+
+            def do_GET(self):
+                nonlocal auth_code
+                # self.path is the path plus the query
+                url = furl(self.path)
+                if str(url.path) != '/':
+                    self.send_error(404)
+                elif 'code' not in url.query.params:
+                    self.send_error(400)
+                else:
+                    auth_code = url.query.params['code']
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(b'Authorization successful. You may close this tab.')
+
+            def log_message(self, format, *args):
+                log.info(format, *args)
+
+        address = (redirect_url.host, redirect_url.port)
+        server = HTTPServer(address, Handler)
+        log.info('Opening web browser for OAuth2 authorization: %s', auth_url)
+        webbrowser.open(str(auth_url))
+        while auth_code is None:
+            server.handle_request()
+        server.server_close()
+
+        authorize_url = str(furl(url=config.service_endpoint,
+                                 path='/user/authorize'))
+        fields = dict(code=auth_code, redirect_uri=str(redirect_url))
+        http = http_client(log)
+        response = http.request_encode_body('POST',
+                                            authorize_url,
+                                            fields=fields,
+                                            encode_multipart=False)
+        assert response.status == 200, response.status
+        return json.loads(response.data)['access_token']
 
     def _check_endpoint(self,
                         method: str,
@@ -1129,7 +1276,10 @@ class IndexingIntegrationTest(IntegrationTestCase):
             fields_expected = set(f['name'] for f in fields)
             self.assertEqual(fields_present, fields_expected)
             for relation in cast(MutableJSONs, record['relations']):
-                relations.add((relation['dst_name'], relation['dst_id']))
+                relations.add((
+                    json_str(relation['dst_name']),
+                    json_str(relation['dst_id'])
+                ))
         # We expect to observe the special `Metadata` entity record and at least
         # one additional entity record
         self.assertGreater(len(record_fqids), 1)
@@ -1508,12 +1658,12 @@ class IndexingIntegrationTest(IntegrationTestCase):
         with self._unregistered_service_account_credentials:
             self.assertEqual(public_source_ids, list_source_ids())
         self.assertEqual(public_source_ids, list_source_ids())
-        invalid_auth = OAuth2('foo')
+        invalid_auth = AccessTokenAuthentication('ya29.invalid')
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
         invalid_client = CredentialedClient(credentials_provider=invalid_provider)
-        with self._authorization_context(invalid_client):
+        with self._authorization_context(invalid_client._http_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 
     def _test_managed_access_indices(self,
@@ -1591,11 +1741,19 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     'is': [ma_source.id]
                 }
             })
-        inner_files = [one(file['files']) for file in files]
+        inner_files = [one(json_list_of_dicts(file['files'])) for file in files]
+        mirror_service = self._mirror_service(catalog)
         for file in inner_files:
-            self.assertIsNone(file['azul_mirror_uri'])
+            mirror_uri = optional(json_str, file['azul_mirror_uri'])
+            file_size = json_int(lookup(file, 'file_size', 'size'))
+            if mirror_service.will_mirror(ma_source.spec, file_size):
+                self.assertIsNotNone(mirror_uri)
+                mirror_uri = furl(mirror_uri)
+                self.assertEqual(aws.ma_mirror_bucket, mirror_uri.host)
+            else:
+                self.assertIsNone(mirror_uri)
         managed_access_file_urls = {
-            file['azul_url']
+            json_str(file['azul_url'])
             for file in inner_files
         }
         file_url = furl(self.random.choice(sorted(managed_access_file_urls)))
@@ -1760,22 +1918,25 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     manifest_url = furl(response.headers['Location'])
                     method = GET
             token = self._tdr_client.credentials.token
-            expected_auth_header = f'Authorization: Bearer {token}'.encode()
-            command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
+            expected_auth_header = f'Authorization: Bearer {token}'
+            command_lines = self._curl_manifest_command_lines(response.data)
             for command_line in command_lines:
                 self.assertIn(expected_auth_header, command_line)
+
+    def _curl_manifest_command_lines(self, data: bytes) -> list[str]:
+        return list(filter(None, data.decode().split('\n')))[1::2]
 
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
         return self.azul_client.mirror_service(catalog)
 
     def _test_mirroring(self, *, delete: bool):
         with self.subTest('mirroring'):
-
             service_by_catalog = {}
             for catalog in config.catalogs.values():
-                service = self._mirror_service(catalog.name)
-                if catalog.is_integration_test_catalog and service.may_mirror():
-                    service_by_catalog[catalog.name] = service
+                if catalog.is_integration_test_catalog:
+                    service = self._mirror_service(catalog.name)
+                    if service.may_mirror():
+                        service_by_catalog[catalog.name] = service
 
             sources_by_catalog = {
                 catalog: list(filter(is_not_none, (
@@ -2139,3 +2300,16 @@ class ResponseHeadersTest(AzulTestCase):
                 self.assertEqual(403, response.status_code)
                 self.assertIsSubset(AzulChaliceApp.security_headers().items(),
                                     response.headers.items())
+
+
+class BearerTokenHttpClient(HttpClientDecorator):
+
+    def __init__(self, inner: HttpClient, token: str):
+        super().__init__(inner)
+        self._token = token
+
+    def urlopen(self, method, url, body=None, headers=None, **kwargs):
+        if headers is None:
+            headers = {}
+        headers = {**headers, 'Authorization': f'Bearer {self._token}'}
+        return super().urlopen(method, url, body=body, headers=headers, **kwargs)

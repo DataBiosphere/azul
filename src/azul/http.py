@@ -25,6 +25,9 @@ from azul.lib import (
     cache,
     cached_property,
 )
+from azul.lib.strings import (
+    redact,
+)
 from azul.logging import (
     http_body_log_message,
 )
@@ -146,12 +149,21 @@ class _LoggingConnectionPool(urllib3.connectionpool.HTTPConnectionPool):
             # urllib3's HTTPHeaderDict.items() can yield multiple entries for
             # the same key, or a key only different in case
             headers = [
-                (k, 'REDACTED' if k.lower() == 'authorization' else v)
+                (k, self._redact(v) if k.lower() == 'authorization' else v)
                 for k, v in headers.items()
             ]
             log.info('… with request headers %r', headers)
         # The stubs for urllib3 v1.x don't declare any protected methods
         return super()._make_request(*args, **kwargs)  # type: ignore[misc]
+
+    def _redact(self, authorization: str) -> str:
+        # First, try a more surgical redaction for bearer tokens
+        authorization = authorization.split()
+        if len(authorization) == 2:
+            bearer, token = authorization
+            if bearer.lower() == 'bearer':
+                return bearer + ' ' + redact(token)
+        return 'REDACTED'
 
 
 class DisableCrossHostRedirectClient(HttpClientDecorator):
@@ -168,7 +180,7 @@ class DisableCrossHostRedirectClient(HttpClientDecorator):
 
 def http_client(log: logging.Logger | None = None) -> HttpClient:
     client = urllib3.PoolManager(ca_certs=certifi.where())
-    client: HttpClient = DisableCrossHostRedirectClient(client)
+    client = DisableCrossHostRedirectClient(client)
     if log is not None:
         client = LoggingHttpClient(client, log)
     return StatusRetryHttpClient(client)

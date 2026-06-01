@@ -18,8 +18,8 @@ from azul.lib import (
 
 def format_and_dedent(string: str, **kwargs) -> str:
     """
-    Remove common leading whitespace from every line in text.
-    Useful for processing triple-quote strings.
+    Remove common leading whitespace from every line in text. Useful for
+    processing triple-quote strings.
 
     If keyword arguments are supplied, they will serve as arguments for
     formatting the dedented string using str.format().
@@ -434,3 +434,69 @@ def double_quote(*words: str) -> str:
     AssertionError: R('"', 'must not occur in', 'foo b"a"r')
     """
     return delimit(join_words(*words), '"')
+
+
+def redact(s: str) -> str:
+    """
+    Redact the given string if it appears to be a secret. Only works with whole
+    secrets: 1) it does not detect secrets that are preceded by other text, and
+    2) it will redact any other text following the secret.
+    """
+    if redactable_access_token(s):
+        return _redact(s)
+    elif redactable_jwt(s):
+        token = s.split('.')
+        if len(token) == 3:
+            return '.'.join((token[0], _redact(token[1]), _redact(token[2])))
+        else:
+            return _redact(s)
+    else:
+        return s
+
+
+def redactable_access_token(s: str) -> bool:
+    return s.startswith('ya29.')
+
+
+def redactable_jwt(s: str) -> bool:
+    return s[:3] in ('eyI', 'eyJ')
+
+
+def _redact(secret: str, *, num_show: int = 3, mask='REDACTED'):
+    """
+    Replace the center of the given string with the given mask, leaving at most
+    ``num_show`` characters unredacted at the beginning and end, and hiding at
+    least 90% of the string.
+
+    >>> d = '0123456789'
+
+    >>> _redact('')
+    'REDACTED'
+
+    >>> _redact(d[:-1]), _redact(d)
+    ('REDACTED', '0REDACTED')
+
+    >>> _redact((d * 2)[:-1]), _redact(d * 2)
+    ('0REDACTED', '0REDACTED9')
+
+    >>> _redact((d * 6)[:-1]), _redact(d * 6)
+    ('012REDACTED78', '012REDACTED789')
+
+    >>> _redact(d * 10)
+    '012REDACTED789'
+
+    >>> _redact((d * 4)[:-1], num_show=2), _redact(d * 4, num_show=2)
+    ('01REDACTED8', '01REDACTED89')
+
+    >>> _redact((d * 2)[:-1], num_show=1), _redact(d * 2, num_show=1)
+    ('0REDACTED', '0REDACTED9')
+
+    >>> _redact(d[:-1], num_show=0), _redact(d, num_show=0)
+    ('REDACTED', 'REDACTED')
+    """
+    n = len(secret)
+    hide = (1 + n) * 9 // 10
+    reveal = min(n - hide, 2 * num_show)
+    back = reveal // 2
+    front = reveal - back
+    return secret[:front] + mask + secret[n - back:]

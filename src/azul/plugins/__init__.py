@@ -969,7 +969,7 @@ class File(DiscriminatingPolymorphicSerializableAttrs,
 
     @classmethod
     @abstractmethod
-    def from_index(cls, hit: JSON) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
         """
         Instantiate this class from an entity aggregate document retrieved from
         OpenSearch.

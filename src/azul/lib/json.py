@@ -25,6 +25,9 @@ from more_itertools.more import (
 from azul.lib import (
     R,
 )
+from azul.lib.strings import (
+    redact,
+)
 from azul.lib.types import (
     AnyJSON,
     AnyMutableJSON,
@@ -360,6 +363,20 @@ def json_hash(o: AnyJSON, hash=None):
     # output, with little impact on performance.
     hash.update(encoder.encode(o).encode())
     return hash
+
+
+def redact_json(v: AnyJSON) -> AnyJSON:
+    """
+    Return a copy of the given JSON with confidential string values redacted.
+    """
+    if isinstance(v, str):
+        return redact(v)
+    elif isinstance(v, dict):
+        return {k: redact_json(v) for k, v in v.items()}
+    elif isinstance(v, list):
+        return [redact_json(e) for e in v]
+    else:
+        return v
 
 
 class Serializable:

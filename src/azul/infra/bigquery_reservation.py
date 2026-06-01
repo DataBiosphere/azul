@@ -227,8 +227,8 @@ class BigQueryReservation:
         if not self.dry_run and self.is_active is not False:
             raise RuntimeError(f'Failed to delete slots in location {self.location!r}')
 
-    def _single_resource(self, resources: ResourcePager) -> Resource | None:
-        resources: list[Resource] = list(resources)
+    def _single_resource(self, pager: ResourcePager) -> Resource | None:
+        resources: list[Resource] = list(pager)
         try:
             resource, *extras = resources
         except ValueError:

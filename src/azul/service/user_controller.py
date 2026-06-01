@@ -1,17 +1,29 @@
 from copy import (
     copy,
 )
+import json
 import logging
 from typing import (
     Any,
 )
+import urllib.parse
 
 from chalice.app import (
     BadRequestError,
+    Response,
+    UnauthorizedError,
 )
+import chevron
 
+from azul.auth import (
+    AccessTokenAuthentication,
+    PersonalAccessTokenAuthentication,
+)
 from azul.chalice import (
     Controller,
+)
+from azul.csp import (
+    CSP,
 )
 from azul.lib import (
     R,
@@ -47,6 +59,8 @@ log = logging.getLogger(__name__)
 
 
 class UserController(Controller):
+    _json_content_type = 'application/json'
+    _form_content_type = 'application/x-www-form-urlencoded'
 
     @cached_property
     def _service(self) -> UserService:
@@ -58,6 +72,10 @@ class UserController(Controller):
             methods=['POST'],
             interactive=False,
             cors=True,
+            content_types=[
+                self._json_content_type,
+                self._form_content_type
+            ],
             spec={
                 'summary': 'Obtain an OAuth 2.0 access token in exchange for an authorization code',
                 'description': fd('''
@@ -134,6 +152,93 @@ class UserController(Controller):
         def authorize():
             return self._authorize()
 
+        @self.app.route(
+            '/user/token',
+            interactive=True,
+            cors=True,
+            spec={
+                'summary': 'Obtain a personal access token',
+                'description': fd('''
+                    Obtain a long-lived, application-specific personal access
+                    token (APAT) in exchange for a valid OAuth 2.0 access token.
+                    The access token must be passed in the `Authorization`
+                    header as a Bearer token. The user must have previously
+                    completed the authorization code flow. In the Swagger UI,
+                    this can be done by clicking the Authorize button above.
+                '''),
+                'tags': ['User'],
+                'responses': {
+                    '200': {
+                        'description': fd('''
+                            A personal access token was successfully minted
+                        '''),
+                        **json_content(
+                            object(
+                                token=describe(str, fd('''
+                                    The personal access token
+                                '''))
+                            )
+                        )
+                    },
+                    '401': {
+                        'description': fd('''
+                            No valid OAuth 2.0 access token was provided
+                        ''')
+                    }
+                }
+            }
+        )
+        def token():
+            return self._token()
+
+        @self.app.route(
+            '/user/revoke',
+            methods=['POST'],
+            interactive=True,
+            cors=True,
+            spec={
+                'summary': 'Revoke all personal access tokens',
+                'description': fd('''
+                    Revoke all personal access tokens (APATs) for the
+                    authenticated user. The user must provide a valid OAuth 2.0
+                    access token in the `Authorization` header as a Bearer
+                    token.
+                '''),
+                'tags': ['User'],
+                'responses': {
+                    '204': {
+                        'description': fd('''
+                            All personal access tokens were revoked
+                        ''')
+                    },
+                    '401': {
+                        'description': fd('''
+                            No valid OAuth 2.0 access token was provided
+                        ''')
+                    }
+                }
+            }
+        )
+        def revoke():
+            return self._revoke()
+
+        @self.app.route(
+            '/swagger/oauth2-redirect.html',
+            interactive=False,
+            cors=True,
+            spec={
+                'summary': 'Used for logging into the the Swagger UI',
+                'tags': ['User'],
+                'responses': {
+                    '200': {
+                        'description': 'The response body is an HTML page'
+                    }
+                }
+            }
+        )
+        def oauth2_redirect():
+            return self._oauth2_redirect()
+
         return locals()
 
     @cached_property
@@ -142,18 +247,58 @@ class UserController(Controller):
         scopes = list(map(back_quote, scopes))
         return join_grammatically(scopes)
 
+    def _oauth2_redirect(self) -> Response:
+        params = self._query_params(self.current_request)
+        try:
+            code = params['code']
+        except KeyError:
+            raise BadRequestError('Missing authorization code')
+        nonce = CSP.new_nonce()
+        template = self.app.load_static_resource(
+            'swagger', 'oauth2-redirect.html.template.mustache'
+        )
+        body = chevron.render(template, {
+            'NONCE': nonce,
+            'CODE': json.dumps(code),
+            'STATE': json.dumps(params.get('state', '')),
+        })
+        csp = CSP.for_azul(nonce=nonce)
+        return Response(status_code=200,
+                        body=body,
+                        headers={
+                            'Content-Type': 'text/html',
+                            'Content-Security-Policy': str(csp),
+                        })
+
     def _authorize(self) -> JSON:
         try:
-            request: JSON = json_mapping(self.current_request.json_body)
-            # FIXME: Use PEP 728 extra TypedDict items instead of removing them
-            #        https://github.com/DataBiosphere/azul/issues/7625
-            request = {
-                k: v
-                for k, v in request.items()
-                if k in Authorization.__annotations__.keys()
-            }
-            assert is_of_type(request, Authorization), R('Invalid request')
-            response = copy(self._service.authorize(request))
+            content_type, charset = self._request_content_type()
+            if content_type == self._form_content_type:
+                body = self.current_request.raw_body
+                if isinstance(body, bytes):
+                    body = body.decode(charset)
+                params = urllib.parse.parse_qs(body)
+                authorization = Authorization(
+                    code=params['code'][0],
+                    scope=' '.join(sorted(self._service.required_scopes))
+                )
+                redirect_uri = params['redirect_uri'][0]
+            elif content_type == self._json_content_type:
+                request: JSON = json_mapping(self.current_request.json_body)
+                # FIXME: Use PEP 728 extra TypedDict items instead of removing them
+                #        https://github.com/DataBiosphere/azul/issues/7625
+                request = {
+                    k: v
+                    for k, v in request.items()
+                    if k in Authorization.__annotations__.keys()
+                }
+                assert is_of_type(request, Authorization), R('Invalid request')
+                authorization = request
+                redirect_uri = None
+            else:
+                raise BadRequestError('Unsupported content type')
+            response = copy(self._service.authorize(authorization,
+                                                    redirect_uri=redirect_uri))
             # Withhold refresh token from client for security reasons. The property
             # is required so we need to override the type checker on that. This is
             # safe because we made copy above.
@@ -164,3 +309,23 @@ class UserController(Controller):
                 raise BadRequestError(e.args)
             else:
                 raise
+
+    def _token(self) -> JSON:
+        auth = self._authentication(self.current_request)
+        if isinstance(auth, PersonalAccessTokenAuthentication):
+            raise BadRequestError('Cannot exchange a personal access token for another')
+        elif isinstance(auth, AccessTokenAuthentication):
+            apat_auth = self._service.mint_personal_access_token(auth)
+            return {'token': apat_auth.token}
+        else:
+            raise UnauthorizedError('Valid access token required')
+
+    def _revoke(self) -> Response:
+        auth = self._authentication(self.current_request)
+        if isinstance(auth, PersonalAccessTokenAuthentication):
+            raise BadRequestError('Cannot revoke using a personal access token')
+        elif isinstance(auth, AccessTokenAuthentication):
+            self._service.revoke_personal_access_tokens(auth)
+            return Response(status_code=204, body='')
+        else:
+            raise UnauthorizedError('Valid access token required')

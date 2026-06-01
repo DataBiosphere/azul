@@ -33,7 +33,11 @@ window.onload = function() {
   const client_id = {{{OAUTH2_CLIENT_ID}}};
   if (client_id !== null) {
       window.ui.initOAuth({
-        clientId: client_id
+        clientId: client_id,
+        additionalQueryStringParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
       })
   }
 

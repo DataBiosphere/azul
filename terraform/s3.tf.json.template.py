@@ -10,6 +10,9 @@ from azul.infra.terraform import (
     enable_s3_bucket_inventory,
     set_empty_s3_bucket_lifecycle_config,
 )
+from azul.lib.functions import (
+    iif,
+)
 
 tf_config = {
     'data': {
@@ -25,18 +28,14 @@ tf_config = {
                 'bucket': aws.storage_bucket,
                 'force_destroy': True
             },
-            **(
-                {
-                    config.mirror_term: {
-                        'bucket': aws.mirror_bucket,
-                    },
-                    config.ma_mirror_term: {
-                        'bucket': aws.ma_mirror_bucket,
-                    }
+            **iif(config.enable_mirroring, {
+                config.mirror_term: {
+                    'bucket': aws.mirror_bucket,
+                },
+                config.ma_mirror_term: {
+                    'bucket': aws.ma_mirror_bucket,
                 }
-                if config.enable_mirroring else
-                {}
-            )
+            })
         },
         'aws_s3_bucket_lifecycle_configuration': {
             config.storage_term: {
@@ -55,22 +54,18 @@ tf_config = {
                     }
                 }
             },
-            **(
-                {
-                    term: {
-                        'bucket': '${aws_s3_bucket.%s.id}' % config.mirror_term,
-                        'rule': {
-                            'id': 'mirror_cleanup',
-                            'status': 'Enabled',
-                            'abort_incomplete_multipart_upload': {
-                                'days_after_initiation': 1
-                            }
+            **iif(config.enable_mirroring, {
+                term: {
+                    'bucket': '${aws_s3_bucket.%s.id}' % term,
+                    'rule': {
+                        'id': 'mirror_cleanup',
+                        'status': 'Enabled',
+                        'abort_incomplete_multipart_upload': {
+                            'days_after_initiation': 1
                         }
-                    } for term in [config.mirror_term, config.ma_mirror_term]
-                }
-                if config.enable_mirroring else
-                {}
-            )
+                    }
+                } for term in [config.mirror_term, config.ma_mirror_term]
+            })
         },
         'aws_s3_bucket_logging': {
             bucket: {
@@ -82,7 +77,7 @@ tf_config = {
             }
             for bucket in (
                 config.storage_term,
-                *([config.mirror_term] if config.enable_mirroring else [])
+                *iif(config.enable_mirroring, [config.mirror_term, config.ma_mirror_term])
             )
         }
     }
