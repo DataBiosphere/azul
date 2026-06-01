@@ -1752,6 +1752,8 @@ class Config:
 
     allowed_v4_ips_term = 'allowed_v4_ips'
 
+    it_ips_term = 'it_v4_ips'
+
     blocked_user_agents_regex_term = 'blocked_user_agents'
 
     blocked_user_agents_custom_regex_term = 'blocked_user_agents_custom'
