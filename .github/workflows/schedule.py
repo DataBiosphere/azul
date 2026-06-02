@@ -208,50 +208,36 @@ class IssueTemplate:
                 assert type == actual_type, (type, actual_type)
                 log.info('Successfully created and verified issue #%s', issue_number)
                 owner, _ = repository.split('/')
-                project = self.gh_json(
-                    'project', 'list',
-                    '--format', 'json',
-                    '--owner', owner,
-                    '--jq', '.projects[]|select(.title == "Azul")'
-                )
-                project_number = str(project['number'])
-                item = self.gh_json(
-                    'project', 'item-add', project_number,
-                    '--owner', owner,
-                    '--url', url,
-                    '--format', 'json'
-                )
-                item_id = item['id']
-                assert item_id, item
-                priority_field = self.gh_json(
-                    'project', 'field-list', project_number,
-                    '--format', 'json',
-                    '--owner', owner,
-                    '--jq', '.fields[]|select(.name == "Priority")'
-                )
-                priority_ids = {pf['name']: pf['id'] for pf in priority_field['options']}
                 priority = self.properties['_priority']
-                item = self.gh_json(
-                    'project', 'item-edit',
-                    '--id', item_id,
-                    '--field-id', priority_field['id'],
-                    '--project-id', project['id'],
-                    '--single-select-option-id', priority_ids[priority],
-                    '--format', 'json'
+                fields = self.gh_json(
+                    'api', f'/orgs/{owner}/issue-fields',
+                    '-H', 'X-GitHub-Api-Version: 2026-03-10',
                 )
-                assert item['title'] == title, (title, item)
-                assert item['url'] == url, (url, item)
-                assert item['id'] == item_id, (item_id, item)
+                priority_field_id = next(f['id'] for f in fields if f['name'] == 'Priority')
+                repo_id = self.gh_json('api', f'/repos/{repository}')['id']
+                self.gh_json(
+                    'api', '--method', 'POST',
+                    f'/repositories/{repo_id}/issues/{issue_number}/issue-field-values',
+                    '-H', 'X-GitHub-Api-Version: 2026-03-10',
+                    '--input', '-',
+                    input=json.dumps({
+                        'issue_field_values': [{'field_id': priority_field_id, 'value': priority}]
+                    }).encode()
+                )
+                log.info('Set native Priority=%r on issue #%s', priority, issue_number)
 
-    def gh_json(self, *args: str) -> dict | list:
+    def gh_json(self, *args: str, input: bytes | None = None) -> dict | list | None:
         """
         Invoke the ``gh`` command with the given arguments and return the
         resulting JSON output.
         """
         command = ['gh', *args]
         log.info('Running %r', command)
-        process = subprocess.run(command, check=True, stdout=subprocess.PIPE)
-        return json.loads(process.stdout)
+        process = subprocess.run(command,
+                                 check=True,
+                                 stdout=subprocess.PIPE,
+                                 input=input)
+        return json.loads(process.stdout) if process.stdout.strip() else None
 
 
 def main(args):
