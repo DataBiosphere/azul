@@ -108,6 +108,7 @@ from azul.deployment import (
 )
 from azul.drs import (
     AccessMethod,
+    CompactDRSURI,
     DRSURI,
     HostBasedDRSURI,
 )
@@ -905,10 +906,23 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 if downloadable is None:
                     return outer_file, inner_file
                 else:
-                    drs_uri = DRSURI.parse(json_str(inner_file['drs_uri']))
-                    if downloadable == isinstance(drs_uri, HostBasedDRSURI):
+                    if downloadable == self._downloadable(inner_file):
                         return outer_file, inner_file
         self.fail('No files found')
+
+    def _downloadable(self, inner_file: JSON) -> bool:
+        drs_uri = DRSURI.parse(json_str(inner_file['drs_uri']))
+        if isinstance(drs_uri, HostBasedDRSURI):
+            return drs_uri.server == config.tdr_service_url.netloc
+        elif isinstance(drs_uri, CompactDRSURI):
+            # As of May 2026, this namespace resolves to TDR, but this may
+            # change. For that reason, …
+            #
+            # FIXME: … we shouldn't hard-code compact identifier namespaces
+            #        https://github.com/DataBiosphere/azul/issues/8063
+            return drs_uri.namespace == 'drs.anv0'
+        else:
+            assert False, inner_file
 
     def _source_spec(self, catalog: CatalogName, entity: JSON) -> SourceSpec:
         source = self._source_from_response(catalog, one(entity['sources']))
