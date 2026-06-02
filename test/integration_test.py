@@ -550,10 +550,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
-            # FIXME: Revert, once the underlying issue with requester-pays is fixed
-            #        https://github.com/DataBiosphere/azul/issues/7955
-            if mirror:
-                self._test_curl_manifest(catalog.name)
+            self._test_curl_manifest(catalog.name)
             self._test_drs(catalog.name)
             self._test_repository_files(catalog.name)
             self._test_managed_access(catalog=catalog.name,
