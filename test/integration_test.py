@@ -515,11 +515,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     # If test_mirroring is run for the catalog, ensure that the
                     # source is not flagged as no_mirror so that we can test
                     # downloading a mirrored file
-                    #
-                    # FIXME: Revert, once the underlying issue with requester-pays is fixed
-                    #        https://github.com/DataBiosphere/azul/issues/7955
-                    #
-                    mirror=True and self._mirror_service(catalog.name).may_mirror()
+                    mirror=mirror and self._mirror_service(catalog.name).may_mirror()
                 ).ref
                 ma_source = self._select_source(catalog.name, public=False)
                 ma_source = None if ma_source is None else ma_source.ref
