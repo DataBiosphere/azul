@@ -485,6 +485,8 @@ class AzulChaliceApp(Chalice):
         if auth is None:
             log.info('Did not authenticate request.')
         else:
+            # FIXME: Logs unredacted APATs and access tokens
+            #        https://github.com/DataBiosphere/azul-private/issues/377
             log.info('Authenticated request as %r', auth)
 
     def _log_request(self, request: Request) -> None:
@@ -493,8 +495,13 @@ class AzulChaliceApp(Chalice):
             'headers': request.headers
         }
         info = json.dumps(info, cls=self._LogJSONEncoder)
+        # FIXME: Logs unredacted APATs, access tokens, and authorization
+        #        codes in request headers
+        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info('Received %s request for %r, with %s.',
                  request.context['httpMethod'], request.context['path'], info)
+        # FIXME: Logs unredacted authorization codes in request body
+        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info(http_body_log_message('request', request.raw_body))
 
     def _log_response(self, response: Response) -> None:
@@ -504,6 +511,8 @@ class AzulChaliceApp(Chalice):
         info = json.dumps(info, cls=self._LogJSONEncoder)
         log.info('Returning %i response with headers %s.',
                  response.status_code, info)
+        # FIXME: Logs unredacted APATs and authorization codes in response body
+        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info(http_body_log_message('response', response.body))
 
     absent = object()

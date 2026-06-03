@@ -118,16 +118,28 @@ class LoggingHttpClient(HttpClientDecorator):
 
     def urlopen(self, method, url, *args, body=None, **kwargs) -> urllib3.HTTPResponse:
         log = self._log
+        # FIXME: Logs unredacted access tokens and URL signatures in
+        #        request URL
+        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info('Making %s request to %r', method, url)
+        # FIXME: Logs unredacted APATs, access tokens, and refresh tokens
+        #        in request body
+        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info(http_body_log_message('request', body))
         start = time.monotonic()
         response = super().urlopen(method, url, *args, body=body, **kwargs)
         duration = time.monotonic() - start
         assert isinstance(response, urllib3.HTTPResponse), type(response)
+        # FIXME: Logs unredacted access tokens and URL signatures in
+        #        response URL
+        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info('Got %s response after %.3fs from %s to %s',
                  response.status, duration, method, url)
         log.info('… with response headers %r', response.headers)
         if response.isclosed():
+            # FIXME: Logs unredacted APATs, access tokens, refresh tokens,
+            #        and URL signatures in response body
+            #        https://github.com/DataBiosphere/azul-private/issues/377
             log.info(http_body_log_message('response', response.data))
         else:
             log.info('… with a streamed response body')
