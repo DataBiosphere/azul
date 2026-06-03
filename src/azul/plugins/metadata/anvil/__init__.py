@@ -24,6 +24,9 @@ from more_itertools.more import (
 from azul import (
     config,
 )
+from azul.field_type import (
+    pass_thru_str,
+)
 from azul.indexer.document import (
     DocumentType,
     EntityType,
@@ -276,13 +279,17 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         }
 
     special_fields = SpecialFields(
-        source_id=SpecialField.symmetric('source_id'),
-        source_spec=SpecialField.symmetric('source_spec'),
-        source_prefix=SpecialField.symmetric('source_prefix'),
-        bundle_uuid=SpecialField.symmetric('bundle_uuid'),
-        bundle_version=SpecialField.symmetric('bundle_version'),
-        file_uuid=SpecialField(name='files.document_id', name_in_hit='document_id'),
-        file_name=SpecialField(name='files.file_name', name_in_hit='file_name'),
+        source_id=SpecialField.symmetric('source_id', pass_thru_str),
+        source_spec=SpecialField.symmetric('source_spec', pass_thru_str),
+        source_prefix=SpecialField.symmetric('source_prefix', pass_thru_str),
+        bundle_uuid=SpecialField.symmetric('bundle_uuid', pass_thru_str),
+        bundle_version=SpecialField.symmetric('bundle_version', pass_thru_str),
+        file_uuid=SpecialField(name='files.document_id',
+                               name_in_hit='document_id',
+                               type=pass_thru_str),
+        file_name=SpecialField(name='files.file_name',
+                               name_in_hit='file_name',
+                               type=pass_thru_str),
     )
 
     @property

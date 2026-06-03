@@ -203,8 +203,8 @@ class ProjectAggregator(SimpleAggregator):
             return SetOfDictAccumulator(key=compose_keys(none_safe_key(),
                                                          none_safe_itemgetter('accession')))
         elif field == 'tissue_atlas':
-            return SetOfDictAccumulator(key=compose_keys(none_safe_key(),
-                                                         none_safe_itemgetter('atlas')))
+            return SetOfDictAccumulator(key=compose_keys(none_safe_tuple_key(),
+                                                         none_safe_itemgetter('atlas', 'version')))
         else:
             return super()._accumulator(field)
 

@@ -1746,6 +1746,41 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         self.assertEqual(inner_cell_suspensions_in_contributions + inner_cell_suspensions_in_aggregates,
                          inner_cell_suspensions)
 
+    def test_nested_field_aggregation(self):
+        bundles = [
+            # Bundles with the following tissue_atlas (atlas/version) values:
+            # [None/None (x2), Lung/None, Retina/v1.0, Blood/v1.0]
+            self.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
+                             version='2021-09-21T17:27:23.898000Z'),
+            # [Blood/v1.0]
+            self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                             version='2018-10-10T02:23:43.182000Z'),
+            # [] (none)
+            self.bundle_fqid(uuid='97f0cc83-f0ac-417a-8a29-221c77debde8',
+                             version='2019-10-14T19:54:15.397406Z')
+        ]
+        for bundle in bundles:
+            self._index_canned_bundle(bundle)
+        hits = self._get_all_hits()
+        expected = {
+            '50151324-f3ed-4358-98af-ec352a940a61': [
+                {'atlas': '~null', 'version': '~null'},
+                {'atlas': 'Blood', 'version': 'v1.0'},
+                {'atlas': 'Lung', 'version': '~null'},
+                {'atlas': 'Retina', 'version': 'v1.0'},
+            ],
+            '6615efae-fca8-4dd2-a223-9cfcf30fe94d': [
+                {'atlas': 'Blood', 'version': 'v1.0'}
+            ],
+            '4e6f083b-5b9a-4393-9890-2a83da8188f1': [
+            ]
+        }
+        for hit in self._filter_hits(hits, DocumentType.aggregate, 'projects'):
+            contents = hit['_source']['contents']
+            project = cast(JSON, one(contents['projects']))
+            project_id = project['document_id']
+            self.assertEqual(expected[project_id], project['tissue_atlas'])
+
     def test_accessions_fields(self):
         bundle_fqid = self.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
                                        version='2019-02-14T19:24:38.034764Z')
