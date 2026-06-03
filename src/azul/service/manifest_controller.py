@@ -576,12 +576,6 @@ class ManifestController(QueryController):
             # secret being shared, but is necessary to preserve the utility of
             # the cURL download feature in general.
             #
-            # Note that on AnVIL, we are prohibited from exposing manifest URLs
-            # that remain valid for longer than one hour, if those manifests
-            # contain managed-access data or metadata. Fortunately, there's
-            # currently no need to enforce this here because the AnVIL plugin's
-            # cURL-format manifest never includes managed-access files.
-            #
             if fetch and manifest.format is ManifestFormat.curl:
                 manifest_key = self._service.sign_manifest_key(manifest_key)
                 url = self._manifest_url(fetch=False, token_or_key=manifest_key.encode())

@@ -1634,17 +1634,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 source_json = json_mapping(one(json_sequence(doc['sources'])))
                 source: SourceRef = SourceRef.from_json(source_json)
 
-                # On AnVIL, and for political reasons, we are not permitted to
-                # include managed-access files, even if they are accessible to
-                # the requesting user. Because we only mirror open-access files,
-                # we can use the mirrorability of a file as a proxy condition
-                # for excluding managed-access files. It is possible that the
-                # condition is true for a file that has yet to be mirrored.
-                # Until the mirrored copy exists, the download will fall back to
-                # TDR's original. We accept that caveat. Also note that if
-                # managed-access files were to be included, we would need to
-                # ensure that the signed URL of the manifest expired after one
-                # hour.
+                # On AnVIL, we are only permitted to include mirrored files, in
+                # order to limit egress cost against the owner of the originals
+                # in GCP. Note that the conditional below indicates that a file
+                # will *eventually* be mirrored, not that it already has been.
                 #
                 if (
                     not config.is_anvil_enabled(self.catalog)
