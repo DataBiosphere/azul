@@ -1009,8 +1009,8 @@ class File(DiscriminatingPolymorphicSerializableAttrs,
     #: ignore this.
     drs_uri: str | None
 
-    #: The file's size on disk, if known.
-    size: int | None = None
+    #: The file's size on disk in bytes
+    size: int
 
     #: The file's MIME content type, if known
     content_type: str | None = None
