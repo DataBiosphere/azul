@@ -1901,7 +1901,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                         'freshclam',
                                         '&& echo freshclam succeeded',
                                         '|| (echo freshclam "failed"; false)',
-                                        '&& clamscan',
+                                        '&& nice -n 19 clamscan',
                                         '--recursive',
                                         '--infected',  # Only print infected files
                                         '--allmatch=yes',  # Continue scanning within file after a match
