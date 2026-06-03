@@ -1404,11 +1404,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         else:
             self.assertEqual(200, response.status)
             response = json.loads(response.data)
-            while response['Status'] != 302:
-                self.assertEqual(301, response['Status'])
-                self.assertNotIn('Retry-After', response)
-                response = self._get_url_json(GET, furl(response['Location']))
-            self.assertNotIn('Retry-After', response)
+            self.assertEqual(302, response['Status'])
             final_file_url = furl(response['Location'])
             response = self._get_url(GET, final_file_url, stream=True)
             self._validate_file_response(response, source, file)

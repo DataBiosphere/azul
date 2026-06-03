@@ -2,7 +2,7 @@
     "openapi": "3.0.1",
     "info": {
         "title": "azul-service-dev",
-        "version": "17.7",
+        "version": "18.0",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n\n\n## Contact us\n\nFor technical support please file an issue at\n[GitHub](https://github.com/DataBiosphere/azul/issues) or email\n`azul-group@ucsc.edu`. To report a security concern or misconduct please email\n`azul-group@ucsc.edu`.\n"
     },
     "tags": [
@@ -13521,24 +13521,6 @@
                     "504": {
                         "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
                     },
-                    "301": {
-                        "description": "\nA URL to the given file is still being prepared. Retry by\nwaiting the number of seconds specified in the `Retry-After`\nheader of the response and the requesting the URL specified\nin the `Location` header.\n",
-                        "headers": {
-                            "Location": {
-                                "schema": {
-                                    "type": "string"
-                                },
-                                "description": "\nA URL pointing back at this endpoint, potentially with\ndifferent or additional request parameters.\n"
-                            },
-                            "Retry-After": {
-                                "schema": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                },
-                                "description": "\nRecommended number of seconds to wait before requesting\nthe URL specified in the `Location` header. The response\nmay carry this header even if server-side waiting was\nrequested via `wait=1`.\n"
-                            }
-                        }
-                    },
                     "302": {
                         "description": "\nThe file can be downloaded from the URL returned in the\n`Location` header.\n",
                         "headers": {
@@ -13602,16 +13584,6 @@
                         "description": "\nThe desired name of the file. The given value will be included\nin the Content-Disposition header of the response. If absent, a\nbest effort to determine the file name from metadata will be\nmade. If that fails, the UUID of the file will be used instead.\n"
                     },
                     {
-                        "name": "wait",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        },
-                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the Retry-After response header. If 1, the server\nwill delay the response in order to consume as much of that\nwaiting period as possible. This parameter should only be set to\n1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any amount\nof wait time left will still be returned in the Retry-After\nheader of the response.\n"
-                    },
-                    {
                         "name": "replica",
                         "in": "query",
                         "required": false,
@@ -13619,34 +13591,6 @@
                             "type": "string"
                         },
                         "description": "\nIf the underlying repository offers multiple replicas of the\nrequested file, use the specified replica. Otherwise, this\nparameter is ignored. If absent, the only replica \u2014 for\nrepositories that don't support replication \u2014 or the default\nreplica \u2014 for those that do \u2014 will be used.\n"
-                    },
-                    {
-                        "name": "requestIndex",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        },
-                        "description": "Do not use. Reserved for internal purposes."
-                    },
-                    {
-                        "name": "drsUri",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Do not use. Reserved for internal purposes."
-                    },
-                    {
-                        "name": "token",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Reserved. Do not pass explicitly."
                     }
                 ],
                 "summary": "Redirect to a URL for downloading a given data file from the underlying repository",
@@ -13744,16 +13688,6 @@
                         "description": "\nThe desired name of the file. The given value will be included\nin the Content-Disposition header of the response. If absent, a\nbest effort to determine the file name from metadata will be\nmade. If that fails, the UUID of the file will be used instead.\n"
                     },
                     {
-                        "name": "wait",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        },
-                        "description": "\nIf 0, the client is responsible for honoring the waiting period\nspecified in the Retry-After response header. If 1, the server\nwill delay the response in order to consume as much of that\nwaiting period as possible. This parameter should only be set to\n1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any amount\nof wait time left will still be returned in the Retry-After\nheader of the response.\n"
-                    },
-                    {
                         "name": "replica",
                         "in": "query",
                         "required": false,
@@ -13761,34 +13695,6 @@
                             "type": "string"
                         },
                         "description": "\nIf the underlying repository offers multiple replicas of the\nrequested file, use the specified replica. Otherwise, this\nparameter is ignored. If absent, the only replica \u2014 for\nrepositories that don't support replication \u2014 or the default\nreplica \u2014 for those that do \u2014 will be used.\n"
-                    },
-                    {
-                        "name": "requestIndex",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        },
-                        "description": "Do not use. Reserved for internal purposes."
-                    },
-                    {
-                        "name": "drsUri",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Do not use. Reserved for internal purposes."
-                    },
-                    {
-                        "name": "token",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Reserved. Do not pass explicitly."
                     }
                 ],
                 "summary": "Request a URL for downloading a given data file"

@@ -46,7 +46,6 @@ from azul import (
     config,
 )
 from azul.auth import (
-    Authentication,
     indexer_authentication,
 )
 from azul.deployment import (
@@ -89,11 +88,10 @@ from azul.lib.types import (
 )
 from azul.plugins import (
     File,
-    RepositoryFileDownload,
     RepositoryPlugin,
 )
 from azul.plugins.repository.tdr import (
-    TDRFileDownload,
+    TDRPlugin,
 )
 from azul.queues import (
     Action,
@@ -189,22 +187,6 @@ class FilePart(SerializableAttrs):
             return attr.evolve(self, index=next_index, offset=next_offset, size=next_size)
         else:
             assert False, R('Part range exceeds file size', self, file)
-
-
-@attrs.frozen(kw_only=True)
-class MirrorFileDownload(RepositoryFileDownload):
-    _location: str
-
-    @property
-    def retry_after(self) -> int | None:
-        return None
-
-    @property
-    def location(self) -> str | None:
-        return self._location
-
-    def update(self, authentication: Authentication | None) -> None:
-        pass
 
 
 class SchemaUrlFunc(Protocol):
@@ -980,7 +962,8 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                            overwrite=False)
 
     def _repository_url(self, file: File) -> str:
-        assert config.is_tdr_enabled(self.catalog), R(
+        plugin = self.repository_plugin
+        assert isinstance(plugin, TDRPlugin), R(
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
@@ -990,15 +973,11 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             authentication = None
         else:
             authentication = indexer_authentication
-        download = TDRFileDownload(plugin=self.repository_plugin,
-                                   file=file,
-                                   replica=None,
-                                   token=None,
-                                   requester_pays=True)
-        download.update(authentication)
-        assert download.retry_after is None
-        assert download.location is not None
-        return download.location
+        repository_url = plugin.file_download_url(file,
+                                                  authentication,
+                                                  requester_pays=True)
+        assert repository_url is not None, file
+        return repository_url
 
     def _download(self, file: File, part: FilePart | None = None) -> bytes:
         url = self._repository_url(file)
