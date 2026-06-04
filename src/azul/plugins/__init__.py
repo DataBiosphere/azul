@@ -1015,12 +1015,12 @@ class File(DiscriminatingPolymorphicSerializableAttrs,
     #: The file's MIME content type, if known
     content_type: str | None = None
 
-    #: The file's source, if known
-    source: SourceRef | None = None
+    #: The file's source
+    source: SourceRef
 
     @classmethod
     @abstractmethod
-    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef) -> Self:
         """
         Instantiate this class from an entity aggregate document retrieved from
         OpenSearch.

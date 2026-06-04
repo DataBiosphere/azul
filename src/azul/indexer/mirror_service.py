@@ -370,7 +370,6 @@ class MirrorService:
         return StorageService(bucket)
 
     def _storage_for_file(self, file: File) -> StorageService:
-        assert file.source is not None, file
         return self._storage_for_source(file.source.spec)
 
     def _storage_for_source(self, source: SourceSpec) -> StorageService:
@@ -808,7 +807,6 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     def _(self, a: MirrorPartitionAction) -> Iterator[MirrorAction]:
         files = self.repository_plugin.list_files(a.source, a.prefix)
         for file in files:
-            assert file.source is not None, R('File source unknown', file)
             assert file.size is not None, R('File size unknown', file)
             assert file.size <= self.max_file_size, R(
                 'File too big', file, self.max_file_size)
@@ -967,8 +965,6 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
-        assert file.source is not None, R(
-            'File source unknown', file)
         if self._is_public(file.source.spec):
             authentication = None
         else:
