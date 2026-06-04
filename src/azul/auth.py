@@ -40,8 +40,15 @@ class Authentication(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def redacted(self) -> str:
-        return redact(self.identity())
+    @abstractmethod
+    def __str__(self) -> str:
+        """
+        A redacted string representation that's safe to use in logs. Clients
+        shouldn't call this method directly but use ``str()`` instead. To obtain
+        an unredacted string representation, clients should use ``repr()``.
+        Concrete subclasses must implement this method.
+        """
+        raise NotImplementedError
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -63,6 +70,9 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
     def as_http_header(self) -> str:
         return f'Authorization: Bearer {self.token}'
 
+    def __str__(self) -> str:
+        return f'{type(self).__name__}(token={redact(self.token)!r})'
+
 
 class AccessTokenAuthentication(BearerTokenAuthentication):
     pass
@@ -82,6 +92,10 @@ class HMACAuthentication(Authentication):
     def as_http_header(self) -> str:
         raise NotImplementedError
 
+    def __str__(self) -> str:
+        # Nothing to redact
+        return repr(self)
+
 
 class _IndexerAuthentication(Authentication):
 
@@ -90,6 +104,13 @@ class _IndexerAuthentication(Authentication):
 
     def as_http_header(self) -> str:
         raise NotImplementedError
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(identity={self.identity()!r})'
+
+    def __str__(self) -> str:
+        # Nothing to redact
+        return repr(self)
 
 
 indexer_authentication: Final = _IndexerAuthentication()

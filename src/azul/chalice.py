@@ -485,9 +485,7 @@ class AzulChaliceApp(Chalice):
         if auth is None:
             log.info('Did not authenticate request.')
         else:
-            # FIXME: Logs unredacted APATs and access tokens
-            #        https://github.com/DataBiosphere/azul-private/issues/377
-            log.info('Authenticated request as %r', auth)
+            log.info('Authenticated request as %s', auth)
 
     def _log_request(self, request: Request) -> None:
         info = {
