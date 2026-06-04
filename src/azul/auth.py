@@ -21,7 +21,6 @@ from azul.lib.strings import (
 )
 
 
-@attr.s(auto_attribs=True, frozen=True)
 class Authentication(metaclass=ABCMeta):
 
     @abstractmethod
