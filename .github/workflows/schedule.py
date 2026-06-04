@@ -243,7 +243,7 @@ class IssueTemplate:
                 assert item['url'] == url, (url, item)
                 assert item['id'] == item_id, (item_id, item)
 
-    def gh_json(self, *args: str) -> dict:
+    def gh_json(self, *args: str) -> dict | list:
         """
         Invoke the ``gh`` command with the given arguments and return the
         resulting JSON output.
