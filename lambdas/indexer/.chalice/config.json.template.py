@@ -66,7 +66,7 @@ emit({
                             **chalice.vpc_lambda_config(app_name),
                         },
                         indexer.forward_s3_logs.name: {
-                            'lambda_memory_size': 160,
+                            'lambda_memory_size': 320,
                             **chalice.vpc_lambda_config(app_name),
                         }
                     }
