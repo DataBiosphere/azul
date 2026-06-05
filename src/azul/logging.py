@@ -238,9 +238,9 @@ def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> st
         if debug == 0:
             pass  # fall through to the default
         else:
-            repr, is_complete = json_head(max_len, body)
+            head, is_complete = json_head(max_len, body)
             if is_complete:
-                return f'… with a {kind} body of length {len(repr)} being {repr}'
+                return f'… with a {kind} body of length {len(head)} being {head}'
             else:
-                return f'… with a {kind} body starting in {repr}'
+                return f'… with a {kind} body starting in {head}'
     return f'… with a {kind} body of type ({type(body)!r})'
