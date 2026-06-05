@@ -440,8 +440,14 @@ def double_quote(*words: str) -> str:
 _base64url = r'[A-Za-z0-9_-]'
 
 _secret_re = re.compile('|'.join([
+    # JSON Web Token (JWT)
     rf'(?i:bearer )?ey[IJ]{_base64url}+\.({_base64url}+)\.({_base64url}+)',
+    # Google OAuth2 access token
     rf'(?i:bearer )?ya29\.({_base64url}+)',
+    # Google OAuth2 refresh token
+    rf'1//[0-9]{{2}}({_base64url}{{98}})',
+    # Google OAuth2 authorization code
+    rf'4/[0-9]({_base64url}{{70}})',
 ]))
 
 
@@ -462,6 +468,12 @@ def redact(s: str, *, fullmatch: bool = False) -> str:
 
     >>> redact('Authorization: Bearer ya29.some_access_token')
     'Authorization: Bearer ya29.sREDACTED'
+
+    >>> redact('refresh=1//09' + 'a' * 98 + '!')
+    'refresh=1//09aaaREDACTEDaaa!'
+
+    >>> redact('code=4/0' + 'b' * 70 + '!')
+    'code=4/0bbbREDACTEDbbb!'
 
     With ``fullmatch=True``, only strings that are entirely a secret are
     redacted:
