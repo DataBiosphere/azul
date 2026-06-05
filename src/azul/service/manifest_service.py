@@ -9,6 +9,7 @@ from bisect import (
 from collections.abc import (
     Iterable,
     Mapping,
+    Sequence,
 )
 import csv
 from datetime import (
@@ -449,10 +450,6 @@ class Manifest(SerializableAttrs):
     #: The proposed file name of the manifest when downloading it to a user's
     #: system
     file_name: str | None
-
-
-def tuple_or_none(v):
-    return v if v is None else tuple(v)
 
 
 @attrs.frozen(kw_only=True)
@@ -1272,12 +1269,67 @@ class ManifestGenerator(metaclass=ABCMeta):
 
 class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
     """
-    A mixin for manifest generators that use client-side paging to query
-    OpenSearch.
+    A manifest generator that uses client-side paging to query OpenSearch.
     """
     page_size = 500
 
-    def _create_paged_request(self, search_after: SortKey | None) -> Search:
+    #: A paginator is a function that, given a ``search_after`` value, returns a
+    #: fully populated OpenSearch request for one page worth of sorted hits with
+    #: the first hit's sort key matching that ``search_after`` value. If the
+    #: ``search_after`` value is None, the request for the first page is
+    #: returned.
+    #:
+    type Paginator = Callable[[SortKey | None], Search]
+
+    def _paginate_hits(self, paginator: Paginator) -> Iterable[Hit]:
+        """
+        Yield all hits in every page of OpenSearch hits obtained using the
+        given paginator.
+        """
+        search_after = None
+        while True:
+            request = paginator(search_after)
+            response = request.execute()
+            if response.hits:
+                hit = None
+                for hit in response.hits:
+                    yield hit
+                assert hit is not None
+                search_after = self._search_after(hit)
+            else:
+                break
+
+    def _custom_paginator(self, request: Search, sort: Sequence[str]) -> Paginator:
+        """
+        Copies the given request, sets up the copy for pagination using the
+        given sort, and returns a paginator that uses the copy to produce
+        requests for individual pages. The sort is specified as a sequence of
+        one or two field names: the primary field to sort by and an optional tie
+        breaker. The length of the ``sort`` argument must be equal to the length
+        of the ``search_after`` value the returned paginator is called with.
+
+        Note that this method *returns* a paginator.
+        """
+        request = request.extra(size=self.page_size)
+        request = request.sort(*sort)
+
+        def request_factory(search_after: SortKey | None) -> Search:
+            if search_after is None:
+                return request
+            else:
+                return request.extra(search_after=search_after)
+
+        return request_factory
+
+    def _default_paginator(self, search_after: SortKey | None) -> Search:
+        """
+        Creates an OpenSearch request for finding aggregates of the current
+        entity type, matching the current filters, sorting the hits by entity ID
+        and returning one page of worth of hits, starting at the hit with the
+        given key, or, if the key is None, starting at the first hit.
+
+        Note that this method *is* a Paginator.
+        """
         pagination = Pagination(sort='entryId',
                                 order='asc',
                                 size=self.page_size,
@@ -1300,8 +1352,7 @@ class ClientSidePagingManifestGenerator(ManifestGenerator, metaclass=ABCMeta):
         return request
 
     def _search_after(self, hit: Hit) -> SortKey:
-        a, b = hit.meta.sort
-        return a, b
+        return sort_key_from_json(list(hit.meta.sort))
 
 
 class PagedManifestGenerator(ClientSidePagingManifestGenerator):
@@ -1383,7 +1434,7 @@ class PagedManifestGenerator(ClientSidePagingManifestGenerator):
                 return partition
 
 
-class FileBasedManifestGenerator(ManifestGenerator):
+class FileBasedManifestGenerator(ClientSidePagingManifestGenerator):
     """
     A manifest generator that writes its output to a file.
 
@@ -1571,7 +1622,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             output.write('\n\n'.join(curl_options))
             output.write('\n\n')
 
-        request = self._create_paged_request(partition.search_after)
+        request = self._default_paginator(partition.search_after)
         response = request.execute()
         if response.hits:
             hit = None
@@ -1737,7 +1788,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
         if partition.page_index == 0:
             writer.writeheader()
 
-        request = self._create_paged_request(partition.search_after)
+        request = self._default_paginator(partition.search_after)
         response = request.execute()
         if response.hits:
             project_short_names: set[str] = set()
@@ -1832,10 +1883,10 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
 
     def _all_docs_sorted(self) -> Iterable[JSON]:
         request = self._create_request(self.entity_type)
-        request = request.params(preserve_order=True).sort('entity_id.keyword')
-        for hit in request.scan():
-            doc = self._hit_to_doc(hit)
-            yield doc
+        sort = ['entity_id.keyword']
+        paginator = self._custom_paginator(request, sort)
+        hits = self._paginate_hits(paginator)
+        return map(self._hit_to_doc, hits)
 
     def create_file(self) -> tuple[str, str | None]:
         transformers = self.service.transformer_types(self.catalog)
@@ -1929,36 +1980,9 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         hub_id: str
         replica_ids: list[str]
 
-    def _paginate_hits(self,
-                       request_factory: Callable[[SortKey | None], Search]
-                       ) -> Iterable[Hit]:
-        """
-        Yield all hits in every page of OpenSearch hits in responses to
-        requests that use client-side paging.
-
-        :param request_factory:  A callable that returns a prepared OpenSearch
-                                 request for the given search-after key, with the
-                                 appropriate filters and sorting applied. The
-                                 returned request should yield one page worth of
-                                 hits, starting at the first page (if the argument
-                                 is None), or the hit right after the hit with
-                                 given search-after key
-        """
-        search_after = None
-        while True:
-            request = request_factory(search_after)
-            response = request.execute()
-            if response.hits:
-                hit = None
-                for hit in response.hits:
-                    yield hit
-                assert hit is not None
-                search_after = self._search_after(hit)
-            else:
-                break
-
     def _list_replica_keys(self) -> Iterable[ReplicaKeys]:
-        for hit in self._paginate_hits(self._create_paged_request):
+        paginator = self._default_paginator
+        for hit in self._paginate_hits(paginator):
             document_ids = [
                 document_id
                 for entity_type in self.hot_entity_types
@@ -2002,7 +2026,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
             {'terms': {'hub_ids.keyword': list(hub_ids)}},
             {'terms': {'entity_id.keyword': list(replica_ids)}}
         ]))
-        request = request.extra(size=self.page_size)
 
         # `_id` is currently the only index field that is unique to each replica
         # document (and thus results in an unambiguous total ordering). However,
@@ -2014,15 +2037,9 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
         # FIXME: ES DeprecationWarning for using _id as sort key
         #        https://github.com/DataBiosphere/azul/issues/7290
         #
-        request = request.sort('entity_id.keyword', '_id')
-
-        def request_factory(search_after: SortKey | None) -> Search:
-            if search_after is None:
-                return request
-            else:
-                return request.extra(search_after=search_after)
-
-        return self._paginate_hits(request_factory)
+        sort = ['entity_id.keyword', '_id']
+        paginator = self._custom_paginator(request, sort)
+        return self._paginate_hits(paginator)
 
 
 class JSONLVerbatimManifestGenerator(PagedManifestGenerator,

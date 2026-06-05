@@ -104,6 +104,7 @@ from azul.csp import (
 )
 from azul.deployment import (
     aws,
+    public_ip,
 )
 from azul.drs import (
     AccessMethod,
@@ -410,6 +411,14 @@ class IndexingIntegrationTest(IntegrationTestCase):
         # more information.
         if 'unattended' not in config.it_flags:
             cls._user_access_token = cls.__user_access_token()
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        # On GitLab, the runner's NAT gateway IPs are already in the WAF IP set
+        # by virtue of Terraform, so no on-the-fly exemption is needed.
+        if 'CI_JOB_TOKEN' not in os.environ:
+            cls.enterClassContext(IntegrationTestRateLimitExemption())
 
     def setUp(self) -> None:
         super().setUp()
@@ -2313,3 +2322,61 @@ class BearerTokenHttpClient(HttpClientDecorator):
             headers = {}
         headers = {**headers, 'Authorization': f'Bearer {self._token}'}
         return super().urlopen(method, url, body=body, headers=headers, **kwargs)
+
+
+class IntegrationTestRateLimitExemption:
+    """
+    An idempotent context manager that adds the local machine's public IP to
+    the WAF IP set exempting integration test runners from the API rate limit
+    on entry, and removes it again on exit. Entering an already-entered or
+    exiting an already-exited instance is a no-op.
+    """
+
+    _scope = 'REGIONAL'
+
+    @property
+    def _wafv2(self):
+        return aws.client('wafv2')
+
+    @cached_property
+    def _address(self) -> str:
+        return f'{public_ip()}/32'
+
+    @cached_property
+    def _qualified_name(self) -> str:
+        return config.qualified_resource_name(config.it_ips_term)
+
+    def __init__(self) -> None:
+        response = self._wafv2.list_ip_sets(Scope=self._scope)
+        self._set_id = one(
+            s['Id'] for s in response['IPSets']
+            if s['Name'] == self._qualified_name
+        )
+
+    def __enter__(self) -> IntegrationTestRateLimitExemption:
+        self._update_ip_set(lambda current: current | {self._address})
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self._update_ip_set(lambda current: current - {self._address})
+
+    type _Updater = Callable[[set[str]], set[str]]
+
+    def _update_ip_set(self, update: _Updater) -> None:
+        response = self._wafv2.get_ip_set(Name=self._qualified_name,
+                                          Scope=self._scope,
+                                          Id=self._set_id)
+        current = set(response['IPSet']['Addresses'])
+        desired = update(current)
+        if current == desired:
+            log.info('No need to modify WAF IP set %r as it already is %r',
+                     self._qualified_name, desired)
+        else:
+            additions, deletions = desired - current, current - desired
+            log.info('Updating WAF IP set %r, adding %r, removing %r.',
+                     self._qualified_name, additions, deletions)
+            self._wafv2.update_ip_set(Name=self._qualified_name,
+                                      Scope=self._scope,
+                                      Id=self._set_id,
+                                      Addresses=list(desired),
+                                      LockToken=response['LockToken'])

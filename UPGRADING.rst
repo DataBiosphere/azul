@@ -20,6 +20,34 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8059 APATs have non-standard signature
+=======================================
+
+Everyone
+--------
+
+Truncate the DynamoDB user table in each of your personal deployments by
+tainting the Terraform resource and reapplying::
+
+    make deploy
+    cd terraform
+    terraform apply -replace=aws_dynamodb_table.users
+
+Note that this will invalidate all APATs in that deployment.
+
+Operator
+--------
+
+Follow the steps above for all shared deployments. Cancel the
+``integration_test`` job of the GitLab pipeline. When the ``deploy`` job has
+completed, run the above commands locally, with the target deployment selected
+and the merge commit (or, for sandbox deployments, the PR branch) checked out.
+The ``make deploy`` should yield an empty plan. We only use it to ensure that
+all dependencies (config files, lambda layer, ...) are present before invoking
+``terraform``. After the ``terraform apply``, resume the pipeline by starting
+the ``integration_test`` job.
+
+
 #8033 Support per-user APAT revocation
 ======================================
 
