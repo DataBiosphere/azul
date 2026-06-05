@@ -20,6 +20,20 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#7993 Tighten verification of access tokens
+===========================================
+
+Operator
+--------
+
+Delete the Data Browser OAuth2 client IDs from each GCP project. In the `GCP
+Console`_, navigate to *APIs & Services > Credentials* and delete all OAuth 2.0
+client IDs named ``azul-browser-{deployment}``, where ``{deployment}`` is the
+name of a deployment in that project.
+
+.. _GCP Console: https://console.cloud.google.com/apis/credentials
+
+
 #8059 APATs have non-standard signature
 =======================================
 
