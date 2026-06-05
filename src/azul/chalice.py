@@ -71,6 +71,7 @@ from azul.lib.json import (
 from azul.lib.strings import (
     format_and_dedent,
     join_words as jw,
+    redact,
 )
 from azul.lib.types import (
     JSON,
@@ -460,10 +461,13 @@ class AzulChaliceApp(Chalice):
     class _LogJSONEncoder(json.JSONEncoder):
 
         def default(self, o: Any) -> Any:
+            def _redact(v):
+                return redact(v, fullmatch=True) if isinstance(v, str) else v
+
             if isinstance(o, MultiDict):
-                # Convert to dict and flatten the singleton values.
+                # Convert to dict, flatten the singleton values, redact strings
                 return {
-                    k: v[0] if len(v) == 1 else v
+                    k: _redact(v[0]) if len(v) == 1 else list(map(_redact, v))
                     for k, v in ((k, o.getlist(k)) for k in o.keys())
                 }
             elif isinstance(o, CaseInsensitiveMapping):
@@ -493,9 +497,6 @@ class AzulChaliceApp(Chalice):
             'headers': request.headers
         }
         info = json.dumps(info, cls=self._LogJSONEncoder)
-        # FIXME: Logs unredacted APATs, access tokens, and authorization
-        #        codes in request headers
-        #        https://github.com/DataBiosphere/azul-private/issues/377
         log.info('Received %s request for %r, with %s.',
                  request.context['httpMethod'], request.context['path'], info)
         # FIXME: Logs unredacted authorization codes in request body
