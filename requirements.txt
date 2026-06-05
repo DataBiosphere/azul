@@ -1,22 +1,22 @@
 --find-links  https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5  # match version of resumablehash requirement below
 attrs==26.1.0
-boto3==1.43.10  # Match version of the `boto3-stubs` dev dependency
-botocore==1.43.10
+boto3==1.43.23  # Match version of the `boto3-stubs` dev dependency
+botocore==1.43.23
 chevron==0.14.0  # Match with types-chevron in requirements.dev.txt
 cryptography==48.0.0
 fastavro==1.12.2
 furl==2.1.4
-google-api-core==2.30.3
+google-api-core==2.31.0
 google-auth[pyopenssl]==2.53.0
 google-cloud-bigquery==3.41.0
 http-message-signatures==2.0.1
 http_sfv==0.9.9
 jmespath==1.1.0
 jsonschema==4.26.0
-more-itertools==11.0.2
+more-itertools==11.1.0
 msgpack==1.1.2  # versioned independently from the type stub dependency but when updating one, the other should be updated, too, if posssible
 opensearch-py==2.8.0  # < 3 to match server
-pyjwt==2.12.1
+pyjwt==2.13.0
 referencing==0.36.2  # < 0.37.0, see https://github.com/DataBiosphere/azul/issues/7832
 requests==2.33.1
 resumablehash==1.5  # match version with --find-links above
