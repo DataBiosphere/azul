@@ -1,3 +1,4 @@
+import re
 from textwrap import (
     dedent,
 )
@@ -436,22 +437,63 @@ def double_quote(*words: str) -> str:
     return delimit(join_words(*words), '"')
 
 
-def redact(s: str) -> str:
+_base64url = r'[A-Za-z0-9_-]'
+
+_secret_re = re.compile('|'.join([
+    rf'(?i:bearer )?ey[IJ]{_base64url}+\.({_base64url}+)\.({_base64url}+)',
+    rf'(?i:bearer )?ya29\.({_base64url}+)',
+]))
+
+
+def redact(s: str, *, fullmatch: bool = False) -> str:
     """
-    Redact the given string if it appears to be a secret. Only works with whole
-    secrets: 1) it does not detect secrets that are preceded by other text, and
-    2) it will redact any other text following the secret.
+    Find and redact secrets in the given string. Every captured group in a
+    match of ``_secret_re`` is redacted; the rest of the match and the
+    surrounding text are preserved.
+
+    >>> redact('token=ya29.some_access_token!')
+    'token=ya29.sREDACTED!'
+
+    >>> redact('token=eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature123!')
+    'token=eyJhbGciOiJSUzI1NiJ9.eREDACTED0.sREDACTED!'
+
+    >>> redact('no secrets here')
+    'no secrets here'
+
+    >>> redact('Authorization: Bearer ya29.some_access_token')
+    'Authorization: Bearer ya29.sREDACTED'
+
+    With ``fullmatch=True``, only strings that are entirely a secret are
+    redacted:
+
+    >>> redact('token=ya29.some_access_token!', fullmatch=True)
+    'token=ya29.some_access_token!'
+
+    >>> redact('ya29.some_access_token', fullmatch=True)
+    'ya29.sREDACTED'
+
+    >>> redact('Bearer ya29.some_access_token', fullmatch=True)
+    'Bearer ya29.sREDACTED'
     """
-    if redactable_access_token(s):
-        return _redact(s)
-    elif redactable_jwt(s):
-        token = s.split('.')
-        if len(token) == 3:
-            return '.'.join((token[0], _redact(token[1]), _redact(token[2])))
+    if fullmatch:
+        m = _secret_re.fullmatch(s)
+        if m is None:
+            return s
         else:
-            return _redact(s)
+            return _redact_groups(m)
     else:
-        return s
+        return _secret_re.sub(_redact_groups, s)
+
+
+def _redact_groups(m: re.Match) -> str:
+    result = m.group(0)
+    start = m.start()
+    for i in reversed(range(1, len(m.groups()) + 1)):
+        if m.group(i) is not None:
+            g_start = m.start(i) - start
+            g_end = m.end(i) - start
+            result = result[:g_start] + _redact(m.group(i)) + result[g_end:]
+    return result
 
 
 def redactable_access_token(s: str) -> bool:

@@ -71,7 +71,7 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
         return f'Authorization: Bearer {self.token}'
 
     def __str__(self) -> str:
-        return f'{type(self).__name__}(token={redact(self.token)!r})'
+        return f'{type(self).__name__}(token={redact(self.token, fullmatch=True)!r})'
 
 
 class AccessTokenAuthentication(BearerTokenAuthentication):

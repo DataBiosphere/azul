@@ -169,13 +169,11 @@ class _LoggingConnectionPool(urllib3.connectionpool.HTTPConnectionPool):
         return super()._make_request(*args, **kwargs)  # type: ignore[misc]
 
     def _redact(self, authorization: str) -> str:
-        # First, try a more surgical redaction for bearer tokens
-        authorization = authorization.split()
-        if len(authorization) == 2:
-            bearer, token = authorization
-            if bearer.lower() == 'bearer':
-                return bearer + ' ' + redact(token)
-        return 'REDACTED'
+        result = redact(authorization, fullmatch=True)
+        if result == authorization:
+            return 'REDACTED'
+        else:
+            return result
 
 
 class DisableCrossHostRedirectClient(HttpClientDecorator):
