@@ -451,6 +451,14 @@ _secret_re = re.compile('|'.join([
 ]))
 
 
+def looks_like_access_token(s: str) -> bool:
+    return s.startswith('ya29.')
+
+
+def looks_like_redactable_jwt(s: str) -> bool:
+    return s[:3] in ('eyI', 'eyJ')
+
+
 def redact(s: str, *, fullmatch: bool = False) -> str:
     """
     Find and redact secrets in the given string. Every captured group in a
@@ -511,14 +519,6 @@ def _redact_groups(m: re.Match) -> str:
 def assert_redactable(secret: str) -> None:
     assert redact(secret, fullmatch=True) != secret, R(
         'Secret not matched by redaction regex')
-
-
-def looks_like_access_token(s: str) -> bool:
-    return s.startswith('ya29.')
-
-
-def looks_like_redactable_jwt(s: str) -> bool:
-    return s[:3] in ('eyI', 'eyJ')
 
 
 def _redact(secret: str, *, num_show: int = 3, mask='REDACTED'):
