@@ -508,6 +508,11 @@ def _redact_groups(m: re.Match) -> str:
     return result
 
 
+def assert_redactable(secret: str) -> None:
+    assert redact(secret, fullmatch=True) != secret, R(
+        'Secret not matched by redaction regex')
+
+
 def redactable_access_token(s: str) -> bool:
     return s.startswith('ya29.')
 

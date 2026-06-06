@@ -45,6 +45,7 @@ from azul.lib.objects import (
     absent,
 )
 from azul.lib.strings import (
+    assert_redactable,
     format_and_dedent as fd,
 )
 from azul.lib.types import (
@@ -254,6 +255,7 @@ class UserService:
         self._jwt.decode(apat,
                          key=config.apat_kms_key.alias,
                          algorithms=[self._apat_algorithm])
+        assert_redactable(apat)
         apat_auth = PersonalAccessTokenAuthentication(token=apat)
         log.info('Minted APAT %s for access token %s',
                  apat_auth, at_auth)
@@ -275,6 +277,7 @@ class UserService:
             log.warning('Invalid APAT %s', apat_auth, exc_info=e)
             raise InvalidPersonalAccessTokenError from e
         else:
+            assert_redactable(apat_auth.token)
             iss, sub = self._decode_identity(claims['sub'])
             user = self._load_user(iss, sub)
             jti = claims.get('jti')
