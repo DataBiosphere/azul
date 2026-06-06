@@ -15,9 +15,9 @@ from azul.lib import (
     R,
 )
 from azul.lib.strings import (
+    looks_like_access_token,
+    looks_like_redactable_jwt,
     redact,
-    redactable_access_token,
-    redactable_jwt,
 )
 
 
@@ -57,9 +57,9 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
 
     @classmethod
     def for_token(cls, token: str) -> BearerTokenAuthentication:
-        if redactable_jwt(token):
+        if looks_like_redactable_jwt(token):
             return PersonalAccessTokenAuthentication(token)
-        elif redactable_access_token(token):
+        elif looks_like_access_token(token):
             return AccessTokenAuthentication(token)
         else:
             assert False, R('Unexpected token syntax')

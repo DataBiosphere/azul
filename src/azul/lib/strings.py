@@ -513,11 +513,11 @@ def assert_redactable(secret: str) -> None:
         'Secret not matched by redaction regex')
 
 
-def redactable_access_token(s: str) -> bool:
+def looks_like_access_token(s: str) -> bool:
     return s.startswith('ya29.')
 
 
-def redactable_jwt(s: str) -> bool:
+def looks_like_redactable_jwt(s: str) -> bool:
     return s[:3] in ('eyI', 'eyJ')
 
 
