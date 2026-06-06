@@ -557,9 +557,6 @@ class AWS:
                        event_name,
                        request.method,
                        request.url)
-        # FIXME: Logs unredacted access tokens and refresh tokens in
-        #        DynamoDB request body
-        #        https://github.com/DataBiosphere/azul-private/issues/377
         message = http_body_log_message('request', request.body)
         boto3_log.info('%s:\t%s', event_name, message)
         return None
@@ -576,9 +573,6 @@ class AWS:
                 boto3_log.info('%s:\tGot no response', event_name)
             else:
                 boto3_log.info('%s:\tGot %s response', event_name, response['status_code'])
-                # FIXME: Logs unredacted access tokens and refresh tokens in
-                #        DynamoDB response body
-                #        https://github.com/DataBiosphere/azul-private/issues/377
                 message = http_body_log_message('response', response['body'])
                 boto3_log.info('%s:\t%s', event_name, message)
         else:

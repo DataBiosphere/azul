@@ -19,6 +19,7 @@ from azul.lib.json import (
     json_head,
 )
 from azul.lib.strings import (
+    redact,
     trunc_ellipses,
 )
 from azul.lib.types import (
@@ -226,21 +227,25 @@ def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> st
     if body is None or body in empty_bodies:
         return f'… without a {kind} body'
     elif isinstance(body, string_types):
+        body_len = len(body)
         if debug == 0:
-            return f'… with a {kind} body of length {len(body)} and type {type(body)!r}'
-        elif len(body) <= max_len:
-            return f'… with a {kind} body of length {len(body)} being {body !r}'
+            return f'… with a {kind} body of length {body_len} and type {type(body)!r}'
+        elif body_len <= max_len:
+            body = redact(repr(body))
+            return f'… with a {kind} body of length {body_len} being {body}'
         else:
             # https://github.com/python/typing/discussions/1911
             prefix = trunc_ellipses(body, max_len)  # type: ignore[type-var]
-            return f'… with a {kind} body of length {len(body)} starting in {prefix!r}'
+            prefix = redact(repr(prefix))
+            return f'… with a {kind} body of length {body_len} starting in {prefix}'
     elif isinstance(body, json_body_types):
         if debug == 0:
             pass  # fall through to the default
         else:
             head, is_complete = json_head(max_len, body)
+            body_len, head = len(head), redact(head)
             if is_complete:
-                return f'… with a {kind} body of length {len(head)} being {head}'
+                return f'… with a {kind} body of length {body_len} being {head}'
             else:
                 return f'… with a {kind} body starting in {head}'
     return f'… with a {kind} body of type ({type(body)!r})'
