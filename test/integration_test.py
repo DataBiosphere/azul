@@ -143,6 +143,9 @@ from azul.lib.collections import (
 from azul.lib.json_freeze import (
     freeze,
 )
+from azul.lib.strings import (
+    redact,
+)
 from azul.lib.types import (
     JSON,
     JSONs,
@@ -828,10 +831,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
                 command_lines = self._curl_manifest_command_lines(response.data)
                 bash_command = command_lines[-1]
                 with tempfile.TemporaryDirectory() as tmpdir:
-                    # FIXME: Logs unredacted access tokens in manifest
-                    #        curl command
-                    #        https://github.com/DataBiosphere/azul-private/issues/377
-                    log.info('Running %r in %r', bash_command, tmpdir)
+                    log.info('Running %r in %r', redact(bash_command), tmpdir)
                     result = subprocess.run(bash_command,
                                             shell=True,
                                             executable='bash',
