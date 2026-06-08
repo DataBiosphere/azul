@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#7646 Failures mirroring files in dev catalog dcp3
+==================================================
+
+Add the ``no_mirror`` flag to the ``f8aa201c`` and ``8c3c290d`` sources in the
+``dcp3`` catalog in the ``environment.py`` files for each of your personal
+deployments. As always, use the sandbox deployment's ``environment.py`` as a
+model when upgrading personal deployments.
+
+
 #8075 Remove snapshots from dev to reduce storage to ≤ 5 TiB
 ============================================================
 

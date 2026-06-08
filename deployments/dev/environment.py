@@ -122,7 +122,7 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-bd995e95', 'hca_dev_842605c7375a47c59e2ca71c2c00fcad__20210830_20210903'),
     source('bigquery', 'datarepo-dev-d0772077', 'hca_dev_8787c23889ef4636a57d3167e8b54a80__20210827_20210903'),
     source('bigquery', 'datarepo-dev-8eb2ffd1', 'hca_dev_87d52a86bdc7440cb84d170f7dc346d9__20210830_20210903'),
-    source('bigquery', 'datarepo-dev-0c5c20b5', 'hca_dev_8c3c290ddfff4553886854ce45f4ba7f__20210902_20210907'),
+    source('bigquery', 'datarepo-dev-0c5c20b5', 'hca_dev_8c3c290ddfff4553886854ce45f4ba7f__20210902_20210907', no_mirror),  # noqa: E501, contains file with bad size and sha256
     source('bigquery', 'datarepo-dev-29509483', 'hca_dev_90bd693340c048d48d76778c103bf545__20210827_20211110'),
     source('bigquery', 'datarepo-dev-59d37b9a', 'hca_dev_946c5add47d1402a97bba5af97e8bce7__20210831_20210903'),
     source('bigquery', 'datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
@@ -166,7 +166,7 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-10f0610a', 'hca_dev_f81efc039f564354aabb6ce819c3d414__20210827_20210903'),
     source('bigquery', 'datarepo-dev-24e9529e', 'hca_dev_f83165c5e2ea4d15a5cf33f3550bffde__20210901_20210908'),
     source('bigquery', 'datarepo-dev-67240cf2', 'hca_dev_f86f1ab41fbb4510ae353ffd752d4dfc__20210901_20210903'),
-    source('bigquery', 'datarepo-dev-e8e0a59a', 'hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903'),
+    source('bigquery', 'datarepo-dev-e8e0a59a', 'hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903', no_mirror),  # noqa: E501, contains file with bad size and sha256
     source('bigquery', 'datarepo-dev-96d8e08c', 'hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903'),
     # @formatter:on
 ]))
