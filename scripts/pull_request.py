@@ -47,6 +47,7 @@ log = logging.getLogger(__name__)
 _project_root = Path(__file__).resolve().parent.parent
 _template_dir = _project_root / '.github' / 'PULL_REQUEST_TEMPLATE'
 _project_owner = 'DataBiosphere'
+_project_repos = ['azul', 'azul-private']
 _project_title = 'Azul'
 
 
@@ -114,7 +115,7 @@ def main(argv):
         fix = issue.type == 'Defect'
     else:
         fix = args.fix
-    title = _pr_title(issue_number, issue.title, fix, suffix=title_suffix)
+    title = _pr_title(issue.ref, issue.title, fix, suffix=title_suffix)
 
     log.info('Checking for existing PR …')
     existing_pr = _existing_pr()
@@ -131,7 +132,7 @@ def main(argv):
     # Normalize line endings from GitHub API responses
     body = '\n'.join(body.splitlines())
 
-    body = _reference_issue_in_body(body, issue_number)
+    body = _reference_issue_in_body(body, issue.ref)
 
     m = re.search(r'^- \[[ x]] Target branch is `(.+?)`$',
                   template, flags=re.MULTILINE)
@@ -343,26 +344,66 @@ class _IssueInfo:
     type: str
     url: str
 
+    @property
+    def ref(self) -> str:
+        segments = furl(self.url).path.segments
+        owner, repo, _, number = segments[0], segments[1], segments[2], segments[3]
+        if repo == 'azul':
+            return f'#{number}'
+        else:
+            return f'{owner}/{repo}#{number}'
+
 
 def _issue_info(issue_number: int) -> _IssueInfo:
+    repo_queries = '\n'.join(
+        fd(
+            '''
+            {alias}: repository(owner: "{owner}", name: "{repo}") {{
+                issue(number: {number}) {{
+                    title
+                    url
+                    state
+                    issueType {{ name }}
+                }}
+            }}
+            ''',
+            alias=repo.replace('-', '_'),
+            owner=_project_owner,
+            repo=repo,
+            number=issue_number
+        )
+        for repo in _project_repos
+    )
     result = subprocess.run(
         [
             'gh', 'api', 'graphql',
-            '-f', 'query=' + fd('''
-                {{
-                    repository(owner: "{owner}", name: "azul") {{
-                        issue(number: {number}) {{
-                            title
-                            url
-                            issueType {{ name }}
-                        }}
-                    }}
-                }}
-            ''', owner=_project_owner, number=issue_number),
+            '-f', 'query={ ' + repo_queries + ' }',
         ],
-        capture_output=True, text=True, check=True
+        capture_output=True, text=True
     )
-    issue = json.loads(result.stdout)['data']['repository']['issue']
+    response = json.loads(result.stdout)
+    data = response['data']
+    issues = [
+        repo_data['issue']
+        for repo_data in data.values()
+        if repo_data['issue'] is not None
+    ]
+    open_issues = [i for i in issues if i['state'] == 'OPEN']
+    if len(open_issues) == 1:
+        issue = open_issues[0]
+    elif len(open_issues) > 1:
+        assert False, R(
+            'Multiple open issues with the same number',
+            [i['url'] for i in open_issues])
+    elif len(issues) == 1:
+        issue = issues[0]
+    elif len(issues) > 1:
+        assert False, R(
+            'Multiple closed issues with the same number',
+            [i['url'] for i in issues])
+    else:
+        assert False, R(
+            'Issue not found in any repository', issue_number)
     issue_type = issue['issueType']
     return _IssueInfo(
         title=issue['title'],
@@ -371,13 +412,13 @@ def _issue_info(issue_number: int) -> _IssueInfo:
     )
 
 
-def _pr_title(issue_number: int,
+def _pr_title(issue_ref: str,
               issue_title: str,
               fix: bool,
               suffix: str = ''
               ) -> str:
     prefix = 'Fix: ' if fix else ''
-    return f'{prefix}{issue_title}{suffix} (#{issue_number})'
+    return f'{prefix}{issue_title}{suffix} ({issue_ref})'
 
 
 def _existing_pr() -> dict | None:
@@ -390,9 +431,9 @@ def _existing_pr() -> dict | None:
     return json.loads(result.stdout)
 
 
-def _reference_issue_in_body(body: str, issue_number: int) -> str:
-    body, n = re.subn(r'^(Linked issues?: *)#\d{1,5}',
-                      rf'\1#{issue_number}',
+def _reference_issue_in_body(body: str, issue_ref: str) -> str:
+    body, n = re.subn(r'^(Linked issues?: *)\S+',
+                      rf'\1{issue_ref}',
                       body, flags=re.MULTILINE)
     assert n > 0, R('Linked issues reference not found in body')
     assert n < 2, R('Multiple linked issues references found in body')
