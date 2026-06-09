@@ -157,9 +157,11 @@ class TestHttp(AzulUnitTestCase):
 
                 prefix, url = 'INFO:test_http:', re.escape(url)
                 http_header_pattern = (
-                    r"\{'Server': 'BaseHTTP/\d+\.\d+\s+Python/\d+\.\d+\.\d+', "
-                    r"'Date': '[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4} \d{2}:\d{2}:\d{2} GMT', "
-                    r"'Retry-After': '\d+'\}"
+                    r"\["
+                    r"\('Server', 'BaseHTTP/\d+\.\d+\s+Python/\d+\.\d+\.\d+'\), "
+                    r"\('Date', '[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4} \d{2}:\d{2}:\d{2} GMT'\), "
+                    r"\('Retry-After', '\d+'\)"
+                    r"\]"
                 )
 
                 expected_logs = []
@@ -180,7 +182,7 @@ class TestHttp(AzulUnitTestCase):
                         expected_logs.extend(
                             [
                                 rf'^{prefix}Got 503 response after \d.\d\d\ds from GET to {url}$',
-                                rf'^{prefix}… with response headers HTTPHeaderDict\({http_header_pattern}\)$',
+                                rf'^{prefix}… with response headers {http_header_pattern}$',
                                 f"^{prefix}… without a response body$",
                             ]
                         )
