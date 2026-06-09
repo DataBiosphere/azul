@@ -245,6 +245,13 @@ operator_keys = [
         'W07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
         ' '
         'dsotirho@ucsc.edu'
+    ),
+    (
+        'ssh-ed25519'
+        ' '
+        'AAAAC3NzaC1lZDI1NTE5AAAAIGQfVzuxnFtCBcrnoebVhB7larVXhag8CmweXQU7QSBe'
+        ' '
+        'nadove@ucsc.edu'
     )
 ]
 
