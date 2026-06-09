@@ -1062,6 +1062,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'local_gateway_id': None,
                         'vpc_endpoint_id': None,
                         'core_network_arn': None,
+                        'odb_network_arn': None,
                     }
                 ],
                 'vpc_id': '${aws_vpc.gitlab.id}'
