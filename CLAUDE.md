@@ -29,9 +29,10 @@
 
 - Prefer to use `git mv` when renaming or moving files
 
-- Do not commit any changes unless explicitly asked to do so. However, it's OK
-  to propose committing changes. When committing changes, include a trailer in 
-  the commit message that attributes the change to you
+- Do not commit or amend any changes unless explicitly asked to do so. A prior
+  request to commit does not authorize subsequent commits or amends. However,
+  it's OK to propose committing changes. When committing changes, include a
+  trailer in the commit message that attributes the change to you
 
 - You can usually disregard any files under `attic/`, except for reference.
   Never modify the attic, except when instructed to move files there.
