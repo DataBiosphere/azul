@@ -127,9 +127,7 @@ dcp2_sources = union({}, 105, delta([
     source('bigquery', 'datarepo-dev-59d37b9a', 'hca_dev_946c5add47d1402a97bba5af97e8bce7__20210831_20210903'),
     source('bigquery', 'datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', no_mirror),  # noqa: E501, all files above mirror size limit
     source('bigquery', 'datarepo-dev-4b88b45b', 'hca_dev_962bd805eb894c54bad2008e497d1307__20210830_20210903'),
-    # FIXME: Make this no_ma_mirror again, once the underlying issue with requester-pays is fixed
-    #        https://github.com/DataBiosphere/azul/issues/7955
-    source('bigquery', 'datarepo-dev-02c59b72', 'hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903'),
+    source('bigquery', 'datarepo-dev-02c59b72', 'hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903', no_ma_mirror),  # noqa: E501
     source('bigquery', 'datarepo-dev-a6312a94', 'hca_dev_992aad5e7fab46d9a47ddf715e8cfd24__20210830_20210903'),
     source('bigquery', 'datarepo-dev-75589244', 'hca_dev_996120f9e84f409fa01e732ab58ca8b9__20210827_20210903'),
     source('bigquery', 'datarepo-dev-d4b988d6', 'hca_dev_a004b1501c364af69bbd070c06dbc17d__20210830_20210903', no_ma_mirror),  # noqa: E501
