@@ -61,9 +61,9 @@ msgpack==1.1.2
 msgpack-types==0.7.0
 mypy==2.1.0
 mypy-boto3-apigateway==1.43.0
-mypy-boto3-cloudwatch==1.43.2
+mypy-boto3-cloudwatch==1.43.26
 mypy-boto3-dynamodb==1.43.0
-mypy-boto3-ec2==1.43.20
+mypy-boto3-ec2==1.43.26
 mypy-boto3-ecr==1.43.0
 mypy-boto3-iam==1.43.2
 mypy-boto3-kms==1.43.12
@@ -120,8 +120,8 @@ setuptools==82.0.1
 six==1.17.0
 smmap==5.0.3
 strict-rfc3339==0.7
-tqdm==4.67.3
-types-awscrt==0.33.0
+tqdm==4.68.2
+types-awscrt==0.34.1
 types-chevron==0.14.2
 types-jsonschema==4.26.0.20260518
 types-s3transfer==0.16.0
@@ -129,7 +129,7 @@ typing_extensions==4.15.0
 uritemplate==4.2.0
 urllib3==2.7.0
 watchdog==6.0.0
-wcwidth==0.7.0
+wcwidth==0.8.1
 werkzeug==3.1.8
 wheel==0.47.0
 www-authenticate==0.9.2
