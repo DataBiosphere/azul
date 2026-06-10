@@ -550,7 +550,10 @@ class IndexingIntegrationTest(IntegrationTestCase):
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
-            self._test_curl_manifest(catalog.name)
+            # FIXME: Re-enable curl manifest IT for AnVIL
+            #        https://github.com/DataBiosphere/azul/issues/8095
+            if config.tdr_requester_pays_project is None:
+                self._test_curl_manifest(catalog.name)
             self._test_drs(catalog.name)
             self._test_repository_files(catalog.name)
             self._test_managed_access(catalog=catalog.name,
