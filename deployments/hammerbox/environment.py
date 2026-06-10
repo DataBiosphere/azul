@@ -1445,9 +1445,4 @@ def env() -> Mapping[str, str | None]:
         'AZUL_ENABLE_VERBATIM_RELATIONS': '0',
 
         'AZUL_ENABLE_MIRRORING': '1',
-
-        # FIXME: Revert, once the underlying issue with requester-pays is fixed
-        #        https://github.com/DataBiosphere/azul/issues/7955
-        #
-        'azul_it_flags': 'no_mirror',
     }
