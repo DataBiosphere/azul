@@ -1582,6 +1582,9 @@ class CurlManifestGenerator(PagedManifestGenerator):
             # using only the supported parameters. Currently, there are no
             # projects where related_files is populated.
             #
+            # FIXME: Retire support for related files
+            #        https://github.com/DataBiosphere/azul/issues/8090
+            #
             assert not is_related_file, R('Download of related file', file)
 
             file_url = self._azul_file_url(file)
