@@ -45,6 +45,7 @@ from azul.lib.objects import (
     absent,
 )
 from azul.lib.strings import (
+    assert_redactable,
     format_and_dedent as fd,
 )
 from azul.lib.types import (
@@ -218,8 +219,8 @@ class UserService:
         token_info = self._oauth_client.token_info(at_auth.token)
         aud = token_info['aud']
         if aud != self._client_id:
-            log.warning('Unexpected access token audience %r for token %r',
-                        aud, at_auth.redacted())
+            log.warning('Unexpected access token audience %r for token %s',
+                        aud, at_auth)
             raise ForeignTokenException(aud)
         else:
             iss, sub = self._google_issuer, token_info['sub']
@@ -238,7 +239,7 @@ class UserService:
         perform. The APAT can be thought of as a proxy secret for the user's
         refresh token.
         """
-        log.info('Minting APAT for %r', at_auth.redacted())
+        log.info('Minting APAT for %s', at_auth)
         iss, sub = self._verify_access_token(at_auth)
         jti = self._next_jti(iss, sub)
         now = self._now()
@@ -254,9 +255,10 @@ class UserService:
         self._jwt.decode(apat,
                          key=config.apat_kms_key.alias,
                          algorithms=[self._apat_algorithm])
+        assert_redactable(apat)
         apat_auth = PersonalAccessTokenAuthentication(token=apat)
-        log.info('Minted APAT %r for access token %r',
-                 apat_auth.redacted(), at_auth.redacted())
+        log.info('Minted APAT %s for access token %s',
+                 apat_auth, at_auth)
         return apat_auth
 
     def exchange_token(self,
@@ -266,21 +268,22 @@ class UserService:
         Return a usable access token in exchange for an APAT if valid and not
         yet expired.
         """
-        log.info('Getting access token for APAT %r', apat_auth.redacted())
+        log.info('Getting access token for APAT %s', apat_auth)
         try:
             claims = self._jwt.decode(apat_auth.token,
                                       key=config.apat_kms_key.alias,
                                       algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:
-            log.warning('Invalid APAT %r', apat_auth.redacted(), exc_info=e)
+            log.warning('Invalid APAT %s', apat_auth, exc_info=e)
             raise InvalidPersonalAccessTokenError from e
         else:
+            assert_redactable(apat_auth.token)
             iss, sub = self._decode_identity(claims['sub'])
             user = self._load_user(iss, sub)
             jti = claims.get('jti')
             if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
-                log.warning('APAT jti %r out of range [%d, %d) for %r',
-                            jti, user['min_jti'], user['max_jti'], apat_auth.redacted())
+                log.warning('APAT jti %r out of range [%d, %d) for %s',
+                            jti, user['min_jti'], user['max_jti'], apat_auth)
                 raise InvalidPersonalAccessTokenError
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
@@ -292,7 +295,7 @@ class UserService:
                 access_token, expires_in = response['access_token'], response['expires_in']
                 self._update_access_token(iss, sub, access_token, expires_in)
             at_auth = AccessTokenAuthentication(access_token)
-            log.info('Exchanged %r for APAT %r', at_auth.redacted(), apat_auth.redacted())
+            log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
             return at_auth
 
     def revoke_personal_access_tokens(self,
@@ -301,7 +304,7 @@ class UserService:
         """
         Revoke all APATs for the user identified by the given access token.
         """
-        log.info('Revoking all APATs for %r', at_auth.redacted())
+        log.info('Revoking all APATs for %s', at_auth)
         iss, sub = self._verify_access_token(at_auth)
         self._revoke_jti(iss, sub)
 

@@ -19,6 +19,7 @@ from azul.lib.json import (
     json_head,
 )
 from azul.lib.strings import (
+    redact as _redact,
     trunc_ellipses,
 )
 from azul.lib.types import (
@@ -209,7 +210,11 @@ max_log_arg_len = 1024 * 1024
 empty_bodies = ('', b'', bytearray())
 
 
-def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> str:
+def http_body_log_message(kind: Literal['request', 'response'],
+                          body: Any,
+                          *,
+                          redact: bool = True
+                          ) -> str:
     """
     Returns a log message suitable for logging the given HTTP request or
     response body. The level set in AZUL_DEBUG determines whether the body is
@@ -219,28 +224,38 @@ def http_body_log_message(kind: Literal['request', 'response'], body: Any) -> st
     :param kind: wether the given body represents a request or a response
 
     :param body: the request or response body to be logged
+
+    :param redact: whether to redact secrets in the body
     """
+
+    def __redact(s: str) -> str:
+        return _redact(s) if redact else s
+
     debug = azul.config.debug
     max_len = max_log_arg_len if debug > 1 else 1024
     assert debug >= 0, debug
     if body is None or body in empty_bodies:
         return f'… without a {kind} body'
     elif isinstance(body, string_types):
+        body_len = len(body)
         if debug == 0:
-            return f'… with a {kind} body of length {len(body)} and type {type(body)!r}'
-        elif len(body) <= max_len:
-            return f'… with a {kind} body of length {len(body)} being {body !r}'
+            return f'… with a {kind} body of length {body_len} and type {type(body)!r}'
+        elif body_len <= max_len:
+            body = __redact(repr(body))
+            return f'… with a {kind} body of length {body_len} being {body}'
         else:
             # https://github.com/python/typing/discussions/1911
             prefix = trunc_ellipses(body, max_len)  # type: ignore[type-var]
-            return f'… with a {kind} body of length {len(body)} starting in {prefix!r}'
+            prefix = __redact(repr(prefix))
+            return f'… with a {kind} body of length {body_len} starting in {prefix}'
     elif isinstance(body, json_body_types):
         if debug == 0:
             pass  # fall through to the default
         else:
-            repr, is_complete = json_head(max_len, body)
+            head, is_complete = json_head(max_len, body)
+            body_len, head = len(head), __redact(head)
             if is_complete:
-                return f'… with a {kind} body of length {len(repr)} being {repr}'
+                return f'… with a {kind} body of length {body_len} being {head}'
             else:
-                return f'… with a {kind} body starting in {repr}'
+                return f'… with a {kind} body starting in {head}'
     return f'… with a {kind} body of type ({type(body)!r})'

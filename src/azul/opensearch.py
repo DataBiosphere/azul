@@ -97,7 +97,8 @@ class AzulUrllib3HttpConnection(Urllib3HttpConnection):
     def _log_request(self, method, full_url, headers, body):
         opensearch_log.info('Making %s request to %s', method, full_url)
         opensearch_log.debug('… with request headers %r', headers)
-        opensearch_log.info(http_body_log_message('request', body))
+        message = http_body_log_message('request', body, redact=False)
+        opensearch_log.info(message)
 
     def _log_response(self,
                       log_level: int,
@@ -112,7 +113,8 @@ class AzulUrllib3HttpConnection(Urllib3HttpConnection):
         # Note that here we log the full URL actually used, see _full_url above
         opensearch_log.log(log_level, 'Got %s response after %.3fs from %s to %s',
                            status_code, duration, method, full_url, exc_info=exception)
-        opensearch_log.log(log_level, http_body_log_message('response', response))
+        message = http_body_log_message('response', response, redact=False)
+        opensearch_log.log(log_level, message)
 
 
 class OpenSearchClientFactory:
