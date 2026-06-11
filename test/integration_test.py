@@ -515,11 +515,7 @@ class IndexingIntegrationTest(IntegrationTestCase):
                     # If test_mirroring is run for the catalog, ensure that the
                     # source is not flagged as no_mirror so that we can test
                     # downloading a mirrored file
-                    #
-                    # FIXME: Revert, once the underlying issue with requester-pays is fixed
-                    #        https://github.com/DataBiosphere/azul/issues/7955
-                    #
-                    mirror=True and self._mirror_service(catalog.name).may_mirror()
+                    mirror=mirror and self._mirror_service(catalog.name).may_mirror()
                 ).ref
                 ma_source = self._select_source(catalog.name, public=False)
                 ma_source = None if ma_source is None else ma_source.ref
@@ -554,9 +550,9 @@ class IndexingIntegrationTest(IntegrationTestCase):
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
-            # FIXME: Revert, once the underlying issue with requester-pays is fixed
-            #        https://github.com/DataBiosphere/azul/issues/7955
-            if mirror:
+            # FIXME: Re-enable curl manifest IT for AnVIL
+            #        https://github.com/DataBiosphere/azul/issues/8095
+            if config.tdr_requester_pays_project is None:
                 self._test_curl_manifest(catalog.name)
             self._test_drs(catalog.name)
             self._test_repository_files(catalog.name)
@@ -1368,12 +1364,22 @@ class IndexingIntegrationTest(IntegrationTestCase):
             self.assertNotIn(str(config.tdr_service_url), msg)
             return None
         elif response.status == 403:
-            # FIXME: Treat this as an error if requester-pays is enabled
-            #        https://github.com/DataBiosphere/azul/issues/7794
             msg = json.loads(response.data)['Message']
             prefix = 'DRS server requires requester-pays for '
             self.assertEqual(prefix, msg[:len(prefix)])
-            return None
+            if config.tdr_requester_pays_project is None:
+                # A requester-pays project ought to be configured in every
+                # deployment that reads from a TDR instance where requester-pays
+                # is required.
+                self.fail(msg)
+            else:
+                # We intentionally omit the x-user-project header from all file
+                # download requests except for those made during mirroring.
+                # Consequently, a 403 response is expected when attempting to
+                # download non-mirrored files. This test runs before the
+                # mirroring subtest, so the file being downloaded is never
+                # mirrored.
+                return None
         else:
             self.assertEqual(200, response.status)
             response = json.loads(response.data)
