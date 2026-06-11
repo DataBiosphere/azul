@@ -1,3 +1,4 @@
+import json
 import logging
 from time import (
     time,
@@ -9,14 +10,28 @@ from typing import (
 )
 
 import attrs
+from cryptography.exceptions import (
+    InvalidSignature,
+)
 from cryptography.hazmat.primitives.asymmetric.ec import (
+    ECDSA,
+    EllipticCurvePublicKey,
     SECP256R1,
 )
 from cryptography.hazmat.primitives.asymmetric.utils import (
     decode_dss_signature,
     encode_dss_signature,
 )
+from cryptography.hazmat.primitives.hashes import (
+    SHA256,
+)
+from cryptography.hazmat.primitives.serialization import (
+    load_der_public_key,
+)
 import jwt.algorithms
+from jwt.algorithms import (
+    ECAlgorithm,
+)
 from jwt.api_jwt import (
     PyJWT,
 )
@@ -50,6 +65,7 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     FlatJSON,
+    JSON,
     JSONTypedDict,
     PrimitiveJSON,
     json_untyped_dict,
@@ -60,6 +76,10 @@ from azul.oauth2 import (
     Authorization,
     OAuth2Client,
     TokenForCodeResponse,
+)
+from azul.resources import (
+    NotInLambdaContextException,
+    open_resource,
 )
 
 if TYPE_CHECKING:
@@ -135,6 +155,25 @@ class UserService:
     @property
     def _client_id(self) -> str:
         return not_none(config.google_oauth2_client_id)
+
+    @cached_property
+    def _apat_public_key(self) -> EllipticCurvePublicKey:
+        try:
+            with open_resource('apat_public_key.json') as f:
+                jwk = json.load(f)
+        except NotInLambdaContextException:
+            response = aws.kms.get_public_key(KeyId=config.apat_kms_key.alias)
+            public_key = load_der_public_key(response['PublicKey'])
+            assert isinstance(public_key, EllipticCurvePublicKey), type(public_key)
+            return public_key
+        else:
+            public_key = ECAlgorithm.from_jwk(jwk)
+            assert isinstance(public_key, EllipticCurvePublicKey), type(public_key)
+            return public_key
+
+    @property
+    def apat_public_key_for_outsourcing(self) -> JSON:
+        return json.loads(ECAlgorithm.to_jwk(self._apat_public_key))
 
     @property
     def _dynamodb(self):
@@ -253,7 +292,7 @@ class UserService:
                                 key=config.apat_kms_key.alias,
                                 algorithm=self._apat_algorithm)
         self._jwt.decode(apat,
-                         key=config.apat_kms_key.alias,
+                         key=self._apat_public_key,
                          algorithms=[self._apat_algorithm])
         assert_redactable(apat)
         apat_auth = PersonalAccessTokenAuthentication(token=apat)
@@ -271,7 +310,7 @@ class UserService:
         log.info('Getting access token for APAT %s', apat_auth)
         try:
             claims = self._jwt.decode(apat_auth.token,
-                                      key=config.apat_kms_key.alias,
+                                      key=self._apat_public_key,
                                       algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:
             log.warning('Invalid APAT %s', apat_auth, exc_info=e)
@@ -497,7 +536,7 @@ class DynamoDBItemUpdate:
 
 class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
 
-    def prepare_key(self, key: str) -> str:
+    def prepare_key(self, key: str | EllipticCurvePublicKey) -> str | EllipticCurvePublicKey:
         return key
 
     @staticmethod
@@ -520,19 +559,14 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
         # KMS returns DER-encoded signatures, but JWS requires raw r||s
         return self._der_to_raw(response['Signature'])
 
-    def verify(self, msg: bytes, key: str, sig: bytes) -> bool:
-        log.debug('Verifying %d bytes with key %r', len(msg), key)
-        # KMS expects DER-encoded signatures, but JWS uses raw r||s
+    def verify(self, msg: bytes, key: EllipticCurvePublicKey, sig: bytes) -> bool:
+        log.debug('Verifying %d bytes', len(msg))
         try:
-            response = aws.kms.verify(KeyId=key,
-                                      Message=msg,
-                                      MessageType='RAW',
-                                      Signature=self._raw_to_der(sig),
-                                      SigningAlgorithm='ECDSA_SHA_256')
-        except aws.kms.exceptions.KMSInvalidSignatureException:
+            key.verify(self._raw_to_der(sig), msg, ECDSA(SHA256()))
+        except InvalidSignature:
             return False
         else:
-            return response['SignatureValid']
+            return True
 
     def _der_to_raw(self, der_sig: bytes) -> bytes:
         r, s = decode_dss_signature(der_sig)
