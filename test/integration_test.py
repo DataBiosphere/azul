@@ -233,7 +233,6 @@ POST = 'POST'
 
 
 class IntegrationTestCase(AzulTestCase):
-    min_bundles = 32
 
     @cached_property
     def azul_client(self):
