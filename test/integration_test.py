@@ -320,6 +320,9 @@ class IntegrationTestCase(AzulTestCase):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
+    def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
+        return set()
+
     def _select_source(self,
                        catalog: CatalogName,
                        *,
@@ -346,17 +349,8 @@ class IntegrationTestCase(AzulTestCase):
         plugin = self.repository_plugin(catalog)
         sources = plugin.sources
 
-        if public is None:
-            ma_sources = set()
-        else:
-            ma_sources = {
-                source.spec
-                # This would raise a KeyError during the can bundle script test
-                # due to it using a mock catalog, so we only evaluate it when
-                # it's actually needed
-                for source in self.managed_access_sources_by_catalog[catalog]
-            }
-            self.assertIsSubset(ma_sources, sources.keys())
+        ma_sources = self._ma_sources(catalog)
+        self.assertIsSubset(ma_sources, sources.keys())
 
         def _filter(source: tuple[SourceSpec, SourceConfig]) -> bool:
             if public is None:
@@ -426,6 +420,12 @@ class IndexingIntegrationTest(IntegrationTestCase):
         super().setUp()
         self._plain_http = http_client(log)
         self._http = self._plain_http
+
+    def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
+        return {
+            source.spec
+            for source in self.managed_access_sources_by_catalog[catalog]
+        }
 
     @contextmanager
     def subTest(self, msg: Any = None, **params: Any):
