@@ -238,9 +238,6 @@ class IntegrationTestCase(AzulTestCase):
     def azul_client(self):
         return AzulClient()
 
-    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
-        return self.azul_client.repository_plugin(catalog)
-
     def setUp(self) -> None:
         super().setUp()
         pinned_seed = only(
@@ -257,6 +254,12 @@ class IntegrationTestCase(AzulTestCase):
         # All random operations should be made using this seed so that test
         # results are deterministically reproducible
         self.random = Random(self.random_seed)
+
+
+class SourceSelectingIntegrationTest(IntegrationTestCase):
+
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return self.azul_client.repository_plugin(catalog)
 
     def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
         return set()
@@ -313,7 +316,7 @@ class IntegrationTestCase(AzulTestCase):
             return Source(ref=plugin.resolve_source(source), config=config)
 
 
-class IndexingIntegrationTest(IntegrationTestCase):
+class IndexingIntegrationTest(SourceSelectingIntegrationTest):
     """
     An integration test case that tests indexing of public and managed-access
     metadata from a random selection of bundles, and the expected effects on the
@@ -2107,7 +2110,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         self.assertEqual(200, response.status_code, response.content)
 
 
-class CanBundleScriptIntegrationTest(IntegrationTestCase):
+class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
 
     def _test_catalog(self, catalog: config.Catalog):
         fqid = self.bundle_fqid(catalog.name)
