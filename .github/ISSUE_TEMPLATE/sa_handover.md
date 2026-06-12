@@ -53,6 +53,11 @@ Temporary hand-overs do not involve …
 - [ ] Make TSA an admin of Terra group [`azul-anvil-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-dev)
 - [ ] Make TSA an admin of Terra group [`azul-prod`](https://app.terra.bio/#groups/azul-prod)
 - [ ] Make TSA an admin of Terra group [`azul-anvil-prod`](https://app.terra.bio/#groups/azul-anvil-prod)
+- [ ] Make TSA an admin of Terra group [`azul-anvil-public-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-public-dev)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvilbox`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvilbox)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvildev`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvildev)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-hammerbox`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-hammerbox)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvilprod`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-anvilprod)
 - [ ] Issue is assigned to only the TSA
 - [ ] Make TSA code owner in [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
 
@@ -100,4 +105,9 @@ Temporary hand-overs do not involve …
 - [ ] Remove TSA as admin of Terra group [`azul-anvil-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-dev)
 - [ ] Remove TSA as admin of Terra group [`azul-prod`](https://app.terra.bio/#groups/azul-prod)
 - [ ] Remove TSA as admin of Terra group [`azul-anvil-prod`](https://app.terra.bio/#groups/azul-anvil-prod)
+- [ ] Remove TSA as admin of Terra group [`azul-anvil-public-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-public-dev)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvilbox`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvilbox)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvildev`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvildev)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-hammerbox`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-hammerbox)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvilprod`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-anvilprod)
 - [ ] Remove TSA as code owner from [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
