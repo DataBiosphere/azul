@@ -1986,5 +1986,26 @@ def env() -> Mapping[str, str | None]:
         'AZUL_MIRRORING_CONCURRENCY': '128',
 
         # This deployment is busy so we can afford a more sensitive threshold.
-        'azul_waf_blocked_alarm_threshold': '25'
+        'azul_waf_blocked_alarm_threshold': '25',
+
+        'azul_browser_sites': json.dumps({
+            'browser': {
+                'zone': 'explore.data.humancellatlas.org',
+                'domain': 'explore.data.humancellatlas.org',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/hca/prod',
+                'tarball_name': 'hca',
+                'tarball_path': 'out',
+                'real_path': ''
+            },
+            'lungmap': {
+                'zone': 'data-browser.lungmap.net',
+                'domain': 'data-browser.lungmap.net',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/lungmap/prod',
+                'tarball_name': 'lungmap',
+                'tarball_path': 'out',
+                'real_path': ''
+            }
+        }),
     }

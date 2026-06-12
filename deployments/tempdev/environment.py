@@ -162,4 +162,16 @@ def env() -> Mapping[str, str | None]:
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '807674395527-erth0gf1m7qme5pe6bu384vpdfjh06dg.apps.googleusercontent.com',
 
         'AZUL_ENABLE_MIRRORING': '1',
+
+        'azul_browser_sites': json.dumps({
+            'browser': {
+                'zone': '{AZUL_DOMAIN_NAME}',
+                'domain': '{AZUL_DOMAIN_NAME}',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/anvil/tempdev',
+                'tarball_name': 'anvil',
+                'tarball_path': 'out',
+                'real_path': ''
+            }
+        }),
     }

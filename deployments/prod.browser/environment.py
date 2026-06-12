@@ -1,7 +1,6 @@
 from collections.abc import (
     Mapping,
 )
-import json
 
 
 def env() -> Mapping[str, str | None]:
@@ -23,25 +22,5 @@ def env() -> Mapping[str, str | None]:
     provide the value.
     """
     return {
-        'azul_terraform_component': 'browser',
-        'azul_browser_sites': json.dumps({
-            'browser': {
-                'zone': 'explore.data.humancellatlas.org',
-                'domain': 'explore.data.humancellatlas.org',
-                'project': 'ucsc/data-browser',
-                'branch': 'ucsc/hca/prod',
-                'tarball_name': 'hca',
-                'tarball_path': 'out',
-                'real_path': ''
-            },
-            'lungmap': {
-                'zone': 'data-browser.lungmap.net',
-                'domain': 'data-browser.lungmap.net',
-                'project': 'ucsc/data-browser',
-                'branch': 'ucsc/lungmap/prod',
-                'tarball_name': 'lungmap',
-                'tarball_path': 'out',
-                'real_path': ''
-            }
-        })
+        'azul_terraform_component': 'browser'
     }
