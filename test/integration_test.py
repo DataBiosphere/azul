@@ -238,20 +238,8 @@ class IntegrationTestCase(AzulTestCase):
     def azul_client(self):
         return AzulClient()
 
-    @property
-    def index_queue_service(self):
-        return self.azul_client.index_queue_service
-
-    @property
-    def repository_service(self):
-        return self.azul_client.repository_service
-
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return self.azul_client.repository_plugin(catalog)
-
-    @cache
-    def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
-        return MetadataPlugin.load(catalog).create()
 
     def setUp(self) -> None:
         super().setUp()
@@ -269,56 +257,6 @@ class IntegrationTestCase(AzulTestCase):
         # All random operations should be made using this seed so that test
         # results are deterministically reproducible
         self.random = Random(self.random_seed)
-
-    @cached_property
-    def _tdr_client(self) -> TDRClient:
-        return TDRClient.for_indexer()
-
-    @cached_property
-    def _public_tdr_client(self) -> TDRClient:
-        return TDRClient.for_anonymous_user()
-
-    @cached_property
-    def _unregistered_tdr_client(self) -> TDRClient:
-        tdr = TDRClient(
-            credentials_provider=ServiceAccountCredentialsProvider(
-                service_account=config.ServiceAccount.unregistered
-            )
-        )
-        email = tdr.credentials.service_account_email
-        self.assertFalse(tdr.is_registered(),
-                         f'The "unregistered" service account ({email!r}) has '
-                         f'been registered')
-        # The unregistered service account should not have access to any sources
-        with self.assertRaises(AssertionError) as cm:
-            tdr.list_snapshots()
-        msg = str(cm.exception)
-        expected_msg_prefix = f'The service account (SA) {email!r} is not authorized'
-        self.assertEqual(expected_msg_prefix, msg[:len(expected_msg_prefix)])
-        return tdr
-
-    @cached_property
-    def managed_access_sources_by_catalog(self
-                                          ) -> dict[CatalogName, set[TDRSourceRef]]:
-        public_sources = self._public_tdr_client.list_snapshots()
-        all_sources = self._tdr_client.list_snapshots()
-        configured_sources = {
-            catalog: self.repository_plugin(catalog).sources
-            for catalog in config.integration_test_catalogs
-            if config.is_tdr_enabled(catalog)
-        }
-        managed_access_sources = {catalog: set() for catalog in config.catalogs}
-        for catalog, sources in configured_sources.items():
-            for spec, _ in sources.items():
-                source_id = one(
-                    id
-                    for id, snapshot in all_sources.items()
-                    if snapshot['name'] == spec.name
-                )
-                if source_id not in public_sources:
-                    ref = TDRSourceRef(id=source_id, spec=spec, prefix=None)
-                    managed_access_sources[catalog].add(ref)
-        return managed_access_sources
 
     def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
         return set()
@@ -420,6 +358,68 @@ class IndexingIntegrationTest(IntegrationTestCase):
         super().setUp()
         self._plain_http = http_client(log)
         self._http = self._plain_http
+
+    @property
+    def index_queue_service(self):
+        return self.azul_client.index_queue_service
+
+    @property
+    def repository_service(self):
+        return self.azul_client.repository_service
+
+    @cache
+    def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
+        return MetadataPlugin.load(catalog).create()
+
+    @cached_property
+    def _tdr_client(self) -> TDRClient:
+        return TDRClient.for_indexer()
+
+    @cached_property
+    def _public_tdr_client(self) -> TDRClient:
+        return TDRClient.for_anonymous_user()
+
+    @cached_property
+    def _unregistered_tdr_client(self) -> TDRClient:
+        tdr = TDRClient(
+            credentials_provider=ServiceAccountCredentialsProvider(
+                service_account=config.ServiceAccount.unregistered
+            )
+        )
+        email = tdr.credentials.service_account_email
+        self.assertFalse(tdr.is_registered(),
+                         f'The "unregistered" service account ({email!r}) has '
+                         f'been registered')
+        # The unregistered service account should not have access to any sources
+        with self.assertRaises(AssertionError) as cm:
+            tdr.list_snapshots()
+        msg = str(cm.exception)
+        expected_msg_prefix = f'The service account (SA) {email!r} is not authorized'
+        self.assertEqual(expected_msg_prefix, msg[:len(expected_msg_prefix)])
+        return tdr
+
+    @cached_property
+    def managed_access_sources_by_catalog(self
+                                          ) -> dict[CatalogName, set[TDRSourceRef]]:
+        public_sources = self._public_tdr_client.list_snapshots()
+        all_sources = self._tdr_client.list_snapshots()
+        configured_sources = {
+            catalog: self.repository_plugin(catalog).sources
+            for catalog in config.integration_test_catalogs
+            if config.is_tdr_enabled(catalog)
+        }
+        managed_access_sources = {catalog: set() for catalog in config.catalogs}
+        for catalog, sources in configured_sources.items():
+            for spec, _ in sources.items():
+                source_id = one(
+                    id
+                    for id, snapshot in all_sources.items()
+                    if snapshot['name'] == spec.name
+                )
+                if source_id not in public_sources:
+                    ref = TDRSourceRef(id=source_id, spec=spec, prefix=None)
+                    managed_access_sources[catalog].add(ref)
+        return managed_access_sources
 
     def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
         return {
