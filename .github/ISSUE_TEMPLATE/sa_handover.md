@@ -31,7 +31,6 @@ Temporary hand-overs do not involve …
 
 ## Hand-over tasks for SA
 
-- [ ] Make TSA code owner in [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
 - [ ] Add TSA to [`Azul Admins`](https://github.com/orgs/DataBiosphere/teams/azul-admins) team in DataBiosphere on GitHub
 - [ ] Add TSA as a maintainer of the [`Azul Operators`](https://github.com/orgs/DataBiosphere/teams/azul-operators) team in DataBiosphere on GitHub
 - [ ] Make TSA an admin on the Admin UI of [`dev.gitlab`](https://gitlab.dev.singlecell.gi.ucsc.edu/admin/users)
@@ -55,6 +54,7 @@ Temporary hand-overs do not involve …
 - [ ] Make TSA an admin of Terra group [`azul-prod`](https://app.terra.bio/#groups/azul-prod)
 - [ ] Make TSA an admin of Terra group [`azul-anvil-prod`](https://app.terra.bio/#groups/azul-anvil-prod)
 - [ ] Issue is assigned to only the TSA
+- [ ] Make TSA code owner in [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
 
 
 ## Hand-over tasks for TSA
@@ -78,7 +78,6 @@ Temporary hand-overs do not involve …
 
 ## Reversal tasks for SA
 
-- [ ] Remove TSA as code owner from [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
 - [ ] Remove TSA from [`Azul Admins`](https://github.com/orgs/DataBiosphere/teams/azul-admins) team in DataBiosphere on GitHub
 - [ ] Remove TSA from [`Azul Operators`](https://github.com/orgs/DataBiosphere/teams/azul-operators) team in DataBiosphere on GitHub
 - [ ] Remove TSA's admin role on the Admin UI of [`dev.gitlab`](https://gitlab.dev.singlecell.gi.ucsc.edu/admin/users)
@@ -101,3 +100,4 @@ Temporary hand-overs do not involve …
 - [ ] Remove TSA as admin of Terra group [`azul-anvil-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-dev)
 - [ ] Remove TSA as admin of Terra group [`azul-prod`](https://app.terra.bio/#groups/azul-prod)
 - [ ] Remove TSA as admin of Terra group [`azul-anvil-prod`](https://app.terra.bio/#groups/azul-anvil-prod)
+- [ ] Remove TSA as code owner from [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
