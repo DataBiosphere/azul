@@ -245,6 +245,13 @@ operator_keys = [
         'W07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
         ' '
         'dsotirho@ucsc.edu'
+    ),
+    (
+        'ssh-ed25519'
+        ' '
+        'AAAAC3NzaC1lZDI1NTE5AAAAIGQfVzuxnFtCBcrnoebVhB7larVXhag8CmweXQU7QSBe'
+        ' '
+        'nadove@ucsc.edu'
     )
 ]
 
@@ -269,7 +276,7 @@ ami_id = {
 # "Updating software packages via release version upgrade in AL2023 instances"
 # section in OPERATOR.rst.
 #
-AL2023_release = '2023.11.20260509'
+AL2023_release = '2023.11.20260526'
 
 # Cloud-init's cc_mounts module does not support the UUID=<uuid> device
 # specification format. We use the /dev/disk/by-uuid/<uuid> symlink as a
@@ -1055,6 +1062,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'local_gateway_id': None,
                         'vpc_endpoint_id': None,
                         'core_network_arn': None,
+                        'odb_network_arn': None,
                     }
                 ],
                 'vpc_id': '${aws_vpc.gitlab.id}'

@@ -43,6 +43,8 @@ from azul.service.index_service import (
 )
 from azul.service.query_service import (
     ResponseTriple,
+    untagged_agg_name,
+    values_agg_name,
 )
 from azul.source import (
     SourceRef,
@@ -80,7 +82,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         def bucket_count(field: str, bucket_key: str):
             aggs = json_mapping(response[field])
-            agg = json_mapping(aggs['myTerms'])
+            agg = json_mapping(aggs[values_agg_name])
             buckets = json_element_mappings(agg['buckets'])
             return [
                 {
@@ -134,7 +136,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             else:
                 return str(term_key)
 
-        buckets = json_mapping(agg['myTerms'])['buckets']
+        buckets = json_mapping(agg[values_agg_name])['buckets']
 
         terms: MutableJSONs = [
             {
@@ -146,7 +148,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
 
         # Add the untagged_count to the existing termObj for a None value,
         # or add a new one
-        untagged_count = json_int(json_mapping(agg['untagged'])['doc_count'])
+        untagged_count = json_int(json_mapping(agg[untagged_agg_name])['doc_count'])
         if untagged_count > 0:
             for term in terms:
                 if term['term'] is None:

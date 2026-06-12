@@ -42,9 +42,6 @@ from azul.auth import (
 from azul.deployment import (
     aws,
 )
-from azul.drs import (
-    AccessMethod,
-)
 from azul.http import (
     HasCachedHttpClient,
 )
@@ -77,6 +74,9 @@ from azul.plugins import (
     File,
     RepositoryFileDownload,
     RepositoryPlugin,
+)
+from azul.plugins.repository.tdr import (
+    TDRFileDownload,
 )
 from azul.queues import (
     Action,
@@ -511,14 +511,6 @@ class MirrorService:
             return None
 
     def mirror_url(self, file: File) -> str | None:
-
-        # FIXME: Expose access to mirrored MA files via /repository/files
-        #        https://github.com/DataBiosphere/azul/issues/7931
-        #
-        assert file.source is not None, file
-        if not self._is_public(file.source.spec):
-            return None
-
         if self._info_exists(file):
             storage = self._storage_for_file(file)
             return storage.get_presigned_url(object_key=self._file_object_key(file),
@@ -796,7 +788,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                            content_type='application/json',
                            overwrite=False)
 
-    def _repository_url(self, file: File) -> furl:
+    def _repository_url(self, file: File) -> str:
         assert config.is_tdr_enabled(self.catalog), R(
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
@@ -807,10 +799,15 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             authentication = None
         else:
             authentication = indexer_authentication
-        object = self.repository_plugin.drs_object(file.drs_uri, authentication)
-        access = object.get(AccessMethod.gs)
-        assert access.method is AccessMethod.https, access
-        return furl(access.url)
+        download = TDRFileDownload(plugin=self.repository_plugin,
+                                   file=file,
+                                   replica=None,
+                                   token=None,
+                                   requester_pays=True)
+        download.update(authentication)
+        assert download.retry_after is None
+        assert download.location is not None
+        return download.location
 
     def _download(self, file: File, part: FilePart | None = None) -> bytes:
         url = self._repository_url(file)
@@ -825,7 +822,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             expected_status = 206
         # Ideally we would stream the response, but boto only supports uploading
         # from streams that are seekable.
-        response = self._http_client.request('GET', str(url), headers=headers)
+        response = self._http_client.request('GET', url, headers=headers)
         if response.status == expected_status:
             actual_size = len(response.data)
             log.info('Downloaded %d bytes in %.3fs from file %r',

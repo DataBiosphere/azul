@@ -26,7 +26,6 @@ from typing import (
 )
 
 from more_itertools import (
-    first,
     one,
 )
 
@@ -429,14 +428,26 @@ class NullableDateTime(NullableScalar[str, str]):
 null_datetime: NullableDateTime = NullableDateTime(str, str)
 
 
-class Nested(PassThrough[JSON]):
+class Nested(FieldType[JSON, JSON]):
+    allow_sorting_by_empty_lists = False
+    es_type = 'nested'
     properties: Mapping[str, FieldType]
-    agg_property: str
 
     def __init__(self, **properties):
-        super().__init__(JSON, es_type='nested')
-        self.agg_property = first(properties.keys())
+        super().__init__(JSON, JSON)
         self.properties = properties
+
+    def to_index(self, value: JSON) -> JSON:
+        return {
+            field: field_type.to_index(value[field])
+            for field, field_type in self.properties.items()
+        }
+
+    def from_index(self, value: JSON) -> JSON:
+        return {
+            field: field_type.from_index(value[field])
+            for field, field_type in self.properties.items()
+        }
 
     def api_filter_values_schema(self, operator: str, mode: Mode) -> JSON:
         assert operator == 'is'

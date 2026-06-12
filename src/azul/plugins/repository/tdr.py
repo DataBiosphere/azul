@@ -14,6 +14,7 @@ from typing import (
     TypeVar,
 )
 
+import attrs
 from chalice import (
     UnauthorizedError,
 )
@@ -270,7 +271,9 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                     yield match
 
 
+@attrs.define(auto_attribs=True, kw_only=True)
 class TDRFileDownload(RepositoryFileDownload):
+    requester_pays: bool = False
     _location: str | None = None
 
     def update(self, authentication: Authentication | None) -> None:
@@ -280,8 +283,12 @@ class TDRFileDownload(RepositoryFileDownload):
             assert self.location is None, self
             assert self.retry_after is None, self
         else:
+            if self.requester_pays and config.tdr_requester_pays_project is not None:
+                headers = {'x-user-project': config.tdr_requester_pays_project}
+            else:
+                headers = None
             drs_client = self._plugin.drs_object(self.file.drs_uri, authentication)
-            access = drs_client.get(access_method=AccessMethod.gs)
+            access = drs_client.get(access_method=AccessMethod.gs, headers=headers)
             assert access.method is AccessMethod.https, R(str(access.method))
             assert access.headers is None, R(str(access.headers))
             signed_url = access.url
