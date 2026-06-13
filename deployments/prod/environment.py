@@ -1922,6 +1922,8 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_DEPLOYMENT_STAGE': 'prod',
 
+        # FIXME: Remove 'azul.' prefix from AZUL_DOMAIN_NAME in prod
+        #        https://github.com/DataBiosphere/azul/issues/5122
         'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
 
         'AZUL_CATALOGS': base64.b64encode(bz2.compress(json.dumps({

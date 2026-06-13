@@ -291,8 +291,6 @@ class Config:
 
     @property
     def data_browser_domain(self) -> str:
-        # FIXME: Remove 'azul.' prefix from AZUL_DOMAIN_NAME in prod
-        #        https://github.com/DataBiosphere/azul/issues/5122
         return self.browser_sites['browser']['domain']
 
     @property
