@@ -19,6 +19,22 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#8075 Remove snapshots from dev to reduce storage to ≤ 5 TiB
+============================================================
+
+Everyone
+--------
+
+In the ``environment.py`` of each of your personal deployments colocated with
+``dev``, add the ``dcp3_min_sources`` definition and change ``AZUL_CATALOGS``
+to reference it instead of ``dcp3_sources``. Use the ``sandbox`` deployment's
+``environment.py`` as a model. Then reindex::
+
+    source environment
+    make reindex
+
+
 #7794 Use requester-pays for mirroring in AnVIL deployments
 ===========================================================
 
