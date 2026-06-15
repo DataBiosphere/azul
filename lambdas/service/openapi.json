@@ -2969,6 +2969,16 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
+                                        "pagination": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": true
+                                        },
+                                        "termFacets": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": true
+                                        },
                                         "hits": {
                                             "type": "array",
                                             "items": {
@@ -3053,22 +3063,12 @@
                                                 ],
                                                 "additionalProperties": true
                                             }
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "properties": {},
-                                            "additionalProperties": true
-                                        },
-                                        "termFacets": {
-                                            "type": "object",
-                                            "properties": {},
-                                            "additionalProperties": true
                                         }
                                     },
                                     "required": [
-                                        "hits",
                                         "pagination",
-                                        "termFacets"
+                                        "termFacets",
+                                        "hits"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -4852,6 +4852,16 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
+                                        "pagination": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": true
+                                        },
+                                        "termFacets": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": true
+                                        },
                                         "hits": {
                                             "type": "array",
                                             "items": {
@@ -4936,22 +4946,12 @@
                                                 ],
                                                 "additionalProperties": true
                                             }
-                                        },
-                                        "pagination": {
-                                            "type": "object",
-                                            "properties": {},
-                                            "additionalProperties": true
-                                        },
-                                        "termFacets": {
-                                            "type": "object",
-                                            "properties": {},
-                                            "additionalProperties": true
                                         }
                                     },
                                     "required": [
-                                        "hits",
                                         "pagination",
-                                        "termFacets"
+                                        "termFacets",
+                                        "hits"
                                     ],
                                     "additionalProperties": false
                                 }
