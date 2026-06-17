@@ -37,8 +37,8 @@ google-resumable-media==2.10.0
 googleapis-common-protos==1.75.0
 greenlet==3.5.1
 grpc-google-iam-v1==0.14.4
-grpcio==1.81.0
-grpcio-status==1.81.0
+grpcio==1.81.1
+grpcio-status==1.81.1
 http-message-signatures==2.0.1
 http_sfv==0.9.9
 httplib2==0.31.2
@@ -65,11 +65,11 @@ mypy-boto3-cloudwatch==1.43.26
 mypy-boto3-dynamodb==1.43.0
 mypy-boto3-ec2==1.43.27
 mypy-boto3-ecr==1.43.0
-mypy-boto3-iam==1.43.2
+mypy-boto3-iam==1.43.29
 mypy-boto3-kms==1.43.12
 mypy-boto3-lambda==1.43.20
 mypy-boto3-opensearch==1.43.16
-mypy-boto3-s3==1.43.14
+mypy-boto3-s3==1.43.31
 mypy-boto3-secretsmanager==1.43.0
 mypy-boto3-securityhub==1.43.5
 mypy-boto3-sns==1.43.23
@@ -89,7 +89,7 @@ pathspec==1.1.1
 pip==26.1.2
 posix_ipc==1.3.2
 proto-plus==1.28.0
-protobuf==7.35.0
+protobuf==7.35.1
 py-partiql-parser==0.6.3
 pyasn1==0.6.3
 pyasn1_modules==0.4.2
