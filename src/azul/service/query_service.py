@@ -35,6 +35,7 @@ from opensearchpy import (
 )
 from opensearchpy.helpers.aggs import (
     Agg,
+    MultiTerms,
     Terms,
 )
 from opensearchpy.helpers.query import (
@@ -80,12 +81,28 @@ from azul.opensearch import (
 )
 from azul.plugins import (
     DocumentSlice,
+    DottedFieldPath,
     FieldPath,
     MetadataPlugin,
     dotted,
+    undotted,
 )
 
 log = logging.getLogger(__name__)
+
+#: The name of the bucket holding one entry per distinct facet value, with its
+#: document count.
+#:
+values_agg_name = 'myTerms'
+
+#: The name of the `nested` aggregation bucket, used only for facets backed by a
+#: nested field.
+#:
+nested_agg_name = 'myNested'
+
+#: The name of the bucket counting documents with no value for the facet.
+#:
+untagged_agg_name = 'myUntagged'
 
 
 class IndexNotFoundError(Exception):
@@ -326,21 +343,55 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
         field_type = self.service.field_type(self.catalog, facet_path)
         if isinstance(field_type, Nested):
-            nested_agg = agg.bucket(name='nested',
+            dotted_facet_path = dotted(facet_path)
+            # Aggregate over the values of the nested field. The values are flat
+            # JSON, i.e. dictionaries consisting of properties whose values are
+            # primitive. OpenSearch refers to the values of the nested field as
+            # "nested documents". By itself, a `nested` aggregation only counts
+            # the number of nested documents.
+            nested_agg = agg.bucket(name=nested_agg_name,
                                     agg_type='nested',
-                                    path=dotted(facet_path))
-            facet_path = dotted(facet_path, field_type.agg_property)
+                                    path=dotted_facet_path)
+            # In order to aggregate over the properties of the nested documents,
+            # a child aggregation must be added. We use the `multi_terms` child
+            # aggregation to produce a result bucket for every distinct nested
+            # document, based on the values of its properties. For each bucket,
+            # the number of occurrences of such a nested document is returned.
+            # Duplicate nested documents, either in a single containing document
+            # or spread out over multiple containing documents, would be counted
+            # individually. We do want to count duplicates occurring in
+            # different containing documents, but we don't want to count
+            # duplicates occurring in the same containing document. To
+            # eliminate the latter, we deduplicated at indexing time.
+            nested_agg.bucket(name=values_agg_name,
+                              agg_type='multi_terms',
+                              terms=[
+                                  {'field': dotted(facet_path, field, 'keyword')}
+                                  for field in field_type.properties
+                              ],
+                              size=config.terms_aggregation_size)
+            # We use a sibling aggregation in order to count the documents that
+            # don't contain any nested documents for this field. For normal
+            # fields we can use the `missing` aggregation, but this is currently
+            # not possible in combination with the `nested` aggregation:
+            # https://github.com/elastic/elasticsearch/issues/9571
+            #
+            # As a workaround, we use a `filter` aggregation instead.
+            agg.bucket(name=untagged_agg_name,
+                       agg_type='filter',
+                       filter=Q('bool',
+                                must_not=[
+                                    Q('nested',
+                                      path=dotted_facet_path,
+                                      query=Q('exists', field=dotted_facet_path))
+                                ]))
         else:
-            nested_agg = agg
-        # Make an inner agg that will contain the terms in question
-        path = dotted(facet_path, 'keyword')
-        # FIXME: Approximation errors for terms aggregation are unchecked
-        #        https://github.com/DataBiosphere/azul/issues/3413
-        nested_agg.bucket(name='myTerms',
-                          agg_type='terms',
-                          field=path,
-                          size=config.terms_aggregation_size)
-        nested_agg.bucket('untagged', 'missing', field=path)
+            dotted_facet_path = dotted(facet_path, 'keyword')
+            agg.bucket(name=values_agg_name,
+                       agg_type='terms',
+                       field=dotted_facet_path,
+                       size=config.terms_aggregation_size)
+            agg.bucket(untagged_agg_name, 'missing', field=dotted_facet_path)
         return agg
 
     def _annotate_aggs_for_translation(self, request: Search):
@@ -350,14 +401,27 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         the response.
         """
 
+        def convert_path(path: DottedFieldPath) -> FieldPath:
+            p = undotted(path)
+            assert p[-1] == 'keyword', path
+            return p[:-1]
+
         def annotate(agg: Agg):
-            if isinstance(agg, Terms):
-                path = agg.field.split('.')
-                if path[-1] == 'keyword':
-                    path.pop()
+            if isinstance(agg, (Terms, MultiTerms)):
                 if not hasattr(agg, 'meta'):
                     agg.meta = {}
-                agg.meta['path'] = path
+                agg.meta['paths'] = []
+                if isinstance(agg, Terms):
+                    # A Terms agg is for a single field, so we only need to
+                    # annotate with the one FieldPath for the field.
+                    agg.meta['paths'].append(convert_path(agg.field))
+                else:
+                    # A MultiTerms agg contains multiple fields, so we need the
+                    # FieldPath of each one. By storing these in the same order
+                    # that the fields occur in `agg.terms`, we can later pair
+                    # these FieldPaths to the values in the aggregation buckets.
+                    for term in agg.terms:
+                        agg.meta['paths'].append(convert_path(term['field']))
             if hasattr(agg, 'aggs'):
                 subs = agg.aggs
                 for sub_name in subs:
@@ -367,12 +431,26 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
             annotate(request.aggs[agg_name])
 
     def _flatten_nested_aggs(self, aggs: MutableJSON):
+        """
+        Hoist the contents of each facet's nested aggregation bucket into its
+        parent, so downstream response parsing is oblivious to nesting.
+        """
         for facet, agg in aggs.items():
             try:
-                nested_agg = agg.pop('nested')
+                nested_agg = agg.pop(nested_agg_name)
             except KeyError:
                 pass
             else:
+                # The value buckets are expected to account for every nested
+                # document the nested aggregation counted. This relies on each
+                # nested document populating all the `multi_terms` fields, since a
+                # nested document missing any of them is omitted from the
+                # buckets but still counted by the nested aggregation.
+                doc_count = sum(bucket['doc_count']
+                                for bucket in nested_agg[values_agg_name]['buckets'])
+                assert nested_agg['doc_count'] == doc_count, R(
+                    'Nested value buckets do not account for the nested total',
+                    facet, nested_agg['doc_count'], doc_count)
                 agg.update(nested_agg)
 
     def _translate_response_aggs(self, aggs: MutableJSON):
@@ -390,13 +468,25 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                         translate(k, v)
             else:
                 try:
-                    path = v['meta']['path']
+                    # `paths` is a key we added to `meta` to have available here
+                    # when processing the response. Each path is a FieldPath
+                    # (e.g. ['contents', 'projects', 'document_id']). There will
+                    # be only one FieldPath in the case of a Terms aggregation,
+                    # and multiple in the case of a MultiTerms aggregation.
+                    paths = v['meta']['paths']
                 except KeyError:
                     pass
                 else:
-                    field_type = self.service.field_type(self.catalog, tuple(path))
+                    for i, path in enumerate(paths):
+                        field_type = self.service.field_type(self.catalog, tuple(path))
+                        for bucket in buckets:
+                            if isinstance(bucket['key'], list):
+                                # The bucket is from a MultiTerms aggregation
+                                bucket['key'][i] = field_type.from_index(bucket['key'][i])
+                            else:
+                                # The bucket is from a Terms aggregation
+                                bucket['key'] = field_type.from_index(bucket['key'])
                     for bucket in buckets:
-                        bucket['key'] = field_type.from_index(bucket['key'])
                         translate(k, bucket)
 
         for k, v in aggs.items():
@@ -411,10 +501,10 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         special_fields = plugin.special_fields
         agg = aggs.pop(special_fields.source_id.name)
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
-        for bucket in agg['myTerms']['buckets']:
+        for bucket in agg[values_agg_name]['buckets']:
             accessible = bucket['key'] in source_ids
             counts_by_accessibility[accessible] += bucket['doc_count']
-        agg['myTerms']['buckets'] = [
+        agg[values_agg_name]['buckets'] = [
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]

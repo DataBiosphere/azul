@@ -1335,7 +1335,7 @@ anvil14_sources = union(anvil13_sources, 423, delta([
     source('4e5838c4', 'eMERGE_eMERGEseq_HMB_GSO_20260403_ANV5_202604220413', no_ma_mirror),
     source('5365fa97', 'eMERGE_eMERGEseq_HMB_IRB_PUB_20260403_ANV5_202604220424', no_ma_mirror),
     source('5e75a098', 'eMERGE_eMERGEseq_HMB_NPU_20260403_ANV5_202604220434', no_ma_mirror),
-    source('c57b8824', 'nhp_dGTEx_V1_20260416_ANV5_202604170018'),
+    source('4154ac8d', 'nhp_dGTEx_V1_20260416_ANV5_202606111155'),
 ]))
 
 
@@ -1393,6 +1393,7 @@ def env() -> Mapping[str, str | None]:
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
         'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-prod.broadinstitute.org',
         'AZUL_TERRA_SERVICE_URL': 'https://firecloud-orchestration.dsde-prod.broadinstitute.org',
+        'AZUL_TDR_REQUESTER_PAYS_PROJECT': 'terra-20cf0e48',
         'azul_ecm_service_url': 'https://externalcreds.dsde-prod.broadinstitute.org',
 
         'AZUL_ENABLE_MONITORING': '1',
@@ -1430,10 +1431,5 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_MIRROR_BUCKET': 'anvilproject',
 
-        'AZUL_MIRRORING_CONCURRENCY': '128',
-
-        # FIXME: Revert, once the underlying issue with requester-pays is fixed
-        #        https://github.com/DataBiosphere/azul/issues/7955
-        #
-        'azul_it_flags': 'no_mirror',
+        'AZUL_MIRRORING_CONCURRENCY': '128'
     }

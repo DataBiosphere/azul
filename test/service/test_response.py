@@ -428,7 +428,7 @@ class TestIndexResponse(IndexResponseTestCase):
     canned_aggs = {
         'organ': {
             'doc_count': 21,
-            'untagged': {
+            'myUntagged': {
                 'doc_count': 0
             },
             'myTerms': {
@@ -446,9 +446,9 @@ class TestIndexResponse(IndexResponseTestCase):
                 ]
             }
         },
-        'disease': {
+        'sampleDisease': {
             'doc_count': 21,
-            'untagged': {
+            'myUntagged': {
                 'doc_count': 12
             },
             'myTerms': {
@@ -490,7 +490,7 @@ class TestIndexResponse(IndexResponseTestCase):
                 'total': 21,
                 'type': 'terms'
             },
-            'disease': {
+            'sampleDisease': {
                 'terms': [
                     {
                         'term': 'silver',
@@ -709,7 +709,7 @@ class TestIndexResponse(IndexResponseTestCase):
                 'total': 2
             },
             'termFacets': {
-                'disease': {
+                'sampleDisease': {
                     'terms': [
                         {
                             'count': 9,
@@ -2630,6 +2630,64 @@ class CellCounts:
                    })
 
 
+class TestNestedFieldAggregation(IndexResponseTestCase):
+    maxDiff = None
+
+    @classmethod
+    def bundles(cls) -> list[BundleFQID]:
+        return [
+            # 1 file, 1 sample
+            # tissue_atlas=[None/None (x2), Lung/None, Retina/v1.0, Blood/v1.0]
+            cls.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
+                            version='2021-09-21T17:27:23.898000Z'),
+            # 20 files, 1 sample
+            # tissue_atlas=[Blood/v1.0]
+            cls.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                            version='2018-10-10T02:23:43.182000Z'),
+            # 2 files, 1 sample
+            # tissue_atlas=[] (none)
+            cls.bundle_fqid(uuid='97f0cc83-f0ac-417a-8a29-221c77debde8',
+                            version='2019-10-14T19:54:15.397406Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_nested_field_facet(self):
+        tissue_atlas_terms = [
+            {'atlas': 'Blood', 'version': 'v1.0'},
+            {'atlas': 'Lung', 'version': None},
+            {'atlas': 'Retina', 'version': 'v1.0'},
+            {'atlas': None, 'version': None},
+            None,
+        ]
+        tissue_atlas_term_counts = {
+            'projects': [2, 1, 1, 1, 1],
+            'bundles': [2, 1, 1, 1, 1],
+            'samples': [2, 1, 1, 1, 1],
+            'files': [21, 1, 1, 1, 2]
+        }
+        for entity_type, counts in tissue_atlas_term_counts.items():
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url.set(path='/index/' + entity_type,
+                                        args=(self._params(size=1)))
+                response = requests.get(str(url))
+                response.raise_for_status()
+                response_json = response.json()
+                facets = response_json['termFacets']
+                expected = []
+                for count, term in zip(counts, tissue_atlas_terms):
+                    expected.append({'count': count, 'term': term})
+                self.assertElasticEqual(expected, facets['tissueAtlas']['terms'])
+
+
 class TestSortAndFilterByCellCount(IndexResponseTestCase):
     maxDiff = None
 
@@ -3562,10 +3620,9 @@ class TestResponseFields(IndexResponseTestCase):
         self.assertEqual(expected_publications, project['publications'])
         expected_tissue_atlas = [
             {'atlas': None, 'version': None},
-            {'atlas': None, 'version': None},
+            {'atlas': 'Blood', 'version': 'v1.0'},
             {'atlas': 'Lung', 'version': None},
             {'atlas': 'Retina', 'version': 'v1.0'},
-            {'atlas': 'Blood', 'version': 'v1.0'},
         ]
         expected_bionetwork_name = ['Eye', 'Immune', 'Kidney', 'Lung', 'Skin']
         self.assertEqual(expected_tissue_atlas, project['tissueAtlas'])
@@ -3573,12 +3630,14 @@ class TestResponseFields(IndexResponseTestCase):
         self.assertTrue(project['isTissueAtlasProject'])
 
         tissue_atlas = response_json['termFacets']['tissueAtlas']
-        self.assertEqual(5, tissue_atlas['total'])
-        terms = {
-            entry['term']: entry['count']
-            for entry in tissue_atlas['terms']
-        }
-        self.assertEqual({None: 2, 'Lung': 1, 'Retina': 1, 'Blood': 1}, terms)
+        self.assertEqual(4, tissue_atlas['total'])
+        expected_tissue_atlas_terms = [
+            {'count': 1, 'term': {'atlas': 'Blood', 'version': 'v1.0'}},
+            {'count': 1, 'term': {'atlas': 'Lung', 'version': None}},
+            {'count': 1, 'term': {'atlas': 'Retina', 'version': 'v1.0'}},
+            {'count': 1, 'term': {'atlas': None, 'version': None}},
+        ]
+        self.assertEqual(expected_tissue_atlas_terms, tissue_atlas['terms'])
 
     def test_data_use_and_duos_id(self):
         test_data = [

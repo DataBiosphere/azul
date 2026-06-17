@@ -1795,6 +1795,16 @@ dcp59_sources = union(dcp58_sources, 530, delta([
     source('bigquery', 'datarepo-72daf113', 'hca_prod_87f519b4886241f9acff75e823e0e430__20240301_dcp2_20260331_dcp59'),
 ]))
 
+dcp60_sources = union(dcp59_sources, 532, delta([
+    source('bigquery', 'datarepo-3a6680bb', 'hca_prod_2245bca065634e88ab26f2b8f60383a7__20250828_dcp2_20260529_dcp60'),
+    source('bigquery', 'datarepo-bf5f084c', 'hca_prod_4ac27412cc624b238df20ee142762a60__20260601_dcp2_20260601_dcp60'),
+    source('bigquery', 'datarepo-e3ee8102', 'hca_prod_893c8fb6bf654527b83b8233de59244c__20260529_dcp2_20260529_dcp60'),
+    source('bigquery', 'datarepo-ee67716e', 'hca_prod_8c4e43fbf7f344468367a3fe9e0b8fd7__20250828_dcp2_20260529_dcp60'),
+    source('bigquery', 'datarepo-fbd197bf', 'hca_prod_984ce0a2682d47a3b80e1354dfe51ca3__20260304_dcp2_20260529_dcp60'),
+    source('bigquery', 'datarepo-a96784e7', 'hca_prod_b10cd3143e7144379a1677028d243e81__20251104_dcp2_20260529_dcp60'),
+    source('bigquery', 'datarepo-e928935c', 'hca_prod_cb4e5e44d8984819a456393527c3186f__20250404_dcp2_20260529_dcp60'),
+]))
+
 lungmap_sources = union({}, 3, delta([
     source('bigquery', 'datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308'),
     source('bigquery', 'datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308'),
@@ -1923,6 +1933,7 @@ def env() -> Mapping[str, str | None]:
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit in [
                 ('hca', 'dcp59', dcp59_sources, None, int(1.5 * 1024 ** 3)),
+                ('hca', 'dcp60', dcp60_sources, None, int(1.5 * 1024 ** 3)),
                 ('lungmap', 'lm10', lm10_sources, -1, -1)
             ]
             for suffix, is_it in [

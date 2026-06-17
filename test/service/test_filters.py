@@ -9,6 +9,9 @@ from chalice import (
     ForbiddenError,
 )
 
+from azul.field_type import (
+    pass_thru_str,
+)
 from azul.filters import (
     FilterJSON,
     Filters,
@@ -31,7 +34,7 @@ class TestFilterReification(AzulTestCase):
     assert inaccessible_source not in accessible_sources
 
     special_fields = SpecialFields(
-        source_id=SpecialField.symmetric('sourceId'),
+        source_id=SpecialField.symmetric('sourceId', pass_thru_str),
         source_spec=MagicMock(),
         source_prefix=MagicMock(),
         bundle_uuid=MagicMock(),

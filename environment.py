@@ -216,7 +216,7 @@ def env() -> Mapping[str, str | None]:
         # `gitlab` components, as well as building and pushing the executor
         # image (see terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '29.4.3',
+        'azul_docker_version': '29.5.2',
 
         # The version of Python used throughout the system.
         #
@@ -244,7 +244,7 @@ def env() -> Mapping[str, str | None]:
         # `make -C terraform update_schema`, and committing the resulting
         # changes.
         #
-        'azul_terraform_version': '1.15.4',
+        'azul_terraform_version': '1.15.5',
 
         # The version of the AWS CLI v2 used throughout the system.
         #
@@ -257,7 +257,7 @@ def env() -> Mapping[str, str | None]:
         # Modifying this variable requires running `make environment.boot` and
         # committing the resulting changes.
         #
-        'azul_awscli_version': '2.34.45',
+        'azul_awscli_version': '2.34.62',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -278,7 +278,7 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6.1-80',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6.1-81',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
@@ -288,7 +288,7 @@ def env() -> Mapping[str, str | None]:
                 'is_custom': False
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-63',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-64',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
@@ -299,11 +299,11 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:18.11.3-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:19.0.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v18.11.3',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v19.0.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
@@ -761,6 +761,14 @@ def env() -> Mapping[str, str | None]:
         # Terra.
         #
         'AZUL_TERRA_SERVICE_URL': None,
+
+        # The GCP project ID of the Terra workspace to charge for file downloads
+        # from TDR while mirroring. If left unset, egress charges are incurred
+        # to the owner of the GCS bucket the files are stored in. Otherwise, the
+        # egress will be charged to the GCP billing account associated with the
+        # workspace. See section 3.2.3 of the README.
+        #
+        'AZUL_TDR_REQUESTER_PAYS_PROJECT': None,
 
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README

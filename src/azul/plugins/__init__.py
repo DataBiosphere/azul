@@ -42,6 +42,10 @@ from azul.drs import (
     IdentifiersDotOrgClient,
     UnauthenticatedDRSClient,
 )
+from azul.field_type import (
+    FieldType,
+    pass_thru_bool,
+)
 from azul.indexer import (
     Bundle,
     SourcedBundleFQID,
@@ -147,8 +151,8 @@ def manifest_config_to_json(c: ManifestConfig) -> AnyJSON:
 type MutableColumnMapping = dict[FieldPathElement, FieldName]
 type MutableManifestConfig = dict[FieldPath, MutableColumnMapping]
 
-DottedFieldPath = str
-FieldGlobs = list[DottedFieldPath]
+type DottedFieldPath = str
+type FieldGlobs = list[DottedFieldPath]
 
 
 def dotted(path_or_element: FieldPathElement | FieldPath,
@@ -156,12 +160,17 @@ def dotted(path_or_element: FieldPathElement | FieldPath,
            ) -> DottedFieldPath:
     dot = '.'
     if isinstance(path_or_element, FieldPathElement):
+        assert dot not in path_or_element, path_or_element
         # The dotted('field') case is pointless, so we won't special-case it
         return dot.join((path_or_element, *elements))
     elif elements:
         return dot.join((*path_or_element, *elements))
     else:
         return dot.join(path_or_element)
+
+
+def undotted(path: DottedFieldPath) -> FieldPath:
+    return tuple(path.split('.'))
 
 
 class DocumentSlice(TypedDict, total=False):
@@ -192,23 +201,36 @@ class SpecialField:
     See :py:class:`SpecialFields`.
     """
 
-    #: The standalone name of the field, as it appears in filters, the `sort`
+    #: The standalone name of this field, as it appears in filters, the `sort`
     #: request parameter and in the `termFacets` part of a service response.
     #:
     name: FieldName
 
-    #: The name of the field in an inner entity, as it appears in the `hit`
+    #: The name of this field in an inner entity, as it appears in the `hit`
     #: part of a service response.
     #:
     name_in_hit: str  # we currently have no alias for this type of occurrence
 
+    #: The type of this field
+    #:
+    type: FieldType
+
+    #: Whether this field is dynamically inserted into the service response.
+    #: Synthetic fields are not stored in the index.
+    #:
+    is_synthetic: bool = False
+
     @classmethod
-    def symmetric(cls, name: str) -> Self:
-        return cls(name=name, name_in_hit=name)
+    def symmetric(cls, name: str, type: FieldType) -> Self:
+        return cls(name=name, name_in_hit=name, type=type)
+
+    @classmethod
+    def synthetic(cls, name: str, type: FieldType) -> Self:
+        return cls(name=name, name_in_hit=name, type=type, is_synthetic=True)
 
 
 @attrs.frozen(auto_attribs=True, kw_only=True)
-class SpecialFields:
+class SpecialFields(Iterable[SpecialField]):
     """
     Azul defines a number of fields in each /index/{entity_type} response that
     are synthetic (not directly taken from the metadata) and/or are used
@@ -220,7 +242,7 @@ class SpecialFields:
     inner entity the field is a property of in the /index/{entity_type}
     response.
     """
-    accessible: ClassVar[SpecialField] = SpecialField.symmetric('accessible')
+    accessible: SpecialField = SpecialField.synthetic('accessible', pass_thru_bool)
     source_id: SpecialField
     source_spec: SpecialField
     source_prefix: SpecialField
@@ -228,6 +250,15 @@ class SpecialFields:
     bundle_version: SpecialField
     file_uuid: SpecialField
     file_name: SpecialField
+
+    def __iter__(self):
+        attr: attrs.Attribute
+        for attr in attrs.fields(type(self)):
+            yield getattr(self, attr.name)
+
+    @property
+    def synthetics(self) -> Iterable[SpecialField]:
+        return (field for field in self if field.is_synthetic)
 
 
 class ManifestFormat(SerializableEnum):

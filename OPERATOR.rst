@@ -21,7 +21,8 @@ Getting started as operator
 
   - remove the ``Editor`` role in those projects from the previous operator
 
-* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Ben and Hannes) to:
+* Email an organisation administrator (cluster-admin@soe.ucsc.edu,
+  cc'ing the PM and the system administrator), requesting to:
 
   - grant you developer access to AWS accounts ``platform-hca-prod`` and ``platform-anvil-prod``
 
@@ -941,19 +942,21 @@ Follow these steps to retry the IT job:
 GitHub bot account
 ------------------
 
-Continuous integration environments (GitLab, Travis) may need a GitHub token to
+Continuous integration environments (GitHub, GitLab) may need a GitHub token to
 access GitHub's API. To avoid using a personal access token tied to any
 particular developer's account, we created a Google Group called
-``azul-group@ucsc.edu`` of which Hannes is the owner. We then used that group
-email to register a bot account in GitHub. Apparently that's ok:
+``azul-group@ucsc.edu`` of which the system administrator is the owner. The
+system administrator used that group email to register a bot account in GitHub.
+That's ok, according to GitHub's own documentation:
 
     User accounts are intended for humans, but you can give one to a robot, such as a continuous integration bot, if necessary.
 
     (https://docs.github.com/en/github/getting-started-with-github/types-of-github-accounts#personal-user-accounts)
 
-Only Hannes knows the GitHub password of the bot account but any member of the
-group can request the password to be reset. All members will receive the
-password reset email. Hannes knows the 2FA recovery codes.
+Only the system administrator knows the credentials (password and 2FA token) for
+the GitHub bot account but any member of the group can request the password to
+be reset. All members will receive the password reset email. Only the system
+administrator knows the 2FA recovery codes.
 
 Handing over operator duties
 ----------------------------
