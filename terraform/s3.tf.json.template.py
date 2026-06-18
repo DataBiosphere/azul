@@ -61,7 +61,7 @@ tf_config = {
                         'id': 'mirror_cleanup',
                         'status': 'Enabled',
                         'abort_incomplete_multipart_upload': {
-                            'days_after_initiation': 1
+                            'days_after_initiation': 7
                         }
                     }
                 } for term in [config.mirror_term, config.ma_mirror_term]
