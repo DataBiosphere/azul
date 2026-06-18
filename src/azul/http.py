@@ -63,6 +63,29 @@ class HttpClientDecorator(HttpClient):
                 return None
 
 
+def _redact_headers(headers) -> list[tuple[str, str]]:
+    # urllib3's HTTPHeaderDict.items() can yield multiple entries for the
+    # same key, or a key only different in case
+    return [
+        (k, _redact_header(k, v))
+        for k, v in headers.items()
+    ]
+
+
+def _redact_header(name: str, value: str) -> str:
+    result = redact(value, fullmatch=True)
+    if result == value:
+        # Our standard, pattern-based approach didn't redact anything …
+        if name.lower() == 'authorization':
+            # … but the header most definitely contains a secret. We don't know
+            # what type of secret we're dealing with, so we redact it entirely.
+            return 'REDACTED'
+        else:
+            return value
+    else:
+        return result
+
+
 class LoggingHttpClient(HttpClientDecorator):
     """
     An HTTP client that logs every request and response to the given logger.
@@ -118,15 +141,17 @@ class LoggingHttpClient(HttpClientDecorator):
 
     def urlopen(self, method, url, *args, body=None, **kwargs) -> urllib3.HTTPResponse:
         log = self._log
-        log.info('Making %s request to %r', method, url)
+        redacted_url = redact(url)
+        log.info('Making %s request to %r', method, redacted_url)
         log.info(http_body_log_message('request', body))
         start = time.monotonic()
         response = super().urlopen(method, url, *args, body=body, **kwargs)
         duration = time.monotonic() - start
         assert isinstance(response, urllib3.HTTPResponse), type(response)
         log.info('Got %s response after %.3fs from %s to %s',
-                 response.status, duration, method, url)
-        log.info('… with response headers %r', response.headers)
+                 response.status, duration, method, redacted_url)
+        log.info('… with response headers %r',
+                 _redact_headers(response.headers))
         if response.isclosed():
             log.info(http_body_log_message('response', response.data))
         else:
@@ -146,24 +171,10 @@ class _LoggingConnectionPool(urllib3.connectionpool.HTTPConnectionPool):
         if headers is None or len(headers) == 0:
             log.info('… without request headers')
         else:
-            # urllib3's HTTPHeaderDict.items() can yield multiple entries for
-            # the same key, or a key only different in case
-            headers = [
-                (k, self._redact(v) if k.lower() == 'authorization' else v)
-                for k, v in headers.items()
-            ]
-            log.info('… with request headers %r', headers)
+            log.info('… with request headers %r',
+                     _redact_headers(headers))
         # The stubs for urllib3 v1.x don't declare any protected methods
         return super()._make_request(*args, **kwargs)  # type: ignore[misc]
-
-    def _redact(self, authorization: str) -> str:
-        # First, try a more surgical redaction for bearer tokens
-        authorization = authorization.split()
-        if len(authorization) == 2:
-            bearer, token = authorization
-            if bearer.lower() == 'bearer':
-                return bearer + ' ' + redact(token)
-        return 'REDACTED'
 
 
 class DisableCrossHostRedirectClient(HttpClientDecorator):

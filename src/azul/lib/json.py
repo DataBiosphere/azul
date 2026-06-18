@@ -370,7 +370,7 @@ def redact_json(v: AnyJSON) -> AnyJSON:
     Return a copy of the given JSON with confidential string values redacted.
     """
     if isinstance(v, str):
-        return redact(v)
+        return redact(v, fullmatch=True)
     elif isinstance(v, dict):
         return {k: redact_json(v) for k, v in v.items()}
     elif isinstance(v, list):

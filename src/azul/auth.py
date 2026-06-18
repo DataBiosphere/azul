@@ -15,13 +15,12 @@ from azul.lib import (
     R,
 )
 from azul.lib.strings import (
+    looks_like_access_token,
+    looks_like_redactable_jwt,
     redact,
-    redactable_access_token,
-    redactable_jwt,
 )
 
 
-@attr.s(auto_attribs=True, frozen=True)
 class Authentication(metaclass=ABCMeta):
 
     @abstractmethod
@@ -41,8 +40,15 @@ class Authentication(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    def redacted(self) -> str:
-        return redact(self.identity())
+    @abstractmethod
+    def __str__(self) -> str:
+        """
+        A redacted string representation that's safe to use in logs. Clients
+        shouldn't call this method directly but use ``str()`` instead. To obtain
+        an unredacted string representation, clients should use ``repr()``.
+        Concrete subclasses must implement this method.
+        """
+        raise NotImplementedError
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -51,9 +57,9 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
 
     @classmethod
     def for_token(cls, token: str) -> BearerTokenAuthentication:
-        if redactable_jwt(token):
+        if looks_like_redactable_jwt(token):
             return PersonalAccessTokenAuthentication(token)
-        elif redactable_access_token(token):
+        elif looks_like_access_token(token):
             return AccessTokenAuthentication(token)
         else:
             assert False, R('Unexpected token syntax')
@@ -63,6 +69,9 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
 
     def as_http_header(self) -> str:
         return f'Authorization: Bearer {self.token}'
+
+    def __str__(self) -> str:
+        return f'{type(self).__name__}(token={redact(self.token, fullmatch=True)!r})'
 
 
 class AccessTokenAuthentication(BearerTokenAuthentication):
@@ -83,6 +92,10 @@ class HMACAuthentication(Authentication):
     def as_http_header(self) -> str:
         raise NotImplementedError
 
+    def __str__(self) -> str:
+        # Nothing to redact
+        return repr(self)
+
 
 class _IndexerAuthentication(Authentication):
 
@@ -91,6 +104,13 @@ class _IndexerAuthentication(Authentication):
 
     def as_http_header(self) -> str:
         raise NotImplementedError
+
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}(identity={self.identity()!r})'
+
+    def __str__(self) -> str:
+        # Nothing to redact
+        return repr(self)
 
 
 indexer_authentication: Final = _IndexerAuthentication()
