@@ -1903,6 +1903,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
 
 class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
                                 metaclass=ABCMeta):
+    page_size = 5000
 
     @property
     def entity_type(self) -> EntityType:
