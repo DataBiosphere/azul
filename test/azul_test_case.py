@@ -245,6 +245,19 @@ class AzulTestCase(TestCase):
 
 class AzulUnitTestCase(AzulTestCase, HasCachedHttpClient):
 
+    def _create_http_client(self) -> HttpClient:
+        # We don't want any retries during unit tests. Since all server fixtures
+        # run on the same machine as the tests, we don't expect any transient
+        # errors, including I/O or 500 status errors. We also require unit tests
+        # to explicitly assert the expected response status, instead of relying
+        # on the client to raise an exception.
+        return DefaultRetryHttpClient(
+            super()._create_http_client(),
+            retries=urllib3.util.Retry(total=0,
+                                       status=0,
+                                       raise_on_status=False)
+        )
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
@@ -358,14 +371,6 @@ class AzulUnitTestCase(AzulTestCase, HasCachedHttpClient):
         cls.addClassPatch(patch.object(target=api,
                                        attribute='valid_schema_domains',
                                        new=cls.valid_schema_domains))
-
-    def _create_http_client(self) -> HttpClient:
-        return DefaultRetryHttpClient(
-            super()._create_http_client(),
-            retries=urllib3.util.Retry(total=0,
-                                       status=0,
-                                       raise_on_status=False)
-        )
 
 
 class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):

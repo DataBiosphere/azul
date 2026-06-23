@@ -237,10 +237,16 @@ POST = 'POST'
 class IntegrationTestCase(AzulTestCase, HasCachedHttpClient):
 
     def _create_http_client(self) -> HttpClient:
+        # Since integration tests use deployed application infrastructure, we do
+        # expect transient I/O errors and rely on urllib3's defaults for
+        # handling those. However, we do not typically expect 5xx status errors
+        # as these often indicate situations in which a 4xx response would be
+        # warranted. We accept the occassional IT failure due to legitimate,
+        # transient 5xx responses. ITs are required to explicitly assert the
+        # expected response so we don't rely on the client raising an exception.
         return DefaultRetryHttpClient(
             super()._create_http_client(),
-            retries=urllib3.util.Retry(status=0,
-                                       raise_on_status=False)
+            retries=urllib3.util.Retry(status=0, raise_on_status=False)
         )
 
     @cached_property
