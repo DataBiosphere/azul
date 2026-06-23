@@ -2694,6 +2694,7 @@ class TestNestedFieldAggregation(IndexResponseTestCase):
                 for count, term in zip(counts, tissue_atlas_terms):
                     expected.append({'count': count, 'term': term})
                 self.assertElasticEqual(expected, facets['tissueAtlas']['terms'])
+                self.assertEqual(sum(counts), facets['tissueAtlas']['total'])
 
 
 class TestSortAndFilterByCellCount(IndexResponseTestCase):
