@@ -112,12 +112,12 @@ class AnvilSearchResponseStage(SearchResponseStage):
     def process_response(self, response: ResponseTriple) -> MutableJSON:
         hits, pagination, aggs = response
         return dict(
-            hits=list(map(self._make_hit, hits)),
             pagination=json_untyped_dict(pagination),
             termFacets=dict(zip(
                 aggs.keys(),
                 map(self._make_terms, map(json_mapping, aggs.values())))
-            )
+            ),
+            hits=list(map(self._make_hit, hits))
         )
 
     def _make_terms(self, agg: JSON) -> MutableJSON:

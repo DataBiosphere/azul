@@ -134,7 +134,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                         ),
                         (
                             INFO,
-                            "Authenticated request as AccessTokenAuthentication(token='ya29.foo_token')"
+                            "Authenticated request as AccessTokenAuthentication(token='ya29.REDACTED')"
                             if authenticated else
                             'Did not authenticate request.'
                         ),

@@ -1,0 +1,1 @@
+../../../../resources/apat_public_key.json.template.py

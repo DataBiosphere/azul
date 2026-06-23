@@ -106,6 +106,10 @@ class TestUserController(DCP2TestCase,
                                  CustomerMasterKeySpec='ECC_NIST_P256')
         aws.kms.create_alias(AliasName=config.apat_kms_key.alias,
                              TargetKeyId=key['KeyMetadata']['KeyId'])
+        # Each test creates a new KMS key, but the UserService instance
+        # persists across tests (as part of the class-level app fixture),
+        # so we must invalidate the cached public key material.
+        UserService._apat_public_key.fdel(self._service)
 
     @contextmanager
     def _mock_token_info(self):
