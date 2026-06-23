@@ -442,10 +442,10 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 pass
             else:
                 # The value buckets are expected to account for every nested
-                # document the nested aggregation counted. This relies on each
-                # nested document populating all the `multi_terms` fields, since a
-                # nested document missing any of them is omitted from the
-                # buckets but still counted by the nested aggregation.
+                # document the `nested` aggregation counted. This relies on each
+                # nested document populating all the `multi_terms` fields, since
+                # a nested document missing any of them is omitted from the
+                # buckets but still counted by the `nested` aggregation.
                 doc_count = sum(bucket['doc_count']
                                 for bucket in nested_agg[values_agg_name]['buckets'])
                 assert nested_agg['doc_count'] == doc_count, R(
