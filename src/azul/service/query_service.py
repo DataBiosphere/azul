@@ -452,6 +452,10 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                     'Nested value buckets do not account for the nested total',
                     facet, nested_agg['doc_count'], doc_count)
                 agg.update(nested_agg)
+                # The `nested` aggregation only counts documents that have the
+                # field, so its doc_count omits those tallied by `filter`
+                # aggregation we use to count the missing fields.
+                agg['doc_count'] += agg[untagged_agg_name]['doc_count']
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """
