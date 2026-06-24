@@ -11,10 +11,11 @@ import logging
 import sys
 import time
 
-import requests
-
 from azul.args import (
     AzulArgumentHelpFormatter,
+)
+from azul.http import (
+    http_client,
 )
 from azul.lib import (
     R,
@@ -57,10 +58,6 @@ def parse_args(argv):
                         type=int,
                         default='300',
                         help='Total duration of the test in seconds.')
-    parser.add_argument('--log-headers',
-                        default=False,
-                        action='store_true',
-                        help='Include response headers in log output')
     args = parser.parse_args(argv)
     args.method = args.method.upper()
     assert args.method in ['HEAD', 'GET', 'PUT'], R(
@@ -75,16 +72,12 @@ def parse_args(argv):
     return args
 
 
-def request_url(method: str, url: str, log_headers: bool) -> int:
-    log.info('Making %s request to %r', method, url)
-    start_time = time.time()
-    response = requests.request(method=method, url=url)
-    duration = time.time() - start_time
-    if log_headers:
-        log.info('… with response headers %r', response.headers)
-    log.info('Got %i response after %.3fs from %s to %s',
-             response.status_code, duration, method, url)
-    return response.status_code
+http = http_client(log=log)
+
+
+def request_url(method: str, url: str) -> int:
+    response = http.request(method=method, url=url)
+    return response.status
 
 
 def main(argv):
@@ -98,7 +91,7 @@ def main(argv):
         end_time = start_time + args.duration
         while time.time() < end_time:
             time.sleep(sleep_delay)
-            futures.append(tpe.submit(request_url, args.method, args.url, args.log_headers))
+            futures.append(tpe.submit(request_url, args.method, args.url))
         for f in as_completed(futures):
             assert f.result() in [200, 429]
 

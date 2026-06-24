@@ -18,13 +18,15 @@ from chalice.local import (
 from furl import (
     furl,
 )
-import requests
-
+import urllib3
 from azul import (
     config,
 )
 from azul.chalice import (
     AzulChaliceApp,
+)
+from azul.http import (
+    raise_on_status,
 )
 from azul.lib import (
     mutable_furl,
@@ -129,7 +131,7 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
         while True:
             try:
                 response = self._ping()
-                response.raise_for_status()
+                raise_on_status(response)
             except Exception:
                 if time.time() > deadline:
                     raise
@@ -138,8 +140,9 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
             else:
                 break
 
-    def _ping(self):
-        return requests.get(str(self.base_url.set(path='/health/basic')))
+    def _ping(self) -> urllib3.BaseHTTPResponse:
+        return self._http_client.request('GET',
+                                         str(self.base_url.set(path='/health/basic')))
 
     def chalice_config(self):
         return ChaliceConfig.create(lambda_timeout=config.api_gateway_lambda_timeout)

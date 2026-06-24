@@ -81,7 +81,6 @@ from openapi_spec_validator import (
     validate,
 )
 import opensearchpy
-import requests
 import urllib3
 
 from azul import (
@@ -113,9 +112,12 @@ from azul.drs import (
     HostBasedDRSURI,
 )
 from azul.http import (
+    DefaultRetryHttpClient,
+    HasCachedHttpClient,
     HttpClient,
     HttpClientDecorator,
     http_client,
+    raise_on_status,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -232,27 +234,24 @@ PUT = 'PUT'
 POST = 'POST'
 
 
-class IntegrationTestCase(AzulTestCase):
-    min_bundles = 32
+class IntegrationTestCase(AzulTestCase, HasCachedHttpClient):
+
+    def _create_http_client(self) -> HttpClient:
+        # Since integration tests use deployed application infrastructure, we do
+        # expect transient I/O errors and rely on urllib3's defaults for
+        # handling those. However, we do not typically expect 5xx status errors
+        # as these often indicate situations in which a 4xx response would be
+        # warranted. We accept the occassional IT failure due to legitimate,
+        # transient 5xx responses. ITs are required to explicitly assert the
+        # expected response so we don't rely on the client raising an exception.
+        return DefaultRetryHttpClient(
+            super()._create_http_client(),
+            retries=urllib3.util.Retry(status=0, raise_on_status=False)
+        )
 
     @cached_property
     def azul_client(self):
         return AzulClient()
-
-    @property
-    def index_queue_service(self):
-        return self.azul_client.index_queue_service
-
-    @property
-    def repository_service(self):
-        return self.azul_client.repository_service
-
-    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
-        return self.azul_client.repository_plugin(catalog)
-
-    @cache
-    def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
-        return MetadataPlugin.load(catalog).create()
 
     def setUp(self) -> None:
         super().setUp()
@@ -270,6 +269,125 @@ class IntegrationTestCase(AzulTestCase):
         # All random operations should be made using this seed so that test
         # results are deterministically reproducible
         self.random = Random(self.random_seed)
+
+
+class SourceSelectingIntegrationTest(IntegrationTestCase):
+
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return self.azul_client.repository_plugin(catalog)
+
+    def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
+        return set()
+
+    def _select_source(self,
+                       catalog: CatalogName,
+                       *,
+                       public: bool | None = None,
+                       mirror: bool = False,
+                       ) -> Source | None:
+        """
+        Choose an indexed source at random.
+
+        :param catalog: The name of the catalog to select a source from.
+
+        :param public: If none (as by default), allow the source to be either
+                       public or non-public. If true, choose a public source, or
+                       raise an `AssertionError` if the catalog contains no
+                       public sources. If false, choose a non-public source, or
+                       return `None` if the catalog contains no non-public
+                       sources.
+
+        :param mirror: If true, choose a source where the `no_mirror` flag is
+                       not present, or return `None` if the catalog contains no
+                       such source. If false, choose a source regardless of
+                       whether this flag is present.
+        """
+        plugin = self.repository_plugin(catalog)
+        sources = plugin.sources
+
+        ma_sources = self._ma_sources(catalog)
+        self.assertIsSubset(ma_sources, sources.keys())
+
+        def _filter(source: tuple[SourceSpec, SourceConfig]) -> bool:
+            if public is None:
+                valid = True
+            elif public is True:
+                valid = source[0] not in ma_sources
+            elif public is False:
+                valid = source[0] in ma_sources
+            else:
+                assert False, public
+            if mirror:
+                valid &= source[1].mirror
+            return valid
+
+        sources = dict(filter(_filter, sources.items()))
+
+        if len(sources) == 0:
+            assert public is False, 'An IT catalog must contain at least one public source'
+            return None
+        else:
+            source, config = self.random.choice(sorted(sources.items()))
+            return Source(ref=plugin.resolve_source(source), config=config)
+
+
+class IndexingIntegrationTest(SourceSelectingIntegrationTest):
+    """
+    An integration test case that tests indexing of public and managed-access
+    metadata from a random selection of bundles, and the expected effects on the
+    service API. This is our main integration test case.
+    """
+
+    #: A vanilla urllib3 HTTP client without authentication or any of the
+    #: special retry behaviour that we employ for Terra services. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
+    _plain_http: HttpClient
+
+    #: Depending on the authorization context, this is either the same client as
+    #: the one refered to by the attribute above, or a client that sends an
+    #: access token — whose access token also depends on the context. Note that
+    #: IT-specific retries are configured explicitly for each request, no matter
+    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
+    #:
+    _http: HttpClient
+
+    _user_access_token: ClassVar[str]
+
+    @classmethod
+    def early_setup(cls) -> None:
+        # Getting a user access token requires user intervention. We'll get it
+        # out of the way early so that the rest of the IT can run unattended.
+        # See the documentation on the `unattended` flag in environment.py for
+        # more information.
+        if 'unattended' not in config.it_flags:
+            cls._user_access_token = cls.__user_access_token()
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        # On GitLab, the runner's NAT gateway IPs are already in the WAF IP set
+        # by virtue of Terraform, so no on-the-fly exemption is needed.
+        if 'CI_JOB_TOKEN' not in os.environ:
+            cls.enterClassContext(IntegrationTestRateLimitExemption())
+
+    def setUp(self) -> None:
+        super().setUp()
+        self._plain_http = self._http_client
+        self._http = self._plain_http
+
+    @property
+    def index_queue_service(self):
+        return self.azul_client.index_queue_service
+
+    @property
+    def repository_service(self):
+        return self.azul_client.repository_service
+
+    @cache
+    def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
+        return MetadataPlugin.load(catalog).create()
 
     @cached_property
     def _tdr_client(self) -> TDRClient:
@@ -321,112 +439,11 @@ class IntegrationTestCase(AzulTestCase):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
-    def _select_source(self,
-                       catalog: CatalogName,
-                       *,
-                       public: bool | None = None,
-                       mirror: bool = False,
-                       ) -> Source | None:
-        """
-        Choose an indexed source at random.
-
-        :param catalog: The name of the catalog to select a source from.
-
-        :param public: If none (as by default), allow the source to be either
-                       public or non-public. If true, choose a public source, or
-                       raise an `AssertionError` if the catalog contains no
-                       public sources. If false, choose a non-public source, or
-                       return `None` if the catalog contains no non-public
-                       sources.
-
-        :param mirror: If true, choose a source where the `no_mirror` flag is
-                       not present, or return `None` if the catalog contains no
-                       such source. If false, choose a source regardless of
-                       whether this flag is present.
-        """
-        plugin = self.repository_plugin(catalog)
-        sources = plugin.sources
-
-        if public is None:
-            ma_sources = set()
-        else:
-            ma_sources = {
-                source.spec
-                # This would raise a KeyError during the can bundle script test
-                # due to it using a mock catalog, so we only evaluate it when
-                # it's actually needed
-                for source in self.managed_access_sources_by_catalog[catalog]
-            }
-            self.assertIsSubset(ma_sources, sources.keys())
-
-        def _filter(source: tuple[SourceSpec, SourceConfig]) -> bool:
-            if public is None:
-                valid = True
-            elif public is True:
-                valid = source[0] not in ma_sources
-            elif public is False:
-                valid = source[0] in ma_sources
-            else:
-                assert False, public
-            if mirror:
-                valid &= source[1].mirror
-            return valid
-
-        sources = dict(filter(_filter, sources.items()))
-
-        if len(sources) == 0:
-            assert public is False, 'An IT catalog must contain at least one public source'
-            return None
-        else:
-            source, config = self.random.choice(sorted(sources.items()))
-            return Source(ref=plugin.resolve_source(source), config=config)
-
-
-class IndexingIntegrationTest(IntegrationTestCase):
-    """
-    An integration test case that tests indexing of public and managed-access
-    metadata from a random selection of bundles, and the expected effects on the
-    service API. This is our main integration test case.
-    """
-
-    #: A vanilla urllib3 HTTP client without authentication or any of the
-    #: special retry behaviour that we employ for Terra services. Note that
-    #: IT-specific retries are configured explicitly for each request, no matter
-    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
-    #:
-    _plain_http: HttpClient
-
-    #: Depending on the authorization context, this is either the same client as
-    #: the one refered to by the attribute above, or a client that sends an
-    #: access token — whose access token also depends on the context. Note that
-    #: IT-specific retries are configured explicitly for each request, no matter
-    #: which client is used, in the :py:meth:`_get_url_unchecked` method.
-    #:
-    _http: HttpClient
-
-    _user_access_token: ClassVar[str]
-
-    @classmethod
-    def early_setup(cls) -> None:
-        # Getting a user access token requires user intervention. We'll get it
-        # out of the way early so that the rest of the IT can run unattended.
-        # See the documentation on the `unattended` flag in environment.py for
-        # more information.
-        if 'unattended' not in config.it_flags:
-            cls._user_access_token = cls.__user_access_token()
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        # On GitLab, the runner's NAT gateway IPs are already in the WAF IP set
-        # by virtue of Terraform, so no on-the-fly exemption is needed.
-        if 'CI_JOB_TOKEN' not in os.environ:
-            cls.enterClassContext(IntegrationTestRateLimitExemption())
-
-    def setUp(self) -> None:
-        super().setUp()
-        self._plain_http = http_client(log)
-        self._http = self._plain_http
+    def _ma_sources(self, catalog: CatalogName) -> set[SourceSpec]:
+        return {
+            source.spec
+            for source in self.managed_access_sources_by_catalog[catalog]
+        }
 
     @contextmanager
     def subTest(self, msg: Any = None, **params: Any):
@@ -2030,7 +2047,7 @@ class AzulClientIntegrationTest(IntegrationTestCase):
         self.assertEqual({expected}, cm.exception.args[1])
 
 
-class OpenAPIIntegrationTest(AzulTestCase):
+class OpenAPIIntegrationTest(IntegrationTestCase):
 
     def test_openapi(self):
         for component, url in [
@@ -2039,19 +2056,19 @@ class OpenAPIIntegrationTest(AzulTestCase):
         ]:
             with self.subTest(component=component):
                 url.set(path='/')
-                response = requests.get(str(url))
-                self.assertEqual(response.status_code, 200)
+                response = self._http_client.request(GET, str(url), redirect=True)
+                self.assertEqual(response.status, 200)
                 self.assertEqual(response.headers['content-type'], 'text/html')
-                self.assertGreater(len(response.content), 0)
+                self.assertGreater(len(response.data), 0)
                 # validate OpenAPI spec
                 url.set(path='/openapi.json')
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request(GET, str(url))
+                raise_on_status(response)
                 spec = response.json()
                 validate(spec)
 
 
-class AzulChaliceLocalIntegrationTest(AzulTestCase):
+class AzulChaliceLocalIntegrationTest(IntegrationTestCase):
     url = furl(scheme='http', host='127.0.0.1', port=8000)
     server = None
     server_thread = None
@@ -2077,21 +2094,21 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         super().tearDownClass()
 
     def test_local_chalice(self):
-        response = requests.get(str(self.url))
-        self.assertEqual(200, response.status_code)
+        response = self._http_client.request(GET, str(self.url), redirect=True)
+        self.assertEqual(200, response.status)
 
     def test_local_chalice_health_endpoint(self):
         url = str(self.url.copy().set(path='health'))
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code)
+        response = self._http_client.request(GET, url)
+        self.assertEqual(200, response.status)
 
     catalog = first(config.integration_test_catalogs)
 
     def test_local_chalice_index_endpoints(self):
         url = str(self.url.copy().set(path='repository/sources',
                                       query=dict(catalog=self.catalog)))
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, response.content)
+        response = self._http_client.request(GET, url)
+        self.assertEqual(200, response.status, response.data)
 
     def test_local_filtered_index_endpoints(self):
         if config.is_hca_enabled(self.catalog):
@@ -2104,11 +2121,11 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         url = str(self.url.copy().set(path='index/files',
                                       query=dict(filters=json.dumps(filters),
                                                  catalog=self.catalog)))
-        response = requests.get(url)
-        self.assertEqual(200, response.status_code, response.content)
+        response = self._http_client.request(GET, url)
+        self.assertEqual(200, response.status, response.data)
 
 
-class CanBundleScriptIntegrationTest(IntegrationTestCase):
+class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
 
     def _test_catalog(self, catalog: config.Catalog):
         fqid = self.bundle_fqid(catalog.name)
@@ -2215,10 +2232,9 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
         return can_bundle.main
 
 
-class SwaggerResourceIntegrationTest(AzulTestCase):
+class SwaggerResourceIntegrationTest(IntegrationTestCase):
 
     def test(self):
-        http = http_client(log)
         for component, base_url in [
             ('service', config.service_endpoint),
             ('indexer', config.indexer_endpoint)
@@ -2234,11 +2250,11 @@ class SwaggerResourceIntegrationTest(AzulTestCase):
                 ('..%2Fdoes-not-exist', 403),
             ]:
                 with self.subTest(component=component, file=file):
-                    response = http.request(GET, str(base_url / 'swagger' / file))
+                    response = self._http_client.request(GET, str(base_url / 'swagger' / file))
                     self.assertEqual(expected_status, response.status)
 
 
-class DeployedVersionIntegrationTest(AzulTestCase):
+class DeployedVersionIntegrationTest(IntegrationTestCase):
 
     def test_version(self):
         local_status = config.git_status
@@ -2247,8 +2263,8 @@ class DeployedVersionIntegrationTest(AzulTestCase):
             ('indexer', config.indexer_endpoint)
         ]:
             endpoint.set(path='/version')
-            response = requests.get(str(endpoint))
-            self.assertEqual(response.status_code, 200)
+            response = self._http_client.request(GET, str(endpoint))
+            self.assertEqual(response.status, 200)
             lambda_status = response.json()['git']
             self.assertEqual(local_status, lambda_status)
 
@@ -2268,7 +2284,7 @@ class DisableAutomaticIndexCreationTest(IntegrationTestCase):
                 opensearch.indices.delete(index=[index_name])
 
 
-class ResponseHeadersTest(AzulTestCase):
+class ResponseHeadersTest(IntegrationTestCase):
 
     def test_response_security_headers(self):
         no_cache = 'no-store'
@@ -2284,8 +2300,8 @@ class ResponseHeadersTest(AzulTestCase):
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             for path, cache_control in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
-                    response = requests.get(str(endpoint / path))
-                    response.raise_for_status()
+                    response = self._http_client.request(GET, str(endpoint / path))
+                    raise_on_status(response)
                     actual_csp = response.headers['Content-Security-Policy']
                     parsed_csp = CSP.parse(actual_csp)
                     parsed_csp.validate()
@@ -2309,15 +2325,16 @@ class ResponseHeadersTest(AzulTestCase):
                         # expected value.
                         'Content-Security-Policy': str(parsed_csp)
                     }
-                    self.assertIsSubset(expected_headers.items(), response.headers.items())
+                    self.assertIsSubset(expected_headers.items(),
+                                        set(list(response.headers.items())))
 
     def test_default_4xx_response_headers(self):
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
             with self.subTest(endpoint=endpoint):
-                response = requests.get(str(endpoint / 'does-not-exist'))
-                self.assertEqual(403, response.status_code)
+                response = self._http_client.request(GET, str(endpoint / 'does-not-exist'))
+                self.assertEqual(403, response.status)
                 self.assertIsSubset(AzulChaliceApp.security_headers().items(),
-                                    response.headers.items())
+                                    set(list(response.headers.items())))
 
 
 class BearerTokenHttpClient(HttpClientDecorator):

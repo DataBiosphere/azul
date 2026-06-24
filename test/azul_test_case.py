@@ -45,6 +45,7 @@ import moto.core.models
 from opensearchpy.exceptions import (
     OpenSearchWarning,
 )
+import urllib3
 
 from azul import (
     CatalogName,
@@ -53,6 +54,11 @@ from azul import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.http import (
+    DefaultRetryHttpClient,
+    HasCachedHttpClient,
+    HttpClient,
 )
 from azul.logging import (
     configure_test_logging,
@@ -237,7 +243,20 @@ class AzulTestCase(TestCase):
             yield
 
 
-class AzulUnitTestCase(AzulTestCase):
+class AzulUnitTestCase(AzulTestCase, HasCachedHttpClient):
+
+    def _create_http_client(self) -> HttpClient:
+        # We don't want any retries during unit tests. Since all server fixtures
+        # run on the same machine as the tests, we don't expect any transient
+        # errors, including I/O or 500 status errors. We also require unit tests
+        # to explicitly assert the expected response status, instead of relying
+        # on the client to raise an exception.
+        return DefaultRetryHttpClient(
+            super()._create_http_client(),
+            retries=urllib3.util.Retry(total=0,
+                                       status=0,
+                                       raise_on_status=False)
+        )
 
     @classmethod
     def setUpClass(cls) -> None:

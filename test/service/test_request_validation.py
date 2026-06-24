@@ -3,13 +3,11 @@ import json
 from furl import (
     furl,
 )
-import requests
-from requests import (
-    Response,
-)
+import urllib3
 
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -28,6 +26,9 @@ from service import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class RequestParameterValidationTest(DCP1CannedBundleTestCase,
@@ -57,13 +58,16 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
         assert isinstance(plugin, MetadataPlugin)
         return plugin
 
-    def assertResponseStatus(self, url: furl, status: int) -> Response:
+    def assertResponseStatus(self,
+                             url: furl,
+                             status: int
+                             ) -> urllib3.BaseHTTPResponse:
         if str(url.path) in {'/manifest/files', '/fetch/manifest/files'}:
             method = 'PUT'
         else:
             method = 'GET'
-        response = requests.request(method, str(url))
-        self.assertEqual(status, response.status_code, response.content)
+        response = self._http_client.request(method, str(url))
+        self.assertEqual(status, response.status, response.data)
         return response
 
     def assertErrorMessage(self, url: furl, status: int, code: str, message: str):

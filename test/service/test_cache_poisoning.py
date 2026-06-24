@@ -5,13 +5,15 @@ from unittest.mock import (
     patch,
 )
 
-import requests
-
 from app_test_case import (
     LocalAppTestCase,
 )
+from azul.http import (
+    raise_on_status,
+)
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.terra import (
     TDRClient,
@@ -25,6 +27,9 @@ from azul_test_case import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class CachePoisoningTestCase(LocalAppTestCase, metaclass=ABCMeta):
@@ -50,8 +55,8 @@ class CachePoisoningTestCase(LocalAppTestCase, metaclass=ABCMeta):
 
     def _test(self):
         url = self.base_url.set(path='/repository/sources')
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
 
 
 # Note that the test cases are named intentionally to force the order in which
