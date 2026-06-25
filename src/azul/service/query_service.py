@@ -442,16 +442,20 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 pass
             else:
                 # The value buckets are expected to account for every nested
-                # document the nested aggregation counted. This relies on each
-                # nested document populating all the `multi_terms` fields, since a
-                # nested document missing any of them is omitted from the
-                # buckets but still counted by the nested aggregation.
+                # document the `nested` aggregation counted. This relies on each
+                # nested document populating all the `multi_terms` fields, since
+                # a nested document missing any of them is omitted from the
+                # buckets but still counted by the `nested` aggregation.
                 doc_count = sum(bucket['doc_count']
                                 for bucket in nested_agg[values_agg_name]['buckets'])
                 assert nested_agg['doc_count'] == doc_count, R(
                     'Nested value buckets do not account for the nested total',
                     facet, nested_agg['doc_count'], doc_count)
                 agg.update(nested_agg)
+                # The `nested` aggregation only counts documents that have the
+                # field, so its doc_count omits those tallied by `filter`
+                # aggregation we use to count the missing fields.
+                agg['doc_count'] += agg[untagged_agg_name]['doc_count']
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """
