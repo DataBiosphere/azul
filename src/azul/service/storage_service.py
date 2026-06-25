@@ -1,5 +1,6 @@
 from collections.abc import (
     Collection,
+    Iterator,
     Mapping,
     Sequence,
 )
@@ -21,6 +22,7 @@ from typing import (
     Callable,
     IO,
     TYPE_CHECKING,
+    TypedDict,
 )
 from urllib.parse import (
     urlencode,
@@ -65,6 +67,12 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 Tagging = Mapping[str, str]
+
+
+class ObjectMetadata(TypedDict):
+    Key: str
+    LastModified: datetime
+    Size: int
 
 
 class StorageObjectNotFound(Exception):
@@ -226,15 +234,24 @@ class StorageService:
         assert num_deleted == num_keys, (num_deleted, num_keys)
         log.info('Deleted %d objects overall', num_deleted)
 
-    def list_objects(self, prefix: str) -> OrderedSet[str]:
-        keys: OrderedSet[str] = OrderedSet()
-        num_keys = 0
+    def list_objects(self, prefix: str) -> Iterator[ObjectMetadata]:
         paginator = self._s3.get_paginator('list_objects_v2')
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=prefix):
             contents = page.get('Contents', ())
-            num_keys += len(contents)
-            keys.update(object['Key'] for object in contents)
-            assert len(keys) == num_keys, R('Got duplicate keys from S3')
+            log.info('Got page of %d object(s) from %r, starting at %r',
+                     len(contents), self.bucket_name,
+                     contents[0]['Key'] if contents else None)
+            for object in contents:
+                yield ObjectMetadata(Key=object['Key'],
+                                     LastModified=object['LastModified'],
+                                     Size=object['Size'])
+
+    def list_keys(self, prefix: str) -> OrderedSet[str]:
+        keys: OrderedSet[str] = OrderedSet()
+        for object in self.list_objects(prefix):
+            key = object['Key']
+            assert key not in keys, R('Got duplicate key from S3', key)
+            keys.add(key)
         return keys
 
     def create_multipart_upload(self,

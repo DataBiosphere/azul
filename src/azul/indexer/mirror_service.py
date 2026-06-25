@@ -572,7 +572,7 @@ class MirrorService:
         storage = self._storage_for_source(source)
         assert storage.bucket_name not in [config.mirror_bucket,
                                            config.ma_mirror_bucket]
-        object_keys = storage.list_objects(prefix)
+        object_keys = storage.list_keys(prefix)
         assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
         for object_key in object_keys:
             assert object_key.startswith(prefix), (object_key, prefix)
