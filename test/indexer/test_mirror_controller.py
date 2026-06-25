@@ -10,6 +10,7 @@ from unittest.mock import (
 )
 
 import attrs
+import botocore.exceptions
 from chalice.app import (
     SQSRecord,
 )
@@ -467,3 +468,57 @@ class TestMirrorController(DCP2TestCase,
         # The info object should have been touched
         after = self._s3.head_object(Bucket=bucket, Key=info_key)['LastModified']
         self.assertGreater(after, before)
+
+    def _assert_objects_exist(self, bucket: str, *keys: str):
+        for key in keys:
+            self._s3.head_object(Bucket=bucket, Key=key)
+
+    def _assert_objects_not_found(self, bucket: str, *keys: str):
+        for key in keys:
+            with self.assertRaises(botocore.exceptions.ClientError) as cm:
+                self._s3.head_object(Bucket=bucket, Key=key)
+            self.assertEqual('404', cm.exception.response['Error']['Code'])
+
+    def test_sweep(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        service = self._service
+        file = self._file
+
+        # Mirror a file so there's something in the bucket
+        self._test_mirror_file(file,
+                               self._mirror_file_message(file),
+                               self._file_contents)
+
+        # Create a garbage info+file object pair by writing directly to S3
+        garbage_digest = Digest(type='sha256', value='00' * 32)
+        garbage_info_key = service._object_key(service.info_prefix, garbage_digest, extension='.json')
+        garbage_file_key = service._object_key(service.file_prefix, garbage_digest, extension='')
+        bucket = self._bucket_name(file)
+        self._s3.put_object(Bucket=bucket, Key=garbage_info_key, Body=b'{}')
+        self._s3.put_object(Bucket=bucket, Key=garbage_file_key, Body=b'garbage')
+
+        # Small delay, then write the .marked object
+        time.sleep(1)
+        service._write_marked()
+
+        # Small delay, then touch the live file's info to mark it as live
+        time.sleep(1)
+        info_key, file_key = service._info_object_key(file), service._file_object_key(file)
+        info_data = self._s3.get_object(Bucket=bucket, Key=info_key)['Body'].read()
+        self._s3.put_object(Bucket=bucket, Key=info_key,
+                            Body=info_data,
+                            ContentType='application/json')
+
+        with self.subTest('dry_run'):
+            service._sweep(dry_run=True)
+            # Garbage should still exist
+            self._assert_objects_exist(bucket, garbage_info_key, garbage_file_key)
+
+        with self.subTest('sweep'):
+            service._sweep(dry_run=False)
+            # Garbage should be deleted
+            self._assert_objects_not_found(bucket, garbage_info_key, garbage_file_key)
+            # Live file should still exist
+            self._assert_objects_exist(bucket, info_key, file_key)
+            # .swept marker should exist
+            self._assert_objects_exist(bucket, service._swept_key)

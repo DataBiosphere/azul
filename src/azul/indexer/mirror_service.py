@@ -5,7 +5,14 @@ from abc import (
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Callable,
+)
+from datetime import (
+    datetime,
+)
 from functools import (
+    partial,
     singledispatchmethod,
 )
 import json
@@ -70,6 +77,9 @@ from azul.lib.digests import (
 from azul.lib.functions import (
     compose,
 )
+from azul.lib.strings import (
+    format_size,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -95,6 +105,7 @@ from azul.service.source_service import (
 )
 from azul.service.storage_service import (
     StorageObjectExists,
+    StorageObjectNotFound,
     StorageService,
 )
 from azul.source import (
@@ -635,6 +646,10 @@ class MirrorService:
     def _marked_key(self) -> str:
         return f'{self._mirror_prefix}.marked'
 
+    @cached_property
+    def _swept_key(self) -> str:
+        return f'{self._mirror_prefix}.swept'
+
     def _write_marked(self) -> None:
         """
         Write an empty ``.marked`` object to each mirror bucket at the
@@ -646,6 +661,85 @@ class MirrorService:
         for storage in (self._storage, self._ma_storage):
             log.info('Writing %r to bucket %r', key, storage.bucket_name)
             storage.put_object(object_key=key, data=b'', overwrite=True)
+
+    @classmethod
+    def sweep_catalogs(cls, *, dry_run: bool, it: bool) -> None:
+        """
+        Sweep garbage from mirror buckets for either all normal catalogs, or
+        all integration test (IT) catalogs.
+
+        :param dry_run: Whether to report garbage without deleting it.
+
+        :param it: Whether to sweep IT or non-IT catalogs.
+        """
+        # The scope of garbage collection is everything underneath a mirror
+        # prefix, which could be shared by multiple catalogs. We need to group
+        # catalogs by that prefix and perform the sweeping using the service
+        # instance for one of the catalogs, it doesn't matter which one.
+        services: dict[str, MirrorService] = {}
+        for catalog in config.catalogs.values():
+            if catalog.is_integration_test_catalog == it:
+                self = cls.for_catalog(catalog.name)
+                if self.may_mirror():
+                    services.setdefault(self._mirror_prefix, self)
+        assert services, R('No catalogs are configured for mirroring')
+        for self in services.values():
+            self._sweep(dry_run=dry_run)
+
+    def _sweep(self, *, dry_run: bool) -> None:
+        summaries: list[Callable[[], None]] = []
+        for storage in (self._storage, self._ma_storage):
+            marked_key = self._marked_key
+            try:
+                response = storage.head_object(marked_key)
+            except StorageObjectNotFound:
+                assert False, R('No such object', marked_key, storage.bucket_name)
+            else:
+                threshold = response['LastModified']
+                summary = self._sweep_storage(storage, threshold=threshold, dry_run=dry_run)
+                summaries.append(summary)
+        for summary in summaries:
+            summary()
+
+    def _sweep_storage(self,
+                       storage: StorageService,
+                       *,
+                       threshold: datetime,
+                       dry_run: bool
+                       ) -> Callable[[], None]:
+        log.info('Sweeping bucket %r with threshold %r',
+                 storage.bucket_name, threshold)
+        info_dir = self._mirror_prefix + self.info_prefix + '/'
+        num_files, total_size = 0, 0
+        for obj in storage.list_objects(info_dir):
+            if obj['LastModified'] < threshold:
+                info_key = obj['Key']
+                file_key = self._info_key_to_file_key(info_key)
+                try:
+                    file_head = storage.head_object(file_key)
+                except StorageObjectNotFound:
+                    log.warning('Garbage file object not found: %r', file_key)
+                else:
+                    total_size += file_head['ContentLength']
+                num_files += 1
+                if dry_run:
+                    log.info('Would delete %r and %r', info_key, file_key)
+                else:
+                    log.info('Deleting %r and %r', info_key, file_key)
+                    storage.delete_objects([info_key, file_key])
+        if dry_run:
+            log.info('Would write %r to %r',
+                     self._swept_key, storage.bucket_name)
+        else:
+            log.info('Writing %r to %r',
+                     self._swept_key, storage.bucket_name)
+            storage.put_object(object_key=self._swept_key,
+                               data=b'',
+                               overwrite=True)
+        verb = 'Would delete' if dry_run else 'Deleted'
+        return partial(log.info,
+                       '%s %d file(s) (%s total) from %r',
+                       verb, num_files, format_size(total_size), storage.bucket_name)
 
     def delete_it_files(self, source: SourceSpec):
         """

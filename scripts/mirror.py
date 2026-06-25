@@ -59,6 +59,10 @@ def mirror(args, azul: AzulClient) -> None:
             'There are messages in the fail queue', fail_queue)
 
 
+def sweep(args) -> None:
+    MirrorService.sweep_catalogs(dry_run=args.dry_run, it=False)
+
+
 def main(args):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=AzulArgumentHelpFormatter)
@@ -92,6 +96,13 @@ def main(args):
                     dest='wait',
                     help='Do not wait for queues to empty before exiting script.')
 
+    sp = subparsers.add_parser('sweep',
+                               help='Sweep garbage from mirror buckets.',
+                               formatter_class=AzulArgumentHelpFormatter)
+    sp.add_argument('--dry-run',
+                    action='store_true',
+                    help='Report garbage objects without deleting them.')
+
     args = parser.parse_args(args)
     assert config.enable_mirroring, R('Mirroring is not enabled')
 
@@ -103,6 +114,8 @@ def main(args):
                 '--mark is mutually exclusive with --sources')
         azul = AzulClient()
         mirror(args, azul)
+    elif args.command == 'sweep':
+        sweep(args)
     else:
         parser.print_usage()
 
