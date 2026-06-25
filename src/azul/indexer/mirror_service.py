@@ -8,7 +8,6 @@ from functools import (
 import json
 import logging
 import math
-import string
 import time
 from typing import (
     ClassVar,
@@ -17,6 +16,7 @@ from typing import (
     Protocol,
     Self,
     TYPE_CHECKING,
+    cast,
     final,
 )
 from uuid import (
@@ -57,6 +57,8 @@ from azul.lib.attrs import (
     serializable,
 )
 from azul.lib.digests import (
+    Digest,
+    DigestType,
     Hasher,
     get_resumable_hasher,
     hasher_from_json,
@@ -68,6 +70,7 @@ from azul.lib.functions import (
 from azul.lib.types import (
     JSON,
     MutableJSON,
+    check_type,
     json_element_strings,
     json_mapping,
 )
@@ -539,19 +542,46 @@ class MirrorService:
 
     info_prefix, file_prefix = 'info', 'file'
 
+    _hex_digits = '0123456789abcdef'
+
     def _info_object_key(self, file: File) -> str:
-        return self._object_key(self.info_prefix, file, extension='.json')
+        return self._object_key(self.info_prefix, file.digest, extension='.json')
 
     def _file_object_key(self, file: File) -> str:
-        return self._object_key(self.file_prefix, file)
+        return self._object_key(self.file_prefix, file.digest, extension='')
 
-    def _object_key(self, prefix: str, file: File, *, extension: str = '') -> str:
-        digest = file.digest
+    def _object_key(self, prefix: str, digest: Digest, *, extension: str) -> str:
         digest_value = digest.value.lower()
-        assert all(c in string.hexdigits for c in digest_value), R(
+        hex_digits = self._hex_digits
+        assert all(c in hex_digits for c in digest_value), R(
             'Expected a hexadecimal digest', digest)
         mirror_prefix = self._mirror_prefix
         return f'{mirror_prefix}{prefix}/{digest_value}.{digest.type}{extension}'
+
+    def _parse_object_key(self, key: str) -> tuple[str, Digest, str]:
+        assert key.startswith(self._mirror_prefix), R('Invalid mirror prefix', key)
+        rest = key.removeprefix(self._mirror_prefix)
+        prefix, sep, file_name = rest.partition('/')
+        assert sep, R('Missing separator', key)
+        assert prefix in (self.info_prefix, self.file_prefix), R('Invalid prefix', key)
+        match file_name.split('.'):
+            case [digest_value, digest_type]:
+                extension = ''
+            case [digest_value, digest_type, extension]:
+                extension = '.' + extension
+            case _:
+                assert False, R('Invalid key', key)
+        hex_digits = self._hex_digits
+        assert all(c in hex_digits for c in digest_value), R('Invalid digest', key)
+        assert check_type(DigestType, digest_type), R('Invalid digest type', key)
+        digest = Digest(type=cast(DigestType, digest_type), value=digest_value)
+        return prefix, digest, extension
+
+    def _info_key_to_file_key(self, info_key: str) -> str:
+        prefix, digest, extension = self._parse_object_key(info_key)
+        assert prefix == self.info_prefix and extension == '.json', R(
+            'Unexpected info key', info_key)
+        return self._object_key(self.file_prefix, digest, extension='')
 
     @cached_property
     def _mirror_prefix(self) -> str:

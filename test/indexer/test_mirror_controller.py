@@ -46,6 +46,9 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.digests import (
+    Digest,
+)
 from azul.lib.json import (
     copy_json,
 )
@@ -410,3 +413,27 @@ class TestMirrorController(DCP2TestCase,
                     self.assertEqual(action, json.loads(one(event).body)['action'])
                     self._mirror_controller.mirror(event)
         self._validate_file_contents(big_file, big_contents)
+
+    def test_object_key_round_trip(self):
+        service = self._service
+        digest = Digest(type='sha256', value='abcdef1234567890' * 4)
+
+        with self.subTest('info_key'):
+            info_key = service._object_key(service.info_prefix, digest, extension='.json')
+            prefix, parsed_digest, extension = service._parse_object_key(info_key)
+            self.assertEqual(service.info_prefix, prefix)
+            self.assertEqual(digest, parsed_digest)
+            self.assertEqual('.json', extension)
+
+        with self.subTest('file_key'):
+            file_key = service._object_key(service.file_prefix, digest, extension='')
+            prefix, parsed_digest, extension = service._parse_object_key(file_key)
+            self.assertEqual(service.file_prefix, prefix)
+            self.assertEqual(digest, parsed_digest)
+            self.assertEqual('', extension)
+
+        with self.subTest('info_key_to_file_key'):
+            info_key = service._object_key(service.info_prefix, digest, extension='.json')
+            file_key = service._info_key_to_file_key(info_key)
+            expected = service._object_key(service.file_prefix, digest, extension='')
+            self.assertEqual(expected, file_key)
