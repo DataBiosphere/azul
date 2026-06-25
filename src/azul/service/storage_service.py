@@ -153,6 +153,7 @@ class StorageService:
                       *,
                       max_attempts: int = 10,
                       content_type: str | None = None,
+                      touch: bool = False
                       ):
         """
         Updates the contents and/or content type of an object, based on its
@@ -160,9 +161,10 @@ class StorageService:
         overwritten. Expects a callback that returns the desired contents of the
         object given its current contents. If the callback returns its argument
         unchanged and the specified content type is None or matches the current
-        content type, no further writes will be attempted. If the object does
-        not exist at any point during the update, StorageObjectNotFound is
-        raised.
+        content type, no further writes will be attempted unless ``touch`` is
+        True, in which case the object will be written regardless, updating its
+        ``LastModified`` time. If the object does not exist at any point during
+        the update, StorageObjectNotFound is raised.
         """
         for i in range(max_attempts):
             response = self._get_object(object_key)
@@ -171,7 +173,7 @@ class StorageService:
             if content_type is None:
                 content_type = response['ContentType']
             new_data = updater(data)
-            if new_data == data and content_type == response['ContentType']:
+            if not touch and new_data == data and content_type == response['ContentType']:
                 log.info('Object contents of %r is already up to date during attempt #%r/%r.',
                          object_key, i + 1, max_attempts)
                 break
