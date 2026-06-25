@@ -698,6 +698,7 @@ class MirrorService:
                 threshold = response['LastModified']
                 summary = self._sweep_storage(storage, threshold=threshold, dry_run=dry_run)
                 summaries.append(summary)
+        log.info('--- Summary ---')
         for summary in summaries:
             summary()
 
@@ -741,11 +742,11 @@ class MirrorService:
                        '%s %d file(s) (%s total) from %r',
                        verb, num_files, format_size(total_size), storage.bucket_name)
 
-    def delete_it_files(self, source: SourceSpec):
+    def delete_it_files(self):
         """
-        Delete all objects (both file/ and info/) with the given catalog's
-        mirror prefix. Currently, the mirror prefix is only used to distinguish
-        IT catalogs from non-IT catalogs, so if an IT catalog is specified,
+        Delete all objects under the catalog's mirror prefix from both mirror
+        buckets. Currently, the mirror prefix is only used to distinguish IT
+        catalogs from non-IT catalogs, so if an IT catalog is specified,
         objects from *all* IT catalogs will be deleted, not just the specified
         catalog.
         """
@@ -753,14 +754,14 @@ class MirrorService:
             'Not an IT catalog', self.catalog)
         prefix = self._mirror_prefix
         assert len(prefix) > 1 and prefix.endswith('/'), prefix
-        storage = self._storage_for_source(source)
-        assert storage.bucket_name not in [config.mirror_bucket,
-                                           config.ma_mirror_bucket]
-        object_keys = storage.list_keys(prefix)
-        assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
-        for object_key in object_keys:
-            assert object_key.startswith(prefix), (object_key, prefix)
-        storage.delete_objects(object_keys, batch_size=100)
+        for storage in (self._storage, self._ma_storage):
+            assert storage.bucket_name not in [config.mirror_bucket,
+                                               config.ma_mirror_bucket]
+            object_keys = storage.list_keys(prefix)
+            assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
+            for object_key in object_keys:
+                assert object_key.startswith(prefix), (object_key, prefix)
+            storage.delete_objects(object_keys, batch_size=100)
 
 
 @attrs.frozen(kw_only=True, slots=False)
