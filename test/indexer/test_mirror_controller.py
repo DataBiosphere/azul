@@ -1,5 +1,6 @@
 import hashlib
 import json
+import time
 from typing import (
     ContextManager,
 )
@@ -166,6 +167,7 @@ class TestMirrorController(DCP2TestCase,
         return dict(action='MirrorFileAction',
                     catalog=self.catalog,
                     operation_id=self._operation_id,
+                    mark=False,
                     source=file.source.to_json(),
                     prefix='00',
                     file=file.to_json())
@@ -243,6 +245,7 @@ class TestMirrorController(DCP2TestCase,
         expected_message = dict(action='MirrorSourceAction',
                                 catalog=self.catalog,
                                 operation_id=self._operation_id,
+                                mark=False,
                                 source=self.source.ref.to_json())
         self.assertEqual(expected_message, source_message)
         return source_message
@@ -258,6 +261,7 @@ class TestMirrorController(DCP2TestCase,
             self.assertEqual(dict(action='MirrorPartitionAction',
                                   catalog=self.catalog,
                                   operation_id=self._operation_id,
+                                  mark=False,
                                   source=self.source.ref.to_json()),
                              message)
         self.assertEqual(list(self.source.ref.prefix.partition_prefixes()), partitions)
@@ -437,3 +441,29 @@ class TestMirrorController(DCP2TestCase,
             file_key = service._info_key_to_file_key(info_key)
             expected = service._object_key(service.file_prefix, digest, extension='')
             self.assertEqual(expected, file_key)
+
+    def test_mark(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        file = self._file
+
+        # First, mirror the file normally
+        self._test_mirror_file(file,
+                               self._mirror_file_message(file),
+                               self._file_contents)
+
+        # Record the info object's LastModified before marking
+        info_key = self._service._info_object_key(file)
+        bucket = self._bucket_name(file)
+        before = self._s3.head_object(Bucket=bucket, Key=info_key)['LastModified']
+
+        # Small delay so that LastModified will differ
+        time.sleep(1)
+
+        # Mirror the same file again with mark=True
+        mark_message = {**self._mirror_file_message(file), 'mark': True}
+        event = self._mirror_event(mark_message)
+        self._mirror_controller.mirror(event)
+
+        # The info object should have been touched
+        after = self._s3.head_object(Bucket=bucket, Key=info_key)['LastModified']
+        self.assertGreater(after, before)

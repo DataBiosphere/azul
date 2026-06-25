@@ -2,6 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections import (
+    defaultdict,
+)
 from functools import (
     singledispatchmethod,
 )
@@ -210,6 +213,13 @@ class MirrorAction(Action, metaclass=ABCMeta):
     #:
     operation_id: str = attrs.field(factory=lambda: MirrorAction._operation_id())
 
+    #: When True, info objects are overwritten even if their content hasn't
+    #: changed, ensuring their LastModified time is updated. This is used by
+    #: the garbage collection mechanism to distinguish referenced objects from
+    #: unreferenced ones.
+    #:
+    mark: bool = False
+
     @classmethod
     def _operation_id(cls):
         return str(uuid4())
@@ -417,21 +427,55 @@ class MirrorService:
         else:
             return False
 
+    @classmethod
+    def mirror_catalogs(cls, *, mark: bool, it: bool) -> None:
+        """
+        Mirror all sources in either all normal catalogs, or all integration
+        test (IT) catalogs.
+
+        :param mark: Whether to perform the mark phase of garbage collection.
+                     Marking involves touching every info object so it should
+                     be used with deliberation.
+
+        :param it: Whether to mirror IT or non-IT catalogs.
+        """
+        # The scope of garbage collection is everything underneath a mirror
+        # prefix, which could be shared by multiple catalogs. We need to group
+        # catalogs by that prefix so that we write the marker file exactly once
+        # per prefix, before mirroring and marking the first catalog sharing
+        # that prefix. When we're not marking, this ordering constraint is
+        # irrelevant but it doesn't hurt anything either.
+        services: dict[str, list[MirrorService]] = defaultdict(list)
+        for catalog in config.catalogs.values():
+            if catalog.is_integration_test_catalog == it:
+                self = cls.for_catalog(catalog.name)
+                if self.may_mirror():
+                    services[self._mirror_prefix].append(self)
+        assert services, R('No catalogs are configured for mirroring')
+        for group in services.values():
+            if mark:
+                group[0]._write_marked()
+            for self in group:
+                sources = self._source_service.list_sources(self.catalog, indexer_authentication)
+                self._mirror_sources(sources, mark=mark)
+
     def mirror_sources(self, sources: Iterable[Source]) -> None:
         """
         Of the given sources, mirror those that are configured to be mirrored,
-        ignoring those that are not. When mirroring a source, only files
-        satisfying certain size constraints will be mirrored. These constraints
-        are configured per catalog, and may depend on factors like whether the
-        catalog is an IT catalog, or whether the deployment is stable or not.
+        ignoring those that are not.
         """
+        self._mirror_sources(sources, mark=False)
+
+    def _mirror_sources(self, sources: Iterable[Source], *, mark: bool) -> None:
         if self.may_mirror():
             def actions():
                 for source in sources:
                     if source.config.mirror:
                         log.info('Mirroring files in source %r from catalog %r',
                                  str(source.ref.spec), self.catalog)
-                        yield MirrorSourceAction(catalog=self.catalog, source=source.ref)
+                        yield MirrorSourceAction(catalog=self.catalog,
+                                                 source=source.ref,
+                                                 mark=mark)
                     else:
                         log.info('Not mirroring any files in source %r from catalog %r because '
                                  'mirroring is explicitly disabled',
@@ -587,6 +631,22 @@ class MirrorService:
     def _mirror_prefix(self) -> str:
         return '_it/' if self.catalog in config.integration_test_catalogs else ''
 
+    @cached_property
+    def _marked_key(self) -> str:
+        return f'{self._mirror_prefix}.marked'
+
+    def _write_marked(self) -> None:
+        """
+        Write an empty ``.marked`` object to each mirror bucket at the
+        catalog's mirror prefix. Only the object's ``LastModified`` time is
+        significant: it records the start of the mark phase and serves as the
+        threshold for the subsequent sweep phase.
+        """
+        key = self._marked_key
+        for storage in (self._storage, self._ma_storage):
+            log.info('Writing %r to bucket %r', key, storage.bucket_name)
+            storage.put_object(object_key=key, data=b'', overwrite=True)
+
     def delete_it_files(self, source: SourceSpec):
         """
         Delete all objects (both file/ and info/) with the given catalog's
@@ -687,7 +747,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert a.file.size is not None, R('File size unknown', a.file)
         if self._info_exists(a.file):
             log.info('File is already mirrored, skipping upload: %r', a.file)
-            self._update_info(a.file)
+            self._update_info(a.file, mark=a.mark)
         elif self._file_exists(a.file):
             assert False, R('File object is already present', a.file)
         else:
@@ -807,13 +867,13 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                                                  version=self.info_schema_version)),
         }
 
-    def _update_info(self, file: File):
+    def _update_info(self, file: File, *, mark: bool):
         def update(data: bytes) -> bytes:
             return json.dumps(self._info(file, json.loads(data))).encode()
 
         key = self._info_object_key(file)
         storage = self._storage_for_file(file)
-        storage.update_object(key, update, content_type='application/json')
+        storage.update_object(key, update, content_type='application/json', touch=mark)
 
     def _create_info(self, file: File):
         object_key = self._info_object_key(file)
