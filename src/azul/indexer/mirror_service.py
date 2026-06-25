@@ -47,6 +47,7 @@ from azul.http import (
 )
 from azul.lib import (
     R,
+    cache,
     cached_property,
     mutable_furl,
 )
@@ -334,6 +335,11 @@ class MirrorService:
     catalog: CatalogName
 
     info_schema_version = 2
+
+    @classmethod
+    @cache
+    def for_catalog(cls, catalog: CatalogName) -> Self:
+        return cls(catalog=catalog)
 
     @cached_property
     def _queues(self) -> Queues:

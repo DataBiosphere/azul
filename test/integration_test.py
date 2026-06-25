@@ -1962,7 +1962,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         return list(filter(None, data.decode().split('\n')))[1::2]
 
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return self.azul_client.mirror_service(catalog)
+        return MirrorService.for_catalog(catalog)
 
     def _test_mirroring(self, *, delete: bool):
         with self.subTest('mirroring'):

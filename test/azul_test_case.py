@@ -60,6 +60,9 @@ from azul.http import (
     HasCachedHttpClient,
     HttpClient,
 )
+from azul.indexer.mirror_service import (
+    MirrorService,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -408,6 +411,8 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
             del config.integration_test_catalogs
         except AttributeError:
             pass
+        MirrorService.for_catalog.cache_clear()
+        cls.addClassCleanup(MirrorService.for_catalog.cache_clear)
         # Patch the catalog property to use a single fake test catalog.
         cls.addClassPatch(patch.object(target=type(config),
                                        attribute='catalogs',

@@ -20,6 +20,9 @@ from azul.auth import (
 from azul.azulclient import (
     AzulClient,
 )
+from azul.indexer.mirror_service import (
+    MirrorService,
+)
 from azul.lib import (
     R,
 )
@@ -46,7 +49,7 @@ def mirror_catalog(azul: AzulClient,
         matching_sources = azul.matching_sources([catalog], source_globs)[catalog]
         sources = [source for source in sources if source.ref.spec in matching_sources]
 
-    azul.mirror_service(catalog).mirror_sources(sources)
+    MirrorService.for_catalog(catalog).mirror_sources(sources)
 
     if wait:
         azul.wait_for_mirroring()
