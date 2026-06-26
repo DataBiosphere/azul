@@ -2249,6 +2249,16 @@ class TestIndexResponse(IndexResponseTestCase):
                     '627cb0ba-b8a1-405a-b58f-0add82c3d635',
                     '88ec040b-8705-4f77-8f41-f81e57632f7d'
                 }
+            ),
+            (
+                [
+                    dict(namespace='array_express', accession='E-AAAA-00'),
+                    dict(namespace='geo_series', accession='GSE132044')
+                ],
+                {
+                    '627cb0ba-b8a1-405a-b58f-0add82c3d635',
+                    '88ec040b-8705-4f77-8f41-f81e57632f7d'
+                }
             )
         ]
         for accession_filter, expected_projects in cases:
