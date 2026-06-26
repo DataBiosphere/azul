@@ -254,11 +254,16 @@ class FilterStage(_OpenSearchStage[Response, Response]):
                 if operator in ('is', 'is_not'):
                     field_type = self.service.field_type(self.catalog, field_path)
                     if isinstance(field_type, Nested):
-                        term_queries = []
-                        for nested_field, nested_value in one(values).items():
-                            nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
-                            term_queries.append(Q('term', **nested_body))
-                        query = Q('nested', path=dotted(field_path), query=Q('bool', must=term_queries))
+                        nested_queries = []
+                        for value in values:
+                            term_queries = []
+                            for nested_field, nested_value in value.items():
+                                nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
+                                term_queries.append(Q('term', **nested_body))
+                            nested_queries.append(Q('nested',
+                                                    path=dotted(field_path),
+                                                    query=Q('bool', must=term_queries)))
+                        query = Q('bool', should=nested_queries)
                     else:
                         query = Q('terms', **{dotted(field_path, 'keyword'): values})
                         translated_none = field_type.to_index(None)
