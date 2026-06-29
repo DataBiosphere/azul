@@ -668,7 +668,9 @@ def env() -> Mapping[str, str | None]:
         'azul_github_project': 'DataBiosphere/azul',
 
         # A GitHub REST API access token with permission to post status checks
-        # to the repository defined in `azul_github_project`.
+        # to the repository defined in `azul_github_project`, and to create
+        # issues in the Azul repositories (used by the `github_schedule` GitLab
+        # CI job).
         #
         'azul_github_access_token': '',
 

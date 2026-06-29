@@ -19,6 +19,35 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#8041 Fix: GH Action schedule failed to create promotion ticket
+===============================================================
+
+Operator
+--------
+
+You may need to ask a system administrator to perform these changes on your
+behalf.
+
+Add a new ``github_schedule`` pipeline schedule on the ``dev`` and ``anvildev``
+GitLab instances:
+
+1) Set the description to "Create Azul scheduled issues on GitHub".
+
+2) Set the interval pattern to ``0 * * * *`` on ``dev`` and ``30 * * * *`` on
+``anvildev``.
+
+3) Set the Cron timezone to ``Pacific Time (US & Canada)``
+
+4) Set the variable ``azul_gitlab_schedule`` to ``github_schedule``
+
+Next, confirm with the SA that the ``azul_github_access_token`` used in both
+instances' ``environment.local.py`` is set, and that its permissions are
+equivalent to that of the token deposited in the ``AZUL_GITHUB_TOKEN`` GitHub
+Action secret.
+
+Lastly, ask the SA to remove the ``AZUL_GITHUB_TOKEN`` from the GitHub Action
+secrets.
+
 
 #8153 Thirteen inaccessible snapshots in dev
 =============================================
