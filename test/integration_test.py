@@ -1962,7 +1962,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         return list(filter(None, data.decode().split('\n')))[1::2]
 
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return self.azul_client.mirror_service(catalog)
+        return MirrorService.for_catalog(catalog)
 
     def _test_mirroring(self, *, delete: bool):
         with self.subTest('mirroring'):
@@ -1983,13 +1983,13 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
             def _delete():
                 if delete:
-                    # This potentially causes redundant ListObjects requests,
-                    # since each IT catalog currently uses the same mirror
-                    # prefix and bucket
-                    for catalog, sources in sources_by_catalog.items():
-                        for source in sources:
-                            service = service_by_catalog[catalog]
-                            service.delete_it_files(source.ref.spec)
+                    # Multiple catalogs may share a mirror prefix, so we
+                    # group by prefix to avoid redundant deletions.
+                    services_by_prefix: dict[str, MirrorService] = {}
+                    for service in service_by_catalog.values():
+                        services_by_prefix.setdefault(service._mirror_prefix, service)
+                    for service in services_by_prefix.values():
+                        service.delete_it_files()
 
             self._assert_queues_empty([config.mirror_queue.name,
                                        config.mirror_queue.to_fail.name])
@@ -2003,11 +2003,22 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     # so the file will always be from the public source
                     repository_file, source, file_response = self._get_one_mirrorable_file(catalog)
                     indexed_files[repository_file] = source, file_response
-                    for _ in range(2):
-                        service.mirror_sources(sources)
-                        service.mirror_file(source, repository_file)
-                        self.azul_client.wait_for_mirroring()
-                        self._assert_queues_empty([config.mirror_queue.to_fail.name])
+                    service.mirror_sources(sources)
+                    service.mirror_file(source, repository_file)
+                    self.azul_client.wait_for_mirroring()
+                    self._assert_queues_empty([config.mirror_queue.to_fail.name])
+                    # Mark phase. If there are two sources, exclude one
+                    # from the second pass so its objects become garbage
+                    # for the subsequent sweep. The second pass also
+                    # verifies mirroring idempotency for the sources
+                    # included.
+                    expect_garbage = len(sources) > 1
+                    service._write_marked()
+                    mark_sources = sources[:1] if expect_garbage else sources
+                    service._mirror_sources(mark_sources, mark=True)
+                    service.mirror_file(source, repository_file)
+                    self.azul_client.wait_for_mirroring()
+                    self._assert_queues_empty([config.mirror_queue.to_fail.name])
 
                 with self.subTest('download_mirrored_files'):
                     for repository_file, (source, file_response) in indexed_files.items():
@@ -2030,6 +2041,23 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     for info_object in info_objects:
                         self.assertEqual(schema_url, info_object['$schema'])
                         jsonschema.validate(info_object, schema_response)
+
+                with self.subTest('sweep', catalog=catalog):
+                    service = service_by_catalog[catalog]
+                    if expect_garbage:
+                        dropped_source = sources[1]
+                        storage = service._storage_for_source(dropped_source.ref.spec)
+                        info_dir = service._mirror_prefix + service.info_prefix + '/'
+                        num_before = sum(1 for _ in storage.list_objects(info_dir))
+                        self.assertGreater(num_before, 0)
+                    service._sweep(dry_run=True)
+                    if expect_garbage:
+                        num_after_dry = sum(1 for _ in storage.list_objects(info_dir))
+                        self.assertEqual(num_before, num_after_dry)
+                    service._sweep(dry_run=False)
+                    if expect_garbage:
+                        num_after_wet = sum(1 for _ in storage.list_objects(info_dir))
+                        self.assertEqual(0, num_after_wet)
 
             _delete()
 

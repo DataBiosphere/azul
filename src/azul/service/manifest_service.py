@@ -809,7 +809,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def mirror_service(self) -> MirrorService:
-        return MirrorService(catalog=self.catalog)
+        return MirrorService.for_catalog(self.catalog)
 
     @classmethod
     @abstractmethod

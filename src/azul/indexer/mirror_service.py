@@ -2,13 +2,22 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections import (
+    defaultdict,
+)
+from collections.abc import (
+    Callable,
+)
+from datetime import (
+    datetime,
+)
 from functools import (
+    partial,
     singledispatchmethod,
 )
 import json
 import logging
 import math
-import string
 import time
 from typing import (
     ClassVar,
@@ -17,6 +26,7 @@ from typing import (
     Protocol,
     Self,
     TYPE_CHECKING,
+    cast,
     final,
 )
 from uuid import (
@@ -47,6 +57,7 @@ from azul.http import (
 )
 from azul.lib import (
     R,
+    cache,
     cached_property,
     mutable_furl,
 )
@@ -56,6 +67,8 @@ from azul.lib.attrs import (
     serializable,
 )
 from azul.lib.digests import (
+    Digest,
+    DigestType,
     Hasher,
     get_resumable_hasher,
     hasher_from_json,
@@ -64,9 +77,13 @@ from azul.lib.digests import (
 from azul.lib.functions import (
     compose,
 )
+from azul.lib.strings import (
+    format_size,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
+    check_type,
     json_element_strings,
     json_mapping,
 )
@@ -88,6 +105,7 @@ from azul.service.source_service import (
 )
 from azul.service.storage_service import (
     StorageObjectExists,
+    StorageObjectNotFound,
     StorageService,
 )
 from azul.source import (
@@ -205,6 +223,13 @@ class MirrorAction(Action, metaclass=ABCMeta):
     #: default factory allows for easy patching during unit tests.
     #:
     operation_id: str = attrs.field(factory=lambda: MirrorAction._operation_id())
+
+    #: When True, info objects are overwritten even if their content hasn't
+    #: changed, ensuring their LastModified time is updated. This is used by
+    #: the garbage collection mechanism to distinguish referenced objects from
+    #: unreferenced ones.
+    #:
+    mark: bool = False
 
     @classmethod
     def _operation_id(cls):
@@ -335,6 +360,11 @@ class MirrorService:
 
     info_schema_version = 2
 
+    @classmethod
+    @cache
+    def for_catalog(cls, catalog: CatalogName) -> Self:
+        return cls(catalog=catalog)
+
     @cached_property
     def _queues(self) -> Queues:
         return Queues()
@@ -408,21 +438,55 @@ class MirrorService:
         else:
             return False
 
+    @classmethod
+    def mirror_catalogs(cls, *, mark: bool, it: bool) -> None:
+        """
+        Mirror all sources in either all normal catalogs, or all integration
+        test (IT) catalogs.
+
+        :param mark: Whether to perform the mark phase of garbage collection.
+                     Marking involves touching every info object so it should
+                     be used with deliberation.
+
+        :param it: Whether to mirror IT or non-IT catalogs.
+        """
+        # The scope of garbage collection is everything underneath a mirror
+        # prefix, which could be shared by multiple catalogs. We need to group
+        # catalogs by that prefix so that we write the marker file exactly once
+        # per prefix, before mirroring and marking the first catalog sharing
+        # that prefix. When we're not marking, this ordering constraint is
+        # irrelevant but it doesn't hurt anything either.
+        services: dict[str, list[MirrorService]] = defaultdict(list)
+        for catalog in config.catalogs.values():
+            if catalog.is_integration_test_catalog == it:
+                self = cls.for_catalog(catalog.name)
+                if self.may_mirror():
+                    services[self._mirror_prefix].append(self)
+        assert services, R('No catalogs are configured for mirroring')
+        for group in services.values():
+            if mark:
+                group[0]._write_marked()
+            for self in group:
+                sources = self._source_service.list_sources(self.catalog, indexer_authentication)
+                self._mirror_sources(sources, mark=mark)
+
     def mirror_sources(self, sources: Iterable[Source]) -> None:
         """
         Of the given sources, mirror those that are configured to be mirrored,
-        ignoring those that are not. When mirroring a source, only files
-        satisfying certain size constraints will be mirrored. These constraints
-        are configured per catalog, and may depend on factors like whether the
-        catalog is an IT catalog, or whether the deployment is stable or not.
+        ignoring those that are not.
         """
+        self._mirror_sources(sources, mark=False)
+
+    def _mirror_sources(self, sources: Iterable[Source], *, mark: bool) -> None:
         if self.may_mirror():
             def actions():
                 for source in sources:
                     if source.config.mirror:
                         log.info('Mirroring files in source %r from catalog %r',
                                  str(source.ref.spec), self.catalog)
-                        yield MirrorSourceAction(catalog=self.catalog, source=source.ref)
+                        yield MirrorSourceAction(catalog=self.catalog,
+                                                 source=source.ref,
+                                                 mark=mark)
                     else:
                         log.info('Not mirroring any files in source %r from catalog %r because '
                                  'mirroring is explicitly disabled',
@@ -533,29 +597,156 @@ class MirrorService:
 
     info_prefix, file_prefix = 'info', 'file'
 
+    _hex_digits = '0123456789abcdef'
+
     def _info_object_key(self, file: File) -> str:
-        return self._object_key(self.info_prefix, file, extension='.json')
+        return self._object_key(self.info_prefix, file.digest, extension='.json')
 
     def _file_object_key(self, file: File) -> str:
-        return self._object_key(self.file_prefix, file)
+        return self._object_key(self.file_prefix, file.digest, extension='')
 
-    def _object_key(self, prefix: str, file: File, *, extension: str = '') -> str:
-        digest = file.digest
+    def _object_key(self, prefix: str, digest: Digest, *, extension: str) -> str:
         digest_value = digest.value.lower()
-        assert all(c in string.hexdigits for c in digest_value), R(
+        hex_digits = self._hex_digits
+        assert all(c in hex_digits for c in digest_value), R(
             'Expected a hexadecimal digest', digest)
         mirror_prefix = self._mirror_prefix
         return f'{mirror_prefix}{prefix}/{digest_value}.{digest.type}{extension}'
+
+    def _parse_object_key(self, key: str) -> tuple[str, Digest, str]:
+        assert key.startswith(self._mirror_prefix), R('Invalid mirror prefix', key)
+        rest = key.removeprefix(self._mirror_prefix)
+        prefix, sep, file_name = rest.partition('/')
+        assert sep, R('Missing separator', key)
+        assert prefix in (self.info_prefix, self.file_prefix), R('Invalid prefix', key)
+        match file_name.split('.'):
+            case [digest_value, digest_type]:
+                extension = ''
+            case [digest_value, digest_type, extension]:
+                extension = '.' + extension
+            case _:
+                assert False, R('Invalid key', key)
+        hex_digits = self._hex_digits
+        assert all(c in hex_digits for c in digest_value), R('Invalid digest', key)
+        assert check_type(DigestType, digest_type), R('Invalid digest type', key)
+        digest = Digest(type=cast(DigestType, digest_type), value=digest_value)
+        return prefix, digest, extension
+
+    def _info_key_to_file_key(self, info_key: str) -> str:
+        prefix, digest, extension = self._parse_object_key(info_key)
+        assert prefix == self.info_prefix and extension == '.json', R(
+            'Unexpected info key', info_key)
+        return self._object_key(self.file_prefix, digest, extension='')
 
     @cached_property
     def _mirror_prefix(self) -> str:
         return '_it/' if self.catalog in config.integration_test_catalogs else ''
 
-    def delete_it_files(self, source: SourceSpec):
+    @cached_property
+    def _marked_key(self) -> str:
+        return f'{self._mirror_prefix}.marked'
+
+    @cached_property
+    def _swept_key(self) -> str:
+        return f'{self._mirror_prefix}.swept'
+
+    def _write_marked(self) -> None:
         """
-        Delete all objects (both file/ and info/) with the given catalog's
-        mirror prefix. Currently, the mirror prefix is only used to distinguish
-        IT catalogs from non-IT catalogs, so if an IT catalog is specified,
+        Write an empty ``.marked`` object to each mirror bucket at the
+        catalog's mirror prefix. Only the object's ``LastModified`` time is
+        significant: it records the start of the mark phase and serves as the
+        threshold for the subsequent sweep phase.
+        """
+        key = self._marked_key
+        for storage in (self._storage, self._ma_storage):
+            log.info('Writing %r to bucket %r', key, storage.bucket_name)
+            storage.put_object(object_key=key, data=b'', overwrite=True)
+
+    @classmethod
+    def sweep_catalogs(cls, *, dry_run: bool, it: bool) -> None:
+        """
+        Sweep garbage from mirror buckets for either all normal catalogs, or
+        all integration test (IT) catalogs.
+
+        :param dry_run: Whether to report garbage without deleting it.
+
+        :param it: Whether to sweep IT or non-IT catalogs.
+        """
+        # The scope of garbage collection is everything underneath a mirror
+        # prefix, which could be shared by multiple catalogs. We need to group
+        # catalogs by that prefix and perform the sweeping using the service
+        # instance for one of the catalogs, it doesn't matter which one.
+        services: dict[str, MirrorService] = {}
+        for catalog in config.catalogs.values():
+            if catalog.is_integration_test_catalog == it:
+                self = cls.for_catalog(catalog.name)
+                if self.may_mirror():
+                    services.setdefault(self._mirror_prefix, self)
+        assert services, R('No catalogs are configured for mirroring')
+        for self in services.values():
+            self._sweep(dry_run=dry_run)
+
+    def _sweep(self, *, dry_run: bool) -> None:
+        summaries: list[Callable[[], None]] = []
+        for storage in (self._storage, self._ma_storage):
+            marked_key = self._marked_key
+            try:
+                response = storage.head_object(marked_key)
+            except StorageObjectNotFound:
+                assert False, R('No such object', marked_key, storage.bucket_name)
+            else:
+                threshold = response['LastModified']
+                summary = self._sweep_storage(storage, threshold=threshold, dry_run=dry_run)
+                summaries.append(summary)
+        log.info('--- Summary ---')
+        for summary in summaries:
+            summary()
+
+    def _sweep_storage(self,
+                       storage: StorageService,
+                       *,
+                       threshold: datetime,
+                       dry_run: bool
+                       ) -> Callable[[], None]:
+        log.info('Sweeping bucket %r with threshold %r',
+                 storage.bucket_name, threshold)
+        info_dir = self._mirror_prefix + self.info_prefix + '/'
+        num_files, total_size = 0, 0
+        for obj in storage.list_objects(info_dir):
+            if obj['LastModified'] < threshold:
+                info_key = obj['Key']
+                file_key = self._info_key_to_file_key(info_key)
+                try:
+                    file_head = storage.head_object(file_key)
+                except StorageObjectNotFound:
+                    log.warning('Garbage file object not found: %r', file_key)
+                else:
+                    total_size += file_head['ContentLength']
+                num_files += 1
+                if dry_run:
+                    log.info('Would delete %r and %r', info_key, file_key)
+                else:
+                    log.info('Deleting %r and %r', info_key, file_key)
+                    storage.delete_objects([info_key, file_key])
+        if dry_run:
+            log.info('Would write %r to %r',
+                     self._swept_key, storage.bucket_name)
+        else:
+            log.info('Writing %r to %r',
+                     self._swept_key, storage.bucket_name)
+            storage.put_object(object_key=self._swept_key,
+                               data=b'',
+                               overwrite=True)
+        verb = 'Would delete' if dry_run else 'Deleted'
+        return partial(log.info,
+                       '%s %d file(s) (%s total) from %r',
+                       verb, num_files, format_size(total_size), storage.bucket_name)
+
+    def delete_it_files(self):
+        """
+        Delete all objects under the catalog's mirror prefix from both mirror
+        buckets. Currently, the mirror prefix is only used to distinguish IT
+        catalogs from non-IT catalogs, so if an IT catalog is specified,
         objects from *all* IT catalogs will be deleted, not just the specified
         catalog.
         """
@@ -563,14 +754,14 @@ class MirrorService:
             'Not an IT catalog', self.catalog)
         prefix = self._mirror_prefix
         assert len(prefix) > 1 and prefix.endswith('/'), prefix
-        storage = self._storage_for_source(source)
-        assert storage.bucket_name not in [config.mirror_bucket,
-                                           config.ma_mirror_bucket]
-        object_keys = storage.list_objects(prefix)
-        assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
-        for object_key in object_keys:
-            assert object_key.startswith(prefix), (object_key, prefix)
-        storage.delete_objects(object_keys, batch_size=100)
+        for storage in (self._storage, self._ma_storage):
+            assert storage.bucket_name not in [config.mirror_bucket,
+                                               config.ma_mirror_bucket]
+            object_keys = storage.list_keys(prefix)
+            assert len(object_keys) <= 300, R('Too many objects', len(object_keys))
+            for object_key in object_keys:
+                assert object_key.startswith(prefix), (object_key, prefix)
+            storage.delete_objects(object_keys, batch_size=100)
 
 
 @attrs.frozen(kw_only=True, slots=False)
@@ -651,7 +842,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert a.file.size is not None, R('File size unknown', a.file)
         if self._info_exists(a.file):
             log.info('File is already mirrored, skipping upload: %r', a.file)
-            self._update_info(a.file)
+            self._update_info(a.file, mark=a.mark)
         elif self._file_exists(a.file):
             assert False, R('File object is already present', a.file)
         else:
@@ -771,13 +962,13 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                                                  version=self.info_schema_version)),
         }
 
-    def _update_info(self, file: File):
+    def _update_info(self, file: File, *, mark: bool):
         def update(data: bytes) -> bytes:
             return json.dumps(self._info(file, json.loads(data))).encode()
 
         key = self._info_object_key(file)
         storage = self._storage_for_file(file)
-        storage.update_object(key, update, content_type='application/json')
+        storage.update_object(key, update, content_type='application/json', touch=mark)
 
     def _create_info(self, file: File):
         object_key = self._info_object_key(file)

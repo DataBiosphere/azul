@@ -17,6 +17,39 @@ from azul.lib import (
 )
 
 
+def format_size(num_bytes: int) -> str:
+    """
+    >>> format_size(0)
+    '0 bytes'
+
+    >>> format_size(1)
+    '1 byte'
+
+    >>> format_size(1023)
+    '1023 bytes'
+
+    >>> format_size(1024)
+    '1.0 KiB'
+
+    >>> format_size(1536)
+    '1.5 KiB'
+
+    >>> format_size(1024 ** 5)
+    '1.0 PiB'
+
+    >>> format_size(1024 ** 6)
+    '1024.0 PiB'
+    """
+    if abs(num_bytes) < 1024:
+        return f'{num_bytes} ' + pluralize('byte', num_bytes)
+    else:
+        for unit in ('KiB', 'MiB', 'GiB', 'TiB', 'PiB'):
+            num_bytes /= 1024
+            if abs(num_bytes) < 1024 or unit == 'PiB':
+                return f'{num_bytes:.1f} {unit}'
+        assert False
+
+
 def format_and_dedent(string: str, **kwargs) -> str:
     """
     Remove common leading whitespace from every line in text. Useful for

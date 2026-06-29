@@ -102,7 +102,7 @@ class RepositoryController(ServiceController):
         return IndexService()
 
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return self._index_service.mirror_service(catalog)
+        return MirrorService.for_catalog(catalog)
 
     def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return self._repository_service.repository_plugin(catalog)
