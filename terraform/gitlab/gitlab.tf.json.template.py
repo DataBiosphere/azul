@@ -1215,14 +1215,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_vpn': {
                 'name': '/aws/vpn/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True,
             },
             'gitlab_vpc': {
                 'name': '/aws/vpc/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True,
             },
             'gitlab_cwagent': {
                 'name': '/aws/cwagent/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True,
             }
         },
         'aws_flow_log': {

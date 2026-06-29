@@ -733,7 +733,8 @@ emit_tf({
                     # WAF logging requires this specific log group name prefix
                     # https://docs.aws.amazon.com/waf/latest/developerguide/logging-cw-logs.html#logging-cw-logs-naming
                     'name': 'aws-waf-logs-' + config.qualified_resource_name('api_gateway'),
-                    'retention_in_days': config.audit_log_retention_days
+                    'retention_in_days': config.audit_log_retention_days,
+                    'skip_destroy': True,
                 }
             },
             'aws_wafv2_web_acl_logging_configuration': {
@@ -961,12 +962,14 @@ emit_tf({
                     app.name: {
                         'name': '/aws/apigateway/' + config.qualified_resource_name(app.name),
                         'retention_in_days': config.audit_log_retention_days,
+                        'skip_destroy': True,
                     },
                     f'{app.name}_api_execution': {
                         'name': 'API-Gateway-Execution-Logs_' +
                                 '${aws_api_gateway_rest_api.%s.id}' % app.name +
                                 '/%s' % config.deployment_stage,
                         'retention_in_days': config.audit_log_retention_days,
+                        'skip_destroy': True,
                     }
                 },
                 'aws_iam_role': {
