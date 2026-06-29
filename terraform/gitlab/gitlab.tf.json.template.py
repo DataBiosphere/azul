@@ -13,6 +13,7 @@ from more_itertools import (
 import yaml
 
 from azul import (
+    R,
     config,
 )
 from azul.deployment import (
@@ -210,16 +211,18 @@ split_tunnel = not config.deployment.is_stable
 
 # The public key of that keypair
 #
-administrator_key = (
-    'ssh-rsa'
-    ' '
-    'AAAAB3NzaC1yc2EAAAADAQABAAABAQDhRBbejN2qT5+6nfpzxPTfTFuSDSiPrAyDKH+V/A9+Xw4ZT8Z3K4d0w0KlwjtRZ'
-    '7shmIxkN44DY8R8LGCiybYHHVHqRNoQYqY1BkfSSP8h+eTylo4kRE4hKzs97dsBKYN1iXYXxd9yJGf6u3iR51LFijNLNN'
-    '6QEsxC6PhBReye21X8KdrlOO1owG3D+BVF6Q8PxpBFTjwMLiJUe3hm/vNTrCJErtHAr6ok28BY7rj3UVbGscrnsMIpdsX'
-    'OFDl5NU7tB6H9HlQ46l/W70ZSpzx8FQel9kbxcjZLinmsujuILC2bI1ev4EcdTRXo9SHo5VLPnE9J2f6StlqbBYJpbdOl'
-    ' '
-    'hannes@ucsc.edu'
-)
+administrator_keys = [
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDhRBbejN2qT5+6nfpzxPTfTFuSDSiPrAyDKH+V/A9+Xw4ZT8Z3K4d0w0KlwjtRZ'
+        '7shmIxkN44DY8R8LGCiybYHHVHqRNoQYqY1BkfSSP8h+eTylo4kRE4hKzs97dsBKYN1iXYXxd9yJGf6u3iR51LFijNLNN'
+        '6QEsxC6PhBReye21X8KdrlOO1owG3D+BVF6Q8PxpBFTjwMLiJUe3hm/vNTrCJErtHAr6ok28BY7rj3UVbGscrnsMIpdsX'
+        'OFDl5NU7tB6H9HlQ46l/W70ZSpzx8FQel9kbxcjZLinmsujuILC2bI1ev4EcdTRXo9SHo5VLPnE9J2f6StlqbBYJpbdOl'
+        ' '
+        'hannes@ucsc.edu'
+    )
+]
 
 operator_keys = [
     (
@@ -260,6 +263,11 @@ operator_keys = [
         'nadove@ucsc.edu'
     )
 ]
+assert administrator_keys, R('Need at least one administrator key')
+first_ssh_key, *other_ssh_keys = dict.fromkeys([
+    *administrator_keys,
+    *([] if config.deployment.is_stable else operator_keys)
+])
 
 # FIXME: Launch GitLab, DinD & runner images using image ID
 #        https://github.com/DataBiosphere/azul/issues/5960
@@ -1486,7 +1494,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_key_pair': {
             'gitlab': {
                 'key_name': 'azul-gitlab',
-                'public_key': administrator_key
+                'public_key': first_ssh_key
             }
         },
         'aws_iam_role': {
@@ -1670,7 +1678,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             '/amazon-ssm-agent.rpm'
                         )
                     ],
-                    'ssh_authorized_keys': [] if config.deployment.is_stable else operator_keys,
+                    'ssh_authorized_keys': other_ssh_keys,
                     'ssh_genkeytypes': ['rsa', 'dsa', 'ecdsa'],
                     'bootcmd': [
                         '; '.join([
