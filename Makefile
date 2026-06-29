@@ -42,6 +42,7 @@ docker$1: check_docker
 	       --build-arg azul_docker_version=$$(azul_docker_version) \
 	       --build-arg azul_terraform_version=$$(azul_terraform_version) \
 	       --build-arg azul_awscli_version=$$(azul_awscli_version) \
+	       --build-arg azul_ghcli_version=$$(azul_ghcli_version) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
 	       --tag $$(azul_image)$3:$$(azul_image_tag) \
