@@ -7,12 +7,12 @@ from typing import (
 )
 
 import attr
+from chalice.app import (
+    BadRequestError,
+)
 
 from azul import (
     config,
-)
-from azul.lib import (
-    R,
 )
 from azul.lib.strings import (
     looks_like_access_token,
@@ -62,7 +62,7 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
         elif looks_like_access_token(token):
             return AccessTokenAuthentication(token)
         else:
-            assert False, R('Unexpected token syntax')
+            raise BadRequestError('Unexpected token syntax')
 
     def identity(self) -> str:
         return self.token
