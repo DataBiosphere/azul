@@ -247,9 +247,15 @@ operator_keys = [
         'dsotirho@ucsc.edu'
     ),
     (
-        'ssh-ed25519'
+        'ssh-rsa'
         ' '
-        'AAAAC3NzaC1lZDI1NTE5AAAAIGQfVzuxnFtCBcrnoebVhB7larVXhag8CmweXQU7QSBe'
+        'AAAAB3NzaC1yc2EAAAADAQABAAABgQDADHgqtexHJDoCQto0PCcOdtmsmgc1PWpXvslnvmMA8Y/TiI51AFGn'
+        'KRA6cakm4tRjz7qdt8ChK2juiMx2soUp7WHIg2WDJ4J9grBz/MEHD4Zmu5t+HT+Xf2YinWU3aLr+Sxg0A4o'
+        '4ztHuUCZU4CTha+SOZ4Bzi6dvps8ralhC8r3pOCF/2eF40DqyXzSnFf75pl4TcCmywXLgnYF+hI5GkfsD7dD'
+        'X83EYFSp6cuMLpsMmDktztYNyeGoQDt17gKV3nlg97bTIkZlHCAmj6VUkmtRv/6FzAH2aCPcFndu+HR8XeK7'
+        'wCUGZ+Qd8HQSlDZoppE1lQlQAVeya2xsKH+k+njxMm8ySgDcAMA6rRBApF0axrjpEysZ0DyRJywYX7CDQkS'
+        'd9Byhjd/8c83PTZucb7gTMxrTbWop16OQoXU0BWQqoCzqYK2UBxt7ykqAdY0FoHSz3EXNbI+3U6xcXCPoRD6'
+        'NMjAPMh24J4bmw9v8H39Wt539UUXiKWBN2KeaUM+8='
         ' '
         'nadove@ucsc.edu'
     )
