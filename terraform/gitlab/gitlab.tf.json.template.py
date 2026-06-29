@@ -221,6 +221,17 @@ administrator_keys = [
         'OFDl5NU7tB6H9HlQ46l/W70ZSpzx8FQel9kbxcjZLinmsujuILC2bI1ev4EcdTRXo9SHo5VLPnE9J2f6StlqbBYJpbdOl'
         ' '
         'hannes@ucsc.edu'
+    ),
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXES'
+        'gpL59i5QcycpYq6q7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xm'
+        'rlGWi8AhEfbFyAFaqb2i+Whbkt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye3'
+        '0OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhr'
+        'W07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
+        ' '
+        'dsotirho@ucsc.edu'
     )
 ]
 
