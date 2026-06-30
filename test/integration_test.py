@@ -48,6 +48,7 @@ from typing import (
 )
 from unittest import (
     mock,
+    skip,
 )
 from unittest.mock import (
     PropertyMock,
@@ -2206,6 +2207,7 @@ class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
                                   repository=catalog.plugins['repository']):
                     self._test_catalog(catalog)
 
+    @skip('https://github.com/DataBiosphere/azul/issues/8152')
     def test_can_bundle_canned_repository(self):
         mock_catalog = config.Catalog(name='canned-it',
                                       atlas='hca',
