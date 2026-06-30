@@ -95,57 +95,11 @@ class TestSourceCache(DynamoDBTestCase):
             service._get(key)
 
 
-class TestPublicSources(DCP2TestCase):
+class TestOutsourcedSources(DCP2TestCase):
 
     @classmethod
     def _patch_public_sources(cls):
         pass  # don't call super so that code under test isn't patched
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-
-        class MockPlugin:
-
-            @property
-            def sources(self):
-                return {source.ref.spec: source.config for source in cls._sources()}
-
-            def list_sources(self, authentication):
-                assert authentication is None, authentication
-                return [cls.source.ref]
-
-        cls.addClassPatch(mock.patch.object(SourceService,
-                                            'repository_plugin',
-                                            return_value=MockPlugin()))
-
-    def test(self):
-        actuals, outsourced = [], []
-
-        def test():
-            service = SourceService()
-            actuals.append(service._public_sources)
-            outsourced.append(service.public_sources_for_outsourcing)
-            mock_open_resource.assert_called_once()
-
-        target = SourceService.__module__ + '.open_resource'
-
-        with mock.patch(target,
-                        side_effect=NotInLambdaContextException('')
-                        ) as mock_open_resource:
-            test()
-
-        with mock.patch(target,
-                        new_callable=mock.mock_open,
-                        read_data=json.dumps(outsourced[0])
-                        ) as mock_open_resource:
-            test()
-
-        self.assertEqual(*outsourced)
-        self.assertEqual([{self.catalog: [self.source]}] * 2, actuals)
-
-
-class TestAllSources(DCP2TestCase):
 
     @classmethod
     def _patch_all_sources(cls):
@@ -162,7 +116,7 @@ class TestAllSources(DCP2TestCase):
                 return {source.ref.spec: source.config for source in cls._sources()}
 
             def list_sources(self, authentication):
-                assert authentication is indexer_authentication, authentication
+                assert authentication in (None, indexer_authentication), authentication
                 return [cls.source.ref]
 
         cls.addClassPatch(mock.patch.object(SourceService,
@@ -170,12 +124,13 @@ class TestAllSources(DCP2TestCase):
                                             return_value=MockPlugin()))
 
     def test(self):
-        actuals, outsourced = [], []
+        public, all_, outsourced = [], [], []
 
         def test():
             service = SourceService()
-            actuals.append(service._all_sources)
-            outsourced.append(service.all_sources_for_outsourcing)
+            public.append(service._public_sources)
+            all_.append(service._all_sources)
+            outsourced.append(service.sources_for_outsourcing)
             mock_open_resource.assert_called_once()
 
         target = SourceService.__module__ + '.open_resource'
@@ -192,7 +147,9 @@ class TestAllSources(DCP2TestCase):
             test()
 
         self.assertEqual(*outsourced)
-        self.assertEqual([{self.catalog: [self.source]}] * 2, actuals)
+        expected = {self.catalog: [self.source]}
+        self.assertEqual([expected] * 2, public)
+        self.assertEqual([expected] * 2, all_)
 
 
 class TestListSources(DCP2TestCase, LocalAppTestCase):

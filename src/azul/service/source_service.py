@@ -27,6 +27,7 @@ from azul.lib import (
 from azul.lib.types import (
     AnyJSON,
     JSON,
+    JSONTypedDict,
     json_element_strings,
     json_item_sequences,
 )
@@ -211,6 +212,34 @@ class SourceService:
     def _now(self) -> int:
         return int(time())
 
+    class _OutsourcedSources(JSONTypedDict):
+        public: dict[CatalogName, list[JSON]]
+        all: dict[CatalogName, list[JSON]]
+
+    @cached_property
+    def _outsourced_sources(self) -> _OutsourcedSources | None:
+        try:
+            with open_resource('sources.json') as f:
+                return json.load(f)
+        except NotInLambdaContextException:
+            return None
+
+    def _to_json(self,
+                 sources: Mapping[CatalogName, Iterable[Source]]
+                 ) -> dict[CatalogName, list[JSON]]:
+        return {
+            catalog: [source.to_json() for source in sources]
+            for catalog, sources in sources.items()
+        }
+
+    def _from_json(self,
+                   sources: dict[CatalogName, list[JSON]]
+                   ) -> Mapping[CatalogName, list[Source]]:
+        return {
+            catalog: [Source.from_json(source) for source in sources]
+            for catalog, sources in json_item_sequences(sources)
+        }
+
     @cached_property
     def _public_sources(self) -> Mapping[CatalogName, Iterable[Source]]:
         """
@@ -219,35 +248,14 @@ class SourceService:
         invoked from a Lambda function, this will never make a roundtrip to the
         underlying repository.
         """
-        try:
-            with open_resource('public_sources.json') as f:
-                public_sources = json.load(f)
-        except NotInLambdaContextException:
+        outsourced = self._outsourced_sources
+        if outsourced is None:
             return {
                 catalog.name: self._list_sources(catalog.name, authentication=None)
                 for catalog in config.catalogs.values()
             }
         else:
-            return {
-                catalog: [Source.from_json(source) for source in sources]
-                for catalog, sources in json_item_sequences(public_sources)
-            }
-
-    def _verify_sources(self) -> None:
-        for catalog, public_sources in self._public_sources.items():
-            all_source_ids = self._all_source_ids(catalog)
-            public_source_ids = {s.ref.id for s in public_sources}
-            assert public_source_ids <= all_source_ids, R(
-                'Public sources not accessible to the indexer',
-                public_source_ids - all_source_ids)
-
-    @property
-    def public_sources_for_outsourcing(self) -> JSON:
-        self._verify_sources()
-        return {
-            catalog: [source.to_json() for source in sources]
-            for catalog, sources in self._public_sources.items()
-        }
+            return self._from_json(outsourced['public'])
 
     @cached_property
     def _all_sources(self) -> Mapping[CatalogName, Iterable[Source]]:
@@ -258,10 +266,8 @@ class SourceService:
         a Lambda function, this will never make a roundtrip to the underlying
         repository.
         """
-        try:
-            with open_resource('all_sources.json') as f:
-                all_sources = json.load(f)
-        except NotInLambdaContextException:
+        outsourced = self._outsourced_sources
+        if outsourced is None:
             result = {}
             for catalog in config.catalogs.values():
                 sources = list(self._list_sources(catalog.name, indexer_authentication))
@@ -272,18 +278,23 @@ class SourceService:
                 result[catalog.name] = sources
             return result
         else:
-            return {
-                catalog: [Source.from_json(source) for source in sources]
-                for catalog, sources in json_item_sequences(all_sources)
-            }
+            return self._from_json(outsourced['all'])
 
     def _all_source_ids(self, catalog: CatalogName) -> set[str]:
         return {s.ref.id for s in self._all_sources[catalog]}
 
+    def _verify_sources(self) -> None:
+        for catalog, public_sources in self._public_sources.items():
+            all_source_ids = self._all_source_ids(catalog)
+            public_source_ids = {s.ref.id for s in public_sources}
+            assert public_source_ids <= all_source_ids, R(
+                'Public sources not accessible to the indexer',
+                public_source_ids - all_source_ids)
+
     @property
-    def all_sources_for_outsourcing(self) -> JSON:
+    def sources_for_outsourcing(self) -> _OutsourcedSources:
         self._verify_sources()
         return {
-            catalog: [source.to_json() for source in sources]
-            for catalog, sources in self._all_sources.items()
+            'public': self._to_json(self._public_sources),
+            'all': self._to_json(self._all_sources),
         }
