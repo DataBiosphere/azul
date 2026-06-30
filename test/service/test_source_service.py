@@ -25,6 +25,9 @@ from mypy_boto3_dynamodb.literals import (
 from app_test_case import (
     LocalAppTestCase,
 )
+from azul.auth import (
+    indexer_authentication,
+)
 from azul.http import (
     http_client,
 )
@@ -142,6 +145,56 @@ class TestPublicSources(DCP2TestCase):
         self.assertEqual([{self.catalog: [self.source]}] * 2, actuals)
 
 
+class TestAllSources(DCP2TestCase):
+
+    @classmethod
+    def _patch_all_sources(cls):
+        pass  # don't call super so that code under test isn't patched
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+
+        class MockPlugin:
+
+            @property
+            def sources(self):
+                return {source.ref.spec: source.config for source in cls._sources()}
+
+            def list_sources(self, authentication):
+                assert authentication is indexer_authentication, authentication
+                return [cls.source.ref]
+
+        cls.addClassPatch(mock.patch.object(SourceService,
+                                            'repository_plugin',
+                                            return_value=MockPlugin()))
+
+    def test(self):
+        actuals, outsourced = [], []
+
+        def test():
+            service = SourceService()
+            actuals.append(service._all_sources)
+            outsourced.append(service.all_sources_for_outsourcing)
+            mock_open_resource.assert_called_once()
+
+        target = SourceService.__module__ + '.open_resource'
+
+        with mock.patch(target,
+                        side_effect=NotInLambdaContextException('')
+                        ) as mock_open_resource:
+            test()
+
+        with mock.patch(target,
+                        new_callable=mock.mock_open,
+                        read_data=json.dumps(outsourced[0])
+                        ) as mock_open_resource:
+            test()
+
+        self.assertEqual(*outsourced)
+        self.assertEqual([{self.catalog: [self.source]}] * 2, actuals)
+
+
 class TestListSources(DCP2TestCase, LocalAppTestCase):
 
     @classmethod
@@ -184,6 +237,15 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
                          return_value={cls.catalog: cls._sources()})
         )
 
+    @classmethod
+    def _patch_all_sources(cls):
+        cls.addClassPatch(
+            patch.object(SourceService,
+                         '_all_sources',
+                         new_callable=PropertyMock,
+                         return_value={cls.catalog: cls._sources()})
+        )
+
     @patch.object(SourceService, '_get')
     @patch.object(TDRClient, 'list_snapshots')
     @patch.object(TDRClient, 'validate', new=MagicMock())
@@ -213,7 +275,7 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
                 }
                 self.assertEqual(expected, actual)
 
-        mock_source_cache_get.return_value = list(self.mock_list_snapshots_response.keys())
+        mock_source_cache_get.return_value = [s.ref.id for s in self._sources()]
         _test(authenticate=True, cache=True)
         _test(authenticate=False, cache=True)
         mock_source_cache_get.return_value = None
