@@ -98,11 +98,7 @@ class TestSourceCache(DynamoDBTestCase):
 class TestOutsourcedSources(DCP2TestCase):
 
     @classmethod
-    def _patch_public_sources(cls):
-        pass  # don't call super so that code under test isn't patched
-
-    @classmethod
-    def _patch_all_sources(cls):
+    def _patch_sources(cls, attribute):
         pass  # don't call super so that code under test isn't patched
 
     @classmethod
@@ -186,19 +182,10 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
         ]
 
     @classmethod
-    def _patch_public_sources(cls):
+    def _patch_sources(cls, attribute):
         cls.addClassPatch(
             patch.object(SourceService,
-                         '_public_sources',
-                         new_callable=PropertyMock,
-                         return_value={cls.catalog: cls._sources()})
-        )
-
-    @classmethod
-    def _patch_all_sources(cls):
-        cls.addClassPatch(
-            patch.object(SourceService,
-                         '_all_sources',
+                         attribute,
                          new_callable=PropertyMock,
                          return_value={cls.catalog: cls._sources()})
         )

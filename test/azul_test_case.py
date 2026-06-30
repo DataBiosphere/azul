@@ -439,18 +439,19 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
                                        return_value=config.deployment.test_name))
 
     @classmethod
-    def _patch_public_sources(cls):
+    def _patch_sources(cls, attribute: str):
         cls.addClassPatch(patch.object(SourceService,
-                                       '_public_sources',
+                                       attribute,
                                        new_callable=PropertyMock,
                                        return_value={cls.catalog: [cls.source]}))
 
     @classmethod
+    def _patch_public_sources(cls):
+        cls._patch_sources('_public_sources')
+
+    @classmethod
     def _patch_all_sources(cls):
-        cls.addClassPatch(patch.object(SourceService,
-                                       '_all_sources',
-                                       new_callable=PropertyMock,
-                                       return_value={cls.catalog: [cls.source]}))
+        cls._patch_sources('_all_sources')
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):
