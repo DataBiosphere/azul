@@ -1434,5 +1434,17 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_MIRROR_BUCKET': 'anvilproject',
 
-        'AZUL_MIRRORING_CONCURRENCY': '128'
+        'AZUL_MIRRORING_CONCURRENCY': '128',
+
+        'azul_browser_sites': json.dumps({
+            'browser': {
+                'zone': '{AZUL_DOMAIN_NAME}',
+                'domain': '{AZUL_DOMAIN_NAME}',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/anvil/anvilprod',
+                'tarball_name': 'anvil',
+                'tarball_path': 'out',
+                'real_path': ''
+            }
+        }),
     }
