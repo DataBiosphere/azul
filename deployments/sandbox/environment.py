@@ -173,27 +173,37 @@ dcp2_sources = union({}, 105, delta([
     # @formatter:on
 ]))
 
-dcp3_sources = union(dcp2_sources, 111, delta([
+dcp3_sources = union(dcp2_sources, 98, delta([
     # @formatter:off
-    source('bigquery', 'datarepo-dev-3d6d24ad', 'hca_dev_05657a599f9d4bb9b77b24be13aa5cea__20210827_20230215'),
+    # FIXME: Revert the pops
+    #        https://github.com/DataBiosphere/azul/issues/8153
+    source('bigquery', 'datarepo-dev-3d6d24ad', 'hca_dev_05657a599f9d4bb9b77b24be13aa5cea__20210827_20230215', pop),
+    source('bigquery', 'datarepo-dev-135f340c', 'hca_dev_1c6a960d52ac44eab728a59c7ab9dc8e__20210827_20210928', pop),
     source('bigquery', 'datarepo-dev-76de829d', 'hca_dev_2043c65a1cf84828a6569e247d4e64f1__20210831_20210907', pop),
-    source('bigquery', 'datarepo-dev-b46086a9', 'hca_dev_51f02950ee254f4b8d0759aa99bb3498__20210827_20230215'),
+    source('bigquery', 'datarepo-dev-b46086a9', 'hca_dev_51f02950ee254f4b8d0759aa99bb3498__20210827_20230215', pop),
+    source('bigquery', 'datarepo-dev-71de019e', 'hca_dev_520afa10f9d24e93ab7a26c4c863ce18__20210827_20210928', pop),
     source('bigquery', 'datarepo-dev-8a52f620', 'hca_dev_6307bc2662764b85bd26c403d52b6eb2__20251110_dcp2_20251110_dcp99'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-3545971c', 'hca_dev_71436067ac414acebe1b2fbcc2cb02fa__20210827_20210928', pop),
     source('bigquery', 'datarepo-dev-fba5d628', 'hca_dev_8c4e43fbf7f344468367a3fe9e0b8fd7__20250828_dcp2_20250829_dcp53'),  # noqa: E501
     source('bigquery', 'datarepo-dev-857f1dfe', 'hca_dev_8f1f653d3ea14d8eb4a7b97dc852c2b1__20230815_dcp2_20250829_dcp53'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-29509483', 'hca_dev_90bd693340c048d48d76778c103bf545__20210827_20211110', pop),
     source('bigquery', 'datarepo-dev-55e5c791', 'hca_dev_aca93e287d874aa4b8ae498b9b235f46__20250730_dcp2_20250801_dcp52'),  # noqa: E501
+    source('bigquery', 'datarepo-dev-cd97e83a', 'hca_dev_b963bd4b4bc14404842569d74bc636b8__20210827_20210928', pop),
     source('bigquery', 'datarepo-dev-e9a7254b', 'hca_dev_c05184453b3b49c6b8fcc41daa4eacba__20220213_dcp2_20250514_dcp49'),  # noqa: E501
     source('bigquery', 'datarepo-dev-71abe9ae', 'hca_dev_c4e1136978d44d29ba8eb67907c4c65c__20220630_dcp2_20241107_dcp44'),  # noqa: E501
-    source('bigquery', 'datarepo-dev-27c50fbc', 'hca_dev_c5f4661568de4cf4bbc2a0ae10f08243__20210827_20230215'),
+    source('bigquery', 'datarepo-dev-27c50fbc', 'hca_dev_c5f4661568de4cf4bbc2a0ae10f08243__20210827_20230215', pop),
+    source('bigquery', 'datarepo-dev-f4cb2365', 'hca_dev_ce33dde2382d448cb6acbfb424644f23__20210827_20210928', pop),
     source('bigquery', 'datarepo-dev-2a4ab485', 'hca_dev_d2111fac3fc44f429b6d32cd6a828267__20210830_20230215'),
-    source('bigquery', 'datarepo-dev-1005632d', 'hca_dev_d3ac7c1b53024804b611dad9f89c049d__20210827_20230215'),
-    source('bigquery', 'datarepo-dev-8709b362', 'hca_dev_df88f39f01a84b5b92f43177d6c0f242__20210827_20230215'),
+    source('bigquery', 'datarepo-dev-1005632d', 'hca_dev_d3ac7c1b53024804b611dad9f89c049d__20210827_20230215', pop),
+    source('bigquery', 'datarepo-dev-3b058b81', 'hca_dev_dc1a41f69e0942a6959e3be23db6da56__20210827_20220228_dcp14', pop),  # noqa: E501
+    source('bigquery', 'datarepo-dev-8709b362', 'hca_dev_df88f39f01a84b5b92f43177d6c0f242__20210827_20230215', pop),
     source('bigquery', 'datarepo-dev-e1712bfa', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20230215'),
     source('bigquery', 'datarepo-dev-1d06e80a', 'hca_dev_edc54c5d82404681844462a086d1d1be__20240410_dcp2_20240410_dcpPilot', no_ma_mirror),  # noqa: E501
+    source('bigquery', 'datarepo-dev-b51e6694', 'hca_dev_f48e7c39cc6740559d79bc437892840c__20210830_20211007', pop),
     # @formatter:on
 ]))
 
-dcp3_min_sources = union(dcp3_sources, 61, delta([
+dcp3_min_sources = union(dcp3_sources, 48, delta([
     # @formatter:off
     source('bigquery', 'datarepo-dev-e2ab8487', 'hca_dev_03c6fce7789e4e78a27a664d562bb738__20210902_20210907', pop),
     source('bigquery', 'datarepo-dev-38e08b5c', 'hca_dev_08b794a0519c4516b184c583746254c5__20210901_20210903', pop),
