@@ -525,13 +525,15 @@ class DynamoDBItemUpdate:
             assert False, R('Unexpected type', type(value))
 
     def to_update_item_input(self) -> UpdateItemInputTypeDef:
-        return dict(
+        result: UpdateItemInputTypeDef = dict(
             TableName=self.table_name,
             Key=self.key,
             UpdateExpression='SET ' + ', '.join(self.assignments),
             ExpressionAttributeValues=self.attributes,
-            ExpressionAttributeNames=self.aliases
         )
+        if self.aliases:
+            result['ExpressionAttributeNames'] = self.aliases
+        return result
 
 
 class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
