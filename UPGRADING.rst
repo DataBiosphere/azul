@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8153 Thirteen inaccessible snapshots in dev
+=============================================
+
+In the ``environment.py`` of each of your personal deployments colocated with
+``dev``, pop thirteen snapshots in ``dcp3_sources`` and adjust the source counts
+for ``dcp3_sources`` and ``dcp3_min_sources``. Use the ``sandbox`` deployment's
+``environment.py`` as a model. Reindex your personal deployments.
+
+
 #7646 Failures mirroring files in dev catalog dcp3
 ==================================================
 
