@@ -533,11 +533,13 @@ tf_config = {
         'aws_cloudwatch_log_group': {
             'trail': {
                 'name': config.qualified_resource_name('trail'),
-                'retention_in_days': config.audit_log_retention_days
+                'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True
             },
             vpc.default_vpc_name: {
                 'name': '/aws/vpc/' + config.qualified_resource_name(vpc.default_vpc_name),
-                'retention_in_days': config.audit_log_retention_days
+                'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True
             },
             **(
                 {
