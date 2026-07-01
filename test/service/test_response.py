@@ -2218,11 +2218,11 @@ class TestIndexResponse(IndexResponseTestCase):
             for entity_type, is_filtered in filtered_entity_types.items():
                 _test(entity_type, expect_empty=is_filtered, expect_accessible=False)
 
-    def test_filter_by_accession(self):
-        def request_accessions(nested_properties):
+    def test_filter_by_nested_field(self):
+        def request_projects(values):
             params = self._params(filters={
                 'accessions': {
-                    'is': [nested_properties]
+                    'is': values
                 }
             })
             url = self.base_url.set(path='/index/projects')
@@ -2232,41 +2232,53 @@ class TestIndexResponse(IndexResponseTestCase):
 
         cases = [
             (
-                dict(namespace='array_express', accession='E-AAAA-00'),
+                [dict(namespace='array_express', accession='E-AAAA-00')],
                 {'627cb0ba-b8a1-405a-b58f-0add82c3d635'}
             ),
             (
-                dict(namespace='geo_series', accession='GSE132044'),
+                [dict(namespace='geo_series', accession='GSE132044')],
                 {'88ec040b-8705-4f77-8f41-f81e57632f7d'}
             ),
             (
-                dict(accession='GSE132044'),
+                [dict(accession='GSE132044')],
                 {'88ec040b-8705-4f77-8f41-f81e57632f7d'}
             ),
             (
-                dict(namespace='geo_series'),
+                [dict(namespace='geo_series')],
+                {
+                    '627cb0ba-b8a1-405a-b58f-0add82c3d635',
+                    '88ec040b-8705-4f77-8f41-f81e57632f7d'
+                }
+            ),
+            (
+                [
+                    dict(namespace='array_express', accession='E-AAAA-00'),
+                    dict(namespace='geo_series', accession='GSE132044')
+                ],
                 {
                     '627cb0ba-b8a1-405a-b58f-0add82c3d635',
                     '88ec040b-8705-4f77-8f41-f81e57632f7d'
                 }
             )
         ]
-        for nested_properties, expected_projects in cases:
-            with self.subTest(nested_properties=nested_properties):
-                response = request_accessions(nested_properties)
+        for accession_filter, expected_projects in cases:
+            with self.subTest(accession_filter=accession_filter):
+                response = request_projects(accession_filter)
                 actual_projects = {
                     one(hit['projects'])['projectId']
                     for hit in response['hits']
                 }
                 self.assertEqual(expected_projects, actual_projects)
-                for hits in response['hits']:
-                    accession_properties = [
-                        {key: value}
-                        for accession in one(hits['projects'])['accessions']
-                        for key, value in accession.items()
-                    ]
-                    for key, value in nested_properties.items():
-                        self.assertIn({key: value}, accession_properties)
+                for hit in response['hits']:
+                    accessions = one(hit['projects'])['accessions']
+                    # In each hit, we expect to find at least one accession that
+                    # has the same key(s) and value(s) as at least one of the
+                    # dicts specified in the filter.
+                    self.assertTrue(any(
+                        set(expected.items()).issubset(actual.items())
+                        for expected in accession_filter
+                        for actual in accessions
+                    ))
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'

@@ -303,10 +303,9 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                                "('foo' was unexpected) at path $.accessions.is[0]"
             ),
             (
-                json.dumps({'accessions': {'is': [{'namespace': 'x', 'accession': 'y'}] * 2}}),
-                schema_error + "[{'namespace': 'x', 'accession': 'y'}, "
-                               "{'namespace': 'x', 'accession': 'y'}] "
-                               "is too long at path $.accessions.is"
+                '{"accessions": {"is": [{"namespace": "baz"}, {"foo": "bar"}]}}',
+                schema_error + "Additional properties are not allowed "
+                               "('foo' was unexpected) at path $.accessions.is[1]"
             ),
             (
                 '{"projectTitle":{"contains":["retina"]}}',

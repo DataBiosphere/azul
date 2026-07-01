@@ -25,10 +25,6 @@ from typing import (
     cast,
 )
 
-from more_itertools import (
-    one,
-)
-
 from azul import (
     CatalogName,
 )
@@ -452,7 +448,6 @@ class Nested(FieldType[JSON, JSON]):
     def api_filter_values_schema(self, operator: str, mode: Mode) -> JSON:
         assert operator == 'is'
         schema = super().api_filter_values_schema(operator, mode)
-        schema = {**schema, 'maxItems': 1}
         return schema
 
     def api_filter_value_schema(self, operator: str, mode: Mode) -> JSON:
@@ -471,14 +466,16 @@ class Nested(FieldType[JSON, JSON]):
                operator: str,
                values: Iterable[AnyJSON | ApiRange]
                ) -> Iterable[JSON | IndexRange[JSON]]:
-        nested_object = one(values)
-        assert isinstance(nested_object, dict)
-        query_filters = {}
-        for nested_field, nested_value in nested_object.items():
-            nested_type = self.properties[nested_field]
-            to_index = nested_type.to_index
-            query_filters[nested_field] = to_index(nested_value)
-        return [query_filters]
+        result = []
+        for nested_object in values:
+            assert isinstance(nested_object, dict)
+            query_filters = {}
+            for nested_field, nested_value in nested_object.items():
+                nested_type = self.properties[nested_field]
+                to_index = nested_type.to_index
+                query_filters[nested_field] = to_index(nested_value)
+            result.append(query_filters)
+        return result
 
 
 class ClosedRange[N: PrimitiveJSON, X: IndexForm](FieldType[Range[N], IndexRange[X]]):
