@@ -200,7 +200,7 @@ class UserService:
         scopes = set(authorization['scope'].split())
         assert self.required_scopes.issubset(scopes), R(
             'Be sure to include the required scopes when requesting the '
-            'authorization code:', self.required_scopes)
+            'authorization code:', sorted(self.required_scopes))
         response = self._oauth_client.token_for_code(
             authorization_code=authorization['code'],
             client_id=self._client_id,
