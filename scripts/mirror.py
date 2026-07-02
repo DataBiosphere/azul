@@ -1,6 +1,5 @@
 """
-Copy all files from the public sources in a catalog to the current deployment's
-mirroring bucket.
+Copy all files from a catalog to the current deployment's mirroring bucket.
 """
 import argparse
 import logging
@@ -80,8 +79,8 @@ def main(args):
                     nargs='+',
                     help='Limit mirroring to a subset of the configured sources. '
                          'Supports shell-style wildcards to match multiple sources per argument. '
-                         'All sources must be public. If no values are passed, this argument will be set from the '
-                         'environment variable ``azul_current_sources``. If that variable is unset, all sources in '
+                         'If no values are passed, this argument will be set from the environment variable '
+                         '``azul_current_sources``. If that variable is unset, all sources in '
                          'the selected catalog will be used.')
     sp.add_argument('--mark',
                     action='store_true',
