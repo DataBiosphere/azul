@@ -13,7 +13,7 @@ google-cloud-bigquery-reservation==1.25.0
 google-cloud-storage==3.11.0
 isort==8.0.1
 jq==1.11.0
-msgpack-types==0.7.0  # versioned independently from the corresponding runtime dependency but when updating one, the other should be updated, too
+msgpack-types==0.8.0  # versioned independently from the corresponding runtime dependency but when updating one, the other should be updated, too
 moto[s3,sqs,sns,dynamodb,iam]==5.2.2  # match the extras with the backends listed in AzulUnitTestCase._reset_moto
 mypy==2.1.0
 openapi-spec-validator==0.7.2  # < 0.8.0, see https://github.com/DataBiosphere/azul/issues/7832

@@ -14,7 +14,7 @@ http_sfv==0.9.9
 jmespath==1.1.0
 jsonschema==4.26.0
 more-itertools==11.1.0
-msgpack==1.1.2  # versioned independently from the type stub dependency but when updating one, the other should be updated, too, if posssible
+msgpack==1.2.1  # versioned independently from the type stub dependency but when updating one, the other should be updated, too, if posssible
 opensearch-py==2.8.0  # < 3 to match server
 pyjwt==2.13.0
 referencing==0.36.2  # < 0.37.0, see https://github.com/DataBiosphere/azul/issues/7832
