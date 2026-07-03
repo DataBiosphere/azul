@@ -419,6 +419,50 @@ class TestMirrorController(DCP2TestCase,
                     self._mirror_controller.mirror(event)
         self._validate_file_contents(big_file, big_contents)
 
+    def test_multi_part_upload_abort_on_race(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        min_size = aws.s3_min_part_size
+        file_size = min_size + 1
+
+        big_contents = self._file_contents + (b'0' * (file_size - len(self._file_contents)))
+        assert len(big_contents) == file_size
+        big_file = attrs.evolve(self._file,
+                                size=file_size,
+                                sha256=hashlib.sha256(big_contents).hexdigest())
+
+        def download(_self, _file, part: FilePart | None = None) -> bytes:
+            return big_contents[part.offset:part.offset + part.size]
+
+        self._send_mirror_message(self._mirror_file_message(big_file))
+        with patch.object(FilePart, 'default_size', new=min_size):
+            with self._patch_download(new=download):
+                # Process MirrorFileAction, which starts the multipart upload
+                # and uploads the first part
+                message = one(self._read_mirror_queue())
+                event = self._mirror_event(message)
+                self.assertEqual('MirrorFileAction',
+                                 json.loads(one(event).body)['action'])
+                self._mirror_controller.mirror(event)
+
+                # Simulate another worker completing the upload by creating the
+                # info object before MirrorPartAction is processed
+                self._service._create_info(big_file)
+
+                # Process MirrorPartAction, which should detect the info object
+                # and abort the upload instead of continuing
+                message = one(self._read_mirror_queue())
+                event = self._mirror_event(message)
+                self.assertEqual('MirrorPartAction',
+                                 json.loads(one(event).body)['action'])
+                self._mirror_controller.mirror(event)
+
+        # No further messages should have been queued
+        self.assertEqual([], self._read_mirror_queue())
+
+        # The info object should exist and be valid
+        content_types = self._get_content_types_from_info_object(big_file)
+        self.assertEqual([big_file.content_type], content_types)
+
     def test_object_key_round_trip(self):
         service = self._service
         digest = Digest(type='sha256', value='abcdef1234567890' * 4)
