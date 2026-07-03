@@ -890,14 +890,29 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorPartAction) -> Iterator[MirrorAction]:
-        # Some upload field values are mutable so we should make a copy
-        upload = a.upload.copy()
-        next_part = self._mirror_part(a.file, upload, a.part)
-        if next_part is None:
-            log.info('Uploaded all %d parts for file %r', len(upload.etags), a.file)
-            yield devolve(FinalizeFileAction, a, upload=upload)
+        if self._info_exists(a.file):
+            # This short-circuit is not as effective as one might think.
+            # Redundant MirrorFileActions for the same digest tend to be
+            # clustered together in the queue, so the concurrent uploads
+            # progress roughly in lockstep and all finish at about the same
+            # time. The info object only appears after one of them completes,
+            # by which point the others are nearly done, too. See #8162.
+            log.info('File was already mirrored, aborting upload %r of %r',
+                     a.upload.upload_id, a.file)
+            object_key = self._file_object_key(a.file)
+            storage = self._storage_for_file(a.file)
+            storage.abort_multipart_upload(object_key=object_key,
+                                           upload_id=a.upload.upload_id)
+            self._update_info(a.file, mark=True)
         else:
-            yield devolve(MirrorPartAction, a, upload=upload, part=next_part)
+            # Some upload field values are mutable so we should make a copy
+            upload = a.upload.copy()
+            next_part = self._mirror_part(a.file, upload, a.part)
+            if next_part is None:
+                log.info('Uploaded all %d parts for file %r', len(upload.etags), a.file)
+                yield devolve(FinalizeFileAction, a, upload=upload)
+            else:
+                yield devolve(MirrorPartAction, a, upload=upload, part=next_part)
 
     @_mirror.register
     def _(self, a: FinalizeFileAction) -> Iterator[MirrorAction]:
