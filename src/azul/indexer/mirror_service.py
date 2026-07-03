@@ -814,6 +814,14 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     @_mirror.register
     def _(self, a: MirrorFileAction) -> Iterator[MirrorAction]:
         if self._info_exists(a.file):
+            # Note that this check is a best effort only and does not completely
+            # prevent the creation of multiple uploads to the same file object.
+            # In fact, such a race is very likely if the info object is absent
+            # while the queue contains multiple MirrorFileActions for files of
+            # the same digest but different uuids. The larger the file, the more
+            # likely the race, but the race can occur for small files, too, if
+            # the actions are close to each other in the queue, increasing the
+            # probability that they are handled concurrently.
             log.info('File is already mirrored, skipping upload: %r', a.file)
             self._update_info(a.file, mark=a.mark)
         elif self._file_exists(a.file):
@@ -844,7 +852,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                            data=file_content,
                            content_type=self._file_object_content_type,
                            overwrite=False)
-        self._create_info(file)
+        self._create_or_update_info(file)
 
     def _create_upload(self, file: File) -> FileUpload:
         object_key = self._file_object_key(file)
@@ -906,7 +914,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             log.info('Discarding redundant upload %r of %r', a.upload.upload_id, a.file)
             storage.abort_multipart_upload(object_key=object_key,
                                            upload_id=a.upload.upload_id)
-        self._create_info(a.file)
+        self._create_or_update_info(a.file)
         log.info('Successfully mirrored file via multi-part upload: %r', a.file)
         return iter(())
 
@@ -936,6 +944,15 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         }
 
     def _update_info(self, file: File, *, mark: bool):
+        """
+        Update the info object for the given file.
+
+        :param mark: Write the file even if it is already up-to-date, ensuring
+                     that its LastModified attribute is set to the current time
+
+        :raise StorageObjectNotFound: if the info object is absent
+        """
+
         def update(data: bytes) -> bytes:
             return json.dumps(self._info(file, json.loads(data))).encode()
 
@@ -944,6 +961,11 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         storage.update_object(key, update, content_type='application/json', touch=mark)
 
     def _create_info(self, file: File):
+        """
+        Create the info object for the given file.
+
+        :raise StorageObjectExists: if the info object already exists
+        """
         object_key = self._info_object_key(file)
         info = self._info(file)
         storage = self._storage_for_file(file)
@@ -951,6 +973,20 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                            data=json.dumps(info).encode(),
                            content_type='application/json',
                            overwrite=False)
+
+    def _create_or_update_info(self, file: File):
+        """
+        Ensure that an up-to-date info object exists for the given file,
+        creating it if necessary. Upon return, the info object's LastModified
+        time will be current.
+
+        Use this method in cases where multiple mirror threads may be uploading
+        duplicates, i.e. files with the same digest but a different uuid.
+        """
+        try:
+            self._create_info(file)
+        except StorageObjectExists:
+            self._update_info(file, mark=True)
 
     def _repository_url(self, file: File) -> str:
         plugin = self.repository_plugin
