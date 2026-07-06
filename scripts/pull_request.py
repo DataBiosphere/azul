@@ -70,6 +70,9 @@ def main(argv):
     parser.add_argument('--no-api',
                         action='store_true', default=False,
                         help='Remove API label and check API tasks.')
+    parser.add_argument('--no-upgrade',
+                        action='store_true', default=False,
+                        help='Remove upgrade label and check upgrade tasks.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -88,6 +91,8 @@ def main(argv):
         parser.error('--no-reindex cannot be used with --type')
     if args.type is not None and args.no_api:
         parser.error('--no-api cannot be used with --type')
+    if args.type is not None and args.no_upgrade:
+        parser.error('--no-upgrade cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
@@ -164,6 +169,14 @@ def main(argv):
     has_u_tag = _has_commit_tag(target_branch, 'u')
     body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
     body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
+
+    if args.no_upgrade:
+        assert not has_u_tag, R(
+            '--no-upgrade cannot be used when a commit is tagged `u`')
+        body = _check_task(body, r'Ran `make docker_images\.json`.*')
+        body = _check_task(body, r'Documented upgrading of deployments in UPGRADING\.rst.*')
+        body = _check_task(body, r'Added `u` tag to commit title.*')
+        body = _check_task(body, r'This PR is labeled `upgrade`.*')
 
     if args.no_reindex:
         assert not _has_commit_tag(target_branch, 'r'), R(
