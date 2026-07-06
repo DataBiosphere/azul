@@ -276,7 +276,7 @@ ami_id = {
 # "Updating software packages via release version upgrade in AL2023 instances"
 # section in OPERATOR.rst.
 #
-AL2023_release = '2023.12.20260608'
+AL2023_release = '2023.12.20260629'
 
 # Cloud-init's cc_mounts module does not support the UUID=<uuid> device
 # specification format. We use the /dev/disk/by-uuid/<uuid> symlink as a
