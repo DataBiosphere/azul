@@ -52,27 +52,19 @@ def main(argv):
                         choices=['upgrade', 'promotion'],
                         help='Type of PR to create. '
                              'If omitted, a regular PR is created.')
-    parser.add_argument('--no-partial',
-                        action='store_true', default=False,
-                        help='Remove partial label and check partiality tasks.')
-    parser.add_argument('--no-mirror',
-                        action='store_true', default=False,
-                        help='Remove mirror labels and check mirror tasks.')
-    parser.add_argument('--no-reindex',
-                        action='store_true', default=False,
-                        help='Remove reindex labels and check reindex tasks.')
-    parser.add_argument('--no-api',
-                        action='store_true', default=False,
-                        help='Remove API label and check API tasks.')
-    parser.add_argument('--no-upgrade',
-                        action='store_true', default=False,
-                        help='Remove upgrade label and check upgrade tasks.')
-    parser.add_argument('--no-deploy',
-                        action='store_true', default=False,
-                        help='Remove deploy labels and check deploy tasks.')
-    parser.add_argument('--no-hotfix',
-                        action='store_true', default=False,
-                        help='Check hotfix tasks.')
+    section_flags = {
+        'partial': 'Remove partial label and check partiality tasks.',
+        'mirror': 'Remove mirror labels and check mirror tasks.',
+        'reindex': 'Remove reindex labels and check reindex tasks.',
+        'api': 'Remove API label and check API tasks.',
+        'upgrade': 'Remove upgrade label and check upgrade tasks.',
+        'deploy': 'Remove deploy labels and check deploy tasks.',
+        'hotfix': 'Check hotfix tasks.',
+    }
+    for flag, help_text in section_flags.items():
+        parser.add_argument(f'--no-{flag}',
+                            action='store_true', default=False,
+                            help=help_text)
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -83,20 +75,10 @@ def main(argv):
     args = parser.parse_args(argv)
     if args.type is not None and args.fix is not None:
         parser.error('--fix/--no-fix cannot be used with --type')
-    if args.type is not None and args.no_partial:
-        parser.error('--no-partial cannot be used with --type')
-    if args.type is not None and args.no_mirror:
-        parser.error('--no-mirror cannot be used with --type')
-    if args.type is not None and args.no_reindex:
-        parser.error('--no-reindex cannot be used with --type')
-    if args.type is not None and args.no_api:
-        parser.error('--no-api cannot be used with --type')
-    if args.type is not None and args.no_upgrade:
-        parser.error('--no-upgrade cannot be used with --type')
-    if args.type is not None and args.no_deploy:
-        parser.error('--no-deploy cannot be used with --type')
-    if args.type is not None and args.no_hotfix:
-        parser.error('--no-hotfix cannot be used with --type')
+    if args.type is not None:
+        for flag in section_flags:
+            if getattr(args, f'no_{flag}'):
+                parser.error(f'--no-{flag} cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
