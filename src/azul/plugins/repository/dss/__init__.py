@@ -11,7 +11,6 @@ from uuid import (
     uuid5,
 )
 
-import attrs
 from furl import (
     furl,
 )
@@ -45,7 +44,7 @@ from azul.lib.types import (
     JSON,
 )
 from azul.plugins import (
-    RepositoryFileDownload,
+    File,
     RepositoryPlugin,
 )
 from azul.plugins.metadata.hca.bundle import (
@@ -189,50 +188,26 @@ class Plugin(RepositoryPlugin[
                          *,
                          file_version: str | None = None,
                          replica: str | None = None,
-                         token: str | None = None,
                          ) -> str | None:
         dss_endpoint = one(self.sources).name
         url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
-        url.query.add(adict(version=file_version, replica=replica, token=token))
+        url.query.add(adict(version=file_version, replica=replica))
         return str(url)
 
-    def file_download_class(self) -> type[RepositoryFileDownload]:
-        return DSSFileDownload
-
-    def validate_version(self, version: str) -> None:
-        # Note that this validates against the DCP2 format instead of the DSS
-        # format (azul.dss.version_format). This is necessary due to commit
-        # 48ef9388 which manually updated all the canned DSS bundles to use
-        # DCP/2 version format.
-        parse_dcp2_version(version)
-
-
-class DSSFileDownload(RepositoryFileDownload, HasCachedHttpClient):
-    _location: str | None = None
-    _retry_after: int | None = None
-
-    def update(self, authentication: Authentication | None) -> None:
-        self.file = attrs.evolve(self.file, drs_uri=None)  # to shorten the retry URLs
-        if self.replica is None:
-            self.replica = 'aws'
-        assert isinstance(self._plugin, Plugin)
-        # noinspection PyProtectedMember
-        dss_url = self._plugin._direct_file_url(file_uuid=self.file.uuid,
-                                                file_version=self.file.version,
-                                                replica=self.replica,
-                                                token=self.token)
+    def file_download_url(self,
+                          file: File,
+                          authentication: Authentication | None,
+                          replica: str | None = None
+                          ) -> str | None:
+        if replica is None:
+            replica = 'aws'
+        dss_url = self._direct_file_url(file_uuid=file.uuid,
+                                        file_version=file.version,
+                                        replica=replica)
         dss_response = self._http_client.request('GET', dss_url, redirect=False)
         if dss_response.status == 301:
-            retry_after = int(dss_response.headers.get('Retry-After'))
-            location = dss_response.headers['Location']
-
-            location = urllib.parse.urlparse(location)
-            query = urllib.parse.parse_qs(location.query, strict_parsing=True)
-            self.token = one(query['token'])
-            self.replica = one(query['replica'])
-            self.file = attrs.evolve(self.file, version=one(query['version']))
-            self._retry_after = retry_after
+            assert False, 'DSS plugin no longer supports Retry-After'
         elif dss_response.status == 302:
             location = dss_response.headers['Location']
             # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
@@ -241,7 +216,7 @@ class DSSFileDownload(RepositoryFileDownload, HasCachedHttpClient):
                 query = urllib.parse.parse_qs(location.query, strict_parsing=True)
                 expires = int(one(query['Expires']))
                 bucket = location.netloc.partition('.')[0]
-                dss_endpoint = one(self._plugin.sources).name
+                dss_endpoint = one(self.sources).name
                 assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
                 with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
                     # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
@@ -249,20 +224,19 @@ class DSSFileDownload(RepositoryFileDownload, HasCachedHttpClient):
                     params = {
                         'Bucket': bucket,
                         'Key': location.path[1:],
-                        'ResponseContentDisposition': 'attachment;filename=' + self.file.name,
+                        'ResponseContentDisposition': 'attachment;filename=' + file.name,
                     }
                     location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
                                                          ExpiresIn=round(expires - time.time()),
                                                          Params=params)
-            self._location = location
+            return location
         else:
             raise_on_status(dss_response)
             assert False
 
-    @property
-    def location(self) -> str | None:
-        return self._location
-
-    @property
-    def retry_after(self) -> int | None:
-        return self._retry_after
+    def validate_version(self, version: str) -> None:
+        # Note that this validates against the DCP2 format instead of the DSS
+        # format (azul.dss.version_format). This is necessary due to commit
+        # 48ef9388 which manually updated all the canned DSS bundles to use
+        # DCP/2 version format.
+        parse_dcp2_version(version)

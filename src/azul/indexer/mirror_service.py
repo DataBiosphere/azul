@@ -46,7 +46,6 @@ from azul import (
     config,
 )
 from azul.auth import (
-    Authentication,
     indexer_authentication,
 )
 from azul.deployment import (
@@ -89,11 +88,10 @@ from azul.lib.types import (
 )
 from azul.plugins import (
     File,
-    RepositoryFileDownload,
     RepositoryPlugin,
 )
 from azul.plugins.repository.tdr import (
-    TDRFileDownload,
+    TDRPlugin,
 )
 from azul.queues import (
     Action,
@@ -167,8 +165,6 @@ class FilePart(SerializableAttrs):
         """
         The first part of the given file, using the given part size.
         """
-        assert file.size is not None, R(
-            'File size unknown', file)
         part_count = math.ceil(file.size / cls.default_size)
         assert part_count <= cls.max_num_parts, R(
             'Too many parts', part_count, cls.default_size, file)
@@ -179,7 +175,6 @@ class FilePart(SerializableAttrs):
         The part following this part in the given file, or None if this is the
         last part.
         """
-        assert file.size is not None, R('File size unknown', file)
         next_offset = self.offset + self.size
         if next_offset == file.size:
             return None
@@ -189,22 +184,6 @@ class FilePart(SerializableAttrs):
             return attr.evolve(self, index=next_index, offset=next_offset, size=next_size)
         else:
             assert False, R('Part range exceeds file size', self, file)
-
-
-@attrs.frozen(kw_only=True)
-class MirrorFileDownload(RepositoryFileDownload):
-    _location: str
-
-    @property
-    def retry_after(self) -> int | None:
-        return None
-
-    @property
-    def location(self) -> str | None:
-        return self._location
-
-    def update(self, authentication: Authentication | None) -> None:
-        pass
 
 
 class SchemaUrlFunc(Protocol):
@@ -388,7 +367,6 @@ class MirrorService:
         return StorageService(bucket)
 
     def _storage_for_file(self, file: File) -> StorageService:
-        assert file.source is not None, file
         return self._storage_for_source(file.source.spec)
 
     def _storage_for_source(self, source: SourceSpec) -> StorageService:
@@ -562,9 +540,7 @@ class MirrorService:
         #
         if self.will_mirror(source.spec, file_size=0):
             file = file_cls.from_index(file_json, source=source)
-            # FIXME: Remove file size default
-            #        https://github.com/DataBiosphere/azul/issues/8024
-            if self.will_mirror(source.spec, 0 if file.size is None else file.size):
+            if self.will_mirror(source.spec, file.size):
                 storage = self._storage_for_source(source.spec)
                 return str(furl(scheme='s3',
                                 netloc=storage.bucket_name,
@@ -826,8 +802,6 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
     def _(self, a: MirrorPartitionAction) -> Iterator[MirrorAction]:
         files = self.repository_plugin.list_files(a.source, a.prefix)
         for file in files:
-            assert file.source is not None, R('File source unknown', file)
-            assert file.size is not None, R('File size unknown', file)
             assert file.size <= self.max_file_size, R(
                 'File too big', file, self.max_file_size)
             if self.will_mirror(file.source.spec, file.size):
@@ -839,7 +813,6 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
 
     @_mirror.register
     def _(self, a: MirrorFileAction) -> Iterator[MirrorAction]:
-        assert a.file.size is not None, R('File size unknown', a.file)
         if self._info_exists(a.file):
             log.info('File is already mirrored, skipping upload: %r', a.file)
             self._update_info(a.file, mark=a.mark)
@@ -980,25 +953,20 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
                            overwrite=False)
 
     def _repository_url(self, file: File) -> str:
-        assert config.is_tdr_enabled(self.catalog), R(
+        plugin = self.repository_plugin
+        assert isinstance(plugin, TDRPlugin), R(
             'Only TDR catalogs are supported', self.catalog)
         assert file.drs_uri is not None, R(
             'File cannot be downloaded', file)
-        assert file.source is not None, R(
-            'File source unknown', file)
         if self._is_public(file.source.spec):
             authentication = None
         else:
             authentication = indexer_authentication
-        download = TDRFileDownload(plugin=self.repository_plugin,
-                                   file=file,
-                                   replica=None,
-                                   token=None,
-                                   requester_pays=True)
-        download.update(authentication)
-        assert download.retry_after is None
-        assert download.location is not None
-        return download.location
+        repository_url = plugin.file_download_url(file,
+                                                  authentication,
+                                                  requester_pays=True)
+        assert repository_url is not None, file
+        return repository_url
 
     def _download(self, file: File, part: FilePart | None = None) -> bytes:
         url = self._repository_url(file)

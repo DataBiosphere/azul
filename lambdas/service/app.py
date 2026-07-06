@@ -58,7 +58,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '17.7',
+        'version': '18.0',
         'description': fd(f'''
             # Overview
 
