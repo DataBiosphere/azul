@@ -67,6 +67,9 @@ def main(argv):
     parser.add_argument('--no-upgrade',
                         action='store_true', default=False,
                         help='Remove upgrade label and check upgrade tasks.')
+    parser.add_argument('--no-deploy',
+                        action='store_true', default=False,
+                        help='Remove deploy labels and check deploy tasks.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -87,6 +90,8 @@ def main(argv):
         parser.error('--no-api cannot be used with --type')
     if args.type is not None and args.no_upgrade:
         parser.error('--no-upgrade cannot be used with --type')
+    if args.type is not None and args.no_deploy:
+        parser.error('--no-deploy cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
@@ -172,6 +177,11 @@ def main(argv):
         body = _check_task(body, r'Added `u` tag to commit title.*')
         body = _check_task(body, r'This PR is labeled `upgrade`.*')
 
+    if args.no_deploy:
+        deploy_labels = _deploy_labels(body)
+        for label in deploy_labels:
+            body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+
     if args.no_reindex:
         assert not _has_commit_tag(target_branch, 'r'), R(
             '--no-reindex cannot be used when a commit is tagged `r`')
@@ -219,6 +229,8 @@ def main(argv):
         labels_to_remove.extend(reindex_labels)
     if args.no_mirror:
         labels_to_remove.extend(mirror_labels)
+    if args.no_deploy:
+        labels_to_remove.extend(deploy_labels)
     if args.no_api:
         labels_to_remove.append('API')
 
@@ -472,6 +484,11 @@ def _reindex_labels(body: str) -> list[str]:
 
 def _mirror_labels(body: str) -> list[str]:
     return re.findall(r'^- \[[ x]] This PR is labeled `(mirror:\w+)`',
+                      body, flags=re.MULTILINE)
+
+
+def _deploy_labels(body: str) -> list[str]:
+    return re.findall(r'^- \[[ x]] This PR is labeled `(deploy:\w+)`',
                       body, flags=re.MULTILINE)
 
 
