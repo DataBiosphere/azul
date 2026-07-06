@@ -393,28 +393,31 @@ class DRSObject:
                 method = one(m for m in access_methods if m['type'] == access_method.scheme)
                 access_url = optional(json_mapping, method.get('access_url'))
                 access_id = optional(json_str, method.get('access_id'))
-                if access_url is not None and access_id is not None:
-                    # TDR quirkily uses the GS access method to provide both a
-                    # GS access URL *and* an access ID that produces an HTTPS
-                    # signed URL
-                    #
-                    # https://github.com/ga4gh/data-repository-service-schemas/issues/360
-                    # https://github.com/ga4gh/data-repository-service-schemas/issues/361
-                    assert access_method is AccessMethod.gs, R(
-                        'Unexpected access method', access_method)
-                    return self._get_access(access_id, AccessMethod.https, headers)
-                elif access_id is not None:
-                    return self._get_access(access_id, access_method, headers)
-                elif access_url is not None:
-                    access_url = json_str(access_url['url'])
-                    scheme = furl(access_url).scheme
-                    assert scheme == access_method.scheme, R(
-                        'Unexpected access URL scheme', scheme)
-                    # We can't convert the signed URL into a furl object since
-                    # the path can contain `%3A` which furl converts to `:`
-                    return Access(method=access_method, url=access_url)
+                if access_id is None:
+                    if access_url is None:
+                        assert False, R("'access_url' and 'access_id' are both missing")
+                    else:
+                        access_url = json_str(access_url['url'])
+                        scheme = furl(access_url).scheme
+                        assert scheme == access_method.scheme, R(
+                            'Unexpected access URL scheme', scheme)
+                        # We can't convert the signed URL into a furl object since
+                        # the path can contain `%3A` which furl converts to `:`
+                        return Access(method=access_method, url=access_url)
                 else:
-                    assert False, R("'access_url' and 'access_id' are both missing")
+                    if access_url is None:
+                        return self._get_access(access_id, access_method, headers)
+                    else:
+
+                        # TDR quirkily uses the GS access method to provide both a
+                        # GS access URL *and* an access ID that produces an HTTPS
+                        # signed URL
+                        #
+                        # https://github.com/ga4gh/data-repository-service-schemas/issues/360
+                        # https://github.com/ga4gh/data-repository-service-schemas/issues/361
+                        assert access_method is AccessMethod.gs, R(
+                            'Unexpected access method', access_method)
+                        return self._get_access(access_id, AccessMethod.https, headers)
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
