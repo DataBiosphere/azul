@@ -18,6 +18,7 @@ from unittest.mock import (
     MagicMock,
     patch,
 )
+
 from furl import (
     furl,
 )
