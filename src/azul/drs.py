@@ -43,6 +43,7 @@ from azul.lib import (
     mutable_furl,
 )
 from azul.lib.types import (
+    JSON,
     MutableJSON,
     json_dict,
     json_element_mappings,
@@ -390,34 +391,49 @@ class DRSObject:
                 # Bundles are not supported therefore we can expect 'access_methods'
                 response_data = json_mapping(json.loads(response.data))
                 access_methods = json_element_mappings(response_data['access_methods'])
-                method = one(m for m in access_methods if m['type'] == access_method.scheme)
-                access_url = optional(json_mapping, method.get('access_url'))
-                access_id = optional(json_str, method.get('access_id'))
-                if access_id is None:
-                    if access_url is None:
-                        assert False, R("'access_url' and 'access_id' are both missing")
-                    else:
-                        access_url = json_str(access_url['url'])
-                        scheme = furl(access_url).scheme
-                        assert scheme == access_method.scheme, R(
-                            'Unexpected access URL scheme', scheme)
-                        # We can't convert the signed URL into a furl object since
-                        # the path can contain `%3A` which furl converts to `:`
-                        return Access(method=access_method, url=access_url)
-                else:
-                    if access_url is None:
-                        return self._get_access(access_id, access_method, headers)
-                    else:
 
-                        # TDR quirkily uses the GS access method to provide both a
-                        # GS access URL *and* an access ID that produces an HTTPS
-                        # signed URL
-                        #
-                        # https://github.com/ga4gh/data-repository-service-schemas/issues/360
-                        # https://github.com/ga4gh/data-repository-service-schemas/issues/361
-                        assert access_method is AccessMethod.gs, R(
-                            'Unexpected access method', access_method)
-                        return self._get_access(access_id, AccessMethod.https, headers)
+                def sort_key(m: JSON) -> tuple:
+                    # Prefer methods with a usable access URL and no access ID
+                    access_id = m.get('access_id')
+                    access_url = optional(json_mapping, m.get('access_url'))
+                    return (
+                        access_id is not None,
+                        '' if access_id is None else access_id,
+                        access_url is None,
+                        '' if access_url is None else json_str(access_url['url'])
+                    )
+
+                methods = sorted(
+                    (m for m in access_methods if m['type'] == access_method.scheme),
+                    key=sort_key
+                )
+                for method in methods:
+                    access_url = optional(json_mapping, method.get('access_url'))
+                    access_id = optional(json_str, method.get('access_id'))
+                    if access_id is None:
+                        if access_url is not None:
+                            access_url = json_str(access_url['url'])
+                            scheme = furl(access_url).scheme
+                            assert scheme == access_method.scheme, R(
+                                'Unexpected access URL scheme', scheme)
+                            # We can't convert the signed URL into a furl object
+                            # since the path can contain `%3A` which furl
+                            # converts to `:`
+                            return Access(method=access_method, url=access_url)
+                    else:
+                        if access_url is None:
+                            return self._get_access(access_id, access_method, headers)
+                        else:
+                            # TDR quirkily uses the GS access method to provide
+                            # both a GS access URL *and* an access ID that
+                            # produces an HTTPS signed URL
+                            #
+                            # https://github.com/ga4gh/data-repository-service-schemas/issues/360
+                            # https://github.com/ga4gh/data-repository-service-schemas/issues/361
+                            assert access_method is AccessMethod.gs, R(
+                                'Unexpected access method', access_method)
+                            return self._get_access(access_id, AccessMethod.https, headers)
+                assert False, R('No usable access method found')
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
