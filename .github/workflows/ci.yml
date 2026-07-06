@@ -57,6 +57,7 @@ jobs:
           export azul_docker_registry=""
 
           make format
+          make isort
           make -C lambdas openapi
           make -C .github
           make anvil_schema
