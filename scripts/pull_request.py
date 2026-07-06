@@ -20,9 +20,6 @@ from pathlib import (
 import re
 import subprocess
 import sys
-from typing import (
-    Literal,
-)
 
 import attrs
 from furl import (
@@ -34,9 +31,6 @@ from azul.lib import (
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
-)
-from azul.lib.types import (
-    check_type,
 )
 from azul.logging import (
     configure_script_logging,
@@ -213,18 +207,33 @@ def main(argv):
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues?')
 
+    labels_to_add = []
+    labels_to_remove = []
+    if has_u_tag:
+        labels_to_add.append('upgrade')
+    else:
+        labels_to_remove.append('upgrade')
+    if args.no_partial:
+        labels_to_remove.append('partial')
+    if args.no_reindex:
+        labels_to_remove.extend(reindex_labels)
+    if args.no_mirror:
+        labels_to_remove.extend(mirror_labels)
+    if args.no_api:
+        labels_to_remove.append('API')
+
     if existing_pr is None:
         log.info('Creating PR …')
-        result = subprocess.run(
-            [
-                'gh', 'pr', 'create',
-                '--base', target_branch,
-                '--title', title,
-                '--body', body,
-                '--assignee', '@me',
-            ],
-            capture_output=True, text=True
-        )
+        cmd = [
+            'gh', 'pr', 'create',
+            '--base', target_branch,
+            '--title', title,
+            '--body', body,
+            '--assignee', '@me',
+        ]
+        if labels_to_add:
+            cmd.extend(['--label', ','.join(labels_to_add)])
+        result = subprocess.run(cmd, capture_output=True, text=True)
         sys.stdout.write(result.stdout)
         sys.stderr.write(result.stderr)
         if result.returncode != 0:
@@ -233,32 +242,18 @@ def main(argv):
     else:
         pr_url = existing_pr['url']
         log.info('Updating PR …')
-        subprocess.run(
-            [
-                'gh', 'pr', 'edit', pr_url,
-                '--title', title,
-                '--body', body,
-                '--add-assignee', '@me',
-            ],
-            capture_output=True, text=True, check=True
-        )
+        cmd = [
+            'gh', 'pr', 'edit', pr_url,
+            '--title', title,
+            '--body', body,
+            '--add-assignee', '@me',
+        ]
+        if labels_to_add:
+            cmd.extend(['--add-label', ','.join(labels_to_add)])
+        if labels_to_remove:
+            cmd.extend(['--remove-label', ','.join(labels_to_remove)])
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         log.info('PR URL is %r', pr_url)
-
-    _label(pr_url, 'upgrade', mode='add' if has_u_tag else 'remove')
-
-    if args.no_partial:
-        _label(pr_url, 'partial', mode='remove')
-
-    if args.no_reindex:
-        for label in reindex_labels:
-            _label(pr_url, label, mode='remove')
-
-    if args.no_mirror:
-        for label in mirror_labels:
-            _label(pr_url, label, mode='remove')
-
-    if args.no_api:
-        _label(pr_url, 'API', mode='remove')
 
     log.info('Setting PR status …')
     pr_node_id = _node_id(pr_url)
@@ -518,21 +513,6 @@ def _node_id(url: str) -> str:
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
-
-
-type LabelMode = Literal['add', 'remove']
-
-
-def _label(item_url: str, label: str, *, mode: LabelMode) -> None:
-    assert check_type(LabelMode, mode)
-    item_type = _gh_item_type(item_url)
-    verb = {'add': 'Adding', 'remove': 'Removing'}[mode]
-    preposition = {'add': 'to', 'remove': 'from'}[mode]
-    log.info('%s label %r %s %r …', verb, label, preposition, item_url)
-    subprocess.run(
-        ['gh', item_type, 'edit', item_url, f'--{mode}-label', label],
-        capture_output=True, text=True
-    )
 
 
 def _set_status(node_id: str, status: str) -> None:
