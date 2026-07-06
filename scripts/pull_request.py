@@ -31,6 +31,7 @@ from azul.lib import (
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
+    join_grammatically,
 )
 from azul.logging import (
     configure_script_logging,
@@ -65,6 +66,10 @@ def main(argv):
         parser.add_argument(f'--no-{flag}',
                             action='store_true', default=False,
                             help=help_text)
+    all_no_flags = join_grammatically([f'--no-{f}' for f in section_flags])
+    parser.add_argument('--vanilla',
+                        action='store_true', default=False,
+                        help=f'Equivalent to {all_no_flags}.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -73,6 +78,9 @@ def main(argv):
                            action='store_false', dest='fix',
                            help='Do not prefix the PR title with "Fix: ".')
     args = parser.parse_args(argv)
+    if args.vanilla:
+        for flag in section_flags:
+            setattr(args, f'no_{flag}', True)
     if args.type is not None and args.fix is not None:
         parser.error('--fix/--no-fix cannot be used with --type')
     if args.type is not None:
