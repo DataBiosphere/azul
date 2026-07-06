@@ -67,6 +67,9 @@ def main(argv):
     parser.add_argument('--no-reindex',
                         action='store_true', default=False,
                         help='Remove reindex labels and check reindex tasks.')
+    parser.add_argument('--no-api',
+                        action='store_true', default=False,
+                        help='Remove API label and check API tasks.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -83,6 +86,8 @@ def main(argv):
         parser.error('--no-mirror cannot be used with --type')
     if args.type is not None and args.no_reindex:
         parser.error('--no-reindex cannot be used with --type')
+    if args.type is not None and args.no_api:
+        parser.error('--no-api cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
@@ -173,6 +178,15 @@ def main(argv):
         for label in mirror_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
 
+    if args.no_api:
+        assert not _has_commit_tag(target_branch, 'a'), R(
+            '--no-api cannot be used when a commit is tagged `a`')
+        assert not _has_commit_tag(target_branch, 'A'), R(
+            '--no-api cannot be used when a commit is tagged `A`')
+        body = _check_task(body, r'This PR and its linked issues are labeled `API`.*')
+        body = _check_task(body, r'Added `a` \(`A`\) tag to commit title.*')
+        body = _check_task(body, r'Updated REST API version number in `app\.py`.*')
+
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
     body = _check_task(body, 'Name of PR branch matches .*')
@@ -229,6 +243,9 @@ def main(argv):
     if args.no_mirror:
         for label in mirror_labels:
             _label(pr_url, label, mode='remove')
+
+    if args.no_api:
+        _label(pr_url, 'API', mode='remove')
 
     log.info('Setting PR status …')
     pr_node_id = _node_id(pr_url)
