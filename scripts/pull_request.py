@@ -177,10 +177,22 @@ def main(argv):
         body = _check_task(body, r'Added `u` tag to commit title.*')
         body = _check_task(body, r'This PR is labeled `upgrade`.*')
 
+    labels_to_add = []
+    labels_to_remove = []
+    if has_u_tag:
+        labels_to_add.append('upgrade')
+    else:
+        labels_to_remove.append('upgrade')
+    if args.no_partial:
+        labels_to_remove.append('partial')
+    if args.no_api:
+        labels_to_remove.append('API')
+
     if args.no_deploy:
         deploy_labels = _deploy_labels(body)
         for label in deploy_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+        labels_to_remove.extend(deploy_labels)
 
     if args.no_reindex:
         assert not _has_commit_tag(target_branch, 'r'), R(
@@ -189,11 +201,13 @@ def main(argv):
         reindex_labels = _reindex_labels(body)
         for label in reindex_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+        labels_to_remove.extend(reindex_labels)
 
     if args.no_mirror:
         mirror_labels = _mirror_labels(body)
         for label in mirror_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+        labels_to_remove.extend(mirror_labels)
 
     if args.no_api:
         assert not _has_commit_tag(target_branch, 'a'), R(
@@ -216,23 +230,6 @@ def main(argv):
 
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues?')
-
-    labels_to_add = []
-    labels_to_remove = []
-    if has_u_tag:
-        labels_to_add.append('upgrade')
-    else:
-        labels_to_remove.append('upgrade')
-    if args.no_partial:
-        labels_to_remove.append('partial')
-    if args.no_reindex:
-        labels_to_remove.extend(reindex_labels)
-    if args.no_mirror:
-        labels_to_remove.extend(mirror_labels)
-    if args.no_deploy:
-        labels_to_remove.extend(deploy_labels)
-    if args.no_api:
-        labels_to_remove.append('API')
 
     if existing_pr is None:
         log.info('Creating PR …')
