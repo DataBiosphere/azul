@@ -70,6 +70,9 @@ def main(argv):
     parser.add_argument('--no-deploy',
                         action='store_true', default=False,
                         help='Remove deploy labels and check deploy tasks.')
+    parser.add_argument('--no-hotfix',
+                        action='store_true', default=False,
+                        help='Check hotfix tasks.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -92,6 +95,8 @@ def main(argv):
         parser.error('--no-upgrade cannot be used with --type')
     if args.type is not None and args.no_deploy:
         parser.error('--no-deploy cannot be used with --type')
+    if args.type is not None and args.no_hotfix:
+        parser.error('--no-hotfix cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
@@ -217,6 +222,12 @@ def main(argv):
         body = _check_task(body, r'This PR and its linked issues are labeled `API`.*')
         body = _check_task(body, r'Added `a` \(`A`\) tag to commit title.*')
         body = _check_task(body, r'Updated REST API version number in `app\.py`.*')
+
+    if args.no_hotfix:
+        assert not _has_commit_tag(target_branch, 'F'), R(
+            '--no-hotfix cannot be used when a commit is tagged `F`')
+        body = _check_task(body, r'Added `F` tag to main commit title.*')
+        body = _check_task(body, r'Reverted the temporary hotfixes for any linked issues.*')
 
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
