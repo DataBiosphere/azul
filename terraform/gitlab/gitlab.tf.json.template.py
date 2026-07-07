@@ -8,6 +8,7 @@ from itertools import (
     chain,
 )
 import json
+import re
 
 from more_itertools import (
     nth,
@@ -277,6 +278,13 @@ operator_keys = [
     )
 ]
 assert administrator_keys, R('Need at least one administrator key')
+for ssh_key in [*administrator_keys, *operator_keys]:
+    parts = ssh_key.split()
+    assert len(parts) == 3, R(
+        'SSH key must have three fields', ssh_key[:50])
+    alias = parts[2]
+    assert re.fullmatch(r'[^@]+@ucsc\.edu', alias), R(
+        'SSH key alias must be a UCSC email address', alias)
 first_ssh_key, *other_ssh_keys = dict.fromkeys([
     *administrator_keys,
     *([] if config.deployment.is_stable else operator_keys)
