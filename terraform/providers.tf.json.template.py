@@ -9,7 +9,7 @@ emit_tf(tag_resources=False, config={
     'terraform': {
         'required_version': config.terraform_version,
         # Note that a change to any of the providers below requires running
-        # `make provider_update`.
+        # `make provider_update` and `make update_schema`.
         'required_providers': {
             'external': {
                 'source': 'hashicorp/external',
@@ -21,11 +21,11 @@ emit_tf(tag_resources=False, config={
             },
             'google': {
                 'source': 'hashicorp/google',
-                'version': '7.36.0'
+                'version': '7.39.0'
             },
             'aws': {
                 'source': 'hashicorp/aws',
-                'version': '6.50.0'
+                'version': '6.53.0'
             },
         },
     },
