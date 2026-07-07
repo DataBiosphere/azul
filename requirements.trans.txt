@@ -1,13 +1,13 @@
 certifi==2026.6.17
-cffi==2.0.0
-charset-normalizer==3.4.8
+cffi==2.1.0
+charset-normalizer==3.4.9
 events==0.5
 google-cloud-core==2.6.0
 google-crc32c==1.8.0
 google-resumable-media==2.10.0
 googleapis-common-protos==1.75.0
-grpcio==1.82.0
-grpcio-status==1.82.0
+grpcio==1.81.1
+grpcio-status==1.81.1
 idna==3.18
 jsonschema-specifications==2025.9.1
 markupsafe==3.0.3

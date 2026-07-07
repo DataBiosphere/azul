@@ -8,9 +8,9 @@ boto3-stubs-lite==1.43.39
 botocore==1.43.39
 botocore-stubs==1.43.14
 certifi==2026.6.17
-cffi==2.0.0
+cffi==2.1.0
 chalice==1.32.0+21
-charset-normalizer==3.4.8
+charset-normalizer==3.4.9
 chevron==0.14.0
 click==8.4.2
 coverage==7.14.3
@@ -38,8 +38,8 @@ google-resumable-media==2.10.0
 googleapis-common-protos==1.75.0
 greenlet==3.5.3
 grpc-google-iam-v1==0.14.4
-grpcio==1.82.0
-grpcio-status==1.82.0
+grpcio==1.81.1
+grpcio-status==1.81.1
 http-message-signatures==2.0.1
 http_sfv==0.9.9
 httplib2==0.32.0
@@ -125,7 +125,7 @@ setuptools==82.0.1
 six==1.17.0
 smmap==5.0.3
 strict-rfc3339==0.7
-tqdm==4.68.3
+tqdm==4.68.4
 types-awscrt==0.34.1
 types-chevron==0.14.2.20260408
 types-jsonschema==4.26.0.20260518
