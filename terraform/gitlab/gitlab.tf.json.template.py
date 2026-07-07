@@ -1514,7 +1514,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_key_pair': {
             'gitlab': {
-                'key_name': 'azul-gitlab',
+                'key_name': first_ssh_key.split()[2],
                 'public_key': first_ssh_key
             }
         },
