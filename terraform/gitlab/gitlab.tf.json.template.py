@@ -1,6 +1,8 @@
+import base64
 from collections.abc import (
     Iterable,
 )
+import gzip
 import ipaddress
 from itertools import (
     chain,
@@ -1673,7 +1675,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'network_interface_id': '${aws_network_interface.gitlab.id}'
                 },
                 'user_data_replace_on_change': True,
-                'user_data': '#cloud-config\n' + yaml.dump({
+                'user_data_base64': base64.b64encode(gzip.compress(('#cloud-config\n' + yaml.dump({
                     'mounts': [
                         [data_volume_device, gitlab_mount, 'ext4', '']
                     ],
@@ -2302,7 +2304,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'condition': True,
                         'message': 'Rebooting to finalize FIPS-mode setup and possibly other things',
                     },
-                }, indent=2),
+                }, indent=2)).encode())).decode(),
                 'tags': {
                     'Owner': config.owner
                 }
