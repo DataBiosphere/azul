@@ -45,9 +45,12 @@ from azul.lib import (
 from azul.lib.types import (
     MutableJSON,
     json_dict,
+    json_element_mappings,
     json_list,
+    json_mapping,
     json_str,
     not_none,
+    optional,
 )
 
 log = logging.getLogger(__name__)
@@ -385,11 +388,11 @@ class DRSObject:
             response = self._request(url)
             if response.status == 200:
                 # Bundles are not supported therefore we can expect 'access_methods'
-                response_data = json_dict(json.loads(response.data))
-                access_methods = map(json_dict, json_list(response_data['access_methods']))
+                response_data = json_mapping(json.loads(response.data))
+                access_methods = json_element_mappings(response_data['access_methods'])
                 method = one(m for m in access_methods if m['type'] == access_method.scheme)
-                access_url = json_dict(method.get('access_url'))
-                access_id = json_str(method.get('access_id'))
+                access_url = optional(json_mapping, method.get('access_url'))
+                access_id = optional(json_str, method.get('access_id'))
                 if access_url is not None and access_id is not None:
                     # TDR quirkily uses the GS access method to provide both a
                     # GS access URL *and* an access ID that produces an HTTPS
@@ -403,13 +406,13 @@ class DRSObject:
                 elif access_id is not None:
                     return self._get_access(access_id, access_method, headers)
                 elif access_url is not None:
-                    scheme = furl(access_url['url']).scheme
+                    access_url = json_str(access_url['url'])
+                    scheme = furl(access_url).scheme
                     assert scheme == access_method.scheme, R(
                         'Unexpected access URL scheme', scheme)
                     # We can't convert the signed URL into a furl object since
                     # the path can contain `%3A` which furl converts to `:`
-                    return Access(method=access_method,
-                                  url=access_url['url'])
+                    return Access(method=access_method, url=access_url)
                 else:
                     assert False, R("'access_url' and 'access_id' are both missing")
             elif response.status == 202:
