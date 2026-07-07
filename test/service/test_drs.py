@@ -310,6 +310,35 @@ class TestDRSObjectGet(AzulUnitTestCase):
         return DRSClient(http_client=http_client,
                          url=furl(self.drs_url))
 
+    def test_access_url_only(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(self._mock_response({
+            'access_methods': [
+                {
+                    'type': 'https',
+                    'access_url': {'url': signed_url}
+                }
+            ]
+        }))
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_access_id_only(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(
+            self._mock_response({
+                'access_methods': [
+                    {
+                        'type': 'https',
+                        'access_id': 'some_access_id'
+                    }
+                ]
+            }),
+            self._mock_response({'url': signed_url})
+        )
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
     def test_both_access_url_and_id(self):
         signed_url = 'https://storage.example.com/bucket/object?token=abc'
         drs_object = self._drs_object(
