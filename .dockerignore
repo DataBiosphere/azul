@@ -5,4 +5,5 @@
 !environment
 !bin/keys/awscli-public-key.asc
 !bin/keys/docker-apt-keyring.pgp
+!bin/checksums/gh_checksums.txt
 requirements.all.txt

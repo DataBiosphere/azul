@@ -269,7 +269,7 @@ def env() -> Mapping[str, str | None]:
         # because it is referenced in the early stages of the GitLab build.
         #
         # Modifying this variable requires running `make environment.boot` and
-        # committing the resulting changes.
+        # `make gh_checksums` and committing the resulting changes.
         #
         'azul_ghcli_version': '2.95.0',
 
