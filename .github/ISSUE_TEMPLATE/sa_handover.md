@@ -26,7 +26,6 @@ Temporary hand-overs do not involve …
 - Modifying the permissions or ownership of azul-group@ucsc.edu
 - Other organizations on GitHub, e.g., HumanCellAtlas
 - Changing GitLab root user credentials
-- Adding/removing SSH keys to/from GitLab instances. This implies that the TSA is in the operator rotation; special action may be necessary if they are not
 
 
 ## Hand-over tasks for SA
@@ -60,6 +59,8 @@ Temporary hand-overs do not involve …
 - [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvilprod`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-anvilprod)
 - [ ] Issue is assigned to only the TSA
 - [ ] Make TSA code owner in [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
+- [ ] Add TSA's SSH public key to `administrator_keys` in [`terraform/gitlab/gitlab.tf.json.template.py`](https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py)
+- [ ] Place the key manually on each GitLab instance <sub>skip on a lower instance if the TSA also serves as an operator</sub>
 
 
 ## Hand-over tasks for TSA
@@ -110,4 +111,6 @@ Temporary hand-overs do not involve …
 - [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvildev`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvildev)
 - [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-hammerbox`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-hammerbox)
 - [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvilprod`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-anvilprod)
+- [ ] Remove TSA's SSH public key from `administrator_keys` in [`terraform/gitlab/gitlab.tf.json.template.py`](https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py)
+- [ ] Remove the key manually from each GitLab instance <sub>skip on a lower instance if the TSA also serves as an operator</sub>
 - [ ] Remove TSA as code owner from [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
