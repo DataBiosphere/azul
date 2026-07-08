@@ -164,7 +164,7 @@ reindex:
 sell_unused_slots:
   extends: .base
   stage: schedule
-  timeout: 30s
+  timeout: 1m
   rules:
     - if: $CI_PIPELINE_SOURCE == 'schedule'
         && $azul_gitlab_schedule == 'sell_unused_slots'
