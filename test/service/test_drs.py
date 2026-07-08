@@ -5,6 +5,13 @@ from unittest.mock import (
 )
 import urllib.parse
 
+from furl import (
+    furl,
+)
+from urllib3 import (
+    HTTPResponse,
+)
+
 from app_test_case import (
     LocalAppTestCase,
 )
@@ -12,7 +19,9 @@ from azul import (
     config,
 )
 from azul.drs import (
+    Access,
     AccessMethod,
+    DRSObject as DRSClient,
 )
 from azul.http import (
     raise_on_status,
@@ -285,3 +294,82 @@ class TestDRSController(AzulUnitTestCase):
         response = controller.get_object_access(bad_access_id, 'file_uuid', {})
         self.assertEqual(400, response.status_code)
         self.assertEqual('Invalid DRS access ID', response.body)
+
+
+class TestDRSObjectGet(AzulUnitTestCase):
+    drs_url = 'https://example.com/ga4gh/drs/v1/objects/abc'
+
+    def _mock_response(self, body: dict, status: int = 200) -> HTTPResponse:
+        return HTTPResponse(body=json.dumps(body).encode(),
+                            status=status,
+                            preload_content=True)
+
+    def _drs_object(self, *responses: HTTPResponse) -> DRSClient:
+        http_client = MagicMock()
+        http_client.request.side_effect = list(responses)
+        return DRSClient(http_client=http_client,
+                         url=furl(self.drs_url))
+
+    def test_access_url_only(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(self._mock_response({
+            'access_methods': [
+                {
+                    'type': 'https',
+                    'access_url': {'url': signed_url}
+                }
+            ]
+        }))
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_access_id_only(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(
+            self._mock_response({
+                'access_methods': [
+                    {
+                        'type': 'https',
+                        'access_id': 'some_access_id'
+                    }
+                ]
+            }),
+            self._mock_response({'url': signed_url})
+        )
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_multiple_methods(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(self._mock_response({
+            'access_methods': [
+                {
+                    'type': 'https',
+                    'access_url': {'url': 'https://other.example.com/bucket/other'},
+                    'access_id': 'some_access_id'
+                },
+                {
+                    'type': 'https',
+                    'access_url': {'url': signed_url}
+                }
+            ]
+        }))
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_both_access_url_and_id(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(
+            self._mock_response({
+                'access_methods': [
+                    {
+                        'type': 'gs',
+                        'access_url': {'url': 'gs://bucket/object'},
+                        'access_id': 'some_access_id'
+                    }
+                ]
+            }),
+            self._mock_response({'url': signed_url})
+        )
+        access = drs_object.get(access_method=AccessMethod.gs)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
