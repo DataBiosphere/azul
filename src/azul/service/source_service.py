@@ -14,6 +14,7 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
+    indexer_authentication,
 )
 from azul.deployment import (
     aws,
@@ -26,6 +27,7 @@ from azul.lib import (
 from azul.lib.types import (
     AnyJSON,
     JSON,
+    JSONTypedDict,
     json_element_strings,
     json_item_sequences,
 )
@@ -70,10 +72,9 @@ class SourceService:
                         authentication: Authentication | None
                         ) -> set[str]:
         """
-        List the IDs of the sources in the underlying repository that are
+        List the IDs of the sources configured in the given catalog that are
         accessible using the provided authentication, or the public service
-        account if no authentication is provided. The result may contain the IDs
-        of sources that are not included in the given catalog.
+        account if no authentication is provided.
 
         This method may require a roundtrip to the underlying repository, but
         results are cached for a certain amount of time, depending on the
@@ -101,6 +102,9 @@ class SourceService:
                 source_ids = set(json_element_strings(self._get(cache_key)))
             except CacheMiss:
                 source_ids = plugin.list_source_ids(authentication)
+                # Some users have access to many sources not relevant for Azul.
+                # Remove them to avoid excessive storage and compute.
+                source_ids &= self._all_source_ids(catalog)
                 self._put(cache_key, list(source_ids))
         return source_ids
 
@@ -109,23 +113,32 @@ class SourceService:
                      authentication: Authentication | None
                      ) -> Iterable[Source]:
         """
-        List the sources in the given catalog that are accessible using the
-        provided authentication.
+        List the sources configured in the given catalog that are accessible
+        using the provided authentication, or the public service account if no
+        authentication is provided.
 
-        If authentication is provided, this method requires a roundtrip to the
-        underlying repository.
+        If authentication is provided, this method may require a roundtrip to
+        the underlying repository.
 
         If no authentication (``None``) was provided, the caching depends on the
         context: calls within a Lambda context use the result determined at
         deployment time. Outside of that context, the first call of this method
         per instance of this class incurs a round trip to the repository, and
         the result is then cached until the instance is destroyed.
-
         """
         if authentication is None:
             return self._public_sources[catalog]
+        elif authentication is indexer_authentication:
+            return self._all_sources[catalog]
         else:
-            return self._list_sources(catalog, authentication)
+            # Some users have access to many sources not relevant for Azul.
+            # Remove them to avoid excessive storage and compute.
+            all_source_ids = self._all_source_ids(catalog)
+            return [
+                s
+                for s in self._list_sources(catalog, authentication)
+                if s.ref.id in all_source_ids
+            ]
 
     def _list_sources(self,
                       catalog: CatalogName,
@@ -199,6 +212,34 @@ class SourceService:
     def _now(self) -> int:
         return int(time())
 
+    class _OutsourcedSources(JSONTypedDict):
+        public: dict[CatalogName, list[JSON]]
+        all: dict[CatalogName, list[JSON]]
+
+    @cached_property
+    def _outsourced_sources(self) -> _OutsourcedSources | None:
+        try:
+            with open_resource('sources.json') as f:
+                return json.load(f)
+        except NotInLambdaContextException:
+            return None
+
+    def _to_json(self,
+                 sources: Mapping[CatalogName, Iterable[Source]]
+                 ) -> dict[CatalogName, list[JSON]]:
+        return {
+            catalog: [source.to_json() for source in sources]
+            for catalog, sources in sources.items()
+        }
+
+    def _from_json(self,
+                   sources: dict[CatalogName, list[JSON]]
+                   ) -> Mapping[CatalogName, list[Source]]:
+        return {
+            catalog: [Source.from_json(source) for source in sources]
+            for catalog, sources in json_item_sequences(sources)
+        }
+
     @cached_property
     def _public_sources(self) -> Mapping[CatalogName, Iterable[Source]]:
         """
@@ -207,23 +248,53 @@ class SourceService:
         invoked from a Lambda function, this will never make a roundtrip to the
         underlying repository.
         """
-        try:
-            with open_resource('public_sources.json') as f:
-                public_sources = json.load(f)
-        except NotInLambdaContextException:
+        outsourced = self._outsourced_sources
+        if outsourced is None:
             return {
                 catalog.name: self._list_sources(catalog.name, authentication=None)
                 for catalog in config.catalogs.values()
             }
         else:
-            return {
-                catalog: [Source.from_json(source) for source in sources]
-                for catalog, sources in json_item_sequences(public_sources)
-            }
+            return self._from_json(outsourced['public'])
+
+    @cached_property
+    def _all_sources(self) -> Mapping[CatalogName, Iterable[Source]]:
+        """
+        The set of all sources included in any catalog in the current
+        deployment that are accessible to the indexer service account. It is
+        an error if any configured source is not accessible. When invoked from
+        a Lambda function, this will never make a roundtrip to the underlying
+        repository.
+        """
+        outsourced = self._outsourced_sources
+        if outsourced is None:
+            result = {}
+            for catalog in config.catalogs.values():
+                sources = list(self._list_sources(catalog.name, indexer_authentication))
+                plugin = self.repository_plugin(catalog.name)
+                missing = plugin.sources.keys() - {s.ref.spec for s in sources}
+                assert not missing, R(
+                    'Configured sources not accessible to the indexer', missing)
+                result[catalog.name] = sources
+            return result
+        else:
+            return self._from_json(outsourced['all'])
+
+    def _all_source_ids(self, catalog: CatalogName) -> set[str]:
+        return {s.ref.id for s in self._all_sources[catalog]}
+
+    def _verify_sources(self) -> None:
+        for catalog, public_sources in self._public_sources.items():
+            all_source_ids = self._all_source_ids(catalog)
+            public_source_ids = {s.ref.id for s in public_sources}
+            assert public_source_ids <= all_source_ids, R(
+                'Public sources not accessible to the indexer',
+                public_source_ids - all_source_ids)
 
     @property
-    def public_sources_for_outsourcing(self) -> JSON:
+    def sources_for_outsourcing(self) -> _OutsourcedSources:
+        self._verify_sources()
         return {
-            catalog: [source.to_json() for source in sources]
-            for catalog, sources in self._public_sources.items()
+            'public': self._to_json(self._public_sources),
+            'all': self._to_json(self._all_sources),
         }

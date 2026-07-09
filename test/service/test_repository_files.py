@@ -4,7 +4,6 @@ from abc import (
 import hashlib
 import io
 import json
-import time
 from typing import (
     Union,
 )
@@ -25,8 +24,6 @@ from furl import (
 from google.auth.transport.urllib3 import (
     AuthorizedHttp,
 )
-import requests
-import responses
 import urllib3
 
 from app_test_case import (
@@ -57,6 +54,9 @@ from azul.logging import (
 from azul.plugins.metadata.hca import (
     HCAFile,
 )
+from azul.plugins.repository.dss import (
+    Plugin as DSSPlugin,
+)
 from azul.service.index_service import (
     IndexService,
 )
@@ -70,6 +70,9 @@ from azul_test_case import (
 from service import (
     MirrorTestCase,
     S3TestCase,
+)
+from urllib3_mock import (
+    Urllib3Mock,
 )
 
 log = get_test_logger(__name__)
@@ -209,100 +212,64 @@ class TestRepositoryFilesWithDSS(DCP1TestCase,
             dss_url = furl(url=config.dss_endpoint,
                            path=('v1', 'files', file_uuid),
                            args=args)
-            dss_token = 'some_token'
-            dss_url_with_token = dss_url.copy().add(args={'token': dss_token})
             for fetch in True, False:
-                for wait in None, 0, 1:
-                    for file_name, signature in [(None, 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM='),
-                                                 (organic_file_name, 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM=',),
-                                                 ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
-                                                 ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
-                        with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
-                            with responses.RequestsMock() as helper:
-                                helper.add_passthru(str(self.base_url))
-                                fixed_time = 1547691253.07010
-                                expires = str(round(fixed_time + 3600))
-                                s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
-                                              path=key,
-                                              args={
-                                                  'AWSAccessKeyId': 'SOMEACCESSKEY',
-                                                  'Signature': 'SOMESIGNATURE=',
-                                                  'x-amz-security-token': 'SOMETOKEN',
-                                                  'Expires': expires
-                                              })
-                                helper.add(responses.Response(method='GET',
-                                                              url=str(dss_url),
-                                                              status=301,
-                                                              headers={
-                                                                  'Location': str(dss_url_with_token),
-                                                                  'Retry-After': '10'
-                                                              }))
-                                azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
-                                                             args=dict(catalog=self.catalog, version=file_version))
-                                if fetch:
-                                    azul_url.path.segments.insert(0, 'fetch')
-                                if wait is not None:
-                                    azul_url.args['wait'] = str(wait)
-                                if file_name is not None:
-                                    azul_url.args['fileName'] = file_name
+                for file_name, signature in [(None, 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM='),
+                                             (organic_file_name, 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM=',),
+                                             ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
+                                             ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
+                    with self.subTest(fetch=fetch, file_name=file_name):
+                        with Urllib3Mock(DSSPlugin) as helper:
+                            fixed_time = 1547691253.07010
+                            expires = str(round(fixed_time + 3600))
+                            s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
+                                          path=key,
+                                          args={
+                                              'AWSAccessKeyId': 'SOMEACCESSKEY',
+                                              'Signature': 'SOMESIGNATURE=',
+                                              'x-amz-security-token': 'SOMETOKEN',
+                                              'Expires': expires
+                                          })
+                            azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
+                                                         args=dict(catalog=self.catalog,
+                                                                   version=file_version,
+                                                                   replica='aws'))
+                            if fetch:
+                                azul_url.path.segments.insert(0, 'fetch')
 
-                                def request_azul(url, expect_status):
-                                    retry_after = 1
-                                    expect_retry_after = None if wait or expect_status == 302 else retry_after
-                                    before = time.monotonic()
-                                    with patch.object(type(aws), 'dss_checkout_bucket', return_value=bucket_name):
-                                        with patch('time.time', new=lambda: 1547691253.07010):
-                                            response = requests.get(url, allow_redirects=False)
-                                    if wait and expect_status == 301:
-                                        self.assertLess(retry_after, time.monotonic() - before)
-                                    if fetch:
-                                        self.assertEqual(200, response.status_code)
-                                        response = response.json()
-                                        self.assertEqual(expect_status, response['Status'])
-                                    else:
-                                        if response.status_code != expect_status:
-                                            response.raise_for_status()
-                                        response = dict(response.headers)
-                                    if expect_retry_after is None:
-                                        self.assertNotIn('Retry-After', response)
-                                    else:
-                                        actual_retry_after = response['Retry-After']
-                                        if fetch:
-                                            self.assertEqual(expect_retry_after, actual_retry_after)
-                                        else:
-                                            self.assertEqual(str(expect_retry_after), actual_retry_after)
-                                    return response['Location']
-
-                                location = request_azul(url=str(azul_url), expect_status=301)
-
-                                if file_name is None:
-                                    file_name = organic_file_name
-
-                                azul_url.args['token'] = dss_token
-                                azul_url.args['requestIndex'] = '1'
+                            if file_name is None:
+                                file_name = organic_file_name
+                            else:
                                 azul_url.args['fileName'] = file_name
-                                azul_url.args['replica'] = 'aws'
-                                azul_url.args['sha256'] = file.sha256
-                                self.assertUrlEqual(azul_url, location)
 
-                                helper.add(responses.Response(method='GET',
-                                                              url=str(dss_url_with_token),
-                                                              status=302,
-                                                              headers={'Location': str(s3_url)}))
+                            helper.add(method='GET',
+                                       url=str(dss_url),
+                                       status=302,
+                                       headers={'Location': str(s3_url)})
 
-                                location = request_azul(url=location, expect_status=302)
+                            with patch.object(type(aws), 'dss_checkout_bucket', return_value=bucket_name):
+                                with patch('time.time', new=lambda: fixed_time):
+                                    response = self._http_client.request('GET', str(azul_url), redirect=False)
+                            if fetch:
+                                self.assertEqual(200, response.status)
+                                response = response.json()
+                                self.assertEqual(302, response['Status'])
+                            else:
+                                self.assertEqual(302, response.status)
+                                response = dict(response.headers)
+                            self.assertNotIn('Retry-After', response)
+                            location = response['Location']
 
-                                args = {
-                                    'response-content-disposition': f'attachment;filename={file_name}',
-                                    'AWSAccessKeyId': self.mock_boto_credentials.access_key,
-                                    'Signature': signature,
-                                    'Expires': expires,
-                                    'x-amz-security-token': self.mock_boto_credentials.token
-                                }
-                                re_pre_signed_s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
-                                                            path=key,
-                                                            args=args)
-                                self.assertUrlEqual(re_pre_signed_s3_url, location)
+                            args = {
+                                'response-content-disposition': f'attachment;filename={file_name}',
+                                'AWSAccessKeyId': self.mock_boto_credentials.access_key,
+                                'Signature': signature,
+                                'Expires': expires,
+                                'x-amz-security-token': self.mock_boto_credentials.token
+                            }
+                            re_pre_signed_s3_url = furl(url=f'https://{bucket_name}.s3.amazonaws.com',
+                                                        path=key,
+                                                        args=args)
+                            self.assertUrlEqual(re_pre_signed_s3_url, location)
 
 
 class TestRepositoryFilesWithMirroring(DCP2TestCase,

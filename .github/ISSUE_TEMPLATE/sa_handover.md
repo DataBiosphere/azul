@@ -26,13 +26,12 @@ Temporary hand-overs do not involve …
 - Modifying the permissions or ownership of azul-group@ucsc.edu
 - Other organizations on GitHub, e.g., HumanCellAtlas
 - Changing GitLab root user credentials
-- Adding/removing SSH keys to/from GitLab instances. This implies that the TSA is in the operator rotation; special action may be necessary if they are not
 
 
 ## Hand-over tasks for SA
 
-- [ ] Make TSA code owner in [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
 - [ ] Add TSA to [`Azul Admins`](https://github.com/orgs/DataBiosphere/teams/azul-admins) team in DataBiosphere on GitHub
+- [ ] Add TSA as a maintainer of the [`Azul Operators`](https://github.com/orgs/DataBiosphere/teams/azul-operators) team in DataBiosphere on GitHub
 - [ ] Make TSA an admin on the Admin UI of [`dev.gitlab`](https://gitlab.dev.singlecell.gi.ucsc.edu/admin/users)
 - [ ] Make TSA an admin on the Admin UI of [`anvildev.gitlab`](https://gitlab.anvil.gi.ucsc.edu/admin/users)
 - [ ] Make TSA an admin on the Admin UI of [`tempdev.gitlab`](https://gitlab.temp.gi.ucsc.edu/admin/users) <sub>or `tempdev.gitlab` is not deployed</sub>
@@ -53,7 +52,15 @@ Temporary hand-overs do not involve …
 - [ ] Make TSA an admin of Terra group [`azul-anvil-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-dev)
 - [ ] Make TSA an admin of Terra group [`azul-prod`](https://app.terra.bio/#groups/azul-prod)
 - [ ] Make TSA an admin of Terra group [`azul-anvil-prod`](https://app.terra.bio/#groups/azul-anvil-prod)
+- [ ] Make TSA an admin of Terra group [`azul-anvil-public-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-public-dev)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvilbox`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvilbox)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvildev`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvildev)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-hammerbox`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-hammerbox)
+- [ ] Make TSA an owner of Terra workspace [`azul-requester_pays-anvilprod`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-anvilprod)
 - [ ] Issue is assigned to only the TSA
+- [ ] Make TSA code owner in [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
+- [ ] Add TSA's SSH public key to `administrator_keys` in [`terraform/gitlab/gitlab.tf.json.template.py`](https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py)
+- [ ] Place the key manually on each GitLab instance <sub>skip on a lower instance if the TSA also serves as an operator</sub>
 
 
 ## Hand-over tasks for TSA
@@ -77,8 +84,8 @@ Temporary hand-overs do not involve …
 
 ## Reversal tasks for SA
 
-- [ ] Remove TSA as code owner from [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)
 - [ ] Remove TSA from [`Azul Admins`](https://github.com/orgs/DataBiosphere/teams/azul-admins) team in DataBiosphere on GitHub
+- [ ] Remove TSA from [`Azul Operators`](https://github.com/orgs/DataBiosphere/teams/azul-operators) team in DataBiosphere on GitHub
 - [ ] Remove TSA's admin role on the Admin UI of [`dev.gitlab`](https://gitlab.dev.singlecell.gi.ucsc.edu/admin/users)
 - [ ] Remove TSA's admin role on the Admin UI of [`anvildev.gitlab`](https://gitlab.anvil.gi.ucsc.edu/admin/users)
 - [ ] Remove TSA's admin role on the Admin UI of [`tempdev.gitlab`](https://gitlab.temp.gi.ucsc.edu/admin/users) <sub>or `tempdev.gitlab` is not deployed</sub>
@@ -99,3 +106,11 @@ Temporary hand-overs do not involve …
 - [ ] Remove TSA as admin of Terra group [`azul-anvil-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-dev)
 - [ ] Remove TSA as admin of Terra group [`azul-prod`](https://app.terra.bio/#groups/azul-prod)
 - [ ] Remove TSA as admin of Terra group [`azul-anvil-prod`](https://app.terra.bio/#groups/azul-anvil-prod)
+- [ ] Remove TSA as admin of Terra group [`azul-anvil-public-dev`](https://bvdp-saturn-dev.appspot.com/#groups/azul-anvil-public-dev)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvilbox`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvilbox)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvildev`](https://bvdp-saturn-dev.appspot.com/#workspaces/general-dev-billing-account/azul-requester_pays-anvildev)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-hammerbox`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-hammerbox)
+- [ ] Remove TSA as owner of Terra workspace [`azul-requester_pays-anvilprod`](https://app.terra.bio/#workspaces/firecloud-cgl/azul-requester_pays-anvilprod)
+- [ ] Remove TSA's SSH public key from `administrator_keys` in [`terraform/gitlab/gitlab.tf.json.template.py`](https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py)
+- [ ] Remove the key manually from each GitLab instance <sub>skip on a lower instance if the TSA also serves as an operator</sub>
+- [ ] Remove TSA as code owner from [.github/CODEOWNERS](https://github.com/DataBiosphere/azul/blob/develop/.github/CODEOWNERS)

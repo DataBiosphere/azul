@@ -157,7 +157,9 @@ class LambdaMapper(Mapper):
     def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS Lambda Function',
-            baseline_config=resource.config['runtime'],
+            # A container-based Lambda does not define a runtime in its config,
+            # so its package type (Image) is used instead.
+            baseline_config=resource.config.get('runtime', resource.config['packageType']),
             is_public=YesNo.no,
             is_virtual=YesNo.yes,
             purpose=resource.config.get('description'),

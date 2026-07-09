@@ -1,11 +1,14 @@
+import base64
 from collections.abc import (
     Iterable,
 )
+import gzip
 import ipaddress
 from itertools import (
     chain,
 )
 import json
+import re
 
 from more_itertools import (
     nth,
@@ -13,6 +16,7 @@ from more_itertools import (
 import yaml
 
 from azul import (
+    R,
     config,
 )
 from azul.deployment import (
@@ -210,50 +214,77 @@ split_tunnel = not config.deployment.is_stable
 
 # The public key of that keypair
 #
-administrator_key = (
-    'ssh-rsa'
-    ' '
-    'AAAAB3NzaC1yc2EAAAADAQABAAABAQDhRBbejN2qT5+6nfpzxPTfTFuSDSiPrAyDKH+V/A9+Xw4ZT8Z3K4d0w0KlwjtRZ'
-    '7shmIxkN44DY8R8LGCiybYHHVHqRNoQYqY1BkfSSP8h+eTylo4kRE4hKzs97dsBKYN1iXYXxd9yJGf6u3iR51LFijNLNN'
-    '6QEsxC6PhBReye21X8KdrlOO1owG3D+BVF6Q8PxpBFTjwMLiJUe3hm/vNTrCJErtHAr6ok28BY7rj3UVbGscrnsMIpdsX'
-    'OFDl5NU7tB6H9HlQ46l/W70ZSpzx8FQel9kbxcjZLinmsujuILC2bI1ev4EcdTRXo9SHo5VLPnE9J2f6StlqbBYJpbdOl'
-    ' '
-    'hannes@ucsc.edu'
-)
+administrator_keys = [
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDhRBbejN2qT5+6nfpzxPTfTFuSDSiPrAyDKH+V/A9+Xw4ZT8Z3K4d0w0KlwjtRZ'
+        '7shmIxkN44DY8R8LGCiybYHHVHqRNoQYqY1BkfSSP8h+eTylo4kRE4hKzs97dsBKYN1iXYXxd9yJGf6u3iR51LFijNLNN'
+        '6QEsxC6PhBReye21X8KdrlOO1owG3D+BVF6Q8PxpBFTjwMLiJUe3hm/vNTrCJErtHAr6ok28BY7rj3UVbGscrnsMIpdsX'
+        'OFDl5NU7tB6H9HlQ46l/W70ZSpzx8FQel9kbxcjZLinmsujuILC2bI1ev4EcdTRXo9SHo5VLPnE9J2f6StlqbBYJpbdOl'
+        ' '
+        'hannes@ucsc.edu'
+    ),
+    (
+        'ssh-rsa'
+        ' '
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXESgpL59i5QcycpYq6q'
+        '7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xmrlGWi8AhEfbFyAFaqb2i+Whb'
+        'kt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye30OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+'
+        'oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhrW07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
+        ' '
+        'dsotirho@ucsc.edu'
+    )
+]
 
 operator_keys = [
     (
         'ssh-rsa'
         ' '
-        'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fR'
-        'yiQqyMNxE/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi'
-        '6ag8h/pOQCvx6oO5NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcK'
-        'G2t2SuVh+PCpmMPA5/i/raDUqATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zp'
-        'ChGpbl5jA2ZfoEDEOhX4ffOD1UwmkmkoUC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6H'
-        'VMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/AkQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZ'
-        'e1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
+        'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fRyiQqyMNx'
+        'E/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi6ag8h/pOQCvx6oO5'
+        'NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcKG2t2SuVh+PCpmMPA5/i/raDU'
+        'qATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zpChGpbl5jA2ZfoEDEOhX4ffOD1Uwmkmko'
+        'UC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6HVMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/A'
+        'kQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZe1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
         ' '
         'achave11@ucsc.edu'
     ),
     (
         'ssh-rsa'
         ' '
-        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXES'
-        'gpL59i5QcycpYq6q7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xm'
-        'rlGWi8AhEfbFyAFaqb2i+Whbkt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye3'
-        '0OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhr'
-        'W07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
+        'AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXESgpL59i5QcycpYq6q'
+        '7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xmrlGWi8AhEfbFyAFaqb2i+Whb'
+        'kt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye30OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+'
+        'oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhrW07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx'
         ' '
         'dsotirho@ucsc.edu'
     ),
     (
-        'ssh-ed25519'
+        'ssh-rsa'
         ' '
-        'AAAAC3NzaC1lZDI1NTE5AAAAIGQfVzuxnFtCBcrnoebVhB7larVXhag8CmweXQU7QSBe'
+        'AAAAB3NzaC1yc2EAAAADAQABAAABgQDADHgqtexHJDoCQto0PCcOdtmsmgc1PWpXvslnvmMA8Y/TiI51AFGnKRA6cakm4'
+        'tRjz7qdt8ChK2juiMx2soUp7WHIg2WDJ4J9grBz/MEHD4Zmu5t+HT+Xf2YinWU3aLr+Sxg0A4o4ztHuUCZU4CTha+SOZ4'
+        'Bzi6dvps8ralhC8r3pOCF/2eF40DqyXzSnFf75pl4TcCmywXLgnYF+hI5GkfsD7dDX83EYFSp6cuMLpsMmDktztYNyeGo'
+        'QDt17gKV3nlg97bTIkZlHCAmj6VUkmtRv/6FzAH2aCPcFndu+HR8XeK7wCUGZ+Qd8HQSlDZoppE1lQlQAVeya2xsKH+k+'
+        'njxMm8ySgDcAMA6rRBApF0axrjpEysZ0DyRJywYX7CDQkSd9Byhjd/8c83PTZucb7gTMxrTbWop16OQoXU0BWQqoCzqYK'
+        '2UBxt7ykqAdY0FoHSz3EXNbI+3U6xcXCPoRD6NMjAPMh24J4bmw9v8H39Wt539UUXiKWBN2KeaUM+8='
         ' '
         'nadove@ucsc.edu'
     )
 ]
+assert administrator_keys, R('Need at least one administrator key')
+for ssh_key in [*administrator_keys, *operator_keys]:
+    parts = ssh_key.split()
+    assert len(parts) == 3, R(
+        'SSH key must have three fields', ssh_key[:50])
+    alias = parts[2]
+    assert re.fullmatch(r'[^@]+@ucsc\.edu', alias), R(
+        'SSH key alias must be a UCSC email address', alias)
+first_ssh_key, *other_ssh_keys = dict.fromkeys([
+    *administrator_keys,
+    *([] if config.deployment.is_stable else operator_keys)
+])
 
 # FIXME: Launch GitLab, DinD & runner images using image ID
 #        https://github.com/DataBiosphere/azul/issues/5960
@@ -266,17 +297,17 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see "Updating the AMI
 # for GitLab instances" section in OPERATOR.rst.
 #
-# CIS Amazon Linux 2023 Benchmark - Level 1 - v05 -prod-fvm47vekg24oc
+# CIS Amazon Linux 2023 Benchmark - Level 1 - v06 -prod-fvm47vekg24oc
 #
 ami_id = {
-    'us-east-1': 'ami-0886eb7785bfc0714'
+    'us-east-1': 'ami-0a0846719b96d249c'
 }
 
 # For instructions on finding the latest Amazon Linux 2023 release, see
 # "Updating software packages via release version upgrade in AL2023 instances"
 # section in OPERATOR.rst.
 #
-AL2023_release = '2023.11.20260526'
+AL2023_release = '2023.12.20260629'
 
 # Cloud-init's cc_mounts module does not support the UUID=<uuid> device
 # specification format. We use the /dev/disk/by-uuid/<uuid> symlink as a
@@ -1215,14 +1246,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             'gitlab_vpn': {
                 'name': '/aws/vpn/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True,
             },
             'gitlab_vpc': {
                 'name': '/aws/vpc/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True,
             },
             'gitlab_cwagent': {
                 'name': '/aws/cwagent/azul-gitlab',
                 'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True,
             }
         },
         'aws_flow_log': {
@@ -1476,8 +1510,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         'aws_key_pair': {
             'gitlab': {
-                'key_name': 'azul-gitlab',
-                'public_key': administrator_key
+                'key_name': first_ssh_key.split()[2],
+                'public_key': first_ssh_key
             }
         },
         'aws_iam_role': {
@@ -1645,7 +1679,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'network_interface_id': '${aws_network_interface.gitlab.id}'
                 },
                 'user_data_replace_on_change': True,
-                'user_data': '#cloud-config\n' + yaml.dump({
+                'user_data_base64': base64.b64encode(gzip.compress(('#cloud-config\n' + yaml.dump({
                     'mounts': [
                         [data_volume_device, gitlab_mount, 'ext4', '']
                     ],
@@ -1661,7 +1695,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             '/amazon-ssm-agent.rpm'
                         )
                     ],
-                    'ssh_authorized_keys': [] if config.deployment.is_stable else operator_keys,
+                    'ssh_authorized_keys': other_ssh_keys,
                     'ssh_genkeytypes': ['rsa', 'dsa', 'ecdsa'],
                     'bootcmd': [
                         '; '.join([
@@ -2274,7 +2308,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'condition': True,
                         'message': 'Rebooting to finalize FIPS-mode setup and possibly other things',
                     },
-                }, indent=2),
+                }, indent=2)).encode())).decode(),
                 'tags': {
                     'Owner': config.owner
                 }

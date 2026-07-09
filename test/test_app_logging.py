@@ -18,7 +18,6 @@ from chalice.config import (
 from more_itertools import (
     one,
 )
-import requests
 
 from app_test_case import (
     ChaliceServerThread,
@@ -30,6 +29,7 @@ from azul.chalice import (
 from azul.logging import (
     azul_log_level,
     configure_test_logging,
+    get_test_logger,
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -39,6 +39,9 @@ from azul_test_case import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestAppLogging(AzulUnitTestCase):
@@ -66,23 +69,23 @@ class TestAppLogging(AzulUnitTestCase):
                         host, port = server_thread.address
                         with self.assertLogs(app.log, level=log_level) as app_log:
                             with self.assertLogs(azul.log, level=log_level) as azul_log:
-                                response = requests.get(f'http://{host}:{port}{path}')
+                                response = self._http_client.request('GET', f'http://{host}:{port}{path}')
                     finally:
                         server_thread.kill_thread()
                         server_thread.join(timeout=10)
                         if server_thread.is_alive():
                             self.fail('Thread is still alive after joining')
 
-                    self.assertEqual(500, response.status_code)
+                    self.assertEqual(500, response.status)
 
                     # The request is always logged
                     self.assertEqual(5, len(azul_log.output))
                     info = {
                         'host': f'{host}:{port}',
-                        'user-agent': 'python-requests/2.33.1',
-                        'accept-encoding': 'gzip, deflate, zstd',
-                        'accept': '*/*',
-                        'connection': 'keep-alive'
+                        # FIXME: Use compressed encoding
+                        #        https://github.com/DataBiosphere/azul/issues/7990
+                        'accept-encoding': 'identity',
+                        'user-agent': 'python-urllib3/2.7.0',
                     }
                     self.assertEqual(f'INFO:azul.chalice:Received GET request for {path!r}, '
                                      f"with {json.dumps({'query': None, 'headers': info})}.",
@@ -99,7 +102,7 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertIn(magic_message, app_log.output[0])
                     self.assertIn(traceback_header, app_log.output[0])
 
-                    body = response.content.decode()
+                    body = response.data.decode()
                     if debug < 2:
                         # We don't allow stacktraces in error responses …
                         self.assertNotIn(traceback_header, body)

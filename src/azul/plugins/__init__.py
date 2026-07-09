@@ -950,7 +950,27 @@ class RepositoryPlugin[BUNDLE: Bundle = Bundle[SourcedBundleFQID],
         return IdentifiersDotOrgClient()
 
     @abstractmethod
-    def file_download_class(self) -> type[RepositoryFileDownload]:
+    def file_download_url(self,
+                          file: File,
+                          authentication: Authentication | None,
+                          replica: str | None = None
+                          ) -> str | None:
+        """
+        Obtain a URL from which the file can be downloaded.
+
+        :param file: The file being downloaded.
+
+        :param authentication: The authentication provided with the download
+                               request.
+
+        :param replica: The name of the replica to download the file from.
+                        Defaults to the name of the default replica. The set of
+                        valid replica names depends on the repository, but each
+                        repository must support the default replica.
+
+        :return: The final URL from which the file contents can be downloaded,
+                 or None if the file currently cannot be downloaded.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -989,18 +1009,18 @@ class File(DiscriminatingPolymorphicSerializableAttrs,
     #: ignore this.
     drs_uri: str | None
 
-    #: The file's size on disk, if known.
-    size: int | None = None
+    #: The file's size on disk in bytes
+    size: int
 
     #: The file's MIME content type, if known
     content_type: str | None = None
 
-    #: The file's source, if known
-    source: SourceRef | None = None
+    #: The file's source
+    source: SourceRef
 
     @classmethod
     @abstractmethod
-    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef) -> Self:
         """
         Instantiate this class from an entity aggregate document retrieved from
         OpenSearch.
@@ -1015,50 +1035,3 @@ class File(DiscriminatingPolymorphicSerializableAttrs,
     @classmethod
     def discriminator(cls) -> str:
         return 'type'
-
-
-@attrs.define(auto_attribs=True, kw_only=True)
-class RepositoryFileDownload(metaclass=ABCMeta):
-    #: The plugin for the repository that contains the file to be downloaded
-    _plugin: RepositoryPlugin
-
-    #: The file being downloaded
-    file: File
-
-    #: The name of the replica to download the file from. Defaults to the name
-    #: of the default replica. The set of valid replica names depends on the
-    #: repository, but each repository must support the default replica.
-    replica: str | None
-
-    #: A token to capture download state in. Should be `None` when the download
-    #: is first requested.
-    token: str | None
-
-    @abstractmethod
-    def update(self, authentication: Authentication | None) -> None:
-        """
-        Initiate the preparation of a URL from which the file can be downloaded.
-        Set any attributes that are None to their default values. If a download
-        is already being prepared, update those attributes and set the
-        `retry_after` property. If the download has been prepared, set the
-        `location` property.
-
-        :param authentication: The authentication provided with the download
-                               request.
-        """
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def location(self) -> str | None:
-        """
-        The final URL from which the file contents can be downloaded.
-        """
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def retry_after(self) -> int | None:
-        """
-        A number of seconds to wait before calling `update` again.
-        """

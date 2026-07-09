@@ -77,6 +77,7 @@ test:
   timeout: 1h 30m
   script:
     - make format
+    - make isort
     - python -m azul -t config.deployment.is_lower_sandbox && make requirements_update
     - make -C lambdas openapi
     - make environment.boot
@@ -164,7 +165,7 @@ reindex:
 sell_unused_slots:
   extends: .base
   stage: schedule
-  timeout: 30s
+  timeout: 1m
   rules:
     - if: $CI_PIPELINE_SOURCE == 'schedule'
         && $azul_gitlab_schedule == 'sell_unused_slots'
@@ -185,3 +186,14 @@ fedramp_inventory:
       - fedramp_inventory.xlsx
     expire_in:
       1 year
+
+github_schedule:
+  extends: .base
+  stage: schedule
+  timeout: 5m
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+        && $azul_gitlab_schedule == 'github_schedule'
+  script:
+    - export GITHUB_TOKEN=$azul_github_access_token GITHUB_REPO=$azul_github_project
+    - python .github/workflows/schedule.py

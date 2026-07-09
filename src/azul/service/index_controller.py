@@ -168,9 +168,9 @@ class IndexController(QueryController):
                     '''),
                     **responses.json_content(
                         schema.object(
-                            hits=schema.array(self._hit_schema),
                             pagination=self._generic_object_schema,
-                            termFacets=self._generic_object_schema
+                            termFacets=self._generic_object_schema,
+                            hits=schema.array(self._hit_schema)
                         )
                     )
                 }

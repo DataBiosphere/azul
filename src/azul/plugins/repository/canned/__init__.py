@@ -40,7 +40,7 @@ from azul.lib.types import (
     JSON,
 )
 from azul.plugins import (
-    RepositoryFileDownload,
+    File,
     RepositoryPlugin,
 )
 from azul.plugins.metadata.hca import (
@@ -273,30 +273,14 @@ class Plugin(RepositoryPlugin[
                         found_version = actual_file_version
         return found_url
 
-    def file_download_class(self) -> type[RepositoryFileDownload]:
-        return CannedFileDownload
+    def file_download_url(self,
+                          file: File,
+                          authentication: Authentication | None,
+                          replica: str | None = None
+                          ) -> str | None:
+        location = self._direct_file_url(file_uuid=file.uuid,
+                                         file_version=file.version)
+        return None if location is None else str(location)
 
     def validate_version(self, version: str) -> None:
         parse_dcp2_version(version)
-
-
-class CannedFileDownload(RepositoryFileDownload):
-    _location: furl | None = None
-    _retry_after: int | None = None
-
-    def update(self,
-               plugin: RepositoryPlugin,
-               authentication: Authentication | None
-               ) -> None:
-        assert isinstance(plugin, Plugin)
-        url = plugin._direct_file_url(file_uuid=self.file.uuid,
-                                      file_version=self.file.version)
-        self._location = url
-
-    @property
-    def location(self) -> str | None:
-        return None if self._location is None else str(self._location)
-
-    @property
-    def retry_after(self) -> int | None:
-        return self._retry_after

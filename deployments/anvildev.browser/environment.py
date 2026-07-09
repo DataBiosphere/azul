@@ -1,13 +1,9 @@
 from collections.abc import (
     Mapping,
 )
-import json
-from typing import (
-    Optional,
-)
 
 
-def env() -> Mapping[str, Optional[str]]:
+def env() -> Mapping[str, str | None]:
     """
     Returns a dictionary that maps environment variable names to values. The
     values are either None or strings. String values can contain references to
@@ -26,16 +22,5 @@ def env() -> Mapping[str, Optional[str]]:
     provide the value.
     """
     return {
-        'azul_terraform_component': 'browser',
-        'azul_browser_sites': json.dumps({
-            'browser': {
-                'zone': '{AZUL_DOMAIN_NAME}',
-                'domain': '{AZUL_DOMAIN_NAME}',
-                'project': 'ucsc/data-browser',
-                'branch': 'ucsc/anvil/anvildev',
-                'tarball_name': 'anvil',
-                'tarball_path': 'out',
-                'real_path': ''
-            }
-        })
+        'azul_terraform_component': 'browser'
     }

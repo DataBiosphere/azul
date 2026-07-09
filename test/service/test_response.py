@@ -33,7 +33,6 @@ from furl import (
 from more_itertools import (
     one,
 )
-import requests
 
 from app_test_case import (
     LocalAppTestCase,
@@ -46,6 +45,9 @@ from azul.deployment import (
 )
 from azul.field_type import (
     null_str,
+)
+from azul.http import (
+    raise_on_status,
 )
 from azul.indexer import (
     BundleFQID,
@@ -68,6 +70,7 @@ from azul.lib.types import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins import (
     FieldPath,
@@ -110,6 +113,9 @@ from service import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 def parse_url_qs(url) -> dict[str, str]:
@@ -1039,9 +1045,10 @@ class TestIndexResponse(IndexResponseTestCase):
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
-                response = requests.get(str(self.base_url.set(path=('index', entity_type),
-                                                              args=self._params())))
-                response.raise_for_status()
+                response = self._http_client.request('GET',
+                                                     str(self.base_url.set(path=('index', entity_type),
+                                                                           args=self._params())))
+                raise_on_status(response)
                 response_json = response.json()
                 # Verify default sort field is set correctly
                 self.assertEqual(response_json['pagination']['sort'],
@@ -1054,8 +1061,8 @@ class TestIndexResponse(IndexResponseTestCase):
         for entity_type in ('files', 'bundles'):
             with self.subTest(entity_type=entity_type):
                 url = self.base_url.set(path=('index', entity_type), args=self._params())
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 for hit in response_json['hits']:
                     if entity_type == 'files':
@@ -1081,8 +1088,8 @@ class TestIndexResponse(IndexResponseTestCase):
             with self.subTest(test_data=test_data):
                 params = self._params(size=10, filters={'specimenDisease': {'is': test_data}})
                 url = self.base_url.set(path='/index/samples', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 diseases = {
                     disease
@@ -1111,8 +1118,8 @@ class TestIndexResponse(IndexResponseTestCase):
                 with self.subTest(entity_type=entity_type):
                     params = self._params(size=2, filters={'projectId': {'is': [test_data['id']]}})
                     url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     response_json = response.json()
                     for hit in response_json['hits']:
                         for project in hit['projects']:
@@ -1131,8 +1138,8 @@ class TestIndexResponse(IndexResponseTestCase):
                               filters={'contentDescription': {'is': ['RNA sequence']}},
                               sort='fileName',
                               order='asc')
-        response = requests.get(str(url), params=params)
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url), fields=params)
+        raise_on_status(response)
         response_json = response.json()
         expected = [
             'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
@@ -1150,8 +1157,8 @@ class TestIndexResponse(IndexResponseTestCase):
         """
         url = self.base_url.set(path='/index/samples',
                                 args=(self._params(size=10)))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         facets = response_json['termFacets']
 
@@ -1177,8 +1184,8 @@ class TestIndexResponse(IndexResponseTestCase):
         for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
                 url = self.base_url.set(path=('index', entity_type), args=self._params())
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 if entity_type == 'samples':
                     for hit in response_json['hits']:
@@ -1199,8 +1206,8 @@ class TestIndexResponse(IndexResponseTestCase):
     def test_bundles_outer_entity(self):
         entity_type = 'bundles'
         url = self.base_url.set(path=('index', entity_type), args=self._params())
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response = response.json()
         indexed_bundles = set(self.bundles())
         self.assertEqual(len(self.bundles()), len(indexed_bundles))
@@ -1299,8 +1306,8 @@ class TestIndexResponse(IndexResponseTestCase):
                                           order='desc',
                                           sort='entryId')
                     url = self.base_url.set(path='/index/projects', args=params)
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     actual_hits = [hit['donorOrganisms'] for hit in response.json()['hits']]
                     self.assertElasticEqual(expected_hits, actual_hits)
 
@@ -1312,13 +1319,15 @@ class TestIndexResponse(IndexResponseTestCase):
 
         for sort_field, accessor in sort_fields:
             responses = {
-                order: requests.get(str(self.base_url.set(path='/index/projects',
-                                                          args=self._params(order=order, sort=sort_field))))
+                order: self._http_client.request('GET',
+                                                 str(self.base_url.set(path='/index/projects',
+                                                                       args=self._params(order=order,
+                                                                                         sort=sort_field))))
                 for order in ['asc', 'desc']
             }
             hit_sort_values = {}
             for order, response in responses.items():
-                response.raise_for_status()
+                raise_on_status(response)
                 hit_sort_values[order] = [accessor(hit) for hit in response.json()['hits']]
 
             self.assertEqual(hit_sort_values['asc'],
@@ -1356,8 +1365,8 @@ class TestIndexResponse(IndexResponseTestCase):
                                       sort='cellLineType',
                                       order='asc' if ascending else 'desc')
                 url = self.base_url.set(path='/index/projects', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 actual_values = list(extract_cell_line_types(response_json))
                 expected = ascending_values if ascending else list(reversed(ascending_values))
@@ -1374,8 +1383,8 @@ class TestIndexResponse(IndexResponseTestCase):
             with self.subTest(order=order, reverse=reverse):
                 params = self._params(size=15, sort='laboratory', order=order)
                 url = self.base_url.set(path='/index/projects', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 laboratories = []
                 for hit in response_json['hits']:
@@ -1692,8 +1701,8 @@ class TestIndexResponse(IndexResponseTestCase):
                                          sorted(expected, key=lambda x: (x[0] is None, x[0])))
                     params = self._params(size=50, sort=field, order=direction)
                     url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     response_json = response.json()
                     actual = [
                         (dates[field], hit['entryId'])
@@ -1866,8 +1875,8 @@ class TestIndexResponse(IndexResponseTestCase):
                     }
                     params = self._params(filters=filters, size=15, sort=field, order='asc')
                     url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     response_json = response.json()
                     actual = [
                         (dates[field], hit['entryId'])
@@ -1898,8 +1907,8 @@ class TestIndexResponse(IndexResponseTestCase):
 
         # Next assert the order of contributors in the service response
         url = self.base_url.set(path=('index', 'projects', project_id))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         project = one(response_json['projects'])
         actual = [r['email'] for r in project['contributors']]
@@ -1945,8 +1954,8 @@ class TestIndexResponse(IndexResponseTestCase):
         for project_id, term_facets in project_term_facets.items():
             with self.subTest(project_id=project_id):
                 params = self._params(filters={'projectId': {'is': [project_id]}})
-                response = requests.get(url, params=params)
-                response.raise_for_status()
+                response = self._http_client.request('GET', url, fields=params)
+                raise_on_status(response)
                 response_json = response.json()
                 actual_term_facets = response_json['termFacets']
                 for facet, terms in term_facets.items():
@@ -2028,11 +2037,11 @@ class TestIndexResponse(IndexResponseTestCase):
                 url = self.base_url.set(path='/index/projects',
                                         args=dict(catalog=self.catalog,
                                                   filters=json.dumps({'organismAge': filters})))
-                response = requests.get(str(url))
+                response = self._http_client.request('GET', str(url))
                 if project_id is None:
-                    self.assertTrue(response.status_code, 400)
+                    self.assertTrue(response.status, 400)
                 else:
-                    response.raise_for_status()
+                    raise_on_status(response)
                     response = response.json()
                     hit = one(response['hits'])
                     self.assertEqual(hit['entryId'], project_id)
@@ -2048,8 +2057,8 @@ class TestIndexResponse(IndexResponseTestCase):
         """
         params = self._params(size=3, sort='workflow', order='asc')
         url = self.base_url.set(path='/index/samples', args=params)
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         first_page_next = parse_url_qs(response_json['pagination']['next'])
 
@@ -2071,8 +2080,8 @@ class TestIndexResponse(IndexResponseTestCase):
         self.assertEqual([None, '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
                          json.loads(first_page_next['search_after']))
 
-        response = requests.get(response_json['pagination']['next'])
-        response.raise_for_status()
+        response = self._http_client.request('GET', response_json['pagination']['next'])
+        raise_on_status(response)
         response_json = response.json()
         second_page_next = parse_url_qs(response_json['pagination']['next'])
         second_page_previous = parse_url_qs(response_json['pagination']['previous'])
@@ -2096,12 +2105,12 @@ class TestIndexResponse(IndexResponseTestCase):
         query_params = self._params(size=1, sort='sampleId', order='asc')
         url = self.base_url.set(path='/index/samples', args=query_params)
         # Get page 1
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         # Get page 2
-        response = requests.get(response_json['pagination']['next'])
-        response.raise_for_status()
+        response = self._http_client.request('GET', response_json['pagination']['next'])
+        raise_on_status(response)
         response_json = response.json()
         test_cases = {
             'search_before': response_json['pagination']['previous'],
@@ -2110,17 +2119,17 @@ class TestIndexResponse(IndexResponseTestCase):
         for pagination_key, good_url in test_cases.items():
             with self.subTest(pagination_key=pagination_key):
                 # Verify URL works before modifying
-                response = requests.get(good_url)
-                response.raise_for_status()
+                response = self._http_client.request('GET', good_url)
+                raise_on_status(response)
                 # Modify search_… param in URL and verify expected error occurs
                 bad_url = furl(good_url)
                 self.assertIn('"', bad_url.args[pagination_key])
                 bad_url.args[pagination_key] = bad_url.args[pagination_key].replace('"', '')
-                response = requests.get(str(bad_url))
+                response = self._http_client.request('GET', str(bad_url))
                 error_msg = f'The {pagination_key!r} parameter is not valid JSON'
                 expected_text = f'{{"Code":"BadRequestError","Message":"{error_msg}"}}'
-                self.assertEqual(400, response.status_code)
-                self.assertEqual(expected_text, response.text)
+                self.assertEqual(400, response.status)
+                self.assertEqual(expected_text, response.data.decode())
 
     def test_filter_by_publication_title(self):
         cases = [
@@ -2169,8 +2178,8 @@ class TestIndexResponse(IndexResponseTestCase):
                 }
                 url = self.base_url.set(path='/index/files',
                                         args=dict(filters=json.dumps(filters)))
-                response = requests.get(str(url))
-                self.assertEqual(200, response.status_code)
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(200, response.status)
                 self.assertEqual(expected_terms,
                                  response.json()['termFacets']['publicationTitle'])
                 files = {
@@ -2192,8 +2201,8 @@ class TestIndexResponse(IndexResponseTestCase):
             with self.subTest(entity_type=entity_type,
                               expect_accessible=expect_accessible):
                 url = str(self.base_url.set(path=('index', entity_type)))
-                response = requests.get(url)
-                self.assertEqual(200, response.status_code)
+                response = self._http_client.request('GET', url)
+                self.assertEqual(200, response.status)
                 hits = response.json()['hits']
                 if expect_empty:
                     self.assertEqual([], hits)
@@ -2210,55 +2219,67 @@ class TestIndexResponse(IndexResponseTestCase):
             for entity_type, is_filtered in filtered_entity_types.items():
                 _test(entity_type, expect_empty=is_filtered, expect_accessible=False)
 
-    def test_filter_by_accession(self):
-        def request_accessions(nested_properties):
+    def test_filter_by_nested_field(self):
+        def request_projects(values):
             params = self._params(filters={
                 'accessions': {
-                    'is': [nested_properties]
+                    'is': values
                 }
             })
             url = self.base_url.set(path='/index/projects')
-            response = requests.get(str(url), params=params)
-            self.assertEqual(200, response.status_code)
+            response = self._http_client.request('GET', str(url), fields=params)
+            self.assertEqual(200, response.status)
             return response.json()
 
         cases = [
             (
-                dict(namespace='array_express', accession='E-AAAA-00'),
+                [dict(namespace='array_express', accession='E-AAAA-00')],
                 {'627cb0ba-b8a1-405a-b58f-0add82c3d635'}
             ),
             (
-                dict(namespace='geo_series', accession='GSE132044'),
+                [dict(namespace='geo_series', accession='GSE132044')],
                 {'88ec040b-8705-4f77-8f41-f81e57632f7d'}
             ),
             (
-                dict(accession='GSE132044'),
+                [dict(accession='GSE132044')],
                 {'88ec040b-8705-4f77-8f41-f81e57632f7d'}
             ),
             (
-                dict(namespace='geo_series'),
+                [dict(namespace='geo_series')],
+                {
+                    '627cb0ba-b8a1-405a-b58f-0add82c3d635',
+                    '88ec040b-8705-4f77-8f41-f81e57632f7d'
+                }
+            ),
+            (
+                [
+                    dict(namespace='array_express', accession='E-AAAA-00'),
+                    dict(namespace='geo_series', accession='GSE132044')
+                ],
                 {
                     '627cb0ba-b8a1-405a-b58f-0add82c3d635',
                     '88ec040b-8705-4f77-8f41-f81e57632f7d'
                 }
             )
         ]
-        for nested_properties, expected_projects in cases:
-            with self.subTest(nested_properties=nested_properties):
-                response = request_accessions(nested_properties)
+        for accession_filter, expected_projects in cases:
+            with self.subTest(accession_filter=accession_filter):
+                response = request_projects(accession_filter)
                 actual_projects = {
                     one(hit['projects'])['projectId']
                     for hit in response['hits']
                 }
                 self.assertEqual(expected_projects, actual_projects)
-                for hits in response['hits']:
-                    accession_properties = [
-                        {key: value}
-                        for accession in one(hits['projects'])['accessions']
-                        for key, value in accession.items()
-                    ]
-                    for key, value in nested_properties.items():
-                        self.assertIn({key: value}, accession_properties)
+                for hit in response['hits']:
+                    accessions = one(hit['projects'])['accessions']
+                    # In each hit, we expect to find at least one accession that
+                    # has the same key(s) and value(s) as at least one of the
+                    # dicts specified in the filter.
+                    self.assertTrue(any(
+                        set(expected.items()).issubset(actual.items())
+                        for expected in accession_filter
+                        for actual in accessions
+                    ))
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
@@ -2268,8 +2289,8 @@ class TestIndexResponse(IndexResponseTestCase):
                                      azul_git_commit=commit,
                                      azul_git_dirty=str(int(dirty))):
                     url = self.base_url.set(path='/version')
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     expected_json = {
                         'commit': commit,
                         'dirty': dirty
@@ -2303,8 +2324,8 @@ class TestFileTypeSummaries(IndexResponseTestCase):
             'catalog': self.catalog,
             'filters': json.dumps(filters)
         }
-        response = requests.get(str(url), params=params)
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url), fields=params)
+        raise_on_status(response)
         response_json = response.json()
         file_type_summaries = one(response_json['hits'])['fileTypeSummaries']
         expected = [
@@ -2477,8 +2498,8 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     'order': 'asc',
                 }
                 url = self.base_url.set(path='/index/projects', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 hits = response_json['hits']
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
@@ -2532,8 +2553,8 @@ class TestSchemaTestDataCannedBundle(IndexResponseTestCase):
         for entity_type in expected_cell_counts.keys():
             with self.subTest(entity_type=entity_type):
                 url = self.base_url.set(path=('index', entity_type), args=params)
-                response = requests.get(url)
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 actual_cell_counts = []
                 for hit in response_json['hits']:
@@ -2545,8 +2566,8 @@ class TestSchemaTestDataCannedBundle(IndexResponseTestCase):
     def test_summary_cell_counts(self):
         url = self.base_url.set(path='/index/summary',
                                 args=dict(catalog=self.catalog))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         summary = response.json()
         self.assertEqual(1, summary['projectCount'])
         self.assertEqual(10, summary['fileCount'])
@@ -2574,8 +2595,8 @@ class TestSchemaTestDataCannedBundle(IndexResponseTestCase):
         """
         params = {'catalog': self.catalog}
         url = self.base_url.set(path='/index/projects', args=params)
-        response = requests.get(url)
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         hit = one(response_json['hits'])
         expected_protocols = [
@@ -2678,14 +2699,15 @@ class TestNestedFieldAggregation(IndexResponseTestCase):
             with self.subTest(entity_type=entity_type):
                 url = self.base_url.set(path='/index/' + entity_type,
                                         args=(self._params(size=1)))
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', (str(url)))
+                raise_on_status(response)
                 response_json = response.json()
                 facets = response_json['termFacets']
                 expected = []
                 for count, term in zip(counts, tissue_atlas_terms):
                     expected.append({'count': count, 'term': term})
                 self.assertElasticEqual(expected, facets['tissueAtlas']['terms'])
+                self.assertEqual(sum(counts), facets['tissueAtlas']['total'])
 
 
 class TestSortAndFilterByCellCount(IndexResponseTestCase):
@@ -2768,8 +2790,8 @@ class TestSortAndFilterByCellCount(IndexResponseTestCase):
                         'order': 'asc' if ascending else 'desc'
                     }
                     url = self.base_url.set(path='/index/projects', args=params)
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     response = response.json()
                     actual = list(map(CellCounts.from_response, response['hits']))
                     if not ascending:
@@ -2835,8 +2857,8 @@ class TestSortAndFilterByCellCount(IndexResponseTestCase):
                         'filters': json.dumps(filters)
                     }
                     url = self.base_url.set(path='/index/projects', args=params)
-                    response = requests.get(str(url))
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     response = response.json()
                     actual = list(map(CellCounts.from_response, response['hits']))
                     self.assertEqual(actual, expected)
@@ -2906,8 +2928,8 @@ class TestProjectMatrices(IndexResponseTestCase):
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         facets = response_json['termFacets']
         expected_counts = {
@@ -2933,8 +2955,8 @@ class TestProjectMatrices(IndexResponseTestCase):
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         facets = response_json['termFacets']
         expected = [
@@ -2998,8 +3020,8 @@ class TestProjectMatrices(IndexResponseTestCase):
                                      facet=facet,
                                      value=value)
                 url = self.base_url.set(path='/index/files', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
                 self.assertEqual(sorted(expected_files), sorted(actual_files))
@@ -3013,8 +3035,8 @@ class TestProjectMatrices(IndexResponseTestCase):
         url = self.base_url.set(path='/index/projects', args=params)
         drs_uri = furl(scheme='drs',
                        netloc=config.drs_domain or config.api_lambda_domain('service'))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         hit = one(response_json['hits'])
         self.assertEqual('8185730f-4113-40d3-9cc3-929271784c2b', hit['entryId'])
@@ -3383,8 +3405,8 @@ class TestProjectMatrices(IndexResponseTestCase):
         for endpoint in ('projects', 'samples'):
             with self.subTest(endpoint=endpoint):
                 url = self.base_url.set(path=('index', endpoint), args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 response_json = response.json()
                 for hit in response_json['hits']:
                     actual_counts = {
@@ -3399,8 +3421,8 @@ class TestProjectMatrices(IndexResponseTestCase):
         }
         actual_counts = Counter()
         url = self.base_url.set(path='/index/files', args=params)
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         for hit in response_json['hits']:
             file = one(hit['files'])
@@ -3448,8 +3470,8 @@ class TestResponseFields(IndexResponseTestCase):
     def test_summary_response(self):
         url = self.base_url.set(path='/index/summary',
                                 args=dict(catalog=self.catalog))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         summary = response.json()
         self.assertEqual(1 + 1 + 1 + 1, summary['projectCount'])
         self.assertEqual(1 + 1 + 3 + 1, summary['specimenCount'])
@@ -3541,8 +3563,8 @@ class TestResponseFields(IndexResponseTestCase):
                 url = self.base_url.set(path='/index/summary',
                                         args=dict(catalog=self.catalog,
                                                   filters=json.dumps(filters)))
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 summary = response.json()
                 self.assertElasticEqual(expected_projects, summary['projects'])
 
@@ -3553,8 +3575,8 @@ class TestResponseFields(IndexResponseTestCase):
                 if use_filter:
                     params['filters'] = json.dumps({"organPart": {"is": [None]}})
                 url = self.base_url.set(path='/index/summary', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 summary_object = response.json()
                 self.assertEqual(summary_object['labCount'], labCount)
 
@@ -3572,8 +3594,8 @@ class TestResponseFields(IndexResponseTestCase):
             })
         }
         url = self.base_url.set(path='/index/projects', args=params)
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         project = one(one(response_json['hits'])['projects'])
         expected_contributors = [
@@ -3654,8 +3676,8 @@ class TestResponseFields(IndexResponseTestCase):
                 plugin = self.index_service.metadata_plugin(self.catalog)
                 for entity_type in plugin.exposed_indices:
                     url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = requests.get(url)
-                    response.raise_for_status()
+                    response = self._http_client.request('GET', str(url))
+                    raise_on_status(response)
                     response = response.json()
                     if field != 'duosId':
                         facets = response['termFacets']
@@ -3717,8 +3739,8 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
             with self.subTest(entity_type=entity_type):
                 url = self.base_url.set(path=('index', entity_type),
                                         args=dict(order='asc'))
-                response = requests.get(str(url))
-                response.raise_for_status()
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
                 sort_field = self._metadata_plugin.exposed_indices[entity_type].field_name
                 expected_response = {
                     'hits': [],
@@ -3752,8 +3774,8 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
             with self.subTest(entity=entity_type, field=field):
                 url = self.base_url.set(path=('index', entity_type),
                                         args=dict(sort=field))
-                response = requests.get(str(url))
-                self.assertEqual(200, response.status_code)
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(200, response.status)
 
 
 class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
@@ -3764,8 +3786,9 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
         return 'service'
 
     def test(self):
-        response = requests.get(str(self.base_url.set(path='/index/catalogs')))
-        self.assertEqual(200, response.status_code)
+        response = self._http_client.request('GET',
+                                             str(self.base_url.set(path='/index/catalogs')))
+        self.assertEqual(200, response.status)
         self.assertEqual({
             'default_catalog': 'test',
             'catalogs': {
@@ -3832,8 +3855,8 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     def test_tdr_sources(self):
         url = self.base_url.set(path='/index/projects')
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         plugin = self.index_service.metadata_plugin(self.catalog)
         special_fields = plugin.special_fields
@@ -3849,8 +3872,8 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
 
     def get_file(self, entry_id: str) -> JSON:
         url = self.base_url.set(path=('index', 'files', entry_id))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         return one(response.json()['files'])
 
     def test_file_urls(self):
@@ -3875,8 +3898,8 @@ class TestResponseWithDCP2Cans(DCP2CannedBundleTestCase, WebServiceTestCase):
         self.maxDiff = None
         project_id = '9b876d31-0739-4e96-9846-f76e6a427279'
         url = self.base_url.set(path=('index', 'projects', project_id))
-        response = requests.get(str(url))
-        response.raise_for_status()
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
         response_json = response.json()
         project = one(response_json['projects'])
         file_url = str(self.base_url.set(

@@ -23,7 +23,8 @@ emit_tf(None if config.share_opensearch_domain else {
                 'aws_cloudwatch_log_group': {
                     f'{log}_log': {
                         'name': f'/aws/aes/domains/{domain}/{log}-logs',
-                        'retention_in_days': config.audit_log_retention_days
+                        'retention_in_days': config.audit_log_retention_days,
+                        'skip_destroy': True,
                     }
                 }
             }

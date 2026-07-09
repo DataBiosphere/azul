@@ -5,7 +5,7 @@ title: Monthly review of publicly accessible content
 labels: compliance,infra,doc
 assignees: hannes-ucsc
 type: Chore
-_priority: \-
+_priority: Medium
 _repository: DataBiosphere/azul-private
 _start: 2024-08-01T09:00
 _period: 1 month

@@ -7,6 +7,7 @@ from azul.lib.types import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul_test_case import (
     DCP1TestCase,
@@ -19,6 +20,9 @@ from health_check_test_case import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
@@ -42,7 +46,7 @@ class TestServiceHealthCheck(DCP1TestCase, HealthCheckTestCase):
         self._create_mock_queues()
         with self._mock(endpoints_up=False):
             response = self._test('/health/fast')
-        self.assertEqual(503, response.status_code)
+        self.assertEqual(503, response.status)
         self.assertEqual(self._expected_health(endpoints_up=False), response.json())
 
 

@@ -1922,6 +1922,8 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_DEPLOYMENT_STAGE': 'prod',
 
+        # FIXME: Remove 'azul.' prefix from AZUL_DOMAIN_NAME in prod
+        #        https://github.com/DataBiosphere/azul/issues/5122
         'AZUL_DOMAIN_NAME': 'azul.data.humancellatlas.org',
 
         'AZUL_CATALOGS': base64.b64encode(bz2.compress(json.dumps({
@@ -1932,7 +1934,6 @@ def env() -> Mapping[str, str | None]:
                                                     repository=dict(name='tdr_hca')),
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit in [
-                ('hca', 'dcp59', dcp59_sources, None, int(1.5 * 1024 ** 3)),
                 ('hca', 'dcp60', dcp60_sources, None, int(1.5 * 1024 ** 3)),
                 ('lungmap', 'lm10', lm10_sources, -1, -1)
             ]
@@ -1986,5 +1987,26 @@ def env() -> Mapping[str, str | None]:
         'AZUL_MIRRORING_CONCURRENCY': '128',
 
         # This deployment is busy so we can afford a more sensitive threshold.
-        'azul_waf_blocked_alarm_threshold': '25'
+        'azul_waf_blocked_alarm_threshold': '25',
+
+        'azul_browser_sites': json.dumps({
+            'browser': {
+                'zone': 'explore.data.humancellatlas.org',
+                'domain': 'explore.data.humancellatlas.org',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/hca/prod',
+                'tarball_name': 'hca',
+                'tarball_path': 'out',
+                'real_path': ''
+            },
+            'lungmap': {
+                'zone': 'data-browser.lungmap.net',
+                'domain': 'data-browser.lungmap.net',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/lungmap/prod',
+                'tarball_name': 'lungmap',
+                'tarball_path': 'out',
+                'real_path': ''
+            }
+        }),
     }

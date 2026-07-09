@@ -4,7 +4,7 @@ about: Issue template for the bi-weekly upgrade of Azul's software dependencies
 title: Upgrade software dependencies
 labels: operator,infra
 type: Chore
-_priority: \-
+_priority: Medium
 _start: 2023-11-27T09:00
 _period: 14 days
 ---
@@ -54,6 +54,7 @@ _period: 14 days
     - [ ] … update to [AL2023 release](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#updating-software-packages-via-release-version-upgrade-in-al2023-instances) <sub>or no update available</sub>
     - [ ] … update to [Swagger UI](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#updating-the-swagger-ui) <sub>or no update available</sub>
     - [ ] … update to [AWS CLI v2](https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst) <sub>or no update available</sub>
+    - [ ] … update to [GitHub CLI](https://github.com/cli/cli/releases) <sub>or no update available</sub>
 - [ ] Created issues for any deferred updates to …
   - [ ] … the next major or minor Python version <sub>or such an issue already exists</sub>
   - [ ] … the next major Docker version <sub>or such an issue already exists</sub>

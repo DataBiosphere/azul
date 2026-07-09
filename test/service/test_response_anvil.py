@@ -1,13 +1,15 @@
-import requests
-
 from azul.deployment import (
     aws,
+)
+from azul.http import (
+    raise_on_status,
 )
 from azul.lib.types import (
     JSON,
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundleFQID,
@@ -23,6 +25,9 @@ from service import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
@@ -1568,7 +1573,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         self._assertResponse(url, expected_response)
 
     def _assertResponse(self, url: str, expected_response: JSON):
-        response = requests.get(url)
-        response.raise_for_status()
+        response = self._http_client.request('GET', url)
+        raise_on_status(response)
         response = response.json()
         self.assertEqual(expected_response, response)
