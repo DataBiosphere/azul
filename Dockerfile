@@ -58,6 +58,18 @@ RUN gpg --import /tmp/awscli-public-key.asc \
     && ./aws/install \
     && rm -rf awscliv2.zip awscliv2.sig aws
 
+# Install GitHub CLI
+#
+ARG azul_ghcli_version
+COPY bin/checksums/gh_checksums.txt /tmp/gh_checksums.txt
+RUN set -o pipefail \
+    && tarball=gh_${azul_ghcli_version}_linux_${TARGETARCH}.tar.gz \
+    && curl --fail --silent --location -o /tmp/${tarball} \
+       https://github.com/cli/cli/releases/download/v${azul_ghcli_version}/${tarball} \
+    && cd /tmp && grep "${tarball}" gh_checksums.txt | sha256sum -c \
+    && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=2 --wildcards "*/bin/gh" --occurrence=1 \
+    && rm /tmp/${tarball} /tmp/gh_checksums.txt
+
 # Install Docker from apt repository. The statically linked binaries don't
 # include buildx or buildkit.
 #
