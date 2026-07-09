@@ -33,6 +33,7 @@ from furl import (
 from more_itertools import (
     one,
 )
+
 from app_test_case import (
     LocalAppTestCase,
 )

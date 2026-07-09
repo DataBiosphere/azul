@@ -20,9 +20,6 @@ from pathlib import (
 import re
 import subprocess
 import sys
-from typing import (
-    Literal,
-)
 
 import attrs
 from furl import (
@@ -34,9 +31,7 @@ from azul.lib import (
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
-)
-from azul.lib.types import (
-    check_type,
+    join_grammatically,
 )
 from azul.logging import (
     configure_script_logging,
@@ -58,15 +53,23 @@ def main(argv):
                         choices=['upgrade', 'promotion'],
                         help='Type of PR to create. '
                              'If omitted, a regular PR is created.')
-    parser.add_argument('--no-partial',
+    section_flags = {
+        'partial': 'Remove partial label and check partiality tasks.',
+        'mirror': 'Remove mirror labels and check mirror tasks.',
+        'reindex': 'Remove reindex labels and check reindex tasks.',
+        'api': 'Remove API label and check API tasks.',
+        'upgrade': 'Remove upgrade label and check upgrade tasks.',
+        'deploy': 'Remove deploy labels and check deploy tasks.',
+        'hotfix': 'Check hotfix tasks.',
+    }
+    for flag, help_text in section_flags.items():
+        parser.add_argument(f'--no-{flag}',
+                            action='store_true', default=False,
+                            help=help_text)
+    all_no_flags = join_grammatically([f'--no-{f}' for f in section_flags])
+    parser.add_argument('--vanilla',
                         action='store_true', default=False,
-                        help='Remove partial label and check partiality tasks.')
-    parser.add_argument('--no-mirror',
-                        action='store_true', default=False,
-                        help='Remove mirror labels and check mirror tasks.')
-    parser.add_argument('--no-reindex',
-                        action='store_true', default=False,
-                        help='Remove reindex labels and check reindex tasks.')
+                        help=f'Equivalent to {all_no_flags}.')
     fix_group = parser.add_mutually_exclusive_group()
     fix_group.add_argument('--fix',
                            action='store_true', default=None,
@@ -75,14 +78,15 @@ def main(argv):
                            action='store_false', dest='fix',
                            help='Do not prefix the PR title with "Fix: ".')
     args = parser.parse_args(argv)
+    if args.vanilla:
+        for flag in section_flags:
+            setattr(args, f'no_{flag}', True)
     if args.type is not None and args.fix is not None:
         parser.error('--fix/--no-fix cannot be used with --type')
-    if args.type is not None and args.no_partial:
-        parser.error('--no-partial cannot be used with --type')
-    if args.type is not None and args.no_mirror:
-        parser.error('--no-mirror cannot be used with --type')
-    if args.type is not None and args.no_reindex:
-        parser.error('--no-reindex cannot be used with --type')
+    if args.type is not None:
+        for flag in section_flags:
+            if getattr(args, f'no_{flag}'):
+                parser.error(f'--no-{flag} cannot be used with --type')
 
     branch = _current_branch()
     _check_working_copy()
@@ -160,6 +164,31 @@ def main(argv):
     body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
     body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
 
+    if args.no_upgrade:
+        assert not has_u_tag, R(
+            '--no-upgrade cannot be used when a commit is tagged `u`')
+        body = _check_task(body, r'Ran `make docker_images\.json`.*')
+        body = _check_task(body, r'Documented upgrading of deployments in UPGRADING\.rst.*')
+        body = _check_task(body, r'Added `u` tag to commit title.*')
+        body = _check_task(body, r'This PR is labeled `upgrade`.*')
+
+    labels_to_add = []
+    labels_to_remove = []
+    if has_u_tag:
+        labels_to_add.append('upgrade')
+    else:
+        labels_to_remove.append('upgrade')
+    if args.no_partial:
+        labels_to_remove.append('partial')
+    if args.no_api:
+        labels_to_remove.append('API')
+
+    if args.no_deploy:
+        deploy_labels = _deploy_labels(body)
+        for label in deploy_labels:
+            body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+        labels_to_remove.extend(deploy_labels)
+
     if args.no_reindex:
         assert not _has_commit_tag(target_branch, 'r'), R(
             '--no-reindex cannot be used when a commit is tagged `r`')
@@ -167,11 +196,28 @@ def main(argv):
         reindex_labels = _reindex_labels(body)
         for label in reindex_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+        labels_to_remove.extend(reindex_labels)
 
     if args.no_mirror:
         mirror_labels = _mirror_labels(body)
         for label in mirror_labels:
             body = _check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+        labels_to_remove.extend(mirror_labels)
+
+    if args.no_api:
+        assert not _has_commit_tag(target_branch, 'a'), R(
+            '--no-api cannot be used when a commit is tagged `a`')
+        assert not _has_commit_tag(target_branch, 'A'), R(
+            '--no-api cannot be used when a commit is tagged `A`')
+        body = _check_task(body, r'This PR and its linked issues are labeled `API`.*')
+        body = _check_task(body, r'Added `a` \(`A`\) tag to commit title.*')
+        body = _check_task(body, r'Updated REST API version number in `app\.py`.*')
+
+    if args.no_hotfix:
+        assert not _has_commit_tag(target_branch, 'F'), R(
+            '--no-hotfix cannot be used when a commit is tagged `F`')
+        body = _check_task(body, r'Added `F` tag to main commit title.*')
+        body = _check_task(body, r'Reverted the temporary hotfixes for any linked issues.*')
 
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
@@ -188,16 +234,16 @@ def main(argv):
 
     if existing_pr is None:
         log.info('Creating PR …')
-        result = subprocess.run(
-            [
-                'gh', 'pr', 'create',
-                '--base', target_branch,
-                '--title', title,
-                '--body', body,
-                '--assignee', '@me',
-            ],
-            capture_output=True, text=True
-        )
+        cmd = [
+            'gh', 'pr', 'create',
+            '--base', target_branch,
+            '--title', title,
+            '--body', body,
+            '--assignee', '@me',
+        ]
+        if labels_to_add:
+            cmd.extend(['--label', ','.join(labels_to_add)])
+        result = subprocess.run(cmd, capture_output=True, text=True)
         sys.stdout.write(result.stdout)
         sys.stderr.write(result.stderr)
         if result.returncode != 0:
@@ -206,29 +252,18 @@ def main(argv):
     else:
         pr_url = existing_pr['url']
         log.info('Updating PR …')
-        subprocess.run(
-            [
-                'gh', 'pr', 'edit', pr_url,
-                '--title', title,
-                '--body', body,
-                '--add-assignee', '@me',
-            ],
-            capture_output=True, text=True, check=True
-        )
+        cmd = [
+            'gh', 'pr', 'edit', pr_url,
+            '--title', title,
+            '--body', body,
+            '--add-assignee', '@me',
+        ]
+        if labels_to_add:
+            cmd.extend(['--add-label', ','.join(labels_to_add)])
+        if labels_to_remove:
+            cmd.extend(['--remove-label', ','.join(labels_to_remove)])
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
         log.info('PR URL is %r', pr_url)
-
-    _label(pr_url, 'upgrade', mode='add' if has_u_tag else 'remove')
-
-    if args.no_partial:
-        _label(pr_url, 'partial', mode='remove')
-
-    if args.no_reindex:
-        for label in reindex_labels:
-            _label(pr_url, label, mode='remove')
-
-    if args.no_mirror:
-        for label in mirror_labels:
-            _label(pr_url, label, mode='remove')
 
     log.info('Setting PR status …')
     pr_node_id = _node_id(pr_url)
@@ -450,6 +485,11 @@ def _mirror_labels(body: str) -> list[str]:
                       body, flags=re.MULTILINE)
 
 
+def _deploy_labels(body: str) -> list[str]:
+    return re.findall(r'^- \[[ x]] This PR is labeled `(deploy:\w+)`',
+                      body, flags=re.MULTILINE)
+
+
 def _check_task(body: str, task: str, checked: bool = True) -> str:
     mark = 'x' if checked else ' '
     body, n = re.subn(r'^- \[[ x]] (' + task + ')$',
@@ -488,21 +528,6 @@ def _node_id(url: str) -> str:
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
-
-
-type LabelMode = Literal['add', 'remove']
-
-
-def _label(item_url: str, label: str, *, mode: LabelMode) -> None:
-    assert check_type(LabelMode, mode)
-    item_type = _gh_item_type(item_url)
-    verb = {'add': 'Adding', 'remove': 'Removing'}[mode]
-    preposition = {'add': 'to', 'remove': 'from'}[mode]
-    log.info('%s label %r %s %r …', verb, label, preposition, item_url)
-    subprocess.run(
-        ['gh', item_type, 'edit', item_url, f'--{mode}-label', label],
-        capture_output=True, text=True
-    )
 
 
 def _set_status(node_id: str, status: str) -> None:

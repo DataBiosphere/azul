@@ -19,6 +19,7 @@ from furl import (
     furl,
 )
 import urllib3
+
 from azul import (
     config,
 )
