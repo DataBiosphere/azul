@@ -785,6 +785,18 @@ class Chalice:
             package_zip = str(self.package_zip_path(app_name))
             resource['source_code_hash'] = '${filebase64sha256("%s")}' % package_zip
             resource['filename'] = package_zip
+            # Creating verbatim PFB manifests for large AnVIL datasets requires
+            # more ephemeral storage than the default, so we raise it to the
+            # maximum. We have to inject this here since Chalice doesn't support
+            # configuring the ephemeral storage.
+            if (
+                app_name == 'service'
+                and resource_name == f'{app_name}_{config.manifest_sfn}'
+                and config.deployment.is_stable
+                and config.is_anvil_enabled()
+            ):
+                assert 'ephemeral_storage' not in resource
+                resource['ephemeral_storage'] = {'size': 10240}
 
         # Replace any references to unqualified function ARNs in the OpenAPI
         # spec emitted by Chalice with references to the alias.

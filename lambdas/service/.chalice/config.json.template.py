@@ -35,7 +35,14 @@ emit({
                 "api_handler": chalice.vpc_lambda_config(app_name),
                 service.generate_manifest.name: {
                     "lambda_timeout": config.service_lambda_timeout,
-                    "lambda_memory_size": 3009 if config.deployment.is_stable else 2048,
+                    # Creating verbatim PFB manifests for large AnVIL datasets
+                    # requires more memory than the default, so we raise it to
+                    # the maximum.
+                    "lambda_memory_size": (
+                        10240 if config.deployment.is_stable and config.is_anvil_enabled()
+                        else 3009 if config.deployment.is_stable
+                        else 2048
+                    ),
                 },
                 service.update_health_cache.name: {
                     "lambda_memory_size": 160,
