@@ -347,6 +347,13 @@ class IndexController(QueryController):
     def search(self, entity_type: str, entity_id: str | None = None) -> str | JSON:
         request = self.current_request
         query_params = self._hoist_parameters(request)
+        # Validate `catalog` first since `_validate_entity_type` requires a
+        # valid catalog to load the metadata plugin.
+        validate_params(query_params,
+                        catalog=self._validate_catalog,
+                        allow_extra_params=True)
+        # Likewise, `_validate_size` requires a valid entity type.
+        self._validate_entity_type(entity_type)
         validate_params(query_params,
                         catalog=self._validate_catalog,
                         filters=self._validate_filters,
@@ -357,7 +364,6 @@ class IndexController(QueryController):
                         search_before_uid=str,
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_field)
-        self._validate_entity_type(entity_type)
         filters = query_params.get('filters')
         pagination = self._pagination(entity_type)
         authentication = self._authentication(request)
