@@ -317,6 +317,10 @@ data_volume_device = f'/dev/disk/by-uuid/{config.gitlab_data_volume_id}'
 
 gitlab_mount = '/mnt/gitlab'
 
+gitlab_fqdn = f'gitlab.{config.domain_name}'
+
+gitlab_cwagent_log_group = '/aws/cwagent/azul-gitlab'
+
 vpc_dns_servers = [
     # https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#AmazonDNS
     str(nth(ipaddress.ip_network(vpc_cidr).hosts(), 1)),
@@ -1254,7 +1258,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'skip_destroy': True,
             },
             'gitlab_cwagent': {
-                'name': '/aws/cwagent/azul-gitlab',
+                'name': gitlab_cwagent_log_group,
                 'retention_in_days': config.audit_log_retention_days,
                 'skip_destroy': True,
             }
@@ -1464,7 +1468,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 {
                     departition('gitlab', '_', subdomain): {
                         'zone_id': '${data.aws_route53_zone.gitlab.id}',
-                        'name': departition(subdomain, '.', f'gitlab.{config.domain_name}'),
+                        'name': departition(subdomain, '.', gitlab_fqdn),
                         'type': 'A',
                         'alias': {
                             'name': '${aws_lb.gitlab_alb.dns_name}',
@@ -1679,6 +1683,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'network_interface_id': '${aws_network_interface.gitlab.id}'
                 },
                 'user_data_replace_on_change': True,
+                # We can't use ${} interpolations within `user_data_base64`
+                # because Terraform can't see them through the compression/
+                # encoding. Our current workaround is to extract values
+                # referenced elsewhere in the config to variables, e.g.
+                # `gitlab_fqdn` and `gitlab_cwagent_log_group`.
                 'user_data_base64': base64.b64encode(gzip.compress(('#cloud-config\n' + yaml.dump({
                     'mounts': [
                         [data_volume_device, gitlab_mount, 'ext4', '']
@@ -1857,7 +1866,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'run',
                                     '--name gitlab',
                                     '--env GITLAB_SKIP_TAIL_LOGS=true',
-                                    '--hostname ${aws_route53_record.gitlab.name}',
+                                    # Not a TF expansion: this string is gzip-compressed
+                                    # before being emitted, so TF never sees it to expand.
+                                    f'--hostname {gitlab_fqdn}',
                                     '--publish 80:80',
                                     '--publish 2222:22',
                                     '--rm',
@@ -2170,7 +2181,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                             'collect_list': [
                                                 {
                                                     'file_path': path,
-                                                    'log_group_name': '${aws_cloudwatch_log_group.gitlab_cwagent.name}',
+                                                    # Not a TF expansion: this string is gzip-compressed
+                                                    # before being emitted, so TF never sees it to expand.
+                                                    'log_group_name': gitlab_cwagent_log_group,
                                                     # https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogStream.html
                                                     # Characters disallowed for use in a log stream name are `:` and
                                                     # `*`, so we replace any occurrence of `*` in `path` with `?`.
