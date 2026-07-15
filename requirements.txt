@@ -1,7 +1,9 @@
+--find-links https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21  # match version of chalice requirement below
 --find-links  https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5  # match version of resumablehash requirement below
 attrs==26.1.0
 boto3==1.43.39  # Match version of the `boto3-stubs` dev dependency
 botocore==1.43.39
+chalice==1.32.0+21  # match version with find-links entry above
 chevron==0.14.0  # Match with types-chevron in requirements.dev.txt
 cryptography==49.0.0
 fastavro==1.12.2

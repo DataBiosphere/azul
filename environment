@@ -75,13 +75,15 @@ _login() {
 		_login_google &&
 		_login_aws &&
 		_login_docker_ecr &&
+		_login_docker_ecr_public &&
 		_login_docker_gitlab ;
 	} ; then
 		echo >&2 \
 			"Session credentials are in effect for AWS. Additionally, you have" \
-			"been logged into Google Cloud, Amazon ECR and the GitLab Docker" \
-			"registry. Use '_logout' to invalidate the session credentials." \
-			"Alternatively, you can use _logout_completely to invalidate all" \
+			"been logged into Google Cloud, Amazon ECR, the Amazon ECR Public" \
+			"registry and the GitLab Docker registry. Use '_logout' to invalidate" \
+			"the session credentials. Alternatively, you can use _logout_completely" \
+			"to invalidate all" \
 			"credentials but this is usually not necessary."
 	else
 		echo >&2 "_login failed"
@@ -107,6 +109,7 @@ _logout_completely() {
 	_logout_google
 	_logout
 	_logout_docker_ecr
+	_logout_docker_ecr_public
 	_logout_docker_gitlab
 }
 
@@ -212,6 +215,27 @@ _logout_docker_ecr() {
 			echo >&2 "_logout_docker_ecr failed"
 			return 1
 		fi
+	fi
+}
+
+_login_docker_ecr_public() {
+	if ! (
+		set -o pipefail
+		aws ecr-public get-login-password --region us-east-1 |
+		docker login \
+			--username AWS \
+			--password-stdin \
+			public.ecr.aws
+	) ; then
+		echo >&2 "_login_docker_ecr_public failed"
+		return 1
+	fi
+}
+
+_logout_docker_ecr_public() {
+	if ! docker logout public.ecr.aws ; then
+		echo >&2 "_logout_docker_ecr_public failed"
+		return 1
 	fi
 }
 

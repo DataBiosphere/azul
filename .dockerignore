@@ -7,3 +7,13 @@
 !bin/keys/docker-apt-keyring.pgp
 !bin/checksums/gh_checksums.txt
 requirements.all.txt
+!bin/wheels/runtime
+!lambdas/layer/requirements.txt
+!lambdas/layer/requirements.trans.txt
+!src/azul
+!src/humancellatlas
+!lambdas/indexer/app.py
+!resources/static
+!lambdas/indexer/vendor/resources
+!lambdas/service/app.py
+!lambdas/service/vendor/resources

@@ -61,3 +61,20 @@ package: check_branch check_python check_aws config environ sources compile
 .PHONY: openapi
 openapi: check_python
 	python $(project_root)/scripts/generate_openapi_document.py
+
+define image
+image_ref := $$(azul_docker_registry)$$(AZUL_RESOURCE_PREFIX)-$1-$$(AZUL_DEPLOYMENT_STAGE):$$(shell git -C $$(project_root) rev-parse HEAD | cut -c1-12)
+
+.PHONY: image
+image: check_docker
+	docker build \
+	    --platform linux/amd64 \
+	    --build-arg APP=$1 \
+	    -f $$(project_root)/lambdas/Dockerfile \
+	    -t $$(image_ref) \
+	    $$(project_root)
+
+.PHONY: image_push
+image_push: image
+	docker push $$(image_ref)
+endef
