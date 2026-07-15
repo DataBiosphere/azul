@@ -19,6 +19,24 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#7730 OutOfMemory error in mirror Lambda function
+=================================================
+
+Everyone
+--------
+
+As part of deploying from this commit, run ::
+
+      source environment
+      _select foo
+      (cd terraform && make validate && terraform destroy \
+         -target aws_lambda_function.service \
+         -target aws_lambda_function.service_servicecachehealth \
+         -target aws_lambda_function.indexer \
+         -target aws_lambda_function.indexer_indexercachehealth)
+      make deploy
+
+
 #8041 Fix: GH Action schedule failed to create promotion ticket
 ===============================================================
 

@@ -796,7 +796,12 @@ emit_tf({
                 resource_name: {
                     'name': config.active_function_alias_name,
                     'function_name': '${aws_lambda_function.%s.function_name}' % resource_name,
-                    'function_version': '${aws_lambda_function.%s.version}' % resource_name
+                    'function_version': '${aws_lambda_function.%s.version}' % resource_name,
+                    'lifecycle': {
+                        'replace_triggered_by': [
+                            'aws_lambda_function.%s.package_type' % resource_name
+                        ]
+                    }
                 }
                 for app in apps
                 for resource_name in app.chalice.tf_function_resource_names
