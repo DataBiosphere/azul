@@ -1,11 +1,15 @@
 .PHONY: all
-all: layer indexer service
+all: layer registry indexer service
 
 include ../common.mk
 
 .PHONY: layer
 layer: check_env
 	$(MAKE) -C layer layer
+
+.PHONY: registry
+registry:
+	$(MAKE) -C $(project_root)/terraform create_registry
 
 .PHONY: indexer
 indexer: check_env

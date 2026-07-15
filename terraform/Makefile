@@ -36,6 +36,10 @@ validate: config
 rename_resources: validate
 	python $(project_root)/scripts/rename_resources.py
 
+.PHONY: create_registry
+create_registry: validate
+	terraform apply -target aws_ecr_repository.indexer_lambda -target aws_ecr_repository.service_lambda
+
 .PHONY: import_resources
 import_resources: rename_resources
 
