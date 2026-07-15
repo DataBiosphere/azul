@@ -5,11 +5,9 @@ import logging
 from typing import (
     Any,
     Literal,
-    Optional,
     TYPE_CHECKING,
 )
 
-import attr
 from more_itertools import (
     one,
 )
@@ -33,38 +31,30 @@ if TYPE_CHECKING:
     )
 
 
-@attr.s(frozen=False, kw_only=False, auto_attribs=True)
-class LambdaLogFilter(logging.Filter):
-    app: Optional[AzulChaliceApp] = None
+class Boto3ResourceActionLogFilter(logging.Filter):
+    """
+    The boto3.resources.action logger logs request parameters verbatim at level
+    DEBUG, which is enabled when AZUL_DEBUG is 2. That logger is used for all
+    Boto3 resources, one of which is MultipartUpload, which StorageService uses
+    to upload parts to S3 during mirroring. The parts are very large, causing a
+    memory error when the log message is being prepared in an AWS Lambda
+    function with limited memory. This filter truncates the parameters to a
+    reasonable size. It is meant to be installed on the boto3.resources.action
+    logger, so it only ever sees that logger's records.
+    """
 
     def filter(self, record):
-        if self.app is None or self.app.lambda_context is None:
-            record.aws_request_id = '00010ca1-b0ba-466f-8c58-dabbad000000'
-        else:
-            record.aws_request_id = self.app.lambda_context.aws_request_id
+        def truncate(arg):
+            if isinstance(arg, string_types):
+                return arg[:max_log_arg_len]
+            elif isinstance(arg, dict):
+                return {k: truncate(v) for k, v in arg.items()}
+            elif isinstance(arg, (tuple, list)):
+                return type(arg)(map(truncate, arg))
+            else:
+                return arg
 
-        # The boto3.resources.action logger logs request parameters verbatim at
-        # level DEBUG, which is enabled when AZUL_DEBUG is 2. That logger is
-        # used for all Boto3 resources, one of which is MultipartUpload, which
-        # StorageService uses to upload parts to S3 during mirroring. The parts
-        # are very large, causing a memory error when the log message is being
-        # prepared in an AWS Lambda function with limited memory. We need to
-        # truncate the parameters to a reasonable size.
-        #
-        if azul.config.debug > 1 and record.name == 'boto3.resources.action':
-
-            def truncate(arg):
-                if isinstance(arg, string_types):
-                    return arg[:max_log_arg_len]
-                elif isinstance(arg, dict):
-                    return {k: truncate(v) for k, v in arg.items()}
-                elif isinstance(arg, (tuple, list)):
-                    return type(arg)(map(truncate, arg))
-                else:
-                    return arg
-
-            record.args = truncate(record.args)
-
+        record.args = truncate(record.args)
         return True
 
 
@@ -81,25 +71,25 @@ lambda_log_date_format = '%Y-%m-%dT%H:%M:%S'
 def configure_app_logging(app: AzulChaliceApp, *loggers):
     _configure_log_levels(app.log, *loggers)
     if not app.loaded_dynamically:
-        # Environment is not unit test
         root_logger = logging.getLogger()
         if root_logger.hasHandlers():
-            # If a handler is already present, we're running on AWS Lambda. See
-            #
-            # https://github.com/aws/aws-lambda-python-runtime-interface-client/blob/3f43f4d0/awslambdaric/bootstrap.py#L454
-            #
-            # for details.
-            #
-            handler = one(root_logger.handlers)
-            root_formatter = logging.Formatter(lambda_log_format, lambda_log_date_format)
-            handler.setFormatter(root_formatter)
+            # On Lambda, awslambdaric has already installed a handler that writes
+            # to the runtime's log sink. We leave the handler in place and only
+            # reformat it to include the logger name. awslambdaric's own filter
+            # supplies `aws_request_id`, and its handler writes each record
+            # verbatim (no line terminator), so the format ends in a newline.
+            formatter = logging.Formatter(lambda_log_format + '\n',
+                                          lambda_log_date_format)
+            for handler in root_logger.handlers:
+                handler.setFormatter(formatter)
         else:
-            # Otherwise, we're running `chalice local`
-            handler = logging.StreamHandler()
-            logging.basicConfig(format=lambda_log_format,
-                                datefmt=lambda_log_date_format,
-                                handlers=[handler])
-        handler.addFilter(LambdaLogFilter(app))
+            # Outside Lambda (e.g. `chalice local`) there is no handler yet.
+            logging.basicConfig(format=log_format)
+        # Truncate Boto3's verbose DEBUG-level request parameters before they
+        # are formatted, to avoid exhausting a Lambda's memory. See
+        # Boto3ResourceActionLogFilter.
+        logging.getLogger('boto3.resources.action').addFilter(
+            Boto3ResourceActionLogFilter())
 
 
 def configure_script_logging(*loggers):
