@@ -140,6 +140,17 @@
                             }
                         },
                         {
+                            "name": "biomaterial_name",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "entity_type",
                             "namespace": "samples",
                             "type": {
@@ -234,6 +245,17 @@
                             }
                         },
                         {
+                            "name": "biomaterial_name",
+                            "namespace": "sample_cell_lines",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "cell_line_type",
                             "namespace": "sample_cell_lines",
                             "type": {
@@ -284,6 +306,17 @@
                             }
                         },
                         {
+                            "name": "biomaterial_name",
+                            "namespace": "sample_organoids",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "model_organ",
                             "namespace": "sample_organoids",
                             "type": {
@@ -324,6 +357,17 @@
                         },
                         {
                             "name": "biomaterial_id",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_name",
                             "namespace": "sample_specimens",
                             "type": {
                                 "items": [
@@ -450,6 +494,17 @@
                             }
                         },
                         {
+                            "name": "biomaterial_name",
+                            "namespace": "sequencing_inputs",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "sequencing_input_type",
                             "namespace": "sequencing_inputs",
                             "type": {
@@ -479,6 +534,17 @@
                         },
                         {
                             "name": "biomaterial_id",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_name",
                             "namespace": "specimens",
                             "type": {
                                 "items": [
@@ -605,6 +671,17 @@
                             }
                         },
                         {
+                            "name": "biomaterial_name",
+                            "namespace": "cell_suspensions",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "total_estimated_cells",
                             "namespace": "cell_suspensions",
                             "type": [
@@ -682,6 +759,17 @@
                             }
                         },
                         {
+                            "name": "biomaterial_name",
+                            "namespace": "cell_lines",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "cell_line_type",
                             "namespace": "cell_lines",
                             "type": {
@@ -722,6 +810,17 @@
                         },
                         {
                             "name": "biomaterial_id",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_name",
                             "namespace": "donors",
                             "type": {
                                 "items": [
@@ -845,6 +944,17 @@
                         },
                         {
                             "name": "biomaterial_id",
+                            "namespace": "organoids",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_name",
                             "namespace": "organoids",
                             "type": {
                                 "items": [
@@ -1055,6 +1165,17 @@
                             }
                         },
                         {
+                            "name": "protocol_name",
+                            "namespace": "analysis_protocols",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "workflow",
                             "namespace": "analysis_protocols",
                             "type": {
@@ -1073,6 +1194,17 @@
                     "fields": [
                         {
                             "name": "document_id",
+                            "namespace": "imaging_protocols",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "protocol_name",
                             "namespace": "imaging_protocols",
                             "type": {
                                 "items": [
@@ -1120,6 +1252,17 @@
                                 ],
                                 "type": "array"
                             }
+                        },
+                        {
+                            "name": "protocol_name",
+                            "namespace": "library_preparation_protocols",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
                         }
                     ],
                     "name": "library_preparation_protocols",
@@ -1156,6 +1299,17 @@
                                 "items": [
                                     "null",
                                     "boolean"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "protocol_name",
+                            "namespace": "sequencing_protocols",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
                                 ],
                                 "type": "array"
                             }

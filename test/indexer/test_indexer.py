@@ -2031,6 +2031,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
         donor = {
             'document_id': 'b111e5bf-e907-47f9-8eed-75b2ec5536c5',
             'biomaterial_id': 'Human_62',
+            'biomaterial_name': 'Human_62_Kidney_donor',
             'biological_sex': 'male',
             'genus_species': ['Homo sapiens'],
             'development_stage': 'human adult stage',
@@ -2060,7 +2061,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 k: (v if isinstance(v, list) else [v]) +
                    ([] if k == 'organism_age_range' or True else [None])
                 for k, v in donor.items()
-                if k != 'biomaterial_id'
+                if k not in ('biomaterial_id', 'biomaterial_name')
             }
         }
         hits = self._get_all_hits()
