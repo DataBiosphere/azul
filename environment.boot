@@ -3,4 +3,4 @@ azul_python_image=docker.io/library/python@sha256:1024754b8689b76ec7a8a70cab2956
 azul_docker_version=29.6.2
 azul_terraform_version=1.15.8
 azul_awscli_version=2.36.4
-azul_ghcli_version=2.95.0
+azul_ghcli_version=2.96.0
