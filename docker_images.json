@@ -1,5 +1,5 @@
 {
-    "docker.io/library/docker:29.6": {
+    "docker.io/library/docker:29.6.2": {
         "digest": "sha256:bfec1f5159c63a81ca6fdedbd81404d2c0e16378ed0feec3bb3fbf3998847659",
         "mirror_digest": "sha256:90050b3b1ba4fedcc950876c87cdd05e61b7fa1ff2f33bb1250f9c50617c5574",
         "parts": {
@@ -122,7 +122,7 @@
             }
         }
     },
-    "docker.io/library/docker:29.6-dind": {
+    "docker.io/library/docker:29.6.2-dind": {
         "digest": "sha256:bfec1f5159c63a81ca6fdedbd81404d2c0e16378ed0feec3bb3fbf3998847659",
         "mirror_digest": "sha256:90050b3b1ba4fedcc950876c87cdd05e61b7fa1ff2f33bb1250f9c50617c5574",
         "parts": {
