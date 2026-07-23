@@ -149,14 +149,6 @@ class AzulTestCase(TestCase):
 
                 'Call to deprecated function (or staticmethod) patch_source_cache',
 
-                # FIXME: DeprecationWarning for ES body parameter
-                #        https://github.com/DataBiosphere/azul/issues/5912
-                #
-                RE(
-                    'The \'body\' parameter is deprecated for the \'.*\' API '
-                    'and will be removed in .*. Instead use .*'
-                ),
-
                 # FIXME: DeprecationWarning for patch_source_cache
                 #        https://github.com/DataBiosphere/azul/issues/7838
                 'Instead of decorating your test case, or its test methods in '
