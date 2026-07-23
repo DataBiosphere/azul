@@ -1,4 +1,4 @@
-annotated-types==0.7.0
+annotated-types==0.8.0
 ast_serialize==0.6.0
 blessed==1.47.0
 botocore-stubs==1.43.14
