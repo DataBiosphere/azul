@@ -26,6 +26,9 @@ import azul
 from azul.chalice import (
     AzulChaliceApp,
 )
+from azul.http import (
+    AcceptEncodingClient,
+)
 from azul.logging import (
     azul_log_level,
     configure_test_logging,
@@ -82,10 +85,8 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertEqual(5, len(azul_log.output))
                     info = {
                         'host': f'{host}:{port}',
-                        # FIXME: Use compressed encoding
-                        #        https://github.com/DataBiosphere/azul/issues/7990
-                        'accept-encoding': 'identity',
                         'user-agent': 'python-urllib3/2.7.0',
+                        'accept-encoding': AcceptEncodingClient.accept_encoding_header(),
                     }
                     self.assertEqual(f'INFO:azul.chalice:Received GET request for {path!r}, '
                                      f"with {json.dumps({'query': None, 'headers': info})}.",
