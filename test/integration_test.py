@@ -1687,14 +1687,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             public_source_ids = list_source_ids()
             self.assertIn(public_source.id, public_source_ids)
             self.assertNotIn(ma_source.id, public_source_ids)
-        with self._unregistered_service_account_credentials:
-            self.assertEqual(public_source_ids, list_source_ids())
         self.assertEqual(public_source_ids, list_source_ids())
         invalid_auth = AccessTokenAuthentication('ya29.invalid')
         with self.assertRaises(UnauthorizedError):
             TDRClient.for_registered_user(invalid_auth)
         invalid_provider = UserCredentialsProvider(invalid_auth)
         invalid_client = CredentialedClient(credentials_provider=invalid_provider)
+        with self._unregistered_service_account_credentials:
+            self.assertEqual(401, self._get_url_unchecked(GET, url).status)
         with self._authorization_context(invalid_client._http_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 
