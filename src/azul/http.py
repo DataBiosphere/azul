@@ -189,9 +189,36 @@ class DisableCrossHostRedirectClient(HttpClientDecorator):
         return super().urlopen(method, url, *args, **kwargs)
 
 
+class AcceptEncodingClient(HttpClientDecorator):
+    """
+    A client that informs servers that it accepts compressed responses via the
+    ``accept-encoding`` request header. The client will not overwrite or modify
+    any user-provided values for that header.
+    """
+
+    @classmethod
+    @cache
+    def accept_encoding_header(cls) -> str:
+        # The exact set of encodings that urllib can natively handle depends on
+        # whether the current python executable was compiled with support for
+        # brotli and/or zstd.
+        headers_str = urllib3.make_headers(accept_encoding=True)['accept-encoding']
+        headers_list = headers_str.split(',')
+        assert 'gzip' in headers_list, headers_list
+        assert 'deflate' in headers_list, headers_list
+        return headers_str
+
+    def urlopen(self, method, url, *args, **kwargs) -> urllib3.BaseHTTPResponse:
+        headers = kwargs.get('headers', {})
+        headers.setdefault('accept-encoding', self.accept_encoding_header())
+        kwargs['headers'] = headers
+        return super().urlopen(method, url, *args, **kwargs)
+
+
 def http_client(log: logging.Logger | None = None) -> HttpClient:
     client = urllib3.PoolManager(ca_certs=certifi.where())
     client = DisableCrossHostRedirectClient(client)
+    client = AcceptEncodingClient(client)
     if log is not None:
         client = LoggingHttpClient(client, log)
     return StatusRetryHttpClient(client)
