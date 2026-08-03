@@ -181,6 +181,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
         sources = json_sequence_of_mappings(es_hit['sources'])
         bundles = json_element_mappings(es_hit['bundles'])
         source: SourceRef = SourceRef.from_json(one(sources))
+        azul_slug = self.plugin.azul_slug(es_hit)
         return {
             'entryId': json_str(es_hit['entity_id']),
             # Note that there is a brittle coupling that must be maintained
@@ -188,7 +189,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
             # renamed fields in `Plugin.manifest_config`.
             'sources': list(map(self._make_source, sources)),
             'bundles': list(map(self._make_bundle, bundles)),
-            **self._make_contents(source, contents)
+            **self._make_contents(source, contents, azul_slug)
         }
 
     def _make_source(self, es_source: JSON) -> MutableJSON:
@@ -208,16 +209,22 @@ class AnvilSearchResponseStage(SearchResponseStage):
             self._special_fields.bundle_version.name_in_hit: json_str(es_bundle['version'])
         }
 
-    def _make_contents(self, source: SourceRef, es_contents: JSON) -> MutableJSON:
+    def _make_contents(self,
+                       source: SourceRef,
+                       es_contents: JSON,
+                       azul_slug: str | list[str] | None
+                       ) -> MutableJSON:
         return {
             inner_entity_type: (
                 [
                     self._pivotal_entity(source,
                                          inner_entity_type,
-                                         json_mapping(one(inner_entities)))
+                                         json_mapping(one(inner_entities)),
+                                         azul_slug)
                 ]
                 if inner_entity_type == self.entity_type else
-                list(map(partial(self._non_pivotal_entity, inner_entity_type), inner_entities))
+                list(map(partial(self._non_pivotal_entity, inner_entity_type, azul_slug),
+                         inner_entities))
             )
             for inner_entity_type, inner_entities in json_item_sequences(es_contents)
         }
@@ -226,6 +233,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
                         source: SourceRef,
                         inner_entity_type: str,
                         inner_entity: JSON,
+                        azul_slug: str | list[str] | None,
                         ) -> MutableJSON:
         inner_entity = copy_json(inner_entity)
         if inner_entity_type == 'files':
@@ -234,18 +242,24 @@ class AnvilSearchResponseStage(SearchResponseStage):
                                                       drs_uri=optional(json_str, inner_entity['drs_uri']))
             inner_entity['azul_mirror_uri'] = self._file_mirror_uri(source, inner_entity)
             inner_entity.pop('version', None)
+        elif inner_entity_type == 'datasets' and azul_slug is not None:
+            inner_entity['azul_slug'] = copy_any_json(azul_slug)
         return inner_entity
 
     def _non_pivotal_entity(self,
                             inner_entity_type: str,
+                            azul_slug: str | list[str] | None,
                             inner_entity: JSON
                             ) -> MutableJSON:
         fields = self._non_pivotal_fields_by_entity_type[inner_entity_type]
-        return {
+        result: MutableJSON = {
             k: copy_any_json(v)
             for k, v in inner_entity.items()
             if k in fields
         }
+        if inner_entity_type == 'datasets' and azul_slug is not None:
+            result['azul_slug'] = copy_any_json(azul_slug)
+        return result
 
     @cached_property
     def _non_pivotal_fields_by_entity_type(self) -> dict[str, set[str]]:
