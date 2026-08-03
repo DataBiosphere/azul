@@ -356,11 +356,13 @@ class HCASearchResponseStage(SearchResponseStage):
     def make_projects(self, source: SourceRef, entry) -> MutableJSONs:
         projects = []
         contents = entry['contents']
+        azul_slug = self.plugin.azul_slug(entry)
         for project in contents['projects']:
             translated_project = {
                 'projectId': project['document_id'],
                 'projectTitle': project.get('project_title'),
                 'projectShortname': project['project_short_name'],
+                'azulSlug': azul_slug,
                 'laboratory': sorted(set(project.get('laboratory', [None]))),
                 'estimatedCellCount': project['estimated_cell_count'],
                 'isTissueAtlasProject': project['is_tissue_atlas_project'],
