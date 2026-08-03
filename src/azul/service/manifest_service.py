@@ -1627,6 +1627,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
             for hit in response.hits:
                 doc = self._hit_to_doc(hit)
                 azul_slug = self.metadata_plugin.azul_slug(doc)
+                assert isinstance(azul_slug, list), R('Expected a list of Azul slugs', doc)
+                azul_slug = one(azul_slug)
                 contents = json_mapping(doc['contents'])
                 files = json_sequence(contents['files'])
                 file = json_mapping(one(files))

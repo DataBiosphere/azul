@@ -327,15 +327,24 @@ class Plugin(MetadataPlugin[HCABundle]):
         file_name=SpecialField(name='fileName', name_in_hit='name', type=pass_thru_str)
     )
 
-    def azul_slug(self, document: JSON) -> str:
+    def azul_slug(self, document: JSON) -> str | list[str] | None:
+        def slug(title: str) -> str:
+            return strings.azul_slug(title,
+                                     words_left=5,
+                                     words_right=2,
+                                     word_length=12,
+                                     hash_length=6)
+
         contents = json_mapping(document['contents'])
         project = one(json_element_mappings(contents['projects']))
-        title = one(json_element_strings(project['project_title']))
-        return strings.azul_slug(title,
-                                 words_left=5,
-                                 words_right=2,
-                                 word_length=12,
-                                 hash_length=6)
+        project_title = project.get('project_title')
+        if project_title is None:
+            return None
+        elif isinstance(project_title, list):
+            return [slug(title) for title in json_element_strings(project_title)]
+        else:
+            return slug(json_str(project_title))
+
 
     @property
     def root_entity_type(self) -> str:

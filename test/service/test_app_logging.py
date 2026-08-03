@@ -157,7 +157,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                 elif debug == 1:
                     expected_log = f'… with a response body starting in {body[:prefix_len]}'
                 elif debug > 1:
-                    expected_log = f'… with a response body of length 9163 being {body}'
+                    expected_log = f'… with a response body of length 9220 being {body}'
                 else:
                     assert False
                 self.assertEqual(expected_log, body_log_message)

@@ -555,10 +555,11 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         raise NotImplementedError
 
     @abstractmethod
-    def azul_slug(self, document: JSON) -> str:
+    def azul_slug(self, document: JSON) -> str | list[str] | None:
         """
         A collision-resistant slug derived from the title of the project (HCA)
-        or dataset (AnVIL).
+        or dataset (AnVIL). The result mirrors the shape of the title in the
+        document: a string, a list of strings, or None.
         """
         raise NotImplementedError
 
