@@ -478,44 +478,40 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     api_bundle: api.Bundle
 
     @classmethod
-    def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
-        agg_cls: type[EntityAggregator]
+    def _aggregator_cls(cls, entity_type: EntityType) -> type[EntityAggregator]:
         if entity_type == 'files':
-            agg_cls = FileAggregator
+            return FileAggregator
         elif entity_type in SampleTransformer.inner_entity_types():
-            agg_cls = SampleAggregator
+            return SampleAggregator
         elif entity_type == 'specimens':
-            agg_cls = SpecimenAggregator
+            return SpecimenAggregator
         elif entity_type == 'cell_suspensions':
-            agg_cls = CellSuspensionAggregator
+            return CellSuspensionAggregator
         elif entity_type == 'cell_lines':
-            agg_cls = CellLineAggregator
+            return CellLineAggregator
         elif entity_type == 'donors':
-            agg_cls = DonorOrganismAggregator
+            return DonorOrganismAggregator
         elif entity_type == 'organoids':
-            agg_cls = OrganoidAggregator
+            return OrganoidAggregator
         elif entity_type == 'projects':
-            agg_cls = ProjectAggregator
+            return ProjectAggregator
         elif entity_type in {
             'analysis_protocols',
             'imaging_protocols',
             'library_preparation_protocols',
             'sequencing_protocols'
         }:
-            agg_cls = ProtocolAggregator
+            return ProtocolAggregator
         elif entity_type == 'sequencing_inputs':
-            agg_cls = SequencingInputAggregator
+            return SequencingInputAggregator
         elif entity_type == 'sequencing_processes':
-            agg_cls = SequencingProcessAggregator
+            return SequencingProcessAggregator
         elif entity_type in ('matrices', 'contributed_analyses'):
-            agg_cls = MatricesAggregator
+            return MatricesAggregator
         elif entity_type == 'dates':
-            agg_cls = DateAggregator
+            return DateAggregator
         else:
-            agg_cls = SimpleAggregator
-        return agg_cls(cls.entity_type(), entity_type,
-                       is_hot=(issubclass(cls, ReplicaTransformer)
-                               and entity_type in cls.hot_entity_types().values()))
+            return SimpleAggregator
 
     def _deduplicate[V: AnyJSON](self,
                                  *,

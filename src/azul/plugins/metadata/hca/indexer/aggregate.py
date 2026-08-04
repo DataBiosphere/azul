@@ -256,12 +256,12 @@ class ProjectAggregator(SimpleAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
         if field == 'document_id':
-            # If any project IDs are missing from the aggregate, those projects
-            # will be omitted during the verbatim handover. Projects are a "hot"
-            # entity type, and we can't track their hubs in replica documents,
-            # so we rely on the inner entity IDs instead. We also need to
-            # aggregate `document_id` to allow filtering by `projectId` on
-            # non-project endpoints.
+            # If any project IDs were missing from the aggregate, those projects
+            # would be omitted during the verbatim handover. Projects are a
+            # "hot" entity type, and we can't track their hubs in replica
+            # documents, so we rely on the inner entity IDs instead. We also
+            # need to aggregate `document_id` to allow filtering by `projectId`
+            # on non-project endpoints.
             return SetAccumulator(max_size=100)
         elif field in ('project_description',
                        'contact_names',

@@ -15,6 +15,8 @@ from typing import (
     TYPE_CHECKING,
 )
 
+import attrs
+
 from azul.indexer.document import (
     EntityType,
 )
@@ -556,25 +558,21 @@ class UniqueValueCountAccumulator[V:Hashable](Accumulator[V, int]):
         return len(self.inner.get())
 
 
+@attrs.frozen
 class EntityAggregator(metaclass=ABCMeta):
+    #: The entity type of the aggregate document
+    #:
+    outer_entity_type: EntityType
 
-    def __init__(self,
-                 outer_entity_type: EntityType,
-                 entity_type: EntityType,
-                 is_hot: bool = False):
-        """
-        :param outer_entity_type: The entity type of the aggregate document.
+    #: The entity type of the inner entities being accumulated
+    #:
+    entity_type: EntityType
 
-        :param entity_type: The entity type of the inner entities being
-                            accumulated.
-
-        :param is_hot: If the inner entity is a "hot" entity type. If true,
-                       complete accumulation of `document_id` will be enforced,
-                       since replicas for these entities don't track hub IDs.
-        """
-        self.outer_entity_type = outer_entity_type
-        self.entity_type = entity_type
-        self.is_hot = is_hot
+    #: Whether the inner entity is a "hot" entity type. If true, complete
+    #: accumulation of `document_id` will be enforced, since replicas for these
+    #: entities don't track hub IDs
+    #:
+    is_hot: bool = False
 
     def _transform_entity(self, entity: JSON) -> JSON:
         return entity
