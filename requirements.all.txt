@@ -24,7 +24,7 @@ flake8==7.3.0
 furl==2.1.4
 gevent==26.7.0
 gitdb==4.0.12
-gitpython==3.1.54
+gitpython==3.1.57
 google-api-core==2.33.0
 google-api-python-client==2.198.0
 google-auth==2.56.2
