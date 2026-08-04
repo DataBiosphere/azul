@@ -5,11 +5,9 @@ from abc import (
 from collections.abc import (
     Iterable,
 )
-from typing import (
-    Optional,
-)
 
 import attr
+import attrs
 
 from azul.field_type import (
     FieldTypes,
@@ -113,12 +111,22 @@ class Transformer(metaclass=ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    @abstractmethod
-    def aggregator(cls, entity_type: EntityType) -> Optional[EntityAggregator]:
+    def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
         """
         Returns the aggregator to be used for inner entities of the given type
         that occur in contributions to an entity of this transformer's (outer)
-        entity type.
+        entity type. Returns None if these entities should not be aggregated.
+        """
+        aggregator_cls = cls._aggregator_cls(entity_type)
+        return aggregator_cls(cls.entity_type(), entity_type)
+
+    @classmethod
+    @abstractmethod
+    def _aggregator_cls(cls, entity_type: EntityType) -> type[EntityAggregator]:
+        """
+        Returns the type of aggregator to be used for inner entities of the
+        given type that occur in contributions to an entity of this
+        transformer's (outer) entity type.
         """
         raise NotImplementedError
 
@@ -194,6 +202,13 @@ class Transformer(metaclass=ABCMeta):
 
 
 class ReplicaTransformer(Transformer, metaclass=ABCMeta):
+
+    @classmethod
+    def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
+        aggregator = super().aggregator(entity_type)
+        if aggregator is not None and entity_type in cls.hot_entity_types().values():
+            aggregator = attrs.evolve(aggregator, is_hot=True)
+        return aggregator
 
     @classmethod
     @abstractmethod
