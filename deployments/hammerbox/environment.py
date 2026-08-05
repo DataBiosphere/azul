@@ -1247,7 +1247,7 @@ anvil12_sources = union(anvil11_sources, 369, delta([
     source('262cd5df', 'GREGOR_R03_GRU_20250612_ANV5_202506271443', pop),
     source('f71485a8', 'GREGOR_R04_HMB_20250910_ANV5_202509221540', no_ma_mirror),
     source('3b09455f', 'GREGoR_R01_GRU_20240208_ANV5_202510101245', pop),
-    source('25d953fe', 'GTEx_public_data_20240117_ANV5_202510101251'),
+    source('25d953fe', 'GTEx_public_data_20240117_ANV5_202510101251', no_mirror),
     source('8285aa5e', 'GTEx_v10_hg38_20241105_ANV5_202511210107', no_ma_mirror),
     source('3dddda4d', 'HPRC_20240401_ANV5_202511121431'),
     source('f76f7f04', 'IGVF_GRU_PUB_R1_20251121_ANV5_202511210201', no_ma_mirror),
