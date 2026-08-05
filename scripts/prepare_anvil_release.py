@@ -192,14 +192,18 @@ def cmd_config(args):
         sys.exit('No valid entries in the specified range')
 
     delta_entries = []
-    added = 0
+    new_count = reintroduced_count = updated_count = 0
     for gp, snapshot, flag in new_entries:
         ds = _dataset_name(snapshot)
         ds_lc = ds.lower()
-        is_new = ds_lc not in dataset_popped or dataset_popped[ds_lc]
-        if is_new:
-            added += 1
+        if ds_lc not in dataset_popped:
+            new_count += 1
+        elif dataset_popped[ds_lc]:
+            reintroduced_count += 1
+        else:
+            updated_count += 1
         delta_entries.append((gp, snapshot, flag, ds))
+    added = new_count + reintroduced_count
 
     delta_entries.sort(key=lambda e: e[3])
 
@@ -230,7 +234,9 @@ def cmd_config(args):
     print(output, file=sys.stderr)
     print('\n--- Copied to clipboard ---', file=sys.stderr)
     print(f'Previous: {prev_name}_sources (count: {prev_count})', file=sys.stderr)
-    print(f'Delta entries: {len(delta_entries)} ({added} new datasets)', file=sys.stderr)
+    print(f'Delta entries: {len(delta_entries)} '
+          f'({new_count} new, {reintroduced_count} reintroduced, {updated_count} updated)',
+          file=sys.stderr)
     print(f'Expected count: {expected_count}', file=sys.stderr)
 
 
