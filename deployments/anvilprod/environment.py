@@ -54,9 +54,10 @@ def _source(source_type: Literal['bigquery', 'parquet'],
 
 def delta(items: list[tuple[DatasetName, SourceItem | None]]
           ) -> dict[DatasetName, SourceItem | None]:
-    result = dict(items)
+    keys = [k for k, _ in items]
+    assert keys == sorted(keys), 'input not sorted'
+    result = {k.lower(): v for k, v in items}
     assert len(items) == len(result), 'collisions detected'
-    assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
@@ -1189,10 +1190,8 @@ anvil11_sources = union(anvil10_sources, 366, delta([
     source('b2659034', 'CCDG_Broad_NP_Epilepsy_USAVANControls_HMB_GSO_GSA_MD_20250721_ANV5_202508052211', no_ma_mirror),
     source('cf9e28f1', 'CCDG_Broad_NP_Epilepsy_USAVAN_HMB_GSO_GSA_MD_20250721_ANV5_202508052202', no_ma_mirror),
     source('11a5f960', 'CCDG_Broad_NP_Epilepsy_USAVAN_HMB_GSO_WES_20250721_ANV5_202507300959', no_ma_mirror),
-    # Supersedes snapshot ccdg_broad_np_epilepsy_usavancontrols_hmb_gso_wes_… popped below
     source('ce5b4d0e', 'CCDG_Broad_NP_Epilepsy_USAVANcontrols_HMB_GSO_WES_20250721_ANV5_202507301007', no_ma_mirror),
     source('84b1d212', 'CCDG_Broad_NP_Epilepsy_ZAFAGN_DS_EPI_COMO_MDS_GSA_MD_20250721_ANV5_202508052220', no_ma_mirror),
-    # Supersedes snapshot ccdg_broad_np_epilepsy_zafagn_ds_epi_como_mds_wes… popped below
     source('4b531498', 'CCDG_Broad_NP_Epilepsy_ZAFAGN_DS_EPI_COMO_MDS_WES_20250721_ANV5_202507301017', no_ma_mirror),
     source('bdc5f5a9', 'CCDG_Broad_Spalletta_HMB_NPU_MDS_WES_20250721_ANV5_202507301024', no_ma_mirror),
     source('0a21cbfd', 'CMG_BaylorHopkins_HMB_IRB_NPU_WES_20221020_ANV5_202402290528', pop),
@@ -1211,8 +1210,6 @@ anvil11_sources = union(anvil10_sources, 366, delta([
     source('04b6f4d8', 'PAGE_BioMe_GRU_WGS_20250224_ANV5_202502241731', no_ma_mirror),
     source('af4c978f', 'PAGE_MEC_GRU_WGS_20250224_ANV5_202502241739', no_ma_mirror),
     source('71b74bcf', 'PAGE_Stanford_Global_Reference_Panel_GRU_WGS_20250224_ANV5_202502241745', no_ma_mirror),
-    source('ff012258', 'ccdg_broad_np_epilepsy_usavancontrols_hmb_gso_wes_20221101_ANV5_202409302105', pop),
-    source('61b6b42b', 'ccdg_broad_np_epilepsy_zafagn_ds_epi_como_mds_wes_20221026_ANV5_202409302116', pop),
     # @formatter:on
 ]))
 
@@ -1341,7 +1338,7 @@ anvil14_sources = union(anvil13_sources, 420, delta([
     source('4154ac8d', 'nhp_dGTEx_V1_20260416_ANV5_202606111155'),
 ]))
 
-anvil15_sources = union(anvil14_sources, 466, delta([
+anvil15_sources = union(anvil14_sources, 464, delta([
     # @formatter:off
     source('37bfbb88', '1000G_PRIMED_data_model_20240410_ANV6_202607071448'),
     source('6ec8e094', '1000G_high_coverage_2019_20230517_ANV6_202607071430'),

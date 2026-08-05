@@ -11,19 +11,25 @@ Workflow:
        Excel (.xlsx). A CSV export only includes the first tab; XLSX is required
        to get the 'AnVIL Prod' sheet.
 
-    3. python3 scripts/prepare_anvil_release.py config <xlsx> <first> [<last>]
+    3. python3 scripts/prepare_anvil_release.py config <xlsx> <catalog> <first> [<last>]
 
-       Generates the new ``anvilXY_sources`` block from the range of rows
-       between the snapshot named ``<first>`` and the snapshot named ``<last>``
-       (both inclusive). If ``<last>`` is omitted, the range extends to the last
-       row of the sheet. The script copies its output into the clipboard. Paste
-       the output into ``deployments/anvilprod/environment.py``.
+       Generates the ``<catalog>_sources`` block (e.g. ``anvil15_sources``) from
+       the range of rows between the snapshot named ``<first>`` and the snapshot
+       named ``<last>`` (both inclusive). If ``<last>`` is omitted, the range
+       extends to the last row of the sheet. The script copies its output into
+       the clipboard. Paste the output into
+       ``deployments/anvilprod/environment.py``. The command is idempotent: it
+       always derives ``prev`` as the catalog immediately below ``<catalog>``,
+       so running it again after applying the output still produces the same
+       block.
 
-    4. python3 scripts/prepare_anvil_release.py column <xlsx>
+    4. python3 scripts/prepare_anvil_release.py column <xlsx> <catalog>
 
-       Generates corrected column values from the ``anvilXY_sources`` block
+       Generates corrected column values from the ``<catalog>_sources`` block
        added in step 3 and the same spreadsheet. Paste the clipboard content
-       into the ``anvilXY`` column.
+       into the ``<catalog>`` column. Idempotent: the specific catalog to
+       process is chosen by name rather than by picking the last one in
+       env.py.
 """
 import argparse
 import os
@@ -86,20 +92,23 @@ _source_re = re.compile(
 )
 
 
-def _parse_catalogs(env_content):
+def _parse_catalogs(env_content, stop_before=None):
     """
-    Parse all catalog definitions. Returns the list of (name, count) tuples and
-    a dict mapping each dataset to whether its most recent entry was a pop.
+    Parse catalog definitions up to (but excluding) ``stop_before``. Returns the
+    list of (name, count) tuples and a dict mapping each dataset (lowercased)
+    to whether its most recent entry was a pop.
     """
     catalogs = []
     dataset_popped = {}
     for match in _catalog_re.finditer(env_content):
         cat_name = match.group(1)
+        if stop_before is not None and cat_name == stop_before:
+            break
         count = int(match.group(3))
         catalogs.append((cat_name, count))
         for src in _source_re.finditer(match.group(4)):
             flag_str = src.group(3)
-            ds = _dataset_name(src.group(2))
+            ds = _dataset_name(src.group(2)).lower()
             dataset_popped[ds] = flag_str is not None and 'pop' in flag_str
     return catalogs, dataset_popped
 
@@ -108,12 +117,17 @@ def cmd_config(args):
     with open(_env_path()) as f:
         env_content = f.read()
 
-    catalogs, dataset_popped = _parse_catalogs(env_content)
-    prev_name, prev_count = catalogs[-1]
+    new_name = args.catalog
+    m = re.match(r'anvil(\d+)$', new_name)
+    if not m:
+        sys.exit(f'Invalid catalog name {new_name!r} (expected form: anvilN)')
+    new_num = int(m.group(1))
+    prev_name = 'anvil' if new_num == 1 else f'anvil{new_num - 1}'
 
-    m = re.match(r'anvil(\d+)', prev_name)
-    new_num = int(m.group(1)) + 1 if m else 1
-    new_name = f'anvil{new_num}'
+    catalogs, dataset_popped = _parse_catalogs(env_content, stop_before=new_name)
+    if not catalogs or catalogs[-1][0] != prev_name:
+        sys.exit(f'Previous catalog {prev_name!r} not found in {_env_path()}')
+    prev_count = catalogs[-1][1]
 
     wb = openpyxl.load_workbook(args.xlsx, data_only=True)
     ws = wb['AnVIL Prod']
@@ -181,7 +195,8 @@ def cmd_config(args):
     added = 0
     for gp, snapshot, flag in new_entries:
         ds = _dataset_name(snapshot)
-        is_new = ds not in dataset_popped or dataset_popped[ds]
+        ds_lc = ds.lower()
+        is_new = ds_lc not in dataset_popped or dataset_popped[ds_lc]
         if is_new:
             added += 1
         delta_entries.append((gp, snapshot, flag, ds))
@@ -190,12 +205,24 @@ def cmd_config(args):
 
     expected_count = prev_count + added
 
-    result = [f'{new_name}_sources = union({prev_name}_sources, {expected_count}, delta([']
+    source_lines = []
+    any_noqa = False
     for gp, snapshot, flag, ds in delta_entries:
         if flag:
-            result.append(f"    source('{gp}', '{snapshot}', {flag}),")
+            line = f"    source('{gp}', '{snapshot}', {flag}),"
         else:
-            result.append(f"    source('{gp}', '{snapshot}'),")
+            line = f"    source('{gp}', '{snapshot}'),"
+        if len(line) > 120:
+            line += '  # noqa: E501'
+            any_noqa = True
+        source_lines.append(line)
+
+    result = [f'{new_name}_sources = union({prev_name}_sources, {expected_count}, delta([']
+    if any_noqa:
+        result.append('    # @formatter:off')
+    result.extend(source_lines)
+    if any_noqa:
+        result.append('    # @formatter:on')
     result.append(']))')
 
     output = '\n'.join(result)
@@ -209,19 +236,24 @@ def cmd_config(args):
 
 def cmd_column(args):
     xlsx_path = args.xlsx
+    latest_name = args.catalog
+
+    m = re.match(r'anvil(\d+)$', latest_name)
+    if not m:
+        sys.exit(f'Invalid catalog name {latest_name!r} (expected form: anvilN)')
+    latest_num = int(m.group(1))
+    prev_name = 'anvil' if latest_num == 1 else f'anvil{latest_num - 1}'
 
     with open(_env_path()) as f:
         env_content = f.read()
 
-    catalogs = list(_catalog_re.finditer(env_content))
-    latest = catalogs[-1]
-    latest_name = latest.group(1)
-    prev_ref = latest.group(2)
-
-    if prev_ref.endswith('_sources'):
-        prev_name = prev_ref[:-len('_sources')]
-    else:
-        sys.exit(f'Cannot determine previous catalog from: {prev_ref}')
+    latest = None
+    for match in _catalog_re.finditer(env_content):
+        if match.group(1) == latest_name:
+            latest = match
+            break
+    if latest is None:
+        sys.exit(f'Catalog {latest_name!r} not found in {_env_path()}')
 
     latest_start = latest.start()
     before_latest = env_content[:latest_start]
@@ -229,12 +261,12 @@ def cmd_column(args):
     all_source_calls = _source_re.findall(before_latest)
     prev_catalog = {}
     for gp, snapshot, flags in all_source_calls:
-        ds = _dataset_name(snapshot)
+        ds = _dataset_name(snapshot).lower()
         prev_catalog[ds] = _full_snapshot_name(snapshot)
 
     latest_delta = latest.group(4)
     delta_sources = _source_re.findall(latest_delta)
-    delta_datasets = {_dataset_name(s) for _, s, _ in delta_sources}
+    delta_datasets = {_dataset_name(s).lower() for _, s, _ in delta_sources}
 
     old_snapshots_to_clear = set()
     for ds in delta_datasets:
@@ -314,6 +346,7 @@ def main():
         help='Generate anvilXY_sources block from a downloaded spreadsheet.'
     )
     config_parser.add_argument('xlsx', help='Path to the downloaded spreadsheet (.xlsx)')
+    config_parser.add_argument('catalog', help='Catalog name to generate (e.g., anvil15)')
     config_parser.add_argument('first', help='Snapshot Name of the first row to include')
     config_parser.add_argument('last', nargs='?', default=None,
                                help='Snapshot Name of the last row to include (default: end of sheet)')
@@ -324,6 +357,7 @@ def main():
         help='Generate corrected anvilXY column values from a downloaded spreadsheet.'
     )
     column_parser.add_argument('xlsx', help='Path to the downloaded spreadsheet (.xlsx)')
+    column_parser.add_argument('catalog', help='Catalog name to process (e.g., anvil15)')
     column_parser.set_defaults(func=cmd_column)
 
     args = parser.parse_args()
