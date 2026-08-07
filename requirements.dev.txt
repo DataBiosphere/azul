@@ -7,7 +7,7 @@ coverage==7.15.2
 docker==7.2.0
 flake8==7.3.0
 gevent==26.7.0
-gitpython==3.1.54
+gitpython==3.1.58
 google-api-python-client==2.198.0
 google-cloud-bigquery-reservation==1.25.0
 google-cloud-storage==3.13.0
