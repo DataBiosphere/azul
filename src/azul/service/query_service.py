@@ -254,11 +254,16 @@ class FilterStage(_OpenSearchStage[Response, Response]):
                 if operator in ('is', 'is_not'):
                     field_type = self.service.field_type(self.catalog, field_path)
                     if isinstance(field_type, Nested):
-                        term_queries = []
-                        for nested_field, nested_value in one(values).items():
-                            nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
-                            term_queries.append(Q('term', **nested_body))
-                        query = Q('nested', path=dotted(field_path), query=Q('bool', must=term_queries))
+                        nested_queries = []
+                        for value in values:
+                            term_queries = []
+                            for nested_field, nested_value in value.items():
+                                nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
+                                term_queries.append(Q('term', **nested_body))
+                            nested_queries.append(Q('nested',
+                                                    path=dotted(field_path),
+                                                    query=Q('bool', must=term_queries)))
+                        query = Q('bool', should=nested_queries)
                     else:
                         query = Q('terms', **{dotted(field_path, 'keyword'): values})
                         translated_none = field_type.to_index(None)
@@ -442,16 +447,20 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 pass
             else:
                 # The value buckets are expected to account for every nested
-                # document the nested aggregation counted. This relies on each
-                # nested document populating all the `multi_terms` fields, since a
-                # nested document missing any of them is omitted from the
-                # buckets but still counted by the nested aggregation.
+                # document the `nested` aggregation counted. This relies on each
+                # nested document populating all the `multi_terms` fields, since
+                # a nested document missing any of them is omitted from the
+                # buckets but still counted by the `nested` aggregation.
                 doc_count = sum(bucket['doc_count']
                                 for bucket in nested_agg[values_agg_name]['buckets'])
                 assert nested_agg['doc_count'] == doc_count, R(
                     'Nested value buckets do not account for the nested total',
                     facet, nested_agg['doc_count'], doc_count)
                 agg.update(nested_agg)
+                # The `nested` aggregation only counts documents that have the
+                # field, so its doc_count omits those tallied by `filter`
+                # aggregation we use to count the missing fields.
+                agg['doc_count'] += agg[untagged_agg_name]['doc_count']
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """

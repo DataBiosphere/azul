@@ -501,7 +501,7 @@ class HCAFile(File):
     s3_etag: str | None = None
 
     @classmethod
-    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef) -> Self:
         return cls(uuid=json_str(hit['uuid']),
                    version=json_str(hit['version']),
                    name=json_str(hit['name']),
@@ -538,7 +538,7 @@ class HCAFile(File):
                       metadata: JSON,
                       descriptor: JSON,
                       drs_uri: str | None,
-                      source: SourceRef | None,
+                      source: SourceRef,
                       ) -> Self:
         # FIXME: Move validation of descriptor to the metadata API
         #        https://github.com/DataBiosphere/azul/issues/6299

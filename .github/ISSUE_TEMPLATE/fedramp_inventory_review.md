@@ -5,7 +5,7 @@ title: Monthly FedRAMP inventory review
 labels: compliance,infra,no demo,operator
 assignees: hannes-ucsc
 type: Chore
-_priority: \-
+_priority: Medium
 _repository: DataBiosphere/azul-private
 _start: 2024-03-01T09:00
 _period: 1 month

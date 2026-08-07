@@ -34,6 +34,9 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.strings import (
+    assert_redactable,
+)
 from azul.lib.types import (
     JSONTypedDict,
     is_of_type,
@@ -146,6 +149,9 @@ class OAuth2Client(HasCachedHttpClient):
         response = json.loads(response.data)
         assert is_of_type(response, TokenForCodeResponse)
         assert response['token_type'] == 'Bearer'
+        assert_redactable(authorization_code)
+        assert_redactable(response['access_token'])
+        assert_redactable(response['refresh_token'])
         return response
 
     def token_for_refresh(self,
@@ -167,6 +173,8 @@ class OAuth2Client(HasCachedHttpClient):
         response = json.loads(response.data)
         assert is_of_type(response, TokenResponse)
         assert response['token_type'] == 'Bearer'
+        assert_redactable(refresh_token)
+        assert_redactable(response['access_token'])
         return response
 
     def token_info(self, access_token: str) -> TokenInfoResponse:

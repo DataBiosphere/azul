@@ -25,8 +25,9 @@ from furl import (
 from moto import (
     mock_aws,
 )
-import requests
-import responses
+from urllib3 import (
+    BaseHTTPResponse,
+)
 
 from app_test_case import (
     LocalAppTestCase,
@@ -42,6 +43,7 @@ from azul.lib.types import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.modules import (
     load_app_module,
@@ -54,6 +56,9 @@ from service import (
 )
 from sqs_test_case import (
     SqsTestCase,
+)
+from urllib3_mock import (
+    Urllib3Mock,
 )
 
 
@@ -69,6 +74,9 @@ def setUpModule():
     configure_test_logging()
 
 
+log = get_test_logger(__name__)
+
+
 class HealthCheckTestCase(LocalAppTestCase,
                           OpenSearchTestCase,
                           StorageServiceTestCase,
@@ -76,21 +84,23 @@ class HealthCheckTestCase(LocalAppTestCase,
                           metaclass=ABCMeta):
 
     def test_basic(self):
-        response = requests.get(str(self.base_url.set(path='/health/basic')))
-        self.assertEqual(200, response.status_code)
+        response = self._http_client.request('GET',
+                                             str(self.base_url.set(path='/health/basic')))
+        self.assertEqual(200, response.status)
         self.assertEqual({'up': True}, response.json())
 
     def test_validation(self):
         for path in ['foo', 'opensearch,', ',opensearch', ',', '1']:
-            response = requests.get(str(self.base_url.set(path=('health', path))))
-            self.assertEqual(400, response.status_code)
+            response = self._http_client.request('GET',
+                                                 str(self.base_url.set(path=('health', path))))
+            self.assertEqual(400, response.status)
 
     @mock_aws
     def test_health_all_ok(self):
         self._create_mock_queues()
         with self._mock():
             response = self._test('/health/')
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status)
         self.assertEqual({
             'up': True,
             **self._expected_opensearch(up=True),
@@ -120,7 +130,7 @@ class HealthCheckTestCase(LocalAppTestCase,
             with self.subTest(keys=keys):
                 with self._mock():
                     response = self._test(f'health/{keys}')
-                self.assertEqual(200, response.status_code)
+                self.assertEqual(200, response.status)
                 self.assertEqual(expected_response, response.json())
 
     @mock_aws
@@ -128,7 +138,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         # No health object is available in S3 bucket, yielding an error
         with self._mock():
             response = self._test('/health/cached')
-        self.assertEqual(404, response.status_code)
+        self.assertEqual(404, response.status)
         expected_response = {
             'Code': 'NotFoundError',
             'Message': 'Cached health object does not exist'
@@ -141,7 +151,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         with self._mock():
             app.update_health_cache(MagicMock(), MagicMock())
             response = self._test('/health/cached')
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status)
 
         # Another failure is observed when the cache health object is older than
         # 2 minutes
@@ -149,7 +159,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         with patch('time.time', new=lambda: future_time):
             with self._mock():
                 response = self._test('/health/cached')
-            self.assertEqual(500, response.status_code)
+            self.assertEqual(500, response.status)
             expected_response = {
                 'Code': 'ChaliceViewError',
                 'Message': 'Cached health object is stale'
@@ -164,7 +174,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         # The use of subTests ensures that we see the result of both
         # assertions. In the case of the health endpoint, the body of a 503
         # may carry a body with additional information.
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status)
         expected_response = {'up': True, **self._expected_other_lambdas(up=True)}
         self.assertEqual(expected_response, response.json())
 
@@ -185,7 +195,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         with patch.dict(os.environ, **mock_env):
             with self._mock():
                 response = self._test('/health/fast')
-            self.assertEqual(503, response.status_code)
+            self.assertEqual(503, response.status)
             self.assertEqual(self._expected_health(opensearch_up=False), response.json())
 
     def _expected_queues(self, *, up: bool) -> MutableJSON:
@@ -214,9 +224,9 @@ class HealthCheckTestCase(LocalAppTestCase,
             } if up else {
                 'up': up,
                 'error': (
-                    "HTTPError('503 Server Error: "
-                    "Service Unavailable for url: "
-                    f"{self._endpoint('/index/bundles?size=1')}')"
+                    ""
+                    "HTTPStatusError('Unexpected response status', 503, 'Service Unavailable', "
+                    f"'{self._endpoint('/index/bundles?size=1')}')"
                 )
             }
         }
@@ -267,38 +277,33 @@ class HealthCheckTestCase(LocalAppTestCase,
             with self._mock_service_endpoints(helper, up=endpoints_up):
                 yield
 
-    def _test(self, path: str) -> requests.Response:
-        return requests.get(str(self.base_url.set(path=path)))
+    def _test(self, path: str) -> BaseHTTPResponse:
+        return self._http_client.request('GET',
+                                         str(self.base_url.set(path=path)))
 
     def helper(self):
-        helper = responses.RequestsMock()
-        helper.add_passthru(str(self.base_url))
-        # We originally shared the Requests mock with Moto which had this set
-        # to False. Because of that, and without noticing, we ended up mocking
-        # more responses than necessary for some of the tests. Instead of
-        # rewriting the tests to only mock what is actually used, we simply
-        # disable the assertion, just like Moto did.
-        helper.assert_all_requests_are_fired = False
-        return helper
+        return Urllib3Mock(Health)
 
     def _mock_service_endpoints(self,
-                                helper: responses.RequestsMock,
+                                helper: Urllib3Mock,
                                 *,
                                 up: bool
                                 ) -> ContextManager:
-        helper.add(responses.Response(method='HEAD',
-                                      url=self._endpoint('/index/bundles?size=1'),
-                                      status=200 if up else 503,
-                                      body=''))
+        helper.add(method='HEAD',
+                   url=self._endpoint('/index/bundles?size=1'),
+                   status=200 if up else 503,
+                   reason='OK' if up else 'Service Unavailable')
         # Patching the Health class to use a random generator with a pinned
         # seed allows us to predict the service endpoint that will be picked
         # to check the health of the service REST API.
         return patch.object(Health, '_random', random.Random(x=42))
 
-    def _mock_other_lambdas(self, helper: responses.RequestsMock, *, up: bool):
+    def _mock_other_lambdas(self, helper: Urllib3Mock, *, up: bool):
         for lambda_name in self._other_lambda_names():
-            url = config.lambda_endpoint(lambda_name).set(path='/health/basic')
-            helper.add(responses.Response(method='GET',
-                                          url=str(url),
-                                          status=200 if up else 500,
-                                          json={'up': up}))
+            url = config.lambda_endpoint(lambda_name).set(path='/health/basic',
+                                                          args={'catalog': self.catalog})
+            helper.add(method='GET',
+                       url=str(url),
+                       status=200 if up else 500,
+                       reason='OK' if up else 'Internal Server Error',
+                       body={'up': up})

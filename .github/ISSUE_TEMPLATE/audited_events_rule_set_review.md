@@ -5,7 +5,7 @@ title: Review rule set for audited events
 labels: compliance,doc,no demo
 assignees: nolunwa-ucsc,bvizzier-ucsc
 type: Chore
-_priority: \-
+_priority: Medium
 _start: 2025-01-10T10:00
 _period: 1 year
 ---

@@ -106,21 +106,12 @@ class TerraValidator:
             assert subgraph_count > 0, R('Common prefix is too long', ref.spec)
             assert subgraph_count <= 512, R('Common prefix is too short', ref.spec)
 
-    def verify_source_access(self) -> None:
-        public_snapshots = self.public_tdr.list_snapshot_ids()
-        all_snapshots = self.tdr.list_snapshot_ids()
-        diff = public_snapshots - all_snapshots
-        assert not diff, R(
-            'The public service account can access snapshots that the indexer '
-            'service account cannot', diff)
-
 
 def main():
     configure_script_logging(log)
     validator = TerraValidator()
     validator.register_with_sam()
     validator.verify_sources()
-    validator.verify_source_access()
 
 
 if __name__ == '__main__':

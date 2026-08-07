@@ -1,10 +1,13 @@
 from more_itertools import (
     one,
 )
-import requests
 
+from azul.http import (
+    raise_on_status,
+)
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from indexer import (
     DCP1CannedBundleTestCase,
@@ -17,6 +20,9 @@ from service import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestIndexProjectsEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
@@ -43,8 +49,8 @@ class TestIndexProjectsEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
         def get_response_json(uuid=None):
             url = self.base_url.set(path=('index', 'projects', uuid or ''),
                                     args=dict(catalog=self.catalog))
-            response = requests.get(str(url))
-            response.raise_for_status()
+            response = self._http_client.request('GET', str(url))
+            raise_on_status(response)
             return response.json()
 
         def assert_file_type_summaries(hit):

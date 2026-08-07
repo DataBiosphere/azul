@@ -19,6 +19,69 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#8041 Fix: GH Action schedule failed to create promotion ticket
+===============================================================
+
+Operator
+--------
+
+You may need to ask a system administrator to perform these changes on your
+behalf.
+
+Add a new ``github_schedule`` pipeline schedule on the ``dev`` and ``anvildev``
+GitLab instances:
+
+1) Set the description to "Create Azul scheduled issues on GitHub".
+
+2) Set the interval pattern to ``0 * * * *`` on ``dev`` and ``30 * * * *`` on
+``anvildev``.
+
+3) Set the Cron timezone to ``Pacific Time (US & Canada)``
+
+4) Set the variable ``azul_gitlab_schedule`` to ``github_schedule``
+
+Next, confirm with the SA that the ``azul_github_access_token`` used in both
+instances' ``environment.local.py`` is set, and that its permissions are
+equivalent to that of the token deposited in the ``AZUL_GITHUB_TOKEN`` GitHub
+Action secret.
+
+Lastly, ask the SA to remove the ``AZUL_GITHUB_TOKEN`` from the GitHub Action
+secrets.
+
+
+#8153 Thirteen inaccessible snapshots in dev
+=============================================
+
+In the ``environment.py`` of each of your personal deployments colocated with
+``dev``, pop thirteen snapshots in ``dcp3_sources`` and adjust the source counts
+for ``dcp3_sources`` and ``dcp3_min_sources``. Use the ``sandbox`` deployment's
+``environment.py`` as a model. Reindex your personal deployments.
+
+
+#7646 Failures mirroring files in dev catalog dcp3
+==================================================
+
+Add the ``no_mirror`` flag to the ``f8aa201c`` and ``8c3c290d`` sources in the
+``dcp3`` catalog in the ``environment.py`` files for each of your personal
+deployments. As always, use the sandbox deployment's ``environment.py`` as a
+model when upgrading personal deployments.
+
+
+#8075 Remove snapshots from dev to reduce storage to ≤ 5 TiB
+============================================================
+
+Everyone
+--------
+
+In the ``environment.py`` of each of your personal deployments colocated with
+``dev``, add the ``dcp3_min_sources`` definition and change ``AZUL_CATALOGS``
+to reference it instead of ``dcp3_sources``. Use the ``sandbox`` deployment's
+``environment.py`` as a model. Then reindex::
+
+    source environment
+    make reindex
+
+
 #7794 Use requester-pays for mirroring in AnVIL deployments
 ===========================================================
 

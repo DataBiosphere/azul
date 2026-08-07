@@ -22,11 +22,11 @@ from azul.plugins import (
     SpecialFields,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AzulUnitTestCase,
 )
 
 
-class TestFilterReification(AzulTestCase):
+class TestFilterReification(AzulUnitTestCase):
     accessible_source = '123'
     accessible_sources = {accessible_source, '456', '789'}
     inaccessible_source = '321'

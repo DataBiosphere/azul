@@ -5,8 +5,12 @@ from unittest.mock import (
 )
 import urllib.parse
 
-import requests
-import responses
+from furl import (
+    furl,
+)
+from urllib3 import (
+    HTTPResponse,
+)
 
 from app_test_case import (
     LocalAppTestCase,
@@ -15,16 +19,23 @@ from azul import (
     config,
 )
 from azul.drs import (
+    Access,
     AccessMethod,
+    DRSObject as DRSClient,
+)
+from azul.http import (
+    raise_on_status,
 )
 from azul.lib.types import (
     MutableJSON,
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.service.drs_controller import (
     DRSController,
+    DRSObject,
     dss_drs_object_uri,
     dss_drs_object_url,
 )
@@ -34,11 +45,17 @@ from azul_test_case import (
 from indexer import (
     DCP1CannedBundleTestCase,
 )
+from urllib3_mock import (
+    Urllib3Mock,
+)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
@@ -67,15 +84,14 @@ class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
         file_version = '2018-11-02T113344.698028Z'
         for redirects in (0, 1, 2, 6):
             with self.subTest(redirects=redirects):
-                with responses.RequestsMock() as helper:
-                    helper.add_passthru(str(self.base_url))
+                with Urllib3Mock(DRSController, DRSObject) as helper:
                     self._mock_responses(helper, redirects, file_uuid, file_version=file_version)
                     # Make first client request
                     url = dss_drs_object_url(file_uuid=file_uuid,
                                              file_version=file_version,
                                              base_url=self.base_url)
-                    drs_response = requests.get(str(url))
-                    drs_response.raise_for_status()
+                    drs_response = self._http_client.request('GET', str(url))
+                    raise_on_status(drs_response)
                     drs_object = drs_response.json()
                     uri = dss_drs_object_uri(file_uuid=file_uuid,
                                              file_version='2018-11-02T113344.698028Z')
@@ -133,16 +149,16 @@ class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
                                                                     file_version=file_version,
                                                                     base_url=self.base_url,
                                                                     access_id=access_id)
-                                drs_response = requests.get(str(drs_access_url))
-                                self.assertEqual(drs_response.status_code, 202)
-                                self.assertEqual(drs_response.text, '')
+                                drs_response = self._http_client.request('GET', str(drs_access_url))
+                                self.assertEqual(drs_response.status, 202)
+                                self.assertEqual(drs_response.data.decode(), '')
                             # The final request should give us just the access URL
                             drs_access_url = dss_drs_object_url(file_uuid=file_uuid,
                                                                 file_version=file_version,
                                                                 base_url=self.base_url,
                                                                 access_id=access_id)
-                            drs_response = requests.get(str(drs_access_url))
-                            self.assertEqual(drs_response.status_code, 200)
+                            drs_response = self._http_client.request('GET', str(drs_access_url))
+                            self.assertEqual(drs_response.status, 200)
                             if method['type'] == AccessMethod.https.scheme:
                                 self.assertEqual(drs_response.json(), {'url': self.signed_url})
                             elif method['type'] == AccessMethod.gs.scheme:
@@ -151,13 +167,14 @@ class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
                                 assert False, f'Access type {method["type"]} is not supported'
 
     def _dss_response(self,
+                      helper: Urllib3Mock,
                       file_uuid,
                       file_version,
                       replica,
                       head=False,
                       initial=True,
                       _301=False
-                      ):
+                      ) -> None:
         request_query = {
             'replica': replica,
             **({'version': file_version} if file_version else {}),
@@ -181,45 +198,91 @@ class TestDRSEndpoint(DCP1CannedBundleTestCase, LocalAppTestCase):
             'retry-after': '1'
         }
         if head:
-            return responses.Response(method=responses.HEAD, url=initial_url, status=200, headers=self.dss_headers)
+            helper.add(method='HEAD',
+                       url=initial_url,
+                       status=200,
+                       headers=self.dss_headers)
         else:
-            return responses.Response(method=responses.GET,
-                                      url=initial_url if initial else retry_url,
-                                      status=301 if _301 else 302,
-                                      headers=headers_301 if _301 else headers_302)
+            helper.add(method='GET',
+                       url=initial_url if initial else retry_url,
+                       status=301 if _301 else 302,
+                       headers=headers_301 if _301 else headers_302)
 
-    def _mock_responses(self, helper, redirects, file_uuid, file_version=None):
+    def _mock_responses(self,
+                        helper: Urllib3Mock,
+                        redirects,
+                        file_uuid,
+                        file_version=None):
         assert redirects >= 0
-        helper.add_passthru(str(self.base_url))
         if redirects == 0:
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=True, _301=False))
-            helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=True, _301=False))
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', head=True))
+            self._dss_response(helper,
+                               file_uuid,
+                               file_version,
+                               'aws',
+                               initial=True,
+                               _301=False)
+            self._dss_response(helper,
+                               file_uuid,
+                               file_version,
+                               'gcp',
+                               initial=True,
+                               _301=False)
+            self._dss_response(helper, file_uuid, file_version, 'aws', head=True)
         else:
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=True, _301=True))
-            helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=True, _301=True))
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', head=True))
+            self._dss_response(helper,
+                               file_uuid,
+                               file_version,
+                               'aws',
+                               initial=True,
+                               _301=True)
+            self._dss_response(helper,
+                               file_uuid,
+                               file_version,
+                               'gcp',
+                               initial=True,
+                               _301=True)
+            self._dss_response(helper, file_uuid, file_version, 'aws', head=True)
             redirects -= 1
             for _ in range(redirects):
-                helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=False, _301=True))
-                helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=False, _301=True))
-            helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=False, _301=False))
-            helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=False, _301=False))
+                self._dss_response(helper,
+                                   file_uuid,
+                                   file_version,
+                                   'aws',
+                                   initial=False,
+                                   _301=True)
+                self._dss_response(helper,
+                                   file_uuid,
+                                   file_version,
+                                   'gcp',
+                                   initial=False,
+                                   _301=True)
+            self._dss_response(helper,
+                               file_uuid,
+                               file_version,
+                               'aws',
+                               initial=False,
+                               _301=False)
+            self._dss_response(helper,
+                               file_uuid,
+                               file_version,
+                               'gcp',
+                               initial=False,
+                               _301=False)
 
     def test_data_object_not_found(self):
         file_uuid = 'NOT_A_GOOD_IDEA'
         error_body = 'DRS should just proxy the DSS for error responses'
-        with responses.RequestsMock() as helper:
-            helper.add_passthru(str(self.base_url))
-            url = f'{config.dss_endpoint}/files/{file_uuid}'
-            helper.add(responses.Response(method=responses.GET,
-                                          body=error_body,
-                                          url=url,
-                                          status=404))
+        with Urllib3Mock(DRSController, DRSObject) as helper:
+            # The controller calls dss_get_file which uses request() with
+            # fields={'replica': 'aws', 'directurl': False}. RequestMethods
+            # encodes these fields into the URL for GET requests.
+            dss_url = f'{config.dss_endpoint}/files/{file_uuid}'
+            query = urllib.parse.urlencode({'replica': 'aws', 'directurl': False})
+            helper.add(method='GET', url=f'{dss_url}?{query}', status=404, body=error_body)
             url = dss_drs_object_url(file_uuid=file_uuid, base_url=self.base_url)
-            drs_response = requests.get(str(url))
-            self.assertEqual(drs_response.status_code, 404)
-            self.assertEqual(drs_response.text, error_body)
+            drs_response = self._http_client.request('GET', str(url))
+            self.assertEqual(404, drs_response.status)
+            self.assertEqual(error_body, drs_response.data.decode())
 
 
 class TestDRSController(AzulUnitTestCase):
@@ -231,3 +294,82 @@ class TestDRSController(AzulUnitTestCase):
         response = controller.get_object_access(bad_access_id, 'file_uuid', {})
         self.assertEqual(400, response.status_code)
         self.assertEqual('Invalid DRS access ID', response.body)
+
+
+class TestDRSObjectGet(AzulUnitTestCase):
+    drs_url = 'https://example.com/ga4gh/drs/v1/objects/abc'
+
+    def _mock_response(self, body: dict, status: int = 200) -> HTTPResponse:
+        return HTTPResponse(body=json.dumps(body).encode(),
+                            status=status,
+                            preload_content=True)
+
+    def _drs_object(self, *responses: HTTPResponse) -> DRSClient:
+        http_client = MagicMock()
+        http_client.request.side_effect = list(responses)
+        return DRSClient(http_client=http_client,
+                         url=furl(self.drs_url))
+
+    def test_access_url_only(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(self._mock_response({
+            'access_methods': [
+                {
+                    'type': 'https',
+                    'access_url': {'url': signed_url}
+                }
+            ]
+        }))
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_access_id_only(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(
+            self._mock_response({
+                'access_methods': [
+                    {
+                        'type': 'https',
+                        'access_id': 'some_access_id'
+                    }
+                ]
+            }),
+            self._mock_response({'url': signed_url})
+        )
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_multiple_methods(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(self._mock_response({
+            'access_methods': [
+                {
+                    'type': 'https',
+                    'access_url': {'url': 'https://other.example.com/bucket/other'},
+                    'access_id': 'some_access_id'
+                },
+                {
+                    'type': 'https',
+                    'access_url': {'url': signed_url}
+                }
+            ]
+        }))
+        access = drs_object.get(access_method=AccessMethod.https)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)
+
+    def test_both_access_url_and_id(self):
+        signed_url = 'https://storage.example.com/bucket/object?token=abc'
+        drs_object = self._drs_object(
+            self._mock_response({
+                'access_methods': [
+                    {
+                        'type': 'gs',
+                        'access_url': {'url': 'gs://bucket/object'},
+                        'access_id': 'some_access_id'
+                    }
+                ]
+            }),
+            self._mock_response({'url': signed_url})
+        )
+        access = drs_object.get(access_method=AccessMethod.gs)
+        self.assertEqual(Access(method=AccessMethod.https, url=signed_url), access)

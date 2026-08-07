@@ -15,8 +15,11 @@ from referencing import (
     Registry,
     Resource,
 )
-import requests
 
+from azul.http import (
+    HasCachedHttpClient,
+    raise_on_status,
+)
 from azul.lib import (
     R,
     cached_property,
@@ -28,7 +31,7 @@ from azul.lib.types import (
 log = logging.getLogger(__name__)
 
 
-class SchemaValidator:
+class SchemaValidator(HasCachedHttpClient):
 
     def validate_json(self, file_json: JSON, file_name: str):
         try:
@@ -45,8 +48,8 @@ class SchemaValidator:
 
     @lru_cache(maxsize=None)
     def _download_json_file(self, file_url: str) -> JSON:
-        response = requests.get(file_url, allow_redirects=False)
-        response.raise_for_status()
+        response = self._http_client.request('GET', file_url, redirect=False)
+        raise_on_status(response)
         return response.json()
 
     def _retrieve_resource(self, resource_url: str) -> Resource:

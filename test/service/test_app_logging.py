@@ -11,20 +11,22 @@ from unittest.mock import (
     patch,
 )
 
-import requests
-
 from azul import (
     Config,
 )
 from azul.chalice import (
     AzulChaliceApp,
-    log,
+    log as chalice_log,
+)
+from azul.http import (
+    AcceptEncodingClient,
 )
 from azul.lib.types import (
     JSON,
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from indexer import (
     DCP1CannedBundleTestCase,
@@ -37,6 +39,9 @@ from service import (
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+log = get_test_logger(__name__)
 
 
 class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
@@ -57,6 +62,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
 
     def test_request_logs(self):
         prefix_len = 1024
+        http = self._http_client
 
         def filter_body(organ: str) -> JSON:
             return {'filters': json.dumps({'organ': {'is': [organ]}})}
@@ -77,26 +83,24 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                 url = self.base_url.set(path='/index/projects')
                 request_headers = {'authorization': 'Bearer ya29.foo_token'} if authenticated else {}
                 level = [INFO, DEBUG, DEBUG][debug]
-                with self.assertLogs(logger=log, level=level) as logs:
+                with self.assertLogs(logger=chalice_log, level=level) as logs:
                     with patch.object(Config, 'debug', new=PropertyMock(return_value=debug)):
                         if body:
                             request_headers = {
-                                'content-length': str(len(body)),
                                 'content-type': 'application/json',
                                 **request_headers
                             }
-                        response = requests.get(str(url),
+                        response = http.request('GET', str(url),
                                                 headers=request_headers,
-                                                json=body_json)
+                                                body=body)
                 logs = [(r.levelno, r.getMessage()) for r in logs.records]
                 body_log_level, body_log_message = logs.pop()  # asserted separately
                 request_headers = {
                     'host': url.netloc,
-                    'user-agent': 'python-requests/2.33.1',
-                    'accept-encoding': 'gzip, deflate, zstd',
-                    'accept': '*/*',
-                    'connection': 'keep-alive',
+                    'content-length': str(len(body)),
+                    'user-agent': 'python-urllib3/2.7.0',
                     **request_headers,
+                    'accept-encoding': AcceptEncodingClient.accept_encoding_header(),
                 }
                 response_headers = {
                     'Access-Control-Allow-Origin': '*',
@@ -134,7 +138,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                         ),
                         (
                             INFO,
-                            "Authenticated request as AccessTokenAuthentication(token='ya29.foo_token')"
+                            "Authenticated request as AccessTokenAuthentication(token='ya29.REDACTED')"
                             if authenticated else
                             'Did not authenticate request.'
                         ),
@@ -146,7 +150,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                     ],
                     logs
                 )
-                body = json.dumps(response.json())
+                body = json.dumps(json.loads(response.data))
                 self.assertGreater(len(body), prefix_len)
                 if debug == 0:
                     expected_log = "… with a response body of type (<class 'dict'>)"
@@ -158,4 +162,4 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                     assert False
                 self.assertEqual(expected_log, body_log_message)
                 self.assertEqual(INFO, body_log_level)
-                self.assertEqual(200, response.status_code)
+                self.assertEqual(200, response.status)

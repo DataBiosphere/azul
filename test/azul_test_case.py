@@ -45,6 +45,7 @@ import moto.core.models
 from opensearchpy.exceptions import (
     OpenSearchWarning,
 )
+import urllib3
 
 from azul import (
     CatalogName,
@@ -53,6 +54,14 @@ from azul import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.http import (
+    DefaultRetryHttpClient,
+    HasCachedHttpClient,
+    HttpClient,
+)
+from azul.indexer.mirror_service import (
+    MirrorService,
 )
 from azul.logging import (
     configure_test_logging,
@@ -139,14 +148,6 @@ class AzulTestCase(TestCase):
                 RE(r'.*humancellatlas\.data\.metadata\.api\.SequencingProcess'),
 
                 'Call to deprecated function (or staticmethod) patch_source_cache',
-
-                # FIXME: DeprecationWarning for ES body parameter
-                #        https://github.com/DataBiosphere/azul/issues/5912
-                #
-                RE(
-                    'The \'body\' parameter is deprecated for the \'.*\' API '
-                    'and will be removed in .*. Instead use .*'
-                ),
 
                 # FIXME: DeprecationWarning for patch_source_cache
                 #        https://github.com/DataBiosphere/azul/issues/7838
@@ -237,7 +238,20 @@ class AzulTestCase(TestCase):
             yield
 
 
-class AzulUnitTestCase(AzulTestCase):
+class AzulUnitTestCase(AzulTestCase, HasCachedHttpClient):
+
+    def _create_http_client(self) -> HttpClient:
+        # We don't want any retries during unit tests. Since all server fixtures
+        # run on the same machine as the tests, we don't expect any transient
+        # errors, including I/O or 500 status errors. We also require unit tests
+        # to explicitly assert the expected response status, instead of relying
+        # on the client to raise an exception.
+        return DefaultRetryHttpClient(
+            super()._create_http_client(),
+            retries=urllib3.util.Retry(total=0,
+                                       status=0,
+                                       raise_on_status=False)
+        )
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -370,6 +384,7 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         cls._patch_replicas_enabled()
         cls._patch_deployment()
         cls._patch_public_sources()
+        cls._patch_all_sources()
 
     @classmethod
     def _patch_catalogs(cls):
@@ -389,6 +404,8 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
             del config.integration_test_catalogs
         except AttributeError:
             pass
+        MirrorService.for_catalog.cache_clear()
+        cls.addClassCleanup(MirrorService.for_catalog.cache_clear)
         # Patch the catalog property to use a single fake test catalog.
         cls.addClassPatch(patch.object(target=type(config),
                                        attribute='catalogs',
@@ -414,11 +431,19 @@ class CatalogTestCase(AzulUnitTestCase, metaclass=ABCMeta):
                                        return_value=config.deployment.test_name))
 
     @classmethod
-    def _patch_public_sources(cls):
+    def _patch_sources(cls, attribute: str):
         cls.addClassPatch(patch.object(SourceService,
-                                       '_public_sources',
+                                       attribute,
                                        new_callable=PropertyMock,
                                        return_value={cls.catalog: [cls.source]}))
+
+    @classmethod
+    def _patch_public_sources(cls):
+        cls._patch_sources('_public_sources')
+
+    @classmethod
+    def _patch_all_sources(cls):
+        cls._patch_sources('_all_sources')
 
 
 class DSSTestCase(CatalogTestCase, metaclass=ABCMeta):

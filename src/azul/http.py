@@ -63,6 +63,29 @@ class HttpClientDecorator(HttpClient):
                 return None
 
 
+def _redact_headers(headers) -> list[tuple[str, str]]:
+    # urllib3's HTTPHeaderDict.items() can yield multiple entries for the
+    # same key, or a key only different in case
+    return [
+        (k, _redact_header(k, v))
+        for k, v in headers.items()
+    ]
+
+
+def _redact_header(name: str, value: str) -> str:
+    result = redact(value, fullmatch=True)
+    if result == value:
+        # Our standard, pattern-based approach didn't redact anything …
+        if name.lower() == 'authorization':
+            # … but the header most definitely contains a secret. We don't know
+            # what type of secret we're dealing with, so we redact it entirely.
+            return 'REDACTED'
+        else:
+            return value
+    else:
+        return result
+
+
 class LoggingHttpClient(HttpClientDecorator):
     """
     An HTTP client that logs every request and response to the given logger.
@@ -118,15 +141,17 @@ class LoggingHttpClient(HttpClientDecorator):
 
     def urlopen(self, method, url, *args, body=None, **kwargs) -> urllib3.HTTPResponse:
         log = self._log
-        log.info('Making %s request to %r', method, url)
+        redacted_url = redact(url)
+        log.info('Making %s request to %r', method, redacted_url)
         log.info(http_body_log_message('request', body))
         start = time.monotonic()
         response = super().urlopen(method, url, *args, body=body, **kwargs)
         duration = time.monotonic() - start
         assert isinstance(response, urllib3.HTTPResponse), type(response)
         log.info('Got %s response after %.3fs from %s to %s',
-                 response.status, duration, method, url)
-        log.info('… with response headers %r', response.headers)
+                 response.status, duration, method, redacted_url)
+        log.info('… with response headers %r',
+                 _redact_headers(response.headers))
         if response.isclosed():
             log.info(http_body_log_message('response', response.data))
         else:
@@ -146,24 +171,10 @@ class _LoggingConnectionPool(urllib3.connectionpool.HTTPConnectionPool):
         if headers is None or len(headers) == 0:
             log.info('… without request headers')
         else:
-            # urllib3's HTTPHeaderDict.items() can yield multiple entries for
-            # the same key, or a key only different in case
-            headers = [
-                (k, self._redact(v) if k.lower() == 'authorization' else v)
-                for k, v in headers.items()
-            ]
-            log.info('… with request headers %r', headers)
+            log.info('… with request headers %r',
+                     _redact_headers(headers))
         # The stubs for urllib3 v1.x don't declare any protected methods
         return super()._make_request(*args, **kwargs)  # type: ignore[misc]
-
-    def _redact(self, authorization: str) -> str:
-        # First, try a more surgical redaction for bearer tokens
-        authorization = authorization.split()
-        if len(authorization) == 2:
-            bearer, token = authorization
-            if bearer.lower() == 'bearer':
-                return bearer + ' ' + redact(token)
-        return 'REDACTED'
 
 
 class DisableCrossHostRedirectClient(HttpClientDecorator):
@@ -178,12 +189,76 @@ class DisableCrossHostRedirectClient(HttpClientDecorator):
         return super().urlopen(method, url, *args, **kwargs)
 
 
+class AcceptEncodingClient(HttpClientDecorator):
+    """
+    A client that informs servers that it accepts compressed responses via the
+    ``accept-encoding`` request header. The client will not overwrite or modify
+    any user-provided values for that header.
+    """
+
+    @classmethod
+    @cache
+    def accept_encoding_header(cls) -> str:
+        # The exact set of encodings that urllib can natively handle depends on
+        # whether the current python executable was compiled with support for
+        # brotli and/or zstd.
+        headers_str = urllib3.make_headers(accept_encoding=True)['accept-encoding']
+        headers_list = headers_str.split(',')
+        assert 'gzip' in headers_list, headers_list
+        assert 'deflate' in headers_list, headers_list
+        return headers_str
+
+    def urlopen(self, method, url, *args, **kwargs) -> urllib3.BaseHTTPResponse:
+        headers = kwargs.get('headers', {})
+        headers.setdefault('accept-encoding', self.accept_encoding_header())
+        kwargs['headers'] = headers
+        return super().urlopen(method, url, *args, **kwargs)
+
+
 def http_client(log: logging.Logger | None = None) -> HttpClient:
     client = urllib3.PoolManager(ca_certs=certifi.where())
     client = DisableCrossHostRedirectClient(client)
+    client = AcceptEncodingClient(client)
     if log is not None:
         client = LoggingHttpClient(client, log)
     return StatusRetryHttpClient(client)
+
+
+class HTTPStatusError(Exception):
+
+    def __init__(self, url: str | None, status: int, reason: str | None = None):
+        # The URL is intentionally passed last, as it tends to be long and we
+        # don't want it to displace the other two arguments in the log line.
+        super().__init__('Unexpected response status', status, reason, url)
+
+
+def raise_on_status(response: urllib3.BaseHTTPResponse) -> None:
+    if not 200 <= response.status < 400:
+        raise HTTPStatusError(response.url, response.status, response.reason)
+
+
+class DefaultRetryHttpClient(HttpClientDecorator):
+
+    def __init__(self,
+                 inner: HttpClient,
+                 retries: urllib3.util.Retry,
+                 headers: dict | None = None):
+        super().__init__(inner, headers)
+        self.retries = retries
+
+    def urlopen(self,
+                method: str,
+                url: str,
+                *args,
+                **kwargs
+                ) -> urllib3.BaseHTTPResponse:
+        assert 'retries' not in kwargs, R("Argument 'retries' is disallowed")
+        response = super().urlopen(method,
+                                   url,
+                                   *args,
+                                   retries=self.retries,
+                                   **kwargs)
+        return response
 
 
 class LimitedTimeoutException(Exception):
