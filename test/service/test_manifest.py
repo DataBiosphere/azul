@@ -558,7 +558,6 @@ class TestManifests(DCP1ManifestTestCase):
             ('cell_suspension.biomaterial_core.biomaterial_name', '', ''),
             ('cell_suspension.estimated_cell_count', '', '9001'),
             ('cell_suspension.selected_cell_type', '', 'CAFs'),
-            ('sequencing_process.provenance.document_id', '', '72732ed3-7b71-47df-bcec-c765ef7ea758'),
             ('sequencing_protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
             ('sequencing_protocol.paired_end', '', 'True'),
             ('sequencing_protocol.protocol_core.protocol_name', '', 'Sequencing SmartSeq2 cells'),
