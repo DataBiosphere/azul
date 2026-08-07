@@ -276,15 +276,6 @@ class SequencingInputAggregator(HCAEntityAggregator):
         return SetAccumulator(max_size=int(7302 * 1.25))
 
 
-class SequencingProcessAggregator(HCAEntityAggregator):
-
-    def _id_field_accumulator(self, field) -> Accumulator | None:
-        return SetAccumulator(max_size=int(6357 * 1.25))
-
-    def _default_accumulator(self) -> Accumulator | None:
-        return SetAccumulator(max_size=10)
-
-
 class MatricesAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
