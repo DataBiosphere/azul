@@ -159,6 +159,7 @@ class EnvHook:
             bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
             # Indicates interpreter is being verified before adding it to PyCharm
             or sys.orig_argv[1:3] == ['-c', 'print(1)']
+            or sys.orig_argv[1] == '-c' and '_is_gil_enabled' in sys.orig_argv[2]
             # Indicates sys.path and installed packages are being listed
             or 'plugins/python-ce/helpers' in sys.argv[0]
         )
