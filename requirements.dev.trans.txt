@@ -1,6 +1,6 @@
 annotated-types==0.8.0
 ast_serialize==0.8.0
-blessed==1.47.0
+blessed==1.48.0
 botocore-stubs==1.43.14
 click==8.4.2
 editor==1.8.0
