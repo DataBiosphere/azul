@@ -1836,11 +1836,11 @@ def dashboard_body(name: str):
                             | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
                             | SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
                             | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
-                            | filter @message like 'Task timed out'
-                            | fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 0 as c
-                            | fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 1 as cr
+                            | filter @message like 'Status: timeout'
+                            | fields strcontains(@log, 'contribute') == 1 and strcontains(@log, 'retry') == 0 as c
+                            | fields strcontains(@log, 'contribute_retry') == 1 as cr
                             | fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 0 as a
-                            | fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 1 as ar
+                            | fields strcontains(@log, 'aggregate_retry') == 1  as ar
                             | stats sum(c) as contribute,
                                     sum(cr) as contribute_retry,
                                     sum(a) as aggregate,
@@ -1850,7 +1850,7 @@ def dashboard_body(name: str):
                         if is_indexer else
                         dedent(f'''\
                             SOURCE '/aws/lambda/{config.indexer_function_name('mirror')}'
-                            | filter @message like 'Task timed out'
+                            | filter @message like 'Status: timeout'
                             | fields strcontains(@log, 'mirror') == 1 as m
                             | stats sum(m) as mirror
                                     by bin(5min)
@@ -2077,13 +2077,13 @@ def dashboard_body(name: str):
                             | SOURCE '/aws/lambda/{config.indexer_function_name('aggregate_retry')}'
                             | SOURCE '/aws/lambda/{config.indexer_function_name('contribute')}'
                             | SOURCE '/aws/lambda/{config.indexer_function_name('contribute_retry')}'
-                            | filter @message like 'Task timed out' or @message like 'START'
-                            | fields strcontains(@message, 'Task timed out') == 1 as timeout
+                            | filter @message like 'Status: timeout' or @message like 'START'
+                            | fields strcontains(@message, 'Status: timeout') == 1 as timeout
                             | fields strcontains(@message, 'START') == 1 as attempt
-                            | fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 0 as c
-                            | fields strcontains(@log, 'aggregate') == 0 and strcontains(@log, 'retry') == 1 as cr
+                            | fields strcontains(@log, 'contribute') == 1 and strcontains(@log, 'retry') == 0 as c
+                            | fields strcontains(@log, 'contribute_retry') == 1 as cr
                             | fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 0 as a
-                            | fields strcontains(@log, 'aggregate') == 1 and strcontains(@log, 'retry') == 1 as ar
+                            | fields strcontains(@log, 'aggregate_retry') == 1  as ar
                             | stats sum(c*timeout) * 100 / sum(c*attempt) as contribute,
                                     sum(cr*timeout) * 100 / sum(cr*attempt) as contribute_retry,
                                     sum(a*timeout) * 100 / sum(a*attempt) as aggregate,
@@ -2093,8 +2093,8 @@ def dashboard_body(name: str):
                         if is_indexer else
                         dedent(f'''\
                             SOURCE '/aws/lambda/{config.indexer_function_name('mirror')}'
-                            | filter @message like 'Task timed out' or @message like 'START'
-                            | fields strcontains(@message, 'Task timed out') == 1 as timeout
+                            | filter @message like 'Status: timeout' or @message like 'START'
+                            | fields strcontains(@message, 'Status: timeout') == 1 as timeout
                             | fields strcontains(@message, 'START') == 1 as attempt
                             | fields strcontains(@log, 'mirror') == 1 as m
                             | stats sum(m*timeout) * 100 / sum(m*attempt) as mirror
