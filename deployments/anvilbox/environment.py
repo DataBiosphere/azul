@@ -53,9 +53,10 @@ def _source(source_type: Literal['bigquery', 'parquet'],
 
 def delta(items: list[tuple[DatasetName, SourceItem | None]]
           ) -> dict[DatasetName, SourceItem | None]:
-    result = dict(items)
+    keys = [k for k, _ in items]
+    assert keys == sorted(keys), 'input not sorted'
+    result = {k.lower(): v for k, v in items}
     assert len(items) == len(result), 'collisions detected'
-    assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
