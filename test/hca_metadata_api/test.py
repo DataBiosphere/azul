@@ -510,7 +510,6 @@ class TestAccessorApi(AzulUnitTestCase):
 
         return bundle
 
-    @skip('https://github.com/DataBiosphere/azul/issues/8152')
     def test_canned_staging_area(self):
         remote_url = furl('https://github.com/HumanCellAtlas/schema-test-data.git')
         staging_area_path = Path('tests')
@@ -798,7 +797,6 @@ class TestSchema(AzulUnitTestCase):
         )
         self.assertEqual(expected, cm.exception.args[0].args)
 
-    @skip('https://github.com/DataBiosphere/azul/issues/8152')
     def test_schema_validation(self):
         validator = SchemaValidator()
         test_data = {
