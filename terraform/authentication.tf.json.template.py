@@ -104,20 +104,24 @@ emit_tf({
                     ]
                 }
             },
-            'aws_kms_key': {
-                key.name: {
-                    'key_usage': key.usage,
-                    'customer_master_key_spec': key.spec,
-                }
-                for key in config.kms_keys
-            },
-            'aws_kms_alias': {
-                key.name: {
-                    'name': key.alias,
-                    'target_key_id': '${aws_kms_key.%s.key_id}' % key.name
-                }
-                for key in config.kms_keys
-            }
         },
+    ],
+    'data': {
+        'aws_kms_key': {
+            key.name: {
+                'key_id': key.alias
+            }
+            for key in config.kms_keys
+        }
+    },
+    'removed': [
+        {
+            'from': f'{resource_type}.{key.name}',
+            'lifecycle': {
+                'destroy': False
+            }
+        }
+        for key in config.kms_keys
+        for resource_type in ('aws_kms_key', 'aws_kms_alias')
     ]
 })

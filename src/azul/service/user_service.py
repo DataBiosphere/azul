@@ -172,14 +172,8 @@ class UserService:
             return public_key
 
     @property
-    def apat_public_key_for_outsourcing(self) -> JSON | None:
-        try:
-            return json.loads(ECAlgorithm.to_jwk(self._apat_public_key))
-        except aws.kms.exceptions.NotFoundException:
-            # FIXME: Remove this workaround. Expected during from-scratch
-            #        deployments. This workaround requires deploying twice.
-            #        https://github.com/DataBiosphere/azul/issues/8201
-            return None
+    def apat_public_key_for_outsourcing(self) -> JSON:
+        return json.loads(ECAlgorithm.to_jwk(self._apat_public_key))
 
     @property
     def _dynamodb(self):
