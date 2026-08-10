@@ -144,6 +144,8 @@ emit_tf({
             }
         },
     ],
+    # FIXME: Remove after all deployments are upgraded
+    #        https://github.com/DataBiosphere/azul/issues/8215
     'import': [
         *[
             entry

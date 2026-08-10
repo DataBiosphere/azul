@@ -14,6 +14,8 @@ emit_tf({
             for key in config.kms_keys
         }
     },
+    # FIXME: Remove after all deployments are upgraded
+    #        https://github.com/DataBiosphere/azul/issues/8215
     'removed': [
         *[
             {
