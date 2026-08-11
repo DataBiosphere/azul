@@ -78,6 +78,7 @@ from azul.lib.functions import (
 )
 from azul.lib.strings import (
     format_size,
+    hex_digits,
 )
 from azul.lib.types import (
     JSON,
@@ -573,8 +574,6 @@ class MirrorService:
 
     info_prefix, file_prefix = 'info', 'file'
 
-    _hex_digits = '0123456789abcdef'
-
     def _info_object_key(self, file: File) -> str:
         return self._object_key(self.info_prefix, file.digest, extension='.json')
 
@@ -583,7 +582,6 @@ class MirrorService:
 
     def _object_key(self, prefix: str, digest: Digest, *, extension: str) -> str:
         digest_value = digest.value.lower()
-        hex_digits = self._hex_digits
         assert all(c in hex_digits for c in digest_value), R(
             'Expected a hexadecimal digest', digest)
         mirror_prefix = self._mirror_prefix
@@ -602,7 +600,6 @@ class MirrorService:
                 extension = '.' + extension
             case _:
                 assert False, R('Invalid key', key)
-        hex_digits = self._hex_digits
         assert all(c in hex_digits for c in digest_value), R('Invalid digest', key)
         assert check_type(DigestType, digest_type), R('Invalid digest type', key)
         digest = Digest(type=cast(DigestType, digest_type), value=digest_value)
