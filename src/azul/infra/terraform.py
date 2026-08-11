@@ -856,9 +856,36 @@ class Chalice:
 
         resource_type = 'aws_s3_bucket_notification'
         if config.enable_log_forwarding and app_name == 'indexer':
+            s3_log_forwarder_prefix = config.s3_access_log_path_prefix(deployment=None)
+            s3_log_forwarder_arn = None
             for resource_name, resource in resource_items(resource_type):
                 for notified_function in json_element_dicts(resource['lambda_function']):
                     alias_property('lambda_function_arn', notified_function)
+                    if notified_function.get('filter_prefix') == s3_log_forwarder_prefix:
+                        s3_log_forwarder_arn = json_str(notified_function['lambda_function_arn'])
+            # Chalice only grants the S3 service principal permission to invoke
+            # the log forwarder for buckets in the deploying account, so buckets
+            # in other accounts need explicit resource-based permissions.
+            # https://repost.aws/knowledge-center/lambda-s3-cross-account-function-invoke
+            for bucket, term in [
+                (config.mirror_bucket, config.mirror_term),
+                (config.ma_mirror_bucket, config.ma_mirror_term)
+            ]:
+                if bucket is not None:
+                    assert s3_log_forwarder_arn is not None
+                    permission_name = f'{app_name}_forward_s3_logs_{term}'
+                    json_dict(resources['aws_lambda_permission'])[permission_name] = {
+                        'statement_id': f'forward-s3-logs-{term}-bucket',
+                        'action': 'lambda:InvokeFunction',
+                        'function_name': s3_log_forwarder_arn,
+                        'qualifier': s3_log_forwarder_arn.replace('.arn', '.name'),
+                        'principal': 's3.amazonaws.com',
+                        # Access logs from the mirror buckets are deposited
+                        # into a dedicated logs bucket in the same account. The
+                        # logs buckets' names are derived from the mirror
+                        # buckets' names.
+                        'source_arn': f'arn:aws:s3:::{bucket}-logs'
+                    }
         else:
             assert resource_type not in resources
 
