@@ -32,13 +32,16 @@ from urllib3 import (
 from azul import (
     config,
 )
+from azul.indexer.cache_service import (
+    UrlCacheService,
+)
 from azul.indexer.document import (
     DocumentType,
     EntityReference,
 )
 from azul.lib.types import (
-    JSONs,
-    MutableJSONs,
+    JSON,
+    MutableJSON,
 )
 from azul.logging import (
     configure_test_logging,
@@ -76,34 +79,40 @@ log = get_test_logger(__name__)
 class DUOSTestCase(TDRTestCase, ABC):
 
     def _mock_normal_duos(self):
-        for p in self._duos_patches(self.normal_response_bodies):
+        for p in self._duos_patches(self.normal_tdr_response,
+                                    self.normal_duos_response):
             self.addPatch(p)
 
     @property
-    def normal_response_bodies(self) -> MutableJSONs:
-        duos_id = 'DUOS-000000'
-        return [
-            # TDR's /snapshots/{snapshot_id} response:
-            {
-                'name': self.source.ref.spec.name,
-                'duosFirecloudGroup': {'duosId': duos_id}
-            },
-            # DUOS' /dataset/registration/{duos_id}:
-            {
-                'consentGroups': [{'datasetIdentifier': duos_id}],
-                'studyDescription': 'Study description from DUOS'
-            }
-        ]
+    def normal_tdr_response(self) -> MutableJSON:
+        return {
+            'name': self.source.ref.spec.name,
+            'duosFirecloudGroup': {'duosId': 'DUOS-000000'}
+        }
 
-    def _duos_patches(self, bodies: JSONs) -> Iterable[patch]:
-        responses = [
-            Mock(spec=HTTPResponse, status=200, data=json.dumps(body))
-            for body in bodies
-        ]
+    @property
+    def normal_duos_response(self) -> MutableJSON:
+        return {
+            'consentGroups': [{'datasetIdentifier': 'DUOS-000000'}],
+            'studyDescription': 'Study description from DUOS'
+        }
+
+    def _duos_patches(self,
+                      tdr_response: JSON,
+                      duos_response: JSON | None = None
+                      ) -> Iterable[patch]:
+        tdr_mock = Mock(spec=HTTPResponse, status=200,
+                        data=json.dumps(tdr_response))
         mock_url = PropertyMock(return_value=furl('https://mock_duos.lan'))
+        mock_cache = Mock(spec=UrlCacheService)
+        if duos_response is not None:
+            duos_mock = Mock(spec=HTTPResponse, status=200,
+                             data=json.dumps(duos_response))
+            mock_cache.get_url.return_value = duos_mock
         patches = [
             patch.object(type(config), 'duos_service_url', new=mock_url),
-            patch.object(TDRClient, '_request', side_effect=responses)
+            patch.object(TDRClient, '_request', return_value=tdr_mock),
+            patch.object(TDRClient, '_url_cache', new=mock_cache),
         ]
         return patches
 
@@ -193,25 +202,22 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         source_ref = self.source.ref
         self._make_mock_tables(source_ref)
         cases = {
-            'Absent duosFirecloudGroup': [
-                {'name': self.source.ref.spec.name}
-            ],
-            'Empty duosFirecloudGroup': [
+            'Absent duosFirecloudGroup':
+                {'name': self.source.ref.spec.name},
+            'Empty duosFirecloudGroup':
                 {
                     'name': self.source.ref.spec.name,
                     'duosFirecloudGroup': {}
-                }
-            ],
-            'Null duosId': [
+                },
+            'Null duosId':
                 {
                     'name': self.source.ref.spec.name,
                     'duosFirecloudGroup': {'duosId': None}
-                }
-            ]
+                },
         }
-        for sub_test, response_bodies in cases.items():
+        for sub_test, tdr_response in cases.items():
             with self.subTest(sub_test):
-                with self.stacked_patches(self._duos_patches(response_bodies)):
+                with self.stacked_patches(self._duos_patches(tdr_response)):
                     bundle = self.plugin.fetch_bundle(self.duos_bundle())
                     self.assertIsInstance(bundle, TDRAnvilBundle)
                     self.assertEqual({}, bundle.entities)
