@@ -275,6 +275,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'registered_identifier': [null_str],
             'title': null_str,
             'data_modality': [null_str],
+            'duos_id': null_str,
         }
 
     @classmethod
@@ -549,7 +550,6 @@ class DatasetTransformer(SingletonTransformer):
         return {
             **cls._dataset_types(),
             'description': null_str,
-            'duos_id': null_str,
         }
 
     @classmethod

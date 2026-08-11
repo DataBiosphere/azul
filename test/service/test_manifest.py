@@ -1327,6 +1327,12 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 ''
             ),
             (
+                'datasets.duos_id',
+                'DUOS-000000',
+                'DUOS-000000',
+                'DUOS-000000'
+            ),
+            (
                 'donors.document_id',
                 '',
                 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',

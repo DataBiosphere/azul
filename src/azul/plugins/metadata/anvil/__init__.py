@@ -195,9 +195,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                         'registered_identifier',
                         'title',
                         'data_modality',
-                        # This field path has a brittle coupling that must be
-                        # maintained to the field lookup in
-                        # `self.manifest_config`.
                         'duos_id',
                     ]
                 },
@@ -331,7 +328,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         # the fields listed here and those used in `self._field_mapping`.
         fields_to_omit_from_manifest: list[FieldPath] = [
             ('contents', 'activities', 'activity_table'),
-            ('contents', 'datasets', 'duos_id'),
             ('contents', 'files', 'version'),
         ]
 

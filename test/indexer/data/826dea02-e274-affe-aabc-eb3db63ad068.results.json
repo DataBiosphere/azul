@@ -80,6 +80,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -241,7 +244,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
@@ -488,6 +492,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -673,7 +680,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
@@ -1413,6 +1421,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -1634,7 +1645,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
@@ -1825,6 +1837,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -2022,7 +2037,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
@@ -2207,6 +2223,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -2403,7 +2422,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
@@ -2658,6 +2678,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -2854,7 +2877,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
@@ -3107,6 +3131,9 @@
                         ],
                         "data_modality": [
                             "~null"
+                        ],
+                        "duos_id": [
+                            "DUOS-000000"
                         ]
                     }
                 ],
@@ -3304,7 +3331,8 @@
                         "title": "ANVIL_CMG_UWASH_DS_BDIS",
                         "data_modality": [
                             "~null"
-                        ]
+                        ],
+                        "duos_id": "DUOS-000000"
                     }
                 ],
                 "diagnoses": [
