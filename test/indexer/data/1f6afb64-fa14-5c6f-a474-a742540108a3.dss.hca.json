@@ -33,7 +33,7 @@
                 "phs001997.v1.p1",
                 "phs001836"
             ],
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/17.0.0/project",
+            "describedBy": "https://schema.humancellatlas.org/type/project/17.0.0/project",
             "ega_accessions": [
                 "EGAS00000000001",
                 "EGAD00000000002"
@@ -132,7 +132,7 @@
             "schema_type": "project"
         },
         "process/1f6afb64-fa14-5c6f-a474-a742540108a3": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -146,7 +146,7 @@
             "schema_type": "process"
         },
         "process/ae8529dc-3bc9-5061-828a-3c5dfacded64": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -160,7 +160,7 @@
             "schema_type": "process"
         },
         "process/c6b932ff-69f1-58b1-a6e6-30319f04541b": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -181,7 +181,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/3.3.0/imaged_specimen",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/3.3.0/imaged_specimen",
             "provenance": {
                 "document_id": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
                 "schema_major_version": 3,
@@ -193,7 +193,7 @@
             "slice_thickness": 10.0
         },
         "analysis_file/2645ed0a-a291-5fe2-a262-7b796b05d647": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.5.0/analysis_file",
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.5.0/analysis_file",
             "file_core": {
                 "content_description": [
                     {
@@ -216,7 +216,7 @@
             "schema_type": "file"
         },
         "analysis_protocol/5e1fa49c-f0e9-5c2c-be16-386ccd60dfd7": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/10.0.0/analysis_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/analysis/10.0.0/analysis_protocol",
             "protocol_core": {
                 "protocol_description": "10x Genomics Visium spatial sequencing samples were aligned to the human transcriptome GRCh38-3.0.0 reference (consistently with single-cell RNA-seq samples) using 10x Genomics SpaceRanger v.1.2.1 and exonic reads were used to produce mRNA count matrices for each sample. 10x Genomics SpaceRanger was also used to align paired histology images with mRNA capture spot positions in the Visium slide. The paired image was used to determine the average number of nuclei per Visium location in the tissue and used as a hyperparameter in the spatial mapping of cell type",
                 "protocol_id": "Visiumanalysis"
@@ -236,7 +236,7 @@
             }
         },
         "library_preparation_protocol/83f14748-af1c-57aa-9088-6cb1cdd4bba4": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
             "end_bias": "3 prime end bias",
             "input_nucleic_acid_molecule": {
                 "ontology": "OBI:0000869",
@@ -283,7 +283,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
             "diseases": [
                 {
                     "ontology": "MONDO:0100096",
@@ -313,7 +313,7 @@
             "schema_type": "biomaterial"
         },
         "imaging_preparation_protocol/7cd840db-f395-5a61-bd17-72c2b2319c23": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/imaging/2.3.0/imaging_preparation_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/imaging/2.3.0/imaging_preparation_protocol",
             "protocol_core": {
                 "protocol_description": "All tissues were sectioned using the Leica CX3050S cryostat and were cut at 10um. Tissue optimization was performed to obtain permeabilization time for fetal tissue (12 min).",
                 "protocol_id": "HumanVisiumSpatialLibraryPrep"
@@ -335,7 +335,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
             "development_stage": {
                 "ontology": "HsapDv:0000087",
                 "ontology_label": "human adult stage",
@@ -371,7 +371,7 @@
             "sex": "unknown"
         },
         "collection_protocol/c5752f73-3511-55e1-95af-040ab3924bce": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
             "method": {
                 "ontology": "EFO:0009121",
                 "ontology_label": "blood draw",
@@ -392,7 +392,7 @@
         }
     },
     "links": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.1.0/links",
+        "describedBy": "https://schema.humancellatlas.org/system/3.1.0/links",
         "links": [
             {
                 "inputs": [

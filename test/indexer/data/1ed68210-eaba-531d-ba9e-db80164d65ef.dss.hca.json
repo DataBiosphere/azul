@@ -45,7 +45,7 @@
                 "phs001997.v1.p1",
                 "phs001836"
             ],
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/17.0.0/project",
+            "describedBy": "https://schema.humancellatlas.org/type/project/17.0.0/project",
             "ega_accessions": [
                 "EGAS00000000001",
                 "EGAD00000000002"
@@ -144,7 +144,7 @@
             "schema_type": "project"
         },
         "process/1ed68210-eaba-531d-ba9e-db80164d65ef": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -158,7 +158,7 @@
             "schema_type": "process"
         },
         "process/37e91a9f-b04e-5313-bbc0-4c394406247e": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -172,7 +172,7 @@
             "schema_type": "process"
         },
         "process/b0092a47-b19d-5b34-b004-cb8edd8c625b": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -186,7 +186,7 @@
             "schema_type": "process"
         },
         "process/bd6a4a38-c44b-5d17-b2b1-d0d4c4531bf0": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "process_core": {
                 "process_id": "dummy_process"
             },
@@ -206,7 +206,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
             "estimated_cell_count": 40000,
             "genus_species": [
                 {
@@ -238,7 +238,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
             "estimated_cell_count": 20000,
             "genus_species": [
                 {
@@ -264,7 +264,7 @@
             ]
         },
         "sequence_file/8da4bdb9-ab64-5a90-8bce-f0ed5106ea41": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/9.5.0/sequence_file",
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.5.0/sequence_file",
             "file_core": {
                 "file_name": "Test_S1_L001_R2_001.fastq.gz",
                 "format": "fastq.gz"
@@ -280,7 +280,7 @@
             "schema_type": "file"
         },
         "sequence_file/de17aa7d-be28-53c1-b7a3-1f4b3989e3e6": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/9.5.0/sequence_file",
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.5.0/sequence_file",
             "file_core": {
                 "file_name": "Test_S1_L001_R1_001.fastq.gz",
                 "format": "fastq.gz"
@@ -301,7 +301,7 @@
                 "barcode_offset": 0,
                 "barcode_read": "Read 1"
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
             "end_bias": "3 prime tag",
             "input_nucleic_acid_molecule": {
                 "text": "polyA RNA"
@@ -338,7 +338,7 @@
                 "fastq_method_version": "Cellranger 4.0",
                 "pooled_channels": 4.0
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
             "instrument_manufacturer_model": {
                 "ontology_label": "EFO_0008637",
                 "text": "Illumina NovaSeq 6000"
@@ -371,7 +371,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
             "diseases": [
                 {
                     "ontology": "MONDO:0100096",
@@ -401,7 +401,7 @@
             "schema_type": "biomaterial"
         },
         "enrichment_protocol/46435803-7ee8-5157-8569-8a61ad50c315": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
             "method": {
                 "ontology": "EFO:0009337",
                 "ontology_label": "cell size selection",
@@ -428,7 +428,7 @@
                     9606
                 ]
             },
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.6.1/donor_organism",
             "development_stage": {
                 "ontology": "HsapDv:0000087",
                 "ontology_label": "human adult stage",
@@ -466,7 +466,7 @@
             "sex": "unknown"
         },
         "collection_protocol/e7f864e3-6ba7-53c8-842f-2a05cb90e1b7": {
-            "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
             "method": {
                 "ontology": "EFO:0009121",
                 "ontology_label": "blood draw",
@@ -487,7 +487,7 @@
         }
     },
     "links": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.1.0/links",
+        "describedBy": "https://schema.humancellatlas.org/system/3.1.0/links",
         "links": [
             {
                 "inputs": [
