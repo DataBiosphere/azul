@@ -48,10 +48,6 @@ from typing import (
 )
 from unittest import (
     mock,
-    skip,
-)
-from unittest.mock import (
-    PropertyMock,
 )
 import uuid
 import webbrowser
@@ -86,7 +82,6 @@ import urllib3
 
 from azul import (
     CatalogName,
-    Config,
     config,
 )
 from azul.auth import (
@@ -2213,28 +2208,6 @@ class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
                 with self.subTest(catalog=catalog.name,
                                   repository=catalog.plugins['repository']):
                     self._test_catalog(catalog)
-
-    @skip('https://github.com/DataBiosphere/azul/issues/8152')
-    def test_can_bundle_canned_repository(self):
-        mock_catalog = config.Catalog(name='canned-it',
-                                      atlas='hca',
-                                      internal=True,
-                                      mirror_limit=None,
-                                      plugins={
-                                          'metadata': config.Catalog.Plugin(name='hca'),
-                                          'repository': config.Catalog.Plugin(name='canned'),
-                                      },
-                                      sources={
-                                          'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests': {
-                                              'mirror': False
-                                          },
-                                      })
-        with mock.patch.object(Config,
-                               'catalogs',
-                               new=PropertyMock(return_value={
-                                   mock_catalog.name: mock_catalog
-                               })):
-            self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
         source = self._select_source(catalog).ref
