@@ -51,6 +51,8 @@ from azul.service.controller import (
 )
 from azul.service.query_service import (
     QueryService,
+    SortKey,
+    sort_key_from_json,
 )
 
 log = logging.getLogger(__name__)
@@ -198,6 +200,15 @@ class QueryController(ServiceController, metaclass=ABCMeta):
         fields = self._fields if include_synthetic else self._organic_fields
         if field not in fields:
             raise BRE(f'Unknown field `{field}`')
+
+    def _validate_sort_key(self, name: str, value: str) -> SortKey:
+        key = self._validate_json_param(name, value)
+        try:
+            return sort_key_from_json(key)
+        except AssertionError:
+            raise BRE(f'The {name!r} param must be a one- or two-element list. '
+                      f'The first parameter must be a primitive JSON value, '
+                      f'and the second value (if present) must be a string.')
 
     def _validate_filters(self, filters):
         filters = self._validate_json_param('filters', filters)
