@@ -407,6 +407,17 @@ class NullableDateTime(NullableScalar[str, str]):
     es_type = 'date'
     null = format_dcp2_datetime(datetime(9999, 1, 1, tzinfo=timezone.utc))
 
+    def api_schema(self, mode: Mode) -> JSON:
+        base_schema = super().api_schema(mode)
+        # This pattern describes the *output* format of `format_dcp2_datetime`,
+        # which is much more narrow than what `parse_dcp2_datetime` can actually
+        # parse. Therefore, it will reject some valid inputs. Capturing the full
+        # range of valid inputs would require a far more complex pattern.
+        return {
+            **base_schema,
+            'pattern': r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$'
+        }
+
     def to_index(self, value: str | None) -> str:
         if value is None:
             return self.null
