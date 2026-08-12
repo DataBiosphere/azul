@@ -48,10 +48,6 @@ from typing import (
 )
 from unittest import (
     mock,
-    skip,
-)
-from unittest.mock import (
-    PropertyMock,
 )
 import uuid
 import webbrowser
@@ -86,7 +82,6 @@ import urllib3
 
 from azul import (
     CatalogName,
-    Config,
     config,
 )
 from azul.auth import (
@@ -1992,14 +1987,21 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                        config.mirror_queue.to_fail.name])
             _delete()
 
-            indexed_files: dict[File, tuple[SourceRef, JSON]] = {}
+            # The files accumulate across catalogs, so each entry records the
+            # catalog it was mirrored for. A file must only ever be passed to the
+            # service for that catalog, since the service determines the bucket a
+            # file was mirrored to by looking up its source among the public
+            # sources of the catalog. A source that's public in one catalog may
+            # be absent from another, in which case the file would be mistaken
+            # for one from a managed access source.
+            indexed_files: dict[File, tuple[CatalogName, SourceRef, JSON]] = {}
             for catalog, sources in sources_by_catalog.items():
                 with self.subTest('mirror_sources_and_files', catalog=catalog):
                     service = service_by_catalog[catalog]
                     # _get_one_mirrorable_file uses the public service account,
                     # so the file will always be from the public source
                     repository_file, source, file_response = self._get_one_mirrorable_file(catalog)
-                    indexed_files[repository_file] = source, file_response
+                    indexed_files[repository_file] = catalog, source, file_response
                     service.mirror_sources(sources)
                     service.mirror_file(source, repository_file)
                     self.azul_client.wait_for_mirroring()
@@ -2017,27 +2019,31 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     self.azul_client.wait_for_mirroring()
                     self._assert_queues_empty([config.mirror_queue.to_fail.name])
 
-                with self.subTest('download_mirrored_files'):
-                    for repository_file, (source, file_response) in indexed_files.items():
-                        digest = repository_file.digest
-                        expected_url = furl(scheme='https', host='s3.amazonaws.com', path=[
-                            aws.mirror_bucket, '_it', 'file', f'{digest.value}.{digest.type}',
-                        ])
-                        actual_url = self._test_file_download(source.spec, file_response)
-                        self.assertIsNotNone(actual_url)
-                        actual_url.set(args=None)
-                        self.assertEqual(expected_url, actual_url)
+            self.assertGreater(len(indexed_files), 0)
 
-                with self.subTest('validate_info_schemas'):
-                    service = service_by_catalog[catalog]
-                    info_objects = [service.info(file) for file in indexed_files.keys()]
-                    schema_url = info_objects[0]['$schema']
-                    self.assertTrue(schema_url.endswith(f'/v{service.info_schema_version}.json'))
-                    schema_response = self._get_url_json('GET', furl(schema_url))
-                    self.assertEqual(schema_url, schema_response['$id'])
-                    for info_object in info_objects:
-                        self.assertEqual(schema_url, info_object['$schema'])
-                        jsonschema.validate(info_object, schema_response)
+            with self.subTest('download_mirrored_files'):
+                for repository_file, (catalog, source, file_response) in indexed_files.items():
+                    digest = repository_file.digest
+                    expected_url = furl(scheme='https', host='s3.amazonaws.com', path=[
+                        aws.mirror_bucket, '_it', 'file', f'{digest.value}.{digest.type}',
+                    ])
+                    actual_url = self._test_file_download(source.spec, file_response)
+                    self.assertIsNotNone(actual_url)
+                    actual_url.set(args=None)
+                    self.assertEqual(expected_url, actual_url)
+
+            with self.subTest('validate_info_schemas'):
+                info_objects = [
+                    service_by_catalog[catalog].info(file)
+                    for file, (catalog, source, file_response) in indexed_files.items()
+                ]
+                schema_url = info_objects[0]['$schema']
+                self.assertTrue(schema_url.endswith(f'/v{MirrorService.info_schema_version}.json'))
+                schema_response = self._get_url_json('GET', furl(schema_url))
+                self.assertEqual(schema_url, schema_response['$id'])
+                for info_object in info_objects:
+                    self.assertEqual(schema_url, info_object['$schema'])
+                    jsonschema.validate(info_object, schema_response)
 
                 with self.subTest('sweep', catalog=catalog):
                     service = service_by_catalog[catalog]
@@ -2202,28 +2208,6 @@ class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
                 with self.subTest(catalog=catalog.name,
                                   repository=catalog.plugins['repository']):
                     self._test_catalog(catalog)
-
-    @skip('https://github.com/DataBiosphere/azul/issues/8152')
-    def test_can_bundle_canned_repository(self):
-        mock_catalog = config.Catalog(name='canned-it',
-                                      atlas='hca',
-                                      internal=True,
-                                      mirror_limit=None,
-                                      plugins={
-                                          'metadata': config.Catalog.Plugin(name='hca'),
-                                          'repository': config.Catalog.Plugin(name='canned'),
-                                      },
-                                      sources={
-                                          'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests': {
-                                              'mirror': False
-                                          },
-                                      })
-        with mock.patch.object(Config,
-                               'catalogs',
-                               new=PropertyMock(return_value={
-                                   mock_catalog.name: mock_catalog
-                               })):
-            self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
         source = self._select_source(catalog).ref

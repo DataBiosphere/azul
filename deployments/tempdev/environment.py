@@ -51,9 +51,10 @@ def _source(source_type: Literal['bigquery', 'parquet'],
 
 def delta(items: list[tuple[DatasetName, SourceItem | None]]
           ) -> dict[DatasetName, SourceItem | None]:
-    result = dict(items)
+    keys = [k for k, _ in items]
+    assert keys == sorted(keys), 'input not sorted'
+    result = {k.lower(): v for k, v in items}
     assert len(items) == len(result), 'collisions detected'
-    assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
     return result
 
 
@@ -136,6 +137,7 @@ def env() -> Mapping[str, str | None]:
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
         'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-dev.broadinstitute.org',
         'AZUL_TERRA_SERVICE_URL': 'https://firecloud-orchestration.dsde-dev.broadinstitute.org',
+        'AZUL_TDR_REQUESTER_PAYS_PROJECT': 'terra-dev-0c74c173',
         'azul_ecm_service_url': 'https://externalcreds.dsde-dev.broadinstitute.org',
 
         'AZUL_ENABLE_MONITORING': '1',

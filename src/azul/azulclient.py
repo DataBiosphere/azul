@@ -294,6 +294,10 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
                           'indexing is occurring. The index may now be in an '
                           'inconsistent state.')
             raise RuntimeError('Failures during deletion', response['failures'])
+        log.info('Purging deleted documents from catalog %r', catalog)
+        response = opensearch.indices.forcemerge(index=indices, only_expunge_deletes=True)
+        if response['_shards']['failed'] > 0:
+            raise RuntimeError('Failures during force merge', response)
 
     def reset_indexer(self,
                       catalogs: Iterable[CatalogName],

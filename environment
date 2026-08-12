@@ -287,7 +287,7 @@ _clone() {
 		git worktree add "../azul.${deployment}" "${branch}"
 		cd "../azul.${deployment}"
 		(cd terraform/gitlab/vpn && git submodule update --init easy-rsa)
-		_update_clone
+		__update_clone
 		source environment
 		_link "${deployment}"
 		_refresh
@@ -319,7 +319,10 @@ _clone() {
 }
 
 _update_clone() {
-	_cwd_is_project_root &&
+	_cwd_is_project_root && __update_clone
+}
+
+__update_clone() {
 	rsync -rvlm \
 		-f '+ */' \
 		-f '+ environment.local.py' \
