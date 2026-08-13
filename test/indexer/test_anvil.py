@@ -177,16 +177,17 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         plugin = self.plugin
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
         self.assertEqual(expected_bundle_fqids, bundle_fqids)
-        for bundle_fqid in canned_bundle_fqids:
+        for bundle_fqid in bundle_fqids:
             with self.subTest(bundle_fqid=bundle_fqid):
-                canned_bundle = self._load_canned_bundle(bundle_fqid)
-                assert isinstance(canned_bundle, TDRAnvilBundle)
                 bundle = plugin.fetch_bundle(bundle_fqid)
                 assert isinstance(bundle, TDRAnvilBundle)
-                self.assertEqual(canned_bundle.fqid, bundle.fqid)
-                self.assertEqual(canned_bundle.entities, bundle.entities)
-                self.assertEqual(canned_bundle.links, bundle.links)
-                self.assertEqual(canned_bundle.orphans, bundle.orphans)
+                if bundle_fqid in canned_bundle_fqids:
+                    canned_bundle = self._load_canned_bundle(bundle_fqid)
+                    assert isinstance(canned_bundle, TDRAnvilBundle)
+                    self.assertEqual(canned_bundle.fqid, bundle.fqid)
+                    self.assertEqual(canned_bundle.entities, bundle.entities)
+                    self.assertEqual(canned_bundle.links, bundle.links)
+                    self.assertEqual(canned_bundle.orphans, bundle.orphans)
 
     def test_absent_duos_id(self):
         source_ref = self.source.ref
