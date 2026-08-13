@@ -34,6 +34,9 @@ from azul.indexer.document import (
     FieldPathElement,
     IndexName,
 )
+from azul.lib import (
+    strings,
+)
 from azul.lib.digests import (
     Digest,
 )
@@ -291,6 +294,26 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                                name_in_hit='file_name',
                                type=pass_thru_str),
     )
+
+    def azul_slug(self, document: JSON) -> str | list[str] | None:
+        def slug(title: str) -> str:
+            # AnVIL dataset titles are short enough that we don't need to limit
+            # the number of words or length of the words used in the slug.
+            return strings.azul_slug(title,
+                                     words_left=None,
+                                     words_right=None,
+                                     word_length=None,
+                                     hash_length=6)
+
+        contents = json_mapping(document['contents'])
+        dataset = one(json_element_mappings(contents['datasets']))
+        title = dataset.get('title')
+        if title is None:
+            return None
+        elif isinstance(title, list):
+            return [slug(t) for t in json_element_strings(title)]
+        else:
+            return slug(json_str(title))
 
     @property
     def root_entity_type(self) -> str:

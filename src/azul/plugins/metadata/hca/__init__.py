@@ -9,6 +9,9 @@ from typing import (
 from attrs import (
     frozen,
 )
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
@@ -28,6 +31,7 @@ from azul.indexer.document import (
 )
 from azul.lib import (
     R,
+    strings,
 )
 from azul.lib.digests import (
     Digest,
@@ -40,6 +44,8 @@ from azul.lib.types import (
     MutableJSON,
     json_dict,
     json_dict_of_dicts,
+    json_element_mappings,
+    json_element_strings,
     json_int,
     json_list,
     json_mapping,
@@ -320,6 +326,25 @@ class Plugin(MetadataPlugin[HCABundle]):
         file_uuid=SpecialField(name='fileId', name_in_hit='uuid', type=pass_thru_str),
         file_name=SpecialField(name='fileName', name_in_hit='name', type=pass_thru_str)
     )
+
+    def azul_slug(self, document: JSON) -> str | list[str] | None:
+        def slug(title: str) -> str:
+            return strings.azul_slug(title,
+                                     words_left=5,
+                                     words_right=2,
+                                     word_length=12,
+                                     hash_length=6)
+
+        contents = json_mapping(document['contents'])
+        project = one(json_element_mappings(contents['projects']))
+        project_title = project.get('project_title')
+        if project_title is None:
+            return None
+        elif isinstance(project_title, list):
+            return [slug(title) for title in json_element_strings(project_title)]
+        else:
+            return slug(json_str(project_title))
+
 
     @property
     def root_entity_type(self) -> str:

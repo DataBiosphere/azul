@@ -698,23 +698,24 @@ class TestManifests(DCP1ManifestTestCase):
         response = self._get_manifest(ManifestFormat.curl, filters)
         self.assertEqual(200, response.status_code)
         base_url = str(self.base_url.set(path='/repository/files'))
+        azul_slug = 'melanoma-infiltration-of-stromal-and-immune-cells--6qb17r'
         expected_body = [
             [
                 f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.221025Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_sequencing_protocol.pdf"',
+                f'output="{azul_slug}/{bundle_fqid.uuid}/SmartSeq2_sequencing_protocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59'
                 '?catalog=test&version=2018-09-14T12%3A33%3A46.866929Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/TissueDissociationProtocol.pdf"',
+                f'output="{azul_slug}/{bundle_fqid.uuid}/TissueDissociationProtocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.012715Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_RTPCR_protocol.pdf"',
+                f'output="{azul_slug}/{bundle_fqid.uuid}/SmartSeq2_RTPCR_protocol.pdf"',
                 ''
             ],
         ]
@@ -1618,6 +1619,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
         file_size_2 = 213021639
         file_size_3 = 3306845592
         cases = [-1, file_size_1, file_size_2, file_size_3]
+        azul_slug = 'anvil-cmg-uwash-ds-bdis--m3tsk6'
         for i, mirror_limit in enumerate(cases, start=1):
             with self.subTest(mirror_limit=mirror_limit):
                 with self._patch_mirror_limit(self.catalog, mirror_limit):
@@ -1630,21 +1632,21 @@ class TestAnvilManifests(AnvilManifestTestCase):
                     *iif(file_size_2 <= mirror_limit, [[
                         f'url="{base_url}/15b76f9c-6b46-433f-851d-34e89f1b9ba6' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
+                        f'output="{azul_slug}/826dea02-e274-affe-aabc-eb3db63ad068/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
                     *iif(file_size_3 <= mirror_limit, [[
                         f'url="{base_url}/3b17377b-16b1-431c-9967-e5d01fc5923f' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
+                        f'output="{azul_slug}/826dea02-e274-affe-aabc-eb3db63ad068/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
                         ''
                     ]]),
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/6b0f6c0f-5d80-4242-accb-840921351cd5' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="595c469e-604d-ab34-af39-f5b9f5d61818/' +
+                        f'output="{azul_slug}/595c469e-604d-ab34-af39-f5b9f5d61818/' +
                         'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
                         ''
                     ]])
