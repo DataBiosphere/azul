@@ -9,15 +9,10 @@ import datetime
 import logging
 import time
 from typing import (
-    Callable,
     Iterable,
     TypeVar,
 )
 
-import attrs
-from chalice import (
-    UnauthorizedError,
-)
 from furl import (
     furl,
 )
@@ -58,7 +53,7 @@ from azul.lib.types import (
     JSON,
 )
 from azul.plugins import (
-    RepositoryFileDownload,
+    File,
     RepositoryPlugin,
 )
 from azul.terra import (
@@ -99,28 +94,6 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
     ]
 ):
 
-    def _auth_fallback(self,
-                       authentication: Authentication | None,
-                       tdr_callback: Callable[[TDRClient], T]
-                       ) -> T:
-        """
-        Terra rejects credentials for users are not registered with Terra's SAM.
-        This method invokes the given callback with the given credentials but
-        invokes the callback again if they are rejected for that reason.
-        """
-        # The line below raises UnauthorizedError for invalid tokens. We don't
-        # want to fall back to anonymous authentication in that case.
-        tdr = self._authenticated_tdr(authentication)
-        try:
-            return tdr_callback(tdr)
-        except UnauthorizedError:
-            if authentication is None or tdr.is_registered():
-                raise
-            else:
-                log.info('Falling back to anonymous access')
-                tdr = self._authenticated_tdr(None)
-                return tdr_callback(tdr)
-
     @cached_property
     def _common_source_filter(self) -> str:
         # We filter by prefix of snapshot names in an attempt to speed up the
@@ -133,11 +106,8 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
     def list_sources(self,
                      authentication: Authentication | None
                      ) -> list[TDRSourceRef]:
-        def list_snapshots(tdr: TDRClient):
-            return tdr.list_snapshots(filter=self._common_source_filter)
-
-        snapshots_by_id = self._auth_fallback(authentication, list_snapshots)
-
+        tdr = self._authenticated_tdr(authentication)
+        snapshots_by_id = tdr.list_snapshots(filter=self._common_source_filter)
         return [
             TDRSourceRef(id=id,
                          spec=TDRSourceSpec(name=snapshot['name'],
@@ -151,10 +121,8 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
     def list_source_ids(self,
                         authentication: Authentication | None
                         ) -> set[str]:
-        def list_snapshot_ids(tdr: TDRClient):
-            return tdr.list_snapshot_ids()
-
-        return self._auth_fallback(authentication, list_snapshot_ids)
+        tdr = self._authenticated_tdr(authentication)
+        return tdr.list_snapshot_ids()
 
     @property
     def tdr(self):
@@ -229,8 +197,30 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
             drs_client = self._unauthenticated_drs
         return drs_client.drs_object(drs_url)
 
-    def file_download_class(self) -> type[RepositoryFileDownload]:
-        return TDRFileDownload
+    def file_download_url(self,
+                          file: File,
+                          authentication: Authentication | None,
+                          replica: str | None = None,
+                          *,
+                          requester_pays: bool = False
+                          ) -> str | None:
+        assert replica is None or replica == 'gcp', R(
+            'Invalid replica', replica)
+        if file.drs_uri is None:
+            return None
+        else:
+            if requester_pays and config.tdr_requester_pays_project is not None:
+                headers = {'x-user-project': config.tdr_requester_pays_project}
+            else:
+                headers = None
+            drs_client = self.drs_object(file.drs_uri, authentication)
+            access = drs_client.get(access_method=AccessMethod.gs, headers=headers)
+            assert access.method is AccessMethod.https, R(str(access.method))
+            assert access.headers is None, R(str(access.headers))
+            signed_url = access.url
+            args = furl(signed_url).args
+            assert 'X-Goog-Signature' in args, R(str(args))
+            return signed_url
 
     def validate_version(self, version: str) -> None:
         parse_dcp2_version(version)
@@ -269,37 +259,3 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                     }
                     log.warning('Undesired string found: %r', match)
                     yield match
-
-
-@attrs.define(auto_attribs=True, kw_only=True)
-class TDRFileDownload(RepositoryFileDownload):
-    requester_pays: bool = False
-    _location: str | None = None
-
-    def update(self, authentication: Authentication | None) -> None:
-        assert self.replica is None or self.replica == 'gcp', R(
-            'Invalid replica', self.replica)
-        if self.file.drs_uri is None:
-            assert self.location is None, self
-            assert self.retry_after is None, self
-        else:
-            if self.requester_pays and config.tdr_requester_pays_project is not None:
-                headers = {'x-user-project': config.tdr_requester_pays_project}
-            else:
-                headers = None
-            drs_client = self._plugin.drs_object(self.file.drs_uri, authentication)
-            access = drs_client.get(access_method=AccessMethod.gs, headers=headers)
-            assert access.method is AccessMethod.https, R(str(access.method))
-            assert access.headers is None, R(str(access.headers))
-            signed_url = access.url
-            args = furl(signed_url).args
-            assert 'X-Goog-Signature' in args, R(str(args))
-            self._location = signed_url
-
-    @property
-    def location(self) -> str | None:
-        return self._location
-
-    @property
-    def retry_after(self) -> int | None:
-        return None

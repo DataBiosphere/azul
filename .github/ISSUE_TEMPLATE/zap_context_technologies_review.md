@@ -4,7 +4,7 @@ about: Template for the annual review/update of the web application vulnerabilit
 title: Update the ZAP scan context file
 labels: compliance,infra,no demo,operator
 type: Chore
-_priority: \-
+_priority: Medium
 _repository: DataBiosphere/azul-private
 _start: 2026-01-01T09:00
 _period: 1 year

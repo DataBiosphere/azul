@@ -4,13 +4,11 @@ from collections.abc import (
 )
 import json
 import logging
-import time
 from typing import (
     Any,
 )
 
 import attr
-import attrs
 from chalice.app import (
     BadRequestError,
     ForbiddenError,
@@ -44,7 +42,6 @@ from azul.http import (
     TooManyRequestsException,
 )
 from azul.indexer.mirror_service import (
-    MirrorFileDownload,
     MirrorService,
 )
 from azul.indexer.repository_service import (
@@ -54,15 +51,11 @@ from azul.lib import (
     R,
     cached_property,
 )
-from azul.lib.collections import (
-    adict,
-)
 from azul.lib.strings import (
     format_and_dedent as fd,
 )
 from azul.lib.types import (
     MutableJSON,
-    is_optional,
     json_int,
 )
 from azul.openapi import (
@@ -71,13 +64,10 @@ from azul.openapi import (
     schema,
 )
 from azul.plugins import (
-    File,
     RepositoryPlugin,
 )
 from azul.service.controller import (
-    Mandatory,
     ServiceController,
-    Validator,
     validate_params,
 )
 from azul.service.index_service import (
@@ -102,7 +92,7 @@ class RepositoryController(ServiceController):
         return IndexService()
 
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return self._index_service.mirror_service(catalog)
+        return MirrorService.for_catalog(catalog)
 
     def _repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return self._repository_service.repository_plugin(catalog)
@@ -125,21 +115,6 @@ class RepositoryController(ServiceController):
                     ''')
                 ),
                 params.query(
-                    'wait',
-                    schema.optional(int),
-                    description=fd('''
-                        If 0, the client is responsible for honoring the waiting period
-                        specified in the Retry-After response header. If 1, the server
-                        will delay the response in order to consume as much of that
-                        waiting period as possible. This parameter should only be set to
-                        1 by clients who can't honor the `Retry-After` header,
-                        preventing them from quickly exhausting the maximum number of
-                        redirects. If the server cannot wait the full amount, any amount
-                        of wait time left will still be returned in the Retry-After
-                        header of the response.
-                    ''')
-                ),
-                params.query(
                     'replica',
                     schema.optional(str),
                     description=fd('''
@@ -149,20 +124,7 @@ class RepositoryController(ServiceController):
                         repositories that don't support replication — or the default
                         replica — for those that do — will be used.
                     ''')
-                ),
-                params.query(
-                    'requestIndex',
-                    schema.optional(int),
-                    description='Do not use. Reserved for internal purposes.'
-                ),
-                params.query(
-                    'drsUri',
-                    schema.optional(str),
-                    description='Do not use. Reserved for internal purposes.'
-                ),
-                params.query('token',
-                             schema.optional(str),
-                             description='Reserved. Do not pass explicitly.')
+                )
             ]
         }
 
@@ -183,26 +145,6 @@ class RepositoryController(ServiceController):
                     [1]: #operations-Repository-get_fetch_repository_files__file_uuid_
                 '''),
                 'responses': {
-                    '301': {
-                        'description': fd('''
-                            A URL to the given file is still being prepared. Retry by
-                            waiting the number of seconds specified in the `Retry-After`
-                            header of the response and the requesting the URL specified
-                            in the `Location` header.
-                        '''),
-                        'headers': {
-                            'Location': responses.header(str, description=fd('''
-                                A URL pointing back at this endpoint, potentially with
-                                different or additional request parameters.
-                            ''')),
-                            'Retry-After': responses.header(int, description=fd('''
-                                Recommended number of seconds to wait before requesting
-                                the URL specified in the `Location` header. The response
-                                may carry this header even if server-side waiting was
-                                requested via `wait=1`.
-                            '''))
-                        }
-                    },
                     '302': {
                         'description': fd('''
                             The file can be downloaded from the URL returned in the
@@ -348,47 +290,36 @@ class RepositoryController(ServiceController):
                        ):
 
         # Check the catalog in a separate step so that the plugins can be loaded
-        # safely, since doing so requires a valid catalog. We need the metadata
-        # plugin to know which file parameters to expect, and the repository
-        # plugin to validate the file version.
+        # safely, since doing so requires a valid catalog. We need the
+        # repository plugin to validate the file version.
         validate_params(query_params,
                         catalog=self._validate_catalog,
-                        requestIndex=int,
                         allow_extra_params=True)
 
-        request_index = int(query_params.get('requestIndex', '0'))
+        plugin = self._repository_plugin(catalog)
 
         validate_params(query_params,
                         catalog=str,
-                        requestIndex=int,
-                        wait=self._validate_wait,
                         replica=self._validate_replica,
-                        token=str,
-                        allow_extra_params=False,
-                        **self._file_param_validators(catalog, request_index))
+                        version=plugin.validate_version,
+                        fileName=str,
+                        allow_extra_params=False)
 
         file_version = query_params.get('version')
         replica = query_params.get('replica')
         file_name = query_params.get('fileName')
-        drs_uri = query_params.get('drsUri')
-        wait = query_params.get('wait')
-        token = query_params.get('token')
 
-        if request_index == 0:
-            filters = self._prepare_filters(catalog, authentication, None)
-            file = self._index_service.get_data_file(catalog=catalog,
-                                                     file_uuid=file_uuid,
-                                                     file_version=file_version,
-                                                     filters=filters)
-            if file is None:
-                raise NotFoundError(f'Unable to find file {file_uuid!r}, '
-                                    f'version {file_version!r} in catalog {catalog!r}')
-            if file_name is not None:
-                file = attr.evolve(file, name=file_name)
-            if drs_uri is not None:
-                file = attr.evolve(file, drs_uri=drs_uri)
-        else:
-            file = self._file_from_request(catalog, file_uuid, query_params)
+        filters = self._prepare_filters(catalog, authentication, None)
+        file = self._index_service.get_data_file(catalog=catalog,
+                                                 file_uuid=file_uuid,
+                                                 file_version=file_version,
+                                                 filters=filters)
+        if file is None:
+            raise NotFoundError(f'Unable to find file {file_uuid!r}, '
+                                f'version {file_version!r} in catalog {catalog!r}')
+
+        if file_name is not None:
+            file = attr.evolve(file, name=file_name)
 
         try:
             range_specifier = headers['range']
@@ -409,74 +340,30 @@ class RepositoryController(ServiceController):
                     'Content-Range': f'bytes */{file.size}'
                 }
 
-        plugin = self._repository_plugin(catalog)
-
         mirror_url = None
-        # The file's content type and source would be None on subsequent
-        # requests since they aren't propagated via query parameters.
-        # `MirrorFileDownload` will always be ready immediately.
-        if request_index == 0 and config.enable_mirroring:
+        if config.enable_mirroring:
             mirror_url = self._mirror_service(catalog).mirror_url(file)
 
-        if mirror_url is None:
-            download_cls = plugin.file_download_class()
-            download = download_cls(plugin=plugin, file=file, replica=replica, token=token)
+        if mirror_url is not None:
+            location = mirror_url
         else:
-            assert request_index == 0, request_index
-            download = MirrorFileDownload(
-                plugin=plugin,
-                file=file,
-                location=mirror_url,
-                replica=replica,
-                token=token
-            )
-            assert download.retry_after is None, download
-
-        try:
-            download.update(authentication)
-        except LimitedTimeoutException as e:
-            raise TemporaryRedirectError(*e.args)
-        except TooManyRequestsException as e:
-            raise TooManyRequestsError(*e.args)
-        except DRSStatusException as e:
-            msg, status, data = e.args
-            if status == UnauthorizedError.STATUS_CODE:
-                raise UnauthorizedError(msg)
-            else:
-                raise
-        except DRSRequesterPaysRequired as e:
-            msg, status, data = e.args
-            raise ForbiddenError(msg)
-        if download.retry_after is not None:
-            retry_after = min(download.retry_after, int(1.3 ** request_index))
-            if wait is not None:
-                if wait == '0':
-                    pass
-                elif wait == '1':
-                    # Sleep in the lambda but ensure that we wake up before it
-                    # runs out of execution time (and before API Gateway times
-                    # out) so we get a chance to return a response to the client
-                    remaining_time = self.lambda_context.get_remaining_time_in_millis() / 1000
-                    server_side_sleep = min(float(retry_after),
-                                            remaining_time - config.api_gateway_timeout_padding - 3)
-                    time.sleep(server_side_sleep)
-                    retry_after = round(retry_after - server_side_sleep)
+            try:
+                location = plugin.file_download_url(file, authentication, replica)
+            except LimitedTimeoutException as e:
+                raise TemporaryRedirectError(*e.args)
+            except TooManyRequestsException as e:
+                raise TooManyRequestsError(*e.args)
+            except DRSStatusException as e:
+                msg, status, data = e.args
+                if status == UnauthorizedError.STATUS_CODE:
+                    raise UnauthorizedError(msg)
                 else:
-                    assert False, wait
-            query_params = adict(self._file_to_request(download.file),
-                                 token=download.token,
-                                 replica=download.replica,
-                                 requestIndex=str(request_index + 1),
-                                 wait=wait)
-            return {
-                'Status': 301,
-                **({'Retry-After': retry_after} if retry_after else {}),
-                'Location': str(self._file_url(catalog=catalog,
-                                               file_uuid=file_uuid,
-                                               fetch=fetch,
-                                               **query_params))
-            }
-        elif download.location is not None:
+                    raise
+            except DRSRequesterPaysRequired as e:
+                msg, status, data = e.args
+                raise ForbiddenError(msg)
+
+        if location is not None:
             log_data = {
                 **file.to_json(),
                 'catalog': catalog,
@@ -491,10 +378,10 @@ class RepositoryController(ServiceController):
                      json.dumps(log_data))
             return {
                 'Status': 302,
-                'Location': download.location
+                'Location': location
             }
         else:
-            assert download.file.drs_uri is None, download
+            assert file.drs_uri is None, file
             raise NotFoundError(f'File {file_uuid!r} with version {file_version!r} '
                                 f'was found in catalog {catalog!r}, however no download is currently available')
 
@@ -564,79 +451,6 @@ class RepositoryController(ServiceController):
             raise BadRequestError(f'Invalid range specifier {range_specifier!r}') from e
         return parsed_ranges
 
-    def _validate_wait(self, wait: str | None):
-        if wait not in ('0', '1', None):
-            raise ValueError
-
     def _validate_replica(self, replica: str):
         if replica not in ('aws', 'gcp'):
             raise ValueError
-
-    def _file_param_validators(self,
-                               catalog: CatalogName,
-                               request_index: int
-                               ) -> dict[str, Validator]:
-        all_file_validators: Mapping[str, Validator] = dict(
-            version=self._repository_plugin(catalog).validate_version,
-            fileName=str,
-            drsUri=str,
-            sha256=str,
-            md5=str
-        )
-        result = {}
-        for a in attrs.fields(self._file_class(catalog)):
-            try:
-                param_name = self._file_params_by_field[a.name]
-            except KeyError:
-                assert a.name == 'uuid' or is_optional(a.type), a
-            else:
-                validator = all_file_validators[param_name]
-                if request_index > 0 and not is_optional(a.type):
-                    validator = Mandatory(validator)
-                result[param_name] = validator
-        return result
-
-    def _file_from_request(self,
-                           catalog: CatalogName,
-                           uuid: str,
-                           params: Mapping[str, str]
-                           ) -> File:
-        file_class = self._file_class(catalog)
-        fields = {}
-        for a in attrs.fields(file_class):
-            if a.name == 'uuid':
-                value = uuid
-            else:
-                try:
-                    # A KeyError here means we do not support passing the field as a query parameter
-                    param_name = self._file_params_by_field[a.name]
-                    # A KeyError here means we do support it, but no parameter was provided
-                    value = params[param_name]
-                except KeyError:
-                    assert is_optional(a.type), a
-                    value = None
-            fields[a.name] = value
-        return file_class.from_json(fields)
-
-    def _file_to_request(self, file: File) -> dict[str, str]:
-        params = {}
-        for a in attrs.fields(type(file)):
-            if a.name != 'uuid':
-                value = getattr(file, a.name)
-                param_name = self._file_params_by_field.get(a.name)
-                if param_name is None or not isinstance(value, str):
-                    assert is_optional(a.type), (a.name, file)
-                else:
-                    params[param_name] = value
-        return params
-
-    _file_params_by_field = {
-        'version': 'version',
-        'name': 'fileName',
-        'drs_uri': 'drsUri',
-        'sha256': 'sha256',
-        'md5': 'md5'
-    }
-
-    def _file_class(self, catalog: CatalogName) -> type[File]:
-        return self._index_service.metadata_plugin(catalog).file_class

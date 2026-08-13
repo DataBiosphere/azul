@@ -420,7 +420,7 @@ def dashboard_body(name: str):
                     ) + dedent(f'''\
                         | fields strcontains(@message, 'Worker successfully handled') as success,
                                  strcontains(@message,'Worker failed to handle message') as failure,
-                                 strcontains(@message,'Task timed out after') as timeout
+                                 strcontains(@message,'Status: timeout') as timeout
                         | filter failure > 0 or success > 0 or timeout > 0
                         | stats sum(success) as Successes,
                                 sum(failure + timeout) as Failures

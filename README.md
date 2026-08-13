@@ -63,6 +63,10 @@ generic with minimal need for project-specific behavior.
   [environment.py](environment.py). Follow the [AWS instructions for
   installing past releases][AWS CLI v2].
 
+- Optionally, the [GitHub CLI]. You should install
+  the version set at `azul_ghcli_version` in [environment.py](environment.py),
+  or a more recent, compatible version.
+
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
 - [git-secrets](#211-git-secrets)
@@ -85,6 +89,7 @@ generic with minimal need for project-specific behavior.
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
+[GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
 
 ### 2.1.1 git-secrets
@@ -694,10 +699,12 @@ workspace for requester-pays in a given deployment:
    [registered with SAM](#234-google-cloud-tdr-and-sam), complete the steps in
    that section before proceeding further.
 
-2. Go to [Terra](https://app.terra.bio/#workspace) and create a new workspace.
-   Give it the name `"azul-requester_pays-${AZUL_DEPLOYMENT_STAGE}"`. This step
-   is usually skipped for personal deployments, which share a workspace with
-   their associated sandbox deployment.
+2. Go to [Terra dev](https://bvdp-saturn-dev.appspot.com/#workspaces), or, for a
+   stable deployment, to [Terra](https://app.terra.bio/#workspace), and create a
+   new workspace. Give it the name
+   `"azul-requester_pays-${AZUL_DEPLOYMENT_STAGE}"`. This step is usually
+   skipped for personal deployments, which share a workspace with their
+   associated sandbox deployment.
 
 3. Select the Terra billing project to be used for requester-pays.
 
@@ -705,19 +712,23 @@ workspace for requester-pays in a given deployment:
    the role of "Writer". The service account's email follows the pattern
    `"${AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC}@${GOOGLE_PROJECT}.iam.gserviceaccount.com"`
 
-5. If the deployment will be used to mirror managed-access files, repeat step 4
-   for the indexer service account.
+5. If the deployment will be used to mirror managed-access files, add the
+   deployment's indexer service account as a collaborator and assign it the role
+   of "Writer". The service account's email follows the pattern
+   `"${AZUL_GOOGLE_SERVICE_ACCOUNT}@${GOOGLE_PROJECT}.iam.gserviceaccount.com"`
 
 In Terra's dev environment, snapshots' associated storage buckets are never
 public, even if the associated snapshot is public. This means that a
 deployment's public service account must be explicitly granted access to the
 public snapshots before it can be used for requester-pays.
 
-This access is managed via a group analogous to the group that grants the
-indexer service account access to all indexed snapshots. The public group is
-set up once per main deployment in Terra dev. Create a new Terra group and ask
-a representative from the Terra team to grant the group access to each public
-snapshot indexed by Azul.
+This access is managed via a Terra group, the "public" group, analogous to the
+"indexer" group that grants the indexer service account access to all indexed
+snapshots. The "public" group is set up once per main deployment in Terra dev.
+Create a new Terra group using the name of the indexer group but with `-public`
+added to the middle component of the name. Make the system administrator an
+admin of the group. Ask a representative from the Terra team to grant the newly
+created group access to each public snapshot indexed by Azul.
 
 Once the public group is set up:
 

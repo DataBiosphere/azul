@@ -35,9 +35,6 @@ from azul.filters import (
 from azul.indexer.mirror_service import (
     MirrorService,
 )
-from azul.lib import (
-    cache,
-)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -97,7 +94,7 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
 
     def _file_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:
         file_cls = self.plugin.file_class
-        mirror_service = self.service.mirror_service(self.catalog)
+        mirror_service = MirrorService.for_catalog(self.catalog)
         return mirror_service.mirror_uri(source, file_cls, file)
 
 
@@ -114,10 +111,6 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
 
 
 class IndexService(QueryService):
-
-    @cache
-    def mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return MirrorService(catalog=catalog)
 
     def search(self,
                *,

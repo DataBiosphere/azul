@@ -1,5 +1,6 @@
 from collections.abc import (
     Collection,
+    Iterator,
     Mapping,
     Sequence,
 )
@@ -21,6 +22,7 @@ from typing import (
     Callable,
     IO,
     TYPE_CHECKING,
+    TypedDict,
 )
 from urllib.parse import (
     urlencode,
@@ -65,6 +67,12 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 Tagging = Mapping[str, str]
+
+
+class ObjectMetadata(TypedDict):
+    Key: str
+    LastModified: datetime
+    Size: int
 
 
 class StorageObjectNotFound(Exception):
@@ -145,6 +153,7 @@ class StorageService:
                       *,
                       max_attempts: int = 10,
                       content_type: str | None = None,
+                      touch: bool = False
                       ):
         """
         Updates the contents and/or content type of an object, based on its
@@ -152,9 +161,10 @@ class StorageService:
         overwritten. Expects a callback that returns the desired contents of the
         object given its current contents. If the callback returns its argument
         unchanged and the specified content type is None or matches the current
-        content type, no further writes will be attempted. If the object does
-        not exist at any point during the update, StorageObjectNotFound is
-        raised.
+        content type, no further writes will be attempted unless ``touch`` is
+        True, in which case the object will be written regardless, updating its
+        ``LastModified`` time. If the object does not exist at any point during
+        the update, StorageObjectNotFound is raised.
         """
         for i in range(max_attempts):
             response = self._get_object(object_key)
@@ -163,7 +173,7 @@ class StorageService:
             if content_type is None:
                 content_type = response['ContentType']
             new_data = updater(data)
-            if new_data == data and content_type == response['ContentType']:
+            if not touch and new_data == data and content_type == response['ContentType']:
                 log.info('Object contents of %r is already up to date during attempt #%r/%r.',
                          object_key, i + 1, max_attempts)
                 break
@@ -226,15 +236,24 @@ class StorageService:
         assert num_deleted == num_keys, (num_deleted, num_keys)
         log.info('Deleted %d objects overall', num_deleted)
 
-    def list_objects(self, prefix: str) -> OrderedSet[str]:
-        keys: OrderedSet[str] = OrderedSet()
-        num_keys = 0
+    def list_objects(self, prefix: str) -> Iterator[ObjectMetadata]:
         paginator = self._s3.get_paginator('list_objects_v2')
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=prefix):
             contents = page.get('Contents', ())
-            num_keys += len(contents)
-            keys.update(object['Key'] for object in contents)
-            assert len(keys) == num_keys, R('Got duplicate keys from S3')
+            log.info('Got page of %d object(s) from %r, starting at %r',
+                     len(contents), self.bucket_name,
+                     contents[0]['Key'] if contents else None)
+            for object in contents:
+                yield ObjectMetadata(Key=object['Key'],
+                                     LastModified=object['LastModified'],
+                                     Size=object['Size'])
+
+    def list_keys(self, prefix: str) -> OrderedSet[str]:
+        keys: OrderedSet[str] = OrderedSet()
+        for object in self.list_objects(prefix):
+            key = object['Key']
+            assert key not in keys, R('Got duplicate key from S3', key)
+            keys.add(key)
         return keys
 
     def create_multipart_upload(self,

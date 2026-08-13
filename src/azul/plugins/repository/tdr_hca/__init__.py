@@ -272,7 +272,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRBundleFQID]):
         if is_stitched:
             bundle.stitched.add(entity.entity_id)
         if entity.entity_type.endswith('_file'):
-            file = self._file_from_row(row)
+            file = self._file_from_row(row, bundle.fqid.source)
             bundle.manifest[str(entity)] = file.to_manifest_entry()
         content = row['content']
         if isinstance(content, str):
@@ -281,7 +281,7 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRBundleFQID]):
 
     def _file_from_row(self,
                        row: BigQueryRow,
-                       source: TDRSourceRef | None = None
+                       source: TDRSourceRef
                        ) -> HCAFile:
         return HCAFile.from_metadata(catalog=self.catalog,
                                      metadata=json.loads(any_str(row['content'])),

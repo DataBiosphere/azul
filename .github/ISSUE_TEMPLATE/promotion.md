@@ -4,7 +4,7 @@ about: Issue template for promoting changes to stable deployments on a weekly ba
 title: Promotion
 labels: infra,no demo,operator
 type: Chore
-_priority: \-
+_priority: Medium
 _start: 2024-02-27T09:00
 _period: 7 days
 ---

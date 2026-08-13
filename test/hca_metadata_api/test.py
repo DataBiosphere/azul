@@ -12,12 +12,6 @@ from itertools import (
 import json
 import logging
 import os
-from pathlib import (
-    Path,
-)
-from tempfile import (
-    TemporaryDirectory,
-)
 from unittest import (
     skip,
 )
@@ -73,9 +67,6 @@ from humancellatlas.data.metadata.helpers.json import (
 )
 from humancellatlas.data.metadata.helpers.schema_validation import (
     SchemaValidator,
-)
-from humancellatlas.data.metadata.helpers.staging_area import (
-    CannedStagingAreaFactory,
 )
 
 
@@ -510,24 +501,6 @@ class TestAccessorApi(AzulUnitTestCase):
 
         return bundle
 
-    @skip('https://github.com/DataBiosphere/azul/issues/8152')
-    def test_canned_staging_area(self):
-        remote_url = furl('https://github.com/HumanCellAtlas/schema-test-data.git')
-        staging_area_path = Path('tests')
-        ref = 'eb93f83b'
-        with TemporaryDirectory() as tmpdir:
-            factory = CannedStagingAreaFactory.clone_remote(remote_url,
-                                                            Path(tmpdir),
-                                                            ref)
-            staging_area = factory.load_staging_area(staging_area_path)
-        self.assertGreater(len(staging_area.links), 0)
-        for link_id in staging_area.links:
-            with self.subTest(link_id=link_id):
-                bundle = staging_area.get_bundle(link_id)
-                self.assertEqual(bundle.uuid, UUID(link_id))
-                project = bundle.projects[UUID('90bf705c-d891-5ce2-aa54-094488b445c6')]
-                self.assertEqual(project.estimated_cell_count, 10000)
-
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
@@ -798,7 +771,6 @@ class TestSchema(AzulUnitTestCase):
         )
         self.assertEqual(expected, cm.exception.args[0].args)
 
-    @skip('https://github.com/DataBiosphere/azul/issues/8152')
     def test_schema_validation(self):
         validator = SchemaValidator()
         test_data = {

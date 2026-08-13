@@ -1147,7 +1147,7 @@ def emit(t: T, target_branch: str):
                                 'on GitLab'
                             ])
                             for browser_site in
-                            json.loads(deployment_env(d, 'browser')['azul_browser_sites']).values()
+                            json.loads(deployment_env(d)['azul_browser_sites']).values()
                         ],
                         'Restarted `deploy_browser` job in the GitLab pipeline for this PR'
                     ]

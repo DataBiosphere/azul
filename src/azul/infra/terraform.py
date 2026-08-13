@@ -869,7 +869,8 @@ class Chalice:
         resources['aws_cloudwatch_log_group'] = {
             f'{resource_name}_lambda': {
                 'name': f'/aws/lambda/{resource['function_name']}',
-                'retention_in_days': config.audit_log_retention_days
+                'retention_in_days': config.audit_log_retention_days,
+                'skip_destroy': True
             }
             for resource_name, resource in resource_items('aws_lambda_function')
         }

@@ -809,7 +809,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def mirror_service(self) -> MirrorService:
-        return MirrorService(catalog=self.catalog)
+        return MirrorService.for_catalog(self.catalog)
 
     @classmethod
     @abstractmethod
@@ -1578,18 +1578,16 @@ class CurlManifestGenerator(PagedManifestGenerator):
             file_name = json_str(file[file_name_field])
             # Related files are indexed differently than normal files (they
             # don't have their own document but are listed inside the main
-            # file's document), so to ensure that the /repository/files
-            # endpoint can resolve them correctly, their endpoint URLs
-            # contain additional parameters, so that the endpoint does not
-            # need to query the index for that information.
-            args = {
-                'requestIndex': 1,
-                'fileName': file_name,
-                'drsUri': file['drs_uri']
-            } if is_related_file else {
-            }
+            # file's document), so the /repository/files can't resolve them
+            # using only the supported parameters. Currently, there are no
+            # projects where related_files is populated.
+            #
+            # FIXME: Retire support for related files
+            #        https://github.com/DataBiosphere/azul/issues/8090
+            #
+            assert not is_related_file, R('Download of related file', file)
 
-            file_url = self._azul_file_url(file, args)
+            file_url = self._azul_file_url(file)
             if file_url is None:
                 output.write(f"# File {file[file_uuid_field]!r}, version {file['version']!r} "
                              f"is currently not available in catalog {self.catalog!r}.\n\n")

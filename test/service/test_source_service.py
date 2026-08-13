@@ -25,6 +25,9 @@ from mypy_boto3_dynamodb.literals import (
 from app_test_case import (
     LocalAppTestCase,
 )
+from azul.auth import (
+    indexer_authentication,
+)
 from azul.http import (
     http_client,
 )
@@ -92,10 +95,10 @@ class TestSourceCache(DynamoDBTestCase):
             service._get(key)
 
 
-class TestPublicSources(DCP2TestCase):
+class TestOutsourcedSources(DCP2TestCase):
 
     @classmethod
-    def _patch_public_sources(cls):
+    def _patch_sources(cls, attribute):
         pass  # don't call super so that code under test isn't patched
 
     @classmethod
@@ -109,7 +112,7 @@ class TestPublicSources(DCP2TestCase):
                 return {source.ref.spec: source.config for source in cls._sources()}
 
             def list_sources(self, authentication):
-                assert authentication is None, authentication
+                assert authentication in (None, indexer_authentication), authentication
                 return [cls.source.ref]
 
         cls.addClassPatch(mock.patch.object(SourceService,
@@ -117,12 +120,13 @@ class TestPublicSources(DCP2TestCase):
                                             return_value=MockPlugin()))
 
     def test(self):
-        actuals, outsourced = [], []
+        public, all_, outsourced = [], [], []
 
         def test():
             service = SourceService()
-            actuals.append(service._public_sources)
-            outsourced.append(service.public_sources_for_outsourcing)
+            public.append(service._public_sources)
+            all_.append(service._all_sources)
+            outsourced.append(service.sources_for_outsourcing)
             mock_open_resource.assert_called_once()
 
         target = SourceService.__module__ + '.open_resource'
@@ -139,7 +143,9 @@ class TestPublicSources(DCP2TestCase):
             test()
 
         self.assertEqual(*outsourced)
-        self.assertEqual([{self.catalog: [self.source]}] * 2, actuals)
+        expected = {self.catalog: [self.source]}
+        self.assertEqual([expected] * 2, public)
+        self.assertEqual([expected] * 2, all_)
 
 
 class TestListSources(DCP2TestCase, LocalAppTestCase):
@@ -176,10 +182,10 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
         ]
 
     @classmethod
-    def _patch_public_sources(cls):
+    def _patch_sources(cls, attribute):
         cls.addClassPatch(
             patch.object(SourceService,
-                         '_public_sources',
+                         attribute,
                          new_callable=PropertyMock,
                          return_value={cls.catalog: cls._sources()})
         )
@@ -213,7 +219,7 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
                 }
                 self.assertEqual(expected, actual)
 
-        mock_source_cache_get.return_value = list(self.mock_list_snapshots_response.keys())
+        mock_source_cache_get.return_value = [s.ref.id for s in self._sources()]
         _test(authenticate=True, cache=True)
         _test(authenticate=False, cache=True)
         mock_source_cache_get.return_value = None

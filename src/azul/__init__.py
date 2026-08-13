@@ -290,21 +290,8 @@ class Config:
         return int(self.environ['AZUL_OPENSEARCH_TIMEOUT'])
 
     @property
-    def data_browser_domain(self):
-        # Note that the return value must be kept synchronized with the value
-        # of azul_browser_sites.browser.domain in
-        # deployments/{stage}.browser/environment.py
-        #
-        # FIXME: Brittle coupling between config.data_browser_domain and .browser_sites
-        #        https://github.com/DataBiosphere/azul/issues/8062
-        domain = self.domain_name
-        # FIXME: Remove 'azul.' prefix from AZUL_DOMAIN_NAME in prod
-        #        https://github.com/DataBiosphere/azul/issues/5122
-        if self.deployment_stage == 'prod':
-            domain = domain.removeprefix('azul.')
-        if self.deployment_stage in ('dev', 'prod'):
-            domain = 'explore.' + domain
-        return domain
+    def data_browser_domain(self) -> str:
+        return self.browser_sites['browser']['domain']
 
     @property
     def dss_endpoint(self) -> str | None:

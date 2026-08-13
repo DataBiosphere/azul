@@ -559,7 +559,7 @@ class AnvilFile(File):
     md5: str
 
     @classmethod
-    def from_index(cls, hit: JSON, *, source: SourceRef | None) -> Self:
+    def from_index(cls, hit: JSON, *, source: SourceRef) -> Self:
         return cls(uuid=json_str(hit['document_id']),
                    version=json_str(hit['version']),
                    name=json_str(hit['file_name']),

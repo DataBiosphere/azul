@@ -35,6 +35,7 @@ from azul import (
     config,
 )
 from azul.http import (
+    AcceptEncodingClient,
     LimitedRetryHttpClient,
     LimitedTimeoutException,
     http_client,
@@ -156,10 +157,13 @@ class TestHttp(AzulUnitTestCase):
                 self.assertEqual(requests, num_actual_requests)
 
                 prefix, url = 'INFO:test_http:', re.escape(url)
+                accept_encoding = AcceptEncodingClient.accept_encoding_header()
                 http_header_pattern = (
-                    r"\{'Server': 'BaseHTTP/\d+\.\d+\s+Python/\d+\.\d+\.\d+', "
-                    r"'Date': '[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4} \d{2}:\d{2}:\d{2} GMT', "
-                    r"'Retry-After': '\d+'\}"
+                    r"\["
+                    r"\('Server', 'BaseHTTP/\d+\.\d+\s+Python/\d+\.\d+\.\d+'\), "
+                    r"\('Date', '[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4} \d{2}:\d{2}:\d{2} GMT'\), "
+                    r"\('Retry-After', '\d+'\)"
+                    r"\]"
                 )
 
                 expected_logs = []
@@ -173,14 +177,16 @@ class TestHttp(AzulUnitTestCase):
                             # The headers are logged for the urlopen() call and
                             # every retry so if we expect one call and three
                             # requests, the headers will be logged three times.
-                            fr"^{prefix}… with request headers \[\('Authorization', 'REDACTED'\)\]$"
+                            fr"^{prefix}… with request headers "
+                            fr"\[\('Authorization', 'REDACTED'\), "
+                            fr"\('accept-encoding', '{re.escape(accept_encoding)}'\)\]$"
                         ] * (requests // calls)
                     )
                     if responses:
                         expected_logs.extend(
                             [
                                 rf'^{prefix}Got 503 response after \d.\d\d\ds from GET to {url}$',
-                                rf'^{prefix}… with response headers HTTPHeaderDict\({http_header_pattern}\)$',
+                                rf'^{prefix}… with response headers {http_header_pattern}$',
                                 f"^{prefix}… without a response body$",
                             ]
                         )

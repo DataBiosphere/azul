@@ -41,6 +41,9 @@ def hasher_from_json(json: AnyJSON) -> Hasher:
     return hasher_from_str(json_str(json))
 
 
+type DigestType = Literal['sha256', 'sha1', 'md5']
+
+
 @attrs.frozen(kw_only=True)
 class Digest:
     """
@@ -48,5 +51,5 @@ class Digest:
     to produce said digest. The set of supported algorithms is limited to those
     we believe to present an acceptable risk of hash collisions.
     """
-    type: Literal['sha256', 'sha1', 'md5']
+    type: DigestType
     value: str

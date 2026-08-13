@@ -137,6 +137,7 @@ def env() -> Mapping[str, str | None]:
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
         'AZUL_DUOS_SERVICE_URL': 'https://consent.dsde-dev.broadinstitute.org',
         'AZUL_TERRA_SERVICE_URL': 'https://firecloud-orchestration.dsde-dev.broadinstitute.org',
+        'AZUL_TDR_REQUESTER_PAYS_PROJECT': 'terra-dev-0c74c173',
         'azul_ecm_service_url': 'https://externalcreds.dsde-dev.broadinstitute.org',
 
         'AZUL_ENABLE_MONITORING': '1',
@@ -163,4 +164,16 @@ def env() -> Mapping[str, str | None]:
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '807674395527-erth0gf1m7qme5pe6bu384vpdfjh06dg.apps.googleusercontent.com',
 
         'AZUL_ENABLE_MIRRORING': '1',
+
+        'azul_browser_sites': json.dumps({
+            'browser': {
+                'zone': '{AZUL_DOMAIN_NAME}',
+                'domain': '{AZUL_DOMAIN_NAME}',
+                'project': 'ucsc/data-browser',
+                'branch': 'ucsc/anvil/tempdev',
+                'tarball_name': 'anvil',
+                'tarball_path': 'out',
+                'real_path': ''
+            }
+        }),
     }

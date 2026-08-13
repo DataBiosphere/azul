@@ -232,7 +232,7 @@
     },
     "metadata": {
         "cell_suspension/803fd65a-c578-4c4f-a39e-bedec24e2578": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/8.6.1/cell_suspension",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI_organoids_pooled_2",
@@ -262,7 +262,7 @@
             }
         },
         "organoid/2d8282f0-6cbb-4d5a-822c-4b01718b4d0d": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/8.3.8/organoid",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "Org_HPSI0214i-wibj_2_2",
@@ -297,7 +297,7 @@
             }
         },
         "organoid/b7214641-1ac5-4f60-b795-cb33a7c25434": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/8.3.8/organoid",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "Org_HPSI0214i-kucg_2_2",
@@ -332,7 +332,7 @@
             }
         },
         "organoid/308eea51-d14b-4036-8cd1-cfd81d7532c3": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/8.3.8/organoid",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "Org_HPSI0314i-hoik_1_2",
@@ -367,7 +367,7 @@
             }
         },
         "organoid/73f10dad-afc5-4d1d-a71c-4a8b6fff9172": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/8.3.8/organoid",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/8.3.8/organoid",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "Org_HPSI0314i-sojd_3_2",
@@ -402,7 +402,7 @@
             }
         },
         "cell_line/c532cca7-67c6-4617-ac47-5b91652621a5": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0214i-wibj_2",
@@ -449,7 +449,7 @@
             }
         },
         "specimen_from_organism/c8e14a8e-81f9-4109-bb27-4bb3029240c1": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0214i-wibj_skin",
@@ -486,7 +486,7 @@
             }
         },
         "donor_organism/d4c29b1a-f23c-4511-a2ae-097772d90254": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0214i-wibj",
@@ -531,7 +531,7 @@
             }
         },
         "cell_line/e924c114-e3cd-4060-9c8e-3d980ec7fcbe": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0214i-kucg_2",
@@ -578,7 +578,7 @@
             }
         },
         "specimen_from_organism/5bd6106c-0158-4c2c-8c60-32019c599c83": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0214i-kucg_skin",
@@ -615,7 +615,7 @@
             }
         },
         "donor_organism/ef7e6ac7-172a-4b24-9620-fc909a5e9c6c": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0214i-kucg",
@@ -660,7 +660,7 @@
             }
         },
         "cell_line/a3651f83-dee6-49b2-ba4e-0ce20f02467d": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0314i-hoik_1",
@@ -707,7 +707,7 @@
             }
         },
         "specimen_from_organism/8f328973-9bc0-46b9-8a1f-38893e77b3b5": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0314i-hoik_skin",
@@ -744,7 +744,7 @@
             }
         },
         "donor_organism/931528fa-820b-49ca-af1e-ae9a2c0ef551": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0314i-hoik",
@@ -789,7 +789,7 @@
             }
         },
         "cell_line/6a16de30-176d-4488-81de-9337a1a6d8c5": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/9.0.0/cell_line",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0314i-sojd_3",
@@ -836,7 +836,7 @@
             }
         },
         "specimen_from_organism/82368936-7b99-4864-9f49-b8fee3906d47": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/6.3.3/specimen_from_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0314i-sojd_skin",
@@ -873,7 +873,7 @@
             }
         },
         "donor_organism/96757312-0221-447a-84f1-7a737b5afd01": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
+            "describedBy": "http://schema.humancellatlas.org/type/biomaterial/10.1.2/donor_organism",
             "schema_type": "biomaterial",
             "biomaterial_core": {
                 "biomaterial_id": "HPSI0314i-sojd",
@@ -918,7 +918,7 @@
             }
         },
         "analysis_file/cf93f747-1392-4670-8eb3-3ac60a96855e": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "barcodes.tsv",
@@ -931,7 +931,7 @@
             }
         },
         "analysis_file/477c0b3e-4a06-4214-8f27-58199ba63528": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "genes.tsv",
@@ -944,7 +944,7 @@
             }
         },
         "analysis_file/ad6d5170-d74b-408c-af6b-25a14315c9da": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "matrix.mtx",
@@ -957,7 +957,7 @@
             }
         },
         "analysis_file/50be9b67-fae5-4472-9719-478dd1303d6e": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "filtered_gene_bc_matrices_h5.h5",
@@ -970,7 +970,7 @@
             }
         },
         "analysis_file/fd16b62e-e540-4f03-8ba0-07d0c204e3c8": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "metrics_summary.csv",
@@ -983,7 +983,7 @@
             }
         },
         "analysis_file/3c41b5b6-f480-4d47-8c5e-155e7c1adf54": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "molecule_info.h5",
@@ -996,7 +996,7 @@
             }
         },
         "analysis_file/022a217c-384d-4d9d-8631-6397b6838e3a": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "possorted_genome_bam.bam",
@@ -1009,7 +1009,7 @@
             }
         },
         "analysis_file/9b778e46-0c51-4260-8e3f-000ecc145f0a": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "possorted_genome_bam.bam.bai",
@@ -1022,7 +1022,7 @@
             }
         },
         "analysis_file/af025a74-53f1-4972-b50d-53095b5ffac2": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "raw_gene_bc_matrices_h5.h5",
@@ -1035,7 +1035,7 @@
             }
         },
         "analysis_file/e8395271-7c8e-4ec4-9598-495df43fe5fd": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "web_summary.html",
@@ -1048,7 +1048,7 @@
             }
         },
         "analysis_file/211a8fbf-b190-4576-ac2f-2b1a91743abb": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "raw_barcodes.tsv",
@@ -1061,7 +1061,7 @@
             }
         },
         "analysis_file/17222e3a-5757-45e9-9dfe-c4b6aa10f28a": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "raw_genes.tsv",
@@ -1074,7 +1074,7 @@
             }
         },
         "analysis_file/2fb8a975-b50c-4528-b850-838a19e19a1e": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "raw_matrix.mtx",
@@ -1087,7 +1087,7 @@
             }
         },
         "sequence_file/213381ea-6161-4159-853e-cfcae4968001": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "GAC027_hOrg_HipSci_2_S6_L008_I1_001.fastq.gz",
@@ -1104,7 +1104,7 @@
             }
         },
         "sequence_file/9ee3da9e-83ca-4c02-84d6-ac09702b12ba": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "GAC027_hOrg_HipSci_2_S6_L008_R1_001.fastq.gz",
@@ -1121,7 +1121,7 @@
             }
         },
         "sequence_file/330a08ca-ae8e-4f1f-aa03-970abcd27f39": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/6.5.2/sequence_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/6.5.2/sequence_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "GAC027_hOrg_HipSci_2_S6_L008_R2_001.fastq.gz",
@@ -1138,7 +1138,7 @@
             }
         },
         "supplementary_file/281c2d08-9e43-47f9-b937-e733e3ba3322": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/1.1.5/supplementary_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "hipsci-ipsc-pipeline.pdf",
@@ -1152,7 +1152,7 @@
             }
         },
         "supplementary_file/ae1d6fa7-964f-465a-8c78-565206827434": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/1.1.5/supplementary_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "Dissociation_protocol_130-092-628.pdf",
@@ -1166,7 +1166,7 @@
             }
         },
         "supplementary_file/f518a8cc-e1d9-4fc9-bc32-491dd8543902": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/1.1.5/supplementary_file",
+            "describedBy": "http://schema.humancellatlas.org/type/file/1.1.5/supplementary_file",
             "schema_type": "file",
             "file_core": {
                 "file_name": "CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf",
@@ -1180,7 +1180,7 @@
             }
         },
         "project/2c5724a4-7252-409e-b008-ff5c127c7e89": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/project/9.0.3/project",
+            "describedBy": "http://schema.humancellatlas.org/type/project/9.0.3/project",
             "schema_type": "project",
             "project_core": {
                 "project_short_name": "HPSI human cerebral organoids2",
@@ -1241,7 +1241,7 @@
             }
         },
         "library_preparation_protocol/92277226-bf78-4df9-a594-5190a8790a14": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
+            "describedBy": "http://schema.humancellatlas.org/type/protocol/sequencing/4.3.3/library_preparation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
                 "protocol_id": "10x_3'_library_preparation",
@@ -1282,7 +1282,7 @@
             }
         },
         "sequencing_protocol/102cdbf3-b0e5-4dd5-9168-51150a9ebb6b": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
+            "describedBy": "http://schema.humancellatlas.org/type/protocol/sequencing/9.0.2/sequencing_protocol",
             "schema_type": "protocol",
             "protocol_core": {
                 "protocol_id": "10x_scRNASeq",
@@ -1306,7 +1306,7 @@
             }
         },
         "dissociation_protocol/755762e0-7aff-48ed-a7d4-d3ea4005758f": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
+            "describedBy": "http://schema.humancellatlas.org/type/protocol/biomaterial_collection/5.0.3/dissociation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
                 "protocol_id": "Cerebral_organoid_dissociation",
@@ -1332,7 +1332,7 @@
             }
         },
         "differentiation_protocol/8f4a8e7c-e7ee-44dc-8e09-f4012355060f": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/1.3.0/differentiation_protocol",
+            "describedBy": "http://schema.humancellatlas.org/type/protocol/biomaterial_collection/1.3.0/differentiation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
                 "protocol_id": "Org_Lanc_2014",
@@ -1356,7 +1356,7 @@
             }
         },
         "ipsc_induction_protocol/cdfe38f2-1d90-4700-a199-d8105ce299df": {
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/2.0.1/ipsc_induction_protocol",
+            "describedBy": "http://schema.humancellatlas.org/type/protocol/biomaterial_collection/2.0.1/ipsc_induction_protocol",
             "schema_type": "protocol",
             "protocol_core": {
                 "protocol_id": "ipsc_induction_protocol_1",
@@ -1380,7 +1380,7 @@
         },
         "analysis_process/228fd33a-3627-4dea-bda9-e9cdc3b924b6": {
             "analysis_run_type": "run",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/analysis/8.0.3/analysis_process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/analysis/8.0.3/analysis_process",
             "input_bundles": [
                 "a2f76df2-a80f-4c66-8fdd-169ae350be4e"
             ],
@@ -1408,7 +1408,7 @@
             ],
             "outputs": [
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "tsv",
                         "file_name": "barcodes.tsv"
@@ -1416,7 +1416,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "tsv",
                         "file_name": "genes.tsv"
@@ -1424,7 +1424,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "mtx",
                         "file_name": "matrix.mtx"
@@ -1432,7 +1432,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "h5",
                         "file_name": "filtered_gene_bc_matrices_h5.h5"
@@ -1440,7 +1440,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "csv",
                         "file_name": "metrics_summary.csv"
@@ -1448,7 +1448,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "h5",
                         "file_name": "molecule_info.h5"
@@ -1456,7 +1456,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "bam",
                         "file_name": "possorted_genome_bam.bam"
@@ -1464,7 +1464,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "bai",
                         "file_name": "possorted_genome_bam.bam.bai"
@@ -1472,7 +1472,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "h5",
                         "file_name": "raw_gene_bc_matrices_h5.h5"
@@ -1480,7 +1480,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "unknown",
                         "file_name": "web_summary.html"
@@ -1488,7 +1488,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "tsv",
                         "file_name": "raw_barcodes.tsv"
@@ -1496,7 +1496,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "tsv",
                         "file_name": "raw_genes.tsv"
@@ -1504,7 +1504,7 @@
                     "schema_type": "file"
                 },
                 {
-                    "describedBy": "http://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+                    "describedBy": "http://schema.humancellatlas.org/type/file/5.3.4/analysis_file",
                     "file_core": {
                         "file_format": "mtx",
                         "file_name": "raw_matrix.mtx"
@@ -1547,7 +1547,7 @@
                 "process_id": "tech_rep_4"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "a2510b8c-8c92-4fe4-bc06-5e4e92093545",
                 "submission_date": "2018-10-11T21:18:02.960Z",
@@ -1559,7 +1559,7 @@
                 "process_id": "process_id_22"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "c7b6e9fe-6f08-41a9-8907-9c0347e6d604",
                 "submission_date": "2018-10-11T21:18:03.340Z",
@@ -1571,7 +1571,7 @@
                 "process_id": "process_id_10"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "0d1d507d-4246-4b1c-8836-261d42f784eb",
                 "submission_date": "2018-10-11T21:18:03.113Z",
@@ -1583,7 +1583,7 @@
                 "process_id": "process_id_5"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "5fcbd4b3-6ad0-434a-bf84-19c33c2d7dc0",
                 "submission_date": "2018-10-11T21:18:03.057Z",
@@ -1595,7 +1595,7 @@
                 "process_id": "process_id_1"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "54760853-d6ed-4149-9a49-53c4cddfd93c",
                 "submission_date": "2018-10-11T21:18:02.993Z",
@@ -1607,7 +1607,7 @@
                 "process_id": "process_id_13"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "d5ac7f5f-9a50-403e-9b8d-6e983a099826",
                 "submission_date": "2018-10-11T21:18:03.149Z",
@@ -1619,7 +1619,7 @@
                 "process_id": "process_id_6"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "53f025f5-931a-4b6e-9a9b-545b5b881710",
                 "submission_date": "2018-10-11T21:18:03.067Z",
@@ -1631,7 +1631,7 @@
                 "process_id": "process_id_2"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "45c67d31-0b05-4d5e-b215-e50e1b2b125c",
                 "submission_date": "2018-10-11T21:18:03.005Z",
@@ -1643,7 +1643,7 @@
                 "process_id": "process_id_16"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "fe0d9d3a-56be-41ca-9fdf-70c8c637fd62",
                 "submission_date": "2018-10-11T21:18:03.269Z",
@@ -1655,7 +1655,7 @@
                 "process_id": "process_id_7"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "4ed306ec-5cf1-49ed-a17a-00f9a0fc38bc",
                 "submission_date": "2018-10-11T21:18:03.080Z",
@@ -1667,7 +1667,7 @@
                 "process_id": "process_id_3"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "76e685c9-fcf2-4582-bbfa-5e0369eb5bdb",
                 "submission_date": "2018-10-11T21:18:03.016Z",
@@ -1679,7 +1679,7 @@
                 "process_id": "process_id_19"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "bce97917-252e-40f2-af8e-df591099acd8",
                 "submission_date": "2018-10-11T21:18:03.300Z",
@@ -1691,7 +1691,7 @@
                 "process_id": "process_id_8"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "6458ae59-0aed-471e-95a0-4de534d449ca",
                 "submission_date": "2018-10-11T21:18:03.090Z",
@@ -1703,7 +1703,7 @@
                 "process_id": "process_id_4"
             },
             "schema_type": "process",
-            "describedBy": "http://schema.staging.data.humancellatlas.org/type/process/6.0.2/process",
+            "describedBy": "http://schema.humancellatlas.org/type/process/6.0.2/process",
             "provenance": {
                 "document_id": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
                 "submission_date": "2018-10-11T21:18:03.026Z",
@@ -1712,7 +1712,7 @@
         }
     },
     "links": {
-        "describedBy": "http://schema.staging.data.humancellatlas.org/system/1.1.3/links",
+        "describedBy": "http://schema.humancellatlas.org/system/1.1.3/links",
         "schema_type": "link_bundle",
         "schema_version": "1.1.3",
         "links": [

@@ -54,11 +54,7 @@ class SourceController(Controller):
         else:
             authoritative_source_ids = {source.ref.id for source in sources}
             cached_source_ids = self._list_source_ids(catalog, authentication)
-            # For optimized performance, the cache may include source IDs that
-            # are accessible but are not configured for indexing. Therefore, we
-            # expect the set of actual sources to be a subset of the cached
-            # sources.
-            diff = authoritative_source_ids - cached_source_ids
+            diff = authoritative_source_ids ^ cached_source_ids
             if diff:
                 log.debug(diff)
                 raise BadGatewayError('Inconsistent response from repository')

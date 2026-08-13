@@ -1,3 +1,4 @@
+import json
 import logging
 from time import (
     time,
@@ -9,14 +10,28 @@ from typing import (
 )
 
 import attrs
+from cryptography.exceptions import (
+    InvalidSignature,
+)
 from cryptography.hazmat.primitives.asymmetric.ec import (
+    ECDSA,
+    EllipticCurvePublicKey,
     SECP256R1,
 )
 from cryptography.hazmat.primitives.asymmetric.utils import (
     decode_dss_signature,
     encode_dss_signature,
 )
+from cryptography.hazmat.primitives.hashes import (
+    SHA256,
+)
+from cryptography.hazmat.primitives.serialization import (
+    load_der_public_key,
+)
 import jwt.algorithms
+from jwt.algorithms import (
+    ECAlgorithm,
+)
 from jwt.api_jwt import (
     PyJWT,
 )
@@ -45,10 +60,12 @@ from azul.lib.objects import (
     absent,
 )
 from azul.lib.strings import (
+    assert_redactable,
     format_and_dedent as fd,
 )
 from azul.lib.types import (
     FlatJSON,
+    JSON,
     JSONTypedDict,
     PrimitiveJSON,
     json_untyped_dict,
@@ -59,6 +76,10 @@ from azul.oauth2 import (
     Authorization,
     OAuth2Client,
     TokenForCodeResponse,
+)
+from azul.resources import (
+    NotInLambdaContextException,
+    open_resource,
 )
 
 if TYPE_CHECKING:
@@ -135,6 +156,31 @@ class UserService:
     def _client_id(self) -> str:
         return not_none(config.google_oauth2_client_id)
 
+    @cached_property
+    def _apat_public_key(self) -> EllipticCurvePublicKey:
+        try:
+            with open_resource('apat_public_key.json') as f:
+                jwk = json.load(f)
+        except NotInLambdaContextException:
+            response = aws.kms.get_public_key(KeyId=config.apat_kms_key.alias)
+            public_key = load_der_public_key(response['PublicKey'])
+            assert isinstance(public_key, EllipticCurvePublicKey), type(public_key)
+            return public_key
+        else:
+            public_key = ECAlgorithm.from_jwk(jwk)
+            assert isinstance(public_key, EllipticCurvePublicKey), type(public_key)
+            return public_key
+
+    @property
+    def apat_public_key_for_outsourcing(self) -> JSON | None:
+        try:
+            return json.loads(ECAlgorithm.to_jwk(self._apat_public_key))
+        except aws.kms.exceptions.NotFoundException:
+            # FIXME: Remove this workaround. Expected during from-scratch
+            #        deployments. This workaround requires deploying twice.
+            #        https://github.com/DataBiosphere/azul/issues/8201
+            return None
+
     @property
     def _dynamodb(self):
         return aws.dynamodb
@@ -160,7 +206,7 @@ class UserService:
         scopes = set(authorization['scope'].split())
         assert self.required_scopes.issubset(scopes), R(
             'Be sure to include the required scopes when requesting the '
-            'authorization code:', self.required_scopes)
+            'authorization code:', sorted(self.required_scopes))
         response = self._oauth_client.token_for_code(
             authorization_code=authorization['code'],
             client_id=self._client_id,
@@ -218,8 +264,8 @@ class UserService:
         token_info = self._oauth_client.token_info(at_auth.token)
         aud = token_info['aud']
         if aud != self._client_id:
-            log.warning('Unexpected access token audience %r for token %r',
-                        aud, at_auth.redacted())
+            log.warning('Unexpected access token audience %r for token %s',
+                        aud, at_auth)
             raise ForeignTokenException(aud)
         else:
             iss, sub = self._google_issuer, token_info['sub']
@@ -238,7 +284,7 @@ class UserService:
         perform. The APAT can be thought of as a proxy secret for the user's
         refresh token.
         """
-        log.info('Minting APAT for %r', at_auth.redacted())
+        log.info('Minting APAT for %s', at_auth)
         iss, sub = self._verify_access_token(at_auth)
         jti = self._next_jti(iss, sub)
         now = self._now()
@@ -252,11 +298,12 @@ class UserService:
                                 key=config.apat_kms_key.alias,
                                 algorithm=self._apat_algorithm)
         self._jwt.decode(apat,
-                         key=config.apat_kms_key.alias,
+                         key=self._apat_public_key,
                          algorithms=[self._apat_algorithm])
+        assert_redactable(apat)
         apat_auth = PersonalAccessTokenAuthentication(token=apat)
-        log.info('Minted APAT %r for access token %r',
-                 apat_auth.redacted(), at_auth.redacted())
+        log.info('Minted APAT %s for access token %s',
+                 apat_auth, at_auth)
         return apat_auth
 
     def exchange_token(self,
@@ -266,21 +313,22 @@ class UserService:
         Return a usable access token in exchange for an APAT if valid and not
         yet expired.
         """
-        log.info('Getting access token for APAT %r', apat_auth.redacted())
+        log.info('Getting access token for APAT %s', apat_auth)
         try:
             claims = self._jwt.decode(apat_auth.token,
-                                      key=config.apat_kms_key.alias,
+                                      key=self._apat_public_key,
                                       algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:
-            log.warning('Invalid APAT %r', apat_auth.redacted(), exc_info=e)
+            log.warning('Invalid APAT %s', apat_auth, exc_info=e)
             raise InvalidPersonalAccessTokenError from e
         else:
+            assert_redactable(apat_auth.token)
             iss, sub = self._decode_identity(claims['sub'])
             user = self._load_user(iss, sub)
             jti = claims.get('jti')
             if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
-                log.warning('APAT jti %r out of range [%d, %d) for %r',
-                            jti, user['min_jti'], user['max_jti'], apat_auth.redacted())
+                log.warning('APAT jti %r out of range [%d, %d) for %s',
+                            jti, user['min_jti'], user['max_jti'], apat_auth)
                 raise InvalidPersonalAccessTokenError
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
@@ -292,7 +340,7 @@ class UserService:
                 access_token, expires_in = response['access_token'], response['expires_in']
                 self._update_access_token(iss, sub, access_token, expires_in)
             at_auth = AccessTokenAuthentication(access_token)
-            log.info('Exchanged %r for APAT %r', at_auth.redacted(), apat_auth.redacted())
+            log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
             return at_auth
 
     def revoke_personal_access_tokens(self,
@@ -301,7 +349,7 @@ class UserService:
         """
         Revoke all APATs for the user identified by the given access token.
         """
-        log.info('Revoking all APATs for %r', at_auth.redacted())
+        log.info('Revoking all APATs for %s', at_auth)
         iss, sub = self._verify_access_token(at_auth)
         self._revoke_jti(iss, sub)
 
@@ -483,18 +531,20 @@ class DynamoDBItemUpdate:
             assert False, R('Unexpected type', type(value))
 
     def to_update_item_input(self) -> UpdateItemInputTypeDef:
-        return dict(
+        result: UpdateItemInputTypeDef = dict(
             TableName=self.table_name,
             Key=self.key,
             UpdateExpression='SET ' + ', '.join(self.assignments),
             ExpressionAttributeValues=self.attributes,
-            ExpressionAttributeNames=self.aliases
         )
+        if self.aliases:
+            result['ExpressionAttributeNames'] = self.aliases
+        return result
 
 
 class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
 
-    def prepare_key(self, key: str) -> str:
+    def prepare_key(self, key: str | EllipticCurvePublicKey) -> str | EllipticCurvePublicKey:
         return key
 
     @staticmethod
@@ -517,19 +567,14 @@ class KMSSigningAlgorithm(jwt.algorithms.Algorithm):
         # KMS returns DER-encoded signatures, but JWS requires raw r||s
         return self._der_to_raw(response['Signature'])
 
-    def verify(self, msg: bytes, key: str, sig: bytes) -> bool:
-        log.debug('Verifying %d bytes with key %r', len(msg), key)
-        # KMS expects DER-encoded signatures, but JWS uses raw r||s
+    def verify(self, msg: bytes, key: EllipticCurvePublicKey, sig: bytes) -> bool:
+        log.debug('Verifying %d bytes', len(msg))
         try:
-            response = aws.kms.verify(KeyId=key,
-                                      Message=msg,
-                                      MessageType='RAW',
-                                      Signature=self._raw_to_der(sig),
-                                      SigningAlgorithm='ECDSA_SHA_256')
-        except aws.kms.exceptions.KMSInvalidSignatureException:
+            key.verify(self._raw_to_der(sig), msg, ECDSA(SHA256()))
+        except InvalidSignature:
             return False
         else:
-            return response['SignatureValid']
+            return True
 
     def _der_to_raw(self, der_sig: bytes) -> bytes:
         r, s = decode_dss_signature(der_sig)

@@ -26,7 +26,6 @@ from chalice.app import (
 from furl import (
     furl,
 )
-import requests
 
 from azul import (
     CatalogName,
@@ -39,6 +38,11 @@ from azul.chalice import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.http import (
+    HTTPStatusError,
+    HasCachedHttpClient,
+    raise_on_status,
 )
 from azul.lib import (
     R,
@@ -176,7 +180,7 @@ class HealthController(Controller):
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-class Health:
+class Health(HasCachedHttpClient):
     """
     Encapsulates information about the health status of an Azul deployment. All
     aspects of health are exposed as lazily loaded properties. Instantiating the
@@ -262,14 +266,10 @@ class Health:
     def _api_endpoint(self, entity_type: str) -> JSON:
         relative_url = furl(path=('index', entity_type), args={'size': '1'})
         url = str(config.service_endpoint.join(relative_url))
-        log.info('Making HEAD request to %s', url)
-        start = time.time()
-        response = requests.api.head(url)
-        log.info('Got %s response after %.3fs from HEAD request to %s',
-                 response.status_code, time.time() - start, url)
+        response = self._http_client.request('HEAD', url)
         try:
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as e:
+            raise_on_status(response)
+        except HTTPStatusError as e:
             return {'up': False, 'error': repr(e)}
         else:
             return {'up': True}
@@ -300,9 +300,8 @@ class Health:
         try:
             url = config.lambda_endpoint(lambda_name).set(path='/health/basic',
                                                           args={'catalog': self.catalog})
-            log.info('Requesting %r', url)
-            response = requests.api.get(str(url))
-            response.raise_for_status()
+            response = self._http_client.request('GET', str(url))
+            raise_on_status(response)
             up = response.json()['up']
         except Exception as e:
             return {

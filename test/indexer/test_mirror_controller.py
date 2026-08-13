@@ -1,5 +1,6 @@
 import hashlib
 import json
+import time
 from typing import (
     ContextManager,
 )
@@ -9,6 +10,7 @@ from unittest.mock import (
 )
 
 import attrs
+import botocore.exceptions
 from chalice.app import (
     SQSRecord,
 )
@@ -45,6 +47,9 @@ from azul.indexer.mirror_service import (
 from azul.lib import (
     R,
     cached_property,
+)
+from azul.lib.digests import (
+    Digest,
 )
 from azul.lib.json import (
     copy_json,
@@ -163,6 +168,7 @@ class TestMirrorController(DCP2TestCase,
         return dict(action='MirrorFileAction',
                     catalog=self.catalog,
                     operation_id=self._operation_id,
+                    mark=False,
                     source=file.source.to_json(),
                     prefix='00',
                     file=file.to_json())
@@ -240,6 +246,7 @@ class TestMirrorController(DCP2TestCase,
         expected_message = dict(action='MirrorSourceAction',
                                 catalog=self.catalog,
                                 operation_id=self._operation_id,
+                                mark=False,
                                 source=self.source.ref.to_json())
         self.assertEqual(expected_message, source_message)
         return source_message
@@ -255,6 +262,7 @@ class TestMirrorController(DCP2TestCase,
             self.assertEqual(dict(action='MirrorPartitionAction',
                                   catalog=self.catalog,
                                   operation_id=self._operation_id,
+                                  mark=False,
                                   source=self.source.ref.to_json()),
                              message)
         self.assertEqual(list(self.source.ref.prefix.partition_prefixes()), partitions)
@@ -410,3 +418,151 @@ class TestMirrorController(DCP2TestCase,
                     self.assertEqual(action, json.loads(one(event).body)['action'])
                     self._mirror_controller.mirror(event)
         self._validate_file_contents(big_file, big_contents)
+
+    def test_multi_part_upload_abort_on_race(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        min_size = aws.s3_min_part_size
+        file_size = min_size + 1
+
+        big_contents = self._file_contents + (b'0' * (file_size - len(self._file_contents)))
+        assert len(big_contents) == file_size
+        big_file = attrs.evolve(self._file,
+                                size=file_size,
+                                sha256=hashlib.sha256(big_contents).hexdigest())
+
+        def download(_self, _file, part: FilePart | None = None) -> bytes:
+            return big_contents[part.offset:part.offset + part.size]
+
+        self._send_mirror_message(self._mirror_file_message(big_file))
+        with patch.object(FilePart, 'default_size', new=min_size):
+            with self._patch_download(new=download):
+                # Process MirrorFileAction, which starts the multipart upload
+                # and uploads the first part
+                message = one(self._read_mirror_queue())
+                event = self._mirror_event(message)
+                self.assertEqual('MirrorFileAction',
+                                 json.loads(one(event).body)['action'])
+                self._mirror_controller.mirror(event)
+
+                # Simulate another worker completing the upload by creating the
+                # info object before MirrorPartAction is processed
+                self._service._create_info(big_file)
+
+                # Process MirrorPartAction, which should detect the info object
+                # and abort the upload instead of continuing
+                message = one(self._read_mirror_queue())
+                event = self._mirror_event(message)
+                self.assertEqual('MirrorPartAction',
+                                 json.loads(one(event).body)['action'])
+                self._mirror_controller.mirror(event)
+
+        # No further messages should have been queued
+        self.assertEqual([], self._read_mirror_queue())
+
+        # The info object should exist and be valid
+        content_types = self._get_content_types_from_info_object(big_file)
+        self.assertEqual([big_file.content_type], content_types)
+
+    def test_object_key_round_trip(self):
+        service = self._service
+        digest = Digest(type='sha256', value='abcdef1234567890' * 4)
+
+        with self.subTest('info_key'):
+            info_key = service._object_key(service.info_prefix, digest, extension='.json')
+            prefix, parsed_digest, extension = service._parse_object_key(info_key)
+            self.assertEqual(service.info_prefix, prefix)
+            self.assertEqual(digest, parsed_digest)
+            self.assertEqual('.json', extension)
+
+        with self.subTest('file_key'):
+            file_key = service._object_key(service.file_prefix, digest, extension='')
+            prefix, parsed_digest, extension = service._parse_object_key(file_key)
+            self.assertEqual(service.file_prefix, prefix)
+            self.assertEqual(digest, parsed_digest)
+            self.assertEqual('', extension)
+
+        with self.subTest('info_key_to_file_key'):
+            info_key = service._object_key(service.info_prefix, digest, extension='.json')
+            file_key = service._info_key_to_file_key(info_key)
+            expected = service._object_key(service.file_prefix, digest, extension='')
+            self.assertEqual(expected, file_key)
+
+    def test_mark(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        file = self._file
+
+        # First, mirror the file normally
+        self._test_mirror_file(file,
+                               self._mirror_file_message(file),
+                               self._file_contents)
+
+        # Record the info object's LastModified before marking
+        info_key = self._service._info_object_key(file)
+        bucket = self._bucket_name(file)
+        before = self._s3.head_object(Bucket=bucket, Key=info_key)['LastModified']
+
+        # Small delay so that LastModified will differ
+        time.sleep(1)
+
+        # Mirror the same file again with mark=True
+        mark_message = {**self._mirror_file_message(file), 'mark': True}
+        event = self._mirror_event(mark_message)
+        self._mirror_controller.mirror(event)
+
+        # The info object should have been touched
+        after = self._s3.head_object(Bucket=bucket, Key=info_key)['LastModified']
+        self.assertGreater(after, before)
+
+    def _assert_objects_exist(self, bucket: str, *keys: str):
+        for key in keys:
+            self._s3.head_object(Bucket=bucket, Key=key)
+
+    def _assert_objects_not_found(self, bucket: str, *keys: str):
+        for key in keys:
+            with self.assertRaises(botocore.exceptions.ClientError) as cm:
+                self._s3.head_object(Bucket=bucket, Key=key)
+            self.assertEqual('404', cm.exception.response['Error']['Code'])
+
+    def test_sweep(self):
+        self._create_mock_queues(config.mirror_queue_names)
+        service = self._service
+        file = self._file
+
+        # Mirror a file so there's something in the bucket
+        self._test_mirror_file(file,
+                               self._mirror_file_message(file),
+                               self._file_contents)
+
+        # Create a garbage info+file object pair by writing directly to S3
+        garbage_digest = Digest(type='sha256', value='00' * 32)
+        garbage_info_key = service._object_key(service.info_prefix, garbage_digest, extension='.json')
+        garbage_file_key = service._object_key(service.file_prefix, garbage_digest, extension='')
+        bucket = self._bucket_name(file)
+        self._s3.put_object(Bucket=bucket, Key=garbage_info_key, Body=b'{}')
+        self._s3.put_object(Bucket=bucket, Key=garbage_file_key, Body=b'garbage')
+
+        # Small delay, then write the .marked object
+        time.sleep(1)
+        service._write_marked()
+
+        # Small delay, then touch the live file's info to mark it as live
+        time.sleep(1)
+        info_key, file_key = service._info_object_key(file), service._file_object_key(file)
+        info_data = self._s3.get_object(Bucket=bucket, Key=info_key)['Body'].read()
+        self._s3.put_object(Bucket=bucket, Key=info_key,
+                            Body=info_data,
+                            ContentType='application/json')
+
+        with self.subTest('dry_run'):
+            service._sweep(dry_run=True)
+            # Garbage should still exist
+            self._assert_objects_exist(bucket, garbage_info_key, garbage_file_key)
+
+        with self.subTest('sweep'):
+            service._sweep(dry_run=False)
+            # Garbage should be deleted
+            self._assert_objects_not_found(bucket, garbage_info_key, garbage_file_key)
+            # Live file should still exist
+            self._assert_objects_exist(bucket, info_key, file_key)
+            # .swept marker should exist
+            self._assert_objects_exist(bucket, service._swept_key)

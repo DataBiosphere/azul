@@ -45,15 +45,11 @@ from azul.indexer.index_queue_service import (
 from azul.indexer.index_service import (
     IndexService,
 )
-from azul.indexer.mirror_service import (
-    MirrorService,
-)
 from azul.indexer.repository_service import (
     RepositoryService,
 )
 from azul.lib import (
     R,
-    cache,
     cached_property,
 )
 from azul.lib.types import (
@@ -106,10 +102,6 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
 
     def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
         return self.index_service.metadata_plugin(catalog)
-
-    @cache
-    def mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return MirrorService(catalog=catalog)
 
     @cached_property
     def source_service(self) -> SourceService:
@@ -302,6 +294,10 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
                           'indexing is occurring. The index may now be in an '
                           'inconsistent state.')
             raise RuntimeError('Failures during deletion', response['failures'])
+        log.info('Purging deleted documents from catalog %r', catalog)
+        response = opensearch.indices.forcemerge(index=indices, only_expunge_deletes=True)
+        if response['_shards']['failed'] > 0:
+            raise RuntimeError('Failures during force merge', response)
 
     def reset_indexer(self,
                       catalogs: Iterable[CatalogName],
