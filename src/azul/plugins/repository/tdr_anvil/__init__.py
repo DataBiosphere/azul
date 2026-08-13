@@ -137,21 +137,6 @@ class BundleType(Enum):
     supplementary bundle to emit contributions for them, hence we treat them as
     orphans.
 
-    DUOS bundles consist of a single dataset entity. This "entity" includes the
-    DUOS ID retrieved from TDR and dataset description retrieved from DUOS,
-    while a copy of the BigQuery row for this dataset is also included as an
-    orphan. We chose this design because there is only one dataset per snapshot,
-    which is referenced in all bundles. Therefore, only one request to DUOS per
-    *snapshot* is necessary. If the DUOS `description` were retrieved at the
-    same time as the other fields of the dataset entity, we would make one
-    request per *bundle* instead, potentially overloading the DUOS service. Our
-    solution is to retrieve `description` only in a bundle of this dedicated
-    DUOS type, once per snapshot, and merge it with the other dataset fields
-    during aggregation. As a result, `duos_id` cannot be included in file
-    manifests since there is only one DUOS bundle per dataset, and that bundle
-    only contributes to outer entities of the `datasets` type, not to entities
-    of the other types, such as files, which the manifest is generated from.
-
     All other bundles are replica bundles. Replica bundles consist of a batch of
     rows from an arbitrary BigQuery table, which may or may not be described by
     the AnVIL schema, and the snapshot's dataset entity. Replica bundles contain
@@ -159,7 +144,6 @@ class BundleType(Enum):
     """
     primary = 'anvil_biosample'
     supplementary = 'anvil_file'
-    duos = 'anvil_dataset'
 
     @classmethod
     def is_batched(cls, table_name: str) -> bool:
@@ -173,7 +157,7 @@ class BundleType(Enum):
         >>> BundleType.is_batched('anvil_activity')
         True
         """
-        return table_name not in (cls.primary.value, cls.duos.value)
+        return table_name != cls.primary.value
 
 
 @attrs.frozen(kw_only=True, eq=False)
@@ -207,8 +191,6 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                    is_orphan: bool = False
                    ) -> None:
         target = self.orphans if is_orphan else self.entities
-        # In DUOS bundles, the dataset is represented as both as entity and an
-        # orphan
         assert entity not in target, entity
         metadata = dict(row,
                         version=version)
@@ -280,14 +262,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             FROM {backtick(self._full_table_name(source.spec, BundleType.primary.value))}
             WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
         '''))['count']
-        duos_count = 0 if config.duos_service_url is None else one(self._run_sql(f'''
-            SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source.spec, BundleType.duos.value))}
-            WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
-        '''))['count']
         sizes_by_table = self._batch_tables(source.spec, prefix)
         batched_count = sum(batch_size for (_, batch_size) in sizes_by_table.values())
-        return primary_count + duos_count + batched_count
+        return primary_count + batched_count
 
     def list_bundles(self,
                      source: TDRSourceRef,
@@ -298,28 +275,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         assert prefix == prefix.lower(), prefix
         bundles = []
         spec = source.spec
-
-        if config.duos_service_url is not None:
-            # We intentionally omit the WHERE clause for datasets in order to
-            # verify our assumption that each snapshot only contains rows for a
-            # single dataset. This verification is performed independently and
-            # concurrently for every partition, but only one partition actually
-            # emits the bundle.
-            row = one(self._run_sql(f'''
-                SELECT datarepo_row_id
-                FROM {backtick(self._full_table_name(spec, BundleType.duos.value))}
-            '''))
-            dataset_row_id = row['datarepo_row_id']
-            if dataset_row_id.startswith(prefix):
-                bundle_uuid = change_version(dataset_row_id,
-                                             self.datarepo_row_uuid_version,
-                                             self.bundle_uuid_version)
-                bundle_fqid = TDRAnvilBundleFQID(uuid=bundle_uuid,
-                                                 version=self._version,
-                                                 source=source,
-                                                 table_name=BundleType.duos.value,
-                                                 batch_prefix=None)
-                bundles.append(bundle_fqid)
         for row in self._run_sql(f'''
             SELECT datarepo_row_id
             FROM {backtick(self._full_table_name(spec, BundleType.primary.value))}
@@ -383,10 +338,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         elif bundle_fqid.table_name == BundleType.supplementary.value:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
             return self._supplementary_bundle(bundle_fqid)
-        elif bundle_fqid.table_name == BundleType.duos.value:
-            assert config.duos_service_url is not None, bundle_fqid
-            log.info('Bundle %r is a DUOS bundle', bundle_fqid.uuid)
-            return self._duos_bundle(bundle_fqid)
         else:
             log.info('Bundle %r is a replica bundle', bundle_fqid.uuid)
             return self._replica_bundle(bundle_fqid)
@@ -429,6 +380,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # This table is present in all snapshots. It is large and contains no
         # useful metadata, so we skip indexing replicas from it.
         table_names.discard('datarepo_row_ids')
+        # The dataset entity is already included as an orphan in every other
+        # replica bundle, so a dedicated anvil_dataset batch would be redundant.
+        table_names.discard('anvil_dataset')
         table_names = sorted(filter(BundleType.is_batched, table_names))
         log.info('Calculating batch prefix lengths for partition %r of %d tables '
                  'in source %s', prefix, len(table_names), source)
@@ -503,6 +457,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         for entity_type, typed_keys in sorted(keys_by_type.items()):
             pk_column = entity_type.removeprefix('anvil_') + '_id'
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
+            if entity_type == 'anvil_dataset':
+                for row in rows:
+                    self._augment_dataset_with_duos(row, source)
             if entity_type == 'anvil_donor':
                 # We expect that the foreign key `part_of_dataset_id` is
                 # redundant for biosamples and donors. To simplify our queries,
@@ -525,7 +482,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
     def _supplementary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         assert bundle_fqid.is_batched, bundle_fqid
-        source = bundle_fqid.source.spec
         result = TDRAnvilBundle(fqid=bundle_fqid)
         linked_file_refs = set()
         for file_ref, file_row in self._get_bundle_batch(bundle_fqid):
@@ -536,8 +492,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                               is_orphan=not is_supplementary)
             if is_supplementary:
                 linked_file_refs.add(file_ref)
-        dataset_ref, dataset_row = self._get_dataset(source)
-        result.add_entity(dataset_ref, self._version, dict(dataset_row))
+        dataset_ref, dataset_row = self._get_dataset(bundle_fqid.source)
+        result.add_entity(dataset_ref, self._version, dataset_row)
         # Avoid inserting "degenerate" links with an empty list of outputs, i.e.
         # in case of an empty batch (as is common on `anvilbox`). Such links
         # would be harmless in production, but would complicate the bundle
@@ -549,45 +505,38 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             ])
         return result
 
-    def _duos_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
-        assert not bundle_fqid.is_batched, bundle_fqid
-        ref, row = self._get_dataset(bundle_fqid.source.spec)
-        expected_entity_id = change_version(bundle_fqid.uuid,
-                                            self.bundle_uuid_version,
-                                            self.datarepo_row_uuid_version)
-        assert ref.entity_id == expected_entity_id, (ref, bundle_fqid)
-        bundle = TDRAnvilBundle(fqid=bundle_fqid)
-        # Classify as orphan to suppress the emission of a contribution
-        bundle.add_entity(ref, self._version, dict(row), is_orphan=True)
-        duos_id, duos_info = self.tdr.get_duos(bundle_fqid.source)
-        if duos_id is not None:
-            entity_row = {
-                'duos_id': duos_id,
-                'description': duos_info.get('studyDescription'),
-                'dataset_id': row['dataset_id']
-            }
-            bundle.add_entity(ref, self._version, entity_row)
-        return bundle
-
     def _replica_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         assert bundle_fqid.is_batched, bundle_fqid
-        source = bundle_fqid.source.spec
         result = TDRAnvilBundle(fqid=bundle_fqid)
         batch = self._get_bundle_batch(bundle_fqid)
-        dataset = self._get_dataset(source)
-        for (ref, row) in itertools.chain([dataset], batch):
+        dataset = self._get_dataset(bundle_fqid.source)
+        for ref, row in itertools.chain([dataset], batch):
             result.add_entity(ref, self._version, dict(row), is_orphan=True)
         return result
 
-    def _get_dataset(self, source: TDRSourceSpec) -> tuple[EntityReference, BigQueryRow]:
+    def _get_dataset(self, source: TDRSourceRef) -> tuple[EntityReference, MutableJSON]:
         table_name = 'anvil_dataset'
         columns = self._columns(table_name)
-        row = one(self._run_sql(f'''
+        row = dict(one(self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
-            FROM {backtick(self._full_table_name(source, table_name))}
-        '''))
+            FROM {backtick(self._full_table_name(source.spec, table_name))}
+        ''')))
         ref = EntityReference(entity_type=table_name, entity_id=row['datarepo_row_id'])
+        self._augment_dataset_with_duos(row, source)
         return ref, row
+
+    def _augment_dataset_with_duos(self,
+                                   row: MutableJSON,
+                                   source: TDRSourceRef
+                                   ) -> None:
+        if config.duos_service_url is not None:
+            duos_id, duos_info = self.tdr.get_duos(source)
+            if duos_id is not None:
+                row['duos_id'] = duos_id
+                row['description'] = duos_info.get('studyDescription')
+                return
+        row['duos_id'] = None
+        row['description'] = None
 
     def _get_batch(self,
                    source: TDRSourceSpec,

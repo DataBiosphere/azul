@@ -163,7 +163,6 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         canned_bundle_fqids = [
             self.primary_bundle(),
             self.supplementary_bundle(),
-            self.duos_bundle(),
             self.replica_bundle(),
         ]
         expected_bundle_fqids = sorted(canned_bundle_fqids + [
@@ -218,10 +217,15 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         for sub_test, tdr_response in cases.items():
             with self.subTest(sub_test):
                 with self.stacked_patches(self._duos_patches(tdr_response)):
-                    bundle = self.plugin.fetch_bundle(self.duos_bundle())
+                    bundle = self.plugin.fetch_bundle(self.primary_bundle())
                     self.assertIsInstance(bundle, TDRAnvilBundle)
-                    self.assertEqual({}, bundle.entities)
-                    self.assertEqual(1, len(bundle.orphans))
+                    dataset_ref = one(
+                        ref for ref in bundle.entities
+                        if ref.entity_type == 'anvil_dataset'
+                    )
+                    metadata = bundle.entities[dataset_ref]
+                    self.assertIsNone(metadata['duos_id'])
+                    self.assertIsNone(metadata['description'])
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
@@ -240,14 +244,11 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='anvil_dataset',
                                       entity_id='2370f948-2783-4eb6-afea-e022897f4dcf')
-        bundles = [self.primary_bundle(), self.duos_bundle()]
-        for bundle_fqid in bundles:
-            bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
-            # To simplify the test, we drop all entities from the bundles
-            # except for the dataset
-            bundle.links.clear()
-            bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
-            self._index_bundle(bundle, delete=False)
+        bundle_fqid = self.primary_bundle()
+        bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
+        bundle.links.clear()
+        bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
+        self._index_bundle(bundle, delete=False)
 
         hits = self._get_all_hits()
         doc_counts: dict[DocumentType, int] = defaultdict(int)
@@ -258,24 +259,19 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
             elif qualifier in {'datasets', 'replica'}:
                 doc_counts[doc_type] += 1
                 if qualifier == 'datasets' and doc_type is DocumentType.aggregate:
-                    self.assertEqual(2, hit['_source']['num_contributions'])
-                    self.assertEqual(sorted(b.uuid for b in bundles),
-                                     sorted(b['uuid'] for b in hit['_source']['bundles']))
+                    self.assertEqual(1, hit['_source']['num_contributions'])
                     contents = one(hit['_source']['contents']['datasets'])
-                    # These fields are populated only in the primary bundle
                     self.assertEqual(dataset_ref.entity_id, contents['document_id'])
                     self.assertEqual(['phs000693'], contents['registered_identifier'])
-                    # These fields are populated only in the DUOS bundle
                     self.assertEqual('Study description from DUOS', contents['description'])
                     self.assertEqual('DUOS-000000', contents['duos_id'])
-                    # This field is present in both bundles
                     self.assertEqual('52ee7665-7033-63f2-a8d9-ce8e32666739', contents['dataset_id'])
             else:
                 self.fail(qualifier)
         self.assertDictEqual(doc_counts, {
             DocumentType.aggregate: 1,
-            DocumentType.contribution: 2,
-            **({DocumentType.replica: 2} if config.enable_replicas else {})
+            DocumentType.contribution: 1,
+            **({DocumentType.replica: 1} if config.enable_replicas else {})
         })
 
     def test_orphans(self):

@@ -926,6 +926,8 @@
                         "data_use_permission": [
                             "DS-BDIS"
                         ],
+                        "description": "Study description from DUOS",
+                        "duos_id": "DUOS-000000",
                         "owner": [
                             "Debbie Nickerson"
                         ],
@@ -1122,6 +1124,8 @@
                         "data_use_permission": [
                             "DS-BDIS"
                         ],
+                        "description": "Study description from DUOS",
+                        "duos_id": "DUOS-000000",
                         "owner": [
                             "Debbie Nickerson"
                         ],
@@ -1267,7 +1271,7 @@
     },
     {
         "_index": "azul_v2_nadove4_test_replica",
-        "_id": "anvil_dataset_2370f948-2783-4eb6-afea-e022897f4dcf_f10ae38d485330bf8fc7a95f7eb06626b984ad6a",
+        "_id": "anvil_dataset_2370f948-2783-4eb6-afea-e022897f4dcf_62afceb18d036f92e1641b515ff3a42222e3967e",
         "_score": 1.0,
         "_source": {
             "entity_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
@@ -1291,6 +1295,8 @@
                 ],
                 "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
                 "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+                "description": "Study description from DUOS",
+                "duos_id": "DUOS-000000",
                 "owner": [
                     "Debbie Nickerson"
                 ],
