@@ -83,6 +83,13 @@ trail_alarms = [
                                     '$.userIdentity.invokedBy != "config.amazonaws.com"',
                                     '$.userIdentity.invokedBy != "resource-explorer-2.amazonaws.com"'
                                 )
+                            ),
+                            _or(
+                                '$.eventSource != "s3.amazonaws.com"',
+                                '$.userIdentity.accountId NOT EXISTS',
+                                '$.userIdentity.accountId != "anonymous"',
+                                '$.requestParameters.bucketName NOT EXISTS',
+                                f'$.requestParameters.bucketName != "{aws.qualified_bucket_name("*")}"'
                             )
                         )
                     )),
