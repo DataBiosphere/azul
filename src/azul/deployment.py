@@ -262,7 +262,7 @@ class AWS:
 
     @property
     def stepfunctions(self) -> SFNClient:
-        return self.client('stepfunctions')
+        return self.client('stepfunctions', azul_logging=True)
 
     @property
     def iam(self) -> IAMClient:
