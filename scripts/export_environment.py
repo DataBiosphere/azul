@@ -141,14 +141,20 @@ def load_env(deployment: Optional[str] = None
     else:
         # If the deployment is a component of another one (e.g. `dev.gitlab`),
         # also get the parent deployment's directory.
-        relative_deployment_dir = deployment_dir.relative_to(deployments_dir)
-        prefix, _, suffix = str(relative_deployment_dir).partition('.')
-        if suffix and suffix != 'local':
-            parent_deployment_dir = deployments_dir / prefix
-            if not parent_deployment_dir.exists():
-                raise BadParentDeployment(parent_deployment_dir, deployment_dir)
-        else:
-            parent_deployment_dir = None
+        deployment, *suffix = str(deployment_dir.relative_to(deployments_dir)).split('.')
+        match suffix:
+            case ['local'] | []:
+                parent_deployment_dir = None
+            case [component, 'local']:
+                assert component
+                parent_deployment_dir = deployments_dir / (deployment + '.local')
+            case [component]:
+                assert component
+                parent_deployment_dir = deployments_dir / deployment
+            case _:
+                assert False, deployment_dir
+        if parent_deployment_dir is not None and not parent_deployment_dir.exists():
+            raise BadParentDeployment(parent_deployment_dir, deployment_dir)
 
     def _load(dir_path: Path, local: bool = False) -> Optional[EnvironmentModule]:
         """

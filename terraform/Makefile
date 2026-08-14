@@ -32,19 +32,12 @@ config: check_schema $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py
 validate: config
 	terraform validate
 
-.PHONY: rename_resources
-rename_resources: validate
-	python $(project_root)/scripts/rename_resources.py
-
-.PHONY: import_resources
-import_resources: rename_resources
-
 .PHONY: plan
-plan: import_resources
+plan: validate
 	terraform plan
 
 .PHONY: apply
-apply: import_resources
+apply: validate
 ifeq ($(AZUL_PRIVATE_API),1)
 	# For private API we need the VPC endpoints to be created first so that the
 	# aws_lb_target_group_attachment can iterate over the network_interface_ids.
@@ -53,7 +46,7 @@ endif
 	terraform apply
 
 .PHONY: auto_apply
-auto_apply: import_resources
+auto_apply: validate
 ifeq ($(AZUL_PRIVATE_API),1)
 	# See `apply` above
 	terraform apply -auto-approve -target aws_vpc_endpoint.indexer -target aws_vpc_endpoint.service
@@ -63,11 +56,11 @@ endif
 	terraform apply -auto-approve plan.bin
 
 .PHONY: destroy
-destroy: import_resources
+destroy: validate
 	terraform destroy
 
 .PHONY: auto_destroy
-auto_destroy: import_resources
+auto_destroy: validate
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
 

@@ -194,7 +194,7 @@ policy = {
                 'kms:VerifyMac'
             ],
             'Resource': [
-                '${aws_kms_key.%s.arn}' % key.name
+                '${data.aws_kms_key.%s.arn}' % key.name
                 for key in config.kms_keys
             ]
         },
