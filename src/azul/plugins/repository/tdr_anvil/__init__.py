@@ -105,59 +105,79 @@ class BundleType(Enum):
     references in *other* bundles' links), but all global orphans are always
     local orphans. Bundles only contain local orphans from the table that
     matches the bundle's `table_name` attribute.
-
-    Primary bundles are defined by a biosample entity, termed the *bundle
-    entity*. Each primary bundle includes all of the bundle entity's descendants
-    and all of those entities' ancestors. Descendants and ancestors are
-    discovered by iteratively following foreign keys. Biosamples were chosen to
-    act as the bundle entities for primary bundles based on a desirable balance
-    between the size and number of the resulting bundles as well as the degree
-    of overlap between them. The implementation of the graph traversal is
-    tightly coupled to this choice, and switching to a different bundle entity
-    type would require re-implementing much of the Plugin code. Primary bundles
-    consist of at least one biosample (the bundle entity), exactly one dataset
-    entity, and zero or more other entities of assorted types. Primary bundles
-    never contain local orphans because they are bijective to rows in the
-    biosample table.
-
-    Supplementary bundles consist of batches of file entities, which may include
-    supplementary files. Supplementary files lack any foreign keys that would
-    associate them with any other entity. Each supplementary bundle also
-    includes a dataset entity, and we create synthetic links between the
-    supplementary files and the dataset. Without these links, the relationship
-    between these files and their parent dataset would not be properly
-    represented in the service response. Supplementary files therefore are never
-    local or global orphans.
-
-    Normal (non-supplementary) files are not linked to the dataset and thus are
-    local orphans within these bundles. This is because these files may also
-    appear in primary bundles. If they do, then those bundles will contribute
-    them to the index alongside all of their linked entities. If they don't,
-    then they are global orphans. In either case, it would be pointless for a
-    supplementary bundle to emit contributions for them, hence we treat them as
-    orphans.
-
-    All other bundles are replica bundles. Replica bundles consist of a batch of
-    rows from an arbitrary BigQuery table, which may or may not be described by
-    the AnVIL schema, and the snapshot's dataset entity. Replica bundles contain
-    no links and thus all of their entities are local orphans.
     """
-    primary = 'anvil_biosample'
-    supplementary = 'anvil_file'
+
+    #: The BigQuery table associated with this bundle type. If this is None for
+    #: an enum member, it must appear last and serves as a catch-all for all
+    #: tables not listed on other members.
+    #:
+    table_name: str | None
+
+    #: Whether this bundle contains batches of rows from the table associated
+    #: with this bundle type, or just a single row.
+    #:
+    is_batched: bool
+
+    #: Primary bundles are defined by a biosample entity, termed the *bundle
+    #: entity*. Each primary bundle includes all of the bundle entity's
+    #: descendants and all of those entities' ancestors. Descendants and
+    #: ancestors are discovered by iteratively following foreign keys.
+    #: Biosamples were chosen to act as the bundle entities for primary bundles
+    #: based on a desirable balance between the size and number of the resulting
+    #: bundles as well as the degree of overlap between them. The implementation
+    #: of the graph traversal is tightly coupled to this choice, and switching
+    #: to a different bundle entity type would require re-implementing much of
+    #: the Plugin code. Primary bundles consist of at least one biosample (the
+    #: bundle entity), exactly one dataset entity, and zero or more other
+    #: entities of assorted types. Primary bundles never contain local orphans
+    #: because they are bijective to rows in the biosample table.
+    #:
+    primary = ('anvil_biosample', False)
+
+    #: Supplementary bundles consist of batches of file entities, which may
+    #: include supplementary files. Supplementary files lack any foreign keys
+    #: that would associate them with any other entity. Each supplementary
+    #: bundle also includes a dataset entity, and we create synthetic links
+    #: between the supplementary files and the dataset. Without these links, the
+    #: relationship between these files and their parent dataset would not be
+    #: properly represented in the service response. Supplementary files
+    #: therefore are never local or global orphans.
+    #:
+    #: Normal (non-supplementary) files are not linked to the dataset and thus
+    #: are local orphans within these bundles. This is because these files may
+    #: also appear in primary bundles. If they do, then those bundles will
+    #: contribute them to the index alongside all of their linked entities. If
+    #: they don't, then they are global orphans. In either case, it would be
+    #: pointless for a supplementary bundle to emit contributions for them,
+    #: hence we treat them as orphans.
+    #:
+    supplementary = ('anvil_file', True)
+
+    #: A placeholder entry to indicate that we don't create any bundles for the
+    #: rows of the anvil_dataset table. Instead, the dataset entity is added
+    #: explicitly to each primary and replica bundle.
+    #:
+    no_bundle = ('anvil_dataset', False)
+
+    #: All other tables are represented by replica bundles. Replica bundles
+    #: consist of a batch of rows from an arbitrary BigQuery table, which may or
+    #: may not be described by the AnVIL schema, and the snapshot's dataset
+    #: entity. Replica bundles contain no links and thus all of their entities
+    #: are local orphans.
+    #:
+    replica = (None, True)
+
+    def __init__(self, table_name: str | None, is_batched: bool) -> None:
+        super().__init__()
+        self.table_name = table_name
+        self.is_batched = is_batched
 
     @classmethod
-    def is_batched(cls, table_name: str) -> bool:
-        """
-        True if bundles for the table of the given name represent batches of
-        rows, or False if each bundle represents a single row.
-
-        >>> BundleType.is_batched(BundleType.primary.value)
-        False
-
-        >>> BundleType.is_batched('anvil_activity')
-        True
-        """
-        return table_name != cls.primary.value
+    def for_table(cls, table_name: str) -> BundleType:
+        for self in cls:
+            if self.table_name == table_name:
+                return self
+        return cls.replica
 
 
 @attrs.frozen(kw_only=True, eq=False)
@@ -166,7 +186,7 @@ class TDRAnvilBundleFQID(TDRBundleFQID):
     batch_prefix: str | None
 
     def __attrs_post_init__(self):
-        should_be_batched = BundleType.is_batched(self.table_name)
+        should_be_batched = BundleType.for_table(self.table_name).is_batched
         is_batched = self.is_batched
         assert is_batched == should_be_batched, self
         if is_batched:
@@ -259,7 +279,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         assert prefix == prefix.lower(), source
         primary_count = one(self._run_sql(f'''
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source.spec, BundleType.primary.value))}
+            FROM {backtick(self._full_table_name(source.spec, BundleType.primary.table_name))}
             WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
         '''))['count']
         sizes_by_table = self._batch_tables(source.spec, prefix)
@@ -277,7 +297,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         spec = source.spec
         for row in self._run_sql(f'''
             SELECT datarepo_row_id
-            FROM {backtick(self._full_table_name(spec, BundleType.primary.value))}
+            FROM {backtick(self._full_table_name(spec, BundleType.primary.table_name))}
             WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
         '''):
             bundle_uuid = change_version(row['datarepo_row_id'],
@@ -286,7 +306,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             bundle_fqid = TDRAnvilBundleFQID(uuid=bundle_uuid,
                                              version=self._version,
                                              source=source,
-                                             table_name=BundleType.primary.value,
+                                             table_name=BundleType.primary.table_name,
                                              batch_prefix=None)
             bundles.append(bundle_fqid)
         prefix_lengths_by_table = self._batch_tables(source.spec, prefix)
@@ -332,10 +352,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         ]
 
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
-        if bundle_fqid.table_name == BundleType.primary.value:
+        if bundle_fqid.table_name == BundleType.primary.table_name:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
             return self._primary_bundle(bundle_fqid)
-        elif bundle_fqid.table_name == BundleType.supplementary.value:
+        elif bundle_fqid.table_name == BundleType.supplementary.table_name:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
             return self._supplementary_bundle(bundle_fqid)
         else:
@@ -374,6 +394,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         def repeat(fmt):
             return ', '.join(fmt.format(i=i) for i in range(1, max_length + 1))
 
+        def is_batched(table_name):
+            return BundleType.for_table(table_name).is_batched
+
         target_size = 256
         prefix_len = len(prefix)
         table_names = self.tdr.list_tables(source)
@@ -382,8 +405,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         table_names.discard('datarepo_row_ids')
         # The dataset entity is already included as an orphan in every other
         # replica bundle, so a dedicated anvil_dataset batch would be redundant.
-        table_names.discard('anvil_dataset')
-        table_names = sorted(filter(BundleType.is_batched, table_names))
+        table_names.discard(BundleType.no_bundle.table_name)
+        table_names = sorted(filter(is_batched, table_names))
         log.info('Calculating batch prefix lengths for partition %r of %d tables '
                  'in source %s', prefix, len(table_names), source)
         # The extraneous outer 'SELECT *' works around a bug in BigQuery emulator

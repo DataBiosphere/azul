@@ -1599,8 +1599,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     bundle_fqid
                     for bundle_fqid in expected_fqids
                     if cast(TDRAnvilBundleFQID, bundle_fqid).table_name not in (
-                        BundleType.primary.value,
-                        BundleType.supplementary.value,
+                        BundleType.primary.table_name,
+                        BundleType.supplementary.table_name,
                     )
                 }
                 expected_fqids -= replica_fqids

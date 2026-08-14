@@ -199,13 +199,14 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     def bundle_fqid(cls,
                     *,
                     uuid: str,
-                    table_name: str = BundleType.primary.value,
+                    table_name: str = BundleType.primary.table_name,
                     ) -> TDRAnvilBundleFQID:
+        batched = BundleType.for_table(table_name).is_batched
         return TDRAnvilBundleFQID(source=cls.source.ref,
                                   uuid=uuid,
                                   version=cls.version,
                                   table_name=table_name,
-                                  batch_prefix='' if BundleType.is_batched(table_name) else None)
+                                  batch_prefix='' if batched else None)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -214,7 +215,7 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='595c469e-604d-ab34-af39-f5b9f5d61818',
-                               table_name=BundleType.supplementary.value)
+                               table_name=BundleType.supplementary.table_name)
 
     @classmethod
     def replica_bundle(cls) -> TDRAnvilBundleFQID:
