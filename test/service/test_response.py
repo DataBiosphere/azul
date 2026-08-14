@@ -275,7 +275,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'disease': ['normal'],
                         'developmentStage': [None],
                         'genusSpecies': ['Australopithecus'],
-                        'id': ['DID_scRSq06'],
                         'donorCount': 1,
                         'organismAge': [{'value': '38', 'unit': 'year'}],
                         'organismAgeRange': [[1198368000.0, 1198368000.0]],
@@ -335,7 +334,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['pancreas'],
                         'disease': ['normal'],
-                        'id': ['DID_scRSq06_pancreas'],
                         'organ': ['pancreas'],
                         'organPart': ['islet of Langerhans'],
                         'preservationMethod': [None],
@@ -354,7 +352,6 @@ class TestIndexResponse(IndexResponseTestCase):
                 'specimens': [
                     {
                         'disease': ['normal'],
-                        'id': ['DID_scRSq06_pancreas'],
                         'organ': ['pancreas'],
                         'organPart': ['islet of Langerhans'],
                         'preservationMethod': [None],
@@ -545,7 +542,6 @@ class TestIndexResponse(IndexResponseTestCase):
                             'disease': ['normal'],
                             'developmentStage': [None],
                             'genusSpecies': ['Australopithecus'],
-                            'id': ['DID_scRSq06'],
                             'donorCount': 1,
                             'organismAge': [{'value': '38', 'unit': 'year'}],
                             'organismAgeRange': [[1198368000.0, 1198368000.0]],
@@ -664,7 +660,6 @@ class TestIndexResponse(IndexResponseTestCase):
                             'sampleEntityType': ['specimens'],
                             'effectiveOrgan': ['pancreas'],
                             'disease': ['normal'],
-                            'id': ['DID_scRSq06_pancreas'],
                             'organ': ['pancreas'],
                             'organPart': ['islet of Langerhans'],
                             'preservationMethod': [None],
@@ -683,7 +678,6 @@ class TestIndexResponse(IndexResponseTestCase):
                     'specimens': [
                         {
                             'disease': ['normal'],
-                            'id': ['DID_scRSq06_pancreas'],
                             'organ': ['pancreas'],
                             'organPart': ['islet of Langerhans'],
                             'preservationMethod': [None],
@@ -778,7 +772,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'disease': ['H syndrome'],
                         'developmentStage': ['human adult stage'],
                         'genusSpecies': ['Homo sapiens'],
-                        'id': ['donor_ID_1'],
                         'donorCount': 1,
                         'organismAge': [{'value': '20', 'unit': 'year'}],
                         'organismAgeRange': [[630720000.0, 630720000.0]],
@@ -933,7 +926,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['brain'],
                         'disease': ['H syndrome'],
-                        'id': ['specimen_ID_1'],
                         'organ': ['brain'],
                         'organPart': ['amygdala'],
                         'preservationMethod': [None],
@@ -952,7 +944,6 @@ class TestIndexResponse(IndexResponseTestCase):
                 'specimens': [
                     {
                         'disease': ['H syndrome'],
-                        'id': ['specimen_ID_1'],
                         'organ': ['brain'],
                         'organPart': ['amygdala'],
                         'preservationMethod': [None],
@@ -994,7 +985,6 @@ class TestIndexResponse(IndexResponseTestCase):
         stage = self._response_stage('projects')
         response = stage.process_response((hits, self.paginations[0], {}))
         expected_cell_lines = {
-            'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
             'modelOrgan': ['blood (parent_cell_line)', 'blood (child_cell_line)'],
         }
@@ -1004,7 +994,6 @@ class TestIndexResponse(IndexResponseTestCase):
         expected_samples = {
             'sampleEntityType': ['cellLines'],
             'effectiveOrgan': ['blood (child_cell_line)'],
-            'id': ['cell_line_Day7_hiPSC-CM_BioRep2'],
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
         }
@@ -1238,12 +1227,6 @@ class TestIndexResponse(IndexResponseTestCase):
                     'genusSpecies': [
                         'Homo sapiens'
                     ],
-                    'id': [
-                        'HPSI0314i-hoik',
-                        'HPSI0214i-wibj',
-                        'HPSI0314i-sojd',
-                        'HPSI0214i-kucg'
-                    ],
                     'donorCount': 4,
                     'organismAge': [
                         {'value': '45-49', 'unit': 'year'},
@@ -1265,12 +1248,6 @@ class TestIndexResponse(IndexResponseTestCase):
                     'disease': ['normal'],
                     'genusSpecies': [
                         'Homo sapiens'
-                    ],
-                    'id': [
-                        'HPSI0314i-hoik',
-                        'HPSI0214i-wibj',
-                        'HPSI0314i-sojd',
-                        'HPSI0214i-kucg'
                     ],
                     'donorCount': 4,
                     'organismAge': [
@@ -2102,7 +2079,7 @@ class TestIndexResponse(IndexResponseTestCase):
         """
         Test that invalid JSON for search_after or search_before raise a 400
         """
-        query_params = self._params(size=1, sort='sampleId', order='asc')
+        query_params = self._params(size=1, sort='entryId', order='asc')
         url = self.base_url.set(path='/index/samples', args=query_params)
         # Get page 1
         response = self._http_client.request('GET', str(url))
@@ -2419,14 +2396,12 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['cellLines'],
                         'effectiveOrgan': ['immune system'],
-                        'id': ['Cell_line_2'],
                         'cellLineType': ['primary'],
                         'modelOrgan': ['immune system'],
                     },
                     {
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['embryo'],
-                        'id': ['Specimen1'],
                         'organ': ['embryo'],
                         'organPart': ['skin epidermis'],
                         'disease': ['normal'],
@@ -2441,12 +2416,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['organoids'],
                         'effectiveOrgan': ['Brain'],
-                        'id': [
-                            'Org_HPSI0214i-kucg_2_2',
-                            'Org_HPSI0214i-wibj_2_2',
-                            'Org_HPSI0314i-hoik_1_2',
-                            'Org_HPSI0314i-sojd_3_2',
-                        ],
                         'modelOrgan': ['Brain'],
                         'modelOrganPart': [None],
                     }
@@ -2459,14 +2428,12 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['cellLines'],
                         'effectiveOrgan': ['immune system'],
-                        'id': ['Cell_line_2'],
                         'cellLineType': ['primary'],
                         'modelOrgan': ['immune system'],
                     },
                     {
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['embryo'],
-                        'id': ['Specimen1'],
                         'organ': ['embryo'],
                         'organPart': ['skin epidermis'],
                         'disease': ['normal'],
@@ -2478,7 +2445,6 @@ class TestResponseInnerEntitySamples(IndexResponseTestCase):
                     {
                         'sampleEntityType': ['specimens'],
                         'effectiveOrgan': ['pancreas'],
-                        'id': ['DID_scRSq06_pancreas'],
                         'organ': ['pancreas'],
                         'organPart': ['islet of Langerhans'],
                         'disease': ['normal'],
@@ -3812,7 +3778,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
                                     'default_order': 'asc'
                                 },
                                 'samples': {
-                                    'default_sort': 'sampleId',
+                                    'default_sort': 'entryId',
                                     'default_order': 'asc'
                                 }
                             }

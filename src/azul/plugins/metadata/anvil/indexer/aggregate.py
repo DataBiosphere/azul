@@ -9,6 +9,7 @@ from azul.indexer.aggregate import (
     Accumulator,
     DistinctAccumulator,
     GroupingAggregator,
+    SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
     SumAccumulator,
@@ -22,14 +23,49 @@ from azul.lib.types import (
 )
 
 
-class ActivityAggregator(SimpleAggregator):
-    pass
+class AnVILEntityAggregator(SimpleAggregator):
+
+    def _never_accumulate(self) -> set[str]:
+        entity_type = self.entity_type
+        if entity_type == 'activities':
+            entity_type = 'activity'
+        elif entity_type == 'diagnoses':
+            entity_type = 'diagnosis'
+        else:
+            assert entity_type.endswith('s')
+            entity_type = entity_type[:-1]
+        return {
+            entity_type + '_id',
+            'document_id',
+            'source_datarepo_row_ids'
+        }
 
 
-class BiosampleAggregator(SimpleAggregator):
+class ActivityAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field == 'donor_age_at_collection':
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        else:
+            return super()._accumulator(field)
+
+
+class BiosampleAggregator(AnVILEntityAggregator):
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        elif field == 'donor_age_at_collection':
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          itemgetter('lte', 'gte')))
@@ -38,25 +74,62 @@ class BiosampleAggregator(SimpleAggregator):
 
 
 class DatasetAggregator(SimpleAggregator):
-    pass
-
-
-class DiagnosisAggregator(SimpleAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in ('diagnosis_age', 'onset_age'):
-            return SetOfDictAccumulator(max_size=100,
-                                        key=compose_keys(none_safe_tuple_key(none_last=True),
-                                                         itemgetter('lte', 'gte')))
+        if field == 'document_id':
+            # If any dataset IDs are missing from the aggregate, those datasets
+            # will be omitted during the verbatim handover. Datasets are a "hot"
+            # entity type, and we can't track their hubs in replica documents,
+            # so we rely on the inner entity IDs instead. We also need to
+            # aggregate document_id to allow filtering by the value on
+            # non-dataset endpoints.
+            return super()._accumulator(field)
+        elif field == 'source_datarepo_row_ids' and self.outer_entity_type != 'files':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
         else:
             return super()._accumulator(field)
 
 
-class DonorAggregator(SimpleAggregator):
-    pass
+class DiagnosisAggregator(AnVILEntityAggregator):
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        elif field in ('diagnosis_age', 'onset_age'):
+            return SetOfDictAccumulator(max_size=100,
+                                        key=compose_keys(none_safe_tuple_key(none_last=True),
+                                                         itemgetter('lte', 'gte')))
+        elif field == 'disease':
+            return SetAccumulator(max_size=100,
+                                  # Some AnVIL datasets have excessive numbers
+                                  # of disease values, all being accessions.
+                                  allow_overflow=self.outer_entity_type == 'datasets')
+        else:
+            return super()._accumulator(field)
 
 
-class FileAggregator(GroupingAggregator):
+class DonorAggregator(AnVILEntityAggregator):
+
+    def _accumulator(self, field: str) -> Accumulator | None:
+        if (
+            field in self._never_accumulate()
+            and self.outer_entity_type != 'files'
+        ):
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            return None
+        else:
+            return super()._accumulator(field)
+
+
+class FileAggregator(AnVILEntityAggregator, GroupingAggregator):
 
     def _transform_entity(self, entity: JSON) -> JSON:
         file_aggregate_fields = {
@@ -72,7 +145,14 @@ class FileAggregator(GroupingAggregator):
         return entity['file_format'],
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if field in ('count', 'file_size'):
+        if field in self._never_accumulate() | {
+            'drs_uri',
+            'file_md5sum',
+            'file_name',
+            'version'
+        }:
+            return None
+        elif field in ('count', 'file_size'):
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._accumulator(field)

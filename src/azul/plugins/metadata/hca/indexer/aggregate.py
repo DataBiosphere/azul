@@ -82,6 +82,12 @@ class HCAAggregate(Aggregate):
                     effective_cell_count=self.effective_cell_count)
 
 
+class HCAEntityAggregator(SimpleAggregator):
+
+    def _never_accumulate(self) -> set[str]:
+        return {'biomaterial_id', 'document_id'}
+
+
 class FileAggregator(GroupingAggregator):
 
     def _transform_entity(self, entity: JSON) -> JSON:
@@ -115,15 +121,41 @@ class FileAggregator(GroupingAggregator):
         return None
 
 
-class SampleAggregator(SimpleAggregator):
-    pass
+class SampleAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=int(1209 * 1.25))
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
 
-class SpecimenAggregator(SimpleAggregator):
-    pass
+class SpecimenAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=int(1209 * 1.25))
+            # `document_id` is included in the sample aggregate so that the
+            # summary response field `specimenCount` can be calculated. This
+            # should not be a problem since there should only ever be one
+            # specimen inner entity in a samples outer entity.
+            elif field == 'document_id' and self.outer_entity_type == 'samples':
+                return super()._accumulator(field)
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
 
-class CellSuspensionAggregator(GroupingAggregator):
+class CellSuspensionAggregator(HCAEntityAggregator, GroupingAggregator):
     cell_count_fields = frozenset([
         'total_estimated_cells',
         'total_estimated_cells_redundant'
@@ -143,14 +175,31 @@ class CellSuspensionAggregator(GroupingAggregator):
         return frozenset(entity['organ']),
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self.cell_count_fields:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=int(9766 * 1.25))
+            else:
+                return None
+        elif field in self.cell_count_fields:
             return DistinctAccumulator(SumAccumulator())
         else:
             return super()._accumulator(field)
 
 
-class CellLineAggregator(SimpleAggregator):
-    pass
+class CellLineAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
 
 class DonorOrganismAggregator(SimpleAggregator):
@@ -162,10 +211,19 @@ class DonorOrganismAggregator(SimpleAggregator):
         }
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'organism_age_range':
-            return SetAccumulator(max_size=100)
+        if field == 'biomaterial_id':
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=int(931 * 1.25))
+            else:
+                return None
+        elif field == 'development_stage':
+            return SetAccumulator(max_size=int(124 * 1.25))
+        elif field == 'organism_age_range':
+            return SetAccumulator(max_size=int(107 * 1.25))
         elif field == 'organism_age':
-            return SetOfDictAccumulator(max_size=100,
+            return SetOfDictAccumulator(max_size=int(107 * 1.25),
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          none_safe_itemgetter('value', 'unit')))
         elif field == 'donor_count':
@@ -175,22 +233,35 @@ class DonorOrganismAggregator(SimpleAggregator):
             # be omitted during the verbatim handover. Donors are a "hot" entity
             # type, and we can't track their hubs in replica documents, so we
             # rely on the inner entity IDs instead.
-            #
-            # FIXME: Enforce that hot entity types are completely aggregated
-            #        https://github.com/DataBiosphere/azul/issues/6793
-            return SetAccumulator(max_size=100)
+            return SetAccumulator(max_size=int(931 * 1.25))
         else:
             return super()._accumulator(field)
 
 
-class OrganoidAggregator(SimpleAggregator):
-    pass
+class OrganoidAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return super()._accumulator(field)
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
 
 class ProjectAggregator(SimpleAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
         if field == 'document_id':
+            # If any project IDs were missing from the aggregate, those projects
+            # would be omitted during the verbatim handover. Projects are a
+            # "hot" entity type, and we can't track their hubs in replica
+            # documents, so we rely on the inner entity IDs instead. We also
+            # need to aggregate `document_id` to allow filtering by `projectId`
+            # on non-project endpoints.
             return SetAccumulator(max_size=100)
         elif field in ('project_description',
                        'contact_names',
@@ -219,9 +290,6 @@ class ProtocolAggregator(SimpleAggregator):
             # protocols may be omitted during the verbatim handover. Some
             # protocols are "hot" entity types, and we can't track their hubs in
             # replicas, so we rely on the inner entity IDs instead.
-            #
-            # FIXME: Enforce that hot entity types are completely aggregated
-            #        https://github.com/DataBiosphere/azul/issues/6793
             return SetAccumulator(max_size=100)
         else:
             return super()._accumulator(field)
@@ -230,31 +298,52 @@ class ProtocolAggregator(SimpleAggregator):
         return SetAccumulator()
 
 
-class SequencingInputAggregator(SimpleAggregator):
-    pass
+class SequencingInputAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=int(7302 * 1.25))
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
 
-class SequencingProcessAggregator(SimpleAggregator):
+class SequencingProcessAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._never_accumulate():
+            # These fields are only aggregated for files, where they are needed
+            # for compact and PFB manifests
+            if self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=int(6357 * 1.25))
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
 
     def _default_accumulator(self) -> Accumulator | None:
         return SetAccumulator(max_size=10)
 
 
-class MatricesAggregator(SimpleAggregator):
+class MatricesAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'document_id':
+        if field in self._never_accumulate():
             return None
         elif field == 'file':
-            return DictAccumulator(max_size=100, key=itemgetter('uuid'))
+            return DictAccumulator(max_size=int(515 * 1.25), key=itemgetter('uuid'))
         else:
             return SetAccumulator()
 
 
-class DateAggregator(SimpleAggregator):
+class DateAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'document_id':
+        if field in self._never_accumulate():
             return None
         elif field in ('submission_date', 'aggregate_submission_date'):
             return MinAccumulator()

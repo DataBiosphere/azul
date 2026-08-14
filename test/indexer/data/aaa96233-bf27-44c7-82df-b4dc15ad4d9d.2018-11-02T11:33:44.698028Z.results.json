@@ -1402,12 +1402,6 @@
             "contents": {
                 "samples": [
                     {
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -1436,12 +1430,6 @@
                         "_source": [
                             "specimen_from_organism"
                         ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "disease": [
                             "normal"
                         ],
@@ -1464,23 +1452,13 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
                     }
                 ],
                 "sequencing_processes": [
-                    {
-                        "document_id": [
-                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
-                    }
+                    {}
                 ],
                 "specimens": [
                     {
@@ -1489,12 +1467,6 @@
                         ],
                         "_source": [
                             "specimen_from_organism"
-                        ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
@@ -1518,12 +1490,6 @@
                 ],
                 "cell_suspensions": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "total_estimated_cells_redundant": 0,
                         "total_estimated_cells_redundant_": 0,
                         "total_estimated_cells": 1,
@@ -1544,9 +1510,6 @@
                     {
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
                         ],
                         "donor_count": 1,
                         "donor_count_": 1,
@@ -2376,23 +2339,13 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
                     }
                 ],
                 "sequencing_processes": [
-                    {
-                        "document_id": [
-                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
-                    }
+                    {}
                 ],
                 "specimens": [
                     {
@@ -2404,9 +2357,6 @@
                         ],
                         "document_id": [
                             "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
@@ -2435,9 +2385,6 @@
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
-                        ],
                         "donor_count": 1,
                         "donor_count_": 1,
                         "genus_species": [
@@ -2465,12 +2412,6 @@
                 ],
                 "cell_suspensions": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -2609,12 +2550,6 @@
             "contents": {
                 "samples": [
                     {
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -2643,12 +2578,6 @@
                         "_source": [
                             "specimen_from_organism"
                         ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "disease": [
                             "normal"
                         ],
@@ -2671,23 +2600,13 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
                     }
                 ],
                 "sequencing_processes": [
-                    {
-                        "document_id": [
-                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
-                    }
+                    {}
                 ],
                 "specimens": [
                     {
@@ -2696,12 +2615,6 @@
                         ],
                         "_source": [
                             "specimen_from_organism"
-                        ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
@@ -2730,9 +2643,6 @@
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
                         ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
-                        ],
                         "donor_count": 1,
                         "donor_count_": 1,
                         "genus_species": [
@@ -2760,12 +2670,6 @@
                 ],
                 "cell_suspensions": [
                     {
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -3208,12 +3112,6 @@
             "contents": {
                 "samples": [
                     {
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -3242,12 +3140,6 @@
                         "_source": [
                             "specimen_from_organism"
                         ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
-                        ],
                         "disease": [
                             "normal"
                         ],
@@ -3270,23 +3162,13 @@
                 ],
                 "sequencing_inputs": [
                     {
-                        "biomaterial_id": [
-                            "GSM2172585 1"
-                        ],
-                        "document_id": [
-                            "412898c5-5b9b-4907-b07c-e9b89666e204"
-                        ],
                         "sequencing_input_type": [
                             "cell_suspension"
                         ]
                     }
                 ],
                 "sequencing_processes": [
-                    {
-                        "document_id": [
-                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
-                    }
+                    {}
                 ],
                 "specimens": [
                     {
@@ -3295,12 +3177,6 @@
                         ],
                         "_source": [
                             "specimen_from_organism"
-                        ],
-                        "document_id": [
-                            "a21dc760-a500-4236-bcff-da34a0e873d2"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06_pancreas"
                         ],
                         "disease": [
                             "normal"
@@ -3346,9 +3222,6 @@
                     {
                         "document_id": [
                             "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
-                        ],
-                        "biomaterial_id": [
-                            "DID_scRSq06"
                         ],
                         "donor_count": 1,
                         "donor_count_": 1,

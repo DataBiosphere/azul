@@ -433,7 +433,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_specimen(self, specimen) -> MutableJSON:
         return {
-            'id': specimen['biomaterial_id'],
             'organ': specimen.get('organ', None),
             'organPart': specimen.get('organ_part', None),
             'disease': specimen.get('disease', None),
@@ -463,7 +462,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_cell_line(self, cell_line) -> MutableJSON:
         return {
-            'id': cell_line['biomaterial_id'],
             'cellLineType': cell_line.get('cell_line_type', None),
             'modelOrgan': cell_line.get('model_organ', None),
         }
@@ -473,7 +471,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_donor(self, donor) -> MutableJSON:
         return {
-            'id': donor['biomaterial_id'],
             'donorCount': donor.get('donor_count', None),
             'developmentStage': donor.get('development_stage', None),
             'genusSpecies': donor.get('genus_species', None),
@@ -488,7 +485,6 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_organoid(self, organoid) -> MutableJSON:
         return {
-            'id': organoid['biomaterial_id'],
             'modelOrgan': organoid.get('model_organ', None),
             'modelOrganPart': organoid.get('model_organ_part', None)
         }
@@ -497,11 +493,12 @@ class HCASearchResponseStage(SearchResponseStage):
         return [self.make_organoid(organoid) for organoid in entry['contents']['organoids']]
 
     def make_sample(self, sample, entity_dict, entity_type) -> MutableJSON:
-        is_aggregate = isinstance(sample['document_id'], list)
         organ_prop = 'organ' if entity_type == 'specimens' else 'model_organ'
+        effective_organ = sample[organ_prop]
+        is_aggregate = isinstance(effective_organ, list)
         return {
             'sampleEntityType': [entity_type] if is_aggregate else entity_type,
-            'effectiveOrgan': sample[organ_prop],
+            'effectiveOrgan': effective_organ,
             **entity_dict
         }
 

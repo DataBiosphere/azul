@@ -1978,6 +1978,12 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
             document_ids = [
                 document_id
                 for entity_type in self.hot_entity_types
+                # Some "hot" entity types may be missing from hit['contents'],
+                # e.g. `imaging_protocols` if `contents.imaging_protocols` in
+                # the source document is an empty list. This is due to our
+                # document slice (aka an Elasticsearch "source filter") limiting
+                # the results to fields that match the "includes" pattern, and
+                # have an actual value. See :meth:`_create_pipeline`
                 for inner_entity in getitem(hit['contents'], entity_type, ())
                 # `document_id` is a scalar (string) when the inner and outer
                 # entity types match, and an array otherwise. `None` should not
