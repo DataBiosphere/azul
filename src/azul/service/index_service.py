@@ -32,12 +32,6 @@ from azul import (
 from azul.filters import (
     Filters,
 )
-from azul.indexer.mirror_service import (
-    MirrorService,
-)
-from azul.lib import (
-    cache,
-)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -51,14 +45,13 @@ from azul.plugins import (
 )
 from azul.service import (
     BadArgumentException,
-    FileUrlFunc,
 )
 from azul.service.query_service import (
+    FileUrlService,
     IndexNotFoundError,
     OpenSearchStage,
     Pagination,
     PaginationStage,
-    QueryService,
     ResponseTriple,
     ToDictStage,
     _OpenSearchStage,
@@ -124,12 +117,7 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
 
 
 @attrs.frozen(auto_attribs=True, kw_only=True)
-class IndexService(QueryService):
-    file_url_func: FileUrlFunc
-
-    @cache
-    def mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return MirrorService(catalog=catalog)
+class IndexService(FileUrlService):
 
     def search(self,
                *,

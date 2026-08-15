@@ -167,17 +167,16 @@ from azul.plugins import (
     manifest_config_to_json,
 )
 from azul.service import (
-    FileUrlFunc,
     avro_pfb,
 )
 from azul.service.avro_pfb import (
     PFBRelation,
 )
 from azul.service.query_service import (
+    FileUrlService,
     OpenSearchChain,
     Pagination,
     PaginationStage,
-    QueryService,
     SortKey,
     ToDictStage,
     sort_key_from_json,
@@ -570,12 +569,7 @@ class CachedManifestNotFound(Exception):
 
 
 @attrs.frozen(kw_only=True)
-class ManifestService(QueryService):
-    file_url_func: FileUrlFunc
-
-    @cache
-    def mirror_service(self, catalog: CatalogName) -> MirrorService:
-        return MirrorService(catalog=catalog)
+class ManifestService(FileUrlService):
 
     @cached_property
     def storage_service(self) -> StorageService:

@@ -63,8 +63,12 @@ from azul.indexer.document import (
 from azul.indexer.document_service import (
     DocumentService,
 )
+from azul.indexer.mirror_service import (
+    MirrorService,
+)
 from azul.lib import (
     R,
+    cache,
     cached_property,
 )
 from azul.lib.types import (
@@ -86,6 +90,9 @@ from azul.plugins import (
     MetadataPlugin,
     dotted,
     undotted,
+)
+from azul.service import (
+    FileUrlFunc,
 )
 
 log = logging.getLogger(__name__)
@@ -812,3 +819,12 @@ class QueryService(DocumentService):
                       index=str(IndexName.create(catalog=catalog,
                                                  qualifier=entity_type,
                                                  doc_type=doc_type)))
+
+
+@attrs.frozen(kw_only=True)
+class FileUrlService(QueryService):
+    file_url_func: FileUrlFunc
+
+    @cache
+    def mirror_service(self, catalog: CatalogName) -> MirrorService:
+        return MirrorService(catalog=catalog)
