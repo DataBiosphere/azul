@@ -573,6 +573,10 @@ class CachedManifestNotFound(Exception):
 class ManifestService(QueryService):
     file_url_func: FileUrlFunc
 
+    @cache
+    def mirror_service(self, catalog: CatalogName) -> MirrorService:
+        return MirrorService(catalog=catalog)
+
     @cached_property
     def storage_service(self) -> StorageService:
         return StorageService()
@@ -807,9 +811,9 @@ class ManifestGenerator(metaclass=ABCMeta):
     def metadata_plugin(self) -> MetadataPlugin:
         return self.service.metadata_plugin(self.catalog)
 
-    @cached_property
+    @property
     def mirror_service(self) -> MirrorService:
-        return MirrorService.for_catalog(self.catalog)
+        return self.service.mirror_service(self.catalog)
 
     @classmethod
     @abstractmethod
