@@ -35,6 +35,9 @@ from azul.filters import (
 from azul.indexer.mirror_service import (
     MirrorService,
 )
+from azul.lib import (
+    cache,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -104,7 +107,7 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
         # FIXME: Redundant implementations of file URLs and mirror URIs
         #        https://github.com/DataBiosphere/azul/issues/8042
         file_cls = self.plugin.file_class
-        mirror_service = MirrorService.for_catalog(self.catalog)
+        mirror_service = self.service.mirror_service(self.catalog)
         return mirror_service.mirror_uri(source, file_cls, file)
 
 
@@ -123,6 +126,10 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
 @attrs.frozen(auto_attribs=True, kw_only=True)
 class IndexService(QueryService):
     file_url_func: FileUrlFunc
+
+    @cache
+    def mirror_service(self, catalog: CatalogName) -> MirrorService:
+        return MirrorService(catalog=catalog)
 
     def search(self,
                *,
