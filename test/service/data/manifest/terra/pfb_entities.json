@@ -202,19 +202,6 @@
                             "name": "files"
                         }
                     ],
-                    "name": "sequencing_processes",
-                    "ontology_reference": "",
-                    "properties": [],
-                    "values": {}
-                },
-                {
-                    "links": [
-                        {
-                            "dst": "files",
-                            "multiplicity": "MANY_TO_MANY",
-                            "name": "files"
-                        }
-                    ],
                     "name": "total_estimated_cells",
                     "ontology_reference": "",
                     "properties": [],
@@ -508,16 +495,6 @@
         "relations": []
     },
     {
-        "id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-        "name": "sequencing_processes",
-        "object": {
-            "document_id": [
-                "5afa951e-1591-4bad-a4f8-2e13cbdb760c"
-            ]
-        },
-        "relations": []
-    },
-    {
         "id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
         "name": "projects",
         "object": {
@@ -630,10 +607,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -885,16 +858,6 @@
         "relations": []
     },
     {
-        "id": "sequencing_processes.596a62d0-05dc-5749-afbf-8a44e8ef27f5.1",
-        "name": "sequencing_processes",
-        "object": {
-            "document_id": [
-                "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-            ]
-        },
-        "relations": []
-    },
-    {
         "id": "projects.0a84dcbd-4475-526e-a2be-61e57bebdfa8.1",
         "name": "projects",
         "object": {
@@ -1005,10 +968,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.596a62d0-05dc-5749-afbf-8a44e8ef27f5.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.53a54cc4-cd39-5a67-b26e-189937e697b8.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1072,10 +1031,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -1143,10 +1098,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1210,10 +1161,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -1281,10 +1228,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1348,10 +1291,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -1419,10 +1358,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1486,10 +1421,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -1557,10 +1488,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1624,10 +1551,6 @@
             {
                 "dst_id": "sequencing_inputs.c4e3c857-be5e-58df-9057-3b3dbe2da411.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.596a62d0-05dc-5749-afbf-8a44e8ef27f5.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.53a54cc4-cd39-5a67-b26e-189937e697b8.1",
@@ -1695,10 +1618,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1762,10 +1681,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -1833,10 +1748,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -1900,10 +1811,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -1971,10 +1878,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2038,10 +1941,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2109,10 +2008,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2176,10 +2071,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2247,10 +2138,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2314,10 +2201,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2385,10 +2268,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2452,10 +2331,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2523,10 +2398,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2590,10 +2461,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2661,10 +2528,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2728,10 +2591,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2799,10 +2658,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -2866,10 +2721,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -2937,10 +2788,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -3006,10 +2853,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -3073,10 +2916,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
@@ -3537,10 +3376,6 @@
                 "dst_name": "sequencing_inputs"
             },
             {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
-            },
-            {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
                 "dst_name": "sequencing_protocols"
             },
@@ -3604,10 +3439,6 @@
             {
                 "dst_id": "sequencing_inputs.77795119-8498-56a8-b175-6afc82257133.1",
                 "dst_name": "sequencing_inputs"
-            },
-            {
-                "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
-                "dst_name": "sequencing_processes"
             },
             {
                 "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",

@@ -137,11 +137,6 @@
                         "sequencing_input_type": "cell_suspension"
                     }
                 ],
-                "sequencing_processes": [
-                    {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                    }
-                ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -420,11 +415,6 @@
                         "sequencing_input_type": "cell_suspension"
                     }
                 ],
-                "sequencing_processes": [
-                    {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                    }
-                ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -673,11 +663,6 @@
                         "sequencing_input_type": "cell_suspension"
                     }
                 ],
-                "sequencing_processes": [
-                    {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                    }
-                ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -924,11 +909,6 @@
                         "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
-                    }
-                ],
-                "sequencing_processes": [
-                    {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
                     }
                 ],
                 "specimens": [
@@ -1202,11 +1182,6 @@
                         "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
-                    }
-                ],
-                "sequencing_processes": [
-                    {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
                     }
                 ],
                 "specimens": [
@@ -1496,9 +1471,6 @@
                             "cell_suspension"
                         ]
                     }
-                ],
-                "sequencing_processes": [
-                    {}
                 ],
                 "specimens": [
                     {
@@ -1816,13 +1788,6 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
-                    }
-                ],
-                "sequencing_processes": [
-                    {
-                        "document_id": [
-                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
                         ]
                     }
                 ],
@@ -2148,13 +2113,6 @@
                         ]
                     }
                 ],
-                "sequencing_processes": [
-                    {
-                        "document_id": [
-                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
-                    }
-                ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2434,9 +2392,6 @@
                         ]
                     }
                 ],
-                "sequencing_processes": [
-                    {}
-                ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2694,9 +2649,6 @@
                             "cell_suspension"
                         ]
                     }
-                ],
-                "sequencing_processes": [
-                    {}
                 ],
                 "specimens": [
                     {
@@ -2969,11 +2921,6 @@
                         "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
-                    }
-                ],
-                "sequencing_processes": [
-                    {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
                     }
                 ],
                 "specimens": [
@@ -3264,9 +3211,6 @@
                             "cell_suspension"
                         ]
                     }
-                ],
-                "sequencing_processes": [
-                    {}
                 ],
                 "specimens": [
                     {
