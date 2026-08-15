@@ -192,7 +192,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             files=Sorting(field_name='fileName'),
             projects=Sorting(field_name='projectTitle',
                              max_page_size=75),
-            samples=Sorting(field_name='sampleId')
+            samples=Sorting(field_name='entryId')
         )
 
     @property
@@ -285,7 +285,6 @@ class Plugin(MetadataPlugin[HCABundle]):
                     'donor_count': 'donorCount'
                 },
                 'samples': {
-                    'biomaterial_id': 'sampleId',
                     'entity_type': 'sampleEntityType',
                     'organ': 'organ',
                     'organ_part': 'organPart',

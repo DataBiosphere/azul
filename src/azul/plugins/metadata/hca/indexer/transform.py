@@ -478,42 +478,40 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     api_bundle: api.Bundle
 
     @classmethod
-    def aggregator(cls, entity_type: EntityType) -> EntityAggregator | None:
-        agg_cls: type[EntityAggregator]
+    def _aggregator_cls(cls, entity_type: EntityType) -> type[EntityAggregator]:
         if entity_type == 'files':
-            agg_cls = FileAggregator
+            return FileAggregator
         elif entity_type in SampleTransformer.inner_entity_types():
-            agg_cls = SampleAggregator
+            return SampleAggregator
         elif entity_type == 'specimens':
-            agg_cls = SpecimenAggregator
+            return SpecimenAggregator
         elif entity_type == 'cell_suspensions':
-            agg_cls = CellSuspensionAggregator
+            return CellSuspensionAggregator
         elif entity_type == 'cell_lines':
-            agg_cls = CellLineAggregator
+            return CellLineAggregator
         elif entity_type == 'donors':
-            agg_cls = DonorOrganismAggregator
+            return DonorOrganismAggregator
         elif entity_type == 'organoids':
-            agg_cls = OrganoidAggregator
+            return OrganoidAggregator
         elif entity_type == 'projects':
-            agg_cls = ProjectAggregator
+            return ProjectAggregator
         elif entity_type in {
             'analysis_protocols',
             'imaging_protocols',
             'library_preparation_protocols',
             'sequencing_protocols'
         }:
-            agg_cls = ProtocolAggregator
+            return ProtocolAggregator
         elif entity_type == 'sequencing_inputs':
-            agg_cls = SequencingInputAggregator
+            return SequencingInputAggregator
         elif entity_type == 'sequencing_processes':
-            agg_cls = SequencingProcessAggregator
+            return SequencingProcessAggregator
         elif entity_type in ('matrices', 'contributed_analyses'):
-            agg_cls = MatricesAggregator
+            return MatricesAggregator
         elif entity_type == 'dates':
-            agg_cls = DateAggregator
+            return DateAggregator
         else:
-            agg_cls = SimpleAggregator
-        return agg_cls(cls.entity_type(), entity_type)
+            return SimpleAggregator
 
     def _deduplicate[V: AnyJSON](self,
                                  *,
@@ -1487,6 +1485,33 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
     def entity_type(cls) -> str:
         return 'files'
 
+    # ┏━━━━━━━━━━━━━━━━━━┓
+    # ┃ Project replica  ┃
+    # ┃                  ┃
+    # ┣━━━━━━━━━━━━━━━━━━┫                                            ┏━━━━━━━━━━━━━━━━━━┓
+    # ┃    entity_id     ┃◀─┐                                         ┃   File replica   ┃
+    # ┣━━━━━━━━━━━━━━━━━━┫  │  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓     ┃                  ┃
+    # ┃     hub_ids      ┃  │  ┃         File aggregate         ┃     ┣━━━━━━━━━━━━━━━━━━┫
+    # ┗━━━━━━━━━━━━━━━━━━┛  │  ┃                                ┃  ┌─▶┃    entity_id     ┃
+    #                       │  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┣━━━━━━━━━━━━━━━━━━┫
+    # ┏━━━━━━━━━━━━━━━━━━┓  │  ┃           entity_id            ┃──┼─▶┃     hub_ids      ┃
+    # ┃  Donor replica   ┃  │  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┗━━━━━━━━━━━━━━━━━━┛
+    # ┃                  ┃  └──┃ contents.projects.document_id  ┃  │
+    # ┣━━━━━━━━━━━━━━━━━━┫     ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┏━━━━━━━━━━━━━━━━━━┓
+    # ┃    entity_id     ┃◀────┃  contents.donors.document_id   ┃  │  ┃ Specimen replica ┃
+    # ┣━━━━━━━━━━━━━━━━━━┫     ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫  │  ┃                  ┃
+    # ┃     hub_ids      ┃  ┌──┃ contents.protocols.document_id ┃  │  ┣━━━━━━━━━━━━━━━━━━┫
+    # ┗━━━━━━━━━━━━━━━━━━┛  │  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛  │  ┃    entity_id     ┃
+    #                       │                                      │  ┣━━━━━━━━━━━━━━━━━━┫
+    # ┏━━━━━━━━━━━━━━━━━━┓  │                                      └─▶┃     hub_ids      ┃
+    # ┃ Protocol replica ┃  │                                         ┗━━━━━━━━━━━━━━━━━━┛
+    # ┃                  ┃  │
+    # ┣━━━━━━━━━━━━━━━━━━┫  │
+    # ┃    entity_id     ┃◀─┘
+    # ┣━━━━━━━━━━━━━━━━━━┫
+    # ┃     hub_ids      ┃
+    # ┗━━━━━━━━━━━━━━━━━━┛
+    #
     @classmethod
     def hot_entity_types(cls) -> dict[EntityType, EntityType]:
         return {
@@ -1558,6 +1583,7 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
         Returns inner entity values (contents) read from the stratification
         values provided by a supplementary file project-level matrix.
         """
+        matrix_namespace = UUID('3bdeb34f-cfd2-428c-bea2-2350258edad0')
         contents: dict[str, list[MutableJSON]] = defaultdict(list)
         file_description = optional(json_str, file.json.get('file_description'))
         if file_description:
@@ -1576,6 +1602,9 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
                     donor.update(
                         {
                             'biomaterial_id': f'donor_organism_{file_name}',
+                            # Donors are a hot entity type, so they are required
+                            # to have a document_id.
+                            'document_id': str(uuid5(matrix_namespace, str(donor)))
                         }
                     )
                     contents['donors'].append(donor)
@@ -1591,9 +1620,13 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
                 library = optional(json_element_strings,
                                    stratum.get('libraryConstructionApproach'))
                 if library is not None:
+                    library = json_sorted(library)
                     contents['library_preparation_protocols'].append(
                         {
-                            'library_construction_approach': json_sorted(library),
+                            # Library preparation protocols are a hot entity
+                            # type, so they are required to have a document_id.
+                            'document_id': str(uuid5(matrix_namespace, str(library))),
+                            'library_construction_approach': library,
                         }
                     )
         return contents
