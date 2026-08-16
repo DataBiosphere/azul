@@ -29,6 +29,9 @@ from azul.lib.json import (
     DynamicPolymorphicSerializable,
     Parseable,
 )
+from azul.lib.strings import (
+    hex_digits,
+)
 from azul.lib.types import (
     SupportsLessAndGreaterThan,
     derived_type_params,
@@ -43,8 +46,6 @@ class Prefix(Parseable):
     common: str = ''
     partition: int
     of_everything: ClassVar[Prefix]
-
-    digits = '0123456789abcdef'
 
     def __attrs_post_init__(self):
         validate_uuid_prefix(self.common)
@@ -184,7 +185,7 @@ class Prefix(Parseable):
 
     @classmethod
     def _prefix_length(cls, n, m) -> int:
-        return max(0, math.ceil(math.log(n / m, len(cls.digits))))
+        return max(0, math.ceil(math.log(n / m, len(hex_digits))))
 
     def partition_prefixes(self) -> Iterator[str]:
         """
@@ -197,7 +198,7 @@ class Prefix(Parseable):
         >>> len(list(Prefix.parse('/2').partition_prefixes()))
         256
         """
-        for partition_prefix_digits in product(self.digits, repeat=self.partition):
+        for partition_prefix_digits in product(hex_digits, repeat=self.partition):
             complete_prefix = ''.join((self.common, *partition_prefix_digits))
             validate_uuid_prefix(complete_prefix)
             yield complete_prefix
@@ -214,7 +215,7 @@ class Prefix(Parseable):
         >>> Prefix.parse('aa/3').num_partitions
         4096
         """
-        return len(self.digits) ** self.partition
+        return len(hex_digits) ** self.partition
 
     def __str__(self):
         """
@@ -260,7 +261,7 @@ class Prefix(Parseable):
         return (
             partition_prefix.startswith(self.common)
             and len(partition_prefix) == len(self)
-            and all(c in self.digits for c in partition_prefix[len(self.common):])
+            and all(c in hex_digits for c in partition_prefix[len(self.common):])
         )
 
 

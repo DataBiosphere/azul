@@ -568,6 +568,22 @@
                         },
                         {
                             "namespace": "anvil_dataset",
+                            "name": "description",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "namespace": "anvil_dataset",
+                            "name": "duos_id",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "namespace": "anvil_dataset",
                             "name": "owner",
                             "type": {
                                 "type": "array",
@@ -1182,37 +1198,6 @@
                         {
                             "namespace": "anvil_variantcallingactivity",
                             "name": "variantcallingactivity_id",
-                            "type": "string"
-                        }
-                    ]
-                },
-                {
-                    "type": "record",
-                    "name": "duos_dataset_registration",
-                    "fields": [
-                        {
-                            "namespace": "duos_dataset_registration",
-                            "name": "dataset_id",
-                            "type": "string"
-                        },
-                        {
-                            "namespace": "duos_dataset_registration",
-                            "name": "description",
-                            "type": "string"
-                        },
-                        {
-                            "namespace": "duos_dataset_registration",
-                            "name": "duos_id",
-                            "type": "string"
-                        },
-                        {
-                            "namespace": "duos_dataset_registration",
-                            "name": "source_datarepo_snapshot_id",
-                            "type": "string"
-                        },
-                        {
-                            "namespace": "duos_dataset_registration",
-                            "name": "version",
                             "type": "string"
                         }
                     ]

@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 from collections.abc import (
     Iterable,
     Mapping,
@@ -79,6 +82,9 @@ from openapi_spec_validator import (
 )
 import opensearchpy
 import urllib3
+from urllib3 import (
+    BaseHTTPResponse,
+)
 
 from azul import (
     CatalogName,
@@ -117,6 +123,9 @@ from azul.http import (
 )
 from azul.indexer import (
     SourcedBundleFQID,
+)
+from azul.indexer.cache_service import (
+    UrlCacheService,
 )
 from azul.indexer.document import (
     EntityReference,
@@ -590,6 +599,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             log.warning('Will skip deletions due to overriding IT flag')
 
         self._test_other_endpoints()
+        self._test_concurrent_cache()
 
     def _reset_indexer(self):
         # While it's OK to erase the integration test catalog, the queues are
@@ -646,6 +656,59 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         for endpoint, path, args in [*service_routes, *health_routes]:
             with self.subTest('other_endpoints', endpoint=endpoint, path=path, args=args):
                 self._check_endpoint(GET, path, args=args, endpoint=endpoint)
+
+    def _test_concurrent_cache(self):
+        with self.subTest('concurrent_cache'):
+            catalog = first(config.integration_test_catalogs)
+            entity_types = list(self.metadata_plugin(catalog).exposed_indices)
+            num_threads_per_endpoint = 8
+
+            service = UrlCacheService(expiration=60,
+                                      lock_expiration=30,
+                                      http_client=self._http_client)
+
+            assignments: list[tuple[EntityType, furl]] = []
+            for entity_type in entity_types:
+                url = config.service_endpoint.set(path=('index', entity_type),
+                                                  query_params=dict(catalog=catalog,
+                                                                    size='1',
+                                                                    filters=json.dumps({})))
+                for _ in range(num_threads_per_endpoint):
+                    assignments.append((entity_type, url))
+            self.random.shuffle(assignments)
+
+            def worker(url: furl) -> BaseHTTPResponse:
+                while True:
+                    try:
+                        return service.get_url(url)
+                    except UrlCacheService.ConcurrentFetchError:
+                        time.sleep(5)
+
+            results: dict[EntityType, list[BaseHTTPResponse]] = defaultdict(list)
+            errors: list[BaseException] = []
+            executor = ThreadPoolExecutor(max_workers=len(assignments))
+            try:
+                futures = [
+                    (entity_type, executor.submit(worker, url))
+                    for entity_type, url in assignments
+                ]
+                for entity_type, future in futures:
+                    e = future.exception(timeout=120)
+                    if e is None:
+                        results[entity_type].append(future.result())
+                    else:
+                        errors.append(e)
+            except BaseException:
+                executor.shutdown(wait=False, cancel_futures=True)
+                raise
+            else:
+                executor.shutdown()
+            self.assertEqual([], errors)
+            for entity_type, responses in results.items():
+                with self.subTest(entity_type=entity_type):
+                    self.assertEqual(len(responses), num_threads_per_endpoint)
+                    request_ids = {r.headers['x-amzn-RequestId'] for r in responses}
+                    self.assertEqual(len(request_ids), 1)
 
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats
@@ -1536,9 +1599,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     bundle_fqid
                     for bundle_fqid in expected_fqids
                     if cast(TDRAnvilBundleFQID, bundle_fqid).table_name not in (
-                        BundleType.primary.value,
-                        BundleType.supplementary.value,
-                        BundleType.duos.value,
+                        BundleType.primary.table_name,
+                        BundleType.supplementary.table_name,
                     )
                 }
                 expected_fqids -= replica_fqids

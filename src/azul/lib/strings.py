@@ -16,6 +16,8 @@ from azul.lib import (
     R,
 )
 
+hex_digits = '0123456789abcdef'
+
 
 def format_size(num_bytes: int) -> str:
     """

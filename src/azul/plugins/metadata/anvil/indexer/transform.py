@@ -65,12 +65,6 @@ from azul.indexer.transform import (
     ReplicaTransformer,
     Transformer,
 )
-from azul.lib import (
-    cache,
-)
-from azul.lib.collections import (
-    deep_dict_merge,
-)
 from azul.lib.strings import (
     pluralize,
 )
@@ -281,6 +275,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'registered_identifier': [null_str],
             'title': null_str,
             'data_modality': [null_str],
+            'duos_id': null_str,
         }
 
     @classmethod
@@ -445,35 +440,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         that_entity, that_bundle = that
         # All AnVIL bundles use a fixed known version
         assert this_bundle.version == that_bundle.version, (this, that)
-        if this_entity.keys() == that_entity.keys():
-            return this
-        else:
-            assert entity_type == 'datasets', (entity_type, this, that)
-            expected_keys = cls._complete_dataset_keys()
-            # There will be one contribution for a DUOS stub, and many redundant
-            # contributions (one per non-DUOS bundle) for the dataset metadata
-            # from BigQuery. Once the stub has been merged with a single main
-            # contribution to consolidate all expected fields, we can disregard
-            # the other contributions as usual.
-            if this_entity.keys() == expected_keys:
-                return this
-            elif that_entity.keys() == expected_keys:
-                return that
-            else:
-                assert this_entity.keys() < expected_keys, this
-                assert that_entity.keys() < expected_keys, that
-                merged = deep_dict_merge(this_entity, that_entity)
-                assert merged.keys() == expected_keys, (this, that)
-                # We can safely discard that_bundle because only the version is
-                # used by the caller, and we know the versions are equal.
-                return merged, this_bundle
-
-    @classmethod
-    @cache
-    def _complete_dataset_keys(cls) -> Set[str]:
-        field_types = cls.field_types()['datasets']
-        assert isinstance(field_types, dict), field_types
-        return field_types.keys()
+        assert this_entity.keys() == that_entity.keys(), (this, that)
+        return this
 
 
 class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
@@ -491,44 +459,6 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
             files=self._entities(self._file, self._entities_by_type['anvil_file'])
         )
         yield self._contribution(contents, entity.entity_id)
-
-    @classmethod
-    def field_types(cls) -> FieldTypes:
-        return deep_dict_merge(
-            super().field_types(),
-            {'datasets': cls._duos_types()}
-        )
-
-    @classmethod
-    def _duos_types(cls) -> FieldTypes:
-        return {
-            'document_id': null_str,
-            'description': null_str,
-            'duos_id': null_str,
-        }
-
-    def _duos(self, dataset: EntityReference) -> MutableJSON:
-        return self._entity(dataset, self._duos_types())
-
-    def _is_duos(self, dataset: EntityReference) -> bool:
-        try:
-            contents = self.bundle.entities[dataset]
-        except KeyError:
-            return False
-        else:
-            return 'duos_id' in contents
-
-    def _dataset(self, dataset: EntityReference) -> MutableJSON:
-        if self._is_duos(dataset):
-            return self._duos(dataset)
-        else:
-            return super()._dataset(dataset)
-
-    def _replica_type(self, entity: EntityReference) -> str:
-        if entity.entity_type == 'anvil_dataset' and self._is_duos(entity):
-            return 'duos_dataset_registration'
-        else:
-            return super()._replica_type(entity)
 
     def _list_entities(self) -> Iterable[EntityReference]:
         # Suppress contributions for bundles that only contain orphans
@@ -614,6 +544,23 @@ class DatasetTransformer(SingletonTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'datasets'
+
+    @classmethod
+    def _detailed_dataset_types(cls) -> FieldTypes:
+        return {
+            **cls._dataset_types(),
+            'description': null_str,
+        }
+
+    @classmethod
+    def field_types(cls) -> FieldTypes:
+        return {
+            **super().field_types(),
+            'datasets': cls._detailed_dataset_types(),
+        }
+
+    def _dataset(self, dataset: EntityReference) -> MutableJSON:
+        return self._entity(dataset, self._detailed_dataset_types())
 
     def _singleton(self) -> EntityReference:
         return self._only_dataset()

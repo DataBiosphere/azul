@@ -251,10 +251,7 @@ class CannedManifestTestCase(CannedFileTestCase):
         # FIXME: Document order of replicas is nondeterministic
         #        https://github.com/DataBiosphere/azul/issues/6442
         sort_key = compose_keys(none_safe_tuple_key(),
-                                # This is necessary to stabilize the ordering of
-                                # DUOS replicas, which have the same id as the
-                                # main dataset replica.
-                                lambda entity: (entity['id'], entity['object'].get('datarepo_row_id')))
+                                lambda entity: (entity['id'],))
         expected_entities = sorted(expected_entities, key=sort_key)
         entities = sorted(manifest, key=sort_key)
         self.assertEqual(expected_schema, schema)
@@ -1154,7 +1151,6 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
     @classmethod
     def bundles(cls) -> list[SourcedBundleFQID]:
         return [
-            cls.duos_bundle(),
             cls.supplementary_bundle(),
             cls.primary_bundle(),
             cls.replica_bundle()
@@ -1245,10 +1241,6 @@ class TestAnvilManifests(AnvilManifestTestCase):
     def test_compact_manifest(self):
         response = self._get_manifest(ManifestFormat.compact, filters={})
         self.assertEqual(200, response.status_code)
-        # The `duos_id` field is absent from manifests since there is only one
-        # DUOS bundle per dataset, and that bundle only contributes to outer
-        # entities of the `datasets` type, not to entities of the other types,
-        # such as files, which the manifest is generated from.
         expected = [
             (
                 'bundles.bundle_uuid',
@@ -1333,6 +1325,12 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 '',
                 '',
                 ''
+            ),
+            (
+                'datasets.duos_id',
+                'DUOS-000000',
+                'DUOS-000000',
+                'DUOS-000000'
             ),
             (
                 'donors.document_id',

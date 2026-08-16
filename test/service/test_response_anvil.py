@@ -44,7 +44,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
 
     @classmethod
     def bundles(cls) -> list[TDRAnvilBundleFQID]:
-        return [cls.primary_bundle(), cls.duos_bundle()]
+        return [cls.primary_bundle()]
 
     def test_entity_indices(self):
         self.maxDiff = None
@@ -95,6 +95,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
@@ -170,6 +171,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
@@ -371,6 +373,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
@@ -539,29 +542,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'bundles': {
                 'hits': [
                     {
-                        'activities': [],
-                        'biosamples': [],
-                        'bundles': [
-                            {
-                                'accessible': True,
-                                'bundle_uuid': '2370f948-2783-aeb6-afea-e022897f4dcf',
-                                'bundle_version': '2022-06-01T00:00:00.000000Z'
-                            }
-                        ],
-                        'datasets': [{'duos_id': ['DUOS-000000']}],
-                        'diagnoses': [],
-                        'donors': [],
-                        'entryId': '2370f948-2783-aeb6-afea-e022897f4dcf',
-                        'files': [],
-                        'sources': [
-                            {
-                                'source_prefix': '/0',
-                                'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot'
-                            }
-                        ]
-                    },
-                    {
                         'activities': [
                             {
                                 'activity_type': ['Sequencing'],
@@ -591,6 +571,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
@@ -641,157 +622,125 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                     }
                 ],
                 'pagination': {
-                    'count': 2,
+                    'count': 1,
                     'next': None,
                     'order': 'asc',
                     'pages': 1,
                     'previous': None,
                     'size': 10,
                     'sort': 'bundle_uuid',
-                    'total': 2
+                    'total': 1
                 },
                 'termFacets': {
                     'accessible': {
-                        'terms': [{'count': 2, 'term': 'true'}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'true'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'activities.activity_type': {
-                        'terms': [
-                            {'count': 1, 'term': 'Sequencing'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'Sequencing'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'activities.assay_type': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'activities.data_modality': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.anatomical_site': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.biosample_type': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'biosamples.disease': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'datasets.consent_group': {
-                        'terms': [
-                            {'count': 1, 'term': 'DS-BDIS'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'DS-BDIS'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'datasets.data_use_permission': {
-                        'terms': [
-                            {'count': 1, 'term': 'DS-BDIS'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'DS-BDIS'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'datasets.registered_identifier': {
-                        'terms': [
-                            {'count': 1, 'term': 'phs000693'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'phs000693'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [
-                            {'count': 1, 'term': 'ANVIL_CMG_UWASH_DS_BDIS'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'ANVIL_CMG_UWASH_DS_BDIS'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.disease': {
                         'terms': [
                             {'count': 1, 'term': 'redacted-A61iJlLx'},
-                            {'count': 1, 'term': 'redacted-g50ublm/'},
-                            {'count': 1, 'term': None}
+                            {'count': 1, 'term': 'redacted-g50ublm/'}
                         ],
-                        'total': 2,
+                        'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenopacket': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'diagnoses.phenotype': {
-                        'terms': [
-                            {'count': 1, 'term': 'redacted-acSYHZUr'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'redacted-acSYHZUr'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'donors.organism_type': {
-                        'terms': [
-                            {'count': 1, 'term': 'redacted-ACw+6ecI'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'redacted-ACw+6ecI'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'donors.phenotypic_sex': {
-                        'terms': [
-                            {'count': 1, 'term': 'redacted-JfQ0b3xG'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'redacted-JfQ0b3xG'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'donors.reported_ethnicity': {
-                        'terms': [
-                            {'count': 1, 'term': 'redacted-NSkwDycK'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'redacted-NSkwDycK'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'files.data_modality': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'files.file_format': {
                         'terms': [
                             {'count': 1, 'term': '.bam'},
-                            {'count': 1, 'term': '.vcf.gz'},
-                            {'count': 1, 'term': None}
+                            {'count': 1, 'term': '.vcf.gz'}
                         ],
-                        'total': 2,
+                        'total': 1,
                         'type': 'terms'
                     },
                     'files.is_supplementary': {
-                        'terms': [
-                            {'count': 1, 'term': 'false'},
-                            {'count': 1, 'term': None}
-                        ],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': 'false'}],
+                        'total': 1,
                         'type': 'terms'
                     },
                     'files.reference_assembly': {
-                        'terms': [{'count': 2, 'term': None}],
-                        'total': 2,
+                        'terms': [{'count': 1, 'term': None}],
+                        'total': 1,
                         'type': 'terms'
                     }
                 }
@@ -808,10 +757,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             }
                         ],
                         'bundles': [
-                            {
-                                'bundle_uuid': '2370f948-2783-aeb6-afea-e022897f4dcf',
-                                'bundle_version': '2022-06-01T00:00:00.000000Z'
-                            },
                             {
                                 'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
@@ -1052,6 +997,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
@@ -1262,6 +1208,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
@@ -1345,6 +1292,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'data_use_permission': ['DS-BDIS'],
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
+                                'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
                                 'title': ['ANVIL_CMG_UWASH_DS_BDIS']
                             }
