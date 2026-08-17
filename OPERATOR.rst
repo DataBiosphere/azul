@@ -118,7 +118,7 @@ operator performs the following steps daily.
    there already is an open ticket for pending updates, reuse that ticket and
    adjust it accordingly.
 
-4. If title contains a date, pin the ticket as *High Priority* in ZenHub.
+4. If title contains a date, pin the ticket in GitHub.
 
 5. The description of the ticket should include a checklist item for each ES
    domain recorded in step 2. The checklist should include items for notifying

@@ -834,9 +834,9 @@ Commit titles
   Note that we don't use Github resolution keywords like "fixes" or "resolves".
   Any mention of those preceding an issue reference in a title would
   automatically close the issue as soon as the commit appears on the default
-  branch. This is undesirable as we want to continue to track issues in
-  ZenHub's *Merged* and *Done* pipelines even after the commit appears on the
-  ``develop`` branch.
+  branch. This is undesirable as we want to continue to track issues under the
+  post-merge statuses of the `Azul project`_, up to and including *Done*, even
+  after the commit appears on the ``develop`` branch.
 
 * We value `expressive and concise commit message titles`_ and try to adhere to
   Github's limit of 72 characters for the length of a commit message title.
@@ -922,7 +922,8 @@ Commit title tags
 Issue Tracking
 ==============
 
-* We use Github's built-in issue tracking and ZenHub.
+* We use Github's built-in issue tracking and Github Projects, specifically
+  the `Azul project`_.
 
 * We use `sentence case`_ for issue titles.
 
@@ -942,11 +943,13 @@ Issue Tracking
   assigned to the assisting person. Once assistance was provided, the ticket
   should be assigned back to the original assignee.
 
-* We use ZenHub dependencies between issues to express constraints on the
+* We use Github's built-in issue dependencies to express constraints on the
   order in which those issues can be worked on.  If issue ``#1`` blocks
   ``#2``, then work on ``#2`` can't begin before work on ``#1`` has completed.
   For issues that are resolved by a commit, work is considered complete when
   that commit appears on the ``develop`` branch.
+
+.. _Azul project: https://github.com/orgs/DataBiosphere/projects/3
 
 
 Pull Requests
@@ -1146,18 +1149,18 @@ Review comments
   the reviewer can refresh their memory as to which changes they requested in a
   prior review so they can verify if they were addressed satisfactorily.
 
-PR dependencies
----------------
+PR merge order
+--------------
 
-* We use ZenHub dependencies between PRs to define constraints on the order in
-  which they can be merged into ``develop``. If PR ``#3`` blocks PR ``#4``,
-  then ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs
-  must not block issues. The only express relation we use between issues and
-  PRs is ZenHub's *Connect to issue* feature. Note that an explicit
-  dependency between two issues implies a dependency between the PRs
-  connected to the issues: if issue ``#1`` blocks issue ``#2`` and PR ``#3``
-  is connected to ``#1`` while PR ``#4`` is connected to ``#2``, then PR
-  ``#4`` must be merged after PR ``#3``.
+* PRs can't depend on each other, at least not explicitly. Instead, we use the
+  *PR merge order* field of the `Azul project`_ to informally express both such
+  dependencies and the relative priority of PRs: a PR with a lower merge order
+  should be merged before one with a higher merge order. The only express
+  relation we use between issues and PRs is Github's built-in linking of a PR
+  to the issues it resolves. Note that a dependency between two issues implies
+  one between the PRs linked to those issues: if issue ``#1`` blocks issue
+  ``#2`` and PR ``#3`` is linked to ``#1`` while PR ``#4`` is linked to
+  ``#2``, then PR ``#4`` should be given a higher merge order than PR ``#3``.
 
 Chained PRs
 -----------
@@ -1168,9 +1171,9 @@ Chained PRs
   refer to PR ``#3`` as the *base PR* and the branch for ``#3`` as the *base
   branch*. 
 
-* The base PR blocks the chained PR (see `PR dependencies`_ for details). It
-  is rare for a PR to be blocked by another PR without also being chained to
-  it.
+* The base PR must be merged before the chained PR (see `PR merge order`_ for
+  details). It is rare for a PR to depend on another PR without also being
+  chained to it.
 
 * Only a draft PR may be chained to another PR. Note that this implies that
   the primary reviewer generally does not review chained PRs unless they are
@@ -1184,7 +1187,8 @@ Chained PRs
 
   3) In Github, set the base branch of PR ``#4`` to the PR branch of ``#3``
 
-  4) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``.
+  4) In the `Azul project`_, give PR ``#4`` a higher *PR merge order* than PR
+     ``#3``.
 
 * A PR may be chained to a PR that is chained to another PR, creating a chain
   of length 3. PR chains can be of arbirary length. All but the first PR in a
