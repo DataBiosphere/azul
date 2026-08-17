@@ -82,76 +82,42 @@ more than one consecutive stints, create events for those as well.
 
 .. _`Team Boardwalk calendar`: https://calendar.google.com/calendar/u/0/r?cid=dWNzYy5lZHVfMDRuZ3J1NXQzNDB0aWd0cW5qYWQ5Nm5jOWtAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ
 
-Check weekly for Amazon OpenSearch Service updates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Apply Amazon OpenSearch Service updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The operator checks weekly for notifications about service software updates to
-Amazon OpenSearch Service domains for all Azul deployments. Note that service
+Every two weeks, an issue labeled ``operator`` and titled *Apply Amazon
+OpenSearch software updates* is created automatically from the `issue
+template`_ of the same name. That issue lists a checklist item for each
+OpenSearch domain and drives the process described below. Note that service
 software updates are distinct from updates to the upstream version of
-ElasticSearch (or Amazon's OpenSearch fork) in use on an ES domain. While the
-latter are discretional and applied via a change to TerraForm configuration,
-some of the latter are mandatory.
+OpenSearch (a fork of ElasticSearch) used by an AWS OpenSearch domain. While
+the latter are discretional and applied via a change to TerraForm
+configuration, some of the former are mandatory.
 
 Unless we intervene, AWS will automatically force the installation of any update
 about which we receive a ``High`` severity notification, typically two weeks
 after the notification was sent. Read `Amazon notification severities`_ for more
 information.  The operator must prevent the automatic installation of such
 updates. It would be disastrous if an update were to be applied during a reindex
-in ``prod``. Instead, the operator must apply the update manually as part of an
-operator ticket in GitHub, as soon as possible, and well before Amazon would
-apply it automatically.
+in ``prod``. Instead, the operator must apply the update manually, as soon as
+possible, and well before Amazon would apply it automatically.
 
-To check for, and apply, if necessary, any pending service software updates, the
-operator performs the following steps daily.
+Pending updates are announced in the *Notifications* pane of the *Amazon
+OpenSearch Service Console*, as notifications with subject ``Service Software
+Update``, in both the ``prod`` and ``dev`` AWS accounts.
 
-1. In *Amazon OpenSearch Service Console* select the *Notifications* pane and
-   identify notifications with subject ``Service Software Update``.
+To update an OpenSearch domain, select it in the Amazon OpenSearch Service
+console. Under *General information*, the *Service software version* should
+have an *Update available* hyperlink. Click on it and follow the subsequent
+instructions. Note that, somewhat counterintuitively, main deployments are
+updated before their respective ``sandbox``, and that team members need to be
+notified about any disruptions to their personal deployments, say, when the
+``sandbox`` domain is being updated.
 
-2. Record the severity, date and the ES domain name of these notifications.
-   Collect this information for all ES domain in both the ``prod`` and ``dev``
-   AWS accounts. If there are no notifications, you are done.
+Once the upgrade process is completed for the ``dev`` or ``prod`` OpenSearch
+domain, perform a smoke test using the respective Data Browser instance.
 
-3. Open a new ticket in GitHub and title it ``Apply Amazon OpenSearch (ES)
-   Software Update (before {date})``. Include ``(before {date})`` in the title
-   if any notification is of ``High`` severity, representing a forced update.
-   Replace ``{date}`` with the anticipated date of the forced installation. If
-   there already is an open ticket for pending updates, reuse that ticket and
-   adjust it accordingly.
-
-4. If title contains a date, pin the ticket in GitHub.
-
-5. The description of the ticket should include a checklist item for each ES
-   domain recorded in step 2. The checklist should include items for notifying
-   the team members about any disruptions to their personal deployments, say,
-   when the ``sandbox`` domain is being updated.
-
-   Use this template for the checklist::
-
-      - [ ] Update `azul-index-dev`
-      - [ ] Update `azul-index-anvildev`
-      - [ ] Update `azul-index-anvilprod`
-      - [ ] Confirm with Azul devs that their personal deployments are idle
-      - [ ] Update `azul-index-sandbox`
-      - [ ] Update `azul-index-anvilbox`
-      - [ ] Update `azul-index-hammerbox`
-      - [ ] Update `azul-index-prod`
-      - [ ] Confirm snapshots are disabled on all domains
-        - `aws opensearch describe-domains --domain-name <NAME> | jq '.DomainStatusList[].SnapshotOptions'`
-        - Value of `AutomatedSnapshotStartHour` should be `-1`
-
-   Note that, somewhat counterintuitively, main deployments are updated before
-   their respective ``sandbox``. If, during step 3, updates or domains were
-   added to an existing ticket, the entire process may have to be restarted and
-   certain checklist items may need to be reset.
-
-6. To update an ES domain, select it the Amazon OpenSearch Service console.
-   Under *General information*, the *Service software version* should have an
-   *Update available* hyperlink. Click on it and follow the subsequent
-   instructions.
-
-7. Once the upgrade process is completed for the ``dev`` or ``prod`` ES domain,
-   perform a smoke test using the respective Data Browser instance.
-
+.. _`issue template`: ./.github/ISSUE_TEMPLATE/opensearch_updates.md
 .. _`Amazon notification severities`: https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-notifications.html#managedomains-notifications-severities
 
 Review counts
@@ -211,19 +177,20 @@ that deployment must then be reverted to the previously passing commit.
 Reindexing
 ^^^^^^^^^^
 
-During reindexing, watch the ES domain for unassigned shards, using the AWS
-console. The ``azul-prod`` CloudWatch dashboard has a graph for the shard count.
-It is OK to have unassigned shards for a while but if the same unassigned shards
-persist for over an hour, they are probably permanently unassigned. Follow the
-procedure outlined in `this AWS support article`_, using either Kibana or
-Cerebro. Cerebro has a dedicated form field for the index setting referenced in
-that article. In the past, unassigned shards have been caused by AWS attempting
-to make snapshots of the indices that are currently being written to under high
-load during reindexing. Make sure that ``GET _cat/snapshots/cs-automated``
-returns nothing. Make sure that the *Start Hour* under *Snapshots* on the
-*Cluster confguration* tab of the ES domain page in the AWS console is shown as
-``0-1:00 UTC``. If either of these checks fails, file a support ticket with AWS
-urgently requesting snapshots to be disabled.
+During reindexing, watch the OpenSearch domain for unassigned shards, using the
+AWS console. The ``azul-prod`` CloudWatch dashboard has a graph for the shard
+count. It is OK to have unassigned shards for a while but if the same
+unassigned shards persist for over an hour, they are probably permanently
+unassigned. Follow the procedure outlined in `this AWS support article`_, using
+either Kibana or Cerebro. Cerebro has a dedicated form field for the index
+setting referenced in that article. In the past, unassigned shards have been
+caused by AWS attempting to make snapshots of the indices that are currently
+being written to under high load during reindexing. Make sure that
+``GET _cat/snapshots/cs-automated`` returns nothing. Make sure that the
+*Start Hour* under *Snapshots* on the *Cluster confguration* tab of the
+OpenSearch domain page in the AWS console is shown as ``0-1:00 UTC``. If either
+of these checks fails, file a support ticket with AWS urgently requesting
+snapshots to be disabled.
 
 .. _this AWS support article: https://aws.amazon.com/premiumsupport/knowledge-center/opensearch-in-memory-shard-lock/
 
