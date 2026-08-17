@@ -91,6 +91,9 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
         elif drs_uri.startswith('drs://dg.4503'):
             # LungMAP contains files not hosted on TDR. Downloading these files
             # requires authentication that can't be provided by Azul.
+            #
+            # FIXME: We shouldn't hard-code compact identifier namespaces
+            #        https://github.com/DataBiosphere/azul/issues/8236
             return None
         else:
             return str(self.file_url_func(catalog=self.catalog,

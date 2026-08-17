@@ -1147,6 +1147,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         elif json_str(file['drs_uri']).startswith('drs://dg.4503'):
             # LungMAP contains files not hosted on TDR. Downloading these files
             # requires authentication that can't be provided by Azul.
+            #
+            # FIXME: We shouldn't hard-code compact identifier namespaces
+            #        https://github.com/DataBiosphere/azul/issues/8236
             return None
         else:
             special_fields = self.metadata_plugin.special_fields
