@@ -186,11 +186,10 @@ either Kibana or Cerebro. Cerebro has a dedicated form field for the index
 setting referenced in that article. In the past, unassigned shards have been
 caused by AWS attempting to make snapshots of the indices that are currently
 being written to under high load during reindexing. Make sure that
-``GET _cat/snapshots/cs-automated`` returns nothing. Make sure that the
-*Start Hour* under *Snapshots* on the *Cluster confguration* tab of the
-OpenSearch domain page in the AWS console is shown as ``0-1:00 UTC``. If either
-of these checks fails, file a support ticket with AWS urgently requesting
-snapshots to be disabled.
+*Automated Snapshots Enabled* under *Snapshot* on the *Cluster configuration*
+tab of the OpenSearch domain page in the AWS console is shown as *No*. If this
+check fails, file a support ticket with AWS urgently requesting snapshots to be
+disabled.
 
 .. _this AWS support article: https://aws.amazon.com/premiumsupport/knowledge-center/opensearch-in-memory-shard-lock/
 
