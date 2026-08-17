@@ -994,7 +994,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             # change. For that reason, …
             #
             # FIXME: … we shouldn't hard-code compact identifier namespaces
-            #        https://github.com/DataBiosphere/azul/issues/8063
+            #        https://github.com/DataBiosphere/azul/issues/8236
             return drs_uri.namespace == 'drs.anv0'
         else:
             assert False, inner_file
