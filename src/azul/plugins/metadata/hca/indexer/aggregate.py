@@ -92,6 +92,8 @@ class HCAEntityAggregator(SimpleAggregator):
                 return None
         elif field in ('biomaterial_name', 'protocol_name'):
             if self.outer_entity_type == 'files':
+                # FIXME: Resize accumulators and disallow overflow
+                #        https://github.com/DataBiosphere/azul/issues/8237
                 return SetAccumulator(max_size=100, allow_overflow=True)
             else:
                 return None
