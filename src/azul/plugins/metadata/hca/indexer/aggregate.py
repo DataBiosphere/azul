@@ -84,20 +84,30 @@ class HCAAggregate(Aggregate):
 
 class HCAEntityAggregator(SimpleAggregator):
 
-    def _files_only_fields(self) -> set[str]:
-        return {'biomaterial_id', 'document_id'}
-
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._files_only_fields():
+        if field in ('biomaterial_id', 'document_id'):
             if self.outer_entity_type == 'files':
-                return self._files_only_accumulator(field)
+                return self._id_field_accumulator(field)
             else:
                 return None
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return super()._accumulator(field)
+
+
+class HCAHotEntityAggregator(HCAEntityAggregator):
+
+    def _accumulator(self, field) -> Accumulator | None:
+        # Hot entity types must always accumulate `document_id` so that
+        # none are omitted during the verbatim handover. We can't track
+        # their hubs in replica documents, so we rely on the inner entity
+        # IDs instead.
+        if field == 'document_id':
+            return self._id_field_accumulator(field)
+        else:
+            return super()._accumulator(field)
 
 
 class FileAggregator(GroupingAggregator):
@@ -145,7 +155,7 @@ class SampleAggregator(HCAEntityAggregator):
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return SetAccumulator(max_size=int(1209 * 1.25))
 
 
@@ -167,7 +177,7 @@ class SpecimenAggregator(HCAEntityAggregator):
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return SetAccumulator(max_size=int(1209 * 1.25))
 
 
@@ -202,7 +212,7 @@ class CellSuspensionAggregator(HCAEntityAggregator, GroupingAggregator):
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return SetAccumulator(max_size=int(9766 * 1.25))
 
 
@@ -219,7 +229,7 @@ class CellLineAggregator(HCAEntityAggregator):
             return super()._accumulator(field)
 
 
-class DonorOrganismAggregator(SimpleAggregator):
+class DonorOrganismAggregator(HCAHotEntityAggregator):
 
     def _transform_entity(self, entity: JSON) -> JSON:
         return {
@@ -228,14 +238,7 @@ class DonorOrganismAggregator(SimpleAggregator):
         }
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'biomaterial_id':
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return SetAccumulator(max_size=int(931 * 1.25))
-            else:
-                return None
-        elif field == 'biomaterial_name':
+        if field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
                 return SetAccumulator(max_size=100, allow_overflow=True)
@@ -251,14 +254,11 @@ class DonorOrganismAggregator(SimpleAggregator):
                                                          none_safe_itemgetter('value', 'unit')))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
-        elif field == 'document_id':
-            # If any donor IDs are missing from the aggregate, those donors will
-            # be omitted during the verbatim handover. Donors are a "hot" entity
-            # type, and we can't track their hubs in replica documents, so we
-            # rely on the inner entity IDs instead.
-            return SetAccumulator(max_size=int(931 * 1.25))
         else:
             return super()._accumulator(field)
+
+    def _id_field_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=int(931 * 1.25))
 
 
 class OrganoidAggregator(HCAEntityAggregator):
@@ -274,21 +274,13 @@ class OrganoidAggregator(HCAEntityAggregator):
             return super()._accumulator(field)
 
 
-class ProjectAggregator(SimpleAggregator):
+class ProjectAggregator(HCAHotEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field == 'document_id':
-            # If any project IDs were missing from the aggregate, those projects
-            # would be omitted during the verbatim handover. Projects are a
-            # "hot" entity type, and we can't track their hubs in replica
-            # documents, so we rely on the inner entity IDs instead. We also
-            # need to aggregate `document_id` to allow filtering by `projectId`
-            # on non-project endpoints.
-            return SetAccumulator(max_size=100)
-        elif field in ('project_description',
-                       'contact_names',
-                       'contributors',
-                       'publications'):
+        if field in ('project_description',
+                     'contact_names',
+                     'contributors',
+                     'publications'):
             return None
         elif field == 'estimated_cell_count':
             return MaxAccumulator()
@@ -302,17 +294,11 @@ class ProjectAggregator(SimpleAggregator):
             return super()._accumulator(field)
 
 
-class ProtocolAggregator(SimpleAggregator):
+class ProtocolAggregator(HCAHotEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
         if field == 'assay_type':
             return FrequencySetAccumulator(max_size=100)
-        elif field == 'document_id':
-            # If any protocol IDs are missing from the aggregate, those
-            # protocols may be omitted during the verbatim handover. Some
-            # protocols are "hot" entity types, and we can't track their hubs in
-            # replicas, so we rely on the inner entity IDs instead.
-            return SetAccumulator(max_size=100)
         elif field == 'protocol_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -321,6 +307,9 @@ class ProtocolAggregator(SimpleAggregator):
                 return None
         else:
             return super()._accumulator(field)
+
+    def _id_field_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=100)
 
     def _default_accumulator(self) -> Accumulator | None:
         return SetAccumulator()
@@ -338,13 +327,13 @@ class SequencingInputAggregator(HCAEntityAggregator):
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return SetAccumulator(max_size=int(7302 * 1.25))
 
 
 class SequencingProcessAggregator(HCAEntityAggregator):
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return SetAccumulator(max_size=int(6357 * 1.25))
 
     def _default_accumulator(self) -> Accumulator | None:
@@ -359,7 +348,7 @@ class MatricesAggregator(HCAEntityAggregator):
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return None
 
     def _default_accumulator(self) -> Accumulator | None:
@@ -378,5 +367,5 @@ class DateAggregator(HCAEntityAggregator):
         else:
             return super()._accumulator(field)
 
-    def _files_only_accumulator(self, field) -> Accumulator | None:
+    def _id_field_accumulator(self, field) -> Accumulator | None:
         return None
