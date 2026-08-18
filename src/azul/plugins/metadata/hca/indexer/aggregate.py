@@ -84,8 +84,20 @@ class HCAAggregate(Aggregate):
 
 class HCAEntityAggregator(SimpleAggregator):
 
-    def _never_accumulate(self) -> set[str]:
+    def _files_only_fields(self) -> set[str]:
         return {'biomaterial_id', 'document_id'}
+
+    def _accumulator(self, field) -> Accumulator | None:
+        if field in self._files_only_fields():
+            if self.outer_entity_type == 'files':
+                return self._files_only_accumulator(field)
+            else:
+                return None
+        else:
+            return super()._accumulator(field)
+
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return super()._accumulator(field)
 
 
 class FileAggregator(GroupingAggregator):
@@ -124,14 +136,7 @@ class FileAggregator(GroupingAggregator):
 class SampleAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return SetAccumulator(max_size=int(1209 * 1.25))
-            else:
-                return None
-        elif field == 'biomaterial_name':
+        if field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
                 return SetAccumulator(max_size=100, allow_overflow=True)
@@ -139,24 +144,20 @@ class SampleAggregator(HCAEntityAggregator):
                 return None
         else:
             return super()._accumulator(field)
+
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=int(1209 * 1.25))
 
 
 class SpecimenAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return SetAccumulator(max_size=int(1209 * 1.25))
-            # `document_id` is included in the sample aggregate so that the
-            # summary response field `specimenCount` can be calculated. This
-            # should not be a problem since there should only ever be one
-            # specimen inner entity in a samples outer entity.
-            elif field == 'document_id' and self.outer_entity_type == 'samples':
-                return super()._accumulator(field)
-            else:
-                return None
+        # `document_id` is included in the sample aggregate so that the
+        # summary response field `specimenCount` can be calculated. This
+        # should not be a problem since there should only ever be one
+        # specimen inner entity in a samples outer entity.
+        if field == 'document_id' and self.outer_entity_type == 'samples':
+            return self._default_accumulator()
         elif field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
@@ -165,6 +166,9 @@ class SpecimenAggregator(HCAEntityAggregator):
                 return None
         else:
             return super()._accumulator(field)
+
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=int(1209 * 1.25))
 
 
 class CellSuspensionAggregator(HCAEntityAggregator, GroupingAggregator):
@@ -187,14 +191,7 @@ class CellSuspensionAggregator(HCAEntityAggregator, GroupingAggregator):
         return frozenset(entity['organ']),
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return SetAccumulator(max_size=int(9766 * 1.25))
-            else:
-                return None
-        elif field == 'biomaterial_name':
+        if field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
                 return SetAccumulator(max_size=100, allow_overflow=True)
@@ -205,18 +202,14 @@ class CellSuspensionAggregator(HCAEntityAggregator, GroupingAggregator):
         else:
             return super()._accumulator(field)
 
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=int(9766 * 1.25))
+
 
 class CellLineAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return super()._accumulator(field)
-            else:
-                return None
-        elif field == 'biomaterial_name':
+        if field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
                 return SetAccumulator(max_size=100, allow_overflow=True)
@@ -271,14 +264,7 @@ class DonorOrganismAggregator(SimpleAggregator):
 class OrganoidAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return super()._accumulator(field)
-            else:
-                return None
-        elif field == 'biomaterial_name':
+        if field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
                 return SetAccumulator(max_size=100, allow_overflow=True)
@@ -343,14 +329,7 @@ class ProtocolAggregator(SimpleAggregator):
 class SequencingInputAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return SetAccumulator(max_size=int(7302 * 1.25))
-            else:
-                return None
-        elif field == 'biomaterial_name':
+        if field == 'biomaterial_name':
             # Only aggregated to be included in compact and PFB manifests
             if self.outer_entity_type == 'files':
                 return SetAccumulator(max_size=100, allow_overflow=True)
@@ -359,19 +338,14 @@ class SequencingInputAggregator(HCAEntityAggregator):
         else:
             return super()._accumulator(field)
 
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=int(7302 * 1.25))
+
 
 class SequencingProcessAggregator(HCAEntityAggregator):
 
-    def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            if self.outer_entity_type == 'files':
-                return SetAccumulator(max_size=int(6357 * 1.25))
-            else:
-                return None
-        else:
-            return super()._accumulator(field)
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return SetAccumulator(max_size=int(6357 * 1.25))
 
     def _default_accumulator(self) -> Accumulator | None:
         return SetAccumulator(max_size=10)
@@ -380,20 +354,22 @@ class SequencingProcessAggregator(HCAEntityAggregator):
 class MatricesAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            return None
-        elif field == 'file':
+        if field == 'file':
             return DictAccumulator(max_size=int(515 * 1.25), key=itemgetter('uuid'))
         else:
-            return SetAccumulator()
+            return super()._accumulator(field)
+
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return None
+
+    def _default_accumulator(self) -> Accumulator | None:
+        return SetAccumulator()
 
 
 class DateAggregator(HCAEntityAggregator):
 
     def _accumulator(self, field) -> Accumulator | None:
-        if field in self._never_accumulate():
-            return None
-        elif field in ('submission_date', 'aggregate_submission_date'):
+        if field in ('submission_date', 'aggregate_submission_date'):
             return MinAccumulator()
         elif field in ('update_date', 'aggregate_update_date'):
             return MaxAccumulator()
@@ -401,3 +377,6 @@ class DateAggregator(HCAEntityAggregator):
             return MaxAccumulator()
         else:
             return super()._accumulator(field)
+
+    def _files_only_accumulator(self, field) -> Accumulator | None:
+        return None
