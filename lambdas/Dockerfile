@@ -17,4 +17,3 @@ RUN python -m zipfile -e /tmp/deployment.zip /var/task \
 WORKDIR /var/task
 
 ENTRYPOINT ["/usr/local/bin/python", "-m", "awslambdaric"]
-CMD ["app.app"]

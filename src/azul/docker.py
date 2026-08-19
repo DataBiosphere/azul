@@ -358,6 +358,41 @@ class Platform:
             result.append(self.variant)
         return '/'.join(result)
 
+    @property
+    def tag_suffix(self) -> str:
+        """
+        The string to append when encoding the platform of an image in a tag.
+        This is an Azul-specifc convention.
+
+        >>> Platform.parse('linux/amd64').tag_suffix
+        '-linux-amd64'
+        """
+        return '-' + str(self).replace('/', '-')
+
+
+_docker_to_lambda_arch = {
+    'amd64': 'x86_64',
+    'arm64': 'arm64',
+}
+
+
+def lambda_image_platform() -> Platform:
+    return Platform.parse(config.lambda_image_platforms[0])
+
+
+def lambda_architecture() -> str:
+    return _docker_to_lambda_arch[lambda_image_platform().arch]
+
+
+def lambda_image_uri(app_name: str) -> str:
+    platform = lambda_image_platform()
+    tag = config.deployment_stage + '-' + app_name + platform.tag_suffix
+    name = config.docker_registry + '/' + config.domain_name + '/azul/lambda'
+    tag_ref = TagImageRef.create(name, tag)
+    repo = Repository(tag_ref)
+    digest = repo.get_tag(tag)
+    return str(tag_ref.with_digest(digest))
+
 
 images_by_alias = {
     alias: TagImageRef.parse(spec['ref'])
