@@ -50,12 +50,7 @@ generic with minimal need for project-specific behavior.
   required version is specified in a variable called `azul_docker_version` in
   [environment.py](environment.py).
 
-- Terraform, to manage deployments. Azul requires a specific version of
-  Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.py](environment.py). Refer to the official documentation on how
-  to [install terraform]. Terraform comes as a single, statically linked binary,
-  so the easiest method of installation is to download the binary and put it in
-  a directory mentioned in the `PATH` environment variable.
+- [Terraform](#212-terraform), to manage deployments
 
 - [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
   available on PyPI, it must be installed separately. Install the version pinned
@@ -87,7 +82,6 @@ generic with minimal need for project-specific behavior.
 - Users of macOS 11 (Big Sur) should follow additional steps outlined in 
   [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
 
-[install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
@@ -144,6 +138,42 @@ been configured for the clone.
 If you get no output, the AWS provider has not been registered.
 
 [git-secrets]: https://github.com/awslabs/git-secrets
+
+
+### 2.1.2 Terraform
+
+Azul requires a specific version of Terraform, which is defined in a variable
+called `azul_terraform_version` in [environment.py](environment.py). Refer to
+the official documentation on how to [install terraform]. Terraform comes as a
+single, statically linked binary, so the easiest method of installation is to
+download the binary and put it in a directory mentioned in the `PATH`
+environment variable.
+
+Azul sets `TF_DATA_DIR` per deployment and AWS profile, so without a [plugin
+cache], Terraform downloads a separate copy of each provider binary into every
+deployment's data directory. Because the AWS provider alone is several hundred
+megabytes, total disk usage can reach tens of gigabytes across multiple working
+copies. To avoid this, add the following to `~/.terraformrc`:
+
+```hcl
+plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"
+```
+
+Then create the directory:
+
+```
+mkdir -p ~/.terraform.d/plugin-cache
+```
+
+With the cache configured, `terraform init` stores provider binaries in the
+cache and symlinks to them from each deployment's data directory.
+
+See also the [troubleshooting
+section](#excessive-disk-usage-by-terraform-providers) on recovering from
+long-term use without the cache.
+
+[install terraform]: https://developer.hashicorp.com/terraform/downloads
+[plugin cache]: https://developer.hashicorp.com/terraform/cli/config/config-file#provider-plugin-cache
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
@@ -1323,6 +1353,44 @@ compatibility flag needs to be added to the `environment.local.py` file in the
 project root. The flag is `SYSTEM_VERSION_COMPAT=1` and it needs to be inserted
 into the file (starting from line 25) as a key/value pair:
 `'SYSTEM_VERSION_COMPAT': 1`.
+
+
+## Excessive disk usage by Terraform providers
+
+Without a [plugin cache], Terraform downloads a separate copy of each provider
+binary into every deployment's data directory. Because Azul sets `TF_DATA_DIR`
+per deployment and AWS profile, and the AWS provider alone is several hundred
+megabytes, total disk usage can reach tens of gigabytes across multiple working
+copies.
+
+Symptoms include unexpectedly low free disk space and large
+`.terraform.*/providers` directories under `deployments/`:
+
+```
+du -sh deployments/*/.terraform.*/providers
+```
+
+To recover:
+
+1. Configure the plugin cache as described in the [Terraform
+   prerequisite](#21-development-prerequisites) section.
+
+2. Delete the redundant provider directories:
+
+   ```
+   find deployments -type d -name providers -path '*/.terraform.*' -exec rm -rf {} +
+   ```
+
+   This is safe because the provider binaries are downloaded on demand by
+   `terraform init`, which runs as a prerequisite of most Terraform operations.
+   The deployment's `terraform.tfstate` (a backend configuration cache) and
+   `modules/` directory are preserved.
+
+3. The next `terraform init` for each deployment will re-download the required
+   providers into the shared cache and symlink to them.
+
+If you have additional working copies of the repository, repeat step 2 in each
+one. The cache is shared across all working copies.
 
 
 # 6. Branch flow & development process
