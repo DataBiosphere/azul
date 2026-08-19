@@ -1032,14 +1032,6 @@ class Chalice:
                 sqs_name, _ = config.unqualified_resource_name(resource_name, suffix)
                 resource['event_source_arn'] = f'${{aws_sqs_queue.{sqs_name}.arn}}'
 
-        # Ensure that the Lambda permissions for the previous aliases aren't
-        # deleted until after the permissions for the new aliases have been
-        # created.
-        #
-        for resource_name, resource in resource_items('aws_lambda_permission'):
-            assert 'lifecycle' not in resource, (resource_name, resource)
-            resource['lifecycle'] = {'create_before_destroy': True}
-
         resource_type = 'aws_lambda_function_recursion_config'
         recursion_configs: MutableJSON = {}
         for resource_name, resource in resource_items('aws_lambda_function'):
