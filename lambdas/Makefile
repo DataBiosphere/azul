@@ -9,11 +9,11 @@ layer: check_env
 
 .PHONY: indexer
 indexer: check_env
-	$(MAKE) -C indexer package
+	$(MAKE) -C indexer docker_push
 
 .PHONY: service
 service: check_env
-	$(MAKE) -C service package
+	$(MAKE) -C service docker_push
 
 .PHONY: clean
 clean: check_env
