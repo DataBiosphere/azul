@@ -12,7 +12,9 @@ RUN pip install --no-cache-dir --no-deps -r /tmp/requirements.txt \
 
 COPY lambdas/${APP}/.chalice/terraform/deployment.zip /tmp/
 RUN python -m zipfile -e /tmp/deployment.zip /var/task \
-    && rm /tmp/deployment.zip
+    && rm /tmp/deployment.zip \
+    && find /var/task -name __pycache__ -exec rm -rf {} + \
+    && python -m compileall -q /var/task
 
 WORKDIR /var/task
 
