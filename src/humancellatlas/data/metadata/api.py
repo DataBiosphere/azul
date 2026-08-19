@@ -388,6 +388,7 @@ class Project(Entity):
 @dataclass(init=False)
 class Biomaterial(LinkedEntity):
     biomaterial_id: str
+    biomaterial_name: str
     ncbi_taxon_id: list[int]
     has_input_biomaterial: str | None
     from_processes: MutableMapping[UUID4, Process] = field(repr=False)
@@ -397,6 +398,7 @@ class Biomaterial(LinkedEntity):
         super().__init__(json)
         content = json.get('content', json)
         self.biomaterial_id = content['biomaterial_core']['biomaterial_id']
+        self.biomaterial_name = content['biomaterial_core'].get('biomaterial_name')
         self.ncbi_taxon_id = content['biomaterial_core']['ncbi_taxon_id']
         self.has_input_biomaterial = content['biomaterial_core'].get('has_input_biomaterial')
         self.from_processes = {}

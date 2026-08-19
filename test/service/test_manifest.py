@@ -533,47 +533,41 @@ class TestManifests(DCP1ManifestTestCase):
             ('file_size', '29230', '64718465'),
             ('file_uuid', '5f9b45af-9a26-4b16-a785-7f2d1053dd7c', 'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'),
             ('file_version', '2018-09-14T12:33:47.012715Z', '2018-09-14T12:33:43.720332Z'),
-
             ('file_crc32c', 'b9364bfa', '980453cc'),
             ('file_sha256',
              '2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16',
              '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582'),
-
             ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
-
             ('file_drs_uri',
              self._drs_uri('5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
                            '2018-09-14T12:33:47.012715Z'),
              self._drs_uri('f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
                            '2018-09-14T12:33:43.720332Z')),
-
             ('file_azul_url',
              self._file_url('5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
                             '2018-09-14T12:33:47.012715Z'),
              self._file_url('f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
                             '2018-09-14T12:33:43.720332Z')),
-
             ('file_mirror_uri',
              self._mirror_uri('2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16'),
              self._mirror_uri('3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582')),
-
             ('cell_suspension.provenance.document_id',
              '',
              '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
-
             ('cell_suspension.biomaterial_core.biomaterial_id', '', '22028_5#300 || 22030_5#300'),
+            ('cell_suspension.biomaterial_core.biomaterial_name', '', ''),
             ('cell_suspension.estimated_cell_count', '', '9001'),
             ('cell_suspension.selected_cell_type', '', 'CAFs'),
             ('sequencing_process.provenance.document_id', '', '72732ed3-7b71-47df-bcec-c765ef7ea758'),
             ('sequencing_protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
             ('sequencing_protocol.paired_end', '', 'True'),
+            ('sequencing_protocol.protocol_core.protocol_name', '', 'Sequencing SmartSeq2 cells'),
             ('library_preparation_protocol.library_construction_approach', '', 'Smart-seq2'),
             ('library_preparation_protocol.nucleic_acid_source', '', 'single cell'),
-
+            ('library_preparation_protocol.protocol_core.protocol_name', '', 'Make/amplify cDNA for each cell'),
             ('project.provenance.document_id',
              '67bc798b-a34a-4104-8cab-cad648471f69',
              '67bc798b-a34a-4104-8cab-cad648471f69'),
-
             ('project.contributors.institution',
              ' || '.join([
                  'DKFZ German Cancer Research Center',
@@ -587,29 +581,27 @@ class TestManifests(DCP1ManifestTestCase):
                  'University of Cambridge',
                  'University of Helsinki',
                  'Wellcome Trust Sanger Institute'])),
-
             ('project.contributors.laboratory',
              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit || Sarah Teichmann',
              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit || Sarah Teichmann'),
-
             ('project.project_core.project_short_name', 'Mouse Melanoma', 'Mouse Melanoma'),
-
             ('project.project_core.project_title',
              'Melanoma infiltration of stromal and immune cells',
              'Melanoma infiltration of stromal and immune cells'),
-
             ('project.estimated_cell_count', '', ''),
-
             ('specimen_from_organism.provenance.document_id',
              '',
              'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244 || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-
+            ('specimen_from_organism.biomaterial_core.biomaterial_name',
+             '',
+             'Mouse_day10_T_rep12 || Mouse_day8_T_rep12'),
             ('specimen_from_organism.diseases', '', ''),
             ('specimen_from_organism.organ', '', 'brain || tumor'),
             ('specimen_from_organism.organ_part', '', ''),
             ('specimen_from_organism.preservation_storage.preservation_method', '', ''),
             ('donor_organism.sex', '', 'female'),
             ('donor_organism.biomaterial_core.biomaterial_id', '', '1209'),
+            ('donor_organism.biomaterial_core.biomaterial_name', '', 'Mouse_day8_rep12'),
             ('donor_organism.provenance.document_id', '', '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
             ('donor_organism.genus_species', '', 'Mus musculus'),
             ('donor_organism.development_stage', '', 'adult'),
@@ -617,26 +609,25 @@ class TestManifests(DCP1ManifestTestCase):
             ('donor_organism.organism_age', '', '6-12 week'),
             ('cell_line.provenance.document_id', '', ''),
             ('cell_line.biomaterial_core.biomaterial_id', '', ''),
+            ('cell_line.biomaterial_core.biomaterial_name', '', ''),
             ('organoid.provenance.document_id', '', ''),
             ('organoid.biomaterial_core.biomaterial_id', '', ''),
+            ('organoid.biomaterial_core.biomaterial_name', '', ''),
             ('organoid.model_organ', '', ''),
             ('organoid.model_organ_part', '', ''),
             ('_entity_type', '', 'specimens'),
-
             ('sample.provenance.document_id',
              '',
              'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244 || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-
             ('sample.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
-
+            ('sample.biomaterial_core.biomaterial_name', '', 'Mouse_day10_T_rep12 || Mouse_day8_T_rep12'),
             ('sequencing_input.provenance.document_id',
              '',
              '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
-
             ('sequencing_input.biomaterial_core.biomaterial_id',
              '',
              '22028_5#300 || 22030_5#300'),
-
+            ('sequencing_input.biomaterial_core.biomaterial_name', '', ''),
             ('sequencing_input_type', '', 'cell_suspension')
         ]
         self.maxDiff = None
