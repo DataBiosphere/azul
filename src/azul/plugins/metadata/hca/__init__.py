@@ -286,6 +286,8 @@ class Plugin(MetadataPlugin[HCABundle]):
                 },
                 'samples': {
                     'entity_type': 'sampleEntityType',
+                    'biomaterial_id': 'sampleId',
+                    'biomaterial_name': 'sampleName',
                     'organ': 'organ',
                     'organ_part': 'organPart',
                     'model_organ': 'modelOrgan',
