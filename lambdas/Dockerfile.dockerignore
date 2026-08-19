@@ -1,0 +1,5 @@
+*
+!requirements.txt
+!requirements.trans.txt
+!lambdas/indexer/.chalice/terraform/deployment.zip
+!lambdas/service/.chalice/terraform/deployment.zip

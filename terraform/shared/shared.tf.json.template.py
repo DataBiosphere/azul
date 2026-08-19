@@ -1113,12 +1113,46 @@ tf_config = {
             }
         },
         'aws_ecr_repository': {
-            tf_repository: {
-                'name': name,
+            **{
+                tf_repository: {
+                    'name': name,
+                    'force_delete': True
+                }
+                for name, tf_repository in docker.images_by_tf_repository.keys()
+                if config.docker_registry
+            },
+            'lambda': {
+                'name': config.domain_name + '/azul/lambda',
                 'force_delete': True
+            },
+        },
+        'aws_ecr_repository_policy': {
+            # Lambda pulls the app image on its own behalf, so the repository
+            # must permit it to do so.
+            'lambda': {
+                'repository': '${aws_ecr_repository.lambda.name}',
+                'policy': json.dumps({
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'Service': 'lambda.amazonaws.com'
+                            },
+                            'Action': [
+                                'ecr:BatchGetImage',
+                                'ecr:GetDownloadUrlForLayer'
+                            ],
+                            'Condition': {
+                                'ArnLike': {
+                                    'aws:SourceArn': f'arn:aws:lambda:{config.region}'
+                                                     f':{config.aws_account_id}:function:*'
+                                }
+                            }
+                        }
+                    ]
+                })
             }
-            for name, tf_repository in docker.images_by_tf_repository.keys()
-            if config.docker_registry
         },
         'null_resource': {
             **{
