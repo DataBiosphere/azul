@@ -972,6 +972,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     },
                     {
                         'actions': [
+                            'ecr:CompleteLayerUpload',
+                            'ecr:InitiateLayerUpload',
+                            'ecr:PutImage',
+                            'ecr:UploadLayerPart'
+                        ],
+                        'resources': [
+                            f'arn:aws:ecr:{aws.region_name}:{aws.account}:repository/{config.domain_name}/azul/lambda'
+                        ]
+                    },
+                    {
+                        'actions': [
                             'logs:CreateLogGroup',
                             'logs:CreateLogStream',
                             'logs:PutLogEvents'
