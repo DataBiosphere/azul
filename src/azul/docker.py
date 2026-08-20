@@ -602,18 +602,22 @@ class Repository:
         try:
             creds_store = config['credsStore']
         except KeyError:
-            return self._decode_auth(config['auths'][auth_server_url]['auth'])
-        else:
-            command = [('docker-credential-' + creds_store), 'get']
-            input = auth_server_url.encode('ascii')
-            log.info('Running %r with input %r', command, input)
-            process = subprocess.run(args=command, stdout=subprocess.PIPE, input=input)
-            output = process.stdout
-            assert process.returncode == 0, R(
-                f'Command {command} failed with status code {process.returncode}',
-                output, 'You may need to login into Docker Desktop')
-            credentials = json.loads(output)
-            return credentials['Username'], credentials['Secret']
+            try:
+                cred_helpers = config['credHelpers']
+            except KeyError:
+                return self._decode_auth(config['auths'][auth_server_url]['auth'])
+            else:
+                creds_store = cred_helpers[auth_server_url]
+        command = [('docker-credential-' + creds_store), 'get']
+        input = auth_server_url.encode('ascii')
+        log.info('Running %r with input %r', command, input)
+        process = subprocess.run(args=command, stdout=subprocess.PIPE, input=input)
+        output = process.stdout
+        assert process.returncode == 0, R(
+            f'Command {command} failed with status code {process.returncode}',
+            output, 'You may need to login into Docker Desktop')
+        credentials = json.loads(output)
+        return credentials['Username'], credentials['Secret']
 
     @property
     def encoded_auth(self) -> str:
