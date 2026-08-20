@@ -717,7 +717,12 @@ def env() -> Mapping[str, str | None]:
         # from that directory. The wheels must be compatible with the AWS
         # Lambda platform.
         #
-        'azul_chalice_bin': '{project_root}/bin/wheels/runtime',
+        # No longer actively used. Lambda runtime dependencies are now
+        # installed via pip inside the Docker image build. Our fork of
+        # Chalice still references this variable but handles it being
+        # unset.
+        #
+        'azul_chalice_bin': None,
 
         # Stop `pip` from nagging us about updates. We update pip regularly like
         # any other dependency. There is nothing special about `pip` that would

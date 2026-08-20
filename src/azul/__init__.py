@@ -167,10 +167,6 @@ class Config:
         return self.environ['project_root']
 
     @property
-    def chalice_bin(self) -> str:
-        return self.environ['azul_chalice_bin']
-
-    @property
     def opensearch_domain(self) -> str:
         return self.environ['AZUL_OPENSEARCH_DOMAIN']
 
