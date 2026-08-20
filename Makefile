@@ -205,7 +205,7 @@ clean: check_env
 absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/scripts \
                                 $(project_root)/test \
-                                $(project_root)/lambdas/{layer,indexer,service}/app.py \
+                                $(project_root)/lambdas/{indexer,service}/app.py \
                                 $(project_root)/.flake8/azul_flake8.py \
                                 $(project_root)/environment.py \
                                 $(project_root)/deployments/*/environment.py \

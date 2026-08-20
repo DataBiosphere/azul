@@ -1613,10 +1613,6 @@ class Config:
         return self.environ.get('azul_gitlab_data_volume_id')
 
     @property
-    def lambda_layer_key(self) -> str:
-        return 'lambda_layers'
-
-    @property
     def dynamo_sources_cache_table_name(self) -> str:
         return self.qualified_resource_name('sources_cache_by_auth')
 
