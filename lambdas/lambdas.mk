@@ -71,7 +71,7 @@ docker_tag := $$(docker_repo):$$(AZUL_DEPLOYMENT_STAGE)-$1
 .PHONY: docker_image
 docker_image: check_docker package
 	set -e; \
-	for platform in linux/arm64 linux/amd64; do \
+	for platform in $$(azul_lambda_image_platforms); do \
 		docker buildx build \
 			--platform $$$$platform \
 			--build-arg azul_docker_registry=$$(azul_docker_registry) \
@@ -86,12 +86,12 @@ docker_image: check_docker package
 .PHONY: docker_push
 docker_push: docker_image
 	set -e; \
-	for platform in linux/arm64 linux/amd64; do \
-		docker push $$(docker_tag)-$$$${platform//\//-}; \
-	done
-	docker manifest create --amend \
-		$$(docker_tag) \
-		$$(docker_tag)-linux-arm64 \
-		$$(docker_tag)-linux-amd64
+	tags=""; \
+	for platform in $$(azul_lambda_image_platforms); do \
+		tag=$$(docker_tag)-$$$${platform//\//-}; \
+		docker push $$$$tag; \
+		tags="$$$$tags $$$$tag"; \
+	done; \
+	docker manifest create --amend $$(docker_tag) $$$$tags; \
 	docker manifest push --purge $$(docker_tag)
 endef

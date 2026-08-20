@@ -202,6 +202,21 @@ def env() -> Mapping[str, str | None]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
+        # The platforms to build Lambda container images for, as a list of
+        # Docker platform specifications separated by space. The first platform
+        # in the list also determines the architecture of the deployed Lambda
+        # function. Images will be built for the other platforms listed, but
+        # those images will not be used by the deployment. A multi-platform
+        # image list consisting of the specified platform-specific images will
+        # also be pushed.
+        #
+        # On machines that support cross-platform image builds, this variable
+        # can be overridden locally to build images for additional platforms. On
+        # machines that don't support building the default platform, a different
+        # one can be specified, e.g., 'linux/arm64'.
+        #
+        'azul_lambda_image_platforms': 'linux/amd64',
+
         # The version of Docker used throughout the system.
         #
         # This variable is not intended to be overridden per deployment or

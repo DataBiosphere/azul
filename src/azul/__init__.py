@@ -1740,6 +1740,21 @@ class Config:
     ]
 
     @property
+    def lambda_image_platforms(self) -> list[str]:
+        return self.environ['azul_lambda_image_platforms'].split()
+
+    _docker_to_lambda_arch = {
+        'amd64': 'x86_64',
+        'arm64': 'arm64',
+    }
+
+    @property
+    def lambda_architecture(self) -> str:
+        platform = self.lambda_image_platforms[0]
+        arch = platform.split('/')[1]
+        return self._docker_to_lambda_arch[arch]
+
+    @property
     def docker_image_gists_path(self) -> Path:
         return Path(config.project_root) / 'docker_images.json'
 
