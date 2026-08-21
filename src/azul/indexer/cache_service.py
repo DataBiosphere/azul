@@ -2,8 +2,13 @@ from collections.abc import (
     Mapping,
 )
 import hashlib
+from itertools import (
+    count,
+)
 import logging
+import random
 from time import (
+    sleep,
     time,
 )
 from typing import (
@@ -41,6 +46,14 @@ from azul.lib.urls import (
 
 log = logging.getLogger(__name__)
 
+type CacheFetcher = Callable[[], bytes]
+
+
+class ConcurrentCacheFetchError(RuntimeError):
+
+    def __init__(self, cache_key: str):
+        super().__init__(f'Cache line {cache_key!r} is locked')
+
 
 @attrs.frozen(kw_only=True)
 class CacheService:
@@ -77,14 +90,7 @@ class CacheService:
     #:
     lock_expiration: int
 
-    type Fetcher = Callable[[], bytes]
-
-    class ConcurrentFetchError(RuntimeError):
-
-        def __init__(self, cache_key: str):
-            super().__init__(f'Cache line {cache_key!r} is locked')
-
-    def get(self, cache_key: str, fetcher: Fetcher) -> bytes:
+    def get(self, cache_key: str, fetcher: CacheFetcher) -> bytes:
         """
         Return the cached value for the given key, or call the fetcher to
         produce it.
@@ -173,7 +179,7 @@ class CacheService:
             )
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
-                raise self.ConcurrentFetchError(cache_key) from e
+                raise ConcurrentCacheFetchError(cache_key) from e
             else:
                 raise
         else:
@@ -222,18 +228,60 @@ class CacheService:
 
 
 @attrs.frozen(kw_only=True)
-class UrlCacheService(CacheService):
+class RetryingCacheService:
     """
-    A cache of responses to HTTP(S) requests. The key under which responses are
+    A decorator for :class:`CacheService` that retries a limited number of times
+    on :class:`ConcurrentFetchError` instead of immediately raising it.
+    """
+
+    #: The number of times to retry after a :class:`ConcurrentFetchError`. If
+    # this is 0, this class behaves exactly like CacheService.
+    #:
+    num_retries: int
+
+    #: The number of seconds to wait between retries.
+    #:
+    retry_delay: float
+
+    _inner: CacheService
+
+    def get(self, cache_key: str, fetcher: CacheFetcher) -> bytes:
+        """
+        Return the cached value for the given key, or call the fetcher to
+        produce it.
+
+        :raise ConcurrentFetchError: Another caller was observed to already be
+                                     fetching the same key for :attr:`num_retries`
+                                     + 1 * :attr:`retry_delay` seconds.
+        """
+        retries = count()
+        while True:
+            try:
+                return self._inner.get(cache_key, fetcher)
+            except ConcurrentCacheFetchError:
+                if (i := next(retries)) < self.num_retries:
+                    log.info('Cache get for %r failed (attempt %d of %d)',
+                             cache_key, i + 1, self.num_retries + 1)
+                    sleep(self.retry_delay * random.uniform(0.5, 1.5))
+                else:
+                    raise
+
+
+@attrs.frozen(kw_only=True)
+class UrlCacheService:
+    """
+    A decorator for :class:`CacheService` (or :class:`RetryingCacheService`)
+    that caches responses to HTTP(S) requests. The key under which responses are
     cached is the hash of the URL and the request headers. The first caller for
     a given URL and headers will cause the request to be made. Subsequent
     callers passing the same URL and headers will get the same response, without
     causing a request to be made, until the cached response expires. The
     expiration time of the response is configurable per instance, independent of
-    any HTTP caching headers. Like the superclass, this class tries to avoid
-    making the same request concurrently, even with concurrent callers, against
-    different instances of this class, in different processes.
+    any HTTP caching headers.
     """
+
+    _inner: CacheService | RetryingCacheService
+
     http_client: HttpClient
 
     def get_url(self, url: furl, headers: Mapping[str, str] | None = None) -> BaseHTTPResponse:
@@ -242,7 +290,8 @@ class UrlCacheService(CacheService):
         it first if necessary.
 
         :raise ConcurrentFetchError: if another caller is already fetching the
-                                     same URL
+                                     same URL and the inner cache service does
+                                     not retry
         """
         assert not str(url.fragment), R(
             'URLs with a fragment cannot be cached', url)
@@ -258,7 +307,7 @@ class UrlCacheService(CacheService):
                 raise self._UncacheableResponse(response)
 
         try:
-            cached = self.get(cache_key, fetcher)
+            cached = self._inner.get(cache_key, fetcher)
         except self._UncacheableResponse as e:
             return e.args[0]
         else:

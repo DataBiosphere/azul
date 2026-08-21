@@ -125,6 +125,8 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.indexer.cache_service import (
+    CacheService,
+    ConcurrentCacheFetchError,
     UrlCacheService,
 )
 from azul.indexer.document import (
@@ -663,9 +665,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             entity_types = list(self.metadata_plugin(catalog).exposed_indices)
             num_threads_per_endpoint = 8
 
-            service = UrlCacheService(expiration=60,
-                                      lock_expiration=30,
-                                      http_client=self._http_client)
+            cache = CacheService(expiration=60, lock_expiration=30)
+            service = UrlCacheService(inner=cache, http_client=self._http_client)
 
             assignments: list[tuple[EntityType, furl]] = []
             for entity_type in entity_types:
@@ -681,7 +682,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 while True:
                     try:
                         return service.get_url(url)
-                    except UrlCacheService.ConcurrentFetchError:
+                    except ConcurrentCacheFetchError:
                         time.sleep(5)
 
             results: dict[EntityType, list[BaseHTTPResponse]] = defaultdict(list)

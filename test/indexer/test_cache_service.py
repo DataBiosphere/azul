@@ -3,7 +3,11 @@ from collections.abc import (
 )
 import random
 import time
+from unittest import (
+    TestCase,
+)
 from unittest.mock import (
+    MagicMock,
     patch,
 )
 
@@ -16,6 +20,8 @@ from mypy_boto3_dynamodb.literals import (
 
 from azul.indexer.cache_service import (
     CacheService,
+    ConcurrentCacheFetchError,
+    RetryingCacheService,
 )
 from azul.lib.strings import (
     hex_digits,
@@ -93,7 +99,7 @@ class TestCacheService(DynamoDBTestCase):
                 service._ttl_attribute: {'N': str(service._now() + 60)},
             }
         )
-        with self.assertRaises(CacheService.ConcurrentFetchError):
+        with self.assertRaises(ConcurrentCacheFetchError):
             service.get('locked_key', lambda: b'should not run')
 
     def test_expired_lock(self):
@@ -167,3 +173,78 @@ class TestCacheService(DynamoDBTestCase):
         with patch.object(CacheService, '_put_value', return_value=True):
             result = service.get(key, lambda: value)
         self.assertEqual(result, value)
+
+
+class TestRetryingCacheService(TestCase):
+
+    def _make_service(self, num_retries=3, retry_delay=0.1):
+        inner = MagicMock(spec=CacheService)
+        service = RetryingCacheService(inner=inner,
+                                       num_retries=num_retries,
+                                       retry_delay=retry_delay)
+        return service, inner
+
+    @patch('azul.indexer.cache_service.sleep')
+    def test_success_on_first_attempt(self, mock_sleep):
+        service, inner = self._make_service()
+        inner.get.return_value = b'hello'
+        result = service.get('key1', lambda: b'hello')
+        self.assertEqual(result, b'hello')
+        inner.get.assert_called_once()
+        mock_sleep.assert_not_called()
+
+    @patch('azul.indexer.cache_service.sleep')
+    def test_success_after_retries(self, mock_sleep):
+        service, inner = self._make_service(num_retries=3, retry_delay=1.0)
+        inner.get.side_effect = [
+            ConcurrentCacheFetchError('key1'),
+            ConcurrentCacheFetchError('key1'),
+            b'hello',
+        ]
+        result = service.get('key1', lambda: b'hello')
+        self.assertEqual(result, b'hello')
+        self.assertEqual(inner.get.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
+        for call in mock_sleep.call_args_list:
+            delay = call[0][0]
+            self.assertGreaterEqual(delay, 0.5)
+            self.assertLessEqual(delay, 1.5)
+
+    @patch('azul.indexer.cache_service.sleep')
+    def test_raises_after_exhausted_retries(self, mock_sleep):
+        service, inner = self._make_service(num_retries=2, retry_delay=1.0)
+        inner.get.side_effect = ConcurrentCacheFetchError('key1')
+        with self.assertRaises(ConcurrentCacheFetchError):
+            service.get('key1', lambda: b'hello')
+        self.assertEqual(inner.get.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    @patch('azul.indexer.cache_service.sleep')
+    def test_zero_retries(self, mock_sleep):
+        service, inner = self._make_service(num_retries=0)
+        inner.get.side_effect = ConcurrentCacheFetchError('key1')
+        with self.assertRaises(ConcurrentCacheFetchError):
+            service.get('key1', lambda: b'hello')
+        inner.get.assert_called_once()
+        mock_sleep.assert_not_called()
+
+    @patch('azul.indexer.cache_service.sleep')
+    def test_other_exceptions_not_retried(self, mock_sleep):
+        service, inner = self._make_service()
+        inner.get.side_effect = RuntimeError('boom')
+        with self.assertRaises(RuntimeError):
+            service.get('key1', lambda: b'hello')
+        inner.get.assert_called_once()
+        mock_sleep.assert_not_called()
+
+    @patch('azul.indexer.cache_service.sleep')
+    def test_jitter_range(self, mock_sleep):
+        service, inner = self._make_service(num_retries=100, retry_delay=10.0)
+        inner.get.side_effect = [ConcurrentCacheFetchError('key1')] * 100 + [b'ok']
+        service.get('key1', lambda: b'ok')
+        delays = [call[0][0] for call in mock_sleep.call_args_list]
+        self.assertTrue(any(d < 10.0 for d in delays))
+        self.assertTrue(any(d > 10.0 for d in delays))
+        for d in delays:
+            self.assertGreaterEqual(d, 5.0)
+            self.assertLessEqual(d, 15.0)
