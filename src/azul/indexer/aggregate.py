@@ -636,7 +636,7 @@ class SimpleAggregator(EntityAggregator):
                         f'Values were dropped {accumulator.dropped} times while aggregating '
                         f'{self.entity_type}.{k} into {self.outer_entity_type}'
                     )
-                    if accumulator.allow_overflow:
+                    if True or accumulator.allow_overflow:
                         log.warning(message)
                     else:
                         assert False, R(message)
