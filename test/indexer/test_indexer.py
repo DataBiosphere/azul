@@ -1967,15 +1967,13 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
             if qualifier == 'samples':
                 sample = one(contents['samples'])
                 sample_entity_type = sample['entity_type']
-                if aggregate:
-                    document_ids = one(contents[sample_entity_type])['document_id']
-                elif contribution:
+                if contribution:
                     document_ids = [d['document_id'] for d in contents[sample_entity_type]]
+                    self.assertIn(sample['document_id'], document_ids)
                     entity = one(d for d in contents[sample_entity_type] if d['document_id'] == sample['document_id'])
                     self.assertEqual(sample['biomaterial_id'], entity['biomaterial_id'])
                 else:
-                    assert False, doc_type
-                self.assertIn(sample['document_id'], document_ids)
+                    assert aggregate, doc_type
                 self.assertEqual(one(contents['specimens'])['organ'], ['blood'] if aggregate else 'blood')
                 self.assertEqual(one(contents['specimens'])['organ_part'], ['venous blood'])
                 self.assertEqual(len(contents['cell_lines']), 1 if aggregate else 2)
@@ -2062,6 +2060,7 @@ class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
                 k: (v if isinstance(v, list) else [v]) +
                    ([] if k == 'organism_age_range' or True else [None])
                 for k, v in donor.items()
+                if k != 'biomaterial_id'
             }
         }
         hits = self._get_all_hits()

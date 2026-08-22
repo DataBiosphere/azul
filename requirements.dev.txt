@@ -1,13 +1,13 @@
 --find-links https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21  # match version of chalice requirement below
 --find-links https://github.com/DataBiosphere/azul-requirements-parser/releases/expanded_assets/v0.13.0+6  # match version of requirements-parser requirement below
 atomicwrites==1.4.1
-boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.54  # match this with the version of the `boto3` runtime dendency
+boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.63  # match this with the version of the `boto3` runtime dendency
 chalice==1.32.0+21  # match version with find-links entry above
-coverage==7.15.2
+coverage==7.15.3
 docker==7.2.0
 flake8==7.3.0
 gevent==26.7.0
-gitpython==3.1.54
+gitpython==3.1.57
 google-api-python-client==2.198.0
 google-cloud-bigquery-reservation==1.25.0
 google-cloud-storage==3.13.0
@@ -21,7 +21,7 @@ openpyxl==3.1.5
 posix_ipc==1.3.2
 pygithub==2.9.1
 python-dxf==12.1.1
-python-gitlab==8.4.0
+python-gitlab==8.5.0
 pyyaml==6.0.3
 requirements-parser==v0.13.0+6  # match version with find-links entry above
 responses==0.26.2

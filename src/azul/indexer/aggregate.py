@@ -15,6 +15,8 @@ from typing import (
     TYPE_CHECKING,
 )
 
+import attrs
+
 from azul.indexer.document import (
     EntityType,
 )
@@ -51,6 +53,8 @@ class Accumulator[V, A](metaclass=ABCMeta):
     Accumulates multiple values into a single value, not necessarily of the same
     type.
     """
+
+    allow_overflow: bool = False
 
     def __init__(self):
         self.dropped = 0
@@ -132,7 +136,9 @@ class SetAccumulator[V: Hashable](Accumulator[V, list[V]]):
 
     def __init__(self,
                  max_size: int | None = None,
-                 key: Callable[[V], SupportsRichComparison] | None = None
+                 key: Callable[[V], SupportsRichComparison] | None = None,
+                 *,
+                 allow_overflow: bool = False
                  ) -> None:
         """
         :param max_size: the maximum number of elements to retain
@@ -147,6 +153,7 @@ class SetAccumulator[V: Hashable](Accumulator[V, list[V]]):
         self.value: set[V] = set()
         self.max_size = max_size
         self.key = none_safe_key(none_last=True) if key is None else key
+        self.allow_overflow = allow_overflow
 
     def accumulate(self, value: V | list[V]) -> int:
         """
@@ -551,11 +558,21 @@ class UniqueValueCountAccumulator[V:Hashable](Accumulator[V, int]):
         return len(self.inner.get())
 
 
+@attrs.frozen
 class EntityAggregator(metaclass=ABCMeta):
+    #: The entity type of the aggregate document
+    #:
+    outer_entity_type: EntityType
 
-    def __init__(self, outer_entity_type: EntityType, entity_type: EntityType):
-        self.outer_entity_type = outer_entity_type
-        self.entity_type = entity_type
+    #: The entity type of the inner entities being accumulated
+    #:
+    entity_type: EntityType
+
+    #: Whether the inner entity is a "hot" entity type. If true, complete
+    #: accumulation of `document_id` will be enforced, since replicas for these
+    #: entities don't track hub IDs
+    #:
+    is_hot: bool = False
 
     def _transform_entity(self, entity: JSON) -> JSON:
         return entity
@@ -600,13 +617,29 @@ class SimpleAggregator(EntityAggregator):
                 accumulator.accumulate(value)
 
     def _aggregate(self, aggregate: Aggregate) -> JSON:
+        if self.is_hot is True:
+            accumulator = aggregate.get('document_id')
+            assert accumulator is not None, R(
+                'Hot entity types must always accumulate document_id',
+                self.entity_type, aggregate.keys()
+            )
+            assert not accumulator.allow_overflow, R(
+                'allow_overflow is not permitted when accumulating document_id '
+                'from hot entity types', self.entity_type
+            )
         result = {}
         for k, accumulator in aggregate.items():
             if accumulator is not None:
                 result[k] = accumulator.get()
                 if accumulator.dropped > 0:
-                    log.warning('Values were dropped %d times while aggregating %s.%s into %s',
-                                accumulator.dropped, self.entity_type, k, self.outer_entity_type)
+                    message = (
+                        f'Values were dropped {accumulator.dropped} times while aggregating '
+                        f'{self.entity_type}.{k} into {self.outer_entity_type}'
+                    )
+                    if True or accumulator.allow_overflow:
+                        log.warning(message)
+                    else:
+                        assert False, R(message)
         return result
 
 
