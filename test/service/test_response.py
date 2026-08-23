@@ -1179,7 +1179,20 @@ class TestIndexResponse(IndexResponseTestCase):
                 response = self._http_client.request('GET', str(url))
                 raise_on_status(response)
                 response_json = response.json()
+                sample_names = set()
+                for hit in response_json['hits']:
+                    for sample in hit['samples']:
+                        if entity_type == 'samples':
+                            self.assertIn('sampleId', sample)
+                            self.assertIsNotNone(sample['sampleId'])
+                            self.assertIn('sampleName', sample)
+                            sample_names.add(sample['sampleName'])
+                        else:
+                            self.assertNotIn('sampleId', sample)
+                            self.assertNotIn('sampleName', sample)
                 if entity_type == 'samples':
+                    # Some bundles have a sample name, some don't.
+                    self.assertNotEqual(sample_names, {None})
                     for hit in response_json['hits']:
                         for sample in hit['samples']:
                             sample_entity_type = sample['sampleEntityType']
@@ -1187,6 +1200,8 @@ class TestIndexResponse(IndexResponseTestCase):
                                 if key not in [
                                     'sampleEntityType',
                                     'effectiveOrgan',
+                                    'sampleId',
+                                    'sampleName',
                                     accessible_field,
                                 ]:
                                     if isinstance(val, list):
