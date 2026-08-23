@@ -246,6 +246,7 @@ def env() -> Mapping[str, str | None]:
         # `shared` component.
         #
         'azul_python_version': '3.14.6',
+        'UV_PYTHON': '{azul_python_version}',
 
         # The version of Terraform used throughout the system.
         #

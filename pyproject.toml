@@ -62,6 +62,13 @@ dev = [
     "watchdog==6.0.0",
 ]
 
+[tool.uv]
+# Only use an interpreter that's already installed on the system, never one
+# that uv downloads and manages itself.
+#
+python-preference = "only-system"
+python-downloads = "never"
+
 [[tool.uv.index]]
 name = "chalice"
 url = "https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21"
