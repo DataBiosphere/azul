@@ -20,17 +20,22 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
+#	`--frozen` installs exactly what `uv.lock` specifies, without resolving
+#	dependencies and without checking the lock against `pyproject.toml`. This
+#	is what installing the pins from `requirements*.txt` with `--no-deps` used
+#	to accomplish. Resolution is now a separate step, `uv lock`, so there is no
+#	longer a variant of these targets that resolves while installing. Note that
+#	uv also *removes* any package the lock doesn't specify, leaving the virtual
+#	environment matching the lock exactly.
+#
 define requirements
 .PHONY: requirements$1
-requirements$1: check_venv $2
-	pip install $3 -Ur requirements$4.txt
+requirements$1: check_venv
+	uv sync --frozen $2
 endef
 
-$(eval $(call requirements,_pip,,--no-deps,.pip))
-$(eval $(call requirements,,requirements_pip,--no-deps,.dev))
-$(eval $(call requirements,_runtime,requirements_pip,--no-deps,))
-$(eval $(call requirements,_deps,requirements_pip,,.dev))
-$(eval $(call requirements,_runtime_deps,requirements_pip,,))
+$(eval $(call requirements,,))
+$(eval $(call requirements,_runtime,--no-default-groups))
 
 define docker
 .PHONY: docker$1
