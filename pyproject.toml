@@ -1,0 +1,78 @@
+[project]
+name = "azul"
+version = "1.0.0"
+requires-python = "==3.14.6"
+dependencies = [
+    "attrs==26.1.0",
+    "boto3==1.43.63",
+    "botocore==1.43.63",
+    "chevron==0.14.0",
+    "cryptography==50.0.0",
+    "fastavro==1.12.2",
+    "furl==2.1.4",
+    "google-api-core==2.33.0",
+    "google-auth[pyopenssl]==2.56.2",
+    "google-cloud-bigquery==3.42.3",
+    "http-message-signatures==2.0.1",
+    "http-sfv==0.9.9",
+    "jmespath==1.1.0",
+    "jsonschema==4.26.0",
+    "more-itertools==11.1.0",
+    "msgpack==1.2.1",
+    "opensearch-py==2.8.0",
+    "pyjwt==2.13.0",
+    "referencing==0.37.0",
+    "requests==2.33.1",
+    "resumablehash==1.5",
+    "setuptools==83.0.0",
+    "urllib3==2.7.0",
+    "werkzeug==3.1.8",
+]
+
+[dependency-groups]
+dev = [
+    "atomicwrites==1.4.1",
+    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.63",
+    "chalice==1.32.0+21",
+    "coverage==7.15.3",
+    "docker==7.2.0",
+    "flake8==7.3.0",
+    "gevent==26.7.0",
+    "gitpython==3.1.57",
+    "google-api-python-client==2.198.0",
+    "google-cloud-bigquery-reservation==1.25.0",
+    "google-cloud-storage==3.13.0",
+    "isort==8.0.1",
+    "jq==1.12.0",
+    "moto[dynamodb,iam,s3,sns,sqs]==5.2.2",
+    "msgpack-types==0.8.0",
+    "mypy==2.3.0",
+    "openapi-spec-validator==0.9.0",
+    "openpyxl==3.1.5",
+    "posix-ipc==1.3.2",
+    "pygithub==2.9.1",
+    "python-dxf==12.1.1",
+    "python-gitlab==8.5.0",
+    "pyyaml==6.0.3",
+    "requirements-parser==0.13.0+6",
+    "responses==0.26.2",
+    "strict-rfc3339==0.7",
+    "types-chevron==0.14.2.20260408",
+    "types-jsonschema==4.26.0.20260518",
+    "watchdog==6.0.0",
+]
+
+[[tool.uv.index]]
+name = "chalice"
+url = "https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21"
+format = "flat"
+
+[[tool.uv.index]]
+name = "requirements-parser"
+url = "https://github.com/DataBiosphere/azul-requirements-parser/releases/expanded_assets/v0.13.0+6"
+format = "flat"
+
+[[tool.uv.index]]
+name = "resumablehash"
+url = "https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5"
+format = "flat"
