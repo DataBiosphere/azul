@@ -69,6 +69,15 @@ dev = [
 python-preference = "only-system"
 python-downloads = "never"
 
+environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+]
+
 [[tool.uv.index]]
 name = "chalice"
 url = "https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21"
