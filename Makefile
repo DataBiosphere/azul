@@ -57,26 +57,12 @@ docker$1_push: docker$1
 	docker push $$(azul_image)$3:$$(azul_image_tag)
 endef
 
-$(eval $(call docker,,_runtime,))  # runtime image w/o dependency resolution
-$(eval $(call docker,_dev,,/dev))  # development image w/o dependency resolution
-$(eval $(call docker,_deps,_runtime_deps,/deps))  # runtime image with automatic dependency resolution
-$(eval $(call docker,_dev_deps,_deps,/dev-deps))  # development image with automatic dependency resolution
+$(eval $(call docker,,_runtime,))  # runtime image
+$(eval $(call docker,_dev,,/dev))  # development image
 
 .PHONY: requirements_update
-requirements_update: check_venv check_docker
-#	Pull out transitive dependency pins so they can be recomputed. Instead of
-#	truncating the `.trans` file, we comment out every line in it such that a
-#	different .trans file produces a different "pulled out" .trans file and
-#	therefore a different image layer hash when the file is copied into the
-#	image. This makes the pin removal injective. If we truncated the file, we
-#	might inadvertently reuse a stale image layer despite the .trans file having
-#	been updated. Not using sed because Darwin's sed does not do -i.
-	git restore requirements.trans.txt requirements.dev.trans.txt
-	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
-	DOCKER_DEFAULT_PLATFORM=linux/amd64 $(MAKE) docker_deps docker_dev_deps
-	python scripts/manage_requirements.py \
-	       --image=$(azul_image)/deps:$(azul_image_tag) \
-	       --build-image=$(azul_image)/dev-deps:$(azul_image_tag)
+requirements_update: check_env
+	uv lock --upgrade
 
 environment.boot: check_python
 	python scripts/generate_environment_boot.py
