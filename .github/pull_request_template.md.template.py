@@ -812,7 +812,7 @@ def emit(t: T, target_branch: str):
                                 f'_select {d}.gitlab && '
                                 f'CI_COMMIT_REF_NAME={target_branch} '
                                 f'make -C terraform/gitlab apply'
-                            ),
+                            ) + '(an error from _login_docker_gitlab is benign if the instance was stopped for backup)',
                             'alt': 'or this PR is not labeled `deploy:gitlab`'
                         }
                     ]

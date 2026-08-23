@@ -129,9 +129,9 @@ Note that after requesting changes, the PR must be assigned to only the author.
 ### Operator (deploy `.shared` and `.gitlab` components)
 
 - [ ] Ran `_select dev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select dev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Ran `_select dev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply`(an error from _login_docker_gitlab is benign if the instance was stopped for backup) <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Ran `_select anvildev.shared && CI_COMMIT_REF_NAME=develop make -C terraform/shared apply_keep_unused` <sub>or this PR is not labeled `deploy:shared`</sub>
-- [ ] Ran `_select anvildev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply` <sub>or this PR is not labeled `deploy:gitlab`</sub>
+- [ ] Ran `_select anvildev.gitlab && CI_COMMIT_REF_NAME=develop make -C terraform/gitlab apply`(an error from _login_docker_gitlab is benign if the instance was stopped for backup) <sub>or this PR is not labeled `deploy:gitlab`</sub>
 - [ ] Checked the items in the next section <sub>or this PR is labeled `deploy:gitlab`</sub>
 - [ ] PR is assigned to only the system administrator and the author <sub>or this PR is not labeled `deploy:gitlab`</sub>
 
