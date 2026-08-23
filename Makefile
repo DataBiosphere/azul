@@ -47,8 +47,10 @@ docker$1: check_docker
 	       --build-arg azul_terraform_version=$$(azul_terraform_version) \
 	       --build-arg azul_awscli_version=$$(azul_awscli_version) \
 	       --build-arg azul_ghcli_version=$$(azul_ghcli_version) \
+	       --build-arg azul_uv_version=$$(azul_uv_version) \
 	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
 	       --build-arg make_target=requirements$2 \
+	       --platform=linux/amd64 \
 	       --tag $$(azul_image)$3:$$(azul_image_tag) \
 	       .
 
@@ -70,6 +72,18 @@ environment.boot: check_python
 gh_checksums: check_env
 	curl --fail --silent --location -o bin/checksums/gh_checksums.txt \
 	    https://github.com/cli/cli/releases/download/v$(azul_ghcli_version)/gh_$(azul_ghcli_version)_checksums.txt
+
+#	Unlike the GitHub CLI, uv publishes one checksum file per release asset, so
+#	we concatenate the ones we care about into the same format that `sha256sum
+#	-c` expects.
+#
+uv_checksums: check_env
+	rm -f bin/checksums/uv_checksums.txt
+	for arch in x86_64 aarch64 ; do \
+	    curl --fail --silent --location \
+	        https://github.com/astral-sh/uv/releases/download/$(azul_uv_version)/uv-$$arch-unknown-linux-gnu.tar.gz.sha256 \
+	        >> bin/checksums/uv_checksums.txt ; \
+	done
 
 .PHONY: lambdas
 lambdas: check_env

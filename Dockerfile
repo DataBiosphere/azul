@@ -70,6 +70,23 @@ RUN set -o pipefail \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=2 --wildcards "*/bin/gh" --occurrence=1 \
     && rm /tmp/${tarball} /tmp/gh_checksums.txt
 
+# Install uv
+#
+ARG azul_uv_version
+COPY bin/checksums/uv_checksums.txt /tmp/uv_checksums.txt
+RUN set -o pipefail \
+    && case "$TARGETARCH" in \
+           amd64) arch=x86_64 ;; \
+           arm64) arch=aarch64 ;; \
+           *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+       esac \
+    && tarball=uv-${arch}-unknown-linux-gnu.tar.gz \
+    && curl --fail --silent --location -o /tmp/${tarball} \
+       https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
+    && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
+    && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
+    && rm /tmp/${tarball} /tmp/uv_checksums.txt
+
 # Install Docker from apt repository. The statically linked binaries don't
 # include buildx or buildkit.
 #
@@ -97,10 +114,16 @@ WORKDIR /build
 #
 ARG PIP_DISABLE_PIP_VERSION_CHECK
 ENV PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK}
-COPY environment requirements*.txt common.mk Makefile ./
+COPY pyproject.toml uv.lock common.mk Makefile ./
 ARG make_target
-RUN source environment \
+# We don't source `environment` here. It loads the environment by running
+# `scripts/export_environment.py`, and neither that script nor the
+# `environment.py` files it reads are part of this image. The only variable the
+# targets below need is `project_root`, which `environment` assigns itself,
+# without involving that script.
+#
+RUN export project_root="$PWD" \
     && make virtualenv \
     && source .venv/bin/activate \
     && make $make_target \
-    && rm requirements*.txt common.mk Makefile
+    && rm pyproject.toml uv.lock common.mk Makefile

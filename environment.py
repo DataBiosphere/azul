@@ -289,6 +289,22 @@ def env() -> Mapping[str, str | None]:
         #
         'azul_ghcli_version': '2.97.0',
 
+        # The version of uv used to create the virtual environment and to
+        # install dependencies into it.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally. Note that it only governs the uv used inside the images we
+        # build. Developers install uv themselves, by whatever means their
+        # system offers.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build.
+        #
+        # Modifying this variable requires running `make environment.boot` and
+        # `make uv_checksums` and committing the resulting changes.
+        #
+        'azul_uv_version': '0.12.5',
+
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
         # references below requires running `make docker_images.json` and
