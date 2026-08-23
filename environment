@@ -412,12 +412,6 @@ _claude() {
 	done
 }
 
-# We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
-# `export_environment.py`, too. We could also pass -S to `python` but that
-# causes problems on Travis (`importlib.util` failing to import `contextlib`).
-#
-eval "$(ENVHOOK=0 python "${project_root}/scripts/export_environment.py" || echo false)"
-
 # Auto-completion for _select
 #
 _complete_env() {
@@ -442,3 +436,13 @@ for _script in "${project_root}/scripts/"*.py ; do
 	eval "${_func}() { python \"${_script}\" \"\$@\" ; }"
 done
 unset _script _func
+
+# We disable `envhook.py` to avoid redundancy. The `envhook.py` script imports
+# `export_environment.py`, too. We could also pass -S to `python` but that
+# causes problems on Travis (`importlib.util` failing to import `contextlib`).
+#
+# This must remain the last statement in this file. It is what propagates a
+# failure to load the environment to whoever sources this file, and it can only
+# do so while its exit status is also the exit status of the `source` command.
+#
+eval "$(ENVHOOK=0 python "${project_root}/scripts/export_environment.py" || echo false)"
