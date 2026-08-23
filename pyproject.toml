@@ -1,11 +1,14 @@
 [project]
 name = "azul"
 version = "1.0.0"
+# Match `azul_python_version` in `environment.py`
 requires-python = "==3.14.6"
 dependencies = [
     "attrs==26.1.0",
+    # Match version of the `boto3-stubs` dev dependency
     "boto3==1.43.63",
     "botocore==1.43.63",
+    # Match with `types-chevron` in the `dev` group
     "chevron==0.14.0",
     "cryptography==50.0.0",
     "fastavro==1.12.2",
@@ -18,12 +21,17 @@ dependencies = [
     "jmespath==1.1.0",
     "jsonschema==4.26.0",
     "more-itertools==11.1.0",
+    # Versioned independently from the type stub dependency but when updating
+    # one, the other should be updated, too, if possible
     "msgpack==1.2.1",
     "opensearch-py==2.8.0",
     "pyjwt==2.13.0",
     "referencing==0.37.0",
     "requests==2.33.1",
+    # Match version with the `resumablehash` index below
     "resumablehash==1.5",
+    # Python 3.12 removed distutils, which we depended on transitively. Luckily,
+    # setuptools includes a vendored copy.
     "setuptools==83.0.0",
     "urllib3==2.7.0",
     "werkzeug==3.1.8",
@@ -32,7 +40,9 @@ dependencies = [
 [dependency-groups]
 dev = [
     "atomicwrites==1.4.1",
+    # Match this with the version of the `boto3` runtime dependency
     "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.63",
+    # Match version with the `chalice` index below
     "chalice==1.32.0+21",
     "coverage==7.15.3",
     "docker==7.2.0",
@@ -44,7 +54,10 @@ dev = [
     "google-cloud-storage==3.13.0",
     "isort==8.0.1",
     "jq==1.12.0",
+    # Match the extras with the backends listed in AzulUnitTestCase._reset_moto
     "moto[dynamodb,iam,s3,sns,sqs]==5.2.2",
+    # Versioned independently from the corresponding runtime dependency but when
+    # updating one, the other should be updated, too
     "msgpack-types==0.8.0",
     "mypy==2.3.0",
     "openapi-spec-validator==0.9.0",
@@ -54,9 +67,11 @@ dev = [
     "python-dxf==12.1.1",
     "python-gitlab==8.5.0",
     "pyyaml==6.0.3",
+    # Match version with the `requirements-parser` index below
     "requirements-parser==0.13.0+6",
     "responses==0.26.2",
     "strict-rfc3339==0.7",
+    # Match with `chevron` in the runtime dependencies
     "types-chevron==0.14.2.20260408",
     "types-jsonschema==4.26.0.20260518",
     "watchdog==6.0.0",
@@ -69,6 +84,16 @@ dev = [
 python-preference = "only-system"
 python-downloads = "never"
 
+# Upper bounds on dependencies that are pinned to an exact version above.
+# Exceeding one of them fails the resolution instead of going unnoticed.
+#
+constraint-dependencies = [
+    # To match the server version on our AWS OpenSearch domains
+    "opensearch-py<3",
+    # See https://github.com/DataBiosphere/azul/issues/8083
+    "requests<2.34.0",
+]
+
 environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
     "sys_platform == 'darwin' and platform_machine == 'arm64'",
@@ -80,15 +105,18 @@ required-environments = [
 
 [[tool.uv.index]]
 name = "chalice"
+# Match version with the `chalice` dev dependency above
 url = "https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21"
 format = "flat"
 
 [[tool.uv.index]]
 name = "requirements-parser"
+# Match version with the `requirements-parser` dev dependency above
 url = "https://github.com/DataBiosphere/azul-requirements-parser/releases/expanded_assets/v0.13.0+6"
 format = "flat"
 
 [[tool.uv.index]]
 name = "resumablehash"
+# Match version with the `resumablehash` runtime dependency above
 url = "https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5"
 format = "flat"

@@ -14,6 +14,12 @@ required-markers = [
     "platform_machine == 'arm64' and sys_platform == 'darwin'",
 ]
 
+[manifest]
+constraints = [
+    { name = "opensearch-py", specifier = "<3" },
+    { name = "requests", specifier = "<2.34.0" },
+]
+
 [[package]]
 name = "annotated-types"
 version = "0.8.0"
