@@ -27,6 +27,8 @@ Linked issue: #0000
 - [ ] Added `H` tag to commit title <sub>or this PR does not include a permanent hotfix</sub>
 - [ ] Added `hotfix` label to PR
 - [ ] This PR is labeled `partial` <sub>or represents a permanent hotfix</sub>
+- [ ] PR carries all applicable `reindex:…` , `mirror:…` and `deploy:…` labels of the preceding incomplete promotion or hotfix PR
+- [ ] PR description contains all applicable notes from the preceding incomplete promotion or hotfix PR
 
 
 ### Author (before every review)
@@ -81,23 +83,24 @@ Linked issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deindexed all unreferenced catalogs in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
-- [ ] Deindexed specific sources in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
-- [ ] Indexed specific sources in `prod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:prod`</sub>
-- [ ] Started reindex in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Emptied fail queues in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Restarted the Data Browser pipeline for the [ucsc/hca/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fprod) on GitLab in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Restarted the Data Browser pipeline for the [ucsc/lungmap/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fprod) on GitLab in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `prod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
+- [ ] In `prod`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:prod` label, or both</sub>
+- [ ] In `prod`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:prod` label, or both</sub>
+- [ ] In `prod`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:prod` label, or both</sub>
+- [ ] In `prod`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:prod` label, or both</sub>
+- [ ] Started full reindex in `prod` <sub>or this PR is not labeled `reindex:prod` or it is labeled reindex:partial</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `prod` <sub>or this PR is not labeled `reindex:prod` or it is labeled reindex:partial</sub>
+- [ ] Emptied fail queues in `prod` <sub>or this PR is not labeled `reindex:prod` or it is labeled reindex:partial</sub>
+- [ ] Restarted the Data Browser pipeline for the [ucsc/hca/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fprod) on GitLab in `prod` <sub>or this PR is not labeled `reindex:prod`</sub>
+- [ ] Restarted the Data Browser pipeline for the [ucsc/lungmap/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fprod) on GitLab in `prod` <sub>or this PR is not labeled `reindex:prod`</sub>
+- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `prod` <sub>or this PR is not labeled `reindex:prod`</sub>
 - [ ] Created backport PR and linked to it in a comment on this PR
 
 
 ### Operator (mirroring)
 
-- [ ] Started mirroring in `prod` <sub>or neither this PR nor a failed, prior promotion is labelled `mirror:prod`</sub>
-- [ ] Checked for, triaged and possibly requeued messages in mirror fail queue in `prod` <sub>or neither this PR nor a failed, prior promotion is labelled `mirror:prod`</sub>
-- [ ] Emptied mirror fail queue in `prod` <sub>or neither this PR nor a failed, prior promotion is labelled `mirror:prod`</sub>
+- [ ] Started mirroring in `prod` <sub>or this PR is not labelled `mirror:prod`</sub>
+- [ ] Checked for, triaged and possibly requeued messages in mirror fail queue in `prod` <sub>or this PR is not labelled `mirror:prod`</sub>
+- [ ] Emptied mirror fail queue in `prod` <sub>or this PR is not labelled `mirror:prod`</sub>
 
 
 ### Operator

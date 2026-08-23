@@ -160,10 +160,16 @@ Note that after requesting changes, the PR must be assigned to only the author.
 - [ ] Reviewed build logs for anomalies in `anvilbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Applied upgrade instructions from UPGRADING.rst to `sandbox` <sub>or this PR is not labeled `upgrade`, or upgrade instructions do not apply to `sandbox`</sub>
 - [ ] Applied upgrade instructions from UPGRADING.rst to `anvilbox` <sub>or this PR is not labeled `upgrade`, or upgrade instructions do not apply to `anvilbox`</sub>
-- [ ] Deleted unreferenced indices in `sandbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `sandbox`</sub>
-- [ ] Deleted unreferenced indices in `anvilbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `anvilbox`</sub>
-- [ ] Started reindex in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] Started reindex in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] In `sandbox`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvilbox`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] In `sandbox`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvilbox`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] In `sandbox`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvilbox`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] In `sandbox`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvilbox`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] Started full reindex in `sandbox` <sub>or this PR is not labeled `reindex:dev` or it is labeled reindex:partial</sub>
+- [ ] Started full reindex in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
 - [ ] Checked for failures in `sandbox` <sub>or this PR is not labeled `reindex:dev`</sub>
 - [ ] Checked for failures in `anvilbox` <sub>or this PR is not labeled `reindex:anvildev`</sub>
 - [ ] Started mirroring in `sandbox` <sub>or this PR is not labeled `mirror:dev`</sub>
@@ -205,23 +211,25 @@ Note that after requesting changes, the PR must be assigned to only the author.
 
 ### Operator (reindex)
 
-- [ ] Deindexed all unreferenced catalogs in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
-- [ ] Deindexed all unreferenced catalogs in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
-- [ ] Deindexed specific sources in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
-- [ ] Deindexed specific sources in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
-- [ ] Indexed specific sources in `dev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:dev`</sub>
-- [ ] Indexed specific sources in `anvildev` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvildev`</sub>
-- [ ] Started reindex in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Started reindex in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Emptied fail queues in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Emptied fail queues in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Restarted the Data Browser pipeline for the [ucsc/hca/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fdev) on GitLab in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Restarted the Data Browser pipeline for the [ucsc/lungmap/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fdev) on GitLab in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `dev` <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Restarted the Data Browser pipeline for the [ucsc/anvil/anvildev branch](https://gitlab.anvil.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvildev) on GitLab in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
-- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvildev` <sub>or this PR does not require reindexing `anvildev`</sub>
+- [ ] In `dev`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvildev`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] In `dev`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvildev`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] In `dev`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvildev`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] In `dev`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:dev` label, or both</sub>
+- [ ] In `anvildev`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvildev` label, or both</sub>
+- [ ] Started full reindex in `dev` <sub>or this PR is not labeled `reindex:dev` or it is labeled reindex:partial</sub>
+- [ ] Started full reindex in `anvildev` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `dev` <sub>or this PR is not labeled `reindex:dev` or it is labeled reindex:partial</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvildev` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
+- [ ] Emptied fail queues in `dev` <sub>or this PR is not labeled `reindex:dev` or it is labeled reindex:partial</sub>
+- [ ] Emptied fail queues in `anvildev` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
+- [ ] Restarted the Data Browser pipeline for the [ucsc/hca/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fdev) on GitLab in `dev` <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] Restarted the Data Browser pipeline for the [ucsc/lungmap/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fdev) on GitLab in `dev` <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `dev` <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] Restarted the Data Browser pipeline for the [ucsc/anvil/anvildev branch](https://gitlab.anvil.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvildev) on GitLab in `anvildev` <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvildev` <sub>or this PR is not labeled `reindex:anvildev`</sub>
 
 
 ### Operator (mirroring)
