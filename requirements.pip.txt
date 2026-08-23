@@ -1,3 +1,0 @@
-pip==26.1.2
-setuptools==83.0.0  # Match requirements.txt
-wheel==0.47.0

@@ -343,9 +343,8 @@ after running ``make envhook``, and correctly configuring the Python interpreter
 for the project (at least once before).
 
 Proceed by identifying the packages that are candidates for upgrades. Check the
-dependencies listed in ``requirements.txt`` and ``requirements.dev.txt`` against
-the Package tool window, where the dependency indicates of an available version.
-When updating:
+dependencies listed in ``pyproject.toml`` against the Package tool window, where
+the dependency indicates of an available version. When updating:
 
 - Update to the latest mature release (a release with a high patch number or
   where the most recent patch release is at least a couple of months old) and go

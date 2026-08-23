@@ -118,7 +118,6 @@ dev = [
     { name = "python-dxf" },
     { name = "python-gitlab" },
     { name = "pyyaml" },
-    { name = "requirements-parser" },
     { name = "responses" },
     { name = "strict-rfc3339" },
     { name = "types-chevron" },
@@ -179,7 +178,6 @@ dev = [
     { name = "python-dxf", specifier = "==12.1.1" },
     { name = "python-gitlab", specifier = "==8.5.0" },
     { name = "pyyaml", specifier = "==6.0.3" },
-    { name = "requirements-parser", specifier = "==0.13.0+6" },
     { name = "responses", specifier = "==0.26.2" },
     { name = "strict-rfc3339", specifier = "==0.7" },
     { name = "types-chevron", specifier = "==0.14.2.20260408" },
@@ -1634,17 +1632,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f3/61/d7545dafb7ac2230c70d38d31cbfe4cc64f7144dc41f6e4e4b78ecd9f5bb/requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6", size = 206888, upload-time = "2023-05-01T04:11:33.229Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/51/d4db610ef29373b879047326cbf6fa98b6c1969d6f6dc423279de2b1be2c/requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06", size = 54481, upload-time = "2023-05-01T04:11:28.427Z" },
-]
-
-[[package]]
-name = "requirements-parser"
-version = "0.13.0+6"
-source = { registry = "https://github.com/DataBiosphere/azul-requirements-parser/releases/expanded_assets/v0.13.0+6" }
-dependencies = [
-    { name = "packaging" },
-]
-wheels = [
-    { url = "https://github.com/DataBiosphere/azul-requirements-parser/releases/download/v0.13.0%2B6/requirements_parser-0.13.0+6-py3-none-any.whl" },
 ]
 
 [[package]]
