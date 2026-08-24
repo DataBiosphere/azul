@@ -76,6 +76,7 @@ docker_image: check_docker package
 			--platform $$$$platform \
 			--build-arg azul_docker_registry=$$(azul_docker_registry) \
 			--build-arg azul_python_image=$$(azul_python_image) \
+			--build-arg azul_uv_version=$$(azul_uv_version) \
 			--build-arg APP=$1 \
 			-f $$(project_root)/lambdas/Dockerfile \
 			--tag $$(docker_tag)-$$$${platform//\//-} \

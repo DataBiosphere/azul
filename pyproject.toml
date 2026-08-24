@@ -38,6 +38,15 @@ dependencies = [
 ]
 
 [dependency-groups]
+# The Lambda runtime interface client, needed only in the image we deploy a
+# Lambda function as. This is not a default group, so it isn't installed into a
+# developer's virtual environment, and the marker keeps it out of the resolution
+# for macOS, for which it isn't distributed at all.
+#
+lambda = [
+    "awslambdaric==4.0.2 ; sys_platform == 'linux'",
+]
+
 dev = [
     "atomicwrites==1.4.1",
     # Match this with the version of the `boto3` runtime dependency

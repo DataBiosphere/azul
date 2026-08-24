@@ -1,5 +1,6 @@
 *
-!requirements.txt
-!requirements.trans.txt
+!pyproject.toml
+!uv.lock
+!bin/checksums/uv_checksums.txt
 !lambdas/indexer/.chalice/terraform/deployment.zip
 !lambdas/service/.chalice/terraform/deployment.zip
