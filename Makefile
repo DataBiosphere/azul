@@ -252,8 +252,8 @@ test: check_python
 
 .PHONY: test_profile
 test_profile: check_python
-	python -c "import pyinstrument" || (echo "Run 'pip install pyinstrument'" ; false)
-	python -m pyinstrument -r html -o test_profile.html $(test_args)
+	uv run --frozen --no-sync --with pyinstrument \
+	       python -m pyinstrument -r html -o test_profile.html $(test_args)
 
 .PHONY: test_list
 test_list: check_python
