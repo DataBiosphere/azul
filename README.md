@@ -2447,82 +2447,10 @@ We call that category  _pip requirements_ and don't distinguish between direct
 or transitive requirements in that category.
 
 
-# 11. Making wheels
-
-_Note: Support for custom wheels is currently disabled. We don't currently have 
-any dependencies for which a binary wheel is unavailable. We'll leave this 
-section in place until support is needed and enabled again_  
-
-Some of Azul's dependencies contain native code that needs to be compiled into
-a binary executable which is then dynamically loaded into the Python
-interpreter process when the package is imported. These dependencies are
-commonly distributed in the form of wheels. A wheel is a Python package
-distribution that contains the pre-compiled binary code for a particular
-operating system and processor architecture combination, aka platform. Many such
-packages lack a wheel for the `linux_x86_64` platform that Lambda functions
-execute on. Chalice will attempt to build the wheel on the fly during `chalice
-package` (`make -C lambdas`) but only if invoked on a system with `linux_x86_64`.
-On macOS, Chalice will fail to build a wheel for the `linux_x86_64` platform but
-only prints a warning that's easily missed. The deployed Lambda will likely
-fail with an import error.
-
-If you add a dependency on a package with native code, you need to build the
-wheel manually:
-
-```
-(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.12.7-slim-bookworm bash
-
-root@97804cb60d95:/# pip --version
-pip 24.2 from /usr/local/lib/python3.12/site-packages/pip (python 3.12)
-
-root@97804cb60d95:/# cd /root/azul/lambdas/.wheels
-
-root@97804cb60d95:~/azul/lambdas/.wheels# pip wheel jsonobject==2.0.0
-Collecting jsonobject==2.0.0
-  Downloading jsonobject-2.0.0.tar.gz (402 kB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 403.0/403.0 KB 9.0 MB/s eta 0:00:00
-  Preparing metadata (setup.py) ... done
-Collecting six
-  Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
-Saved ./six-1.16.0-py2.py3-none-any.whl
-Building wheels for collected packages: jsonobject
-  Building wheel for jsonobject (setup.py) ... done
-  Created wheel for jsonobject: filename=jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl size=1606493 sha256=7f69b1ef612e13265ea95817e24b7d33ec63f07c0924f8c8692ee689679e1a18
-  Stored in directory: /root/.cache/pip/wheels/c1/1b/00/8958e64a98b73db2ca8d997a7034c93b545cdcf30054aa7e43
-Successfully built jsonobject
-
-root@97804cb60d95:~/azul/lambdas/.wheels# ls -l
-total 1584
--rw-r--r-- 1 root root 1606493 May 10 00:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
--rw-r--r-- 1 root root   11053 May 10 00:35 six-1.16.0-py2.py3-none-any.whl
-
-root@97804cb60d95:~/azul/lambdas/.wheels# exit
-exit
-
-(.venv) ~/workspace/hca/azul$ ls -l lambdas/.wheels
-total 1584
--rw-r--r-- 1 root root 1606493 May  9 17:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
--rw-r--r-- 1 root root   11053 May  9 17:35 six-1.16.0-py2.py3-none-any.whl
-
-(.venv) ~/workspace/hca/azul$ sudo chown -R `id -u`:`id -g` lambdas/.wheels
-
-(.venv) ~/workspace/hca/azul$ ls -l lambdas/.wheels
-total 1584
--rw-r--r-- 1 hannes hannes 1606493 May  9 17:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
--rw-r--r-- 1 hannes hannes   11053 May  9 17:35 six-1.16.0-py2.py3-none-any.whl
-(.venv) ~/workspace/hca/azul$ 
-```
-
-Then modify the `wheels` target in `lambdas/*/Makefile` to unzip the wheel into
-the corresponding vendor directory.
-
-Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
+# 11. Development tools
 
 
-# 12. Development tools
-
-
-## 12.1 OpenAPI development
+## 11.1 OpenAPI development
 
 [Azul Service OpenAPI page]: https://service.dev.singlecell.gi.ucsc.edu/
 
@@ -2538,7 +2466,7 @@ of the API documentation is visible. Change the docs in `azul/service/app.py`,
 save, refresh the page, and your changes will appear immediately.
 
 
-## 12.2 Tracking changes to the OpenAPI definition
+## 11.2 Tracking changes to the OpenAPI definition
 
 Changes to the OpenAPI definition are tracked in the source tree. When making 
 changes that affect the definition, run:
