@@ -38,16 +38,15 @@ generic with minimal need for project-specific behavior.
 ## 2.1 Development Prerequisites
 
 - Python, the specific version is defined in an environment variable called
-  `azul_python_version` defined in [environment.py](environment.py). We
-  frequently update Python so the recommended way to install and manage Python
-  versions is [pyenv]. The easiest way to install pyenv on macOS is with
-  [Homebrew].
+  `azul_python_version` defined in [environment.py]. We frequently update Python
+  so the recommended way to install and manage Python versions is [pyenv]. The
+  easiest way to install pyenv on macOS is with [Homebrew].
 
 - [uv], to create the virtual environment and to install dependencies into it.
   Install it with `curl -LsSf https://astral.sh/uv/x.y.z/install.sh | sh`,
   where `x.y.z` is the version specified by the `required-version` setting in
-  [pyproject.toml](pyproject.toml). To change versions later, run
-  `uv self update x.y.z`. The installer is only needed the first time.
+  [pyproject.toml]. To change versions later, run `uv self update x.y.z`. The
+  installer is only needed the first time.
 
 - The `bash` shell
 
@@ -57,23 +56,23 @@ generic with minimal need for project-specific behavior.
 
 - [Docker], for running the tests (the community edition is sufficient). The
   required version is specified in a variable called `azul_docker_version` in
-  [environment.py](environment.py).
+  [environment.py].
 
 - Terraform, to manage deployments. Azul requires a specific version of
   Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.py](environment.py). Refer to the official documentation on how
-  to [install terraform]. Terraform comes as a single, statically linked binary,
-  so the easiest method of installation is to download the binary and put it in
-  a directory mentioned in the `PATH` environment variable.
+  [environment.py]. Refer to the official documentation on how to
+  [install terraform]. Terraform comes as a single, statically linked binary, so
+  the easiest method of installation is to download the binary and put it in a
+  directory mentioned in the `PATH` environment variable.
 
 - [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
   available on PyPI, it must be installed separately. Install the version pinned
   by Azul defined in a variable called `azul_awscli_version` in
-  [environment.py](environment.py). Follow the [AWS instructions for
-  installing past releases][AWS CLI v2].
+  [environment.py]. Follow the [AWS instructions for installing past
+  releases][AWS CLI v2].
 
 - Optionally, the [GitHub CLI]. You should install
-  the version set at `azul_ghcli_version` in [environment.py](environment.py),
+  the version set at `azul_ghcli_version` in [environment.py],
   or a more recent, compatible version.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
@@ -97,6 +96,7 @@ generic with minimal need for project-specific behavior.
 [pyenv]: https://github.com/pyenv/pyenv
 [Homebrew]: https://brew.sh
 [uv]: https://docs.astral.sh/uv/getting-started/installation/
+[pyproject.toml]: /pyproject.toml
 
 ### 2.1.1 git-secrets
 
@@ -204,12 +204,12 @@ end.
    Linux users whose distribution does not offer the required Python version
    should consider installing [pyenv] first, then Python using `pyenv install
    x.y.z` and setting `PYENV_VERSION` to `x.y.z`, where `x.y.z` is the value of
-   `azul_python_version` in [environment.py](environment.py). You may need to
-   update [pyenv] itself before it recognizes the given Python version. Even if
-   a distribution provides the required minor version of Python natively, using
-   [pyenv] is generally preferred because it offers every patch-level release of
-   Python, supports an arbitrary number of different Python versions to be
-   installed concurrently and allows for easily switching between them.
+   `azul_python_version` in [environment.py]. You may need to update [pyenv]
+   itself before it recognizes the given Python version. Even if a distribution
+   provides the required minor version of Python natively, using [pyenv] is
+   generally preferred because it offers every patch-level release of Python,
+   supports an arbitrary number of different Python versions to be installed
+   concurrently and allows for easily switching between them.
 
    Ubuntu users using their system's default Python installation must
    install `python3-dev` before any wheel requirements can be built.
@@ -490,7 +490,7 @@ has not been used since 2020 when Azul stopped offering DRS for HCA.
 
 The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
-[src/azul/deployment.py:tags](src/azul/deployment.py).
+[src/azul/deployment.py:tags](/src/azul/deployment.py).
 
 ### 3.1.3 AWS Chatbot integration with Slack
 
@@ -1248,7 +1248,7 @@ process may also increase the chance of the `AzulTestCase` context manager
 causing a failure.
 
 If these failures occur, add the warning to the list of permitted warnings
-found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
+found in [`AzulTestCase`](/test/azul_test_case.py) and commit the modifications. 
 
 
 # 6. Branch flow & development process
