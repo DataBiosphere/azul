@@ -260,8 +260,6 @@ def env() -> Mapping[str, str | None]:
         #
         'azul_python_version': _pin('project', 'requires-python'),
 
-        'UV_PYTHON': '{azul_python_version}',
-
         # The version of Terraform used throughout the system.
         #
         # This variable is not intended to be overridden per deployment or
