@@ -254,21 +254,12 @@ def env() -> Mapping[str, str | None]:
         #
         'azul_docker_version': '29.7.1',
 
-        # The version of Python used throughout the system.
-        #
-        # This variable is not intended to be overridden per deployment or
-        # locally.
-        #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build. The
-        # next paragraph explains how to keep that file in sync.
-        #
-        # Do not modify this variable directly. Instead, edit `requires-python`
-        # in `pyproject.toml`, run `make docker_images.json` and
-        # `make environment.boot`, in that order, and commit the resulting
-        # changes. Ensure that the `shared` component is redeployed.
+        # The version of Python used throughout the system. Do not modify this
+        # variable directly. It is derived from `requires-python` in
+        # `pyproject.toml`, where the procedure for updating it is documented.
         #
         'azul_python_version': _pin('project', 'requires-python'),
+
         'UV_PYTHON': '{azul_python_version}',
 
         # The version of Terraform used throughout the system.
@@ -315,21 +306,9 @@ def env() -> Mapping[str, str | None]:
         'azul_ghcli_version': '2.97.0',
 
         # The version of uv used to create the virtual environment and to
-        # install dependencies into it.
-        #
-        # This variable is not intended to be overridden per deployment or
-        # locally. It governs the uv installed in the images we build. The
-        # version a developer is expected to have on their system is enforced
-        # by `required-version` in `pyproject.toml`, from which this variable is
-        # derived.
-        #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build. The
-        # next paragraph explains how to keep that file in sync.
-        #
-        # Do not modify this variable directly. Instead, edit
-        # `required-version` in `pyproject.toml`, run `make environment.boot`
-        # and `make uv_checksums`, and commit the resulting changes.
+        # install dependencies into it. Do not modify this variable directly. It
+        # is derived from `required-version` in `pyproject.toml`, where the
+        # procedure for updating it is documented.
         #
         'azul_uv_version': _pin('tool', 'uv', 'required-version'),
 
