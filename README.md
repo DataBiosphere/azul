@@ -43,6 +43,12 @@ generic with minimal need for project-specific behavior.
   versions is [pyenv]. The easiest way to install pyenv on macOS is with
   [Homebrew].
 
+- [uv], to create the virtual environment and to install dependencies into it.
+  Install it with `curl -LsSf https://astral.sh/uv/x.y.z/install.sh | sh`,
+  where `x.y.z` is the version specified by the `required-version` setting in
+  [pyproject.toml](pyproject.toml). To change versions later, run
+  `uv self update x.y.z`. The installer is only needed the first time.
+
 - The `bash` shell
 
 - GNU make 3.81 or newer
@@ -90,6 +96,7 @@ generic with minimal need for project-specific behavior.
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
 [pyenv]: https://github.com/pyenv/pyenv
 [Homebrew]: https://brew.sh
+[uv]: https://docs.astral.sh/uv/getting-started/installation/
 
 ### 2.1.1 git-secrets
 
