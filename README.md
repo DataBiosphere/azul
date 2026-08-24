@@ -81,9 +81,6 @@ generic with minimal need for project-specific behavior.
   versions should work, too). LibreSSL, which became the default on macOS at 
   some point, is an acceptible replacement. Version 2.8.3 is known to work.  
 
-- Users of macOS 12 (Monterey) should follow additional steps outlined in 
-  [Troubleshooting](#setting-up-the-azul-build-prerequisites-on-macos-12-monterey)
-
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
@@ -1242,38 +1239,6 @@ causing a failure.
 
 If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
-
-
-## Setting up the Azul build prerequisites on macOS 12 (Monterey)
-
-The steps below are examplary for Python 3.12.7. Replace `3.12.7` with the value
-of `azul_python_version` in [environment.py](environment.py).
-
-Make `bash` the default shell. Google it.
-
-Install Homebrew. Google it. 
-
-Install pyenv:
-
-```
-brew install zlib pyenv
-```
-
-Install python
-
-```
-pyenv install 3.12.7
-```
-
-Set `PYENV_VERSION` to `3.12.7` in `environment.local.py` at the project root.
-For a more maintainable configuration use `os.environ['azul_python_version']` as
-the value and `import os` at the top.
-
-Install Docker Desktop. Google it.
-
-Install Terraform by downloading and unziping the binary to a directory on the 
-`PATH`. Be sure to download the file for the architecture of your Mac. For Apple 
-Silicon the file name contains `arm64`, for older Intel Macs it's `amd64`.
 
 
 # 6. Branch flow & development process
