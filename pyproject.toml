@@ -76,6 +76,13 @@ dev = [
 ]
 
 [tool.uv]
+# Match `azul_uv_version` in `environment.py`. TOML cannot interpolate, so the
+# two have to be kept equal by hand. Every uv invocation refuses to proceed
+# unless the running version satisfies this, whether it was made by one of the
+# targets in the Makefile or by hand.
+#
+required-version = "==0.12.5"
+
 # Only use an interpreter that's already installed on the system, never one
 # that uv downloads and manages itself.
 #

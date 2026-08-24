@@ -293,15 +293,17 @@ def env() -> Mapping[str, str | None]:
         # install dependencies into it.
         #
         # This variable is not intended to be overridden per deployment or
-        # locally. Note that it only governs the uv used inside the images we
-        # build. Developers install uv themselves, by whatever means their
-        # system offers.
+        # locally. It governs the uv installed in the images we build. The
+        # version a developer is expected to have on their system is enforced
+        # by `required-version` in `pyproject.toml`, which must be kept equal to
+        # this variable.
         #
         # This variable is duplicated in a file called `environment.boot`
         # because it is referenced in the early stages of the GitLab build.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # `make uv_checksums` and committing the resulting changes.
+        # Modifying this variable requires updating `pyproject.toml`, running
+        # `make environment.boot` and `make uv_checksums`, and committing the
+        # resulting changes.
         #
         'azul_uv_version': '0.12.5',
 
