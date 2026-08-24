@@ -762,10 +762,11 @@ def env() -> Mapping[str, str | None]:
         # from that directory. The wheels must be compatible with the AWS
         # Lambda platform.
         #
-        # No longer actively used. Lambda runtime dependencies are now
-        # installed via pip inside the Docker image build. Our fork of
-        # Chalice still references this variable but handles it being
-        # unset.
+        # No longer actively used. The run-time dependencies of a Lambda
+        # function are installed with uv, from the lock file, while its image is
+        # built. Our fork of Chalice still reads this variable, but only while
+        # building a deployment package from a `requirements.txt`, and there is
+        # no such file for either Lambda function.
         #
         'azul_chalice_bin': None,
 
