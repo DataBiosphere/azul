@@ -3,6 +3,26 @@ from collections.abc import (
 )
 import json
 import os
+import tomllib
+
+
+def _pin(*path: str) -> str:
+    """
+    Return the version from the exact version specifier at the given path of
+    keys in `pyproject.toml`. That file is the sole source of these versions
+    because uv reads it directly, and because TOML offers no way of referring
+    to a value defined elsewhere.
+    """
+    file_path = os.path.join(os.path.dirname(__file__), 'pyproject.toml')
+    with open(file_path, 'rb') as f:
+        node = tomllib.load(f)
+    for key in path:
+        node = node[key]
+    assert isinstance(node, str), node
+    prefix = '=='
+    assert node.startswith(prefix), node
+    version = node.removeprefix(prefix)
+    return version
 
 
 def env() -> Mapping[str, str | None]:
@@ -239,13 +259,15 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make docker_images.json`
-        # and committing the resulting changes. It also requires redeploying the
-        # `shared` component.
+        # Do not modify this variable directly. Instead, edit `requires-python`
+        # in `pyproject.toml`, run `make docker_images.json` and
+        # `make environment.boot`, in that order, and commit the resulting
+        # changes. Ensure that the `shared` component is redeployed.
         #
-        'azul_python_version': '3.14.6',
+        'azul_python_version': _pin('project', 'requires-python'),
         'UV_PYTHON': '{azul_python_version}',
 
         # The version of Terraform used throughout the system.
@@ -295,17 +317,18 @@ def env() -> Mapping[str, str | None]:
         # This variable is not intended to be overridden per deployment or
         # locally. It governs the uv installed in the images we build. The
         # version a developer is expected to have on their system is enforced
-        # by `required-version` in `pyproject.toml`, which must be kept equal to
-        # this variable.
+        # by `required-version` in `pyproject.toml`, from which this variable is
+        # derived.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires updating `pyproject.toml`, running
-        # `make environment.boot` and `make uv_checksums`, and committing the
-        # resulting changes.
+        # Do not modify this variable directly. Instead, edit
+        # `required-version` in `pyproject.toml`, run `make environment.boot`
+        # and `make uv_checksums`, and commit the resulting changes.
         #
-        'azul_uv_version': '0.12.5',
+        'azul_uv_version': _pin('tool', 'uv', 'required-version'),
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image

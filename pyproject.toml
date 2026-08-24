@@ -1,7 +1,7 @@
 [project]
 name = "azul"
 version = "1.0.0"
-# Match `azul_python_version` in `environment.py`
+# `environment.py` derives `azul_python_version` from this
 requires-python = "==3.14.6"
 dependencies = [
     "attrs==26.1.0",
@@ -76,11 +76,7 @@ dev = [
 ]
 
 [tool.uv]
-# Match `azul_uv_version` in `environment.py`. TOML cannot interpolate, so the
-# two have to be kept equal by hand. Every uv invocation refuses to proceed
-# unless the running version satisfies this, whether it was made by one of the
-# targets in the Makefile or by hand.
-#
+# `environment.py` derives `azul_uv_version` from this
 required-version = "==0.12.5"
 
 # Only use an interpreter that's already installed on the system, never one
