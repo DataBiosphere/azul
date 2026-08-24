@@ -37,8 +37,11 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python, the specific verson is defined in an environment variable called
-  `azul_python_version` defined in [environment.py](environment.py)
+- Python, the specific version is defined in an environment variable called
+  `azul_python_version` defined in [environment.py](environment.py). We
+  frequently update Python so the recommended way to install and manage Python
+  versions is [pyenv]. The easiest way to install pyenv on macOS is with
+  [Homebrew].
 
 - The `bash` shell
 
@@ -85,6 +88,8 @@ generic with minimal need for project-specific behavior.
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
+[pyenv]: https://github.com/pyenv/pyenv
+[Homebrew]: https://brew.sh
 
 ### 2.1.1 git-secrets
 
@@ -205,8 +210,6 @@ end.
    ```
    sudo apt install python3-dev
    ```
-
-   [pyenv]: https://github.com/pyenv/pyenv
 
 6. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
