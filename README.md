@@ -2390,61 +2390,57 @@ The Dev Tools of OpenSearch Dashboards should now be available at
 # 10. Managing dependencies
 
 We pin all dependencies, direct and transitive ones alike. That's the only way
-to get a somewhat reproducible build. It's possible that the build still
-fails if a dependency version is deleted from pypi.org or if a dependency
-maintainer re-releases a version, but aside from caching all dependencies,
-pinning them is next best thing for reproducibility of the build.
+to get a reproducible build. The lock file additionally records a hash
+of every distribution, so a dependency maintainer re-releasing a version under
+the same version number is detected instead of quietly changing the build. A
+version being deleted from pypi.org still breaks it, short of caching all
+dependencies ourselves.
 
-Now, while pinning direct dependencies should be routine, chasing down
-transitive dependencies and pinning those is difficult, tedious and prone to
-errors. That's why we automate that step: When a developer updates, adds or
-removes a direct dependency, running `make requirements_update` will reevaluate
-all transitive dependencies and update their pins. If the added direct
-dependency has transitive dependencies, those will be picked up. It's likely
-that the reevaluation picks up updates to transitive dependencies unrelated to
-the modified direct dependency, but that's unavoidable. It's even possible that
-a direct dependency update causes a downgrade of a transitive dependency if the
-updated direct dependency further restricts the allowed version range of the
-transitive dependency.
+Direct dependencies are declared, and pinned, in `pyproject.toml`. The pins of
+the transitive ones, along with the resolved version of every direct one, live
+in `uv.lock`. Chasing down transitive dependencies and pinning them by hand
+would be difficult, tedious and prone to errors, so we automate that step: when
+a developer updates, adds or removes a direct dependency, running `make
+requirements_update` reevaluates all transitive dependencies and updates their
+pins. If the added direct dependency has transitive dependencies, those will be
+picked up. It's likely that the reevaluation picks up updates to transitive
+dependencies unrelated to the modified direct dependency, but that's
+unavoidable. It's even possible that a direct dependency update causes a
+downgrade of a transitive dependency if the updated direct dependency further
+restricts the allowed version range of the transitive dependency.
+
+Running `make requirements` installs exactly what the lock file specifies,
+resolving nothing. It also uninstalls any distribution the lock file does not
+specify, so that the virtual environment matches the lock file exactly.
 
 We distinguish between run-time and build-time — or _development_ —
 dependencies. A run-time dependency is a one that is needed by deployed code.
 A build-time dependency is one that is **not** needed by deployed code, but by
-some other code, like unit tests, for example. A developer's virtualenv will
-have both run-time and build-time dependencies installed. Combined with the
-distinction between direct and transitive dependencies this yields four
-categories of dependencies. Let's refer to them as DR (direct run-time), TR
-(transitive run-time), DB (direct build-time) and TB (transitive build-time).
-The intersections DR ∩ TR, DB ∩ TB, DR ∩ DB, TR ∩ TB and DR ∩ TB should all be
-empty but the intersection TR ∩ DB may not be.
+some other code, like unit tests, for example. Run-time dependencies are
+declared in the `project.dependencies` array, development dependencies in the
+`dev` dependency group. A developer's virtualenv will have both run-time and
+build-time dependencies installed, while the image for deployed code has only
+the run-time ones. Combined with the distinction between direct and transitive
+dependencies this yields four categories of dependencies. Let's refer to them as
+DR (direct run-time), TR (transitive run-time), DB (direct build-time) and TB
+(transitive build-time). The intersections DR ∩ TR, DB ∩ TB, DR ∩ DB, TR ∩ TB
+and DR ∩ TB should all be empty but the intersection TR ∩ DB may not be.
 
 ![Azul architecture diagram](docs/dependencies.svg)
 
-Ambiguities can arise as to which version of a requirement should be used when
-multiple requirements have overlapping transitive dependencies. We can't
-resolve these ambiguities automatically because different versions of a package
-may have different dependencies in and of themselves, so pinning just the
-dependency in question might omit some of its dependencies. By pinning it
-explicitly the normal dependency resolution kicks in, including all transitive
-dependencies of the pinned version.
+The resolution covers the entire project at once, so a package occurs in the
+lock file exactly once, at one version, no matter how many of the categories
+above it belongs to. Two direct dependencies that disagree about the version of
+a shared transitive dependency are therefore not a conflict to be adjudicated,
+but simply a resolution that fails.
 
-`make requirements_update` will raise an exception when ambiguous requirements
-are found.
-
-```
-ERROR   MainThread: Ambiguous version of transitive runtime requirement jsonschema==2.6.0,==3.2.0. Consider pinning it to the version used at build time (==3.2.0).
-```
-
-With this example case the solution would be to add `jsonschema` as a
-direct run-time requirement in the file `reqirements.txt` along with a comment
-`# resolve ambiguity with build-time dependency`, and then to run `make
-requirements_update` to remove the package as a transitive run-time requirement.
-
-There is a separate category for requirements that need to be installed before
-any other dependency is installed, either run-time or build-time, in order to
-ensure that the remaining dependencies are resolved and installed correctly.
-We call that category  _pip requirements_ and don't distinguish between direct
-or transitive requirements in that category.
+A few settings in `pyproject.toml` constrain the resolution further.
+`environments` and `required-environments` limit it to the platforms we deploy
+to and develop on, keeping distributions for other platforms out of the lock
+file. `constraint-dependencies` restates the upper bounds that are documented on
+individual pins, so that raising one of those pins past its bound fails the
+resolution instead of going unnoticed. `exclude-dependencies` withholds
+distributions we don't want installed even though something depends on them.
 
 
 # 11. Development tools
