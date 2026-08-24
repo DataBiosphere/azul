@@ -243,13 +243,14 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make docker_images.json`
-        # and `make environment.boot`, in that order, and committing the
-        # resulting changes. It also requires redeploying the `shared` and
-        # `gitlab` components, as well as building and pushing the executor
-        # image (see terraform/gitlab/runner/Dockerfile for how).
+        # After modifying this variable, run `make docker_images.json` and
+        # `make environment.boot`, in that order. Commit the resulting
+        # changes. Ensure that the `shared` and `gitlab` components are
+        # redeployed, and that the executor image is built and pushed (see
+        # terraform/gitlab/runner/Dockerfile for how).
         #
         'azul_docker_version': '29.7.1',
 
@@ -276,11 +277,11 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # `make -C terraform update_schema`, and committing the resulting
-        # changes.
+        # After modifying this variable, run `make environment.boot` and
+        # `make -C terraform update_schema`, and commit the resulting changes.
         #
         'azul_terraform_version': '1.15.8',
 
@@ -290,10 +291,11 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # committing the resulting changes.
+        # After modifying this variable, run `make environment.boot` and commit
+        # the resulting changes.
         #
         'azul_awscli_version': '2.36.15',
 
@@ -304,10 +306,11 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # `make gh_checksums` and committing the resulting changes.
+        # After modifying this variable, run `make environment.boot` and
+        # `make gh_checksums`, and commit the resulting changes.
         #
         'azul_ghcli_version': '2.97.0',
 
