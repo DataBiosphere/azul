@@ -112,8 +112,6 @@ WORKDIR /build
 
 # Install Azul dependencies
 #
-ARG PIP_DISABLE_PIP_VERSION_CHECK
-ENV PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK}
 COPY pyproject.toml uv.lock common.mk Makefile ./
 ARG make_target
 # We don't source `environment` here. It loads the environment by running

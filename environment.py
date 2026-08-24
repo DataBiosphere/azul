@@ -769,12 +769,6 @@ def env() -> Mapping[str, str | None]:
         #
         'azul_chalice_bin': None,
 
-        # Stop `pip` from nagging us about updates. We update pip regularly like
-        # any other dependency. There is nothing special about `pip` that would
-        # warrant the distraction.
-        #
-        'PIP_DISABLE_PIP_VERSION_CHECK': '1',
-
         # The path of the directory where the public key infrastructure files
         # are managed on developer, operator and administrator machines. The
         # directory contains secrets so it Must reside outside of the project
