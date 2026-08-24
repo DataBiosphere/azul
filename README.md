@@ -84,9 +84,6 @@ generic with minimal need for project-specific behavior.
 - Users of macOS 12 (Monterey) should follow additional steps outlined in 
   [Troubleshooting](#setting-up-the-azul-build-prerequisites-on-macos-12-monterey)
 
-- Users of macOS 11 (Big Sur) should follow additional steps outlined in 
-  [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
-
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
@@ -1269,60 +1266,14 @@ pyenv install 3.12.7
 ```
 
 Set `PYENV_VERSION` to `3.12.7` in `environment.local.py` at the project root.
-Do not set `SYSTEM_VERSION_COMPAT`. For a more maintainable configuration use 
-`os.environ['azul_python_version']` as the value and `import os` at the top.
+For a more maintainable configuration use `os.environ['azul_python_version']` as
+the value and `import os` at the top.
 
 Install Docker Desktop. Google it.
 
 Install Terraform by downloading and unziping the binary to a directory on the 
 `PATH`. Be sure to download the file for the architecture of your Mac. For Apple 
 Silicon the file name contains `arm64`, for older Intel Macs it's `amd64`.
-
-
-## Installing Python 3.8.12 on macOS 11 (Big Sur)
-
-[pyenv macOS 11 GitHub issue](https://github.com/pyenv/pyenv/issues/1740)
-
-Users of macOS 11 or later may encounter a `build failed` error when installing
-Python through pyenv. A patch was made available to remedy this:
-
-First, ensure that bzip2 and any other requirements for the Python build
-environment are met. See [pyenv wiki] for details:
-
-[pyenv wiki]:https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-
-```
-brew install openssl readline sqlite3 xz zlib bzip2
-```
-
-Follow any additional steps that `brew` prompts for at the end of the
-installation. These should include modifying path variables `LDFLAGS` and
-`CPPFLAGS`. The commands from the `brew` output to modify the aforementioned
-path variables can be placed in `~/.bash_profile` to make the change persistent.
-
-Then install Python 3.8.12 using `pyenv` by running:
-
-```
-pyenv install 3.8.12
-```
-
-Users of macOS 11 or later may encounter `pip` installation errors due to `pip`
-not being able to locate the appropriate wheels. The information below will
-help remedy this:
-
-[Resolution source](https://stackoverflow.com/a/63972598)
-
-[macOS 11 Release Notes](https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps)
-
-`pip` will not be able to locate the appropriate wheels due to the major release
-version of macOS being incremented from `10.x` to `11.x`, instead pip will
-attempt to compile wheels manually for wheels that it cannot locate.
-
-In order to be able to run `make requirements` successfully, a backwards
-compatibility flag needs to be added to the `environment.local.py` file in the
-project root. The flag is `SYSTEM_VERSION_COMPAT=1` and it needs to be inserted
-into the file (starting from line 25) as a key/value pair:
-`'SYSTEM_VERSION_COMPAT': 1`.
 
 
 # 6. Branch flow & development process
