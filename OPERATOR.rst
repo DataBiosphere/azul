@@ -337,14 +337,13 @@ Before upgrading the GitLab version, create a backup of the GitLab volume. See
 Upgrade direct Python dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In PyCharm, use `Package tool window`_  to view the most recent versions of
-the project's direct Python dependencies. This feature may only work properly
-after running ``make envhook``, and correctly configuring the Python interpreter
-for the project (at least once before).
-
-Proceed by identifying the packages that are candidates for upgrades. Check the
-dependencies listed in ``pyproject.toml`` against the Package tool window, where
-the dependency indicates of an available version. When updating:
+Run ``uv tree --outdated --depth 1`` to identify the packages that are
+candidates for an upgrade. It lists the direct dependencies, those declared in
+``pyproject.toml``, and annotates each one for which a more recent release
+exists with the version of that release. Omitting ``--depth 1`` includes the
+transitive dependencies, but note that the release it reports for one of those
+may not actually be installable, because another package restricts the range of
+versions that dependency is allowed to occupy. When updating:
 
 - Update to the latest mature release (a release with a high patch number or
   where the most recent patch release is at least a couple of months old) and go
@@ -361,11 +360,14 @@ the dependency indicates of an available version. When updating:
   commit, to easily identify the dependencies forcing the change and the given
   resolution.
 
-Note, a way to display all available versions of a given package in a concise
-way, is to pretend to install a non-existing version from a terminal console
-via the pip command. For example, to see all available versions of ``flake8``
-one may run ``pip install flake8=9.9.9``, and the output will display all
-versions of the dependency.
+``uv tree --outdated`` reports only the most recent release, which is not
+enough to judge whether that release is mature. For the release history of a
+package, including the date of each release, consult its page on PyPI, under
+*Release history*.
+
+Upgrading a dependency means editing its pin in ``pyproject.toml``, running
+``make requirements_update`` to update the lock file, and ``make requirements``
+to install the result.
 
 As always, each of the committed changes should be tested, and should
 independently succeed all feature branch checks in GitHub, etc. Perform the
@@ -376,8 +378,6 @@ following for smoke-testing basic operations and functions:
 
  #. Run the ``test``, and ``deploy`` targets in personal deployment (or via
     sandbox) and then run the integration test.
-
-.. _Package tool window: https://www.jetbrains.com/guide/python/tutorials/getting-started-pycharm/installing-and-managing-python-packages/
 
 Increase GitLab data volume size
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
