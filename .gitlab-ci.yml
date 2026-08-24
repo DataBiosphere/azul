@@ -77,7 +77,7 @@ test:
   script:
     - make format
     - make isort
-    - python -m azul -t config.deployment.is_lower_sandbox && make requirements_update
+    - if python -m azul -t config.deployment.is_lower_sandbox ; then make requirements_update ; fi
     - make -C lambdas openapi
     - make environment.boot
     - make -C .github
