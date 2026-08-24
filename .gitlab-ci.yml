@@ -30,8 +30,8 @@ stages:
 build_image:
   # Build an image containing the build prerequisites (python, terraform, etc).
   # This lets us exploit Docker's layer caching to speed up the build. The
-  # image will only be rebuilt after changes to the Dockerfile, 
-  # requirements*.txt, common.mk and the Makefile.
+  # image will only be rebuilt after changes to the Dockerfile, pyproject.toml,
+  # uv.lock, common.mk and the Makefile.
   extends: .on_push
   stage: build_image
   timeout: 6m
