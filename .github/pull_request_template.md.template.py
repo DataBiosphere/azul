@@ -636,24 +636,17 @@ def emit(t: T, target_branch: str):
                 {
                     'type': 'cli',
                     'content': 'Ran `make requirements_update`',
-                    'alt': 'or this PR does not modify ' + join_grammatically(list(map(bq, [
-                        'Dockerfile',
-                        'environment',
-                        'requirements*.txt',
-                        'common.mk',
-                        'Makefile',
-                        'environment.boot',
-                    ])), last_joiner=' or ')
+                    'alt': 'or this PR does not modify `pyproject.toml`'
                 },
                 {
                     'type': 'cli',
                     'content': 'Added `R` tag to commit title',
-                    'alt': 'or this PR does not modify `requirements*.txt`'
+                    'alt': 'or this PR does not modify `uv.lock`'
                 },
                 {
                     'type': 'cli',
                     'content': 'This PR is labeled `reqs`',
-                    'alt': 'or does not modify `requirements*.txt`'
+                    'alt': 'or does not modify `uv.lock`'
                 },
                 iif(t is T.upgrade, {
                     'type': 'cli',
