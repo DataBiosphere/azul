@@ -118,7 +118,6 @@ WORKDIR /build
 # Install Azul dependencies
 #
 COPY pyproject.toml uv.lock common.mk Makefile ./
-ARG make_target
 # We don't source `environment` here. It loads the environment by running
 # `scripts/export_environment.py`, and neither that script nor the
 # `environment.py` files it reads are part of this image. The only variable the
@@ -128,5 +127,5 @@ ARG make_target
 RUN export project_root="$PWD" \
     && make virtualenv \
     && source .venv/bin/activate \
-    && make $make_target \
+    && make requirements \
     && rm pyproject.toml uv.lock common.mk Makefile

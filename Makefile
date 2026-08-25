@@ -24,18 +24,13 @@ envhook: check_venv
 #	dependencies and without checking the lock against `pyproject.toml`. This
 #	is what installing the pins from `requirements*.txt` with `--no-deps` used
 #	to accomplish. Resolution is now a separate step, `uv lock`, so there is no
-#	longer a variant of these targets that resolves while installing. Note that
+#	longer a variant of this target that resolves while installing. Note that
 #	uv also *removes* any package the lock doesn't specify, leaving the virtual
 #	environment matching the lock exactly.
 #
-define requirements
-.PHONY: requirements$1
-requirements$1: check_venv
-	uv sync --frozen $2
-endef
-
-$(eval $(call requirements,,))
-$(eval $(call requirements,_runtime,--no-default-groups))
+.PHONY: requirements
+requirements: check_venv
+	uv sync --frozen
 
 #	Fail if the lock file isn't consistent with `pyproject.toml`, say because a
 #	dependency was added to the latter without updating the former. Newer
@@ -50,28 +45,22 @@ check_requirements: check_env
 check_transitive_requirements: check_python
 	python scripts/check_transitive_requirements.py
 
-define docker
-.PHONY: docker$1
-docker$1: check_docker
+.PHONY: docker_dev
+docker_dev: check_docker
 	docker build \
-	       --build-arg azul_docker_registry=$$(azul_docker_registry) \
-	       --build-arg azul_python_image=$$(azul_python_image) \
-	       --build-arg azul_docker_version=$$(azul_docker_version) \
-	       --build-arg azul_terraform_version=$$(azul_terraform_version) \
-	       --build-arg azul_awscli_version=$$(azul_awscli_version) \
-	       --build-arg azul_ghcli_version=$$(azul_ghcli_version) \
-	       --build-arg azul_uv_version=$$(azul_uv_version) \
-	       --build-arg make_target=requirements$2 \
-	       --tag $$(azul_image)$3:$$(azul_image_tag) \
+	       --build-arg azul_docker_registry=$(azul_docker_registry) \
+	       --build-arg azul_python_image=$(azul_python_image) \
+	       --build-arg azul_docker_version=$(azul_docker_version) \
+	       --build-arg azul_terraform_version=$(azul_terraform_version) \
+	       --build-arg azul_awscli_version=$(azul_awscli_version) \
+	       --build-arg azul_ghcli_version=$(azul_ghcli_version) \
+	       --build-arg azul_uv_version=$(azul_uv_version) \
+	       --tag $(azul_image)/dev:$(azul_image_tag) \
 	       .
 
-.PHONY: docker$1_push
-docker$1_push: docker$1
-	docker push $$(azul_image)$3:$$(azul_image_tag)
-endef
-
-$(eval $(call docker,,_runtime,))  # runtime image
-$(eval $(call docker,_dev,,/dev))  # development image
+.PHONY: docker_dev_push
+docker_dev_push: docker_dev
+	docker push $(azul_image)/dev:$(azul_image_tag)
 
 .PHONY: requirements_update
 requirements_update: check_env
