@@ -36,7 +36,7 @@ Per `.github/PULL_REQUEST_TEMPLATE/prod-promotion.md` (lines 108-114) and
 | Item type | Expected prior status | Target status  | Exception           |
 |-----------|-----------------------|----------------|----------------------|
 | PR        | Merged lower          | Merged stable  | Already *Done* → skip |
-| Issue     | Lower                 | Stable         | (none)               |
+| Issue     | Lower                 | Stable         | Not *Lower* → skip  |
 
 ## GitHub project coordinates
 
@@ -78,7 +78,8 @@ Per `.github/PULL_REQUEST_TEMPLATE/prod-promotion.md` (lines 108-114) and
    to *Merged stable*.
 
 5. For each promoted issue, query its project item ID and current status.
-   Set status to *Stable*.
+   Skip if status is not *Lower* (the issue may still be open, tracked
+   independently, or already moved). Otherwise set status to *Stable*.
 
 6. Verify by re-querying that all transitions succeeded and report a summary
    table.
