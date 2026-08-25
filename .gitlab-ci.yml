@@ -74,10 +74,16 @@ test:
   extends: .base_on_push
   stage: test
   timeout: 1h 30m
+  variables:
+    # Enough history for `scripts/check_transitive_requirements.py` to find
+    # where this branch diverged from `develop`. Set here, rather than per
+    # instance, so that the check behaves the same everywhere.
+    GIT_DEPTH: '100'
   script:
+    - make check_requirements
+    - if python -m azul -t config.deployment.is_lower_sandbox ; then make check_transitive_requirements ; fi
     - make format
     - make isort
-    - if python -m azul -t config.deployment.is_lower_sandbox ; then make requirements_update ; fi
     - make -C lambdas openapi
     - make environment.boot
     - make -C .github

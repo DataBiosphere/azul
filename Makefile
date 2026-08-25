@@ -37,6 +37,19 @@ endef
 $(eval $(call requirements,,))
 $(eval $(call requirements,_runtime,--no-default-groups))
 
+#	Fail if the lock file isn't consistent with `pyproject.toml`, say because a
+#	dependency was added to the latter without updating the former. Newer
+#	releases of a dependency don't affect this; `requirements_update` is what
+#	picks those up.
+#
+.PHONY: check_requirements
+check_requirements: check_env
+	uv lock --check
+
+.PHONY: check_transitive_requirements
+check_transitive_requirements: check_python
+	python scripts/check_transitive_requirements.py
+
 define docker
 .PHONY: docker$1
 docker$1: check_docker
