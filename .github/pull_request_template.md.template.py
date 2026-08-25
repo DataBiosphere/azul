@@ -16,6 +16,7 @@ from typing import (
     AbstractSet,
     Iterable,
     Mapping,
+    NotRequired,
     Protocol,
     TypedDict,
     cast,
@@ -57,11 +58,7 @@ from azul.template import (
 class Item(TypedDict):
     type: str
     content: str
-    alt: str
-
-
-class EmptyItem(TypedDict):
-    pass
+    alt: NotRequired[str | None]
 
 
 class Handler(Protocol):
@@ -74,7 +71,15 @@ class Handler(Protocol):
         """
 
 
-def emit_checklist(checklist: Iterable[Item | EmptyItem]):
+#: An item is really an `Item`, but the ones a caller builds conditionally are
+#: empty when the condition doesn't hold, and those it builds through a helper
+#: lose their literal type on the way, leaving nothing for a checker to match
+#: against a `TypedDict`. `non_empty_items` below narrows what survives.
+#:
+LooseItem = Mapping[str, str | None]
+
+
+def emit_checklist(checklist: Iterable[LooseItem]):
     def comment(i: Item, _) -> Iterable[str]:
         return '<!--', *wrap(i), '-->'
 
@@ -88,7 +93,11 @@ def emit_checklist(checklist: Iterable[Item | EmptyItem]):
         return '', '', '### ' + text(i['content'])
 
     def cli(i: Item, j: Item | None) -> Iterable[str]:
-        alt = '' if i.get('alt') is None else ' <sub>' + i['alt'] + '</sub>'
+        alt = i.get('alt')
+        if alt is None:
+            alt = ''
+        else:
+            alt = ' <sub>' + alt + '</sub>'
         return *margin(i, j), '- [ ] ' + text(i['content']) + alt
 
     def li(i: Item, j: Item | None) -> Iterable[str]:
@@ -171,7 +180,7 @@ class T(Enum):
 
         return S('issue' + iif(default, 's'))
 
-    def target_deployments(self, target_branch: str) -> Mapping[str, str]:
+    def target_deployments(self, target_branch: str) -> Mapping[str, str | None]:
         """
         Returns a mapping between 1) the name of each main deployment the given
         branch can be deployed to and 2) the name of the respective sandbox
@@ -223,8 +232,7 @@ class T(Enum):
     def needs_shared_deploy(self):
         return self not in (T.backport, T.hotfix)
 
-    # noinspection PyUnusedLocal
-    def shared_deploy_is_two_phase(self, target_branch: str) -> bool:
+    def shared_deploy_is_two_phase(self, _target_branch: str) -> bool:
         # All `shared` components are deployed in two-phases. The first phase,
         # prior to the merge, mirrors new images to ECR, while the second phase
         # removes any outdated images. This makes it possible to abandon the
@@ -255,7 +263,8 @@ def deployment_env(deployment: str,
                    component: str | None = None
                    ) -> Mapping[str, str]:
     script = load_script('export_environment')
-    deployment += '' if component is None else '.' + component
+    if component is not None:
+        deployment += '.' + component
     env, warning = script.load_env(deployment)
     assert warning is None, warning
     resolved_env = script.resolve_env(env)
