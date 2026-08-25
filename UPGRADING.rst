@@ -20,6 +20,25 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8249 Use uv to manage Python dependencies
+==========================================
+
+Direct dependencies are now declared in ``pyproject.toml``. As before, the
+declaration pins them down to a specific version. All dependencies, including
+the transitive ones, are pinned down to their checksum in ``uv.lock``. These two
+files, the virtualenv and the dependency installation are now managed by uv,
+which takes the place of pip. The ``requirements*.txt`` files are gone, as is
+the complicated functionality that maintained them.
+
+Everyone
+--------
+
+Install uv as `described <./README.md#21-development-prerequisites>`_ in our
+README, at the version given by the ``required-version`` setting in
+``pyproject.toml``. Then re-source `environment`, deactivate the virtualenv if
+it is active, run ``make virtualenv`` and ``make requirements envhook``.
+
+
 #8201 Deploying from scratch causes KMS NotFoundException for APAT signing key
 ==============================================================================
 
