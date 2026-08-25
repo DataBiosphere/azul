@@ -6,7 +6,7 @@ include ../../../common.mk
 image := docker.gitlab.$(AZUL_DOMAIN_NAME)/ucsc/azul/runner
 
 .PHONY:
-docker: check_docker
+docker_image: check_docker
 	docker build \
 	       --platform linux/amd64 \
 	       --build-arg azul_docker_registry=$(azul_docker_registry) \
@@ -14,11 +14,11 @@ docker: check_docker
 	       --tag $(image) .
 
 .PHONY:
-docker_push: docker
+docker_push: docker_image
 	docker push $(image)
 
 .PHONY:
-docker_run: docker
+docker_run: docker_image
 	docker run --rm -it \
 	       --volume $(project_root):/azul \
 	       --workdir /azul \

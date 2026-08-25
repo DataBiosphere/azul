@@ -42,12 +42,12 @@ build_image:
       printenv CI_REGISTRY_PASSWORD 
       | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY_IMAGE
     - set -o allexport ; source environment.boot ; set +o allexport
-    - make docker_dev_push
+    - make docker_push
 
 .base:
   dependencies:
     - build_image
-  image: ${azul_image}/dev:${azul_image_tag}
+  image: ${azul_image}:${azul_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate

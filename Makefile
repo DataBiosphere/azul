@@ -45,8 +45,8 @@ check_requirements: check_env
 check_transitive_requirements: check_python
 	python scripts/check_transitive_requirements.py
 
-.PHONY: docker_dev
-docker_dev: check_docker
+.PHONY: docker_image
+docker_image: check_docker
 	docker build \
 	       --build-arg azul_docker_registry=$(azul_docker_registry) \
 	       --build-arg azul_python_image=$(azul_python_image) \
@@ -55,12 +55,12 @@ docker_dev: check_docker
 	       --build-arg azul_awscli_version=$(azul_awscli_version) \
 	       --build-arg azul_ghcli_version=$(azul_ghcli_version) \
 	       --build-arg azul_uv_version=$(azul_uv_version) \
-	       --tag $(azul_image)/dev:$(azul_image_tag) \
+	       --tag $(azul_image):$(azul_image_tag) \
 	       .
 
-.PHONY: docker_dev_push
-docker_dev_push: docker_dev
-	docker push $(azul_image)/dev:$(azul_image_tag)
+.PHONY: docker_push
+docker_push: docker_image
+	docker push $(azul_image):$(azul_image_tag)
 
 .PHONY: requirements_update
 requirements_update: check_env
