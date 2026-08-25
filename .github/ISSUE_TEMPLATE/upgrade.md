@@ -54,7 +54,7 @@ _period: 14 days
     - [ ] … update to [AL2023 release](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#updating-software-packages-via-release-version-upgrade-in-al2023-instances) <sub>or no update available</sub>
     - [ ] … update to [Swagger UI](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#updating-the-swagger-ui) <sub>or no update available</sub>
     - [ ] … update to [AWS CLI v2](https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst) <sub>or no update available</sub>
-    - [ ] … update to [GitHub CLI](https://github.com/cli/cli/releases) <sub>or no update available</sub>
+    - [ ] … update to [GitHub CLI](https://github.com/cli/cli/releases), having run `make gh_checksums` afterwards <sub>or no update available</sub>
     - [ ] … update to [uv](https://github.com/astral-sh/uv/releases), following the instructions next to the pin in `pyproject.toml` <sub>or no update available</sub>
 - [ ] Created issues for any deferred updates to …
   - [ ] … the next major or minor Python version <sub>or such an issue already exists</sub>
