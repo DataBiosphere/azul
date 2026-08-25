@@ -580,10 +580,10 @@ The following resources must be created manually before deploying the `gitlab`
 component:
 
 - An EBS volume needs to be created. See [gitlab.tf.json.template.py] and the
-  [section on CI/CD](#85-storage) for details.
+  [section on CI/CD](#75-storage) for details.
 
 - A certificate authority must be set up for VPN access. For details refer to
-  [section on GitLab CA](#812-setting-up-the-certificate-authority).
+  [section on GitLab CA](#713-setting-up-the-certificate-authority).
 
 
 ## 3.2 One-time manual configuration of deployments
@@ -826,8 +826,8 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 ## 3.6 Private API
 
 Follow these steps to put a deployment's API Gateway in the GitLab VPC so that a
-VPN connection is required to access the deployment. See [8.1 VPN access to
-GitLab](#81-vpn-access-to-gitlab) for details. Read this entire section before
+VPN connection is required to access the deployment. See [7.1 VPN access to
+GitLab](#71-vpn-access-to-gitlab) for details. Read this entire section before
 following these steps.
 
 1. Destroy the current deployment (`make -C terraform destroy`).
@@ -1251,195 +1251,10 @@ If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](/test/azul_test_case.py) and commit the modifications. 
 
 
-# 6. Branch flow & development process
-
-**This section should be considered a draft. It describes a future extension to the current branching flow.**
-
-The section below describes the flow we want to get to eventually, not the one
-we are currently using while this repository recovers from the aftermath of its
-inception.
-
-The declared goal here is a process that prevents diverging forks yet allows
-each project to operate independently as far as release schedule, deployment
-cadence, project management and issue tracking is concerned. The main challenges
-are 1) preventing contention on a single `develop` or `master` branch, 2)
-isolating project-specific changes from generic ones, 3) maintaining a
-reasonably linear and clean history and 4) ensuring code reuse.
-
-The [original repository](https://github.com/DataBiosphere/azul), also known as
-*upstream*, should only contain generic functionality and infrastructure code.
-Project-specific functionality should be maintained in separate project-specific
-forks of that repository. The upstream repository will only contain a `master`
-branch and the occasional PR branch.
-
-Azul dynamically imports project-specific plugin modules from a special location
-in the Python package hierarchy: `azul.projects`. The package structure in
-upstream is
-
-```
-root
-├── ...
-├── src
-│   └── azul
-│       ├── index
-│       │   └── ...
-│       ├── projects (empty)
-│       ├── service
-│       │   └── ...
-│       └── util
-│       │   └── ...
-└── ...
-```
-
-Note that the `projects` directory is empty.
-
-The directory structure in forked repositories is generally the same with one
-important difference. While a fork's `master` branch is an approximate mirror of
-upstream's `master` and therefore also lacks content in `projects`, that
-directory *does* contain modules in the fork's `develop` branch. In
-`HumanCellAtlas/azul-hca`, the fork of Azul for the HumanCellAtlas project, the
-`develop` branch would look like this:
+# 6. Operational Procedures
 
 
-```
-root
-├── ...
-├── src
-│   └── azul
-│       ├── index
-│       │   └── ...
-│       ├── projects
-│       │   └── hca
-│       │       └── ...
-│       ├── service
-│       │   └── ...
-│       └── util
-│       │   └── ...
-└── ...
-```
-
-The `develop` branch would only contain changes to the `azul.projects.hca`
-package. All other changes would have to be considered generic—they would occur
-on the fork's `master` branch and eventually be merged into upstream's `master`
-branch. The `master` branches in each fork should not be divergent for sustained
-periods of time while the project-specific branches can and will be.
-
-The reason why each fork maintains a copy of the `master` branch is that forks
-generally need to have a place to test and evaluate generic features before they
-are promoted upstream. If there wasn't a `master` branch in a fork, the
-project-specific `develop` branch in that fork would inevitably conflate
-project-specific changes with generic ones. It would be very hard to selectively
-promote generic changes upstream, even if the generic changes were separate
-commits.
-
-The flow presented here establishes an easy-to-follow rule: If you're modifying
-`azul.projects.hca`, you need to do so in a PR against `develop`. If you're
-modifying anything else, you need to do so in a PR against `master`. The figure
-below illustrates that.
-
-```
-                                                      ●────● feature/generic-foo
-                                                     ╱
-                                              4     ╱
-    ─────●────────────────────────────────────●────●──────────────        master
-          ╲                                  ╱
- azul      ╲                                ╱
- ─ ─ ─ ─ ─ ─╲─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╱ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
- azul-hca    ╲                            ╱
-              ╲                          ╱
-    ──────●────●────●────●────●────●────●──────────────────────────       master
-           ╲   1     ╲    ╲   A'   B'
-            ╲         ╲    ╲
-             ╲         ╲    ●────● feature/master/generic-stuff
-              ╲         ╲   A    B
-               ╲         ╲
-                ●─────────●─────────────●────●────●─────────────────     develop
-                2         3              ╲   C'   D'
-                                          ╲
-                                           ●────● feature/develop/specific-stuff
-                                                C    D
-```
-
-Merge commit 1 from the upstream `master` branch integrates upstream changes
-into the fork. These may be generic changes merged upstream from other forks or
-changes that were directly PR-ed against `master` in upstream. Commit 2 marks
-the beginning of the `develop` branch, adding the `azul.projects.hca` package.
-Merge commit 3 brings the changes from commit 1 into the `develop` branch.
-
-Another important rule is that collaborative branches like `develop` and
-`master` are never rebased. Changes are exchanged between them using merge
-commits instead. Individual branches however, like feature branches, are always
-rebased onto the base branch. In the above example,
-`feature/master/generic-stuff` is first rebased onto `master`, creating commits
-A' and B'. Later those changes are merged upstream via commit 4. Both the rebase
-and the merge happen via a pull request, but the landing action will be "Rebase
-and merge" for the first PR and "Create a merge commit" for the second.
-
-The reason for this distinction is that rebasing usually triggers more rebasing
-of branches that were based on the rebased branch. It also rewrites the commit
-timestamps, thereby obfuscating the history to some extent. For these two
-reasons, rebasing is not a sustainable practice for collaborative branches. For
-individual branches however, rebasing is possible because feature branches are
-typically not used as a base for other branches. Rebasing is also desirable
-because it produces a cleaner, linear history and we should use it whenever
-possible. The back and forth merging between collaborative branches produces a
-history that's somewhat convoluted so it is important to keep the history as
-clean as possible in between merges.
-
-Generic changes don't have to be conceived in a fork. We can also PR them
-directly against the upstream repository as illustrated by branch
-`feature/generic-foo`.
-
-The most common type of pull request in a fork is one against that fork's
-`develop` branch, `feature/develop/specific-stuff` for example. Note that
-changes occurring on `develop` are never merged upstream.
-
-As mentioned before, merge commit 4 is done via a pull request against the
-upstream repository. It is possible and perfectly acceptable that such upstream
-PRs combine multiple unrelated changes. They should be requested by the team
-lead for the forking project and reviewed by an upstream lead. Shortly after the
-PR lands, the requesting lead should perform a fast-forward merge of the
-upstream `master` branch into the fork's `master` branch. This will propagate
-the merge commit downstream before any subsequent commits occurring on fork's
-`master` have a chance to complicate the history by introducing the infamous
-merge of merge commits.
-
-```
-$ git branch
-* master
-  develop
-$ git merge --ff-only upstream/master
-Updating 450b0c0..212003c
-Fast-forward
-```
-
-This procedure requires that the lead's local clone of the fork be set up with
-two remotes: `origin` (the forked repository) and `upstream` (the upstream
-repository). Other team members can usually get by with just one remote,
-`origin`.
-
-
-## 6.1 Deployment branches
-
-The code in the upstream repository should never be deployed anywhere because it
-does not contain any concrete modules to be loaded at runtime. The code in a
-fork, however, is typically active in a number of deployments. The specifics
-should be left to each project but the rule of thumb should be that each
-deployment corresponds to a separate branch in the fork. The `azul-hca` fork has
-four deployments: development, integration, staging and production. The
-development deployment, or `dev`, is done from the `develop` branch. Whenever a
-commit is pushed to that branch, a continuous deployment script deploys the code
-to AWS. The other deployment branches are named accordingly. Changes are
-promoted between deployments via a merge. The merge is likely going to be a
-fast-forward. A push to any of the deployment branches will trigger a CI/CD
-build that performs the deployment. The promotion could be automatic and/or
-gated on a condition, like tests passing.
-
-
-# 7. Operational Procedures
-
-
-## 7.1 Main deployments and promotions
+## 6.1 Main deployments and promotions
 
 We will refer to the branch of the stage to which you are deploying as the
 **`TARGET`** branch. The branch of the stage just below will be referred to as
@@ -1449,7 +1264,7 @@ This cheat sheet may differ from branch to branch. Be sure to follow the cheat
 sheet in the README on the branch currently checked out.
 
 
-### 7.1.1 Initial setup
+### 6.1.1 Initial setup
 
 [Gitlab instance]: https://gitlab.dev.singlecell.gi.ucsc.edu/
 
@@ -1505,7 +1320,7 @@ or `staging` selected), you may not be able to do the same for the production
 AWS account (with `prod` selected).
 
 
-### 7.1.2 Prepare for promotion
+### 6.1.2 Prepare for promotion
 
 _NOTE: Skip these steps if you are deploying without promoting changes._
 
@@ -1582,7 +1397,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    assume yes.
 
 
-### 7.1.3 Finishing up deployment / promotion
+### 6.1.3 Finishing up deployment / promotion
 
 If promoting to staging or production this part of the process must be
 coordinated on the
@@ -1692,7 +1507,7 @@ are ready to actually deploy.
    Gitlab pipeline representing the most recent build on the current branch.
 
 
-## 7.2 Big red button
+## 6.2 Big red button
 
 In the event of an emergency, Azul can be shut down immediately using the
 `enable_lambdas.py` script. Before using this script, make sure that the desired
@@ -1711,7 +1526,7 @@ python scripts/enable_lambdas.py --enable
 ```
 
 
-## 7.3 Copying bundles
+## 6.3 Copying bundles
 
 In order to copy bundles from one DSS instance to another, you can use
 `scripts/copy_bundles.py`. The script copies specific bundles or all bundles
@@ -1820,7 +1635,7 @@ Here is a complete example for copying bundles from `prod` to `integration`.
    copied file and bundle. Run `python scripts/copy_bundles --help` for details.
 
 
-# 8. Continuous deployment and integration
+# 7. Continuous deployment and integration
 
 For the purposes of continually testing and deploying the Azul application, we 
 run the community edition of GitLab on a project-specific EC2 instance. There is 
@@ -1854,7 +1669,7 @@ feature branches is `sandbox`, the protected branches (`develop` and `prod` use
 their respective deployments.
 
 
-## 8.1 VPN access to GitLab
+## 7.1 VPN access to GitLab
 
 The GitLab EC2 instance resides in a VPC that can only be accessed through a
 VPN. The VPN uses AWS Client VPN. It is Amazon's flavor of OpenVPN. The AWS
@@ -1881,7 +1696,7 @@ authenticate itself to clients and check validity of the certificates that
 clients present to the server. Both client and server keys must be signed by
 the same CA.
 
-### 8.1.1 Setting up a VPN client
+### 7.1.1 Setting up a VPN client
 
 Install an OpenVPN client. On Ubuntu, the respective package is called
 `network-manager-openvpn-gnome`. Popular clients for macOS are [Tunnelblick]
@@ -1922,7 +1737,7 @@ instructions on how to do so on Ubuntu. For other VPN clients the process is
 pretty much self-explanatory. Delete the file after importing it. It contains
 the private key and can always be regenerated again later using `make config`. 
 
-### 8.1.2 Ensuring split tunnel on client
+### 7.1.2 Ensuring split tunnel on client
 
 Except on stable deployments, you should configure the client to only route VPC
 traffic through the VPN. The VPN server will not forward any other traffic, in
@@ -1961,7 +1776,7 @@ For Tunnelblick, the steps are as follows:
 4) On the *Settings* tab of the right-hand side of the window, make sure that
    the *Route all IPv4 traffic through the VPN* option is unchecked
 
-### 8.1.3 Setting up the certificate authority
+### 7.1.3 Setting up the certificate authority
 
 This must be done by a system administrator before a GitLab instance is first 
 deployed:
@@ -1977,7 +1792,7 @@ cd ..
 make apply  # (re)deploy GitLab
 ```
 
-### 8.1.4 Issuing a certificate
+### 7.1.4 Issuing a certificate
 
 To issue a client certificate for a developer so that they can access the VPN,
 ask the developer to send you a certificate request as described in the previous 
@@ -1998,7 +1813,7 @@ The communication channel through which requests and certificates are messaged
 does not need to be private but it needs to ensure the integrity of the
 messages.
 
-### 8.1.5 Revoking a certificate
+### 7.1.5 Revoking a certificate
 
 ```
 _select dev.gitlab  # or prod.gitlab
@@ -2024,7 +1839,7 @@ make publish_revocations
 mv $EASYRSA_PKI/issued/joe@foo.org.crt.orig $EASYRSA_PKI/issued/joe@foo.org.crt
 ```
 
-### 8.1.6 Issuing a certificate on a person's behalf
+### 7.1.6 Issuing a certificate on a person's behalf
 
 A private key and OpenVPN configuration can be generated by a system
 administrator on behalf of any person that doesn't have a configured working
@@ -2034,12 +1849,12 @@ eavesdrops on the channel through which the OpenVPN configuration
 (which includes the private key) is communicated to the person.
 
 To generate the key and OpenVPN configuration file on another person's behalf, 
-invoke the `make` steps as outlined in [8.1.1](#811-setting-up-a-vpn-client) and 
-[8.1.3](#813-issuing-a-certificate) but use `make client_cn=joe@foo.org` instead 
+invoke the `make` steps as outlined in [7.1.1](#711-setting-up-a-vpn-client) and 
+[7.1.4](#714-issuing-a-certificate) but use `make client_cn=joe@foo.org` instead 
 of `make`.
 
 
-## 8.2 The Sandbox Deployment
+## 7.2 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
@@ -2047,7 +1862,7 @@ sandbox must be coordinated externally e.g., via Slack. The project lead owns
 the sandbox deployment and coordinates access to it.
 
 
-## 8.3 Security
+## 7.3 Security
 
 Gitlab has AWS write permissions for the AWS services used by Azul and the
 principle of least privilege is applied as much as IAM allows it. Some AWS
@@ -2072,10 +1887,10 @@ Code running on the Gitlab instance has access to credentials of a Google Cloud
 service account that has write privileges to Google Cloud. This service account 
 for Gitlab is created automatically by TF but its private key is not. They need 
 to created manually and copied to `/mnt/gitlab/runner/config/etc` on the 
-instance. See [section 8.10](#810-the-gitlab-build-environment) for details.
+instance. See [section 7.10](#710-the-gitlab-build-environment) for details.
 
 
-## 8.4 Networking
+## 7.4 Networking
 
 The networking details are documented in [gitlab.tf.json.template.py]. The
 Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
@@ -2084,7 +1899,7 @@ Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
 
 
-## 8.5 Storage
+## 7.5 Storage
 
 The Gitlab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
@@ -2113,7 +1928,7 @@ one. Just keep in mind that the new instance might have a newer version of
 Gitlab which may have added new settings. You may see commented-out default
 settings in the new gitlab.rb file that may be missing in the old one.
 
-## 8.5.1 Freeing up storage space
+## 7.5.1 Freeing up storage space
 
 There are three docker daemons running on the instance: the RancherOS system 
 daemon, the RancherOS user daemon and the Docker-in-Docker (DIND) daemon. For 
@@ -2134,7 +1949,7 @@ sudo docker exec -it gitlab-dind docker image prune -a --filter "until=720h"
 
 on the instance.
 
-## 8.6 The Gitlab web application
+## 7.6 The Gitlab web application
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
 Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
@@ -2143,7 +1958,7 @@ Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
 
 
-## 8.7 Registering the Gitlab runner
+## 7.7 Registering the Gitlab runner
 
 The runner is the container that performs the builds. The instance is configured
 to automatically start that container. The primary configuration for the runner
@@ -2226,7 +2041,7 @@ simply reboot the instance. Either way, the Gitlab UI should now show the newly
 registered runners.
 
 
-## 8.8 The Gitlab runner image for Azul
+## 7.8 The Gitlab runner image for Azul
 
 Because the first stage of the Azul pipeline on Gitlab creates a dedicated image
 containing the dependencies of the subsequent stages, that first stage only
@@ -2238,7 +2053,7 @@ is modified. See `terraform/gitlab/runner/Dockerfile` for details on how to
 build the image and register it with the runner.
 
 
-## 8.9 Updating Gitlab
+## 7.9 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
@@ -2246,7 +2061,7 @@ will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done regularly.
 
 
-## 8.10 The Gitlab Build Environment
+## 7.10 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
@@ -2261,7 +2076,7 @@ push access is tied to shell access which is what one would normally need to
 modify those files.
 
 
-## 8.11. Cleaning up hung test containers
+## 7.11. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in
@@ -2270,7 +2085,7 @@ xargs docker exec gitlab-dind docker kill` and again but with `rm` instead
 of `kill`.
 
 
-# 9. OpenSearch Dashboards and Cerebro
+# 8. OpenSearch Dashboards and Cerebro
 
 OpenSearch Dashboards, formerly known as Kibana, is a web UI for interactively
 querying and managing an OpenSearch instance. To use Dashboards with Azul's
@@ -2305,7 +2120,7 @@ and open the specified URLs in your browser.
 
 [Cerebro]: https://github.com/lmenezes/cerebro
 
-## 9.1 Connecting OpenSearch Dashboards to a local OpenSearch instance
+## 8.1 Connecting OpenSearch Dashboards to a local OpenSearch instance
 
 Note: The steps outlined in this section were only tested on macOS, using Docker
 Desktop. They may not work without modification with a standard installation of
@@ -2362,7 +2177,7 @@ submit queries to it via the dashboards' Dev Tools feature.
 The Dev Tools of OpenSearch Dashboards should now be available at
 `http://127.0.0.1:5601/app/dev_tools`.
 
-# 10. Managing dependencies
+# 9. Managing dependencies
 
 We pin all dependencies, direct and transitive ones alike. That's the only way
 to get a reproducible build. The lock file additionally records a hash
@@ -2418,10 +2233,10 @@ resolution instead of going unnoticed. `exclude-dependencies` withholds
 distributions we don't want installed even though something depends on them.
 
 
-# 11. Development tools
+# 10. Development tools
 
 
-## 11.1 OpenAPI development
+## 10.1 OpenAPI development
 
 [Azul Service OpenAPI page]: https://service.dev.singlecell.gi.ucsc.edu/
 
@@ -2437,7 +2252,7 @@ of the API documentation is visible. Change the docs in `azul/service/app.py`,
 save, refresh the page, and your changes will appear immediately.
 
 
-## 11.2 Tracking changes to the OpenAPI definition
+## 10.2 Tracking changes to the OpenAPI definition
 
 Changes to the OpenAPI definition are tracked in the source tree. When making 
 changes that affect the definition, run:

@@ -2765,7 +2765,7 @@ The ``AZUL_DSS_ENDPOINT`` environment variable has been replaced with
 Follow the instructions in the README on `requesting VPN access to GitLab`_ for
 both ``dev.gitlab`` and ``prod.gitlab``.
 
-.. _requesting VPN access to GitLab: ./README.md#911-requesting-access
+.. _requesting VPN access to GitLab: ./README.md#71-vpn-access-to-gitlab
 
 Upgrade to Terraform 0.12.31 and run ``make deploy`` in every personal
 deployment.
@@ -3090,7 +3090,7 @@ deployment.
     ``GOOGLE_APPLICATION_CREDENTIALS`` to the new key.
 
 4.  Ask to have your burner added as an admin of the ``azul-dev`` SAM group
-    (`README sections 2.3.2 and 2.3.3`_).
+    (`README section 2.3.4`_).
 
 5.  For your personal deployment, set ``GOOGLE_PROJECT`` to ``platform-hca-dev``
     and run ::
@@ -3100,10 +3100,10 @@ deployment.
 
 6.  When that fails to verify TDR access (it should, and the error message will
     contain the service account name), add your personal deployment's service
-    account to the ``azul-dev`` SAM group (`README sections 2.3.2 and 2.3.3`_)
+    account to the ``azul-dev`` SAM group (`README section 2.3.4`_)
     and run ``make deploy`` again.
 
-.. _README sections 2.3.2 and 2.3.3: ./README.md#232-google-cloud-credentials
+.. _README section 2.3.4: ./README.md#234-google-cloud-tdr-and-sam
 
 
 #2658 Disable DSS plugin in all deployments
@@ -3230,9 +3230,9 @@ This PR introduces two new deployment-specific environment variables,
 these variables from the example deployment to your personal deployment.
 
 Service accounts must be registered and authorized with SAM for integration
-tests to pass. See `section 3.2.1`_ of the README for registration instructions.
+tests to pass. See `section 2.3.4`_ of the README for registration instructions.
 
-.. _section 3.2.1: ./README.md#321-tdr-and-sam
+.. _section 2.3.4: ./README.md#234-google-cloud-tdr-and-sam
 
 
 #2069 Upgrade PyJWT to 1.7.1
