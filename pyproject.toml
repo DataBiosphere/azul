@@ -128,13 +128,31 @@ constraint-dependencies = [
     "requests<2.34.0",
 ]
 
+# The platforms we deploy to and develop on. Note that Linux and macOS spell the
+# same architecture differently, `aarch64` and `arm64` respectively.
+#
 environments = [
+    # Used in the app image (lambdas/Dockerfile), by some developers' machines
+    # and in the dev image (./Dockerfile) built on those machines and on GitLab
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # Used by the remaining developers' machines
     "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    # Used by the dev image built on those machines
+    "sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
+
+# While the list above limits the environments uv resolves for, this one expands
+# what that resolution must support: a package that offers no source
+# distribution has to provide a wheel for each environment listed here. Without
+# that, such a package could be missing a wheel for one of them, and only fail
+# once it is installed there.
+#
+# Keep this in sync with the above list
+#
 required-environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
     "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
 
 [[tool.uv.index]]

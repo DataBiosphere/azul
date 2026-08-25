@@ -16,9 +16,14 @@ RUN apt-get update \
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
-RUN curl -o /usr/bin/docker-credential-ecr-login \
-    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-amd64/docker-credential-ecr-login \
-    && printf 'c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db /usr/bin/docker-credential-ecr-login\n' | sha256sum -c \
+RUN case "$TARGETARCH" in \
+        amd64) sha=c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db ;; \
+        arm64) sha=ff14a4da40d28a2d2d81a12a7c9c36294ddf8e6439780c4ccbc96622991f3714 ;; \
+        *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+    esac \
+    && curl -o /usr/bin/docker-credential-ecr-login \
+    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-${TARGETARCH}/docker-credential-ecr-login \
+    && printf '%s /usr/bin/docker-credential-ecr-login\n' "$sha" | sha256sum -c \
     && chmod +x /usr/bin/docker-credential-ecr-login
 ARG azul_docker_registry
 ENV azul_docker_registry=${azul_docker_registry}
