@@ -35,9 +35,9 @@ _period: 14 days
   - [ ] GH Action workflow succeeded
   - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator/tags) 
 - [ ] Create Azul PR, linked to this issue, with … 
-    - [ ] … changes to `requirements*.txt` from open Dependabot PRs, one commit per PR
+    - [ ] … changes to `pyproject.toml` and `uv.lock` from open Dependabot PRs, one commit per PR
     - [ ] … upgrade direct Python dependencies, [reference the operator manual](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#upgrade-direct-python-dependencies) for instructions <sub>or not applicable</sub>
-    - [ ] … update to [Python](https://hub.docker.com/_/python/tags) (only patch versions) <sub>or no update available</sub>
+    - [ ] … update to [Python](https://hub.docker.com/_/python/tags) (only patch versions), following the instructions next to the pin in `pyproject.toml` <sub>or no update available</sub>
     - [ ] … update to [Terraform](https://hub.docker.com/r/hashicorp/terraform/tags) (only patch versions) <sub>or no update available</sub>
     - [ ] … update to Terraform provider (only minor and patch versions) …
         - [ ] … [hashicorp/aws](https://registry.terraform.io/providers/hashicorp/aws/latest) <sub>or no update available</sub>
@@ -55,6 +55,7 @@ _period: 14 days
     - [ ] … update to [Swagger UI](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#updating-the-swagger-ui) <sub>or no update available</sub>
     - [ ] … update to [AWS CLI v2](https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst) <sub>or no update available</sub>
     - [ ] … update to [GitHub CLI](https://github.com/cli/cli/releases) <sub>or no update available</sub>
+    - [ ] … update to [uv](https://github.com/astral-sh/uv/releases), following the instructions next to the pin in `pyproject.toml` <sub>or no update available</sub>
 - [ ] Created issues for any deferred updates to …
   - [ ] … the next major or minor Python version <sub>or such an issue already exists</sub>
   - [ ] … the next major Docker version <sub>or such an issue already exists</sub>
