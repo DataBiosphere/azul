@@ -87,7 +87,7 @@ trail_alarms = [
                             _or(
                                 '$.eventSource != "s3.amazonaws.com"',
                                 '$.userIdentity.accountId != "anonymous"',
-                                f'$.requestParameters.bucketName != "{aws.qualified_bucket_name("*")}"'
+                                f'$.requestParameters.bucketName != "{aws.qualified_bucket_name('*')}"'
                             )
                         )
                     )),
