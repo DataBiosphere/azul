@@ -89,7 +89,7 @@ trail_alarms = [
                                 '$.userIdentity.accountId NOT EXISTS',
                                 '$.userIdentity.accountId != "anonymous"',
                                 '$.requestParameters.bucketName NOT EXISTS',
-                                f'$.requestParameters.bucketName != "{aws.qualified_bucket_name("*")}"'
+                                f'$.requestParameters.bucketName != "{aws.qualified_bucket_name('*')}"'
                             )
                         )
                     )),
