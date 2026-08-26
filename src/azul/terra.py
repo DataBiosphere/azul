@@ -76,6 +76,8 @@ from azul.http import (
     Propagate429HttpClient,
 )
 from azul.indexer.cache_service import (
+    CacheService,
+    RetryingCacheService,
     UrlCacheService,
 )
 from azul.lib import (
@@ -542,9 +544,9 @@ class TDRClient(SAMClient, DRSClient):
 
     @cached_property
     def _url_cache(self) -> UrlCacheService:
-        return UrlCacheService(expiration=3600 * 24,
-                               lock_expiration=60 * 2,
-                               http_client=self._http_client)
+        cache = CacheService(expiration=3600 * 24, lock_expiration=60 * 2)
+        cache = RetryingCacheService(inner=cache, num_retries=13, retry_delay=10.0)
+        return UrlCacheService(inner=cache, http_client=self._http_client)
 
     def _check_response(self,
                         endpoint: furl,
