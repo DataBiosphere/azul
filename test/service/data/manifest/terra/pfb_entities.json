@@ -289,6 +289,9 @@
             "biomaterial_id": [
                 "Q4_DEMO-sample_SAMN02797092"
             ],
+            "biomaterial_name": [
+                "Q4_DEMO-Single cell mRNA-seq_MGH30_A01"
+            ],
             "disease": [
                 "glioblastoma"
             ],
@@ -319,6 +322,9 @@
         "object": {
             "biomaterial_id": [
                 "Q4_DEMO-sample_SAMN02797092"
+            ],
+            "biomaterial_name": [
+                "Q4_DEMO-Single cell mRNA-seq_MGH30_A01"
             ],
             "document_id": [
                 "b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a"
@@ -351,6 +357,9 @@
             "biomaterial_id": [
                 "Q4_DEMO-cellsus_SAMN02797092"
             ],
+            "biomaterial_name": [
+                null
+            ],
             "document_id": [
                 "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0"
             ],
@@ -372,6 +381,9 @@
             ],
             "biomaterial_id": [
                 "Q4_DEMO-sample_SAMN02797092"
+            ],
+            "biomaterial_name": [
+                "Q4_DEMO-Single cell mRNA-seq_MGH30_A01"
             ],
             "disease": [
                 "glioblastoma"
@@ -404,6 +416,9 @@
             "biomaterial_id": [
                 "Q4_DEMO-cellsus_SAMN02797092"
             ],
+            "biomaterial_name": [
+                null
+            ],
             "document_id": [
                 "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0"
             ],
@@ -430,6 +445,9 @@
             ],
             "biomaterial_id": [
                 "Q4_DEMO-donor_MGH30"
+            ],
+            "biomaterial_name": [
+                "Q4 DEMO donor MGH30"
             ],
             "development_stage": [
                 "adult"
@@ -463,6 +481,9 @@
             ],
             "nucleic_acid_source": [
                 "single cell"
+            ],
+            "protocol_name": [
+                null
             ]
         },
         "relations": []
@@ -479,6 +500,9 @@
             ],
             "paired_end": [
                 true
+            ],
+            "protocol_name": [
+                null
             ]
         },
         "relations": []
@@ -634,6 +658,9 @@
             "biomaterial_id": [
                 "DID_scRSq06_pancreas"
             ],
+            "biomaterial_name": [
+                null
+            ],
             "disease": [
                 "normal"
             ],
@@ -664,6 +691,9 @@
         "object": {
             "biomaterial_id": [
                 "DID_scRSq06_pancreas"
+            ],
+            "biomaterial_name": [
+                null
             ],
             "document_id": [
                 "a21dc760-a500-4236-bcff-da34a0e873d2"
@@ -696,6 +726,9 @@
             "biomaterial_id": [
                 "GSM2172585 1"
             ],
+            "biomaterial_name": [
+                null
+            ],
             "document_id": [
                 "412898c5-5b9b-4907-b07c-e9b89666e204"
             ],
@@ -717,6 +750,9 @@
             ],
             "biomaterial_id": [
                 "DID_scRSq06_pancreas"
+            ],
+            "biomaterial_name": [
+                null
             ],
             "disease": [
                 "normal"
@@ -749,6 +785,9 @@
             "biomaterial_id": [
                 "GSM2172585 1"
             ],
+            "biomaterial_name": [
+                null
+            ],
             "document_id": [
                 "412898c5-5b9b-4907-b07c-e9b89666e204"
             ],
@@ -775,6 +814,9 @@
             ],
             "biomaterial_id": [
                 "DID_scRSq06"
+            ],
+            "biomaterial_name": [
+                null
             ],
             "development_stage": [
                 null
@@ -816,6 +858,9 @@
             ],
             "nucleic_acid_source": [
                 "single cell"
+            ],
+            "protocol_name": [
+                null
             ]
         },
         "relations": []
@@ -832,6 +877,9 @@
             ],
             "paired_end": [
                 true
+            ],
+            "protocol_name": [
+                null
             ]
         },
         "relations": []
@@ -3053,6 +3101,9 @@
             "biomaterial_id": [
                 "AP1_specimen"
             ],
+            "biomaterial_name": [
+                "AP1_specimen"
+            ],
             "disease": [
                 "COVID-19"
             ],
@@ -3084,6 +3135,9 @@
         "name": "samples",
         "object": {
             "biomaterial_id": [
+                "AP1_specimen"
+            ],
+            "biomaterial_name": [
                 "AP1_specimen"
             ],
             "document_id": [
@@ -3126,6 +3180,9 @@
             "biomaterial_id": [
                 "AP1_specimen"
             ],
+            "biomaterial_name": [
+                "AP1_specimen"
+            ],
             "disease": [
                 "COVID-19"
             ],
@@ -3159,6 +3216,9 @@
             "biomaterial_id": [
                 "AP1CS"
             ],
+            "biomaterial_name": [
+                null
+            ],
             "document_id": [
                 "d6b3d2ab-5715-4486-a544-ac09fafac279"
             ],
@@ -3182,6 +3242,9 @@
         "object": {
             "biomaterial_id": [
                 "AP1CS"
+            ],
+            "biomaterial_name": [
+                null
             ],
             "document_id": [
                 "d9eaaffe-4c93-5503-984f-762e8dfddce4"
@@ -3209,6 +3272,9 @@
             ],
             "biomaterial_id": [
                 "AP1"
+            ],
+            "biomaterial_name": [
+                "Sanger_AP1"
             ],
             "development_stage": [
                 "human adult stage"
@@ -3247,6 +3313,9 @@
             "document_id": [
                 "811adf54-7f27-5aec-9ed7-c6084c4c3a1b"
             ],
+            "protocol_name": [
+                "Combined analysis protocol"
+            ],
             "workflow": [
                 "Combined_AnalysisProt"
             ]
@@ -3265,6 +3334,9 @@
             ],
             "nucleic_acid_source": [
                 "single cell"
+            ],
+            "protocol_name": [
+                "Newcastle 10x Single cell V(D)J"
             ]
         },
         "relations": []

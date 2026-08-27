@@ -834,9 +834,9 @@ Commit titles
   Note that we don't use Github resolution keywords like "fixes" or "resolves".
   Any mention of those preceding an issue reference in a title would
   automatically close the issue as soon as the commit appears on the default
-  branch. This is undesirable as we want to continue to track issues in
-  ZenHub's *Merged* and *Done* pipelines even after the commit appears on the
-  ``develop`` branch.
+  branch. This is undesirable as we want to continue to track issues under the
+  post-merge statuses of the `Azul project`_, up to and including *Done*, even
+  after the commit appears on the ``develop`` branch.
 
 * We value `expressive and concise commit message titles`_ and try to adhere to
   Github's limit of 72 characters for the length of a commit message title.
@@ -922,7 +922,8 @@ Commit title tags
 Issue Tracking
 ==============
 
-* We use Github's built-in issue tracking and ZenHub.
+* We use Github's built-in issue tracking and Github Projects, specifically
+  the `Azul project`_.
 
 * We use `sentence case`_ for issue titles.
 
@@ -942,11 +943,13 @@ Issue Tracking
   assigned to the assisting person. Once assistance was provided, the ticket
   should be assigned back to the original assignee.
 
-* We use ZenHub dependencies between issues to express constraints on the
+* We use Github's built-in issue dependencies to express constraints on the
   order in which those issues can be worked on.  If issue ``#1`` blocks
   ``#2``, then work on ``#2`` can't begin before work on ``#1`` has completed.
   For issues that are resolved by a commit, work is considered complete when
   that commit appears on the ``develop`` branch.
+
+.. _Azul project: https://github.com/orgs/DataBiosphere/projects/3
 
 
 Pull Requests
@@ -1146,62 +1149,46 @@ Review comments
   the reviewer can refresh their memory as to which changes they requested in a
   prior review so they can verify if they were addressed satisfactorily.
 
-PR dependencies
----------------
+PR merge order
+--------------
 
-* We use ZenHub dependencies between PRs to define constraints on the order in
-  which they can be merged into ``develop``. If PR ``#3`` blocks PR ``#4``,
-  then ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs
-  must not block issues. The only express relation we use between issues and
-  PRs is ZenHub's *Connect to issue* feature. Note that an explicit
-  dependency between two issues implies a dependency between the PRs
-  connected to the issues: if issue ``#1`` blocks issue ``#2`` and PR ``#3``
-  is connected to ``#1`` while PR ``#4`` is connected to ``#2``, then PR
-  ``#4`` must be merged after PR ``#3``.
+* PRs can't depend on each other, at least not explicitly. Instead, we use the
+  *PR merge order* field of the `Azul project`_ to informally express both such
+  dependencies and the relative priority of PRs: a PR with a lower merge order
+  should be merged before one with a higher merge order. The merge order of a
+  PR is determined by the system administrator, after they approve it. The only
+  express relation we use between issues and PRs is Github's built-in linking
+  of a PR to the issues it resolves. Note that a dependency between two issues
+  implies one between the PRs linked to those issues: if issue ``#1`` blocks
+  issue ``#2`` and PR ``#3`` is linked to ``#1`` while PR ``#4`` is linked to
+  ``#2``, then PR ``#4`` should be given a higher merge order than PR ``#3``.
 
 Chained PRs
 -----------
 
+* We say a PR ``#4`` is chained to PR ``#3``, if the branch for PR ``#4`` is a
+  continuation of the branch for PR ``#3``. We refer to PR ``#3`` as the *base
+  PR* and the branch for ``#3`` as the *base branch*.
+
 * If two PRs touch the same code, or if one PR depends on changes in another
-  PR, the PRs may be chained. We say a PR ``#4`` is chained to PR ``#3``, if
-  the branch for PR ``#4`` is a continuation of the branch for PR ``#3``. We
-  refer to PR ``#3`` as the *base PR* and the branch for ``#3`` as the *base
-  branch*. 
+  PR, a developer may chain the PRs while working on them.
 
-* The base PR blocks the chained PR (see `PR dependencies`_ for details). It
-  is rare for a PR to be blocked by another PR without also being chained to
-  it.
+* Chaining PRs is not part of the process for PR review, approval and merging.
+  A chained PR must be unchained before it enters review, so chaining is only
+  permissible before the author requests the first review of a PR. Review of a
+  previously chained PR may only be requested after the base PR was merged and
+  the chained PR was unchained.
 
-* Only a draft PR may be chained to another PR. Note that this implies that
-  the primary reviewer generally does not review chained PRs unless they are
-  labeled `WIP` and the request is accompanied by specific questions.
+* To unchain PR ``#4`` from PR ``#3`` …
 
-* To chain PR ``#4`` to PR ``#3`` …
-  
-  1) Make sure PR ``#4`` is a draft PR
+  1) Using ``git``, rebase the ``#4`` branch onto ``develop``::
 
-  2) Using ``git``, base the ``#4`` branch on the ``#3`` branch
+       git rebase --onto origin/develop $start_commit issues/joe/1234-foo
 
-  3) In Github, set the base branch of PR ``#4`` to the PR branch of ``#3``
+     where ``start_commit`` is the first commit in ``issues/joe/1234-foo``
+     that wasn't also on the base PR's branch
 
-  4) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``.
-
-* A PR may be chained to a PR that is chained to another PR, creating a chain
-  of length 3. PR chains can be of arbirary length. All but the first PR in a
-  chain must be drafts.
-
-  Note that in chains involving more than two PRs, the intermediate PRs carry
-  both the ``chained`` and ``base`` labels.
-
-* Rebasing a chained PR involves rebasing its branch on the base branch
-  instead of ``develop``.
-
-* Once the base PR of a chain is merged, all chained PRs need to be rebased::
-
-    git rebase --onto origin/develop $start_commit issues/joe/1234-foo
-
-  where ``start_commit`` is the first commit in ``issues/joe/1234-foo`` that
-  wasn't also on the base PR's branch.
+  2) In Github, set the base branch of PR ``#4`` back to ``develop``
 
 Hotfixes
 --------

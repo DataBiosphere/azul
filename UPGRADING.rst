@@ -19,6 +19,36 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#8201 Deploying from scratch causes KMS NotFoundException for APAT signing key
+==============================================================================
+
+Some resources have been moved from the main Terraform component to a new
+``base`` component. For deployments managed by CI, the migration happens
+automatically. For personal deployments, apply the base component first to
+import the existing resources into its state, then deploy the main component to
+remove them from its state.
+
+Developer
+---------
+
+Select the personal deployment of yours that is colocated with ``sandbox`` and
+run the following commands::
+
+    cp -R deployments/sandbox.base deployments/$AZUL_DEPLOYMENT_STAGE.base.local
+    ln -sf ../$AZUL_DEPLOYMENT_STAGE.local/environment.local.py deployments/$AZUL_DEPLOYMENT_STAGE.base.local/
+
+    _select $AZUL_DEPLOYMENT_STAGE.base.local
+    make -C terraform/base apply
+
+    _select $AZUL_DEPLOYMENT_STAGE.local
+    make deploy
+
+Repeat the above for all remaining personal deployments. In the first command,
+be sure to replace ``sandbox`` with the name of the actual sandbox the
+respective personal deployment is colocated with.
+
+
 #8041 Fix: GH Action schedule failed to create promotion ticket
 ===============================================================
 

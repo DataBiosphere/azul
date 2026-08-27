@@ -102,6 +102,9 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                     **request_headers,
                     'accept-encoding': AcceptEncodingClient.accept_encoding_header(),
                 }
+                if authenticated:
+                    # The token in the header is redacted before it is logged
+                    request_headers['authorization'] = 'Bearer ya29.REDACTED'
                 response_headers = {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': 'Authorization,'

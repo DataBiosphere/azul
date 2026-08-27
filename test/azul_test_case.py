@@ -19,6 +19,7 @@ from re import (
 from typing import (
     Callable,
     Iterable,
+    Mapping,
     Optional,
 )
 from unittest import (
@@ -62,6 +63,9 @@ from azul.http import (
 )
 from azul.indexer.mirror_service import (
     MirrorService,
+)
+from azul.lib.types import (
+    JSON,
 )
 from azul.logging import (
     configure_test_logging,
@@ -528,6 +532,13 @@ class TDRTestCase(CatalogTestCase, metaclass=ABCMeta):
         return [cls.source]
 
     @classmethod
+    def _catalog_sources(cls) -> Mapping[str, JSON]:
+        return {
+            str(source.ref.spec): source.config.to_json()
+            for source in cls._sources()
+        }
+
+    @classmethod
     def _patch_source_cache(cls):
         from service import (
             patch_source_cache,
@@ -547,10 +558,6 @@ class DCP2TestCase(TDRTestCase):
 
     @classmethod
     def catalog_config(cls) -> dict[CatalogName, Config.Catalog]:
-        sources = {
-            str(source.ref.spec): source.config.to_json()
-            for source in cls._sources()
-        }
         return {
             cls.catalog: config.Catalog(name=cls.catalog,
                                         atlas='hca',
@@ -558,7 +565,32 @@ class DCP2TestCase(TDRTestCase):
                                         mirror_limit=None,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                                      repository=config.Catalog.Plugin(name='tdr_hca')),
-                                        sources=sources)
+                                        sources=cls._catalog_sources())
+        }
+
+
+class LungmapTestCase(TDRTestCase):
+    source_spec = ('tdr:bigquery:gcp:datarepo-dev-5d9526e0:'
+                   'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404')
+    source = Source(
+        config=SourceConfig(mirror=False),
+        ref=TDRSourceRef(
+            id='96c6482b-7949-4d6e-894b-371149e85134',
+            spec=TDRSourceSpec.parse(source_spec),
+            prefix=Prefix.of_everything
+        )
+    )
+
+    @classmethod
+    def catalog_config(cls) -> dict[CatalogName, Config.Catalog]:
+        return {
+            cls.catalog: config.Catalog(name=cls.catalog,
+                                        atlas='lungmap',
+                                        internal=False,
+                                        mirror_limit=-1,
+                                        plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                                     repository=config.Catalog.Plugin(name='tdr_hca')),
+                                        sources=cls._catalog_sources())
         }
 
 
@@ -574,7 +606,6 @@ class AnvilTestCase(TDRTestCase):
 
     @classmethod
     def catalog_config(cls) -> dict[CatalogName, Config.Catalog]:
-        sources = {str(cls.source.ref.spec): cls.source.config.to_json()}
         return {
             cls.catalog: config.Catalog(name=cls.catalog,
                                         atlas='anvil',
@@ -582,7 +613,7 @@ class AnvilTestCase(TDRTestCase):
                                         mirror_limit=None,
                                         plugins=dict(metadata=config.Catalog.Plugin(name='anvil'),
                                                      repository=config.Catalog.Plugin(name='tdr_anvil')),
-                                        sources=sources)
+                                        sources=cls._catalog_sources())
         }
 
 

@@ -493,12 +493,19 @@ class HCASearchResponseStage(SearchResponseStage):
         return [self.make_organoid(organoid) for organoid in entry['contents']['organoids']]
 
     def make_sample(self, sample, entity_dict, entity_type) -> MutableJSON:
+        outer_is_sample = self.entity_type == 'samples'
         organ_prop = 'organ' if entity_type == 'specimens' else 'model_organ'
-        effective_organ = sample[organ_prop]
-        is_aggregate = isinstance(effective_organ, list)
         return {
-            'sampleEntityType': [entity_type] if is_aggregate else entity_type,
-            'effectiveOrgan': effective_organ,
+            'sampleEntityType': entity_type if outer_is_sample else [entity_type],
+            **(
+                {
+                    'sampleId': sample.get('biomaterial_id'),
+                    'sampleName': sample.get('biomaterial_name'),
+                }
+                if outer_is_sample else
+                {}
+            ),
+            'effectiveOrgan': sample[organ_prop],
             **entity_dict
         }
 

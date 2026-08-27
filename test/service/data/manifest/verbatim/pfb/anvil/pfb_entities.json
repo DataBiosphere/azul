@@ -183,19 +183,6 @@
                     "properties": []
                 },
                 {
-                    "name": "duos_dataset_registration",
-                    "ontology_reference": "",
-                    "values": {},
-                    "links": [
-                        {
-                            "multiplicity": "ONE_TO_ONE",
-                            "dst": "anvil_dataset",
-                            "name": ""
-                        }
-                    ],
-                    "properties": []
-                },
-                {
                     "name": "non_schema_orphan_table",
                     "ontology_reference": "",
                     "values": {},
@@ -363,6 +350,8 @@
             ],
             "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
             "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+            "description": "Study description from DUOS",
+            "duos_id": "DUOS-000000",
             "owner": [
                 "Debbie Nickerson"
             ],
@@ -453,23 +442,6 @@
             "version": "2022-06-01T00:00:00.000000Z"
         },
         "relations": []
-    },
-    {
-        "id": "DUOS-000000",
-        "name": "duos_dataset_registration",
-        "object": {
-            "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
-            "description": "Study description from DUOS",
-            "duos_id": "DUOS-000000",
-            "source_datarepo_snapshot_id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-            "version": "2022-06-01T00:00:00.000000Z"
-        },
-        "relations": [
-            {
-                "dst_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
-                "dst_name": "anvil_dataset"
-            }
-        ]
     },
     {
         "id": "a60c5138-3749-f7cb-8714-52d389ad5231",

@@ -75,9 +75,15 @@ from azul.http import (
     LimitedTimeoutException,
     Propagate429HttpClient,
 )
+from azul.indexer.cache_service import (
+    CacheService,
+    RetryingCacheService,
+    UrlCacheService,
+)
 from azul.lib import (
     R,
     cache,
+    cached_property,
     mutable_furl,
 )
 from azul.lib.bigquery import (
@@ -263,7 +269,7 @@ class TerraClientException(Exception):
 
 class TerraStatusException(TerraClientException):
 
-    def __init__(self, url: furl, response: urllib3.response.HTTPResponse):
+    def __init__(self, url: furl, response: urllib3.response.BaseHTTPResponse):
         super().__init__(f'Unexpected response from {url}',
                          response.status, response.data)
 
@@ -536,9 +542,15 @@ class TDRClient(SAMClient, DRSClient):
         assert url is not None
         return url.set(path=('api', *path))
 
+    @cached_property
+    def _url_cache(self) -> UrlCacheService:
+        cache = CacheService(expiration=3600 * 24, lock_expiration=60 * 2)
+        cache = RetryingCacheService(inner=cache, num_retries=13, retry_delay=10.0)
+        return UrlCacheService(inner=cache, http_client=self._http_client)
+
     def _check_response(self,
                         endpoint: furl,
-                        response: urllib3.HTTPResponse
+                        response: urllib3.response.BaseHTTPResponse
                         ) -> MutableJSON:
         if response.status == 200:
             return json.loads(response.data)
@@ -661,7 +673,7 @@ class TDRClient(SAMClient, DRSClient):
         else:
             url = self._duos_endpoint('dataset', 'registration', duos_id)
             try:
-                response = self._request('GET', url)
+                response = self._url_cache.get_url(url)
             except LimitedTimeoutException:
                 body = {'studyDescription': '[Description currently not available]'}
                 return duos_id, body

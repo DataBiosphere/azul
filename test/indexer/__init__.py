@@ -16,9 +16,6 @@ from unittest.mock import (
     patch,
 )
 
-from more_itertools import (
-    one,
-)
 from opensearchpy.helpers import (
     scan,
 )
@@ -202,13 +199,14 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     def bundle_fqid(cls,
                     *,
                     uuid: str,
-                    table_name: str = BundleType.primary.value,
+                    table_name: str = BundleType.primary.table_name,
                     ) -> TDRAnvilBundleFQID:
+        batched = BundleType.for_table(table_name).is_batched
         return TDRAnvilBundleFQID(source=cls.source.ref,
                                   uuid=uuid,
                                   version=cls.version,
                                   table_name=table_name,
-                                  batch_prefix='' if BundleType.is_batched(table_name) else None)
+                                  batch_prefix='' if batched else None)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
@@ -217,12 +215,7 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='595c469e-604d-ab34-af39-f5b9f5d61818',
-                               table_name=BundleType.supplementary.value)
-
-    @classmethod
-    def duos_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='2370f948-2783-aeb6-afea-e022897f4dcf',
-                               table_name=BundleType.duos.value)
+                               table_name=BundleType.supplementary.table_name)
 
     @classmethod
     def replica_bundle(cls) -> TDRAnvilBundleFQID:
@@ -264,22 +257,10 @@ class IndexerTestCase(CatalogTestCase,
                          index=','.join(map(str, self.index_service.index_names(self.catalog))),
                          preserve_order=True))
 
-        def is_duos_contribution(entity_type, doc_type):
-            return (
-                config.is_anvil_enabled(self.catalog)
-                and entity_type in {'bundles', 'datasets'}
-                and doc_type is DocumentType.contribution
-                and 'description' in one(hit['_source']['contents']['datasets'])
-            )
-
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
-            if not (
-                # Replicas may contain (intentionally) unsorted metadata
-                doc_type is DocumentType.replica
-                # DUOS contributions contain no lists
-                or is_duos_contribution(qualifier, doc_type)
-            ):
+            # Replicas may contain (intentionally) unsorted metadata
+            if doc_type is not DocumentType.replica:
                 self._verify_sorted_lists(hit['_source'])
         return hits
 

@@ -24,6 +24,9 @@ from azul.lib import (
     cache,
     cached_property,
 )
+from azul.lib.strings import (
+    redact,
+)
 from azul.lib.types import (
     AnyJSON,
     JSON,
@@ -52,13 +55,13 @@ class CacheMiss(Exception):
 class NotFound(CacheMiss):
 
     def __init__(self, key: str):
-        super().__init__(f'Key not found: {key!r}')
+        super().__init__(f'Key not found: {redact(key)!r}')
 
 
 class Expired(CacheMiss):
 
     def __init__(self, key: str):
-        super().__init__(f'Entry for key {key!r} is expired')
+        super().__init__(f'Entry for key {redact(key)!r} is expired')
 
 
 class SourceService:
