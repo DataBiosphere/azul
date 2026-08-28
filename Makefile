@@ -69,24 +69,10 @@ requirements_update: check_venv check_docker
 #	been updated. Not using sed because Darwin's sed does not do -i.
 	git restore requirements.trans.txt requirements.dev.trans.txt
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
-#	Since we're building for the x86_64 Lambda runtime, we should do so on an
-#	image for that architecture, hence the default platform override below. The
-#	override slows down this make target considerably on ARM hosts like Apple
-#	Silicon Macs. And for some reason, pip's --platform=…_x86_64 appears to do
-#	the right thing even on an ARM image, without the override, but I'd rather
-#	not play with fire at this time without a deeper understanding as to why.
 	DOCKER_DEFAULT_PLATFORM=linux/amd64 $(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
 	       --image=$(azul_image)/deps:$(azul_image_tag) \
 	       --build-image=$(azul_image)/dev-deps:$(azul_image_tag)
-#	Download wheels (source and binary) for the Lambda runtime
-	rm ${azul_chalice_bin}/*
-	pip download \
-	    --platform=manylinux2014_x86_64 \
-	    --only-binary=:all: \
-	    --no-deps \
-	    -r requirements.txt \
-	    --dest=${azul_chalice_bin}
 
 environment.boot: check_python
 	python scripts/generate_environment_boot.py
@@ -205,7 +191,7 @@ clean: check_env
 absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/scripts \
                                 $(project_root)/test \
-                                $(project_root)/lambdas/{layer,indexer,service}/app.py \
+                                $(project_root)/lambdas/{indexer,service}/app.py \
                                 $(project_root)/.flake8/azul_flake8.py \
                                 $(project_root)/environment.py \
                                 $(project_root)/deployments/*/environment.py \

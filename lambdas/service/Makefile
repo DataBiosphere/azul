@@ -7,3 +7,5 @@ include ../lambdas.mk
 apat_public_key: vendor/resources/apat_public_key.json
 
 package: apat_public_key
+
+$(eval $(call docker_image_macro,service))

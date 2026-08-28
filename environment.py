@@ -202,6 +202,21 @@ def env() -> Mapping[str, str | None]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
+        # The platforms to build Lambda container images for, as a list of
+        # Docker platform specifications separated by space. The first platform
+        # in the list also determines the architecture of the deployed Lambda
+        # function. Images will be built for the other platforms listed, but
+        # those images will not be used by the deployment. A multi-platform
+        # image list consisting of the specified platform-specific images will
+        # also be pushed.
+        #
+        # On machines that support cross-platform image builds, this variable
+        # can be overridden locally to build images for additional platforms. On
+        # machines that don't support building the default platform, a different
+        # one can be specified, e.g., 'linux/arm64'.
+        #
+        'azul_lambda_image_platforms': 'linux/amd64',
+
         # The version of Docker used throughout the system.
         #
         # This variable is not intended to be overridden per deployment or
@@ -702,7 +717,12 @@ def env() -> Mapping[str, str | None]:
         # from that directory. The wheels must be compatible with the AWS
         # Lambda platform.
         #
-        'azul_chalice_bin': '{project_root}/bin/wheels/runtime',
+        # No longer actively used. Lambda runtime dependencies are now
+        # installed via pip inside the Docker image build. Our fork of
+        # Chalice still references this variable but handles it being
+        # unset.
+        #
+        'azul_chalice_bin': None,
 
         # Stop `pip` from nagging us about updates. We update pip regularly like
         # any other dependency. There is nothing special about `pip` that would
@@ -985,15 +1005,6 @@ def env() -> Mapping[str, str | None]:
         #        https://github.com/DataBiosphere/azul/issues/7183
         #
         'AZUL_ENABLE_BUNDLE_NOTIFICATIONS': '0',
-
-        # A Lambda runtime version to pin to, which overrides the AWS-managed
-        # default. Pin the runtime to python:3.14.v35 to prevent OutOfMemory
-        # errors in the mirror Lambda function.
-        #
-        # FIXME: Remove pinned Lambda runtime version ARN
-        #        https://github.com/DataBiosphere/azul/issues/7730
-        #
-        'azul_lambda_runtime_version': '6e4c2a8804e47c3599d89c0a896af2312961578a5546d2d9a288c0d93e6b1a2d',
 
         # URL of Terra's external credentials manager (ECM) service used by the
         # Azul deployment.

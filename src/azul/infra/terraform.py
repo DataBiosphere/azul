@@ -30,6 +30,10 @@ from azul.chalice import (
 from azul.deployment import (
     aws,
 )
+from azul.docker import (
+    lambda_architecture,
+    lambda_image_uri,
+)
 from azul.lib import (
     R,
     cache,
@@ -763,8 +767,6 @@ class Chalice:
             ]
 
         for resource_name, resource in resource_items('aws_lambda_function'):
-            assert 'layers' not in resource
-            resource['layers'] = ['${aws_lambda_layer_version.dependencies.arn}']
             # Publishing a new Lambda function version each time lets us perform
             # an atomic update of the function, avoiding a race condition
             # between the update of the function's configuration and its code.
@@ -782,9 +784,21 @@ class Chalice:
                 )
             )
             json_dict(json_dict(resource['environment'])['variables']).update(env)
-            package_zip = str(self.package_zip_path(app_name))
-            resource['source_code_hash'] = '${filebase64sha256("%s")}' % package_zip
-            resource['filename'] = package_zip
+
+            # Chalice assumes that we deploy the app as source code. Patch the
+            # the resource definition to use the custom Docker image instead:
+            #
+            handler = resource.pop('handler')
+            del resource['runtime']
+            del resource['source_code_hash']
+            del resource['filename']
+            resource['package_type'] = 'Image'
+            resource['image_uri'] = lambda_image_uri(app_name)
+            resource['architectures'] = [lambda_architecture()]
+            resource['image_config'] = {
+                'command': [handler]
+            }
+
             # Creating verbatim PFB manifests for large AnVIL datasets requires
             # more ephemeral storage than the default, so we raise it to the
             # maximum. We have to inject this here since Chalice doesn't support
@@ -1017,29 +1031,6 @@ class Chalice:
                 suffix = '.fifo' if resource_name.endswith('.fifo') else ''
                 sqs_name, _ = config.unqualified_resource_name(resource_name, suffix)
                 resource['event_source_arn'] = f'${{aws_sqs_queue.{sqs_name}.arn}}'
-
-        # Ensure that the Lambda permissions for the previous aliases aren't
-        # deleted until after the permissions for the new aliases have been
-        # created.
-        #
-        for resource_name, resource in resource_items('aws_lambda_permission'):
-            assert 'lifecycle' not in resource, (resource_name, resource)
-            resource['lifecycle'] = {'create_before_destroy': True}
-
-        if config.lambda_runtime_version is not None:
-            resource_type = 'aws_lambda_runtime_management_config'
-            runtime_version = config.lambda_runtime_version
-            assert isinstance(runtime_version, str), runtime_version
-            runtime_version_configs: MutableJSON = {}
-            for resource_name, resource in resource_items('aws_lambda_function'):
-                runtime_version_configs[resource_name] = {
-                    'function_name': '${aws_lambda_function.%s.function_name}' % resource_name,
-                    'qualifier': '${aws_lambda_function.%s.version}' % resource_name,
-                    'update_runtime_on': 'Manual',
-                    'runtime_version_arn': 'arn:aws:lambda:us-east-1::runtime:' + runtime_version,
-                }
-            assert resource_type not in resources, resources
-            resources[resource_type] = runtime_version_configs
 
         resource_type = 'aws_lambda_function_recursion_config'
         recursion_configs: MutableJSON = {}

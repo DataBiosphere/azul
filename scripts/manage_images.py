@@ -132,15 +132,11 @@ def copy_multi_platform_image(src: TagImageRef,
 def make_platform_tag(tag, platform: Platform):
     assert not is_platform_tag(tag), R(
         'Input already looks like a platform tag', tag)
-    return tag + platform_tag_suffix(platform)
+    return tag + platform.tag_suffix
 
 
 def is_platform_tag(tag):
-    return any(tag.endswith(platform_tag_suffix(p)) for p in platforms)
-
-
-def platform_tag_suffix(platform):
-    return '-' + str(platform).replace('/', '-')
+    return any(tag.endswith(p.tag_suffix) for p in platforms)
 
 
 def delete_unused_images(repository):

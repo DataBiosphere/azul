@@ -602,8 +602,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ],
                         'resources': [
                             f'arn:aws:lambda:{aws.region_name}:{aws.account}:event-source-mapping:*',
-                            f'arn:aws:lambda:{aws.region_name}:{aws.account}:layer:azul-*',
                             f'arn:aws:lambda:{aws.region_name}:{aws.account}:function:azul-*',
+                            # FIXME: Remove the layer ARNs once the issue below landed
+                            #        https://github.com/DataBiosphere/azul/issues/7730
+                            f'arn:aws:lambda:{aws.region_name}:{aws.account}:layer:azul-*',
                             f'arn:aws:lambda:{aws.region_name}:{aws.account}:layer:azul-*:*'
                         ]
                     },
@@ -966,6 +968,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ],
                         'resources': [
                             '*'
+                        ]
+                    },
+                    {
+                        'actions': [
+                            'ecr:CompleteLayerUpload',
+                            'ecr:InitiateLayerUpload',
+                            'ecr:PutImage',
+                            'ecr:UploadLayerPart'
+                        ],
+                        'resources': [
+                            f'arn:aws:ecr:{aws.region_name}:{aws.account}:repository/{config.domain_name}/azul/lambda'
                         ]
                     },
                     {

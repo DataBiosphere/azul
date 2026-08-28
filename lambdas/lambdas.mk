@@ -61,3 +61,37 @@ package: check_branch check_python check_aws config environ sources compile
 .PHONY: openapi
 openapi: check_python
 	python $(project_root)/scripts/generate_openapi_document.py
+
+
+docker_repo = $(azul_docker_registry)$(AZUL_DOMAIN_NAME)/azul/lambda
+
+define docker_image_macro
+docker_tag := $$(docker_repo):$$(AZUL_DEPLOYMENT_STAGE)-$1
+
+.PHONY: docker_image
+docker_image: check_docker package
+	set -e; \
+	for platform in $$(azul_lambda_image_platforms); do \
+		docker buildx build \
+			--platform $$$$platform \
+			--build-arg azul_docker_registry=$$(azul_docker_registry) \
+			--build-arg azul_python_image=$$(azul_python_image) \
+			--build-arg APP=$1 \
+			-f $$(project_root)/lambdas/Dockerfile \
+			--tag $$(docker_tag)-$$$${platform//\//-} \
+			--load \
+			$$(project_root); \
+	done
+
+.PHONY: docker_push
+docker_push: docker_image
+	set -e; \
+	tags=""; \
+	for platform in $$(azul_lambda_image_platforms); do \
+		tag=$$(docker_tag)-$$$${platform//\//-}; \
+		docker push $$$$tag; \
+		tags="$$$$tags $$$$tag"; \
+	done; \
+	docker manifest create --amend $$(docker_tag) $$$$tags; \
+	docker manifest push --purge $$(docker_tag)
+endef
