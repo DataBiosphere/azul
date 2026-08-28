@@ -88,10 +88,26 @@ test:
     - mypy
     - AZUL_DEBUG=0 make test
 
+deploy_base:
+  extends: .base_on_push
+  stage: deploy
+  timeout: 20m
+  script:
+    - _link $deployment.base
+    - _refresh
+    - cd terraform/base
+    - make auto_apply
+  artifacts:
+    paths:
+      - terraform/base/plan.json
+
 deploy:
   extends: .base_on_push
   stage: deploy
   timeout: 45m
+  needs:
+    - build_image
+    - deploy_base
   script:
     - make auto_deploy
     - make create
@@ -105,6 +121,7 @@ deploy_browser:
   timeout: 20m  # initial deploys can take a while
   needs:
     - build_image
+    - deploy_base
     - deploy
   script:
     - test -e deployments/$deployment.browser || exit 0

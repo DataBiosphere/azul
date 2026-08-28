@@ -195,9 +195,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                         'registered_identifier',
                         'title',
                         'data_modality',
-                        # This field path has a brittle coupling that must be
-                        # maintained to the field lookup in
-                        # `self.manifest_config`.
                         'duos_id',
                     ]
                 },
@@ -331,11 +328,6 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         # the fields listed here and those used in `self._field_mapping`.
         fields_to_omit_from_manifest: list[FieldPath] = [
             ('contents', 'activities', 'activity_table'),
-            # We omit the `duos_id` field from manifests since there is only one
-            # DUOS bundle per dataset, and that bundle only contributes to outer
-            # entities of the `datasets` type, not to entities of the other
-            # types, such as files, which the manifest is generated from.
-            ('contents', 'datasets', 'duos_id'),
             ('contents', 'files', 'version'),
         ]
 
@@ -399,10 +391,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         try:
             primary_key = self.primary_keys_by_table[replica_type]
         except KeyError:
-            if replica_type == 'duos_dataset_registration':
-                return json_str(contents['duos_id'])
-            else:
-                return super().verbatim_pfb_entity_id(replica)
+            return super().verbatim_pfb_entity_id(replica)
         else:
             return json_str(contents[primary_key])
 
@@ -412,10 +401,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         try:
             foreign_keys = self.foreign_keys_by_table[table_name]
         except KeyError:
-            if table_name == 'duos_dataset_registration':
-                return [('anvil_dataset', json_str(contents['dataset_id']))]
-            else:
-                return super().verbatim_pfb_relations(replica)
+            return super().verbatim_pfb_relations(replica)
         else:
             return [
                 (foreign_table_name, foreign_key)
@@ -429,28 +415,18 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             ]
 
     def verbatim_pfb_links(self, replica_type: str) -> MutableJSONs:
-        return (
-            [
-                {
-                    'dst': 'anvil_dataset',
-                    'name': '',
-                    'multiplicity': 'ONE_TO_ONE'
-                }
-            ]
-            if replica_type == 'duos_dataset_registration' else
-            [
-                {
-                    'dst': json_str(json_mapping(r['to'])['table']),
-                    'name': json_str(r['name']),
-                    # Each link is between a foreign key and a primary key.
-                    # Primary keys are unique within their own table, but
-                    # multiple rows in other tables can reference them.
-                    'multiplicity': 'MANY_TO_ONE',
-                }
-                for r in json_element_mappings(anvil_schema['relationships'])
-                if json_mapping(r['from'])['table'] == replica_type
-            ]
-        )
+        return [
+            {
+                'dst': json_str(json_mapping(r['to'])['table']),
+                'name': json_str(r['name']),
+                # Each link is between a foreign key and a primary key.
+                # Primary keys are unique within their own table, but
+                # multiple rows in other tables can reference them.
+                'multiplicity': 'MANY_TO_ONE',
+            }
+            for r in json_element_mappings(anvil_schema['relationships'])
+            if json_mapping(r['from'])['table'] == replica_type
+        ]
 
     def verbatim_pfb_schema(self, replicas: Iterable[JSON]) -> MutableJSONs:
         table_schemas_by_name = {
@@ -472,6 +448,11 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                                                    anvil_datatype='string',
                                                    is_optional=False)
             ]
+            if table_name == 'anvil_dataset':
+                for column_name in ('description', 'duos_id'):
+                    field_schemas.append(self._pfb_schema_from_anvil_column(table_name=table_name,
+                                                                            column_name=column_name,
+                                                                            anvil_datatype='string'))
             if table_name == 'anvil_file':
                 field_schemas.append(self._pfb_schema_from_anvil_column(table_name=table_name,
                                                                         column_name='drs_uri',

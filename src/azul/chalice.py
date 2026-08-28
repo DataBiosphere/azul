@@ -54,6 +54,7 @@ from azul.csp import (
 )
 from azul.http import (
     parse_header,
+    redact_header,
 )
 from azul.lib import (
     R,
@@ -471,7 +472,8 @@ class AzulChaliceApp(Chalice):
                     for k, v in ((k, o.getlist(k)) for k in o.keys())
                 }
             elif isinstance(o, CaseInsensitiveMapping):
-                return dict(o)
+                # Convert to dict, redacting the header values
+                return {k: redact_header(k, v) for k, v in o.items()}
             else:
                 return super().default(o)
 

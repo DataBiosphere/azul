@@ -38,6 +38,8 @@
             ],
             "datarepo_row_id": "2370f948-2783-4eb6-afea-e022897f4dcf",
             "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
+            "description": "Study description from DUOS",
+            "duos_id": "DUOS-000000",
             "owner": [
                 "Debbie Nickerson"
             ],
@@ -218,15 +220,6 @@
             ],
             "version": "2022-06-01T00:00:00.000000Z",
             "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1fab11f5-7eab-4318-9a58-68d8d06e0715"
-        }
-    },
-    {
-        "type": "duos_dataset_registration",
-        "value": {
-            "dataset_id": "52ee7665-7033-63f2-a8d9-ce8e32666739",
-            "description": "Study description from DUOS",
-            "duos_id": "DUOS-000000",
-            "version": "2022-06-01T00:00:00.000000Z"
         }
     }
 ]

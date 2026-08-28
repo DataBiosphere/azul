@@ -1,3 +1,6 @@
+from collections.abc import (
+    Mapping,
+)
 import logging
 import sys
 import time
@@ -63,16 +66,16 @@ class HttpClientDecorator(HttpClient):
                 return None
 
 
-def _redact_headers(headers) -> list[tuple[str, str]]:
+def redact_headers(headers: Mapping[str, str]) -> list[tuple[str, str]]:
     # urllib3's HTTPHeaderDict.items() can yield multiple entries for the
     # same key, or a key only different in case
     return [
-        (k, _redact_header(k, v))
+        (k, redact_header(k, v))
         for k, v in headers.items()
     ]
 
 
-def _redact_header(name: str, value: str) -> str:
+def redact_header(name: str, value: str) -> str:
     result = redact(value, fullmatch=True)
     if result == value:
         # Our standard, pattern-based approach didn't redact anything …
@@ -151,7 +154,7 @@ class LoggingHttpClient(HttpClientDecorator):
         log.info('Got %s response after %.3fs from %s to %s',
                  response.status, duration, method, redacted_url)
         log.info('… with response headers %r',
-                 _redact_headers(response.headers))
+                 redact_headers(response.headers))
         if response.isclosed():
             log.info(http_body_log_message('response', response.data))
         else:
@@ -172,7 +175,7 @@ class _LoggingConnectionPool(urllib3.connectionpool.HTTPConnectionPool):
             log.info('… without request headers')
         else:
             log.info('… with request headers %r',
-                     _redact_headers(headers))
+                     redact_headers(headers))
         # The stubs for urllib3 v1.x don't declare any protected methods
         return super()._make_request(*args, **kwargs)  # type: ignore[misc]
 

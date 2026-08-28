@@ -286,6 +286,8 @@ class Plugin(MetadataPlugin[HCABundle]):
                 },
                 'samples': {
                     'entity_type': 'sampleEntityType',
+                    'biomaterial_id': 'sampleId',
+                    'biomaterial_name': 'sampleName',
                     'organ': 'organ',
                     'organ_part': 'organPart',
                     'model_organ': 'modelOrgan',
@@ -399,6 +401,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             ('contents', 'cell_suspensions'): {
                 'document_id': 'cell_suspension.provenance.document_id',
                 'biomaterial_id': 'cell_suspension.biomaterial_core.biomaterial_id',
+                'biomaterial_name': 'cell_suspension.biomaterial_core.biomaterial_name',
                 'total_estimated_cells': 'cell_suspension.estimated_cell_count',
                 'selected_cell_type': 'cell_suspension.selected_cell_type'
             },
@@ -407,11 +410,13 @@ class Plugin(MetadataPlugin[HCABundle]):
             },
             ('contents', 'sequencing_protocols'): {
                 'instrument_manufacturer_model': 'sequencing_protocol.instrument_manufacturer_model',
-                'paired_end': 'sequencing_protocol.paired_end'
+                'paired_end': 'sequencing_protocol.paired_end',
+                'protocol_name': 'sequencing_protocol.protocol_core.protocol_name'
             },
             ('contents', 'library_preparation_protocols'): {
                 'library_construction_approach': 'library_preparation_protocol.library_construction_approach',
-                'nucleic_acid_source': 'library_preparation_protocol.nucleic_acid_source'
+                'nucleic_acid_source': 'library_preparation_protocol.nucleic_acid_source',
+                'protocol_name': 'library_preparation_protocol.protocol_core.protocol_name'
             },
             ('contents', 'projects'): {
                 'document_id': 'project.provenance.document_id',
@@ -423,6 +428,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             },
             ('contents', 'specimens'): {
                 'document_id': 'specimen_from_organism.provenance.document_id',
+                'biomaterial_name': 'specimen_from_organism.biomaterial_core.biomaterial_name',
                 'disease': 'specimen_from_organism.diseases',
                 'organ': 'specimen_from_organism.organ',
                 'organ_part': 'specimen_from_organism.organ_part',
@@ -431,6 +437,7 @@ class Plugin(MetadataPlugin[HCABundle]):
             ('contents', 'donors'): {
                 'biological_sex': 'donor_organism.sex',
                 'biomaterial_id': 'donor_organism.biomaterial_core.biomaterial_id',
+                'biomaterial_name': 'donor_organism.biomaterial_core.biomaterial_name',
                 'document_id': 'donor_organism.provenance.document_id',
                 'genus_species': 'donor_organism.genus_species',
                 'development_stage': 'donor_organism.development_stage',
@@ -439,22 +446,26 @@ class Plugin(MetadataPlugin[HCABundle]):
             },
             ('contents', 'cell_lines'): {
                 'document_id': 'cell_line.provenance.document_id',
-                'biomaterial_id': 'cell_line.biomaterial_core.biomaterial_id'
+                'biomaterial_id': 'cell_line.biomaterial_core.biomaterial_id',
+                'biomaterial_name': 'cell_line.biomaterial_core.biomaterial_name'
             },
             ('contents', 'organoids'): {
                 'document_id': 'organoid.provenance.document_id',
                 'biomaterial_id': 'organoid.biomaterial_core.biomaterial_id',
+                'biomaterial_name': 'organoid.biomaterial_core.biomaterial_name',
                 'model_organ': 'organoid.model_organ',
                 'model_organ_part': 'organoid.model_organ_part'
             },
             ('contents', 'samples'): {
                 'entity_type': '_entity_type',
                 'document_id': 'sample.provenance.document_id',
-                'biomaterial_id': 'sample.biomaterial_core.biomaterial_id'
+                'biomaterial_id': 'sample.biomaterial_core.biomaterial_id',
+                'biomaterial_name': 'sample.biomaterial_core.biomaterial_name'
             },
             ('contents', 'sequencing_inputs'): {
                 'document_id': 'sequencing_input.provenance.document_id',
                 'biomaterial_id': 'sequencing_input.biomaterial_core.biomaterial_id',
+                'biomaterial_name': 'sequencing_input.biomaterial_core.biomaterial_name',
                 'sequencing_input_type': 'sequencing_input_type'
             }
         }

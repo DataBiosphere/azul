@@ -1,6 +1,9 @@
 from azul import (
     config,
 )
+from azul.indexer.cache_service import (
+    CacheService,
+)
 from azul.infra.terraform import (
     emit_tf,
 )
@@ -43,6 +46,21 @@ emit_tf(
                         ],
                         "ttl": {
                             "attribute_name": UserService.ttl_attribute,
+                            "enabled": True
+                        }
+                    },
+                    "object_cache": {
+                        "name": config.dynamo_object_cache_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": CacheService._key_attribute,
+                        "attribute": [
+                            {
+                                "name": CacheService._key_attribute,
+                                "type": "S"
+                            }
+                        ],
+                        "ttl": {
+                            "attribute_name": CacheService._ttl_attribute,
                             "enabled": True
                         }
                     }

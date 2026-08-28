@@ -23,20 +23,12 @@ config: init $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 validate: config
 	terraform validate
 
-.PHONY: rename_resources
-rename_resources: validate
-	python $(project_root)/scripts/rename_resources.py
-
-.PHONY: import_resources
-import_resources: rename_resources
-	python $(project_root)/scripts/import_default_vpc.py
-
 .PHONY: plan
-plan: import_resources
+plan: validate
 	terraform plan
 
 .PHONY: apply
-apply: import_resources
+apply: validate
 	terraform apply
 
 .PHONY: apply_keep_unused
@@ -44,16 +36,16 @@ apply_keep_unused:
 	azul_terraform_keep_unused=1 $(MAKE) apply
 
 .PHONY: auto_apply
-auto_apply: import_resources
+auto_apply: validate
 	terraform plan -no-color -out=plan.bin
 	terraform show -json plan.bin > plan.json
 	terraform apply -auto-approve plan.bin
 
 .PHONY: destroy
-destroy: import_resources
+destroy: validate
 	terraform destroy
 
 .PHONY: auto_destroy
-auto_destroy: import_resources
+auto_destroy: validate
 	@echo '!!! All resources will be deleted in 10s, hit Ctrl-C to cancel !!!'; sleep 10
 	terraform destroy -auto-approve
