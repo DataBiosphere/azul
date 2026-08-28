@@ -516,9 +516,14 @@ class UrlCacheService:
     any HTTP caching headers.
     """
 
-    _inner: CacheService | RetryingCacheService | RateLimitingCacheService
-
+    #: The client to be used when fetching the URL on a cache miss. If the
+    #: client is configured to follow redirects, the final response will be
+    #: returned and cached under the given URL, otherwise the redirect
+    #: response will be returned and cached.
+    #:
     http_client: HttpClient
+
+    _inner: CacheService | RetryingCacheService | RateLimitingCacheService
 
     def get_url(self,
                 url: furl,
@@ -526,9 +531,11 @@ class UrlCacheService:
                 **kwargs
                 ) -> BaseHTTPResponse:
         """
-        Return a cached HTTP response for the given URL and headers, fetching
-        it first if necessary. Any additional keyword arguments are forwarded
-        to :meth:`HttpClient.urlopen`.
+        Return a cached HTTP response for the given URL and headers, fetching it
+        first if necessary. Any additional keyword arguments are forwarded to
+        :meth:`HttpClient.urlopen`. If ``redirect=True`` is passed, the final
+        response will be returned and cached under the given URL, otherwise
+        a redirect response, if any, will be returned and cached as-is.
 
         :raise ConcurrentFetchError: if another caller is already fetching the
                                      same URL and the inner cache service does
