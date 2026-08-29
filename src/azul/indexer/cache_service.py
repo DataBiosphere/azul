@@ -284,10 +284,15 @@ class UrlCacheService:
 
     http_client: HttpClient
 
-    def get_url(self, url: furl, headers: Mapping[str, str] | None = None) -> BaseHTTPResponse:
+    def get_url(self,
+                url: furl,
+                headers: Mapping[str, str] | None = None,
+                **kwargs
+                ) -> BaseHTTPResponse:
         """
         Return a cached HTTP response for the given URL and headers, fetching
-        it first if necessary.
+        it first if necessary. Any additional keyword arguments are forwarded
+        to :meth:`HttpClient.urlopen`.
 
         :raise ConcurrentFetchError: if another caller is already fetching the
                                      same URL and the inner cache service does
@@ -300,7 +305,7 @@ class UrlCacheService:
         cache_key = self._cache_key(url, headers)
 
         def fetcher() -> bytes:
-            response = self.http_client.urlopen('GET', str(url), headers=headers)
+            response = self.http_client.urlopen('GET', str(url), headers=headers, **kwargs)
             if 200 <= response.status < 400:
                 return self._serialize_response(response)
             else:

@@ -673,7 +673,10 @@ class TDRClient(SAMClient, DRSClient):
         else:
             url = self._duos_endpoint('dataset', 'registration', duos_id)
             try:
-                response = self._url_cache.get_url(url)
+                # A recent log analysis revealed that 95% of contribution Lambda
+                # invocations end less than 4s after they retrieved the dataset
+                # description from DUOS. A 10s margin covers 97% of invocations
+                response = self._url_cache.get_url(url, timeout_margin=10)
             except LimitedTimeoutException:
                 body = {'studyDescription': '[Description currently not available]'}
                 return duos_id, body
