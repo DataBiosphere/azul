@@ -481,8 +481,9 @@ _base64url = r'[A-Za-z0-9_-]'
 _secret_re = re.compile('|'.join([
     # JSON Web Token (JWT), like Google ID tokens and the APATs we mint
     rf'(?i:bearer )?ey[IJ]{_base64url}+\.({_base64url}+)\.({_base64url}+)',
-    # Google OAuth2 access token
-    rf'(?i:bearer )?ya29\.({_base64url}+)',
+    # Google OAuth2 access token. For service account tokens, we observed
+    # multiple base64 segments separated by dot. User tokens only had one.
+    rf'(?i:bearer )?ya29\.({_base64url}+(?:\.{_base64url}+)*)',
     # Google OAuth2 refresh token
     rf'1//[0-9]{{2}}({_base64url}{{64,}})',
     # Google OAuth2 authorization code
@@ -496,6 +497,12 @@ def is_redactable(secret: str) -> bool:
     and would therefore be redacted before being logged.
 
     >>> is_redactable('ya29.' + 'a' * 100)
+    True
+
+    Access tokens issued to service accounts carry an extra segment between the
+    prefix and the body:
+
+    >>> is_redactable('ya29.c.' + 'a' * 100)
     True
 
     Note that the prefix tests below are necessary to tell the kinds of token
@@ -546,6 +553,19 @@ def redact(s: str, *, fullmatch: bool = False) -> str:
 
     >>> redact('code=4/0' + 'b' * 250 + '!')
     'code=4/0bbbREDACTEDbbb!'
+
+    Neither is the number of dot-separated segments in the body of an access
+    token, of which those issued to service accounts have more than one. All of
+    them are redacted, not just the first:
+
+    >>> redact('token=ya29.c.' + 'a' * 100 + '!')
+    'token=ya29.c.aREDACTEDaaa!'
+
+    The body only continues across a dot if another segment follows it, so a
+    token at the end of a sentence is not conflated with what follows it:
+
+    >>> redact('saw ya29.abc. Next sentence')
+    'saw ya29.REDACTED. Next sentence'
 
     Strings that are too short to be a token are left alone:
 
