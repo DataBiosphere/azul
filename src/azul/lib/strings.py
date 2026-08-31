@@ -478,7 +478,7 @@ _secret_re = re.compile('|'.join([
     # Google OAuth2 access token
     rf'(?i:bearer )?ya29\.({_base64url}+)',
     # Google OAuth2 refresh token
-    rf'1//[0-9]{{2}}({_base64url}{{98}})',
+    rf'1//[0-9]{{2}}({_base64url}{{64,}})',
     # Google OAuth2 authorization code
     rf'4/[0-9]({_base64url}{{70}})',
 ]))
