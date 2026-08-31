@@ -106,7 +106,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             activities=Sorting(field_name='activities.activity_id'),
             biosamples=Sorting(field_name='biosamples.biosample_id'),
             bundles=Sorting(field_name=self.special_fields.bundle_uuid.name),
-            datasets=Sorting(field_name='datasets.dataset_id'),
+            datasets=Sorting(field_name='datasets.dataset_id',
+                             max_page_size=400),
             donors=Sorting(field_name='donors.donor_id'),
             files=Sorting(field_name='files.file_id'),
         )
