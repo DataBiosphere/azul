@@ -1,6 +1,7 @@
 import logging.config
 
 from chalice import (
+    BadRequestError,
     UnauthorizedError,
 )
 
@@ -18,6 +19,7 @@ from azul.lib import (
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
+    is_redactable,
 )
 from azul.lib.types import (
     JSON,
@@ -279,7 +281,10 @@ class ServiceApp(HealthApp):
                 raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return BearerTokenAuthentication.for_token(auth_token)
+                    if not is_redactable(auth_token):
+                        raise BadRequestError('Unexpected token syntax')
+                    else:
+                        return BearerTokenAuthentication.for_token(auth_token)
                 else:
                     raise UnauthorizedError(header)
 

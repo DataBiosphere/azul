@@ -474,16 +474,37 @@ def double_quote(*words: str) -> str:
 
 _base64url = r'[A-Za-z0-9_-]'
 
+# The lower bounds on the variable length patterns were chosen arbitrarily. They
+# are needed to prevent false positives if the preceding anchor is too short to
+# do so on its own.
+#
 _secret_re = re.compile('|'.join([
-    # JSON Web Token (JWT)
+    # JSON Web Token (JWT), like Google ID tokens and the APATs we mint
     rf'(?i:bearer )?ey[IJ]{_base64url}+\.({_base64url}+)\.({_base64url}+)',
     # Google OAuth2 access token
     rf'(?i:bearer )?ya29\.({_base64url}+)',
     # Google OAuth2 refresh token
-    rf'1//[0-9]{{2}}({_base64url}{{98}})',
+    rf'1//[0-9]{{2}}({_base64url}{{64,}})',
     # Google OAuth2 authorization code
-    rf'4/[0-9]({_base64url}{{70}})',
+    rf'4/[0-9]({_base64url}{{64,}})',
 ]))
+
+
+def is_redactable(secret: str) -> bool:
+    """
+    True if the given secret is matched, in its entirety, by the patterns above,
+    and would therefore be redacted before being logged.
+
+    >>> is_redactable('ya29.' + 'a' * 100)
+    True
+
+    Note that the prefix tests below are necessary to tell the kinds of token
+    apart, but not sufficient to establish this property:
+
+    >>> looks_like_redactable_jwt('eyJnotajwt'), is_redactable('eyJnotajwt')
+    (True, False)
+    """
+    return redact(secret, fullmatch=True) != secret
 
 
 def looks_like_access_token(s: str) -> bool:
@@ -517,6 +538,19 @@ def redact(s: str, *, fullmatch: bool = False) -> str:
 
     >>> redact('code=4/0' + 'b' * 70 + '!')
     'code=4/0bbbREDACTEDbbb!'
+
+    The length of the variable portion of a token is not fixed:
+
+    >>> redact('refresh=1//01' + 'a' * 97 + '!')
+    'refresh=1//01aaaREDACTEDaaa!'
+
+    >>> redact('code=4/0' + 'b' * 250 + '!')
+    'code=4/0bbbREDACTEDbbb!'
+
+    Strings that are too short to be a token are left alone:
+
+    >>> redact('refresh=1//09' + 'a' * 63 + '!') == 'refresh=1//09' + 'a' * 63 + '!'
+    True
 
     With ``fullmatch=True``, only strings that are entirely a secret are
     redacted:
@@ -552,8 +586,15 @@ def _redact_groups(m: re.Match) -> str:
 
 
 def assert_redactable(secret: str) -> None:
-    assert redact(secret, fullmatch=True) != secret, R(
-        'Secret not matched by redaction regex')
+    """
+    >>> assert_redactable('ya29.' + 'a' * 100)
+
+    >>> assert_redactable('not a secret')
+    Traceback (most recent call last):
+    ...
+    AssertionError: Secret not matched by redaction regex
+    """
+    assert is_redactable(secret), 'Secret not matched by redaction regex'
 
 
 def _redact(secret: str, *, num_show: int = 3, mask='REDACTED'):

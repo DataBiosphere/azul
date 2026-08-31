@@ -32,6 +32,7 @@ from azul.lib import (
 from azul.lib.strings import (
     back_quote,
     format_and_dedent as fd,
+    is_redactable,
     join_grammatically,
 )
 from azul.lib.types import (
@@ -297,13 +298,16 @@ class UserController(Controller):
                 redirect_uri = None
             else:
                 raise BadRequestError('Unsupported content type')
-            response = copy(self._service.authorize(authorization,
-                                                    redirect_uri=redirect_uri))
-            # Withhold refresh token from client for security reasons. The property
-            # is required so we need to override the type checker on that. This is
-            # safe because we made copy above.
-            response.pop('refresh_token')  # type: ignore[misc]
-            return json_untyped_dict(response)
+            if not is_redactable(authorization['code']):
+                raise BadRequestError('Unexpected authorization code syntax')
+            else:
+                response = copy(self._service.authorize(authorization,
+                                                        redirect_uri=redirect_uri))
+                # Withhold refresh token from client for security reasons. The
+                # property is required so we need to override the type checker
+                # on that. This is safe because we made copy above.
+                response.pop('refresh_token')  # type: ignore[misc]
+                return json_untyped_dict(response)
         except AssertionError as e:
             if R.caused(e):
                 raise BadRequestError(e.args)
