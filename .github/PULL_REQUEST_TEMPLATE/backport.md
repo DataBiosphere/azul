@@ -2,6 +2,8 @@
 This is the PR template for backport PRs against `develop`.
 -->
 
+Linked issues: #0000
+
 
 ## Checklist
 
@@ -12,7 +14,8 @@ This is the PR template for backport PRs against `develop`.
 - [ ] Status of PR is *In progress*
 - [ ] Target branch is `develop`
 - [ ] Name of PR branch matches `backports/<7-digit SHA1 of most recent backported commit>`
-- [ ] Status of linked issue is *Stable*
+- [ ] PR is linked to the issues it backports
+- [ ] Status of linked issues is *Stable*
 - [ ] PR title contains the 7-digit SHA1 of the backported commits
 - [ ] PR title references the issues relating to the backported commits
 - [ ] PR title references the PRs that introduced the backported commits
@@ -95,7 +98,7 @@ This is the PR template for backport PRs against `develop`.
 - [ ] PR is assigned to only the operator
 - [ ] Deleted PR branch from GitLab `dev`
 - [ ] Deleted PR branch from GitLab `anvildev`
-- [ ] Status of linked issue is *Stable*
+- [ ] Status of linked issues is *Stable*
 
 
 ### Operator
