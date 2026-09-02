@@ -1,7 +1,7 @@
 """
-Search CloudWatch logs for unredacted secrets (APATs, OAuth access tokens,
-refresh tokens, authorization codes and client secrets) in the currently
-selected deployment.
+Search CloudWatch logs for unredacted secrets (APATs, OAuth 2.0 access tokens,
+refresh tokens, authorization codes and OAuth 2.0 client secrets, as well as
+the signatures of signed GCS and S3 URLs) in the currently selected deployment.
 """
 import argparse
 from collections import (
@@ -45,6 +45,7 @@ secret_types = {
     'refresh_token': r"['\x22= ]1\/\/[A-Za-z0-9_-]{20,}",
     'auth_code': r"['\x22= ]4\/[A-Za-z0-9_-]{60,}",
     'client_secret': r'GOCSPX-[A-Za-z0-9_-]{20,}',
+    'signature': r'[?&](X-Amz-|X-Goog-)?Signature=[^&\s]{20,}',
 }
 
 indexer_handler_names = [

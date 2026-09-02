@@ -8,8 +8,12 @@ from typing import (
     overload,
 )
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     minmax,
+    one,
 )
 
 from azul.lib import (
@@ -474,6 +478,23 @@ def double_quote(*words: str) -> str:
 
 _base64url = r'[A-Za-z0-9_-]'
 
+#: The query parameters that carry the signature of a signed URL. The signature
+#: is the secret part of such a URL.
+#:
+_url_signature_params = [
+    # AWS Signature Version 4
+    'X-Amz-Signature',
+    # Google Cloud Storage V4
+    'X-Goog-Signature',
+    # AWS Signature Version 2, which is what is used to presign S3 URLs in
+    # the us-east-1 region currently used for Azul. This alternative is the least
+    # specific of the three, so it is also the one most likely to over-match.
+    #
+    # FIXME: Remove once we switched to version 4 signatures
+    #        https://github.com/DataBiosphere/azul/issues/8272
+    'Signature',
+]
+
 # The lower bounds on the variable length patterns were chosen arbitrarily. They
 # are needed to prevent false positives if the preceding anchor is too short to
 # do so on its own.
@@ -490,12 +511,14 @@ _secret_re = re.compile('|'.join([
     rf'4/[0-9]({_base64url}{{64,}})',
     # Google OAuth2 client secret
     rf'GOCSPX-({_base64url}+)',
+    # Signature of a signed URL
+    rf'[?&](?i:{"|".join(_url_signature_params)})=([^&\s]+)',
 ]))
 
 
 def is_redactable(secret: str) -> bool:
     """
-    True if the given secret is matched, in its entirety, by the patterns above,
+    True if the given secret is matched, in its entirety, by the regex above,
     and would therefore be redacted before being logged.
 
     >>> is_redactable('ya29.' + 'a' * 100)
@@ -510,7 +533,8 @@ def is_redactable(secret: str) -> bool:
     Note that the prefix tests below are necessary to tell the kinds of token
     apart, but not sufficient to establish this property:
 
-    >>> looks_like_redactable_jwt('eyJnotajwt'), is_redactable('eyJnotajwt')
+    >>> s = 'eyJnotajwt'
+    >>> looks_like_redactable_jwt(s), is_redactable(s)
     (True, False)
     """
     return redact(secret, fullmatch=True) != secret
@@ -577,6 +601,13 @@ def redact(s: str, *, fullmatch: bool = False) -> str:
     >>> redact('client_secret=GOCSPX-' + 'c' * 28 + '!')
     'client_secret=GOCSPX-cREDACTEDc!'
 
+    Only the signature of a signed URL is redacted, leaving the rest of the URL,
+    and with it the diagnostic value of the log message, intact:
+
+    >>> redact('to https://bucket.s3.amazonaws.com/k'
+    ...        '?X-Amz-Expires=900&X-Amz-Signature=' + 'd' * 64)
+    'to https://bucket.s3.amazonaws.com/k?X-Amz-Expires=900&X-Amz-Signature=dddREDACTEDddd'
+
     With ``fullmatch=True``, only strings that are entirely a secret are
     redacted:
 
@@ -620,6 +651,29 @@ def assert_redactable(secret: str) -> None:
     AssertionError: Secret not matched by redaction regex
     """
     assert is_redactable(secret), 'Secret not matched by redaction regex'
+
+
+def assert_signed_url_redactable(url: str) -> None:
+    """
+    Assert that the signature of the given signed URL would be redacted by a
+    call to :func:`redact`. Exactly one of the signature parameters above must
+    occur in the URL, and it is that parameter's value that must be redacted.
+
+    >>> assert_signed_url_redactable('https://h/p?X-Goog-Signature=' + 'a' * 40)
+
+    >>> assert_signed_url_redactable('https://h/p?Expires=1&Signature=' + 'a' * 40)
+
+    A URL that carries none of those parameters is not a signed URL:
+
+    >>> assert_signed_url_redactable('https://h/p?Sig=' + 'a' * 40)
+    Traceback (most recent call last):
+    ...
+    ValueError: too few items in iterable (expected 1)
+    """
+    args = furl(url).args
+    name = one(name for name in _url_signature_params if name in args)
+    assert furl(redact(url)).args[name] != args[name], R(
+        'Signature not redacted', name)
 
 
 def _redact(secret: str, *, num_show: int = 3, mask='REDACTED'):
