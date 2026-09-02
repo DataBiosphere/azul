@@ -1216,11 +1216,11 @@ wheels = [
 
 [[package]]
 name = "mypy-boto3-lambda"
-version = "1.43.76"
+version = "1.43.86"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a2/66/3f30ca9bfca136200bf629aebc3a48d045ce9f4c0fdcfb6e3f1c40f0d135/mypy_boto3_lambda-1.43.76.tar.gz", hash = "sha256:c8065c8c15b8e7f616d63f3c715ffad246abf9ebb39bb7e9feedba30488657e7", size = 53257, upload-time = "2026-08-20T19:47:24.533Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/41/327af6cf88a913c5eb562cc931a9c9a6688582e2f00b67d77cd1f0cddc95/mypy_boto3_lambda-1.43.86.tar.gz", hash = "sha256:8b31847e36ecf676bc9ec0ceefd114051682176f28a5332a31c5c2b9203d29b1", size = 53295, upload-time = "2026-09-01T19:41:38.126Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/b0/84e92f730030224c1c75a6280fe045379f07e71880d6c2dcdaf84537bc0e/mypy_boto3_lambda-1.43.76-py3-none-any.whl", hash = "sha256:50a3e733e96d1152732b6cf3a3d173adefcd49f054f874f7fa56ebc819998898", size = 61502, upload-time = "2026-08-20T19:47:23.08Z" },
+    { url = "https://files.pythonhosted.org/packages/af/81/5ada1e42beb7723c5780bfff738d36191f21321610d41bb7cd6dca574105/mypy_boto3_lambda-1.43.86-py3-none-any.whl", hash = "sha256:13c8625846d73b4792bb87f806298442118747b57c0f9ea13001fe9fd0095cbf", size = 61654, upload-time = "2026-09-01T19:41:35.587Z" },
 ]
 
 [[package]]
