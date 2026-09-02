@@ -77,6 +77,7 @@ from azul.http import (
 )
 from azul.indexer.cache_service import (
     CacheService,
+    RateLimitingCacheService,
     RetryingCacheService,
     UrlCacheService,
 )
@@ -544,7 +545,24 @@ class TDRClient(SAMClient, DRSClient):
 
     @cached_property
     def _url_cache(self) -> UrlCacheService:
-        cache = CacheService(expiration=3600 * 24, lock_expiration=60 * 2)
+        # We were asked to time out after 30s on DUOS requests, and to retry
+        # three times. The HTTP client we use for Terra services may have a
+        # different timeout and retry configured. For example, when running in a
+        # Lambda context, it uses the remaining Lambda execution time for the
+        # timeout, and, incidentally, three retries. The cache's fetch lock
+        # expiration can only be set to a fixed value so in order to avoid more
+        # than one Lambda invocation retrying the same DUOS request in parallel,
+        # we'll set it to the contribution Lamba's timeout.
+        cache = CacheService(expiration=3600 * 24,
+                             lock_expiration=config.contribution_lambda_timeout(retry=False))
+        # Ten concurrent requests per URL host, regardless of the URL path.
+        cache = RateLimitingCacheService(inner=cache, max_slots=10)
+        # Keep in mind that the retrying cache service handles contention on the
+        # fetch lock *and* the rate limiting slots. The lock expiration above
+        # essentially disables the contention-based retries on the fetch lock,
+        # because the Lambda times out before it could retry to acquire the
+        # lock. So the parameters for the retrying cache service are primarily
+        # tuned for the slot contention retry.
         cache = RetryingCacheService(inner=cache, num_retries=13, retry_delay=10.0)
         return UrlCacheService(inner=cache, http_client=self._http_client)
 
@@ -673,7 +691,10 @@ class TDRClient(SAMClient, DRSClient):
         else:
             url = self._duos_endpoint('dataset', 'registration', duos_id)
             try:
-                response = self._url_cache.get_url(url)
+                # A recent log analysis revealed that 95% of contribution Lambda
+                # invocations end less than 4s after they retrieved the dataset
+                # description from DUOS. A 10s margin covers 97% of invocations
+                response = self._url_cache.get_url(url, timeout_margin=10)
             except LimitedTimeoutException:
                 body = {'studyDescription': '[Description currently not available]'}
                 return duos_id, body

@@ -171,14 +171,14 @@ class T(Enum):
 
     @property
     def issues(self):
-        default = self is T.default
+        plural = self in (T.default, T.backport)
 
         class S(str):
 
             def __call__(self, then, otherwise):
-                return then if default else otherwise
+                return then if plural else otherwise
 
-        return S('issue' + iif(default, 's'))
+        return S('issue' + iif(plural, 's'))
 
     def target_deployments(self, target_branch: str) -> Mapping[str, str | None]:
         """
@@ -305,10 +305,10 @@ def emit(t: T, target_branch: str):
                     T.promotion: f'This is the PR template for a promotion PR against {bq(target_branch)}.'
                 }[t]
             },
-            iif(t is not T.backport, {
+            {
                 'type': 'p',
                 'content': f'Linked {t.issues}: #0000'
-            }),
+            },
             {
                 'type': 'h1',
                 'content': 'Checklist'
@@ -343,16 +343,16 @@ def emit(t: T, target_branch: str):
                     T.backport: 'backports/<7-digit SHA1 of most recent backported commit>'
                 }[t] + '`'
             },
-            iif(t is not t.backport, {
+            {
                 'type': 'cli',
                 'content': {
                     T.default: 'PR is linked to all issues it (partially) resolves',
                     T.upgrade: 'PR is linked to the upgrade issue it resolves',
                     T.hotfix: 'PR is linked to the issue it hotfixes',
                     T.promotion: 'PR is linked to the promotion issue it resolves',
-                    T.backport: None
+                    T.backport: 'PR is linked to the issues it backports'
                 }[t]
-            }),
+            },
             {
                 'type': 'cli',
                 'content': f'Status of linked {t.issues} is ' + (

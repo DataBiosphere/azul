@@ -366,21 +366,28 @@ class _LimitedRetry(urllib3.Retry):
 
 
 class LimitedRetryHttpClient(HttpClientDecorator):
+    _default_timeout_margin: ClassVar[float] = 10
 
     @property
     def _timing_is_restricted(self) -> bool:
         return config.lambda_is_handling_api_gateway_request
 
-    @property
-    def timeout(self) -> float:
-        return 5 if self._timing_is_restricted else 20
+    def _timeout(self, margin: float) -> float:
+        if self._timing_is_restricted:
+            return 5
+        elif config.lambda_context is None:
+            return 20
+        else:
+            remaining = config.lambda_context.get_remaining_time_in_millis() / 1000
+            return max(5, remaining - margin)
 
     @property
     def retries(self) -> int:
         return 0 if self._timing_is_restricted else 2
 
     def urlopen(self, method, url, *args, **kwargs) -> urllib3.BaseHTTPResponse:
-        timeout, retries = self.timeout, self.retries
+        margin = kwargs.pop('timeout_margin', self._default_timeout_margin)
+        timeout, retries = self._timeout(margin), self.retries
         assert 'retries' not in kwargs, R("Argument 'retries' is disallowed")
         retry = _LimitedRetry.create(retries=retries, timeout=timeout)
         try:
