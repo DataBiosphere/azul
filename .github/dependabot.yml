@@ -1,0 +1,11 @@
+version: 2
+
+updates:
+  - package-ecosystem: 'uv'
+    directory: '/'
+    target-branch: 'develop'
+    # Disable routine dependency updates, but keep security updates active
+    open-pull-requests-limit: 0
+    # Ignored if open-pull-requests-limit is 0
+    schedule:
+      interval: 'weekly'

@@ -16,9 +16,14 @@ RUN apt-get update \
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
-RUN curl -o /usr/bin/docker-credential-ecr-login \
-    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-amd64/docker-credential-ecr-login \
-    && printf 'c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db /usr/bin/docker-credential-ecr-login\n' | sha256sum -c \
+RUN case "$TARGETARCH" in \
+        amd64) sha=c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db ;; \
+        arm64) sha=ff14a4da40d28a2d2d81a12a7c9c36294ddf8e6439780c4ccbc96622991f3714 ;; \
+        *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+    esac \
+    && curl -o /usr/bin/docker-credential-ecr-login \
+    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-${TARGETARCH}/docker-credential-ecr-login \
+    && printf '%s /usr/bin/docker-credential-ecr-login\n' "$sha" | sha256sum -c \
     && chmod +x /usr/bin/docker-credential-ecr-login
 ARG azul_docker_registry
 ENV azul_docker_registry=${azul_docker_registry}
@@ -70,6 +75,23 @@ RUN set -o pipefail \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=2 --wildcards "*/bin/gh" --occurrence=1 \
     && rm /tmp/${tarball} /tmp/gh_checksums.txt
 
+# Install uv
+#
+ARG azul_uv_version
+COPY bin/checksums/uv_checksums.txt /tmp/uv_checksums.txt
+RUN set -o pipefail \
+    && case "$TARGETARCH" in \
+           amd64) arch=x86_64 ;; \
+           arm64) arch=aarch64 ;; \
+           *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+       esac \
+    && tarball=uv-${arch}-unknown-linux-gnu.tar.gz \
+    && curl --fail --silent --location -o /tmp/${tarball} \
+       https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
+    && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
+    && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
+    && rm /tmp/${tarball} /tmp/uv_checksums.txt
+
 # Install Docker from apt repository. The statically linked binaries don't
 # include buildx or buildkit.
 #
@@ -95,12 +117,15 @@ WORKDIR /build
 
 # Install Azul dependencies
 #
-ARG PIP_DISABLE_PIP_VERSION_CHECK
-ENV PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK}
-COPY environment requirements*.txt common.mk Makefile ./
-ARG make_target
-RUN source environment \
+COPY pyproject.toml uv.lock common.mk Makefile ./
+# We don't source `environment` here. It loads the environment by running
+# `scripts/export_environment.py`, and neither that script nor the
+# `environment.py` files it reads are part of this image. The only variable the
+# targets below need is `project_root`, which `environment` assigns itself,
+# without involving that script.
+#
+RUN export project_root="$PWD" \
     && make virtualenv \
     && source .venv/bin/activate \
-    && make $make_target \
-    && rm requirements*.txt common.mk Makefile
+    && make requirements \
+    && rm pyproject.toml uv.lock common.mk Makefile
