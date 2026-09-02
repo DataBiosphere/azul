@@ -140,12 +140,14 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
                     if fetch:
                         azul_url.path.segments.insert(0, 'fetch')
 
-                    file_name = 'foo.gz'
-                    gs_bucket_name = 'gringotts-wizarding-bank'
-                    gs_drs_id = 'some_dataset_id/some_object_id'
-                    gs_file_url = f'gs://{gs_bucket_name}/{gs_drs_id}/{file_name}'
-
-                    pre_signed_gs = furl(url=gs_file_url,
+                    pre_signed_gs = furl(scheme='https',
+                                         host='storage.googleapis.com',
+                                         path=[
+                                             'some_bucket_name',
+                                             'some_dataset_id',
+                                             'some_object_id',
+                                             'foo.gz'
+                                         ],
                                          args={
                                              'X-Goog-Algorithm': 'SOMEALGORITHM',
                                              'X-Goog-Credential': 'SOMECREDENTIAL',
