@@ -497,7 +497,7 @@ class AzulChaliceApp(Chalice):
 
     def _log_response(self, response: Response) -> None:
         info = {
-            'headers': response.headers
+            'headers': self._redact_headers(response.headers)
         }
         info = json.dumps(info)
         log.info('Returning %i response with headers %s.',
