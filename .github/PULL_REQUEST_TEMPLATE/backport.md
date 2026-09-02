@@ -21,9 +21,9 @@ This is the PR template for backport PRs against `develop`.
 ### Author (before every review)
 
 - [ ] PR branch is up to date (if not, merge `develop` into PR branch to integrate upstream changes)
-- [ ] Ran `make requirements_update` <sub>or this PR does not modify `Dockerfile`, `environment`, `requirements*.txt`, `common.mk`, `Makefile` or `environment.boot`</sub>
-- [ ] Added `R` tag to commit title <sub>or this PR does not modify `requirements*.txt`</sub>
-- [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not modify `pyproject.toml`</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not modify `uv.lock`</sub>
+- [ ] This PR is labeled `reqs` <sub>or does not modify `uv.lock`</sub>
 - [ ] PR is not a draft
 - [ ] PR is awaiting requested review from system administrator
 - [ ] Status of PR is *Review requested*

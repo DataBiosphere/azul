@@ -13,80 +13,58 @@ hello: check_python
 .PHONY: virtualenv
 virtualenv: check_env
 	@if test -s "$$VIRTUAL_ENV"; then echo -e "\nRun 'deactivate' first\n"; false; fi
-	if test -e .venv; then rm -rf .venv/; fi
-	python -m venv .venv
+	uv venv --clear --force .venv
 	@echo -e "\nRun 'source .venv/bin/activate' now!\n"
 
 .PHONY: envhook
 envhook: check_venv
 	python scripts/envhook.py install
 
-define requirements
-.PHONY: requirements$1
-requirements$1: check_venv $2
-	pip install $3 -Ur requirements$4.txt
-endef
+#	`--frozen` installs exactly what `uv.lock` specifies, without resolving
+#	dependencies and without checking the lock against `pyproject.toml`. This
+#	is what installing the pins from `requirements*.txt` with `--no-deps` used
+#	to accomplish. Resolution is now a separate step, `uv lock`, so there is no
+#	longer a variant of this target that resolves while installing. Note that
+#	uv also *removes* any package the lock doesn't specify, leaving the virtual
+#	environment matching the lock exactly.
+#
+.PHONY: requirements
+requirements: check_venv
+	uv sync --frozen
 
-$(eval $(call requirements,_pip,,--no-deps,.pip))
-$(eval $(call requirements,,requirements_pip,--no-deps,.dev))
-$(eval $(call requirements,_runtime,requirements_pip,--no-deps,))
-$(eval $(call requirements,_deps,requirements_pip,,.dev))
-$(eval $(call requirements,_runtime_deps,requirements_pip,,))
+#	Fail if the lock file isn't consistent with `pyproject.toml`, say because a
+#	dependency was added to the latter without updating the former. Newer
+#	releases of a dependency don't affect this; `requirements_update` is what
+#	picks those up.
+#
+.PHONY: check_requirements
+check_requirements: check_env
+	uv lock --check
 
-define docker
-.PHONY: docker$1
-docker$1: check_docker
+.PHONY: check_transitive_requirements
+check_transitive_requirements: check_python
+	python scripts/check_transitive_requirements.py
+
+.PHONY: docker_image
+docker_image: check_docker
 	docker build \
-	       --build-arg azul_docker_registry=$$(azul_docker_registry) \
-	       --build-arg azul_python_image=$$(azul_python_image) \
-	       --build-arg azul_docker_version=$$(azul_docker_version) \
-	       --build-arg azul_terraform_version=$$(azul_terraform_version) \
-	       --build-arg azul_awscli_version=$$(azul_awscli_version) \
-	       --build-arg azul_ghcli_version=$$(azul_ghcli_version) \
-	       --build-arg PIP_DISABLE_PIP_VERSION_CHECK=$$(PIP_DISABLE_PIP_VERSION_CHECK) \
-	       --build-arg make_target=requirements$2 \
-	       --tag $$(azul_image)$3:$$(azul_image_tag) \
+	       --build-arg azul_docker_registry=$(azul_docker_registry) \
+	       --build-arg azul_python_image=$(azul_python_image) \
+	       --build-arg azul_docker_version=$(azul_docker_version) \
+	       --build-arg azul_terraform_version=$(azul_terraform_version) \
+	       --build-arg azul_awscli_version=$(azul_awscli_version) \
+	       --build-arg azul_ghcli_version=$(azul_ghcli_version) \
+	       --build-arg azul_uv_version=$(azul_uv_version) \
+	       --tag $(azul_image):$(azul_image_tag) \
 	       .
 
-.PHONY: docker$1_push
-docker$1_push: docker$1
-	docker push $$(azul_image)$3:$$(azul_image_tag)
-endef
-
-$(eval $(call docker,,_runtime,))  # runtime image w/o dependency resolution
-$(eval $(call docker,_dev,,/dev))  # development image w/o dependency resolution
-$(eval $(call docker,_deps,_runtime_deps,/deps))  # runtime image with automatic dependency resolution
-$(eval $(call docker,_dev_deps,_deps,/dev-deps))  # development image with automatic dependency resolution
+.PHONY: docker_push
+docker_push: docker_image
+	docker push $(azul_image):$(azul_image_tag)
 
 .PHONY: requirements_update
-requirements_update: check_venv check_docker
-#	Pull out transitive dependency pins so they can be recomputed. Instead of
-#	truncating the `.trans` file, we comment out every line in it such that a
-#	different .trans file produces a different "pulled out" .trans file and
-#	therefore a different image layer hash when the file is copied into the
-#	image. This makes the pin removal injective. If we truncated the file, we
-#	might inadvertently reuse a stale image layer despite the .trans file having
-#	been updated. Not using sed because Darwin's sed does not do -i.
-	git restore requirements.trans.txt requirements.dev.trans.txt
-	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
-#	Since we're building for the x86_64 Lambda runtime, we should do so on an
-#	image for that architecture, hence the default platform override below. The
-#	override slows down this make target considerably on ARM hosts like Apple
-#	Silicon Macs. And for some reason, pip's --platform=…_x86_64 appears to do
-#	the right thing even on an ARM image, without the override, but I'd rather
-#	not play with fire at this time without a deeper understanding as to why.
-	DOCKER_DEFAULT_PLATFORM=linux/amd64 $(MAKE) docker_deps docker_dev_deps
-	python scripts/manage_requirements.py \
-	       --image=$(azul_image)/deps:$(azul_image_tag) \
-	       --build-image=$(azul_image)/dev-deps:$(azul_image_tag)
-#	Download wheels (source and binary) for the Lambda runtime
-	rm ${azul_chalice_bin}/*
-	pip download \
-	    --platform=manylinux2014_x86_64 \
-	    --only-binary=:all: \
-	    --no-deps \
-	    -r requirements.txt \
-	    --dest=${azul_chalice_bin}
+requirements_update: check_env
+	uv lock --upgrade
 
 environment.boot: check_python
 	python scripts/generate_environment_boot.py
@@ -94,6 +72,18 @@ environment.boot: check_python
 gh_checksums: check_env
 	curl --fail --silent --location -o bin/checksums/gh_checksums.txt \
 	    https://github.com/cli/cli/releases/download/v$(azul_ghcli_version)/gh_$(azul_ghcli_version)_checksums.txt
+
+#	Unlike the GitHub CLI, uv publishes one checksum file per release asset, so
+#	we concatenate the ones we care about into the same format that `sha256sum
+#	-c` expects.
+#
+uv_checksums: check_env
+	rm -f bin/checksums/uv_checksums.txt
+	for arch in x86_64 aarch64 ; do \
+	    curl --fail --silent --location \
+	        https://github.com/astral-sh/uv/releases/download/$(azul_uv_version)/uv-$$arch-unknown-linux-gnu.tar.gz.sha256 \
+	        >> bin/checksums/uv_checksums.txt ; \
+	done
 
 .PHONY: lambdas
 lambdas: check_env
@@ -205,7 +195,7 @@ clean: check_env
 absolute_sources = $(shell echo $(project_root)/src \
                                 $(project_root)/scripts \
                                 $(project_root)/test \
-                                $(project_root)/lambdas/{layer,indexer,service}/app.py \
+                                $(project_root)/lambdas/{indexer,service}/app.py \
                                 $(project_root)/.flake8/azul_flake8.py \
                                 $(project_root)/environment.py \
                                 $(project_root)/deployments/*/environment.py \
@@ -276,8 +266,8 @@ test: check_python
 
 .PHONY: test_profile
 test_profile: check_python
-	python -c "import pyinstrument" || (echo "Run 'pip install pyinstrument'" ; false)
-	python -m pyinstrument -r html -o test_profile.html $(test_args)
+	uv run --frozen --no-sync --with pyinstrument \
+	       python -m pyinstrument -r html -o test_profile.html $(test_args)
 
 .PHONY: test_list
 test_list: check_python

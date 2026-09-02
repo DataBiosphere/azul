@@ -78,6 +78,19 @@ lambda_log_format = '\t'.join([
 lambda_log_date_format = '%Y-%m-%dT%H:%M:%S'
 
 
+class LambdaLogFormatter(logging.Formatter):
+    """
+    awslambdaric's StandardLogSink uses newlines to delimit CloudWatch log
+    events. To prevent multi-line log records (e.g., with tracebacks from
+    exc_info) from being split into separate events, this formatter replaces
+    newlines with carriage returns and appends a single newline at the end.
+    """
+
+    def format(self, record):
+        s = super().format(record)
+        return s.replace('\n', '\r') + '\n'
+
+
 def configure_app_logging(app: AzulChaliceApp, *loggers):
     _configure_log_levels(app.log, *loggers)
     if not app.loaded_dynamically:
@@ -91,7 +104,7 @@ def configure_app_logging(app: AzulChaliceApp, *loggers):
             # for details.
             #
             handler = one(root_logger.handlers)
-            root_formatter = logging.Formatter(lambda_log_format, lambda_log_date_format)
+            root_formatter = LambdaLogFormatter(lambda_log_format, lambda_log_date_format)
             handler.setFormatter(root_formatter)
         else:
             # Otherwise, we're running `chalice local`

@@ -3,6 +3,26 @@ from collections.abc import (
 )
 import json
 import os
+import tomllib
+
+
+def _pin(*path: str) -> str:
+    """
+    Return the version from the exact version specifier at the given path of
+    keys in `pyproject.toml`. That file is the sole source of these versions
+    because uv reads it directly, and because TOML offers no way of referring
+    to a value defined elsewhere.
+    """
+    file_path = os.path.join(os.path.dirname(__file__), 'pyproject.toml')
+    with open(file_path, 'rb') as f:
+        node = tomllib.load(f)
+    for key in path:
+        node = node[key]
+    assert isinstance(node, str), node
+    prefix = '=='
+    assert node.startswith(prefix), node
+    version = node.removeprefix(prefix)
+    return version
 
 
 def env() -> Mapping[str, str | None]:
@@ -202,35 +222,43 @@ def env() -> Mapping[str, str | None]:
         'azul_docker_registry': '{AZUL_AWS_ACCOUNT_ID}.dkr.ecr.'
                                 '{AWS_DEFAULT_REGION}.amazonaws.com/',
 
+        # The platforms to build Lambda container images for, as a list of
+        # Docker platform specifications separated by space. The first platform
+        # in the list also determines the architecture of the deployed Lambda
+        # function. Images will be built for the other platforms listed, but
+        # those images will not be used by the deployment. A multi-platform
+        # image list consisting of the specified platform-specific images will
+        # also be pushed.
+        #
+        # On machines that support cross-platform image builds, this variable
+        # can be overridden locally to build images for additional platforms. On
+        # machines that don't support building the default platform, a different
+        # one can be specified, e.g., 'linux/arm64'.
+        #
+        'azul_lambda_image_platforms': 'linux/amd64',
+
         # The version of Docker used throughout the system.
         #
         # This variable is not intended to be overridden per deployment or
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make docker_images.json`
-        # and `make environment.boot`, in that order, and committing the
-        # resulting changes. It also requires redeploying the `shared` and
-        # `gitlab` components, as well as building and pushing the executor
-        # image (see terraform/gitlab/runner/Dockerfile for how).
+        # After modifying this variable, run `make docker_images.json` and
+        # `make environment.boot`, in that order. Commit the resulting
+        # changes. Ensure that the `shared` and `gitlab` components are
+        # redeployed, and that the executor image is built and pushed (see
+        # terraform/gitlab/runner/Dockerfile for how).
         #
         'azul_docker_version': '29.7.1',
 
-        # The version of Python used throughout the system.
+        # The version of Python used throughout the system. Do not modify this
+        # variable directly. It is derived from `requires-python` in
+        # `pyproject.toml`, where the procedure for updating it is documented.
         #
-        # This variable is not intended to be overridden per deployment or
-        # locally.
-        #
-        # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
-        #
-        # Modifying this variable requires running `make docker_images.json`
-        # and committing the resulting changes. It also requires redeploying the
-        # `shared` component.
-        #
-        'azul_python_version': '3.14.6',
+        'azul_python_version': _pin('project', 'requires-python'),
 
         # The version of Terraform used throughout the system.
         #
@@ -238,11 +266,11 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # `make -C terraform update_schema`, and committing the resulting
-        # changes.
+        # After modifying this variable, run `make environment.boot` and
+        # `make -C terraform update_schema`, and commit the resulting changes.
         #
         'azul_terraform_version': '1.15.8',
 
@@ -252,10 +280,11 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # committing the resulting changes.
+        # After modifying this variable, run `make environment.boot` and commit
+        # the resulting changes.
         #
         'azul_awscli_version': '2.36.15',
 
@@ -266,12 +295,20 @@ def env() -> Mapping[str, str | None]:
         # locally.
         #
         # This variable is duplicated in a file called `environment.boot`
-        # because it is referenced in the early stages of the GitLab build.
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
         #
-        # Modifying this variable requires running `make environment.boot` and
-        # `make gh_checksums` and committing the resulting changes.
+        # After modifying this variable, run `make environment.boot` and
+        # `make gh_checksums`, and commit the resulting changes.
         #
         'azul_ghcli_version': '2.97.0',
+
+        # The version of uv used to create the virtual environment and to
+        # install dependencies into it. Do not modify this variable directly. It
+        # is derived from `required-version` in `pyproject.toml`, where the
+        # procedure for updating it is documented.
+        #
+        'azul_uv_version': _pin('tool', 'uv', 'required-version'),
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
@@ -702,13 +739,13 @@ def env() -> Mapping[str, str | None]:
         # from that directory. The wheels must be compatible with the AWS
         # Lambda platform.
         #
-        'azul_chalice_bin': '{project_root}/bin/wheels/runtime',
-
-        # Stop `pip` from nagging us about updates. We update pip regularly like
-        # any other dependency. There is nothing special about `pip` that would
-        # warrant the distraction.
+        # No longer actively used. The run-time dependencies of a Lambda
+        # function are installed with uv, from the lock file, while its image is
+        # built. Our fork of Chalice still reads this variable, but only while
+        # building a deployment package from a `requirements.txt`, and there is
+        # no such file for either Lambda function.
         #
-        'PIP_DISABLE_PIP_VERSION_CHECK': '1',
+        'azul_chalice_bin': None,
 
         # The path of the directory where the public key infrastructure files
         # are managed on developer, operator and administrator machines. The
@@ -985,15 +1022,6 @@ def env() -> Mapping[str, str | None]:
         #        https://github.com/DataBiosphere/azul/issues/7183
         #
         'AZUL_ENABLE_BUNDLE_NOTIFICATIONS': '0',
-
-        # A Lambda runtime version to pin to, which overrides the AWS-managed
-        # default. Pin the runtime to python:3.14.v35 to prevent OutOfMemory
-        # errors in the mirror Lambda function.
-        #
-        # FIXME: Remove pinned Lambda runtime version ARN
-        #        https://github.com/DataBiosphere/azul/issues/7730
-        #
-        'azul_lambda_runtime_version': '6e4c2a8804e47c3599d89c0a896af2312961578a5546d2d9a288c0d93e6b1a2d',
 
         # URL of Terra's external credentials manager (ECM) service used by the
         # Azul deployment.

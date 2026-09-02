@@ -30,8 +30,8 @@ stages:
 build_image:
   # Build an image containing the build prerequisites (python, terraform, etc).
   # This lets us exploit Docker's layer caching to speed up the build. The
-  # image will only be rebuilt after changes to the Dockerfile, 
-  # requirements*.txt, common.mk and the Makefile.
+  # image will only be rebuilt after changes to the Dockerfile, pyproject.toml,
+  # uv.lock, common.mk and the Makefile.
   extends: .on_push
   stage: build_image
   timeout: 6m
@@ -42,16 +42,15 @@ build_image:
       printenv CI_REGISTRY_PASSWORD 
       | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY_IMAGE
     - set -o allexport ; source environment.boot ; set +o allexport
-    - make docker_dev_push
+    - make docker_push
 
 .base:
   dependencies:
     - build_image
-  image: ${azul_image}/dev:${azul_image_tag}
+  image: ${azul_image}:${azul_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
-    - pip list
     - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
     - _link $deployment
@@ -75,10 +74,16 @@ test:
   extends: .base_on_push
   stage: test
   timeout: 1h 30m
+  variables:
+    # Enough history for `scripts/check_transitive_requirements.py` to find
+    # where this branch diverged from `develop`. Set here, rather than per
+    # instance, so that the check behaves the same everywhere.
+    GIT_DEPTH: '100'
   script:
+    - make check_requirements
+    - if python -m azul -t config.deployment.is_lower_sandbox ; then make check_transitive_requirements ; fi
     - make format
     - make isort
-    - python -m azul -t config.deployment.is_lower_sandbox && make requirements_update
     - make -C lambdas openapi
     - make environment.boot
     - make -C .github
@@ -124,7 +129,7 @@ deploy_browser:
     - deploy_base
     - deploy
   script:
-    - test -e deployments/$deployment.browser || exit 0
+    - if [[ ! -e deployments/$deployment.browser ]] ; then exit 0 ; fi
     - _link $deployment.browser
     - _refresh
     - cd terraform/browser

@@ -1,0 +1,168 @@
+[project]
+name = "azul"
+version = "1.0.0"
+
+# The version of Python used throughout the system. It is not intended to be
+# overridden per deployment or locally.
+#
+# `environment.py` derives `azul_python_version` from this. That variable is
+# duplicated in a file called `environment.boot`, because it is referenced in
+# the early stages of the GitLab build.
+#
+# After modifying this pin, run `make docker_images.json` and
+# `make environment.boot`, in that order, and commit the resulting changes.
+# Ensure that the `shared` component is redeployed.
+#
+requires-python = "==3.14.6"
+dependencies = [
+    "attrs==26.1.0",
+    # Match version of the `boto3-stubs` dev dependency
+    "boto3==1.43.63",
+    "botocore==1.43.63",
+    # Match with `types-chevron` in the `dev` group
+    "chevron==0.14.0",
+    "cryptography==50.0.0",
+    "fastavro==1.12.2",
+    "furl==2.1.4",
+    "google-api-core==2.33.0",
+    "google-auth[pyopenssl]==2.56.2",
+    "google-cloud-bigquery==3.42.3",
+    "http-message-signatures==2.0.1",
+    "http-sfv==0.9.9",
+    "jmespath==1.1.0",
+    "jsonschema==4.26.0",
+    "more-itertools==11.1.0",
+    # Versioned independently from the type stub dependency but when updating
+    # one, the other should be updated, too, if possible
+    "msgpack==1.2.1",
+    "opensearch-py==2.8.0",
+    "pyjwt==2.13.0",
+    "referencing==0.37.0",
+    "requests==2.33.1",
+    # Match version with the `resumablehash` index below
+    "resumablehash==1.5",
+    # Python 3.12 removed distutils, which we depended on transitively. Luckily,
+    # setuptools includes a vendored copy.
+    "setuptools==83.0.0",
+    "urllib3==2.7.0",
+    "werkzeug==3.1.8",
+]
+
+[dependency-groups]
+# The Lambda runtime interface client, needed only in the image we deploy a
+# Lambda function as. This is not a default group, so it isn't installed into a
+# developer's virtual environment, and the marker keeps it out of the resolution
+# for macOS, for which it isn't distributed at all.
+#
+lambda = [
+    "awslambdaric==4.0.2 ; sys_platform == 'linux'",
+]
+
+dev = [
+    "atomicwrites==1.4.1",
+    # Match this with the version of the `boto3` runtime dependency
+    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.63",
+    # Match version with the `chalice` index below
+    "chalice==1.32.0+21",
+    "coverage==7.15.3",
+    "docker==7.2.0",
+    "flake8==7.3.0",
+    "gevent==26.7.0",
+    "gitpython==3.1.57",
+    "google-api-python-client==2.198.0",
+    "google-cloud-bigquery-reservation==1.25.0",
+    "google-cloud-storage==3.13.0",
+    "isort==8.0.1",
+    "jq==1.12.0",
+    # Match the extras with the backends listed in AzulUnitTestCase._reset_moto
+    "moto[dynamodb,iam,s3,sns,sqs]==5.2.2",
+    # Versioned independently from the corresponding runtime dependency but when
+    # updating one, the other should be updated, too
+    "msgpack-types==0.8.0",
+    "mypy==2.3.0",
+    "openapi-spec-validator==0.9.0",
+    "openpyxl==3.1.5",
+    "posix-ipc==1.3.2",
+    "pygithub==2.9.1",
+    "python-dxf==12.1.1",
+    "python-gitlab==8.5.0",
+    "pyyaml==6.0.3",
+    "responses==0.26.2",
+    "strict-rfc3339==0.7",
+    # Match with `chevron` in the runtime dependencies
+    "types-chevron==0.14.2.20260408",
+    "types-jsonschema==4.26.0.20260518",
+    "watchdog==6.0.0",
+]
+
+[tool.uv]
+
+# The version of uv used to create the virtual environment and to install
+# dependencies into it. It is not intended to be overridden per deployment or
+# locally. It governs the uv installed in the images we build and, because uv
+# refuses to run a version that doesn't satisfy this, the one a developer is
+# expected to have installed.
+#
+# `environment.py` derives `azul_uv_version` from this. That variable is
+# duplicated in a file called `environment.boot`, because it is referenced in
+# the early stages of the GitLab build.
+#
+# After modifying this pin, run `make environment.boot` and `make uv_checksums`,
+# and commit the resulting changes.
+#
+required-version = "==0.12.5"
+
+# Only use an interpreter that's already installed on the system, never one
+# that uv downloads and manages itself.
+#
+python-preference = "only-system"
+python-downloads = "never"
+
+# Upper bounds on dependencies that are pinned to an exact version above.
+# Exceeding one of them fails the resolution instead of going unnoticed.
+#
+constraint-dependencies = [
+    # To match the server version on our AWS OpenSearch domains
+    "opensearch-py<3",
+    # See https://github.com/DataBiosphere/azul/issues/8083
+    "requests<2.34.0",
+]
+
+# The platforms we deploy to and develop on. Note that Linux and macOS spell the
+# same architecture differently, `aarch64` and `arm64` respectively.
+#
+environments = [
+    # Used in the app image (lambdas/Dockerfile), by some developers' machines
+    # and in the dev image (./Dockerfile) built on those machines and on GitLab
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # Used by the remaining developers' machines
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    # Used by the dev image built on those machines
+    "sys_platform == 'linux' and platform_machine == 'aarch64'",
+]
+
+# While the list above limits the environments uv resolves for, this one expands
+# what that resolution must support: a package that offers no source
+# distribution has to provide a wheel for each environment listed here. Without
+# that, such a package could be missing a wheel for one of them, and only fail
+# once it is installed there.
+#
+# Keep this in sync with the above list
+#
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'aarch64'",
+]
+
+[[tool.uv.index]]
+name = "chalice"
+# Match version with the `chalice` dev dependency above
+url = "https://github.com/DataBiosphere/azul-chalice/releases/expanded_assets/v1.32.0+21"
+format = "flat"
+
+[[tool.uv.index]]
+name = "resumablehash"
+# Match version with the `resumablehash` runtime dependency above
+url = "https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5"
+format = "flat"
