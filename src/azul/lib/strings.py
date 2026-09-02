@@ -488,6 +488,8 @@ _secret_re = re.compile('|'.join([
     rf'1//[0-9]{{2}}({_base64url}{{64,}})',
     # Google OAuth2 authorization code
     rf'4/[0-9]({_base64url}{{64,}})',
+    # Google OAuth2 client secret
+    rf'GOCSPX-({_base64url}+)',
 ]))
 
 
@@ -571,6 +573,9 @@ def redact(s: str, *, fullmatch: bool = False) -> str:
 
     >>> redact('refresh=1//09' + 'a' * 63 + '!') == 'refresh=1//09' + 'a' * 63 + '!'
     True
+
+    >>> redact('client_secret=GOCSPX-' + 'c' * 28 + '!')
+    'client_secret=GOCSPX-cREDACTEDc!'
 
     With ``fullmatch=True``, only strings that are entirely a secret are
     redacted:
