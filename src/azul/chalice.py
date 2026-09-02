@@ -7,6 +7,9 @@ from collections.abc import (
 from enum import (
     Enum,
 )
+from functools import (
+    partial,
+)
 import json
 import logging
 import mimetypes
@@ -28,7 +31,6 @@ from urllib.parse import (
 import attrs
 from chalice.app import (
     BadRequestError,
-    CaseInsensitiveMapping,
     Chalice,
     ChaliceViewError,
     EventSourceHandler,
@@ -467,24 +469,6 @@ class AzulChaliceApp(Chalice):
                 "Only specify 'spec' once per route path and method")
             path_methods[method] = copy_json(spec)
 
-    class _LogJSONEncoder(json.JSONEncoder):
-
-        def default(self, o: Any) -> Any:
-            def _redact(v):
-                return redact(v) if isinstance(v, str) else v
-
-            if isinstance(o, MultiDict):
-                # Convert to dict, flatten the singleton values, redact strings
-                return {
-                    k: _redact(v[0]) if len(v) == 1 else list(map(_redact, v))
-                    for k, v in ((k, o.getlist(k)) for k in o.keys())
-                }
-            elif isinstance(o, CaseInsensitiveMapping):
-                # Convert to dict, redacting the header values
-                return {k: redact_header(k, v) for k, v in o.items()}
-            else:
-                return super().default(o)
-
     def _authenticate(self) -> Authentication | None:
         """
         Authenticate the current request, return None if it is unauthenticated,
@@ -503,10 +487,10 @@ class AzulChaliceApp(Chalice):
 
     def _log_request(self, request: Request) -> None:
         info = {
-            'query': request.query_params,
-            'headers': request.headers
+            'query': self._redact_query(request.query_params),
+            'headers': self._redact_headers(request.headers)
         }
-        info = json.dumps(info, cls=self._LogJSONEncoder)
+        info = json.dumps(info)
         log.info('Received %s request for %r, with %s.',
                  request.context['httpMethod'], request.context['path'], info)
         log.info(http_body_log_message('request', request.raw_body))
@@ -515,10 +499,37 @@ class AzulChaliceApp(Chalice):
         info = {
             'headers': response.headers
         }
-        info = json.dumps(info, cls=self._LogJSONEncoder)
+        info = json.dumps(info)
         log.info('Returning %i response with headers %s.',
                  response.status_code, info)
         log.info(http_body_log_message('response', response.body))
+
+    @classmethod
+    def _redact[T: (str, Sequence[str])](cls,
+                                         value: T,
+                                         redact: Callable[[str], str]
+                                         ) -> T:
+        if isinstance(value, str):
+            return redact(value)
+        else:
+            return [cls._redact(v, redact) for v in value]
+
+    @classmethod
+    def _redact_query(cls, query: MultiDict | None) -> JSON | None:
+        if query is None:
+            return None
+        else:
+            return {
+                name: cls._redact(values[0] if len(values) == 1 else values, redact)
+                for name, values in ((name, query.getlist(name)) for name in query.keys())
+            }
+
+    @classmethod
+    def _redact_headers(cls, headers: Mapping[str, str | Sequence[str]]) -> JSON:
+        return {
+            name: cls._redact(value, partial(redact_header, name))
+            for name, value in headers.items()
+        }
 
     absent = object()
 
@@ -718,7 +729,6 @@ class AzulChaliceApp(Chalice):
             yield f'{self.unqualified_app_name}_{handler_name}'
 
     def default_routes(self):
-
         @self.route(
             '/',
             interactive=False,
