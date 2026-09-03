@@ -358,9 +358,9 @@ class IndexController(QueryController):
                         catalog=self._validate_catalog,
                         filters=self._validate_filters,
                         order=self._validate_order,
-                        search_after=partial(self._validate_json_param, 'search_after'),
+                        search_after=partial(self._validate_sort_key, 'search_after'),
                         search_after_uid=str,
-                        search_before=partial(self._validate_json_param, 'search_before'),
+                        search_before=partial(self._validate_sort_key, 'search_before'),
                         search_before_uid=str,
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_field)

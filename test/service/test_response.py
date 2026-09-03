@@ -1880,6 +1880,26 @@ class TestIndexResponse(IndexResponseTestCase):
                     ]
                     self.assertEqual(expected, actual)
 
+    def test_invalid_datetime_filter(self):
+        """
+        Test that filtering a datetime field using an invalid datetime format
+        raises a 400
+        """
+        filters = {
+            'submissionDate': {
+                'is': ['not-a-date']
+            }
+        }
+        params = self._params(filters=filters, size=1)
+        url = self.base_url.set(path='/index/bundles', args=params)
+        response = self._http_client.request('GET', str(url))
+        error_msg = ("The value of the `filters` parameter is invalid against the schema: "
+                     "{'is': ['not-a-date']} is not valid under any of the given schemas "
+                     "at path $.submissionDate")
+        expected_text = f'{{"Code":"BadRequestError","Message":"{error_msg}"}}'
+        self.assertEqual(400, response.status)
+        self.assertEqual(expected_text, response.data.decode())
+
     def test_contributors_order(self):
         # Test that indexing preserves the order of project contributors
         expected = [
@@ -2125,6 +2145,26 @@ class TestIndexResponse(IndexResponseTestCase):
                 expected_text = f'{{"Code":"BadRequestError","Message":"{error_msg}"}}'
                 self.assertEqual(400, response.status)
                 self.assertEqual(expected_text, response.data.decode())
+
+        # Test values that are valid JSON but not valid sort keys
+        bad_shapes = [
+            [],
+            [1, 2, 3],
+            {'sampleId': 'foo'},
+            ['sampleId', 42],
+        ]
+        for pagination_key, good_url in test_cases.items():
+            for bad_shape in bad_shapes:
+                with self.subTest(pagination_key=pagination_key, bad_shape=bad_shape):
+                    bad_url = furl(good_url)
+                    bad_url.args[pagination_key] = json.dumps(bad_shape)
+                    response = self._http_client.request('GET', str(bad_url))
+                    error_msg = (f'The {pagination_key!r} param must be a one- or two-element list. '
+                                 f'The first parameter must be a primitive JSON value, '
+                                 'and the second value (if present) must be a string.')
+                    expected_text = f'{{"Code":"BadRequestError","Message":"{error_msg}"}}'
+                    self.assertEqual(400, response.status)
+                    self.assertEqual(expected_text, response.data.decode())
 
     def test_filter_by_publication_title(self):
         cases = [
