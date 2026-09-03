@@ -13,7 +13,7 @@ emit_tf(tag_resources=False, config={
         'required_providers': {
             'external': {
                 'source': 'hashicorp/external',
-                'version': '2.4.0'
+                'version': '2.4.1'
             },
             'null': {
                 'source': 'hashicorp/null',
