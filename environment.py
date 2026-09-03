@@ -272,7 +272,7 @@ def env() -> Mapping[str, str | None]:
         # After modifying this variable, run `make environment.boot` and
         # `make -C terraform update_schema`, and commit the resulting changes.
         #
-        'azul_terraform_version': '1.15.8',
+        'azul_terraform_version': '1.15.9',
 
         # The version of the AWS CLI v2 used throughout the system.
         #
