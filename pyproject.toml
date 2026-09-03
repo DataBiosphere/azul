@@ -110,7 +110,7 @@ dev = [
 # After modifying this pin, run `make environment.boot` and `make uv_checksums`,
 # and commit the resulting changes.
 #
-required-version = "==0.12.5"
+required-version = "==0.12.9"
 
 # Only use an interpreter that's already installed on the system, never one
 # that uv downloads and manages itself.
