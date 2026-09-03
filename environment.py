@@ -286,7 +286,7 @@ def env() -> Mapping[str, str | None]:
         # After modifying this variable, run `make environment.boot` and commit
         # the resulting changes.
         #
-        'azul_awscli_version': '2.36.15',
+        'azul_awscli_version': '2.36.38',
 
         # The version of the GitHub CLI used in the `github_schedule` GitLab CI
         # job to create GitHub issues from the templates.
