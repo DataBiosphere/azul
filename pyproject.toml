@@ -13,7 +13,7 @@ version = "1.0.0"
 # `make environment.boot`, in that order, and commit the resulting changes.
 # Ensure that the `shared` component is redeployed.
 #
-requires-python = "==3.14.6"
+requires-python = "==3.14.7"
 dependencies = [
     "attrs==26.1.0",
     # Match version of the `boto3-stubs` dev dependency
