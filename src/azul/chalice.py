@@ -471,7 +471,7 @@ class AzulChaliceApp(Chalice):
 
         def default(self, o: Any) -> Any:
             def _redact(v):
-                return redact(v, fullmatch=True) if isinstance(v, str) else v
+                return redact(v) if isinstance(v, str) else v
 
             if isinstance(o, MultiDict):
                 # Convert to dict, flatten the singleton values, redact strings
