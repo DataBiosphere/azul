@@ -252,7 +252,7 @@ def env() -> Mapping[str, str | None]:
         # redeployed, and that the executor image is built and pushed (see
         # terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '29.7.1',
+        'azul_docker_version': '29.7.2',
 
         # The version of Python used throughout the system. Do not modify this
         # variable directly. It is derived from `requires-python` in
