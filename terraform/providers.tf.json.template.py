@@ -17,7 +17,7 @@ emit_tf(tag_resources=False, config={
             },
             'null': {
                 'source': 'hashicorp/null',
-                'version': '3.3.0'
+                'version': '3.3.1'
             },
             'google': {
                 'source': 'hashicorp/google',
