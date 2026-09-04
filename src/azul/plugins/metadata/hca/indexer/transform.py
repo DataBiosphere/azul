@@ -1413,8 +1413,9 @@ class TransformerVisitor(api.EntityVisitor):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             if entity.is_sequencing_process():
-                # Sequencing processes are not included in contributions, but we
-                # still need to visit them to emit them as replicas.
+                # Sequencing processes are not included in contributions, but
+                # the FileTransformer still needs to visit them to emit them as
+                # replicas.
                 self.sequencing_processes[entity.document_id] = entity
             for protocol in entity.protocols.values():
                 if isinstance(protocol, api.AnalysisProtocol):
