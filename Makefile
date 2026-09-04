@@ -216,7 +216,13 @@ pep8: check_python
 
 # The container path resolution in the recipe below is needed on Gitlab where
 # the build is already running in a container and the container below will be a
-# sibling of the current container.
+# sibling of the current container. The Docker daemon resolves the source of
+# every bind mount against the host's file system, so a path that's only valid
+# inside the build container, like one below /tmp, can't be used. That's why
+# the temporary directory below is created inside the project root, the only
+# directory that's guaranteed to be mounted from the host. For the same reason
+# we use --mount instead of --volume: the latter silently creates a missing
+# source directory on the host instead of failing.
 
 # Using --attach only for stdout causes stderr to remain detached, thereby
 # suppressing error output like stack traces. In order to address security
@@ -237,22 +243,28 @@ pep8: check_python
 # setting up a fake home directory to which the "developer" user has write
 # access, since PyCharm needs to write to directories such as ~/.config.
 
+# The temporary directory is removed by a trap, so that the exit status of the
+# recipe is that of `docker run`. Were the removal the last command in the
+# recipe, its exit status would mask a failure of `docker run`.
+
 .PHONY: format
 format: check_venv check_docker
-	tmp=$$(mktemp -d); \
-	mkdir -p $$tmp/pycharm/etc $$tmp/pycharm/home/developer; \
-	echo developer:x:$$(id -u):$$(id -g)::/home/developer:/bin/bash >$$tmp/pycharm/etc/passwd; \
+	root=$$(python scripts/resolve_container_path.py $(project_root)) && \
+	tmp=$$(mktemp -d $(project_root)/.tmp.XXXXXXXX) && \
+	trap "rm -rf $$tmp" EXIT && \
+	mkdir -p $$tmp/etc $$tmp/home/developer && \
+	echo developer:x:$$(id -u):$$(id -g)::/home/developer:/bin/bash >$$tmp/etc/passwd && \
+	host_tmp=$$root/$$(basename $$tmp) && \
 	docker run \
 	    --attach stdout \
 	    --rm \
 	    --user $$(id -u):$$(id -g) \
-	    --mount type=bind,readonly,source=$$tmp/pycharm/etc/passwd,target=/etc/passwd \
-	    --volume $$tmp/pycharm/home/developer:/home/developer \
-	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
+	    --mount type=bind,readonly,source=$$host_tmp/etc/passwd,target=/etc/passwd \
+	    --mount type=bind,source=$$host_tmp/home/developer,target=/home/developer \
+	    --mount type=bind,source=$$root,target=/home/developer/azul \
 	    --workdir /home/developer/azul \
 	    $$(AZUL_DEBUG=0 python -m azul 'docker.resolve_docker_image_for_launch("pycharm")') \
-	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources); \
-	rm -rf $$tmp/pycharm && rm -d $$tmp
+	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: isort
 isort: check_python
