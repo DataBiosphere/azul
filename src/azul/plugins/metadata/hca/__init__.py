@@ -405,9 +405,6 @@ class Plugin(MetadataPlugin[HCABundle]):
                 'total_estimated_cells': 'cell_suspension.estimated_cell_count',
                 'selected_cell_type': 'cell_suspension.selected_cell_type'
             },
-            ('contents', 'sequencing_processes'): {
-                'document_id': 'sequencing_process.provenance.document_id'
-            },
             ('contents', 'sequencing_protocols'): {
                 'instrument_manufacturer_model': 'sequencing_protocol.instrument_manufacturer_model',
                 'paired_end': 'sequencing_protocol.paired_end',
