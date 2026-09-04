@@ -799,18 +799,25 @@ class Chalice:
                 'command': [handler]
             }
 
-            # Creating verbatim PFB manifests for large AnVIL datasets requires
-            # more ephemeral storage than the default, so we raise it to the
-            # maximum. We have to inject this here since Chalice doesn't support
-            # configuring the ephemeral storage.
+            # Chalice doesn't support configuring ephemeral storage, so we have
+            # to inject it here.
+            assert 'ephemeral_storage' not in resource
             if (
                 app_name == 'service'
                 and resource_name == f'{app_name}_{config.manifest_sfn}'
                 and config.deployment.is_stable
                 and config.is_anvil_enabled()
             ):
-                assert 'ephemeral_storage' not in resource
-                resource['ephemeral_storage'] = {'size': 10240}
+                # Creating verbatim PFB manifests for large AnVIL datasets
+                # requires more ephemeral storage than the default, so we raise
+                # it to the maximum.
+                ephemeral_storage = 10240
+            else:
+                # We declare the AWS default explicitly because Terraform only
+                # reverts external changes to attributes (drift) if these
+                # attributes are explicitly declared in the configuration.
+                ephemeral_storage = 512
+            resource['ephemeral_storage'] = {'size': ephemeral_storage}
 
         # Replace any references to unqualified function ARNs in the OpenAPI
         # spec emitted by Chalice with references to the alias.
