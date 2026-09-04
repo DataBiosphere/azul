@@ -173,9 +173,10 @@ class ParseInspectorFindings:
                 summary['resources'].add(image)
                 self.images.add(image)
         elif resource_type == 'AWS_EC2_INSTANCE':
-            instance_name = resource['details']['awsEc2Instance']['keyName']
+            instance_name = resource['tags']['Name']
+            instance_image_id = resource['details']['awsEc2Instance']['imageId']
             instance_id = resource['id']
-            instance = f'{instance_name} {instance_id}'
+            instance = f'{instance_name} {instance_image_id} {instance_id}'
             summary['resources'].add(instance)
             self.instances.add(instance)
         else:
