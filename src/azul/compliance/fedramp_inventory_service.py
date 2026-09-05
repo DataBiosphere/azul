@@ -6,9 +6,6 @@ from collections import (
     Counter,
     defaultdict,
 )
-from collections.abc import (
-    Set,
-)
 import inspect
 import json
 import logging
@@ -20,7 +17,6 @@ import sys
 from typing import (
     Iterable,
     Iterator,
-    Optional,
     Self,
     Sequence,
 )
@@ -59,11 +55,13 @@ from azul.lib.types import (
 
 log = logging.getLogger(__name__)
 
+null_str = str | None
+
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class ResourceConfig:
     id: str
-    name: Optional[str]
+    name: null_str
     region: str
     type: str
     state_id: str
@@ -81,9 +79,6 @@ class ResourceConfig:
             config=json.loads(response['configuration']),
             supplementary_config=response['supplementaryConfiguration']
         )
-
-
-null_str = Optional[str]
 
 
 class YesNo:
@@ -131,7 +126,7 @@ class Mapper(metaclass=ABCMeta):
     def _common_fields(self,
                        resource: ResourceConfig,
                        *,
-                       id_suffix: Optional[str] = None
+                       id_suffix: null_str = None
                        ) -> dict:
         return dict(
             asset_tag=resource.name,
@@ -142,7 +137,7 @@ class Mapper(metaclass=ABCMeta):
             unique_id=resource.id + ('' if id_suffix is None else f'/{id_suffix}')
         )
 
-    def _supported_resource_types(self) -> Set[str]:
+    def _supported_resource_types(self) -> set[str]:
         return frozenset()
 
     def can_map(self, resource: ResourceConfig) -> bool:
@@ -258,7 +253,7 @@ class ELBMapper(Mapper):
             network_id = resource.config['vpcId']
         return dict(asset_type=asset_type, network_id=network_id)
 
-    def _get_ip_addresses(self, availability_zones: JSONs) -> set[Optional[str]]:
+    def _get_ip_addresses(self, availability_zones: JSONs) -> set[null_str]:
         return {
             load_balancer_address.get('ipAddress')
             for availability_zone in availability_zones
@@ -269,7 +264,7 @@ class ELBMapper(Mapper):
 
 class NetworkInterfaceMapper(Mapper):
 
-    def _supported_resource_types(self) -> Set[str]:
+    def _supported_resource_types(self) -> set[str]:
         return {'AWS::EC2::NetworkInterface'}
 
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
@@ -344,7 +339,7 @@ class DynamoDbTableMapper(Mapper):
 
 class ElasticIPMapper(Mapper):
 
-    def _supported_resource_types(self) -> Set[str]:
+    def _supported_resource_types(self) -> set[str]:
         return {'AWS::EC2::EIP'}
 
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
@@ -397,7 +392,7 @@ class VPCMapper(Mapper):
 
 class ACMCertificateMapper(Mapper):
 
-    def _supported_resource_types(self) -> Set[str]:
+    def _supported_resource_types(self) -> set[str]:
         return {'AWS::ACM::Certificate'}
 
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
@@ -423,7 +418,7 @@ class ACMCertificateMapper(Mapper):
 
 class ResourceComplianceMapper(Mapper):
 
-    def _supported_resource_types(self) -> Set[str]:
+    def _supported_resource_types(self) -> set[str]:
         return {'AWS::Config::ResourceCompliance'}
 
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
@@ -641,7 +636,7 @@ class FedRAMPInventoryService:
                                       worksheet: Worksheet,
                                       column: int,
                                       row: int,
-                                      value: Optional[str]
+                                      value: null_str
                                       ) -> None:
         if value:
             # Scale the size of the column with the input value if necessary.
