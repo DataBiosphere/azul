@@ -776,14 +776,14 @@ wheels = [
 
 [[package]]
 name = "googleapis-common-protos"
-version = "1.75.2"
+version = "1.75.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "protobuf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/90/fb8f1c84537fbf210c1f53a53ae473a805f6599c5a40b93c1bbadd211f7a/googleapis_common_protos-1.75.2.tar.gz", hash = "sha256:8829a3d1e4508c5b7b9a6b9525f7fccff611f8531644579a76466c29295d4bb2", size = 154083, upload-time = "2026-08-25T19:19:13.028Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/c5/4353a188e2c335aee33269e8b654af228278cca8e5f0b4b5f11e5d0e9adb/googleapis_common_protos-1.75.3.tar.gz", hash = "sha256:57c435ac2c68b108999b6db075d9053e4d7a936ba57b4a3d45667b1346f1738a", size = 153905, upload-time = "2026-09-03T22:31:21.869Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/47/5b/1c9e55363c3b1890a98cae813de5b4ea327845756cd8fb7ee690140c7eac/googleapis_common_protos-1.75.2-py3-none-any.whl", hash = "sha256:6b83302f554ea93a0f48409c7fc2050f954bcbcddb7e3a9c76d4a823cb22920e", size = 307002, upload-time = "2026-08-25T19:18:08.927Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/7a/7d79170c6ce6f12e109df2b3879d6b934010cf4f99aea8de8b7e5408c174/googleapis_common_protos-1.75.3-py3-none-any.whl", hash = "sha256:a018d2bf098ca9fb6faa08d5bb780e2a2c2f73c566f069761331386c9596d3f2", size = 306984, upload-time = "2026-09-03T22:30:45.133Z" },
 ]
 
 [package.optional-dependencies]
@@ -1180,11 +1180,11 @@ wheels = [
 
 [[package]]
 name = "mypy-boto3-ec2"
-version = "1.43.87"
+version = "1.43.89"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ce/9c/0ad7de9d4218b242da8c7ff3e056ecaafa075d1a32694b03d79f15ae26d3/mypy_boto3_ec2-1.43.87.tar.gz", hash = "sha256:95610ea34582894c462fecf9a9a6a1225b2ea8a8f1419e16128b42609cd14101", size = 465237, upload-time = "2026-09-02T19:50:08.356Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/88/97/372df5067f285c3a6e7e6df7681d8f7a2af85556e8c4091b2f43ef0c3e1f/mypy_boto3_ec2-1.43.89.tar.gz", hash = "sha256:fd6b7f33544f40d7c29707ab8a1a55af8209a47d39f9bcb60a40e8a10e62b572", size = 465556, upload-time = "2026-09-04T21:09:33.118Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/91/640ba87d38d72a60a337fb86c6a0bbc9fe502b7d91adbefd2c8b02661236/mypy_boto3_ec2-1.43.87-py3-none-any.whl", hash = "sha256:5bebb91866aff5f606cefd4408ff2de319a2a24b29e0a2ac0664b5a5d641afdc", size = 453503, upload-time = "2026-09-02T19:50:03.881Z" },
+    { url = "https://files.pythonhosted.org/packages/42/0a/8bba26a2b901e1afac8217cddab933b83948e72ebf4237a53095b5532531/mypy_boto3_ec2-1.43.89-py3-none-any.whl", hash = "sha256:0a6cc64c9a6d7b9c4d20349705831eff375a5c2186734f0c9338f6375b1f9aa7", size = 453803, upload-time = "2026-09-04T21:09:29.787Z" },
 ]
 
 [[package]]
@@ -1288,11 +1288,11 @@ wheels = [
 
 [[package]]
 name = "mypy-boto3-stepfunctions"
-version = "1.43.7"
+version = "1.43.88"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/eb/c7/9b5d40afdc9e8f772bfea842231c0fb0d6b162d078a6245f8be8d1487010/mypy_boto3_stepfunctions-1.43.7.tar.gz", hash = "sha256:beee206867dae74e2f1f45055e2ca7c8003f502cd0c5b31dd784129758e61e4e", size = 31290, upload-time = "2026-05-13T19:41:37.454Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/7e/7e4b7288b22800161959e2b16c3e4de29a9e78498b8d6b4d4c135518300e/mypy_boto3_stepfunctions-1.43.88.tar.gz", hash = "sha256:09f166489439887f0b2300e9101cd469c7ed3f937c73213b33f60dc5ca7a4ab0", size = 31464, upload-time = "2026-09-03T19:52:05.454Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/c2/8146e594dbc84347c3f1c5bfee4572b67f1f299c8e5fbd278fd05f2e3097/mypy_boto3_stepfunctions-1.43.7-py3-none-any.whl", hash = "sha256:3a0423193f6872d1f9d75eb04611c6a517a30cce5eac4ab18f119a37100971dd", size = 36351, upload-time = "2026-05-13T19:41:34.439Z" },
+    { url = "https://files.pythonhosted.org/packages/11/f2/2df7b6c34ef98d6e073749b2a4da5f5fe9f8c511d2e72cfde0591251ce93/mypy_boto3_stepfunctions-1.43.88-py3-none-any.whl", hash = "sha256:f03eb3449290360ff6d82403171bbab20b5edba76c9581646edca9104bc909ef", size = 36453, upload-time = "2026-09-03T19:52:03.01Z" },
 ]
 
 [[package]]
