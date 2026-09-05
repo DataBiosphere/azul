@@ -522,7 +522,7 @@ class TestTDRSourceList(AzulUnitTestCase):
                             '123-foobar.apps.googleusercontent.com')
 
     def test_auth_list_snapshots(self):
-        for token in ('mock_token_1', 'mock_token_2'):
+        for token in ('ya29.mock_token_1', 'ya29.mock_token_2'):
             with self._patch_client_id():
                 with self._patch_urlopen(new=self._mock_google_oauth_tokeninfo()):
                     tdr_client = TDRClient.for_registered_user(AccessTokenAuthentication(token))

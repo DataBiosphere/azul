@@ -32,13 +32,16 @@ from urllib3 import (
 from azul import (
     config,
 )
+from azul.indexer.cache_service import (
+    UrlCacheService,
+)
 from azul.indexer.document import (
     DocumentType,
     EntityReference,
 )
 from azul.lib.types import (
-    JSONs,
-    MutableJSONs,
+    JSON,
+    MutableJSON,
 )
 from azul.logging import (
     configure_test_logging,
@@ -76,34 +79,48 @@ log = get_test_logger(__name__)
 class DUOSTestCase(TDRTestCase, ABC):
 
     def _mock_normal_duos(self):
-        for p in self._duos_patches(self.normal_response_bodies):
+        for p in self._duos_patches(self.normal_tdr_response,
+                                    self.normal_duos_response):
             self.addPatch(p)
 
     @property
-    def normal_response_bodies(self) -> MutableJSONs:
-        duos_id = 'DUOS-000000'
-        return [
-            # TDR's /snapshots/{snapshot_id} response:
-            {
-                'name': self.source.ref.spec.name,
-                'duosFirecloudGroup': {'duosId': duos_id}
-            },
-            # DUOS' /dataset/registration/{duos_id}:
-            {
-                'consentGroups': [{'datasetIdentifier': duos_id}],
-                'studyDescription': 'Study description from DUOS'
-            }
-        ]
+    def normal_tdr_response(self) -> MutableJSON:
+        return {
+            'name': self.source.ref.spec.name,
+            'duosFirecloudGroup': {'duosId': 'DUOS-000000'}
+        }
 
-    def _duos_patches(self, bodies: JSONs) -> Iterable[patch]:
-        responses = [
-            Mock(spec=HTTPResponse, status=200, data=json.dumps(body))
-            for body in bodies
-        ]
-        mock_url = PropertyMock(return_value=furl('https://mock_duos.lan'))
+    @property
+    def normal_duos_response(self) -> MutableJSON:
+        return {
+            'consentGroups': [{'datasetIdentifier': 'DUOS-000000'}],
+            'studyDescription': 'Study description from DUOS'
+        }
+
+    def _duos_patches(self,
+                      tdr_response: JSON,
+                      duos_response: JSON | None = None
+                      ) -> Iterable[patch]:
+        tdr_mock = Mock(spec=HTTPResponse, status=200,
+                        data=json.dumps(tdr_response))
+        duos_host = 'mock_duos.lan'
+        mock_url = PropertyMock(return_value=furl(f'https://{duos_host}'))
+        mock_cache = Mock(spec=UrlCacheService)
+        if duos_response is None:
+            duos_mock = None
+        else:
+            duos_mock = Mock(spec=HTTPResponse, status=200,
+                             data=json.dumps(duos_response))
+
+        def get_url(url, *_args, **_kwargs):
+            # The snapshot metadata and the DUOS dataset registration are
+            # fetched through the same cache, and are told apart by their host
+            return duos_mock if url.host == duos_host else tdr_mock
+
+        mock_cache.get_url.side_effect = get_url
         patches = [
             patch.object(type(config), 'duos_service_url', new=mock_url),
-            patch.object(TDRClient, '_request', side_effect=responses)
+            patch.object(TDRClient, '_url_cache', new=mock_cache),
         ]
         return patches
 
@@ -154,7 +171,6 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         canned_bundle_fqids = [
             self.primary_bundle(),
             self.supplementary_bundle(),
-            self.duos_bundle(),
             self.replica_bundle(),
         ]
         expected_bundle_fqids = sorted(canned_bundle_fqids + [
@@ -177,44 +193,47 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         plugin = self.plugin
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
         self.assertEqual(expected_bundle_fqids, bundle_fqids)
-        for bundle_fqid in canned_bundle_fqids:
+        for bundle_fqid in bundle_fqids:
             with self.subTest(bundle_fqid=bundle_fqid):
-                canned_bundle = self._load_canned_bundle(bundle_fqid)
-                assert isinstance(canned_bundle, TDRAnvilBundle)
                 bundle = plugin.fetch_bundle(bundle_fqid)
                 assert isinstance(bundle, TDRAnvilBundle)
-                self.assertEqual(canned_bundle.fqid, bundle.fqid)
-                self.assertEqual(canned_bundle.entities, bundle.entities)
-                self.assertEqual(canned_bundle.links, bundle.links)
-                self.assertEqual(canned_bundle.orphans, bundle.orphans)
+                if bundle_fqid in canned_bundle_fqids:
+                    canned_bundle = self._load_canned_bundle(bundle_fqid)
+                    assert isinstance(canned_bundle, TDRAnvilBundle)
+                    self.assertEqual(canned_bundle.fqid, bundle.fqid)
+                    self.assertEqual(canned_bundle.entities, bundle.entities)
+                    self.assertEqual(canned_bundle.links, bundle.links)
+                    self.assertEqual(canned_bundle.orphans, bundle.orphans)
 
     def test_absent_duos_id(self):
         source_ref = self.source.ref
         self._make_mock_tables(source_ref)
         cases = {
-            'Absent duosFirecloudGroup': [
-                {'name': self.source.ref.spec.name}
-            ],
-            'Empty duosFirecloudGroup': [
+            'Absent duosFirecloudGroup':
+                {'name': self.source.ref.spec.name},
+            'Empty duosFirecloudGroup':
                 {
                     'name': self.source.ref.spec.name,
                     'duosFirecloudGroup': {}
-                }
-            ],
-            'Null duosId': [
+                },
+            'Null duosId':
                 {
                     'name': self.source.ref.spec.name,
                     'duosFirecloudGroup': {'duosId': None}
-                }
-            ]
+                },
         }
-        for sub_test, response_bodies in cases.items():
+        for sub_test, tdr_response in cases.items():
             with self.subTest(sub_test):
-                with self.stacked_patches(self._duos_patches(response_bodies)):
-                    bundle = self.plugin.fetch_bundle(self.duos_bundle())
+                with self.stacked_patches(self._duos_patches(tdr_response)):
+                    bundle = self.plugin.fetch_bundle(self.primary_bundle())
                     self.assertIsInstance(bundle, TDRAnvilBundle)
-                    self.assertEqual({}, bundle.entities)
-                    self.assertEqual(1, len(bundle.orphans))
+                    dataset_ref = one(
+                        ref for ref in bundle.entities
+                        if ref.entity_type == 'anvil_dataset'
+                    )
+                    metadata = bundle.entities[dataset_ref]
+                    self.assertIsNone(metadata['duos_id'])
+                    self.assertIsNone(metadata['description'])
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
@@ -233,14 +252,11 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='anvil_dataset',
                                       entity_id='2370f948-2783-4eb6-afea-e022897f4dcf')
-        bundles = [self.primary_bundle(), self.duos_bundle()]
-        for bundle_fqid in bundles:
-            bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
-            # To simplify the test, we drop all entities from the bundles
-            # except for the dataset
-            bundle.links.clear()
-            bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
-            self._index_bundle(bundle, delete=False)
+        bundle_fqid = self.primary_bundle()
+        bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
+        bundle.links.clear()
+        bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
+        self._index_bundle(bundle, delete=False)
 
         hits = self._get_all_hits()
         doc_counts: dict[DocumentType, int] = defaultdict(int)
@@ -251,24 +267,19 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
             elif qualifier in {'datasets', 'replica'}:
                 doc_counts[doc_type] += 1
                 if qualifier == 'datasets' and doc_type is DocumentType.aggregate:
-                    self.assertEqual(2, hit['_source']['num_contributions'])
-                    self.assertEqual(sorted(b.uuid for b in bundles),
-                                     sorted(b['uuid'] for b in hit['_source']['bundles']))
+                    self.assertEqual(1, hit['_source']['num_contributions'])
                     contents = one(hit['_source']['contents']['datasets'])
-                    # These fields are populated only in the primary bundle
                     self.assertEqual(dataset_ref.entity_id, contents['document_id'])
                     self.assertEqual(['phs000693'], contents['registered_identifier'])
-                    # These fields are populated only in the DUOS bundle
                     self.assertEqual('Study description from DUOS', contents['description'])
                     self.assertEqual('DUOS-000000', contents['duos_id'])
-                    # This field is present in both bundles
                     self.assertEqual('52ee7665-7033-63f2-a8d9-ce8e32666739', contents['dataset_id'])
             else:
                 self.fail(qualifier)
         self.assertDictEqual(doc_counts, {
             DocumentType.aggregate: 1,
-            DocumentType.contribution: 2,
-            **({DocumentType.replica: 2} if config.enable_replicas else {})
+            DocumentType.contribution: 1,
+            **({DocumentType.replica: 1} if config.enable_replicas else {})
         })
 
     def test_orphans(self):

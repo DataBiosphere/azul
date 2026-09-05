@@ -152,6 +152,18 @@ policy = {
         {
             'Effect': 'Allow',
             'Action': [
+                'dynamodb:GetItem',
+                'dynamodb:PutItem',
+                'dynamodb:DeleteItem',
+            ],
+            'Resource': [
+                f'arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/'
+                f'{config.dynamo_object_cache_table_name}'
+            ]
+        },
+        {
+            'Effect': 'Allow',
+            'Action': [
                 's3:GetObject',
                 's3:PutObject'
             ],

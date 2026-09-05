@@ -626,12 +626,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **cls._entity_types(),
             'biomaterial_id': null_str,
+            'biomaterial_name': null_str,
         }
 
     def _biomaterial(self, biomaterial: api.Biomaterial):
         return {
             **self._entity(biomaterial),
             'biomaterial_id': str(biomaterial.biomaterial_id),
+            'biomaterial_name': biomaterial.biomaterial_name,
         }
 
     @classmethod
@@ -1024,12 +1026,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _analysis_protocol_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
+            'protocol_name': null_str,
             'workflow': null_str
         }
 
     def _analysis_protocol(self, protocol: api.AnalysisProtocol) -> MutableJSON:
         return {
             **self._entity(protocol),
+            'protocol_name': protocol.protocol_name,
             'workflow': protocol.protocol_id
         }
 
@@ -1038,13 +1042,15 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **cls._entity_types(),
             # Pass through counter used to produce a FrequencySetAccumulator
-            'assay_type': pass_thru_json
+            'assay_type': pass_thru_json,
+            'protocol_name': null_str
         }
 
     def _imaging_protocol(self, protocol: api.ImagingProtocol) -> MutableJSON:
         return {
             **self._entity(protocol),
-            'assay_type': dict(Counter(probe.assay_type for probe in protocol.probe))
+            'assay_type': dict(Counter(probe.assay_type for probe in protocol.probe)),
+            'protocol_name': protocol.protocol_name
         }
 
     @classmethod
@@ -1052,7 +1058,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **cls._entity_types(),
             'library_construction_approach': null_str,
-            'nucleic_acid_source': null_str
+            'nucleic_acid_source': null_str,
+            'protocol_name': null_str
         }
 
     def _library_preparation_protocol(self,
@@ -1061,7 +1068,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **self._entity(protocol),
             'library_construction_approach': protocol.library_construction_method,
-            'nucleic_acid_source': protocol.nucleic_acid_source
+            'nucleic_acid_source': protocol.nucleic_acid_source,
+            'protocol_name': protocol.protocol_name,
         }
 
     @classmethod
@@ -1069,14 +1077,16 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             **cls._entity_types(),
             'instrument_manufacturer_model': null_str,
-            'paired_end': null_bool
+            'paired_end': null_bool,
+            'protocol_name': null_str,
         }
 
     def _sequencing_protocol(self, protocol: api.SequencingProtocol) -> MutableJSON:
         return {
             **self._entity(protocol),
             'instrument_manufacturer_model': protocol.instrument_manufacturer_model,
-            'paired_end': protocol.paired_end
+            'paired_end': protocol.paired_end,
+            'protocol_name': protocol.protocol_name,
         }
 
     @classmethod
@@ -1129,6 +1139,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return {
                 'document_id': str(sample.document_id),
                 'biomaterial_id': sample.biomaterial_id,
+                'biomaterial_name': sample.biomaterial_name,
                 'entity_type': cls.entity_type,
             }
 

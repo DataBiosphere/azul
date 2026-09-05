@@ -99,6 +99,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -115,6 +116,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -130,6 +132,7 @@
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
                     }
@@ -145,6 +148,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -161,6 +165,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "total_estimated_cells_redundant": 0,
                         "total_estimated_cells_redundant_": 0,
                         "total_estimated_cells": 1,
@@ -181,6 +186,7 @@
                     {
                         "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
                         "biomaterial_id": "DID_scRSq06",
+                        "biomaterial_name": "~null",
                         "biological_sex": "female",
                         "genus_species": [
                             "Australopithecus"
@@ -254,6 +260,7 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "protocol_name": "~null",
                         "library_construction_approach": "Smart-seq2",
                         "nucleic_acid_source": "single cell"
                     }
@@ -261,6 +268,7 @@
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "protocol_name": "~null",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
                         "paired_end": 1
                     }
@@ -374,6 +382,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -390,6 +399,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -405,6 +415,7 @@
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
                     }
@@ -420,6 +431,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -438,6 +450,7 @@
                     {
                         "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
                         "biomaterial_id": "DID_scRSq06",
+                        "biomaterial_name": "~null",
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -457,6 +470,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -504,6 +518,7 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "protocol_name": "~null",
                         "library_construction_approach": "Smart-seq2",
                         "nucleic_acid_source": "single cell"
                     }
@@ -511,6 +526,7 @@
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "protocol_name": "~null",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
                         "paired_end": 1
                     }
@@ -619,6 +635,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -635,6 +652,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -650,6 +668,7 @@
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
                     }
@@ -665,6 +684,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -683,6 +703,7 @@
                     {
                         "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
                         "biomaterial_id": "DID_scRSq06",
+                        "biomaterial_name": "~null",
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -702,6 +723,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -749,6 +771,7 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "protocol_name": "~null",
                         "library_construction_approach": "Smart-seq2",
                         "nucleic_acid_source": "single cell"
                     }
@@ -756,6 +779,7 @@
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "protocol_name": "~null",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
                         "paired_end": 1
                     }
@@ -864,6 +888,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -880,6 +905,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -895,6 +921,7 @@
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
                     }
@@ -910,6 +937,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -928,6 +956,7 @@
                     {
                         "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
                         "biomaterial_id": "DID_scRSq06",
+                        "biomaterial_name": "~null",
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -947,6 +976,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -1019,6 +1049,7 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "protocol_name": "~null",
                         "library_construction_approach": "Smart-seq2",
                         "nucleic_acid_source": "single cell"
                     }
@@ -1026,6 +1057,7 @@
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "protocol_name": "~null",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
                         "paired_end": 1
                     }
@@ -1134,6 +1166,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -1150,6 +1183,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -1165,6 +1199,7 @@
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
                     }
@@ -1180,6 +1215,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -1198,6 +1234,7 @@
                     {
                         "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
                         "biomaterial_id": "DID_scRSq06",
+                        "biomaterial_name": "~null",
                         "genus_species": [
                             "Australopithecus"
                         ],
@@ -1217,6 +1254,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "selected_cell_type": [
                             "~null"
                         ],
@@ -1289,6 +1327,7 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "protocol_name": "~null",
                         "library_construction_approach": "Smart-seq2",
                         "nucleic_acid_source": "single cell"
                     }
@@ -1296,6 +1335,7 @@
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "protocol_name": "~null",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
                         "paired_end": 1
                     }
@@ -1703,6 +1743,9 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
+                        "biomaterial_name": [
+                            "~null"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -1737,6 +1780,9 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
+                        "biomaterial_name": [
+                            "~null"
+                        ],
                         "disease": [
                             "normal"
                         ],
@@ -1761,6 +1807,9 @@
                     {
                         "biomaterial_id": [
                             "GSM2172585 1"
+                        ],
+                        "biomaterial_name": [
+                            "~null"
                         ],
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
@@ -1791,6 +1840,9 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
+                        "biomaterial_name": [
+                            "~null"
+                        ],
                         "disease": [
                             "normal"
                         ],
@@ -1820,6 +1872,9 @@
                         ],
                         "biomaterial_id": [
                             "DID_scRSq06"
+                        ],
+                        "biomaterial_name": [
+                            "~null"
                         ],
                         "donor_count": 1,
                         "donor_count_": 1,
@@ -1853,6 +1908,9 @@
                         ],
                         "biomaterial_id": [
                             "GSM2172585 1"
+                        ],
+                        "biomaterial_name": [
+                            "~null"
                         ],
                         "selected_cell_type": [
                             "~null"
@@ -1903,6 +1961,9 @@
                         "document_id": [
                             "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
                         ],
+                        "protocol_name": [
+                            "~null"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -1915,6 +1976,9 @@
                     {
                         "document_id": [
                             "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
+                        "protocol_name": [
+                            "~null"
                         ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
@@ -2008,6 +2072,9 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
+                        "biomaterial_name": [
+                            "~null"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
@@ -2042,6 +2109,9 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
+                        "biomaterial_name": [
+                            "~null"
+                        ],
                         "disease": [
                             "normal"
                         ],
@@ -2066,6 +2136,9 @@
                     {
                         "biomaterial_id": [
                             "GSM2172585 1"
+                        ],
+                        "biomaterial_name": [
+                            "~null"
                         ],
                         "document_id": [
                             "412898c5-5b9b-4907-b07c-e9b89666e204"
@@ -2096,6 +2169,9 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
+                        "biomaterial_name": [
+                            "~null"
+                        ],
                         "disease": [
                             "normal"
                         ],
@@ -2125,6 +2201,9 @@
                         ],
                         "biomaterial_id": [
                             "DID_scRSq06"
+                        ],
+                        "biomaterial_name": [
+                            "~null"
                         ],
                         "donor_count": 1,
                         "donor_count_": 1,
@@ -2158,6 +2237,9 @@
                         ],
                         "biomaterial_id": [
                             "GSM2172585 1"
+                        ],
+                        "biomaterial_name": [
+                            "~null"
                         ],
                         "selected_cell_type": [
                             "~null"
@@ -2208,6 +2290,9 @@
                         "document_id": [
                             "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
                         ],
+                        "protocol_name": [
+                            "~null"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -2220,6 +2305,9 @@
                     {
                         "document_id": [
                             "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
+                        "protocol_name": [
+                            "~null"
                         ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
@@ -2309,6 +2397,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -2325,6 +2414,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -2843,6 +2933,7 @@
                     {
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "entity_type": "specimens",
                         "organ": "pancreas",
                         "organ_part": [
@@ -2859,6 +2950,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -2874,6 +2966,7 @@
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "sequencing_input_type": "cell_suspension"
                     }
@@ -2889,6 +2982,7 @@
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
+                        "biomaterial_name": "~null",
                         "disease": [
                             "normal"
                         ],
@@ -2905,6 +2999,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "total_estimated_cells_redundant": 0,
                         "total_estimated_cells_redundant_": 0,
                         "total_estimated_cells": 1,
@@ -2925,6 +3020,7 @@
                     {
                         "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
                         "biomaterial_id": "DID_scRSq06",
+                        "biomaterial_name": "~null",
                         "biological_sex": "female",
                         "genus_species": [
                             "Australopithecus"
@@ -2998,6 +3094,7 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "protocol_name": "~null",
                         "library_construction_approach": "Smart-seq2",
                         "nucleic_acid_source": "single cell"
                     }
@@ -3005,6 +3102,7 @@
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "protocol_name": "~null",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
                         "paired_end": 1
                     }
@@ -3202,6 +3300,7 @@
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
                         "biomaterial_id": "GSM2172585 1",
+                        "biomaterial_name": "~null",
                         "total_estimated_cells_redundant": 0,
                         "total_estimated_cells_redundant_": 0,
                         "total_estimated_cells": 1,

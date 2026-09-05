@@ -31,6 +31,7 @@ import azul.lib.strings
 import azul.lib.threads
 import azul.lib.time
 import azul.lib.types
+import azul.lib.urls
 import azul.lib.uuids
 from azul.logging import (
     configure_test_logging,
@@ -97,6 +98,7 @@ def load_tests(_loader,
         azul.lib.threads,
         azul.lib.time,
         azul.lib.types,
+        azul.lib.urls,
         azul.lib.uuids,
         azul.openapi,
         azul.openapi.params,

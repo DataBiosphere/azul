@@ -1,6 +1,7 @@
 import logging.config
 
 from chalice import (
+    BadRequestError,
     UnauthorizedError,
 )
 
@@ -18,6 +19,7 @@ from azul.lib import (
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
+    is_redactable,
 )
 from azul.lib.types import (
     JSON,
@@ -58,7 +60,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '19.0',
+        'version': '19.1',
         'description': fd(f'''
             # Overview
 
@@ -279,7 +281,10 @@ class ServiceApp(HealthApp):
                 raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return BearerTokenAuthentication.for_token(auth_token)
+                    if not is_redactable(auth_token):
+                        raise BadRequestError('Unexpected token syntax')
+                    else:
+                        return BearerTokenAuthentication.for_token(auth_token)
                 else:
                     raise UnauthorizedError(header)
 

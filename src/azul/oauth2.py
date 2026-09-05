@@ -132,6 +132,7 @@ class OAuth2Client(HasCachedHttpClient):
                              Google Sign-In (GSI) library's authorizationCode
                              flow.
         """
+        assert_redactable(authorization_code)
         if redirect_uri is None:
             # Undocumented but crucial (https://stackoverflow.com/a/48121098/4171119)
             redirect_uri = 'postmessage'
@@ -149,7 +150,6 @@ class OAuth2Client(HasCachedHttpClient):
         response = json.loads(response.data)
         assert is_of_type(response, TokenForCodeResponse)
         assert response['token_type'] == 'Bearer'
-        assert_redactable(authorization_code)
         assert_redactable(response['access_token'])
         assert_redactable(response['refresh_token'])
         return response
@@ -160,6 +160,7 @@ class OAuth2Client(HasCachedHttpClient):
                           client_id: str,
                           client_secret: str
                           ) -> TokenResponse:
+        assert_redactable(refresh_token)
         fields = {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
@@ -173,11 +174,11 @@ class OAuth2Client(HasCachedHttpClient):
         response = json.loads(response.data)
         assert is_of_type(response, TokenResponse)
         assert response['token_type'] == 'Bearer'
-        assert_redactable(refresh_token)
         assert_redactable(response['access_token'])
         return response
 
     def token_info(self, access_token: str) -> TokenInfoResponse:
+        assert_redactable(access_token)
         url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args=dict(access_token=access_token))
         response = self._http_client.request('GET', str(url))

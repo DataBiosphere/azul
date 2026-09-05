@@ -72,7 +72,11 @@ class TestAppLogging(AzulUnitTestCase):
                         host, port = server_thread.address
                         with self.assertLogs(app.log, level=log_level) as app_log:
                             with self.assertLogs(azul.log, level=log_level) as azul_log:
-                                response = self._http_client.request('GET', f'http://{host}:{port}{path}')
+                                response = self._http_client.request(
+                                    'GET',
+                                    f'http://{host}:{port}{path}',
+                                    # A secret of an unrecognized type
+                                    headers={'authorization': 'Basic YWxhZGRpbjpvcGVuc2VzYW1l'})
                     finally:
                         server_thread.kill_thread()
                         server_thread.join(timeout=10)
@@ -86,6 +90,9 @@ class TestAppLogging(AzulUnitTestCase):
                     info = {
                         'host': f'{host}:{port}',
                         'user-agent': 'python-urllib3/2.7.0',
+                        # Since the type of the secret is unrecognized, the
+                        # entire header value is redacted
+                        'authorization': 'REDACTED',
                         'accept-encoding': AcceptEncodingClient.accept_encoding_header(),
                     }
                     self.assertEqual(f'INFO:azul.chalice:Received GET request for {path!r}, '

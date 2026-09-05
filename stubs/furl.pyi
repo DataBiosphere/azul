@@ -85,12 +85,21 @@ class MutablePath(Path):
 
 
 class Fragment:
+    path: Path
+    query: Query
 
     def __str__(self) -> str: ...
 
 
 class MutableFragment(Fragment):
-    pass
+    path: MutablePath
+    query: MutableQuery
+
+    def set(self,
+            *,
+            path: _Path | None = None,
+            args: _Args | None = None
+            ) -> Self: ...
 
 
 class furl:

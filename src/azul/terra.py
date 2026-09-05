@@ -75,9 +75,16 @@ from azul.http import (
     LimitedTimeoutException,
     Propagate429HttpClient,
 )
+from azul.indexer.cache_service import (
+    CacheService,
+    RateLimitingCacheService,
+    RetryingCacheService,
+    UrlCacheService,
+)
 from azul.lib import (
     R,
     cache,
+    cached_property,
     mutable_furl,
 )
 from azul.lib.bigquery import (
@@ -263,7 +270,7 @@ class TerraClientException(Exception):
 
 class TerraStatusException(TerraClientException):
 
-    def __init__(self, url: furl, response: urllib3.response.HTTPResponse):
+    def __init__(self, url: furl, response: urllib3.response.BaseHTTPResponse):
         super().__init__(f'Unexpected response from {url}',
                          response.status, response.data)
 
@@ -400,7 +407,9 @@ class TDRClient(SAMClient, DRSClient):
 
     def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
-        response = self._request('GET', endpoint)
+        # This method is called once per contribution, while the
+        # response only varies per source, so it is cached.
+        response = self._url_cache.get_url(endpoint)
         response = self._check_response(endpoint, response)
         assert source.spec.name == response['name'], R(
             'Source name changed unexpectedly', source, response)
@@ -536,9 +545,44 @@ class TDRClient(SAMClient, DRSClient):
         assert url is not None
         return url.set(path=('api', *path))
 
+    @cached_property
+    def _url_cache(self) -> UrlCacheService:
+
+        # This cache serves the DUOS dataset registrations as well as the TDR
+        # snapshot metadata that `get_duos` needs in order to request them. The
+        # rate limiting below is per URL host, so the two services are allotted
+        # independent sets of slots. The cache timing is *not* per host, but per
+        # cache, so it'll have to be tuned with both DUOS and TDR in mind.
+        #
+        # We were asked to time out after 30s on DUOS requests, and to retry
+        # three times. The HTTP client we use for Terra services may have a
+        # different timeout and retry configured. For example, when running in a
+        # Lambda context, it uses the remaining Lambda execution time for the
+        # timeout, and, incidentally, three retries. The cache's fetch lock
+        # expiration can only be set to a fixed value so in order to avoid more
+        # than one Lambda invocation retrying the same DUOS request in parallel,
+        # we'll set it to the contribution Lamba's timeout.
+        #
+        timeout = config.contribution_lambda_timeout(retry=False)
+        cache = CacheService(expiration=3600 * 24, lock_expiration=timeout)
+
+        # Ten concurrent requests per URL host, regardless of the URL path.
+        #
+        cache = RateLimitingCacheService(inner=cache, max_slots=10)
+
+        # Keep in mind that the retrying cache service handles contention on the
+        # fetch lock *and* the rate limiting slots. The lock expiration above
+        # essentially disables the contention-based retries on the fetch lock,
+        # because the Lambda times out before it could retry to acquire the
+        # lock. So the parameters for the retrying cache service are primarily
+        # tuned for the slot contention retry.
+        #
+        cache = RetryingCacheService(inner=cache, num_retries=13, retry_delay=10.0)
+        return UrlCacheService(inner=cache, http_client=self._http_client)
+
     def _check_response(self,
                         endpoint: furl,
-                        response: urllib3.HTTPResponse
+                        response: urllib3.response.BaseHTTPResponse
                         ) -> MutableJSON:
         if response.status == 200:
             return json.loads(response.data)
@@ -661,7 +705,10 @@ class TDRClient(SAMClient, DRSClient):
         else:
             url = self._duos_endpoint('dataset', 'registration', duos_id)
             try:
-                response = self._request('GET', url)
+                # A recent log analysis revealed that 95% of contribution Lambda
+                # invocations end less than 4s after they retrieved the dataset
+                # description from DUOS. A 10s margin covers 97% of invocations
+                response = self._url_cache.get_url(url, timeout_margin=10)
             except LimitedTimeoutException:
                 body = {'studyDescription': '[Description currently not available]'}
                 return duos_id, body

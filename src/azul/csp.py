@@ -134,7 +134,7 @@ class CSP:
         grammar from the specification. Of that grammar, only the productions
         used in CSPs for Azul are supported.
 
-        >>> def validate(s): return CSP.parse(s).validate()
+        >>> def validate(s): CSP.parse(s).validate()
 
         >>> valid = ('0a+/' * 11)[:43]
         >>> validate(f"script-src 'self' 'nonce-{valid}'")

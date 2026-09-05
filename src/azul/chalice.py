@@ -54,6 +54,7 @@ from azul.csp import (
 )
 from azul.http import (
     parse_header,
+    redact_header,
 )
 from azul.lib import (
     R,
@@ -169,16 +170,20 @@ class AzulChaliceApp(Chalice):
         return result
 
     def __call__(self, event: dict, context: LambdaContext) -> dict[str, Any]:
-        # Chalice does not URL-decode path parameters
-        # (https://github.com/aws/chalice/issues/511)
-        # This appears to actually be a bug in API Gateway, as the parameters
-        # are already parsed when the event is passed to Chalice
-        # (https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-example-event)
-        path_params = event['pathParameters']
-        if path_params is not None:
-            for key, value in path_params.items():
-                path_params[key] = unquote(value)
-        return super().__call__(event, context)
+        config.lambda_context = context
+        try:
+            # Chalice does not URL-decode path parameters
+            # (https://github.com/aws/chalice/issues/511)
+            # This appears to actually be a bug in API Gateway, as the
+            # parameters are already parsed when the event is passed to Chalice
+            # (https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html#apigateway-example-event)
+            path_params = event['pathParameters']
+            if path_params is not None:
+                for key, value in path_params.items():
+                    path_params[key] = unquote(value)
+            return super().__call__(event, context)
+        finally:
+            config.lambda_context = None
 
     def _patch_event_source_handler(self):
         """
@@ -191,7 +196,11 @@ class AzulChaliceApp(Chalice):
 
         def patched_event_source_handler(self_, event, context):
             self.lambda_context = context
-            return old_handler(self_, event, context)
+            config.lambda_context = context
+            try:
+                return old_handler(self_, event, context)
+            finally:
+                config.lambda_context = None
 
         old_handler = chalice.app.EventSourceHandler.__call__
         if old_handler.__code__ != patched_event_source_handler.__code__:
@@ -471,7 +480,8 @@ class AzulChaliceApp(Chalice):
                     for k, v in ((k, o.getlist(k)) for k in o.keys())
                 }
             elif isinstance(o, CaseInsensitiveMapping):
-                return dict(o)
+                # Convert to dict, redacting the header values
+                return {k: redact_header(k, v) for k, v in o.items()}
             else:
                 return super().default(o)
 

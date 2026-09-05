@@ -20,7 +20,7 @@ from typing import (
     Self,
 )
 
-import attr
+import attrs
 from furl import (
     furl,
 )
@@ -136,7 +136,7 @@ class OpenSearchStage[R1, R2](metaclass=ABCMeta):
         raise NotImplementedError
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class OpenSearchChain[R0, R1, R2](OpenSearchStage[R0, R2]):
     """
     The result of wrapping a stage or chain in another stage.
@@ -167,7 +167,7 @@ class OpenSearchChain[R0, R1, R2](OpenSearchStage[R0, R2]):
             yield self.inner
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
     """
     A base implementation of a stage.
@@ -187,7 +187,7 @@ class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
 TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[PrimitiveJSON]]]
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class FilterStage(_OpenSearchStage[Response, Response]):
     """
     Converts the given filters to an OpenSearch query and adds that query as
@@ -290,7 +290,7 @@ class FilterStage(_OpenSearchStage[Response, Response]):
         return Q('bool', must=query_list)
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
     """
     Cooperate with the given filter stage to augment the request with an
@@ -520,7 +520,7 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         aggs[special_fields.accessible.name] = agg
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class SlicingStage(_OpenSearchStage[Response, Response]):
     """
     Augments the request with a document slice (known as a *source filter* in
@@ -549,7 +549,7 @@ class SlicingStage(_OpenSearchStage[Response, Response]):
 # FIXME: Elminate Eliminate reliance on Elasticsearch DSL
 #        https://github.com/DataBiosphere/azul/issues/4111
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class ToDictStage(_OpenSearchStage[Response, MutableJSON]):
 
     def prepare_request(self, request: Search) -> Search:
@@ -576,7 +576,7 @@ def sort_key_to_json(s: SortKey) -> AnyJSON:
     return list(s)
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+@attrs.frozen(kw_only=True)
 class Pagination:
     order: str
     size: int
@@ -589,9 +589,9 @@ class Pagination:
                 search_before: SortKey | None,
                 search_after: SortKey | None
                 ) -> Self:
-        return attr.evolve(self,
-                           search_before=search_before,
-                           search_after=search_after)
+        return attrs.evolve(self,
+                            search_before=search_before,
+                            search_after=search_after)
 
     def link(self, *, previous: bool, **params: str) -> furl | None:
         """
@@ -620,7 +620,7 @@ class ResponsePagination(JSONTypedDict):
 ResponseTriple = tuple[JSONs, ResponsePagination, JSON]
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attrs.frozen(kw_only=True)
 class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
     """
     Handles the pagination of search results

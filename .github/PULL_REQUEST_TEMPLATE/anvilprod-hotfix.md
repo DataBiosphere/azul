@@ -27,6 +27,8 @@ Linked issue: #0000
 - [ ] Added `H` tag to commit title <sub>or this PR does not include a permanent hotfix</sub>
 - [ ] Added `hotfix` label to PR
 - [ ] This PR is labeled `partial` <sub>or represents a permanent hotfix</sub>
+- [ ] PR carries all applicable `reindex:…` , `mirror:…` and `deploy:…` labels of the preceding incomplete promotion or hotfix PR
+- [ ] PR description contains all applicable notes from the preceding incomplete promotion or hotfix PR
 
 
 ### Author (before every review)
@@ -65,8 +67,11 @@ Linked issue: #0000
 - [ ] Pushed PR branch to GitLab `anvilprod` <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passes in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Reviewed build logs for anomalies in `hammerbox` deployment <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Deleted unreferenced indices in `hammerbox` <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices in `hammerbox`</sub>
-- [ ] Started reindex in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
+- [ ] In `hammerbox`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] In `hammerbox`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] In `hammerbox`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] In `hammerbox`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] Started full reindex in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
 - [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] Started mirroring in `hammerbox` <sub>or this PR is not labeled `mirror:anvilprod`</sub>
 - [ ] Checked for failures in `hammerbox` <sub>or this PR is not labeled `mirror:anvilprod`</sub>
@@ -95,22 +100,23 @@ Linked issue: #0000
 
 ### Operator (reindex)
 
-- [ ] Deindexed all unreferenced catalogs in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
-- [ ] Deindexed specific sources in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
-- [ ] Indexed specific sources in `anvilprod` <sub>or this PR is neither labeled `reindex:partial` nor `reindex:anvilprod`</sub>
-- [ ] Started reindex in `anvilprod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvilprod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Emptied fail queues in `anvilprod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Restarted the Data Browser pipeline for the [ucsc/anvil/anvilprod branch](https://gitlab.explore.anvilproject.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvilprod) on GitLab in `anvilprod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
-- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvilprod` <sub>or neither this PR nor a failed, prior promotion requires it</sub>
+- [ ] In `anvilprod`, deleted the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] In `anvilprod`, deindexed the sources sepcified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] In `anvilprod`, indexed the sources specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] In `anvilprod`, indexed the catalogs specified in the notes <sub>or this PR is missing either the `reindex:partial` or the `reindex:anvilprod` label, or both</sub>
+- [ ] Started full reindex in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
+- [ ] Checked for, triaged and possibly requeued messages in both fail queues in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
+- [ ] Emptied fail queues in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
+- [ ] Restarted the Data Browser pipeline for the [ucsc/anvil/anvilprod branch](https://gitlab.explore.anvilproject.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvilprod) on GitLab in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
+- [ ] Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] Created backport PR and linked to it in a comment on this PR
 
 
 ### Operator (mirroring)
 
-- [ ] Started mirroring in `anvilprod` <sub>or neither this PR nor a failed, prior promotion is labelled `mirror:anvilprod`</sub>
-- [ ] Checked for, triaged and possibly requeued messages in mirror fail queue in `anvilprod` <sub>or neither this PR nor a failed, prior promotion is labelled `mirror:anvilprod`</sub>
-- [ ] Emptied mirror fail queue in `anvilprod` <sub>or neither this PR nor a failed, prior promotion is labelled `mirror:anvilprod`</sub>
+- [ ] Started mirroring in `anvilprod` <sub>or this PR is not labelled `mirror:anvilprod`</sub>
+- [ ] Checked for, triaged and possibly requeued messages in mirror fail queue in `anvilprod` <sub>or this PR is not labelled `mirror:anvilprod`</sub>
+- [ ] Emptied mirror fail queue in `anvilprod` <sub>or this PR is not labelled `mirror:anvilprod`</sub>
 
 
 ### Operator

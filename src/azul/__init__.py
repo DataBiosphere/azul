@@ -56,6 +56,7 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     JSON,
+    LambdaContext,
     MutableJSON,
     json_bool,
     json_int,
@@ -1344,8 +1345,9 @@ class Config:
     def api_gateway_lambda_timeout(self) -> int:
         return self.api_gateway_timeout + self.api_gateway_timeout_padding
 
-    # This attribute is set dynamically at runtime
+    # These attributes are set dynamically at runtime
     lambda_is_handling_api_gateway_request: bool = False
+    lambda_context: LambdaContext | None = None
 
     # The length limit is more or less arbitrary. It was determined a few years
     # ago by looking at the resource name length limits for various types of AWS
@@ -1627,6 +1629,10 @@ class Config:
     @property
     def dynamo_users_table_name(self) -> str:
         return self.qualified_resource_name('users')
+
+    @property
+    def dynamo_object_cache_table_name(self) -> str:
+        return self.qualified_resource_name('object_cache')
 
     @property
     def current_sources(self) -> list[str] | None:

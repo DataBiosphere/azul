@@ -603,6 +603,17 @@ def emit(t: T, target_branch: str):
                             'content': 'This PR is labeled `partial`',
                             'alt': 'or represents a permanent hotfix'
                         },
+                        {
+                            'type': 'cli',
+                            'content': 'PR carries all applicable `reindex:…` , `mirror:…` and `deploy:…` labels of '
+                                       'the preceding incomplete promotion or hotfix PR'
+                        },
+                        {
+                            'type': 'cli',
+                            'content': 'PR description contains all applicable notes from '
+                                       'the preceding incomplete promotion or hotfix PR'
+                        },
+
                     ]
                     if t is T.hotfix else
                     []
@@ -812,7 +823,7 @@ def emit(t: T, target_branch: str):
                                 f'_select {d}.gitlab && '
                                 f'CI_COMMIT_REF_NAME={target_branch} '
                                 f'make -C terraform/gitlab apply'
-                            ),
+                            ) + '(an error from _login_docker_gitlab is benign if the instance was stopped for backup)',
                             'alt': 'or this PR is not labeled `deploy:gitlab`'
                         }
                     ]
@@ -878,6 +889,12 @@ def emit(t: T, target_branch: str):
             # unzip() is used to interleave the steps for each deployment so
             # that first, step 1 is done for all deployments, then step 2
             # for all of them, and so on.
+            *([], partial_reindex_actions := [
+                'deleted the catalogs specified in the notes',
+                'deindexed the sources sepcified in the notes',
+                'indexed the sources specified in the notes',
+                'indexed the catalogs specified in the notes'
+            ])[0],
             *flatten(unzip(
                 [
                     {
@@ -902,16 +919,18 @@ def emit(t: T, target_branch: str):
                                f'or upgrade instructions do not apply to `{s}`'
                     }),
                     *iif(t is not T.upgrade, [
+                        *[
+                            {
+                                'type': 'cli',
+                                'content': f'In `{s}`, {action}',
+                                'alt': f'or this PR is missing either the `reindex:partial` '
+                                       f'or the `reindex:{d}` label, or both'
+                            } for action in partial_reindex_actions
+                        ],
                         {
                             'type': 'cli',
-                            'content': f'Deleted unreferenced indices in `{s}`',
-                            'alt': f'or this PR does not remove catalogs '
-                                   f'or otherwise causes unreferenced indices in `{s}`'
-                        },
-                        {
-                            'type': 'cli',
-                            'content': f'Started reindex in `{s}`',
-                            'alt': f'or this PR is not labeled `reindex:{d}`'
+                            'content': f'Started full reindex in `{s}`',
+                            'alt': f'or this PR is not labeled `reindex:{d}` or it is labeled reindex:partial'
                         },
                         {
                             'type': 'cli',
@@ -1097,26 +1116,19 @@ def emit(t: T, target_branch: str):
                         *[
                             {
                                 'type': 'cli',
-                                'content': f'{action} in `{d}`',
-                                'alt': f'or this PR is neither labeled `reindex:partial` nor `reindex:{d}`'
-                            } for action in [
-                                'Deindexed all unreferenced catalogs',
-                                'Deindexed specific sources',
-                                'Indexed specific sources'
-                            ]
+                                'content': f'In `{d}`, {action}',
+                                'alt': f'or this PR is missing either the `reindex:partial` '
+                                       f'or the `reindex:{d}` label, or both'
+                            } for action in partial_reindex_actions
                         ],
                         *[
                             {
                                 'type': 'cli',
                                 'content': f'{action} in `{d}`',
-                                'alt': (
-                                    'or neither this PR nor a failed, prior promotion requires it'
-                                    if t is T.hotfix else
-                                    f'or this PR does not require reindexing `{d}`'
-                                )
+                                'alt': f'or this PR is not labeled `reindex:{d}` or it is labeled reindex:partial'
                             }
                             for action in [
-                                'Started reindex',
+                                'Started full reindex',
                                 'Checked for, triaged and possibly requeued messages in both fail queues',
                                 'Emptied fail queues'
                             ]
@@ -1128,11 +1140,7 @@ def emit(t: T, target_branch: str):
                     {
                         'type': 'cli',
                         'content': f'{action} in `{d}`',
-                        'alt': (
-                            'or neither this PR nor a failed, prior promotion requires it'
-                            if t is T.hotfix else
-                            f'or this PR does not require reindexing `{d}`'
-                        )
+                        'alt': f'or this PR is not labeled `reindex:{d}`'
                     }
                     for d, s in t.target_deployments(target_branch).items()
                     for action in [
@@ -1171,11 +1179,7 @@ def emit(t: T, target_branch: str):
                             {
                                 'type': 'cli',
                                 'content': f'{action} in `{d}`',
-                                'alt': (
-                                    f'or neither this PR nor a failed, prior promotion is labelled `mirror:{d}`'
-                                    if t is T.hotfix else
-                                    f'or this PR is not labelled `mirror:{d}`'
-                                )
+                                'alt': f'or this PR is not labelled `mirror:{d}`'
                             }
                             for action in [
                                 'Started mirroring',
