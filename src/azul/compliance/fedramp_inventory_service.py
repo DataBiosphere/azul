@@ -416,6 +416,54 @@ class ACMCertificateMapper(Mapper):
                 )
 
 
+class PendingDeletionMapper(Mapper, metaclass=ABCMeta):
+    """
+    Base class for mappers of resource types whose deletion is deferred by a
+    recovery window. AWS Config keeps reporting such a resource until it is
+    purged at the end of that window.
+    """
+
+    @abstractmethod
+    def _is_pending_deletion(self, resource: ResourceConfig) -> bool:
+        raise NotImplementedError
+
+    def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
+        yield InventoryRow(
+            asset_type=resource.type,
+            comments=(
+                'Pending deletion'
+                if self._is_pending_deletion(resource) else
+                None
+            ),
+            **self._common_fields(resource)
+        )
+
+
+class SecretMapper(PendingDeletionMapper):
+
+    def _supported_resource_types(self) -> set[str]:
+        return {'AWS::SecretsManager::Secret'}
+
+    def _is_pending_deletion(self, resource: ResourceConfig) -> bool:
+        return resource.config['Deleted']
+
+
+class KMSKeyMapper(PendingDeletionMapper):
+
+    def _supported_resource_types(self) -> set[str]:
+        return {'AWS::KMS::Key'}
+
+    def _is_pending_deletion(self, resource: ResourceConfig) -> bool:
+        # A deleted replica of a multi-region key is reported PendingReplicaDeletion
+        # instead of PendingDeletion
+        #
+        # https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html
+        #
+        return resource.config['keyState'] in {
+            'PendingDeletion',
+            'PendingReplicaDeletion'}
+
+
 class ResourceComplianceMapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
