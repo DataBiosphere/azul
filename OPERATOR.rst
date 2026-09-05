@@ -792,7 +792,7 @@ properly. This is because of two mechanisms: first, the ``PUT /manifest/files``
 endpoint has a much stricter rate limit which would be impractical for the rest
 of the scan. Second, the inherent nature of the penetration testing means that
 many requests will be blocked by Amazon's common ruleset. When these blocked
-requests exceed 25% of total requests, an alarm is triggered.
+requests exceed 50% of total requests, an alarm is triggered.
 
 .. _`Data Portal / Browser scan`: #running-a-data-portal-browser-scan
 
