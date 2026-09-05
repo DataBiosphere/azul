@@ -70,6 +70,14 @@ jobs:
           #
           export azul_docker_registry=""
 
+          # The digest in `azul_python_image_mirrored` is that of the image
+          # mirror, and digests of multi-platform images differ between the
+          # mirror and the upstream registry. With the mirror disabled above,
+          # the base image of the image built below must be referred to by its
+          # upstream digest.
+          #
+          export azul_python_image=$azul_python_image_upstream
+
           make format
           make isort
           make -C lambdas openapi

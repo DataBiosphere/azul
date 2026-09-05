@@ -26,7 +26,7 @@ def main():
             if line:
                 name, _, old = line.partition('=')
                 cur = os.environ.get(name)
-                if name == 'azul_python_image':
+                if name == 'azul_python_image_mirrored':
                     ref, gist = resolve_docker_image_for_pull('python')
                     # We remove the current registry from the ref, assuming that
                     # it is reintroduced when the variable is used, by
@@ -47,6 +47,19 @@ def main():
                         log.warning('%r differs between boot (%r) and current (%r) environment. '
                                     'This suggests that the environment was not loaded correctly.',
                                     name, old, cur)
+                    if old != new:
+                        log.info('Updating %r from %r to %r. '
+                                 'You need to run _refresh.',
+                                 name, old, new)
+                elif name == 'azul_python_image_upstream':
+                    # The variable above refers to the image in a mirror. A
+                    # build that has no credentials for the mirror pulls the
+                    # image from the upstream registry instead, where that
+                    # digest is not valid, which is why the upstream digest is
+                    # tracked, too.
+                    ref, gist = resolve_docker_image_for_pull('python')
+                    ref = ref.port_from(config.docker_registry)
+                    new = str(ref.with_digest(gist['digest']))
                     if old != new:
                         log.info('Updating %r from %r to %r. '
                                  'You need to run _refresh.',
