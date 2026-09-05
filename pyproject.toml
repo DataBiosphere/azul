@@ -13,12 +13,12 @@ version = "1.0.0"
 # `make environment.boot`, in that order, and commit the resulting changes.
 # Ensure that the `shared` component is redeployed.
 #
-requires-python = "==3.14.6"
+requires-python = "==3.14.7"
 dependencies = [
     "attrs==26.1.0",
     # Match version of the `boto3-stubs` dev dependency
-    "boto3==1.43.63",
-    "botocore==1.43.63",
+    "boto3==1.43.87",
+    "botocore==1.43.87",
     # Match with `types-chevron` in the `dev` group
     "chevron==0.14.0",
     "cryptography==50.0.0",
@@ -61,14 +61,14 @@ lambda = [
 dev = [
     "atomicwrites==1.4.1",
     # Match this with the version of the `boto3` runtime dependency
-    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.63",
+    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.87",
     # Match version with the `chalice` index below
     "chalice==1.32.0+21",
     "coverage==7.15.3",
     "docker==7.2.0",
     "flake8==7.3.0",
     "gevent==26.7.0",
-    "gitpython==3.1.57",
+    "gitpython==3.1.61",
     "google-api-python-client==2.198.0",
     "google-cloud-bigquery-reservation==1.25.0",
     "google-cloud-storage==3.13.0",
@@ -110,7 +110,7 @@ dev = [
 # After modifying this pin, run `make environment.boot` and `make uv_checksums`,
 # and commit the resulting changes.
 #
-required-version = "==0.12.5"
+required-version = "==0.12.9"
 
 # Only use an interpreter that's already installed on the system, never one
 # that uv downloads and manages itself.
