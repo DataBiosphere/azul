@@ -103,15 +103,23 @@ class DUOSTestCase(TDRTestCase, ABC):
                       ) -> Iterable[patch]:
         tdr_mock = Mock(spec=HTTPResponse, status=200,
                         data=json.dumps(tdr_response))
-        mock_url = PropertyMock(return_value=furl('https://mock_duos.lan'))
+        duos_host = 'mock_duos.lan'
+        mock_url = PropertyMock(return_value=furl(f'https://{duos_host}'))
         mock_cache = Mock(spec=UrlCacheService)
-        if duos_response is not None:
+        if duos_response is None:
+            duos_mock = None
+        else:
             duos_mock = Mock(spec=HTTPResponse, status=200,
                              data=json.dumps(duos_response))
-            mock_cache.get_url.return_value = duos_mock
+
+        def get_url(url, *_args, **_kwargs):
+            # The snapshot metadata and the DUOS dataset registration are
+            # fetched through the same cache, and are told apart by their host
+            return duos_mock if url.host == duos_host else tdr_mock
+
+        mock_cache.get_url.side_effect = get_url
         patches = [
             patch.object(type(config), 'duos_service_url', new=mock_url),
-            patch.object(TDRClient, '_request', return_value=tdr_mock),
             patch.object(TDRClient, '_url_cache', new=mock_cache),
         ]
         return patches

@@ -407,7 +407,9 @@ class TDRClient(SAMClient, DRSClient):
 
     def _retrieve_source(self, source: TDRSourceRef) -> MutableJSON:
         endpoint = self._repository_endpoint('snapshots', source.id)
-        response = self._request('GET', endpoint)
+        # This method is called once per contribution, while the
+        # response only varies per source, so it is cached.
+        response = self._url_cache.get_url(endpoint)
         response = self._check_response(endpoint, response)
         assert source.spec.name == response['name'], R(
             'Source name changed unexpectedly', source, response)
@@ -545,6 +547,13 @@ class TDRClient(SAMClient, DRSClient):
 
     @cached_property
     def _url_cache(self) -> UrlCacheService:
+
+        # This cache serves the DUOS dataset registrations as well as the TDR
+        # snapshot metadata that `get_duos` needs in order to request them. The
+        # rate limiting below is per URL host, so the two services are allotted
+        # independent sets of slots. The cache timing is *not* per host, but per
+        # cache, so it'll have to be tuned with both DUOS and TDR in mind.
+        #
         # We were asked to time out after 30s on DUOS requests, and to retry
         # three times. The HTTP client we use for Terra services may have a
         # different timeout and retry configured. For example, when running in a
@@ -553,16 +562,21 @@ class TDRClient(SAMClient, DRSClient):
         # expiration can only be set to a fixed value so in order to avoid more
         # than one Lambda invocation retrying the same DUOS request in parallel,
         # we'll set it to the contribution Lamba's timeout.
-        cache = CacheService(expiration=3600 * 24,
-                             lock_expiration=config.contribution_lambda_timeout(retry=False))
+        #
+        timeout = config.contribution_lambda_timeout(retry=False)
+        cache = CacheService(expiration=3600 * 24, lock_expiration=timeout)
+
         # Ten concurrent requests per URL host, regardless of the URL path.
+        #
         cache = RateLimitingCacheService(inner=cache, max_slots=10)
+
         # Keep in mind that the retrying cache service handles contention on the
         # fetch lock *and* the rate limiting slots. The lock expiration above
         # essentially disables the contention-based retries on the fetch lock,
         # because the Lambda times out before it could retry to acquire the
         # lock. So the parameters for the retrying cache service are primarily
         # tuned for the slot contention retry.
+        #
         cache = RetryingCacheService(inner=cache, num_retries=13, retry_delay=10.0)
         return UrlCacheService(inner=cache, http_client=self._http_client)
 
