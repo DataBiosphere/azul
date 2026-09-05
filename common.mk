@@ -1,5 +1,10 @@
 SHELL=/bin/bash
 
+# Use the mirrored base image by default. Override this variable to refer to
+# the upstream image if the mirror isn't available.
+#
+azul_python_image ?= $(azul_python_image_mirrored)
+
 # Every phony target must directly or indirectly depend on this target. This
 # implies that only targets that have no other dependencies must explicitly
 # list this target as a dependency:
