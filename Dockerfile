@@ -81,7 +81,8 @@ RUN gpg --import /tmp/awscli-public-key.asc \
     && gpg --verify awscliv2.sig awscliv2.zip \
     && unzip awscliv2.zip \
     && ./aws/install \
-    && rm -rf awscliv2.zip awscliv2.sig aws
+    && rm awscliv2.zip awscliv2.sig \
+    && rm -rf aws
 
 # Install GitHub CLI
 #
@@ -174,7 +175,8 @@ RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
            '*/plugins/pycharm-community-customization-shared' \
            '*/plugins/python-ce' \
            '*/plugins/toml' \
-    && rm /tmp/${tarball} /tmp/pycharm_checksums.txt
+    && rm /tmp/${tarball} /tmp/pycharm_checksums.txt \
+    && rm -r /tmp/hsperfdata_root
 
 # Prepare working directory for builds
 #
@@ -194,4 +196,4 @@ RUN export project_root="$PWD" \
     && make virtualenv \
     && source .venv/bin/activate \
     && make requirements \
-    && rm pyproject.toml uv.lock common.mk Makefile
+    && rm pyproject.toml uv.lock common.mk Makefile /tmp/uv-*.lock
