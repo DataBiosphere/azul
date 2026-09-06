@@ -54,14 +54,11 @@ RUN mkdir -p ${HOME}/.docker \
 # Install Terraform
 #
 ARG azul_terraform_version
-RUN mkdir terraform \
-    && (set -o pipefail \
-        && cd terraform \
-        && curl -s -o terraform.zip \
-           https://releases.hashicorp.com/terraform/${azul_terraform_version}/terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
-        && unzip terraform.zip \
-        && mv terraform /usr/local/bin) \
-    && rm -rf terraform
+RUN archive=terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
+    && curl --fail --silent --location -o /tmp/${archive} \
+       https://releases.hashicorp.com/terraform/${azul_terraform_version}/${archive} \
+    && unzip -q -d /usr/local/bin /tmp/${archive} terraform \
+    && rm /tmp/${archive}
 
 # Install AWS CLI v2
 #
