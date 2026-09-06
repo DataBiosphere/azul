@@ -87,11 +87,10 @@ RUN gpg --import /tmp/awscli-public-key.asc \
 #
 ARG azul_ghcli_version
 COPY bin/checksums/gh_checksums.txt /tmp/gh_checksums.txt
-RUN set -o pipefail \
-    && tarball=gh_${azul_ghcli_version}_linux_${TARGETARCH}.tar.gz \
+RUN tarball=gh_${azul_ghcli_version}_linux_${TARGETARCH}.tar.gz \
     && curl --fail --silent --location -o /tmp/${tarball} \
        https://github.com/cli/cli/releases/download/v${azul_ghcli_version}/${tarball} \
-    && cd /tmp && grep "${tarball}" gh_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c gh_checksums.txt \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=2 --wildcards "*/bin/gh" --occurrence=1 \
     && rm /tmp/${tarball} /tmp/gh_checksums.txt
 
@@ -99,8 +98,7 @@ RUN set -o pipefail \
 #
 ARG azul_uv_version
 COPY bin/checksums/uv_checksums.txt /tmp/uv_checksums.txt
-RUN set -o pipefail \
-    && case "$TARGETARCH" in \
+RUN case "$TARGETARCH" in \
            amd64) arch=x86_64 ;; \
            arm64) arch=aarch64 ;; \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
@@ -108,7 +106,7 @@ RUN set -o pipefail \
     && tarball=uv-${arch}-unknown-linux-gnu.tar.gz \
     && curl --fail --silent --location -o /tmp/${tarball} \
        https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
-    && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c uv_checksums.txt \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
     && rm /tmp/${tarball} /tmp/uv_checksums.txt
 
@@ -148,7 +146,6 @@ RUN set -o pipefail \
 ARG azul_pycharm_version
 COPY bin/checksums/pycharm_checksums.txt /tmp/pycharm_checksums.txt
 RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
-    && set -o pipefail \
     && case "$TARGETARCH" in \
            amd64) arch= ;; \
            arm64) arch=-aarch64 ;; \
@@ -157,7 +154,7 @@ RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
     && tarball=pycharm-community-${azul_pycharm_version}${arch}.tar.gz \
     && curl --fail --silent --location -o /tmp/${tarball} \
        https://download.jetbrains.com/python/${tarball} \
-    && cd /tmp && grep "${tarball}" pycharm_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c pycharm_checksums.txt \
     && mkdir /opt/pycharm \
     && tar -xzf /tmp/${tarball} -C /opt/pycharm \
            --strip-components=1 \
