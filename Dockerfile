@@ -76,7 +76,7 @@ RUN gpg --import /tmp/awscli-public-key.asc \
     && curl -s -o awscliv2.sig \
        https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${azul_awscli_version}.zip.sig \
     && gpg --verify awscliv2.sig awscliv2.zip \
-    && unzip awscliv2.zip \
+    && unzip -q awscliv2.zip \
     && ./aws/install \
     && rm awscliv2.zip awscliv2.sig \
     && rm -rf aws
