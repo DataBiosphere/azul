@@ -36,7 +36,7 @@ _period: 14 days
         - [ ] … [hashicorp/external](https://registry.terraform.io/providers/hashicorp/external/latest) <sub>or no update available</sub>
         - [ ] … [hashicorp/google](https://registry.terraform.io/providers/hashicorp/google/latest) <sub>or no update available</sub>
         - [ ] … [hashicorp/null](https://registry.terraform.io/providers/hashicorp/null/latest) <sub>or no update available</sub>
-    - [ ] … update to [PyCharm](https://www.jetbrains.com/pycharm/download/other.html), having run `make pycharm_checksums` afterwards <sub>or no update available</sub>
+    - [ ] … update to [PyCharm](https://www.jetbrains.com/pycharm/download/other.html), following the instructions in the comment preceding `azul_pycharm_version` in `environment.py` <sub>or no update available</sub>
     - [ ] … new [BigQuery Emulator image](https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator/tags)
     - [ ] … update to [OpenSearch image](https://hub.docker.com/r/opensearchproject/opensearch/tags) (only minor and patch versions) <sub>or no update available</sub>
     - [ ] … update to [Docker images](https://hub.docker.com/_/docker/tags) (only minor and patch versions) <sub>or no update available</sub>
