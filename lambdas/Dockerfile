@@ -17,8 +17,7 @@ SHELL ["/bin/bash", "-c"]
 #
 ARG azul_uv_version
 COPY bin/checksums/uv_checksums.txt /tmp/uv_checksums.txt
-RUN set -o pipefail \
-    && case "$TARGETARCH" in \
+RUN case "$TARGETARCH" in \
            amd64) arch=x86_64 ;; \
            arm64) arch=aarch64 ;; \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
@@ -27,7 +26,7 @@ RUN set -o pipefail \
     && python -c 'import sys, urllib.request; urllib.request.urlretrieve(*sys.argv[1:])' \
        https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
        /tmp/${tarball} \
-    && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c uv_checksums.txt \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
     && rm /tmp/${tarball} /tmp/uv_checksums.txt
 
