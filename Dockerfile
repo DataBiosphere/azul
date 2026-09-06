@@ -6,13 +6,33 @@ ARG TARGETARCH
 
 SHELL ["/bin/bash", "-c"]
 
-# Increment the value of this argument to ensure that all installed OS packages
-# are updated.
+# Configure Docker's apt repository. Docker itself is installed further below
+# but the repository is configured here, ahead of the package index being
+# fetched, so that we only need to fetch once.
+#
+# https://docs.docker.com/engine/install/debian/#install-using-the-repository
+#
+RUN install -m 0755 -d /etc/apt/keyrings
+COPY --chmod=0644 bin/keys/docker-apt-keyring.pgp /etc/apt/keyrings/docker.gpg
+RUN set -o pipefail \
+    && ( \
+      echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" \
+      | tee /etc/apt/sources.list.d/docker.list \
+    )
+
+# Fetch the package index. Every package installed below comes from it. The
+# packages the base image ships are not upgraded, because that image is pinned
+# to a digest that is bumped every other week. Leaving them at the versions that
+# digest ships makes the content of this image a function of that digest.
+#
+# Increment the value of this argument to fetch a new index and to reinstall the
+# packages below from it. That is necessary when a build fails because a version
+# in the cached index is no longer available from the repository.
 #
 ARG azul_image_version=2
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get -y install build-essential curl gnupg unzip
+RUN apt-get update
+
+RUN apt-get -y install build-essential curl gnupg unzip
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
@@ -92,20 +112,11 @@ RUN set -o pipefail \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
     && rm /tmp/${tarball} /tmp/uv_checksums.txt
 
-# Install Docker from apt repository. The statically linked binaries don't
-# include buildx or buildkit.
+# Install Docker using the Apt repository configured above. We can't use the
+# statically linked binaries because they lack buildx and buildkit.
 #
-# https://docs.docker.com/engine/install/debian/#install-using-the-repository
-#
-RUN install -m 0755 -d /etc/apt/keyrings
-COPY --chmod=0644 bin/keys/docker-apt-keyring.pgp /etc/apt/keyrings/docker.gpg
 ARG azul_docker_version
 RUN set -o pipefail \
-    && ( \
-      echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" \
-      | tee /etc/apt/sources.list.d/docker.list \
-    ) \
-    && apt-get update \
     && version=$(apt-cache madison docker-ce | awk '{ print $3 }' | grep -P "^5:\Q${azul_docker_version}\E" | head -1) \
     && test -n "$version" \
     && apt-get -y install docker-ce=$version docker-ce-cli=$version docker-buildx-plugin
@@ -114,9 +125,9 @@ RUN set -o pipefail \
 # target in the Makefile.
 #
 # PyCharm bundles its own JRE, the JetBrains Runtime. We install the
-# distribution's JRE instead, so that the `apt-get upgrade` at the top of this
-# file keeps the runtime patched, and don't extract the bundled one. Its major
-# version matches the one of the bundled runtime.
+# distribution's JRE instead, which is patched whenever the pin of the base
+# image is bumped, and don't extract the bundled one. Its major version matches
+# the one of the bundled runtime.
 #
 # We only extract what the formatter needs: the platform, the launchers, and the
 # five plugins that PyCharm considers essential. We omit the bundled runtime,
@@ -136,8 +147,7 @@ RUN set -o pipefail \
 #
 ARG azul_pycharm_version
 COPY bin/checksums/pycharm_checksums.txt /tmp/pycharm_checksums.txt
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends openjdk-21-jre-headless \
+RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
     && set -o pipefail \
     && case "$TARGETARCH" in \
            amd64) arch= ;; \
