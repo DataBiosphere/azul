@@ -320,8 +320,16 @@ def env() -> Mapping[str, str | None]:
         # because it is referenced in the early stages of the GitLab build. The
         # next paragraph explains how to keep that file in sync.
         #
-        # After modifying this variable, run `make environment.boot` and
-        # `make pycharm_checksums`, and commit the resulting changes.
+        # After modifying this variable, run `make environment.boot` followed by
+        # `make pycharm_checksums`, and commit the resulting changes. Then run
+        # `make format`. Note that the name of the tarball may not be stable
+        # across releases; it is spelled out in the Dockerfile and in the
+        # `pycharm_checksums` target, and both may need adjusting.
+        #
+        # Only a fraction of the tarball is extracted, the fraction the
+        # formatter needs. If `make format` fails after the upgrade, that
+        # fraction is no longer sufficient. See the corresponding Dockerfile
+        # stanza for details.
         #
         'azul_pycharm_version': '2025.2.6.1',
 
