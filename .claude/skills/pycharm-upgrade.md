@@ -11,9 +11,9 @@ bumped, as instructed by the comment preceding that variable in
 `environment.py`. If `make format` passes, the upgrade is done and none of what
 follows is needed.
 
-The image built from `Dockerfile` contains the PyCharm formatter that `make
-format` and `make _format` invoke. Only part of the distribution is extracted
-from the archive: the platform, the launchers and the plugins PyCharm considers
+The image built from `Dockerfile` contains the PyCharm formatter that the
+`format`, `_format` and `__format` targets invoke. Only part of the
+distribution is extracted from the archive: the platform, the launchers and the plugins PyCharm considers
 essential. The bundled JetBrains Runtime, four dozen other plugins and the
 helper scripts of the Python plugin are left behind, and the distribution's JRE
 is installed instead of the bundled one.
@@ -91,7 +91,7 @@ from Step 2:
 2. the other architecture, via `docker build --platform` and `docker run
    --platform`
 
-3. `make _format` inside an image built by `make docker_image`
+3. `make __format` inside an image built by `make docker_image`
 
 4. the GitHub build, which runs `make format` followed by `make check_clean`
 
@@ -104,9 +104,8 @@ longer extracted.
 
 `--no-wildcards-match-slash` in the `tar` invocation is load-bearing. Without
 it a `*` matches `/` too, so `*/lib` also matches everything below `lib` and
-`--exclude` patterns are defeated by the include patterns that follow. An
-earlier attempt without it extracted 1.6 GB where the correct patterns extract
-915 MB, and reported no error while doing so.
+`--exclude` patterns are defeated by the include patterns that follow. Dropping
+it extracts most of the distribution, and reports no error while doing so.
 
 The plugins are named individually rather than as a directory because
 `plugins/plugin-classpath.txt` must not be extracted. It indexes the JARs of all
@@ -123,6 +122,6 @@ bundled runtime. Extract `jbr/release` from the archive and read `JAVA_VERSION`
 before assuming the pinned `openjdk-*-jre-headless` is still right.
 
 Expect on the order of a hundred lines of stack traces per run even when
-everything is correct; `make _format` discards stderr for that reason. Judge
+everything is correct; `make __format` discards stderr for that reason. Judge
 success by the `N file(s) formatted` line, the exit status and the diff, never
 by the absence of exceptions.

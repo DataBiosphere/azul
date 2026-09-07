@@ -138,8 +138,9 @@ RUN set -o pipefail \
 # ones left behind.
 #
 # If a future version of PyCharm needs more than what is extracted here, the
-# `format` and `check_clean` targets in the GitLab build will fail. Consult the
-# `pycharm-upgrade` skill before changing the version.
+# `__format` and `check_clean` targets in the GitLab build will fail. Use Claude
+# with the `pycharm-upgrade` skill to redo the archive member selections below
+# when upgrading to such a version.
 #
 ARG azul_pycharm_version
 COPY bin/checksums/pycharm_checksums.txt /tmp/pycharm_checksums.txt

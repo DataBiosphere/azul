@@ -223,13 +223,13 @@ relative_sources = $(subst $(project_root)/,,$(absolute_sources))
 pep8: check_python
 	python -m flake8 --config .flake8/conf $(absolute_sources)
 
-# The formatter is part of PyCharm, which the Dockerfile in this directory
-# installs into the image used for builds. The `_format` target below assumes
-# that the formatter is installed in the system it runs on. It is the target to
-# use in a container from that image, as the GitLab build does. The `format`
-# target is the one to use on a host. It builds that image and then invokes
-# `_format` in a container from it.
-
+# The formatter we use is part of PyCharm, which the Dockerfile at the project
+# root installs into the development image. There are three targets for invoking
+# the formatter, each assuming more than the one before it. `__format` assumes
+# that the formatter is installed on the system it runs on, and is the target to
+# use inside a container from that image. `_format` assumes only that the image
+# exists; `format` assumes nothing, and builds the image first.
+#
 # Discarding stderr suppresses error output like stack traces. In order to
 # reduce the number of vulnerabilities in the image, the Dockerfile retains only
 # those parts of the IDE that the formatter needs. When the PyCharm process
@@ -238,14 +238,14 @@ pep8: check_python
 # is being formatted. When diagnosing problems with the actual formatting,
 # removing the redirection will reveal all output, potentially aiding in the
 # diagnosis.
-
-.PHONY: _format
-_format: check_env
+#
+.PHONY: __format
+__format: check_env
 	/opt/pycharm/bin/format.sh \
 	    -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources) \
 	    2>/dev/null
 
-# The container path resolution in the recipe below is needed when `make format`
+# The container path resolution in the recipe below is needed when `make _format`
 # is invoked in a container, in which case the container below will be a sibling
 # of the current container. The Docker daemon resolves the source of every bind
 # mount against the host's file system, so a path that's only valid inside the
@@ -270,8 +270,8 @@ _format: check_env
 #
 container_root = /home/developer/azul
 
-.PHONY: format
-format: check_venv docker_image
+.PHONY: _format
+_format: check_venv
 	root=$$(python scripts/resolve_container_path.py $(project_root)) && \
 	tmp=$$(mktemp -d $(project_root)/.tmp.XXXXXXXX) && \
 	trap "rm -rf $$tmp" EXIT && \
@@ -287,7 +287,11 @@ format: check_venv docker_image
 	    --mount type=bind,source=$$root,target=$(container_root) \
 	    --workdir $(container_root) \
 	    $(azul_image):$(azul_image_tag) \
-	    make _format
+	    make __format
+
+.PHONY: format
+format: docker_image
+	$(MAKE) _format
 
 .PHONY: isort
 isort: check_python
