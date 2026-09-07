@@ -7,3 +7,4 @@
 !bin/keys/docker-apt-keyring.pgp
 !bin/checksums/gh_checksums.txt
 !bin/checksums/uv_checksums.txt
+!bin/checksums/pycharm_checksums.txt

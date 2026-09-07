@@ -110,6 +110,65 @@ RUN set -o pipefail \
     && test -n "$version" \
     && apt-get -y install docker-ce=$version docker-ce-cli=$version docker-buildx-plugin
 
+# Install the Python formatter, which is part of PyCharm. See the `format`
+# target in the Makefile.
+#
+# PyCharm bundles its own JRE, the JetBrains Runtime. We install the
+# distribution's JRE instead, so that the `apt-get upgrade` at the top of this
+# file keeps the runtime patched, and don't extract the bundled one. Its major
+# version matches the one of the bundled runtime.
+#
+# We only extract what the formatter needs: the platform, the launchers, and the
+# five plugins that PyCharm considers essential. We omit the bundled runtime,
+# four dozen other plugins and the helper scripts of the Python plugin, together
+# around two thirds of the distribution.
+#
+# The archive member selection names the plugins individually rather than as a
+# directory because `plugins/plugin-classpath.txt` must not be extracted. That
+# file is a precomputed index of the JARs of all bundled plugins, and with it in
+# place the platform would not start on this image. Without it, the platform
+# discovers the plugins by scanning the directory, tolerating the absence of the
+# ones left behind.
+#
+# If a future version of PyCharm needs more than what is extracted here, the
+# `format` and `check_clean` targets in the GitLab build will fail. Consult the
+# `pycharm-upgrade` skill before changing the version.
+#
+ARG azul_pycharm_version
+COPY bin/checksums/pycharm_checksums.txt /tmp/pycharm_checksums.txt
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends openjdk-21-jre-headless \
+    && set -o pipefail \
+    && case "$TARGETARCH" in \
+           amd64) arch= ;; \
+           arm64) arch=-aarch64 ;; \
+           *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+       esac \
+    && tarball=pycharm-community-${azul_pycharm_version}${arch}.tar.gz \
+    && curl --fail --silent --location -o /tmp/${tarball} \
+       https://download.jetbrains.com/python/${tarball} \
+    && cd /tmp && grep "${tarball}" pycharm_checksums.txt | sha256sum -c \
+    && mkdir /opt/pycharm \
+    && tar -xzf /tmp/${tarball} -C /opt/pycharm \
+           --strip-components=1 \
+           --wildcards \
+           --no-wildcards-match-slash \
+           --anchored \
+           # The first * matches a top-level directory named after the release \
+           --exclude '*/plugins/python-ce/helpers' \
+           # The remaining arguments are inclusions \
+           '*/bin' \
+           '*/lib' \
+           '*/license' \
+           '*/modules' \
+           '*/product-info.json' \
+           '*/plugins/json' \
+           '*/plugins/pycharm-community-customization' \
+           '*/plugins/pycharm-community-customization-shared' \
+           '*/plugins/python-ce' \
+           '*/plugins/toml' \
+    && rm /tmp/${tarball} /tmp/pycharm_checksums.txt
+
 # Prepare working directory for builds
 #
 RUN mkdir /build
