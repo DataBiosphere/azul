@@ -8,14 +8,6 @@ _priority: Medium
 _start: 2023-11-27T09:00
 _period: 14 days
 ---
-- [ ] Update [PyCharm image](https://github.com/DataBiosphere/azul-docker-pycharm)
-  - [ ] Bump [base image](https://hub.docker.com/_/debian/tags?name=trixie) `-slim` tag (only same Debian release), if possible
-  - [ ] Bump upstream version, if possible
-  - [ ] Bump internal version
-  - [ ] Remove unused dependencies with high or critical CVEs
-  - [ ] Push commit to GitHub (directly to `master` branch, no PR needed)
-  - [ ] GH Action workflow succeeded
-  - [ ] Image is available on [DockerHub](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm/tags) 
 - [ ] Update [BigQuery Emulator image](https://github.com/DataBiosphere/azul-bigquery-emulator)
   - [ ] Upgrade Go SDK in [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql)'s `go.mod` & `build.yml` <sub>or no update available</sub>
   - [ ] Bump base image tag in [azul-go-zetasql](https://github.com/DataBiosphere/azul-go-zetasql)'s `build.yml` <sub>or no update available</sub>
@@ -44,7 +36,7 @@ _period: 14 days
         - [ ] … [hashicorp/external](https://registry.terraform.io/providers/hashicorp/external/latest) <sub>or no update available</sub>
         - [ ] … [hashicorp/google](https://registry.terraform.io/providers/hashicorp/google/latest) <sub>or no update available</sub>
         - [ ] … [hashicorp/null](https://registry.terraform.io/providers/hashicorp/null/latest) <sub>or no update available</sub>
-    - [ ] … new [PyCharm image](https://hub.docker.com/repository/docker/ucscgi/azul-pycharm/tags)
+    - [ ] … update to [PyCharm](https://www.jetbrains.com/pycharm/download/other.html), having run `make pycharm_checksums` afterwards <sub>or no update available</sub>
     - [ ] … new [BigQuery Emulator image](https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator/tags)
     - [ ] … update to [OpenSearch image](https://hub.docker.com/r/opensearchproject/opensearch/tags) (only minor and patch versions) <sub>or no update available</sub>
     - [ ] … update to [Docker images](https://hub.docker.com/_/docker/tags) (only minor and patch versions) <sub>or no update available</sub>
