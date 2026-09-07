@@ -50,7 +50,6 @@ build_image:
   image: ${azul_image}:${azul_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
-    - source /build/.venv/bin/activate
     - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
     - _link $deployment

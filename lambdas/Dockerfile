@@ -35,11 +35,11 @@ RUN case "$TARGETARCH" in \
 # which is what `UV_PROJECT_ENVIRONMENT` selects. The client is declared in the
 # `lambda` dependency group, which only this image installs.
 #
-COPY pyproject.toml uv.lock /build/
 ENV UV_PROJECT_ENVIRONMENT=/usr/local
-RUN cd /build \
+COPY pyproject.toml uv.lock /azul/
+RUN cd /azul \
     && uv sync --frozen --no-default-groups --group lambda \
-    && rm -rf /build /usr/local/bin/uv
+    && rm -rf /azul /usr/local/bin/uv
 
 FROM ${azul_docker_registry}${azul_python_image}
 
