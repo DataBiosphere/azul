@@ -176,22 +176,12 @@ RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
     && rm /tmp/${tarball} /tmp/pycharm_checksums.txt \
     && rm -r /tmp/hsperfdata_root
 
-# Prepare working directory for builds
+# Set UV_PROJECT_ENVIRONMENT to point at the image's own Python installation,
+# and install Azul's dependencies there. A container typically has no need for
+# the isolation a virtual environment provides.
 #
-RUN mkdir /build
-WORKDIR /build
-
-# Install Azul dependencies
-#
-COPY pyproject.toml uv.lock common.mk Makefile ./
-# We don't source `environment` here. It loads the environment by running
-# `scripts/export_environment.py`, and neither that script nor the
-# `environment.py` files it reads are part of this image. The only variable the
-# targets below need is `project_root`, which `environment` assigns itself,
-# without involving that script.
-#
-RUN export project_root="$PWD" \
-    && make virtualenv \
-    && source .venv/bin/activate \
-    && make requirements \
-    && rm pyproject.toml uv.lock common.mk Makefile /tmp/uv-*.lock
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
+COPY pyproject.toml uv.lock /azul/
+RUN cd /azul \
+    && uv sync --frozen \
+    && rm -r /azul /tmp/uv-*.lock
