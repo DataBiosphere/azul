@@ -10,6 +10,9 @@ jobs:
   test:
     runs-on: 'ubuntu-22.04'
     timeout-minutes: 45
+    permissions:
+      contents: 'read'
+      packages: 'write'
     steps:
 
       - uses: 'actions/checkout@v4'
@@ -37,6 +40,24 @@ jobs:
           prune-cache: true
 
       - name: 'Run unit tests and other checks'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Everything that determines the contents of the image built from the
+          # Dockerfile. The image is reused only by a build whose inputs hash to
+          # the same value.
+          #
+          azul_image_input_hash: "${{ hashFiles(
+            'Dockerfile',
+            '.dockerignore',
+            'environment.boot',
+            'pyproject.toml',
+            'uv.lock',
+            'Makefile',
+            'common.mk',
+            'bin/keys/*',
+            'bin/checksums/*'
+          ) }}"
         run: |
           source environment  # load global defaults
 
@@ -78,7 +99,33 @@ jobs:
           #
           export azul_python_image=$azul_python_image_upstream
 
-          make format
+          # We need the development image because it includes the PyCharm
+          # formatter. That's currently the only use of that image on GitHub
+          # Actions. Building it dominates the time spent on formatting so we
+          # try to reuse an image from a previous run whose inputs were the
+          # same.
+          #
+          # This requires pushing the image after building it. Two builds can
+          # race to push to the same tag, but since their inputs hash the same,
+          # the images should only differ due to ambient conditions, such as
+          # which specific package versions apt-get installs, so either image is
+          # as usable as the other.
+          #
+          export azul_image=ghcr.io/${GITHUB_REPOSITORY,,}/dev
+          export azul_image_tag=${{ runner.arch }}-$azul_image_input_hash
+          printenv GITHUB_TOKEN | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          if docker pull --quiet $azul_image:$azul_image_tag ; then
+              echo "Reusing $azul_image:$azul_image_tag"
+          else
+              make docker_image
+              # A build for a PR from a fork's token can't write packages so we
+              # skip the push rather than failing the build.
+              if [[ '${{ github.event.pull_request.head.repo.fork }}' != 'true' ]] ; then
+                  docker push --quiet $azul_image:$azul_image_tag
+              fi
+          fi
+
+          make _format
           make isort
           make -C lambdas openapi
           make -C .github
@@ -94,6 +141,26 @@ jobs:
         with:
           name: 'coverage-file'
           path: 'coverage.xml'
+
+  # Nothing in the registry expires automatically, so we need to prune it
+  # explicitly. The registry hosts the development image, and a new image is
+  # pushed whenever the image inputs change. Pruning an image prematurely only
+  # costs a redundant image build, never correctness.
+  #
+  prune:
+    needs: 'test'
+    runs-on: 'ubuntu-22.04'
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      packages: 'write'
+    steps:
+      - uses: 'actions/delete-package-versions@v5'
+        with:
+          package-name: 'azul/dev'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: false
 
   codecov:
     needs: 'test'
