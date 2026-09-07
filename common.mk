@@ -16,17 +16,24 @@ check_env:
 		false; \
 	fi
 
+# On a developer machine, Azul's dependencies are installed into the virtual
+# environment at $VIRTUAL_ENV. On the dev image, the one built from the
+# Dockerfile at the project root, they are installed directly into the image's
+# Python installation at $UV_PROJECT_ENVIRONMENT.
+#
+python_env = $(or $(VIRTUAL_ENV),$(UV_PROJECT_ENVIRONMENT))
+
 .PHONY: check_venv
 check_venv: check_env
-	@if ! test -n "$$VIRTUAL_ENV"; then \
+	@if ! test -n "$(python_env)"; then \
 		echo -e "\nError: Run 'source .venv/bin/activate' first\n"; \
 		false; \
 	fi
 
 .PHONY: check_python
 check_python: check_venv
-	@if test "$$VIRTUAL_ENV/bin/python" != "$$(hash python && hash -t python)"; then \
-  		echo -e "\nPATH lookup yields a 'python' executable from outside the virtualenv\n"; \
+	@if test "$(python_env)/bin/python" != "$$(hash python && hash -t python)"; then \
+  		echo -e "\nPATH lookup yields a 'python' executable from outside $(python_env)\n"; \
 		false; \
 	fi
 	@if ! python -c 'pass'; then \
