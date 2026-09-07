@@ -310,6 +310,21 @@ def env() -> Mapping[str, str | None]:
         #
         'azul_uv_version': _pin('tool', 'uv', 'required-version'),
 
+        # The version of PyCharm that is used to format the source code in this
+        # project. The download URL of the PyCharm tarball is derived from it.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
+        #
+        # After modifying this variable, run `make environment.boot` and
+        # `make pycharm_checksums`, and commit the resulting changes.
+        #
+        'azul_pycharm_version': '2025.2.6.1',
+
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
         # references below requires running `make docker_images.json` and

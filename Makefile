@@ -55,6 +55,7 @@ docker_image: check_docker
 	       --build-arg azul_awscli_version=$(azul_awscli_version) \
 	       --build-arg azul_ghcli_version=$(azul_ghcli_version) \
 	       --build-arg azul_uv_version=$(azul_uv_version) \
+	       --build-arg azul_pycharm_version=$(azul_pycharm_version) \
 	       --tag $(azul_image):$(azul_image_tag) \
 	       .
 
@@ -83,6 +84,14 @@ uv_checksums: check_env
 	    curl --fail --silent --location \
 	        https://github.com/astral-sh/uv/releases/download/$(azul_uv_version)/uv-$$arch-unknown-linux-gnu.tar.gz.sha256 \
 	        >> bin/checksums/uv_checksums.txt ; \
+	done
+
+pycharm_checksums: check_env
+	rm -f bin/checksums/pycharm_checksums.txt
+	for arch in "" -aarch64 ; do \
+	    curl --fail --silent --location \
+	        https://download.jetbrains.com/python/pycharm-community-$(azul_pycharm_version)$$arch.tar.gz.sha256 \
+	        >> bin/checksums/pycharm_checksums.txt ; \
 	done
 
 .PHONY: lambdas
@@ -214,41 +223,55 @@ relative_sources = $(subst $(project_root)/,,$(absolute_sources))
 pep8: check_python
 	python -m flake8 --config .flake8/conf $(absolute_sources)
 
-# The container path resolution in the recipe below is needed on Gitlab where
-# the build is already running in a container and the container below will be a
-# sibling of the current container. The Docker daemon resolves the source of
-# every bind mount against the host's file system, so a path that's only valid
-# inside the build container, like one below /tmp, can't be used. That's why
-# the temporary directory below is created inside the project root, the only
+# The formatter is part of PyCharm, which the Dockerfile in this directory
+# installs into the image used for builds. The `_format` target below assumes
+# that the formatter is installed in the system it runs on. It is the target to
+# use in a container from that image, as the GitLab build does. The `format`
+# target is the one to use on a host. It builds that image and then invokes
+# `_format` in a container from it.
+
+# Discarding stderr suppresses error output like stack traces. In order to
+# reduce the number of vulnerabilities in the image, the Dockerfile retains only
+# those parts of the IDE that the formatter needs. When the PyCharm process
+# attempts to use one of the removed parts, an exception is raised. Fortunately
+# this occurs in another thread, not affecting the main thread in which the code
+# is being formatted. When diagnosing problems with the actual formatting,
+# removing the redirection will reveal all output, potentially aiding in the
+# diagnosis.
+
+.PHONY: _format
+_format: check_env
+	/opt/pycharm/bin/format.sh \
+	    -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources) \
+	    2>/dev/null
+
+# The container path resolution in the recipe below is needed when `make format`
+# is invoked in a container, in which case the container below will be a sibling
+# of the current container. The Docker daemon resolves the source of every bind
+# mount against the host's file system, so a path that's only valid inside the
+# current container, like one below /tmp, can't be used. That's why the
+# temporary directory below is created inside the project root, the only
 # directory that's guaranteed to be mounted from the host. For the same reason
 # we use --mount instead of --volume: the latter silently creates a missing
 # source directory on the host instead of failing.
 
-# Using --attach only for stdout causes stderr to remain detached, thereby
-# suppressing error output like stack traces. In order to address security
-# vulnerabilities that had remained open for a long time we resorted to simply
-# removing the affected dependencies from the image unless they were needed for
-# our use case of the image: formatting Python source code. When the PyCharm
-# process in the container launched from the image attempts to use these
-# dependencies, an exception is raised. Fortunately this occurs in another
-# thread, not affecting the main thread in which the code is being formatted.
-# When diagnosing problems with the actual formatting, removing the --attach
-# flag will reveal all output, potentially aiding in the diagnosis.
-
-# The PyCharm image used here sets up a user called `developer` and assigns it
-# UID 1000. If `make format` is invoked by a user with a different UID, it would
-# fail due to lacking the permissions to write to the formatted files. To
-# circumvent this, we bind mount a temporary /etc/passwd file to associate
-# the "developer" user with the current user's UID and GID. This also requires
-# setting up a fake home directory to which the "developer" user has write
-# access, since PyCharm needs to write to directories such as ~/.config.
+# The image runs its containers as root by default. If the container below did,
+# too, the formatted files would end up being owned by root on the host, so it
+# is run as the invoking user instead. That user has no entry in the image's
+# /etc/passwd, leaving PyCharm without a home directory to write to, which is
+# why a temporary /etc/passwd defining such an entry is bind-mounted into the
+# container, together with the home directory it refers to.
 
 # The temporary directory is removed by a trap, so that the exit status of the
 # recipe is that of `docker run`. Were the removal the last command in the
 # recipe, its exit status would mask a failure of `docker run`.
 
+# The path at which the project is mounted inside the container below
+#
+container_root = /home/developer/azul
+
 .PHONY: format
-format: check_venv check_docker
+format: check_venv docker_image
 	root=$$(python scripts/resolve_container_path.py $(project_root)) && \
 	tmp=$$(mktemp -d $(project_root)/.tmp.XXXXXXXX) && \
 	trap "rm -rf $$tmp" EXIT && \
@@ -256,15 +279,15 @@ format: check_venv check_docker
 	echo developer:x:$$(id -u):$$(id -g)::/home/developer:/bin/bash >$$tmp/etc/passwd && \
 	host_tmp=$$root/$$(basename $$tmp) && \
 	docker run \
-	    --attach stdout \
 	    --rm \
 	    --user $$(id -u):$$(id -g) \
+	    --env project_root=$(container_root) \
 	    --mount type=bind,readonly,source=$$host_tmp/etc/passwd,target=/etc/passwd \
 	    --mount type=bind,source=$$host_tmp/home/developer,target=/home/developer \
-	    --mount type=bind,source=$$root,target=/home/developer/azul \
-	    --workdir /home/developer/azul \
-	    $$(AZUL_DEBUG=0 python -m azul 'docker.resolve_docker_image_for_launch("pycharm")') \
-	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
+	    --mount type=bind,source=$$root,target=$(container_root) \
+	    --workdir $(container_root) \
+	    $(azul_image):$(azul_image_tag) \
+	    make _format
 
 .PHONY: isort
 isort: check_python

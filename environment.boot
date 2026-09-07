@@ -5,3 +5,4 @@ azul_terraform_version=1.15.9
 azul_awscli_version=2.36.38
 azul_ghcli_version=2.99.0
 azul_uv_version=0.12.9
+azul_pycharm_version=2025.2.6.1
