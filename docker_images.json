@@ -31,22 +31,6 @@
             }
         }
     },
-    "docker.io/ucscgi/azul-pycharm:2025.2.6.1-87": {
-        "digest": "sha256:7eff943dd57a93e30ccb3544df3bc35b927e20b9e72a36acc2bae0f07ca2962c",
-        "mirror_digest": "sha256:9538aaf049f2519b5e46e403782dbd602b029e204fd836d70613d23feebe1753",
-        "parts": {
-            "linux/amd64": {
-                "digest": "sha256:f86a69f98f7cc1fe5fc1556f5188a54bb329063dd464204799ddde5652dda539",
-                "id": "sha256:7a011d6808cfba82c0730014993af3156e359cb1eaf26f8fbb0778f47b02bbcc",
-                "platform": "linux/amd64"
-            },
-            "linux/arm64": {
-                "digest": "sha256:19aa6386e2ac56847f381bc478f861380295ebe8a9552f0c5bbcf319b79a360b",
-                "id": "sha256:08c178e073cc7b48e8af1fc47108cfe10a8d717d65266a12f168d321e6755460",
-                "platform": "linux/arm64"
-            }
-        }
-    },
     "docker.io/opensearchproject/opensearch:2.19.6": {
         "digest": "sha256:8690b204fe914c60ca76d451ac73bc0481e034d32d3779944c8caca56a2b003f",
         "mirror_digest": "sha256:ba68fce5a7be1e85c8062452a7199780580deeafba2429cd80c11fd794cfcfeb",
