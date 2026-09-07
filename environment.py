@@ -343,11 +343,6 @@ def env() -> Mapping[str, str | None]:
                 'ref': 'docker.io/library/python:{azul_python_version}-slim-trixie',
                 'url': 'https://hub.docker.com/_/python',
             },
-            'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6.1-87',
-                'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
-                'is_custom': True
-            },
             'opensearch': {
                 'ref': 'docker.io/opensearchproject/opensearch:2.19.6',
                 'url': 'https://hub.docker.com/r/opensearchproject/opensearch',
