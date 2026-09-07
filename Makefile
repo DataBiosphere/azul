@@ -245,47 +245,34 @@ __format: check_env
 	    -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources) \
 	    2>/dev/null
 
-# The container path resolution in the recipe below is needed when `make _format`
-# is invoked in a container, in which case the container below will be a sibling
-# of the current container. The Docker daemon resolves the source of every bind
-# mount against the host's file system, so a path that's only valid inside the
-# current container, like one below /tmp, can't be used. That's why the
-# temporary directory below is created inside the project root, the only
-# directory that's guaranteed to be mounted from the host. For the same reason
-# we use --mount instead of --volume: the latter silently creates a missing
-# source directory on the host instead of failing.
-
-# The image runs its containers as root by default. If the container below did,
-# too, the formatted files would end up being owned by root on the host, so it
-# is run as the invoking user instead. That user has no entry in the image's
-# /etc/passwd, leaving PyCharm without a home directory to write to, which is
-# why a temporary /etc/passwd defining such an entry is bind-mounted into the
-# container, together with the home directory it refers to.
-
-# The temporary directory is removed by a trap, so that the exit status of the
-# recipe is that of `docker run`. Were the removal the last command in the
-# recipe, its exit status would mask a failure of `docker run`.
-
-# The path at which the project is mounted inside the container below
+# The container path resolution in the recipe below is needed when `make
+# _format` is invoked in a container. In that case the container started by the
+# recipe will be a sibling of the invoking container. The Docker daemon resolves
+# the source of every bind mount against the host's file system, so the path at
+# which the project is mounted in the invoking container can't be used as the
+# source of the mount for the sibling container. For the same reason we use
+# --mount instead of --volume: the latter silently creates a missing source
+# directory on the host instead of failing.
 #
-container_root = /home/developer/azul
-
+# Containers from the image run as root by default. If the one below did, the
+# formatted files would end up being owned by root on the host, so it is run as
+# the invoking user instead. That user has no entry in the image's /etc/passwd,
+# so the JVM running PyCharm finds no home directory for it and falls back to
+# $HOME, which is set to /tmp, the one directory in the image that any user can
+# write to. Any caches and indexes PyCharm puts there stay in the container and
+# are discarded with it.
+#
 .PHONY: _format
 _format: check_venv
-	root=$$(python scripts/resolve_container_path.py $(project_root)) && \
-	tmp=$$(mktemp -d $(project_root)/.tmp.XXXXXXXX) && \
-	trap "rm -rf $$tmp" EXIT && \
-	mkdir -p $$tmp/etc $$tmp/home/developer && \
-	echo developer:x:$$(id -u):$$(id -g)::/home/developer:/bin/bash >$$tmp/etc/passwd && \
-	host_tmp=$$root/$$(basename $$tmp) && \
+	container_root=/azul && \
+	host_root=$$(python scripts/resolve_container_path.py $(project_root)) && \
 	docker run \
 	    --rm \
 	    --user $$(id -u):$$(id -g) \
-	    --env project_root=$(container_root) \
-	    --mount type=bind,readonly,source=$$host_tmp/etc/passwd,target=/etc/passwd \
-	    --mount type=bind,source=$$host_tmp/home/developer,target=/home/developer \
-	    --mount type=bind,source=$$root,target=$(container_root) \
-	    --workdir $(container_root) \
+	    --env HOME=/tmp \
+	    --env project_root=$$container_root \
+	    --mount type=bind,source=$$host_root,target=$$container_root \
+	    --workdir $$container_root \
 	    $(azul_image):$(azul_image_tag) \
 	    make __format
 
