@@ -1046,4 +1046,17 @@ def env() -> Mapping[str, str | None]:
         # no longer part of the environment, and must be unset.
         #
         'azul_env_vars': None,
+
+        # Whether to suppress the diagnostic output that
+        # `scripts/export_environment.py` emits about the modules the
+        # environment is loaded from, and the variables it consists of.
+        # Warnings and errors are emitted either way. The only accepted values
+        # are "0" and "1"; the variable being absent means the same as "0".
+        #
+        # This variable is an input to loading the environment rather than a
+        # part of it, which is why it is not defined here. Defining it would
+        # also export it, overriding the value in the shell that loads the
+        # environment.
+        #
+        'azul_env_quiet': None,
     }
