@@ -185,14 +185,14 @@ def load_env(deployment: Optional[str] = None
         parent_deployment_dir and _load(parent_deployment_dir),
         _load(root_dir)
     ]
-    # Note that ChainMap looks only considers the second mapping in the chain
+    # Note that ChainMap only considers the second mapping in the chain
     # if a key is absent from the first one. IOW, the earlier mappings in the
     # chain take precedence over later ones.
     env = ChainMap(dict(project_root=str(root_dir)))
     for module in modules:
         if module is not None:
-            # https://github.com/python/typeshed/issues/6042
-            # noinspection PyTypeChecker
+            # We don't want an entry whose value is None to override a
+            # lower-precedence value that isn't None.
             env.maps.append(filter_env(module.env()))
     env.maps.append(load_boot_env(root_dir))
     return env, warning
@@ -209,9 +209,23 @@ def load_boot_env(root_dir: Path) -> dict[str, str]:
 
 def filter_env(env: DraftEnvironment) -> Environment:
     """
-    Remove entries whose value is None from the environment. None values are
-    permitted in environment.py modules such that those entries can be
-    documented without having to define a value.
+    Remove entries whose value is None from the environment. Such entries
+    arise in two ways: an environment.py module may use None to document a
+    variable without providing a value, and `resolve_env` yields None for
+    values whose variable references could not be resolved. Either way, the
+    variable is undefined and must not be emitted.
+
+    >>> filter_env({'x': '42'})
+    {'x': '42'}
+
+    >>> filter_env({'x': None})
+    {}
+
+    Note that an empty value is not the same as an undefined one, and is
+    therefore retained:
+
+    >>> filter_env({'x': '', 'y': None})
+    {'x': ''}
     """
     return {k: v for k, v in env.items() if v is not None}
 
@@ -285,7 +299,7 @@ class ResolvedEnvironment(DraftEnvironment):
     __str__ = __repr__
 
 
-def resolve_env(env: Environment) -> Environment:
+def resolve_env(env: Environment) -> DraftEnvironment:
     """
     Resolve references to other variables among all values in the given
     environment.
@@ -468,7 +482,8 @@ def main():
 def prepare_env() -> Tuple[Environment, Optional[str]]:
     env, warning = load_env()
     resolved_env = resolve_env(env)
-    hashed_env = hash_env(resolved_env)
+    filtered_env = filter_env(resolved_env)
+    hashed_env = hash_env(filtered_env)
     return hashed_env, warning
 
 
