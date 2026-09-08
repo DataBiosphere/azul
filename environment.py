@@ -1027,4 +1027,23 @@ def env() -> Mapping[str, str | None]:
         # Azul deployment.
         #
         'azul_ecm_service_url': None,
+
+        # A digest of the names and values of all variables in this
+        # environment. `scripts/export_environment.py` adds it after merging
+        # and resolving all `environment.py` modules, which is why it must not
+        # be defined here. `scripts/envhook.py` compares it against the digest
+        # of a freshly compiled environment, to detect that a Python process
+        # inherited a stale environment from the shell that started it.
+        #
+        'azul_env_hash': None,
+
+        # A comma-separated list of the names of all other variables in this
+        # environment, including `azul_env_hash`. Variable names may therefore
+        # not contain a comma. `scripts/export_environment.py` adds it while
+        # exporting the environment, which is why it must not be defined here.
+        # When the environment is exported again, the list is read back from
+        # the shell to determine which of the previously exported variables are
+        # no longer part of the environment, and must be unset.
+        #
+        'azul_env_vars': None,
     }
