@@ -1026,5 +1026,5 @@ def env() -> Mapping[str, str | None]:
         # URL of Terra's external credentials manager (ECM) service used by the
         # Azul deployment.
         #
-        'azul_ecm_service_url': None
+        'azul_ecm_service_url': None,
     }
