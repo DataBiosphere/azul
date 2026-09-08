@@ -560,7 +560,7 @@ def env() -> Mapping[str, str | None]:
         # state, they only read credentials from the location configured via
         # GOOGLE_APPLICATION_CREDENTIALS below.
         #
-        'CLOUDSDK_CONFIG': '{project_root}/deployments/.active/.gcloud',
+        'CLOUDSDK_CONFIG': '{project_root}/deployments/{azul_current_deployment}/.gcloud',
 
         # The path of a JSON file with credentials for an authorized user or a
         # service account. The Google Cloud libraries for Python and Go will
@@ -759,7 +759,7 @@ def env() -> Mapping[str, str | None]:
         # different AWS accounts, we need a discriminator for the state directory and
         # the best I could come up with is the profile name.
         #
-        'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
+        'TF_DATA_DIR': '{project_root}/deployments/{azul_current_deployment}/.terraform.{AWS_PROFILE}',
 
         # Make Terraform's deprecation warnings more compact
         #
