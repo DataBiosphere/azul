@@ -7,6 +7,7 @@ from collections import (
 )
 from collections.abc import (
     Iterator,
+    KeysView,
     Mapping,
 )
 from functools import (
@@ -28,7 +29,6 @@ from pathlib import (
 import shlex
 import sys
 from typing import (
-    Iterable,
     Literal,
     Optional,
     TextIO,
@@ -172,6 +172,7 @@ def load_env(deployment: Optional[str] = None
             if __name__ == '__main__':
                 log('info', f'Loading environment from {module_file}')
             spec = importlib.util.spec_from_file_location('environment', file_path)
+            assert spec is not None, file_path
             module = importlib.util.module_from_spec(spec)
             assert isinstance(spec.loader, Loader)
             spec.loader.exec_module(module)
@@ -212,7 +213,7 @@ def load_boot_env(root_dir: Path) -> dict[str, str]:
     return boot
 
 
-def filter_env(env: DraftEnvironment) -> Environment:
+def filter_env(env: DraftEnvironment) -> dict[str, str]:
     """
     Remove entries whose value is None from the environment. Such entries
     arise in two ways: an environment.py module may use None to document a
@@ -240,7 +241,7 @@ class ResolvedEnvironment(DraftEnvironment):
     def __init__(self, env: DraftEnvironment) -> None:
         super().__init__()
         self._env = env
-        self._keys = set()
+        self._keys: set[str] = set()
 
     def __getitem__(self, k: str) -> Optional[str]:
         if k.isidentifier():
@@ -295,7 +296,7 @@ class ResolvedEnvironment(DraftEnvironment):
     def __iter__(self) -> Iterator[str]:
         return iter(self._env)
 
-    def keys(self) -> Iterable[str]:
+    def keys(self) -> KeysView[str]:
         return self._env.keys()
 
     def __repr__(self) -> str:
@@ -437,7 +438,7 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
     try:
         old_vars = os.environ[azul_env_vars]
     except KeyError:
-        old_vars = set()
+        old_vars = set[str]()
     else:
         old_vars = set(old_vars.split(','))
     assert not any(',' in var for var in env), env
