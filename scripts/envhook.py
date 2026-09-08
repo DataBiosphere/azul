@@ -150,15 +150,20 @@ class EnvHook:
 
     @property
     def pycharm_hosted(self):
-        return (
-            # Indicates Python Console, Run/Debug
-            bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
-            # Indicates interpreter is being verified before adding it to PyCharm
-            or sys.orig_argv[1:3] == ['-c', 'print(1)']
-            or sys.orig_argv[1] == '-c' and '_is_gil_enabled' in sys.orig_argv[2]
-            # Indicates sys.path and installed packages are being listed
-            or 'plugins/python-ce/helpers' in sys.argv[0]
-        )
+        # Indicates Python Console, Run/Debug
+        if int(os.environ.get('PYCHARM_HOSTED', '0')):
+            return True
+        # Indicates sys.path and installed packages are being listed
+        elif 'plugins/python-ce/helpers' in sys.argv[0]:
+            return True
+        else:
+            match sys.orig_argv:
+                case [_, '-c', script, *_]:
+                    # Indicates that the interpreter is being verified before
+                    # adding it to PyCharm. Newer versions use the latter form.
+                    return script == 'print(1)' or '_is_gil_enabled' in script
+                case _:
+                    return False
 
     @classmethod
     @cache
