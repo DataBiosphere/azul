@@ -232,7 +232,7 @@ def filter_env(env: DraftEnvironment) -> Environment:
 
 class ResolvedEnvironment(DraftEnvironment):
 
-    def __init__(self, env: Environment) -> None:
+    def __init__(self, env: DraftEnvironment) -> None:
         super().__init__()
         self._env = env
         self._keys = set()
@@ -299,7 +299,7 @@ class ResolvedEnvironment(DraftEnvironment):
     __str__ = __repr__
 
 
-def resolve_env(env: Environment) -> DraftEnvironment:
+def resolve_env(env: DraftEnvironment) -> DraftEnvironment:
     """
     Resolve references to other variables among all values in the given
     environment.
