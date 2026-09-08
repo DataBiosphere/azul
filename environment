@@ -419,7 +419,7 @@ _complete_env() {
 	local env envs
 	env="${COMP_WORDS[COMP_CWORD]}"
 	# * because of https://unix.stackexchange.com/a/537241/448602
-	envs=$(find "${project_root}/deployments" -maxdepth 1 -type d -print0 | xargs -0 basename)
+	envs=$(find "${project_root}/deployments" -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 basename)
 	# shellcheck disable=SC2207
 	COMPREPLY=($(compgen -W "$envs" -- "${env}"))
 	return 0
