@@ -247,8 +247,11 @@ class ResolvedEnvironment(DraftEnvironment):
                 raise RecursionError('Circular reference', k)
             else:
                 v = self._env[k]
+                # A recursive call from format_map finds at least the
+                # referencing variable. Outside calls start with no keys.
+                recursive = bool(self._keys)
                 if v is None:
-                    if self._keys:
+                    if recursive:
                         raise KeyError
                     else:
                         return v
@@ -267,7 +270,10 @@ class ResolvedEnvironment(DraftEnvironment):
                         try:
                             return self._format(v)
                         except KeyError:
-                            return None
+                            if recursive:
+                                raise
+                            else:
+                                return None
                         except ValueError:
                             return v
                     finally:
@@ -328,10 +334,10 @@ def resolve_env(env: DraftEnvironment) -> DraftEnvironment:
     ...
     TypeError: ('Referenced must be a string or None', 42)
 
-    A reference to a missing variable, or a variable whose value is None, causes
-    the entire referencing value to be undefined. This is unlike Unix shell
+    A reference to an absent variable, or a variable whose value is None, causes
+    the referencing variable to be set None. This is unlike Unix shell
     substitution, where the reference would be replaced with the empty string.
-    It's more akin to `null` propagation in SQL. We do this so that we don't
+    It's akin to `null` propagation in SQL. We do this so that we don't
     emit partially populated values, which allows for composing defaults that
     are dependendent on variables defined in overriding environments.
 
@@ -345,6 +351,11 @@ def resolve_env(env: DraftEnvironment) -> DraftEnvironment:
 
     >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '42'})
     {'x': '42', 'y': '42', 'z': '42'}
+
+    The propagation of None is transitive as well:
+
+    >>> resolve_env({'x': 'a{y}b', 'y': 'c{z}d'})
+    {'x': None, 'y': None}
 
     Circular references, direct or indirect are not supported:
 
