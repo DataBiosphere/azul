@@ -9,6 +9,9 @@ from collections.abc import (
     Iterator,
     Mapping,
 )
+from functools import (
+    cache,
+)
 import hashlib
 from importlib.abc import (
     Loader,
@@ -26,6 +29,7 @@ import shlex
 import sys
 from typing import (
     Iterable,
+    Literal,
     Optional,
     TextIO,
     Tuple,
@@ -166,7 +170,7 @@ def load_env(deployment: Optional[str] = None
         if file_path.exists():
             module_file = Path(file_path).relative_to(root_dir)
             if __name__ == '__main__':
-                print(f'{this_module.name}: Loading environment from {module_file}', file=sys.stderr)
+                log('info', f'Loading environment from {module_file}')
             spec = importlib.util.spec_from_file_location('environment', file_path)
             module = importlib.util.module_from_spec(spec)
             assert isinstance(spec.loader, Loader)
@@ -442,15 +446,13 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
     }
     for unset in old_vars - env.keys():
         assert unset != azul_env_vars
-        print(f"{this_module.name}: {'Would unset' if output is None else 'Unsetting'} "
-              f"{unset}",
-              file=sys.stderr)
+        log('info', f"{'Would unset' if output is None else 'Unsetting'} "
+                    f"{unset}")
         if output is not None:
             print(f'unset {unset}', file=output)
     for k, v in env.items():
-        print(f"{this_module.name}: {'Would set' if output is None else 'Setting'} "
-              f"{k} to {shlex.quote(redact(k, v))}",
-              file=sys.stderr)
+        log('info', f"{'Would set' if output is None else 'Setting'} "
+                    f"{k} to {shlex.quote(redact(k, v))}")
         if output is not None:
             print(f'export {k}={shlex.quote(v)}', file=output)
 
@@ -458,6 +460,31 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
 def redact(k: str, v: str) -> str:
     forbidden = ('secret', 'password', 'token')
     return 'REDACTED' if any(s in k.lower() for s in forbidden) else v
+
+
+@cache
+def verbose() -> bool:
+    azul_env_quiet = 'azul_env_quiet'
+    try:
+        value = os.environ[azul_env_quiet]
+    except KeyError:
+        return True
+    else:
+        if value == '0':
+            return True
+        elif value == '1':
+            return False
+        else:
+            raise ValueError('Expected "0" or "1"', azul_env_quiet, value)
+
+
+type LogLevel = Literal['info', 'warning', 'error']
+
+
+def log(level: LogLevel, message: str) -> None:
+    if level != 'info' or verbose():
+        prefix = '' if level == 'info' else level + ': '
+        print(f'{this_module.name}: {prefix}{message}', file=sys.stderr)
 
 
 def main():
@@ -468,12 +495,12 @@ def main():
     hashed_env, warning = prepare_env()
     export_env(hashed_env, output)
     if warning:
-        print(warning, file=sys.stderr)
+        log('warning', warning)
     if output is None:
-        print("\nStdout appears to be a terminal. No output was generated "
-              "other than the usual redacted diagnostic output to stderr. To "
-              "avoid this, pass the program's output to your shell's `eval`:\n"
-              f"eval $(python3 {sys.argv[0]}) || echo false", file=sys.stderr)
+        log('error', "Stdout appears to be a terminal. No output was generated "
+                     "other than the usual redacted diagnostic output to stderr. To "
+                     "avoid this, pass the program's output to your shell's `eval`:\n"
+                     f"eval $(python3 {sys.argv[0]}) || echo false")
         sys.exit(1)
     else:
         print(output.getvalue(), file=sys.stdout)
