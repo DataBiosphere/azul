@@ -30,9 +30,7 @@ import shlex
 import sys
 from typing import (
     Literal,
-    Optional,
     TextIO,
-    Tuple,
     cast,
 )
 
@@ -40,7 +38,7 @@ this_module = Path(__file__)
 
 root_dir = this_module.parent.parent
 
-DraftEnvironment = Mapping[str, Optional[str]]
+DraftEnvironment = Mapping[str, str | None]
 
 Environment = Mapping[str, str]
 
@@ -104,8 +102,8 @@ class BadParentDeployment(RuntimeError):
         )
 
 
-def load_env(deployment: Optional[str] = None
-             ) -> Tuple[Environment, Optional[str]]:
+def load_env(deployment: str | None = None
+             ) -> tuple[Environment, str | None]:
     """
     Load environment.py and environment.local.py modules from the project
     root and either the specified deployment or the current active deployment
@@ -160,7 +158,7 @@ def load_env(deployment: Optional[str] = None
         if parent_deployment_dir is not None and not parent_deployment_dir.exists():
             raise BadParentDeployment(parent_deployment_dir, deployment_dir)
 
-    def _load(dir_path: Path, local: bool = False) -> Optional[EnvironmentModule]:
+    def _load(dir_path: Path, local: bool = False) -> EnvironmentModule | None:
         """
         Load and return the `environment.py` or `environment.local.py` module
         from the given directory if such a module exists, otherwise return None.
@@ -243,7 +241,7 @@ class ResolvedEnvironment(DraftEnvironment):
         self._env = env
         self._keys: set[str] = set()
 
-    def __getitem__(self, k: str) -> Optional[str]:
+    def __getitem__(self, k: str) -> str | None:
         if k.isidentifier():
             if k in self._keys:
                 raise RecursionError('Circular reference', k)
@@ -430,7 +428,7 @@ def hash_env(env: Environment) -> Environment:
 azul_env_vars = 'azul_env_vars'
 
 
-def export_env(env: Environment, output: Optional[TextIO]) -> None:
+def export_env(env: Environment, output: TextIO | None) -> None:
     """
     Print the given environment in a form that can be evaluated by the Bash
     shell, unsetting variables that are no longer used.
@@ -508,7 +506,7 @@ def main():
         print(output.getvalue(), file=sys.stdout)
 
 
-def prepare_env() -> Tuple[Environment, Optional[str]]:
+def prepare_env() -> tuple[Environment, str | None]:
     env, warning = load_env()
     resolved_env = resolve_env(env)
     filtered_env = filter_env(resolved_env)
