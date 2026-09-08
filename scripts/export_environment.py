@@ -84,16 +84,6 @@ class InvalidDeployment(RuntimeError):
         )
 
 
-class InvalidActiveDeployment(RuntimeError):
-
-    def __init__(self, dir_: Path) -> None:
-        super().__init__(
-            f"{dir_} does not exist or is not a symbolic link to a directory. "
-            f"Please create a symbolic link to the active deployment, as in "
-            f"the following example: 'cd deployments && ln -snf dev .active'"
-        )
-
-
 class BadParentDeployment(RuntimeError):
 
     def __init__(self, parent: Path, component: Path) -> None:
@@ -102,57 +92,57 @@ class BadParentDeployment(RuntimeError):
         )
 
 
+azul_current_deployment = 'azul_current_deployment'
+
+
 def load_env(deployment: str | None = None
              ) -> tuple[Environment, str | None]:
     """
-    Load environment.py and environment.local.py modules from the project
-    root and either the specified deployment or the current active deployment
-    directory, call their env() function to obtain the environment dictionary
-    and merge the dictionaries. The entries from an environment.local.py take
-    precedence over those from a corresponding environment.py in the same
-    directory. The modules from the deployment directory take precedence over
-    ones in the project root.
+    Load environment.py and environment.local.py modules from the project root
+    and from the directory of either the specified deployment or the one named
+    by `azul_current_deployment`, call their env() function to obtain the
+    environment dictionary and merge the dictionaries. The entries from an
+    environment.local.py take precedence over those from a corresponding
+    environment.py in the same directory. The modules from the deployment
+    directory take precedence over ones in the project root.
     """
 
     deployments_dir = root_dir / 'deployments'
-    active_deployment_dir = deployments_dir / '.active'
 
-    if deployment is not None:
+    if deployment is None:
+        # An empty value means the same as the variable being absent. We only
+        # afford this accommodation to this one variable, because it may have
+        # been set via `env` in Claude Code's settings, which has no way of
+        # removing a variable from the environment.
+        deployment = os.environ.get(azul_current_deployment) or None
+
+    if deployment is None:
+        warning = (
+            f'No current deployment ({azul_current_deployment} is not set). '
+            f'Loaded global defaults only.'
+        )
+        deployment_dir = None
+    else:
         deployment_dir = deployments_dir / deployment
         if not deployment_dir.is_dir():
             raise InvalidDeployment(deployment_dir)
         warning = None
-    elif active_deployment_dir.is_dir() and active_deployment_dir.is_symlink():
-        deployment_dir = Path(os.readlink(str(active_deployment_dir)))
-        if not deployment_dir.is_absolute():
-            deployment_dir = deployments_dir / deployment_dir
-        if not deployment_dir.is_dir():
-            raise InvalidActiveDeployment(deployment_dir)
-        warning = None
-    elif active_deployment_dir.exists():
-        raise InvalidActiveDeployment(active_deployment_dir)
-    else:
-        warning = (
-            f'No active deployment (missing {str(active_deployment_dir)!r}). '
-            f'Loaded global defaults only.'
-        )
-        deployment_dir = None
 
     if deployment_dir is None:
         parent_deployment_dir = None
     else:
         # If the deployment is a component of another one (e.g. `dev.gitlab`),
         # also get the parent deployment's directory.
-        deployment, *suffix = str(deployment_dir.relative_to(deployments_dir)).split('.')
+        parent, *suffix = deployment_dir.name.split('.')
         match suffix:
             case ['local'] | []:
                 parent_deployment_dir = None
             case [component, 'local']:
                 assert component
-                parent_deployment_dir = deployments_dir / (deployment + '.local')
+                parent_deployment_dir = deployments_dir / (parent + '.local')
             case [component]:
                 assert component
-                parent_deployment_dir = deployments_dir / deployment
+                parent_deployment_dir = deployments_dir / parent
             case _:
                 assert False, deployment_dir
         if parent_deployment_dir is not None and not parent_deployment_dir.exists():
@@ -189,10 +179,24 @@ def load_env(deployment: str | None = None
         if dir is not None
     ]
 
-    # Note that ChainMap only considers the second mapping in the chain
-    # if a key is absent from the first one. IOW, the earlier mappings in the
-    # chain take precedence over later ones.
-    env = ChainMap(dict(project_root=str(root_dir)))
+    # Combine all deserialized environment modules. Note that ChainMap only
+    # considers the second mapping in the chain if a key is absent from the
+    # first one. IOW, the earlier mappings in the chain take precedence over
+    # later ones.
+    #
+    # Two variables describe the context the environment is compiled in, namely
+    # which working copy and which deployment. Neither can be stated in an
+    # environment.py, but both are needed by one: `PYTHONPATH`, `MYPYPATH`,
+    # `TF_DATA_DIR` and `CLOUDSDK_CONFIG` all refer to them. Being inputs to
+    # compiling the environment rather than products of it, they must not be
+    # overridable, which we ensure by placing them first in the chain. If no
+    # deployment is selected, the variable naming it is omitted rather than set
+    # to None, keeping every mapping in the chain free of None values.
+    #
+    inputs = {'project_root': str(root_dir)}
+    if deployment is not None:
+        inputs[azul_current_deployment] = deployment
+    env = ChainMap(inputs)
     for module in modules:
         if module is not None:
             # We don't want an entry whose value is None to override a
