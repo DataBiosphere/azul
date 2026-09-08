@@ -182,13 +182,14 @@ def load_env(deployment: Optional[str] = None
             return None
 
     modules = [
-        deployment_dir and _load(deployment_dir, local=True),
-        parent_deployment_dir and _load(parent_deployment_dir, local=True),
-        _load(root_dir, local=True),
-        deployment_dir and _load(deployment_dir),
-        parent_deployment_dir and _load(parent_deployment_dir),
-        _load(root_dir)
+        _load(dir, local=local)
+        # Local environment files take precedence
+        for local in [True, False]
+        # More specific environment files take precedence
+        for dir in [deployment_dir, parent_deployment_dir, root_dir]
+        if dir is not None
     ]
+
     # Note that ChainMap only considers the second mapping in the chain
     # if a key is absent from the first one. IOW, the earlier mappings in the
     # chain take precedence over later ones.
