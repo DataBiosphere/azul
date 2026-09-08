@@ -255,6 +255,11 @@ class ResolvedEnvironment(DraftEnvironment):
                 elif not isinstance(v, str):
                     raise TypeError('Referenced must be a string or None', v)
                 else:
+                    # Whether this value is itself being referenced by another
+                    # one, in which case a failure to resolve it must be
+                    # propagated to that one, just like the value being None
+                    # outright is above.
+                    referenced = bool(self._keys)
                     self._keys.add(k)
                     try:
                         if v and (v[0] == '{' and v[-1] == '}' or v[0] == '[' and v[-1] == ']'):
@@ -267,7 +272,10 @@ class ResolvedEnvironment(DraftEnvironment):
                         try:
                             return self._format(v)
                         except KeyError:
-                            return None
+                            if referenced:
+                                raise
+                            else:
+                                return None
                         except ValueError:
                             return v
                     finally:
@@ -339,6 +347,12 @@ def resolve_env(env: DraftEnvironment) -> DraftEnvironment:
     {'x': None}
 
     >>> resolve_env({'x': 'a{y}b', 'y': None})
+    {'x': None, 'y': None}
+
+    That propagates transitively, rather than the undefined value reaching the
+    referencing one as the string "None":
+
+    >>> resolve_env({'x': 'a{y}b', 'y': 'c{z}d'})
     {'x': None, 'y': None}
 
     Transitive reference:
