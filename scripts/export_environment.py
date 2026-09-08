@@ -78,7 +78,7 @@ class InvalidDeployment(RuntimeError):
 
     def __init__(self, dir_: Path) -> None:
         super().__init__(
-            f"{dir_} does not exist or is not a symbolic link to a directory."
+            f"{dir_} does not exist or is not a directory."
         )
 
 
@@ -118,7 +118,7 @@ def load_env(deployment: Optional[str] = None
     if deployment is not None:
         deployment_dir = deployments_dir / deployment
         if not deployment_dir.is_dir():
-            raise InvalidDeployment(deployments_dir)
+            raise InvalidDeployment(deployment_dir)
         warning = None
     elif active_deployment_dir.is_dir() and active_deployment_dir.is_symlink():
         deployment_dir = Path(os.readlink(str(active_deployment_dir)))
