@@ -13,7 +13,6 @@ __pycache__/
 ## Build products above this line. Please see the `clean` target in Makefile.
 
 # Local environment configuration
-/deployments/.active
 /deployments/*.local/
 /environment.local.py
 /deployments/*/environment.local.py
