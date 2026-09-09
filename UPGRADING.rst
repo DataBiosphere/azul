@@ -20,6 +20,23 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8290 Use of Claude Code is complicated by .active deployment symlink
+=====================================================================
+
+The current deployment is now specified in the ``azul_current_deployment``
+environment variable instead of the ``deployments/.active`` symbolic link. There
+is no default; the variable must be set explicitly, which ``_select`` does. The
+selection therefore lives in the shell that made it, and has to be made again in
+every new shell, where previously the link persisted it on disk.
+
+Everyone
+--------
+
+Delete the now unused symbolic link::
+
+    rm deployments/.active
+
+
 #8249 Use uv to manage Python dependencies
 ==========================================
 
