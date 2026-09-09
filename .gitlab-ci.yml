@@ -34,7 +34,7 @@ build_image:
   # uv.lock, common.mk and the Makefile.
   extends: .on_push
   stage: build_image
-  timeout: 6m
+  timeout: 10m
   rules:
     - if: $CI_COMMIT_BRANCH
   script:
