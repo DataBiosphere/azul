@@ -11,7 +11,7 @@ _refresh() {
 	source "${project_root}/environment"
 }
 
-# Manage the symlink to the active deployment
+# Manage the variable that specifies the current deployment
 #
 _select() {
 	if [ -z "$1" ] ; then
@@ -42,12 +42,21 @@ _deselect() {
 }
 
 _show_link() {
-	( cd "${project_root}/deployments" && ls -l .active )
+	if [ -n "${azul_current_deployment:+x}" ] ; then
+		echo "${azul_current_deployment}"
+	else
+		echo >&2 "No deployment is currently selected"
+		return 1
+	fi
 }
 
 _validate_link() {
-	d="${project_root}/deployments/$1"
-	# -d dereferences symlinks so with -L we make sure the argument isn't one
+	local d="${project_root}/deployments/$1"
+	if [ -z "$1" ] ; then
+		echo >&2 "_validate_link failed: no deployment specified"
+		return 1
+	fi
+	# -L is used to reject symlinks which -d would dereference
 	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
 		echo >&2 "_validate_link failed: '$1'"
 		return 1
@@ -55,19 +64,11 @@ _validate_link() {
 }
 
 _link() {
-	if ! (
-		_validate_link "$1" &&
-		cd "${project_root}/deployments" &&
-		{ [ ! -e .active ] || { [ -L .active ] && rm .active ; } ; } &&
-		ln -s "$1" .active
-	) ; then
-		echo >&2 "_link failed: '$1'"
-		return 1
-	fi
+	_validate_link "$1" && export azul_current_deployment="$1"
 }
 
 _unlink() {
-	rm "${project_root}/deployments/.active"
+	unset azul_current_deployment
 }
 
 _login() {
