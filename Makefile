@@ -291,7 +291,7 @@ tag: check_branch
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
 .PHONY: integration_test
-integration_test: check_python check_branch $(project_root)/lambdas/service/.chalice/config.json
+integration_test: check_aws check_python check_branch $(project_root)/lambdas/service/.chalice/config.json
 	python -m unittest --verbose integration_test
 
 .PHONY: check_clean
