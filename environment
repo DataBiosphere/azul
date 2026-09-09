@@ -15,12 +15,12 @@ _refresh() {
 #
 _select() {
 	if [ -z "$1" ] ; then
-		_show_link
+		_show_deployment
 	else
 		if ! {
-			_validate_link "$1" &&
+			_validate_deployment "$1" &&
 			_logout &&
-			_link "$1" &&
+			_set_deployment "$1" &&
 			_refresh &&
 			_login ;
 		} ; then
@@ -33,7 +33,7 @@ _select() {
 _deselect() {
 	if ! {
 		_logout &&
-		_unlink &&
+		_unset_deployment &&
 		_refresh ;
 	} ; then
 		echo >&2 "_deselect failed"
@@ -41,7 +41,7 @@ _deselect() {
 	fi
 }
 
-_show_link() {
+_show_deployment() {
 	if [ -n "${azul_current_deployment:+x}" ] ; then
 		echo "${azul_current_deployment}"
 	else
@@ -50,24 +50,24 @@ _show_link() {
 	fi
 }
 
-_validate_link() {
+_validate_deployment() {
 	local d="${project_root}/deployments/$1"
 	if [ -z "$1" ] ; then
-		echo >&2 "_validate_link failed: no deployment specified"
+		echo >&2 "_validate_deployment failed: no deployment specified"
 		return 1
 	fi
 	# -L is used to reject symlinks which -d would dereference
 	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
-		echo >&2 "_validate_link failed: '$1'"
+		echo >&2 "_validate_deployment failed: '$1'"
 		return 1
 	fi
 }
 
-_link() {
-	_validate_link "$1" && export azul_current_deployment="$1"
+_set_deployment() {
+	_validate_deployment "$1" && export azul_current_deployment="$1"
 }
 
-_unlink() {
+_unset_deployment() {
 	unset azul_current_deployment
 }
 
@@ -290,7 +290,7 @@ _clone() {
 		(cd terraform/gitlab/vpn && git submodule update --init easy-rsa)
 		__update_clone
 		source environment
-		_link "${deployment}"
+		_set_deployment "${deployment}"
 		_refresh
 		make virtualenv
 		source .venv/bin/activate
@@ -356,7 +356,7 @@ _hibernate() {
         -target aws_opensearch_domain.index
     ) && (
       cd terraform/shared &&
-      _link "$AZUL_DEPLOYMENT_STAGE.shared" &&
+      _set_deployment "$AZUL_DEPLOYMENT_STAGE.shared" &&
       _refresh &&
       make validate &&
       terraform destroy \
@@ -364,7 +364,7 @@ _hibernate() {
         -target aws_cloudwatch_metric_alarm.freshclam
     ) && (
       cd terraform/gitlab &&
-      _link "$AZUL_DEPLOYMENT_STAGE.gitlab" && _refresh &&
+      _set_deployment "$AZUL_DEPLOYMENT_STAGE.gitlab" && _refresh &&
       make validate &&
       terraform destroy \
         -target aws_cloudwatch_metric_alarm.gitlab_cpu_use \
@@ -377,7 +377,7 @@ _hibernate() {
         -target aws_lb.gitlab_nlb \
         -target aws_lb.gitlab_alb
     ) &&
-    _link "$AZUL_DEPLOYMENT_STAGE" &&
+    _set_deployment "$AZUL_DEPLOYMENT_STAGE" &&
     _refresh &&
     echo "Successfully hibernated $AZUL_DEPLOYMENT_STAGE"
   } then {
@@ -399,7 +399,7 @@ _complete_env() {
 	return 0
 }
 
-complete -F _complete_env _select _link _validate_link
+complete -F _complete_env _select _set_deployment _validate_deployment
 
 # Adds an az_foo convenience function for every scripts/foo.py
 #
