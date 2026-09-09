@@ -11,6 +11,16 @@ check_env:
 		false; \
 	fi
 
+# An empty value means the same as the variable being absent, which is how
+# `environment` treats it, too.
+#
+.PHONY: check_deployment
+check_deployment: check_env
+	@if ! test -n "$$azul_current_deployment"; then \
+		echo -e "\nPlease select a deployment by running '_select <deployment>'\n"; \
+		false; \
+	fi
+
 .PHONY: check_venv
 check_venv: check_env
 	@if ! test -n "$$VIRTUAL_ENV"; then \
@@ -81,7 +91,7 @@ check_awscli: check_env
 	fi
 
 .PHONY: check_aws
-check_aws: check_python check_awscli
+check_aws: check_python check_awscli check_deployment
 	@if ! python -c "import os, sys, boto3 as b; \
 		             expected = os.environ['AZUL_AWS_ACCOUNT_ID']; \
 		             actual = b.client('sts').get_caller_identity()['Account']; \
