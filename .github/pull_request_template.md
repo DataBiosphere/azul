@@ -83,9 +83,9 @@ title is `Fix: ` followed by the issue title
 ### Author (before every review)
 
 - [ ] Rebased PR branch on `develop`, squashed fixups from prior reviews
-- [ ] Ran `make requirements_update` <sub>or this PR does not modify `Dockerfile`, `environment`, `requirements*.txt`, `common.mk`, `Makefile` or `environment.boot`</sub>
-- [ ] Added `R` tag to commit title <sub>or this PR does not modify `requirements*.txt`</sub>
-- [ ] This PR is labeled `reqs` <sub>or does not modify `requirements*.txt`</sub>
+- [ ] Ran `make requirements_update` <sub>or this PR does not modify `pyproject.toml`</sub>
+- [ ] Added `R` tag to commit title <sub>or this PR does not modify `uv.lock`</sub>
+- [ ] This PR is labeled `reqs` <sub>or does not modify `uv.lock`</sub>
 - [ ] `make integration_test` passes in personal deployment <sub>or this PR does not modify functionality that could affect the IT outcome</sub>
 - [ ] PR is awaiting requested review from a peer
 - [ ] Status of PR is *Review requested*

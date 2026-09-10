@@ -7,6 +7,8 @@ __pycache__/
 /.coverage.*
 /test_profile.html
 /fedramp_inventory.xlsx
+# Temporary directory created by the `format` target in Makefile
+/.tmp.*/
 
 ## Build products above this line. Please see the `clean` target in Makefile.
 

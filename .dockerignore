@@ -1,9 +1,9 @@
 *
 !Makefile
 !common.mk
-!requirements*.txt
-!environment
+!pyproject.toml
+!uv.lock
 !bin/keys/awscli-public-key.asc
 !bin/keys/docker-apt-keyring.pgp
 !bin/checksums/gh_checksums.txt
-requirements.all.txt
+!bin/checksums/uv_checksums.txt

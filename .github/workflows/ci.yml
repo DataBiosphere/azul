@@ -19,8 +19,22 @@ jobs:
       - uses: 'actions/setup-python@v5'
         with:
           python-version: '${{ env.azul_python_version }}'
-          cache: 'pip'
-          cache-dependency-path: 'requirements.dev.txt'
+
+      # The action is referenced by commit, not by tag, because the project
+      # doesn't publish a tag for the major version this commit belongs to.
+      #
+      - uses: 'astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d'  # v10.0.1
+        # The action reads `required-version` from `pyproject.toml`.
+        with:
+          enable-cache: true
+          # Key the cache on the lock file. This is more reliable than
+          # the default (pyproject.toml), and insensitive to pyproject.toml
+          # changes that don't affect the set of dependencies.
+          cache-dependency-glob: 'uv.lock'
+          # Remove pre-built wheels from the cache before saving, leaving only
+          # wheels built during install. The former are cheaper to download
+          # again than to restore from the cache.
+          prune-cache: true
 
       - name: 'Run unit tests and other checks'
         run: |
