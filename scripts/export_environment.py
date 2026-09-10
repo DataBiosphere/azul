@@ -6,6 +6,7 @@ from collections import (
     ChainMap,
 )
 from collections.abc import (
+    Iterable,
     Iterator,
     KeysView,
     Mapping,
@@ -95,7 +96,8 @@ class BadParentDeployment(RuntimeError):
 azul_current_deployment = 'azul_current_deployment'
 
 
-def load_env(deployment: str | None = None
+def load_env(deployment: str | None = None,
+             extra_files: Iterable[Path] = ()
              ) -> tuple[Environment, str | None]:
     """
     Load environment.py and environment.local.py modules from the project root
@@ -105,16 +107,33 @@ def load_env(deployment: str | None = None
     environment.local.py take precedence over those from a corresponding
     environment.py in the same directory. The modules from the deployment
     directory take precedence over ones in the project root.
+
+    The given extra files, of the `name=value` form that `load_env_file`
+    parses, take precedence over all of those modules. A file that does not
+    exist is ignored. Because such a file may name the current deployment, and
+    thereby determine which modules to load, it is read before them. A later
+    file in `extra_files` takes precedence over an earlier one.
     """
 
     deployments_dir = root_dir / 'deployments'
+
+    extra_env: dict[str, str] = {}
+    for path in extra_files:
+        try:
+            extra_env.update(load_env_file(path))
+        except FileNotFoundError:
+            pass
 
     if deployment is None:
         # An empty value means the same as the variable being absent. We only
         # afford this accommodation to this one variable, because it may have
         # been set via `env` in Claude Code's settings, which has no way of
         # removing a variable from the environment.
-        deployment = os.environ.get(azul_current_deployment) or None
+        deployment = (
+            os.environ.get(azul_current_deployment)
+            or extra_env.get(azul_current_deployment)
+            or None
+        )
 
     if deployment is None:
         warning = (
@@ -196,23 +215,30 @@ def load_env(deployment: str | None = None
     inputs = {'project_root': str(root_dir)}
     if deployment is not None:
         inputs[azul_current_deployment] = deployment
-    env = ChainMap(inputs)
+    env = ChainMap(inputs, extra_env)
     for module in modules:
         if module is not None:
             # We don't want an entry whose value is None to override a
             # lower-precedence value that isn't None.
             env.maps.append(filter_env(module.env()))
-    env.maps.append(load_boot_env(root_dir))
+    env.maps.append(load_env_file(root_dir / 'environment.boot'))
     return env, warning
 
 
-def load_boot_env(root_dir: Path) -> dict[str, str]:
-    boot = {}
-    with open(root_dir / 'environment.boot') as f:
+def load_env_file(path: Path) -> dict[str, str]:
+    """
+    Load a file of `name=value` lines, ignoring blank lines and those commented
+    out with a `#`. Unlike the environment modules, such a file is inert: its
+    values are used verbatim, without resolving references between them.
+    """
+    env = {}
+    with open(path) as f:
         for line in f:
-            k, _, v = line.partition('=')
-            boot[k.strip()] = v.strip()
-    return boot
+            line = line.strip()
+            if line and not line.startswith('#'):
+                k, _, v = line.partition('=')
+                env[k.strip()] = v.strip()
+    return env
 
 
 def filter_env(env: DraftEnvironment) -> dict[str, str]:
@@ -521,8 +547,9 @@ def main():
         print(output.getvalue(), file=sys.stdout)
 
 
-def prepare_env() -> tuple[Environment, str | None]:
-    env, warning = load_env()
+def prepare_env(extra_files: Iterable[Path] = ()
+                ) -> tuple[Environment, str | None]:
+    env, warning = load_env(extra_files=extra_files)
     resolved_env = resolve_env(env)
     filtered_env = filter_env(resolved_env)
     hashed_env = hash_env(filtered_env)

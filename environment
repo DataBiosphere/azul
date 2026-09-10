@@ -64,11 +64,39 @@ _validate_deployment() {
 }
 
 _set_deployment() {
-	_validate_deployment "$1" && export azul_current_deployment="$1"
+	_validate_deployment "$1" &&
+	export azul_current_deployment="$1" &&
+	_write_pycharm_env "$1"
 }
 
 _unset_deployment() {
 	unset azul_current_deployment
+	_write_pycharm_env ''
+}
+
+# Record the given deployment in `environment.pycharm` so that envhook.py can
+# inject it into Python processes started by PyCharm. We pass -S to disable site
+# hooks, and thereby envhook.py which would only get in the way here.
+#
+_write_pycharm_env() {
+	python -S - "$1" <<- "EOF"
+		import os
+		from pathlib import Path
+		import sys
+
+		name = 'azul_current_deployment'
+		deployment, = sys.argv[1:]
+		path = Path(os.environ['project_root']) / 'environment.pycharm'
+		try:
+		    lines = path.read_text().splitlines()
+		except FileNotFoundError:
+		    lines = []
+		# Remove lines for the variable, preserve the rest in their original order
+		lines = [l for l in lines if l.partition('=')[0].strip() != name]
+		if deployment:
+		    lines.append(f'{name}={deployment}')
+		path.write_text(''.join(l + '\n' for l in lines))
+	EOF
 }
 
 _login() {
