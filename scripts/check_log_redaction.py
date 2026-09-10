@@ -1,7 +1,7 @@
 """
-Search CloudWatch logs for unredacted security tokens (APATs, OAuth access
-tokens, refresh tokens, and authorization codes) in the currently selected
-deployment.
+Search CloudWatch logs for unredacted secrets (APATs, OAuth 2.0 access tokens,
+refresh tokens, authorization codes and OAuth 2.0 client secrets, as well as
+the signatures of signed GCS and S3 URLs) in the currently selected deployment.
 """
 import argparse
 from collections import (
@@ -29,11 +29,23 @@ from azul.logging import (
 
 log = logging.getLogger(__name__)
 
+# Every pattern requires a long, uninterrupted run of base64url characters
+# somewhere in the token. Redacting a token replaces the middle of each of its
+# variable parts with a mask, leaving runs that are far too short to satisfy
+# that requirement. The patterns therefore only match tokens that were logged
+# unredacted, or only partially so, and the query below doesn't need to exclude
+# messages containing the mask. Such an exclusion would defeat the purpose of
+# this script, because a partially redacted token contains the mask, too. The
+# lower bounds were chosen arbitrarily, just as they were for the patterns in
+# `azul.lib.strings`.
+#
 secret_types = {
-    'APAT': r"['\x22= ]ey[IJ][A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+",
-    'access_token': r'ya29\.[A-Za-z0-9_-]{40,}',
+    'APAT': r"['\x22= ]ey[IJ][A-Za-z0-9_-]+\.[A-Za-z0-9_-]{40,}\.[A-Za-z0-9_-]+",
+    'access_token': r'ya29\.(?:[A-Za-z0-9_-]+\.)*[A-Za-z0-9_-]{40,}',
     'refresh_token': r"['\x22= ]1\/\/[A-Za-z0-9_-]{20,}",
     'auth_code': r"['\x22= ]4\/[A-Za-z0-9_-]{60,}",
+    'client_secret': r'GOCSPX-[A-Za-z0-9_-]{20,}',
+    'signature': r'[?&](X-Amz-|X-Goog-)?Signature=[^&\s]{20,}',
 }
 
 indexer_handler_names = [
@@ -99,7 +111,6 @@ def main():
     for secret_type, pattern in secret_types.items():
         query = (
             f'filter @message =~ /{pattern}/'
-            f' | filter @message not like "REDACTED"'
             f' | filter @message not like "bucket_owner"'
             f' | fields @log, @message'
             f' | sort @timestamp asc'

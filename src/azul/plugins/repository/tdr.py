@@ -13,10 +13,6 @@ from typing import (
     TypeVar,
 )
 
-from furl import (
-    furl,
-)
-
 from azul import (
     config,
 )
@@ -43,6 +39,7 @@ from azul.lib.bigquery import (
     backtick,
 )
 from azul.lib.strings import (
+    assert_signed_url_redactable,
     longest_common_prefix,
 )
 from azul.lib.time import (
@@ -218,8 +215,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
             assert access.method is AccessMethod.https, R(str(access.method))
             assert access.headers is None, R(str(access.headers))
             signed_url = access.url
-            args = furl(signed_url).args
-            assert 'X-Goog-Signature' in args, R(str(args))
+            assert_signed_url_redactable(signed_url)
             return signed_url
 
     def validate_version(self, version: str) -> None:

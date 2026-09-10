@@ -277,7 +277,7 @@ class AzulUnitTestCase(AzulTestCase, HasCachedHttpClient):
         # Note that we don't use moto.core.models.moto_api_backend.reset() here
         # because it resets all backends and therefore requires that all Moto
         # extras are installed. The backends listed here need to match the
-        #  extras specified for the `moto` dependency in `requirements.dev.txt`.
+        #  extras specified for the `moto` dependency in `pyproject.toml`.
         for name in ('s3', 'sqs', 'sns', 'dynamodb', 'iam'):
             backends = moto.backends.get_backend(name)
             for region_name, backend in backends.items():
