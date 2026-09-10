@@ -254,8 +254,8 @@ navigate to *Settings* -> *Developer settings* -> *Personal access tokens*
 
 6. Click *Generate token* and copy the resulting token
 
-7. Edit the `deployments/.active/environment.local.py` file and modify the
-   `GITHUB_TOKEN` variable: 
+7. Edit `deployments/$azul_current_deployment/environment.local.py`
+   and modify the `GITHUB_TOKEN` variable:
 
    ```
    'GITHUB_TOKEN': '<the token you just copied>'
@@ -387,15 +387,16 @@ deploying to.
 2. Create a new directory for the configuration of your personal deployment:
 
    ```
-   cd deployments
-   cp -r sandbox yourname.local
-   ln -snf yourname.local .active
-   mv .active/.example.environment.local.py .active/environment.local.py 
-   cd ..
+   cp -r deployments/sandbox deployments/yourname.local
+   cd deployments/yourname.local
+   mv .example.environment.local.py environment.local.py
+   cd ../..
+   _select yourname.local
    ```
 
-3. Read all comments in `deployments/.active/environment.py` and
-   `deployments/.active/environment.local.py` and make the appropriate edits.
+3. Read all comments in `deployments/yourname.local/environment.py` and
+   `deployments/yourname.local/environment.local.py` and make the appropriate
+   edits.
 
 
 ## 2.4 PyCharm
@@ -404,6 +405,12 @@ Running tests from PyCharm requires `environment` to be sourced. The easiest way
 to do this automatically is by installing `envhook.py`, a helper script that
 injects the environment variables from `environment` into the Python interpreter
 process started from the project's virtual environment in `.venv`.
+
+Because PyCharm typically doesn't get its environment from a shell, no process
+it starts inherits azul_current_deployment, the variable specifying the current
+deployment. `envhook.py` therefore also loads `environment.pycharm`. The
+`_select` helper maintains the `azul_current_deployment` entry in that file, so
+selecting a deployment in a shell selects it for PyCharm, too.
 
 To install `envhook.py` run
 
@@ -992,7 +999,7 @@ but they will be empty.
    your deployment.
 
 7. Delete the local Terraform state file at
-   `deployments/.active/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
+   `deployments/foo.local/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
 
 
 # 4. Running system components locally
