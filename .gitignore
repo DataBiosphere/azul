@@ -15,6 +15,7 @@ __pycache__/
 # Local environment configuration
 /deployments/*.local/
 /environment.local.py
+/environment.pycharm
 /deployments/*/environment.local.py
 /deployments/*/.terraform/
 /deployments/*/.terraform.*/

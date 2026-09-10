@@ -133,10 +133,49 @@ class EnvHook:
 
     def prepare_env(self) -> Mapping[str, str]:
         prepare_env = self.export_environment.prepare_env
-        new, message = prepare_env()
+        new, message = prepare_env(self.extra_env_files())
         if message is not None:
             self.print(message)
         return new
+
+    def extra_env_files(self) -> list:
+        """
+        The `environment.pycharm` file, but only for processes launched by
+        PyCharm. PyCharm doesn't usually get its environment from a shell, so
+        this file is a convenient way to inject Azul environment variables into
+        those processes, without affecting Python processes launched from a
+        shell with an already populated Azul environment. Note that Python
+        processes launched by a shell running in PyCharm's terminal window fall
+        into the latter category.
+
+        The key use case for this file is setting `azul_current_deployment`. In
+        fact, the `_select` helper sets `azul_current_deployment` in the shell's
+        environment *and* writes it to `environment.pycharm`.
+
+        Being loaded as part of the environment, the file's entries are subject
+        to the same resolution of references between variables as those from
+        the environment*.py files, which it takes precedence over. It does not
+        take precedence over a variable configured in a specific PyCharm run
+        configuration, nor over one from PyCharm's intrinsic environment, the
+        two being indistinguishable from each other and both being more
+        specific than this file.
+
+        The order of precedence among the different sources of environment
+        variables is as follows (from lowest to highest):
+
+        - environment*.py
+
+        - environment.pycharm
+
+        - PyCharm's own environment
+
+        - Any variable set in the active PyCharm Run Configuration, or under
+          Python – Console – Python Console
+        """
+        if self.pycharm_hosted:
+            return [self.export_environment.root_dir / 'environment.pycharm']
+        else:
+            return []
 
     def set_env(self, env: Mapping[str, str]):
         redact = self.export_environment.redact
