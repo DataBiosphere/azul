@@ -134,6 +134,8 @@ class EnvHook:
     def prepare_env(self) -> Mapping[str, str]:
         prepare_env = self.export_environment.prepare_env
         new, message = prepare_env()
+        if message is not None:
+            self.print(message)
         return new
 
     def set_env(self, env: Mapping[str, str]):
