@@ -884,10 +884,13 @@ class Chalice:
                     alias_property('lambda_function_arn', notified_function)
                     if notified_function.get('filter_prefix') == s3_log_forwarder_prefix:
                         s3_log_forwarder_arn = json_str(notified_function['lambda_function_arn'])
+
             # Chalice only grants the S3 service principal permission to invoke
-            # the log forwarder for buckets in the deploying account, so buckets
-            # in other accounts need explicit resource-based permissions.
+            # the log forwarder function for buckets in the same account as that
+            # function, so buckets in other accounts need explicit permissions.
+            #
             # https://repost.aws/knowledge-center/lambda-s3-cross-account-function-invoke
+            #
             for bucket, term in [
                 (config.mirror_bucket, config.mirror_term),
                 (config.ma_mirror_bucket, config.ma_mirror_term)
@@ -901,10 +904,9 @@ class Chalice:
                         'function_name': s3_log_forwarder_arn,
                         'qualifier': s3_log_forwarder_arn.replace('.arn', '.name'),
                         'principal': 's3.amazonaws.com',
-                        # Access logs from the mirror buckets are deposited
-                        # into a dedicated logs bucket in the same account. The
-                        # logs buckets' names are derived from the mirror
-                        # buckets' names.
+                        # The access logs for a mirror bucket are deposited into
+                        # a dedicated bucket that is located in the same account
+                        # and whose name is derived from the mirror bucket name.
                         'source_arn': f'arn:aws:s3:::{bucket}-logs'
                     }
         else:
