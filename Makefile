@@ -89,7 +89,7 @@ uv_checksums: check_env
 lambdas: check_env
 	$(MAKE) -C lambdas
 
-anvil_schema: check_python
+anvil_schema: check_python check_deployment
 	python scripts/download_anvil_schema.py
 
 define deploy
@@ -110,25 +110,25 @@ destroy:
 	$(MAKE) -C terraform destroy
 
 .PHONY: create
-create: check_python check_branch
+create: check_aws check_python check_branch
 	python scripts/reindex.py --create
 
 .PHONY: delete
-delete: check_python check_branch
+delete: check_aws check_python check_branch
 	python scripts/reindex.py --delete
 
 .PHONY: index
-index: check_python check_branch
+index: check_aws check_python check_branch
 	python scripts/reindex.py --index
 
 reindex_args = --delete --index --purge
 
 .PHONY: reindex
-reindex: check_python check_branch
+reindex: check_aws check_python check_branch
 	python scripts/reindex.py ${reindex_args}
 
 .PHONY: reindex_no_slots
-reindex_no_slots: check_python check_branch
+reindex_no_slots: check_aws check_python check_branch
 	python scripts/reindex.py ${reindex_args} --no-slots
 
 # By our own convention, a line starting with `##` in the top-level `.gitignore`
