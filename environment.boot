@@ -1,7 +1,9 @@
 azul_python_version=3.14.7
-azul_python_image=docker.io/library/python@sha256:18ae2bb4eabf4791e81a6c0981f45f7655fded95ace9aeb276bdece64c0364ec
+azul_python_image_mirrored=docker.io/library/python@sha256:18ae2bb4eabf4791e81a6c0981f45f7655fded95ace9aeb276bdece64c0364ec
+azul_python_image_upstream=docker.io/library/python@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6
 azul_docker_version=29.7.2
 azul_terraform_version=1.15.9
 azul_awscli_version=2.36.38
 azul_ghcli_version=2.99.0
 azul_uv_version=0.12.9
+azul_pycharm_version=2025.2.6.1

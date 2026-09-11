@@ -6,13 +6,33 @@ ARG TARGETARCH
 
 SHELL ["/bin/bash", "-c"]
 
-# Increment the value of this argument to ensure that all installed OS packages
-# are updated.
+# Configure Docker's apt repository. Docker itself is installed further below
+# but the repository is configured here, ahead of the package index being
+# fetched, so that we only need to fetch once.
+#
+# https://docs.docker.com/engine/install/debian/#install-using-the-repository
+#
+RUN install -m 0755 -d /etc/apt/keyrings
+COPY --chmod=0644 bin/keys/docker-apt-keyring.pgp /etc/apt/keyrings/docker.gpg
+RUN set -o pipefail \
+    && ( \
+      echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" \
+      | tee /etc/apt/sources.list.d/docker.list \
+    )
+
+# Fetch the package index. Every package installed below comes from it. The
+# packages the base image ships are not upgraded, because that image is pinned
+# to a digest that is bumped every other week. Leaving them at the versions that
+# digest ships makes the content of this image a function of that digest.
+#
+# Increment the value of this argument to fetch a new index and to reinstall the
+# packages below from it. That is necessary when a build fails because a version
+# in the cached index is no longer available from the repository.
 #
 ARG azul_image_version=2
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get -y install build-essential curl gnupg unzip
+RUN apt-get update
+
+RUN apt-get -y install build-essential curl gnupg unzip
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
@@ -34,14 +54,11 @@ RUN mkdir -p ${HOME}/.docker \
 # Install Terraform
 #
 ARG azul_terraform_version
-RUN mkdir terraform \
-    && (set -o pipefail \
-        && cd terraform \
-        && curl -s -o terraform.zip \
-           https://releases.hashicorp.com/terraform/${azul_terraform_version}/terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
-        && unzip terraform.zip \
-        && mv terraform /usr/local/bin) \
-    && rm -rf terraform
+RUN archive=terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
+    && curl --fail --silent --location -o /tmp/${archive} \
+       https://releases.hashicorp.com/terraform/${azul_terraform_version}/${archive} \
+    && unzip -q -d /usr/local/bin /tmp/${archive} terraform \
+    && rm /tmp/${archive}
 
 # Install AWS CLI v2
 #
@@ -59,19 +76,19 @@ RUN gpg --import /tmp/awscli-public-key.asc \
     && curl -s -o awscliv2.sig \
        https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${azul_awscli_version}.zip.sig \
     && gpg --verify awscliv2.sig awscliv2.zip \
-    && unzip awscliv2.zip \
+    && unzip -q awscliv2.zip \
     && ./aws/install \
-    && rm -rf awscliv2.zip awscliv2.sig aws
+    && rm awscliv2.zip awscliv2.sig \
+    && rm -rf aws
 
 # Install GitHub CLI
 #
 ARG azul_ghcli_version
 COPY bin/checksums/gh_checksums.txt /tmp/gh_checksums.txt
-RUN set -o pipefail \
-    && tarball=gh_${azul_ghcli_version}_linux_${TARGETARCH}.tar.gz \
+RUN tarball=gh_${azul_ghcli_version}_linux_${TARGETARCH}.tar.gz \
     && curl --fail --silent --location -o /tmp/${tarball} \
        https://github.com/cli/cli/releases/download/v${azul_ghcli_version}/${tarball} \
-    && cd /tmp && grep "${tarball}" gh_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c gh_checksums.txt \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=2 --wildcards "*/bin/gh" --occurrence=1 \
     && rm /tmp/${tarball} /tmp/gh_checksums.txt
 
@@ -79,8 +96,7 @@ RUN set -o pipefail \
 #
 ARG azul_uv_version
 COPY bin/checksums/uv_checksums.txt /tmp/uv_checksums.txt
-RUN set -o pipefail \
-    && case "$TARGETARCH" in \
+RUN case "$TARGETARCH" in \
            amd64) arch=x86_64 ;; \
            arm64) arch=aarch64 ;; \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
@@ -88,44 +104,84 @@ RUN set -o pipefail \
     && tarball=uv-${arch}-unknown-linux-gnu.tar.gz \
     && curl --fail --silent --location -o /tmp/${tarball} \
        https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
-    && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c uv_checksums.txt \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
     && rm /tmp/${tarball} /tmp/uv_checksums.txt
 
-# Install Docker from apt repository. The statically linked binaries don't
-# include buildx or buildkit.
+# Install Docker using the Apt repository configured above. We can't use the
+# statically linked binaries because they lack buildx and buildkit.
 #
-# https://docs.docker.com/engine/install/debian/#install-using-the-repository
-#
-RUN install -m 0755 -d /etc/apt/keyrings
-COPY --chmod=0644 bin/keys/docker-apt-keyring.pgp /etc/apt/keyrings/docker.gpg
 ARG azul_docker_version
 RUN set -o pipefail \
-    && ( \
-      echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" \
-      | tee /etc/apt/sources.list.d/docker.list \
-    ) \
-    && apt-get update \
     && version=$(apt-cache madison docker-ce | awk '{ print $3 }' | grep -P "^5:\Q${azul_docker_version}\E" | head -1) \
     && test -n "$version" \
     && apt-get -y install docker-ce=$version docker-ce-cli=$version docker-buildx-plugin
 
-# Prepare working directory for builds
+# Install the Python formatter, which is part of PyCharm. See the `format`
+# target in the Makefile.
 #
-RUN mkdir /build
-WORKDIR /build
+# PyCharm bundles its own JRE, the JetBrains Runtime. We install the
+# distribution's JRE instead, which is patched whenever the pin of the base
+# image is bumped, and don't extract the bundled one. Its major version matches
+# the one of the bundled runtime.
+#
+# We only extract what the formatter needs: the platform, the launchers, and the
+# five plugins that PyCharm considers essential. We omit the bundled runtime,
+# four dozen other plugins and the helper scripts of the Python plugin, together
+# around two thirds of the distribution.
+#
+# The archive member selection names the plugins individually rather than as a
+# directory because `plugins/plugin-classpath.txt` must not be extracted. That
+# file is a precomputed index of the JARs of all bundled plugins, and with it in
+# place the platform would not start on this image. Without it, the platform
+# discovers the plugins by scanning the directory, tolerating the absence of the
+# ones left behind.
+#
+# If a future version of PyCharm needs more than what is extracted here, the
+# `__format` and `check_clean` targets in the GitLab build will fail. Use Claude
+# with the `pycharm-upgrade` skill to redo the archive member selections below
+# when upgrading to such a version.
+#
+ARG azul_pycharm_version
+COPY bin/checksums/pycharm_checksums.txt /tmp/pycharm_checksums.txt
+RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
+    && case "$TARGETARCH" in \
+           amd64) arch= ;; \
+           arm64) arch=-aarch64 ;; \
+           *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
+       esac \
+    && tarball=pycharm-community-${azul_pycharm_version}${arch}.tar.gz \
+    && curl --fail --silent --location -o /tmp/${tarball} \
+       https://download.jetbrains.com/python/${tarball} \
+    && cd /tmp && sha256sum --ignore-missing -c pycharm_checksums.txt \
+    && mkdir /opt/pycharm \
+    && tar -xzf /tmp/${tarball} -C /opt/pycharm \
+           --strip-components=1 \
+           --wildcards \
+           --no-wildcards-match-slash \
+           --anchored \
+           # The first * matches a top-level directory named after the release \
+           --exclude '*/plugins/python-ce/helpers' \
+           # The remaining arguments are inclusions \
+           '*/bin' \
+           '*/lib' \
+           '*/license' \
+           '*/modules' \
+           '*/product-info.json' \
+           '*/plugins/json' \
+           '*/plugins/pycharm-community-customization' \
+           '*/plugins/pycharm-community-customization-shared' \
+           '*/plugins/python-ce' \
+           '*/plugins/toml' \
+    && rm /tmp/${tarball} /tmp/pycharm_checksums.txt \
+    && rm -r /tmp/hsperfdata_root
 
-# Install Azul dependencies
+# Set UV_PROJECT_ENVIRONMENT to point at the image's own Python installation,
+# and install Azul's dependencies there. A container typically has no need for
+# the isolation a virtual environment provides.
 #
-COPY pyproject.toml uv.lock common.mk Makefile ./
-# We don't source `environment` here. It loads the environment by running
-# `scripts/export_environment.py`, and neither that script nor the
-# `environment.py` files it reads are part of this image. The only variable the
-# targets below need is `project_root`, which `environment` assigns itself,
-# without involving that script.
-#
-RUN export project_root="$PWD" \
-    && make virtualenv \
-    && source .venv/bin/activate \
-    && make requirements \
-    && rm pyproject.toml uv.lock common.mk Makefile
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
+COPY pyproject.toml uv.lock /azul/
+RUN cd /azul \
+    && uv sync --frozen \
+    && rm -r /azul /tmp/uv-*.lock

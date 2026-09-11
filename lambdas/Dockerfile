@@ -17,8 +17,7 @@ SHELL ["/bin/bash", "-c"]
 #
 ARG azul_uv_version
 COPY bin/checksums/uv_checksums.txt /tmp/uv_checksums.txt
-RUN set -o pipefail \
-    && case "$TARGETARCH" in \
+RUN case "$TARGETARCH" in \
            amd64) arch=x86_64 ;; \
            arm64) arch=aarch64 ;; \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
@@ -27,7 +26,7 @@ RUN set -o pipefail \
     && python -c 'import sys, urllib.request; urllib.request.urlretrieve(*sys.argv[1:])' \
        https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
        /tmp/${tarball} \
-    && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
+    && cd /tmp && sha256sum --ignore-missing -c uv_checksums.txt \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
     && rm /tmp/${tarball} /tmp/uv_checksums.txt
 
@@ -36,11 +35,11 @@ RUN set -o pipefail \
 # which is what `UV_PROJECT_ENVIRONMENT` selects. The client is declared in the
 # `lambda` dependency group, which only this image installs.
 #
-COPY pyproject.toml uv.lock /build/
 ENV UV_PROJECT_ENVIRONMENT=/usr/local
-RUN cd /build \
+COPY pyproject.toml uv.lock /azul/
+RUN cd /azul \
     && uv sync --frozen --no-default-groups --group lambda \
-    && rm -rf /build /usr/local/bin/uv
+    && rm -rf /azul /usr/local/bin/uv
 
 FROM ${azul_docker_registry}${azul_python_image}
 

@@ -1,0 +1,2 @@
+7318c435782281bf9354249eda60b45f8574bca3c8e1e857ade67d5974d3c05f *pycharm-community-2025.2.6.1.tar.gz
+3dde392df186358be8fdf8a65b4452b07abf3491960c8c6cd1d3a1ac4e0ac14a *pycharm-community-2025.2.6.1-aarch64.tar.gz

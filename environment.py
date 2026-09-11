@@ -310,6 +310,29 @@ def env() -> Mapping[str, str | None]:
         #
         'azul_uv_version': _pin('tool', 'uv', 'required-version'),
 
+        # The version of PyCharm that is used to format the source code in this
+        # project. The download URL of the PyCharm tarball is derived from it.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
+        #
+        # After modifying this variable, run `make environment.boot` followed by
+        # `make pycharm_checksums`, and commit the resulting changes. Then run
+        # `make format`. Note that the name of the tarball may not be stable
+        # across releases; it is spelled out in the Dockerfile and in the
+        # `pycharm_checksums` target, and both may need adjusting.
+        #
+        # Only a fraction of the tarball is extracted, the fraction the
+        # formatter needs. If `make format` fails after the upgrade, that
+        # fraction is no longer sufficient. See the corresponding Dockerfile
+        # stanza for details.
+        #
+        'azul_pycharm_version': '2025.2.6.1',
+
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
         # references below requires running `make docker_images.json` and
@@ -327,11 +350,6 @@ def env() -> Mapping[str, str | None]:
             'python': {
                 'ref': 'docker.io/library/python:{azul_python_version}-slim-trixie',
                 'url': 'https://hub.docker.com/_/python',
-            },
-            'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6.1-87',
-                'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
-                'is_custom': True
             },
             'opensearch': {
                 'ref': 'docker.io/opensearchproject/opensearch:2.19.6',
