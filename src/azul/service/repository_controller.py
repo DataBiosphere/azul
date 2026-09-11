@@ -89,7 +89,7 @@ class RepositoryController(ServiceController):
 
     @cached_property
     def _index_service(self) -> IndexService:
-        return IndexService()
+        return IndexService(file_url_func=self._file_url)
 
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
         return MirrorService.for_catalog(catalog)

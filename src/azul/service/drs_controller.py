@@ -73,7 +73,7 @@ class DRSController(ServiceController, HasCachedHttpClient):
 
     @cached_property
     def _service(self) -> IndexService:
-        return IndexService()
+        return IndexService(file_url_func=self._file_url)
 
     _drs_spec_description = fd('''
         This is a partial implementation of the [DRS 1.0.0 spec][1]. Not all
