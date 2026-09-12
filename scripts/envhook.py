@@ -49,13 +49,29 @@ class EnvHook:
     def _main(self, argv):
         import argparse
 
-        from azul.args import (
-            AzulArgumentHelpFormatter,
+        parser = argparse.ArgumentParser(
+            description=__doc__,
+            formatter_class=argparse.RawDescriptionHelpFormatter
         )
-        parser = argparse.ArgumentParser(description=__doc__,
-                                         formatter_class=AzulArgumentHelpFormatter)
-        parser.add_argument('action', choices=['install', 'remove'])
+        parser.add_argument(
+            'action',
+            choices=['install', 'remove', 'select']
+        )
+        parser.add_argument(
+            'deployment',
+            nargs='?',
+            help='With the `select` action, the deployment to record in '
+                 '`environment.pycharm`, or the empty string to retract the '
+                 'one on record. Not accepted otherwise.'
+        )
         options = parser.parse_args(argv)
+        if options.action == 'select':
+            if options.deployment is None:
+                parser.error('the `select` action requires a deployment')
+            self.select(options.deployment)
+            return
+        elif options.deployment is not None:
+            parser.error(f'the `{options.action}` action takes no deployment')
 
         # Confirm virtual environment is active `venv || virtualenv`
         if 'VIRTUAL_ENV' in os.environ:
@@ -173,9 +189,35 @@ class EnvHook:
           Python – Console – Python Console
         """
         if self.pycharm_hosted:
-            return [self.export_environment.root_dir / 'environment.pycharm']
+            return [self.pycharm_env_file]
         else:
             return []
+
+    @property
+    def pycharm_env_file(self):
+        return self.export_environment.root_dir / 'environment.pycharm'
+
+    def select(self, deployment: str) -> None:
+        """
+        Record the given deployment in `environment.pycharm`, from which this
+        hook injects it into the processes PyCharm launches. Any other variable
+        in that file is preserved, in its original order. An empty argument
+        removes the entry instead.
+        """
+        path = self.pycharm_env_file
+        name = self.export_environment.azul_current_deployment
+        try:
+            lines = path.read_text().splitlines()
+        except FileNotFoundError:
+            lines = []
+        lines = [
+            line
+            for line in lines
+            if line.partition('=')[0].strip() != name
+        ]
+        if deployment:
+            lines.append(f'{name}={deployment}')
+        path.write_text(''.join(line + '\n' for line in lines))
 
     def set_env(self, env: Mapping[str, str]):
         redact = self.export_environment.redact
@@ -209,10 +251,10 @@ class EnvHook:
     @classmethod
     @cache
     def import_sibling_script(cls, module_name: str):
-        # When this module is loaded from the `sitecustomize.py` symbolic link, the
-        # directory containing the physical file may not be on the sys.path so we
-        # cannot use a normal import to load any sibling scripts. When it is run
-        # as a script instead, there is no such link to follow.
+        # When this module is loaded from the `sitecustomize.py` symbolic link,
+        # the directory containing the physical file may not be on the sys.path
+        # so we cannot use a normal import to load any sibling scripts. When it
+        # is run as a script instead, there is no such link to follow.
         file_name = module_name + '.py'
         this_file = Path(__file__)
         if this_file.is_symlink():
