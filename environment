@@ -79,24 +79,7 @@ _unset_deployment() {
 # hooks, and thereby envhook.py which would only get in the way here.
 #
 _write_pycharm_env() {
-	python -S - "$1" <<- "EOF"
-		import os
-		from pathlib import Path
-		import sys
-
-		name = 'azul_current_deployment'
-		deployment, = sys.argv[1:]
-		path = Path(os.environ['project_root']) / 'environment.pycharm'
-		try:
-		    lines = path.read_text().splitlines()
-		except FileNotFoundError:
-		    lines = []
-		# Remove lines for the variable, preserve the rest in their original order
-		lines = [l for l in lines if l.partition('=')[0].strip() != name]
-		if deployment:
-		    lines.append(f'{name}={deployment}')
-		path.write_text(''.join(l + '\n' for l in lines))
-	EOF
+	python -S "${project_root}/scripts/envhook.py" select "$1"
 }
 
 _login() {
