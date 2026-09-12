@@ -20,9 +20,17 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
+.PHONY: envunhook
+envunhook: check_venv
+	python scripts/envhook.py remove
+
 .PHONY: claudehook
 claudehook: check_venv
 	python scripts/claudehook.py register
+
+.PHONY: claudeunhook
+claudeunhook: check_venv
+	python scripts/claudehook.py unregister
 
 #	`--frozen` installs exactly what `uv.lock` specifies, without resolving
 #	dependencies and without checking the lock against `pyproject.toml`. This
