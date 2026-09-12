@@ -20,6 +20,10 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
+.PHONY: claudehook
+claudehook: check_venv
+	python scripts/claudehook.py register
+
 #	`--frozen` installs exactly what `uv.lock` specifies, without resolving
 #	dependencies and without checking the lock against `pyproject.toml`. This
 #	is what installing the pins from `requirements*.txt` with `--no-deps` used
