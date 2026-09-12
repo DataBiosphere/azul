@@ -1830,13 +1830,37 @@ class Config:
     def enable_mirroring(self) -> bool:
         return self._boolean(self.environ['AZUL_ENABLE_MIRRORING'])
 
+    @frozen(kw_only=True)
+    class Bucket:
+        account_id: str
+        name: str
+
+        @classmethod
+        def parse(cls, value: str) -> Self:
+            account_id, _, bucket_name = value.partition(':')
+            assert account_id and bucket_name, R(
+                'Bucket must be of the form account_id:bucket_name', value)
+            return cls(account_id=account_id, name=bucket_name)
+
+    @cached_property
+    def qualified_mirror_bucket(self) -> Bucket | None:
+        value = self.environ.get('AZUL_MIRROR_BUCKET')
+        return None if value is None else self.Bucket.parse(value)
+
+    @cached_property
+    def qualified_ma_mirror_bucket(self) -> Bucket | None:
+        value = self.environ.get('AZUL_MANAGED_ACCESS_MIRROR_BUCKET')
+        return None if value is None else self.Bucket.parse(value)
+
     @property
     def mirror_bucket(self) -> str | None:
-        return self.environ.get('AZUL_MIRROR_BUCKET')
+        bucket = self.qualified_mirror_bucket
+        return None if bucket is None else bucket.name
 
     @property
     def ma_mirror_bucket(self) -> str | None:
-        return self.environ.get('AZUL_MANAGED_ACCESS_MIRROR_BUCKET')
+        bucket = self.qualified_ma_mirror_bucket
+        return None if bucket is None else bucket.name
 
     @property
     def enable_bundle_notifications(self):
