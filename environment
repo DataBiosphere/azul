@@ -66,12 +66,14 @@ _validate_deployment() {
 _set_deployment() {
 	_validate_deployment "$1" &&
 	export azul_current_deployment="$1" &&
-	_write_pycharm_env "$1"
+	_write_pycharm_env "$1" &&
+	_write_claude_env "$1"
 }
 
 _unset_deployment() {
 	unset azul_current_deployment
 	_write_pycharm_env ''
+	_write_claude_env ''
 }
 
 # Record the given deployment in `environment.pycharm` so that envhook.py can
@@ -97,6 +99,14 @@ _write_pycharm_env() {
 		    lines.append(f'{name}={deployment}')
 		path.write_text(''.join(l + '\n' for l in lines))
 	EOF
+}
+
+# Record the given deployment in Claude Code's settings for this working copy,
+# from which it passes the deployment to every command it runs. Settings that
+# don't exist are left alone. We pass -S for the same reason as above.
+#
+_write_claude_env() {
+	python -S "${project_root}/scripts/claudehook.py" select "$1"
 }
 
 _login() {
@@ -174,7 +184,9 @@ _login_aws() {
 	local env
 	if ! env="$(
 		python - <<- "EOF"
+			import os
 			from pathlib import Path
+			import sys
 
 			import botocore.credentials
 			import botocore.session
@@ -185,6 +197,20 @@ _login_aws() {
 			resolver = session.get_component('credential_provider')
 			provider = resolver.get_provider('assume-role')
 			resolver.providers = [provider]
+
+			# Prompting for an MFA token requires a terminal to prompt on. The
+			# default prompter looks for one on /dev/tty, not on the standard
+			# input of this script, which is this here document. Without a
+			# terminal it warns and then fails with an EOFError, obscuring the
+			# only thing the caller can act on, so we report that instead.
+			try:
+			    tty = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
+			except OSError:
+			    def prompter(prompt):
+			        sys.exit('Expired AWS credentials. Run _login_aws.')
+			    provider._prompter = prompter
+			else:
+			    os.close(tty)
 
 			# Make the provider use the same cache as the AWS CLI
 			cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
