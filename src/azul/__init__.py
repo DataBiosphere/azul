@@ -758,12 +758,7 @@ class Config:
 
     @property
     def enable_log_forwarding(self) -> bool:
-        # The main deployment in a given account is responsible for forwarding
-        # logs from every deployment in that account. We expect this to be more
-        # efficient than having one forwarder per deployment because logs are
-        # delivered very frequently so each log forwarder Lambda will be
-        # constantly active.
-        return self.deployment_stage == self.main_deployment_stage
+        return True
 
     @property
     def enable_verbatim_relations(self) -> bool:
