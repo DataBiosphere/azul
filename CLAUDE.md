@@ -10,25 +10,35 @@
 
 Most commands need this project's environment, which reaches them in one of
 three ways. The optional `scripts/claudehook.py` hook is registered in
-`.claude/settings.local.json` by `scripts/claudehook.py register`, and removed
-from it by `scripts/claudehook.py unregister`. Whether a command has an
-environment at all is evident from `azul_env_hash` being set in it.
+`.claude/settings.local.json` by `python -S scripts/claudehook.py register`,
+and removed from it by `python -S scripts/claudehook.py unregister`. Whether a
+command has an environment at all is evident from `azul_env_hash` being set
+in it.
 
 - *Hook registered*: nothing is needed, because the hook prefixes every command
   with the loading of a freshly compiled environment. Claude Code must have been
   started from a shell with the virtualenv activated but *without* `environment`
-  sourced. The hook enforces that, blocking every command with `Run 'source
-  .venv/bin/activate' first` or `azul_env_vars is set: ...` respectively; relay
-  whichever applies and ask the user to relaunch from a shell in that state.
+  sourced. The hook enforces both, blocking every command with a message that
+  names the two ways out: restarting `claude` as described, or unregistering
+  the hook. Relay that message; neither remedy can be applied from within the
+  session, because it inherited what is wrong with it.
 
   Because the environment is recompiled per command, the deployment can be
-  switched between commands: it comes from `azul_current_deployment`, which is
-  most conveniently set via `env` in the same settings file, and a change to
-  that value takes effect on the very next command. Ask the user before
-  switching it yourself. The AWS session credentials are neither part of the
-  environment nor inherited in this case, so anything calling AWS resolves them
-  from the shared CLI cache; when they lapse, the user refreshes them with
-  `_login_aws` in a terminal, again without a restart.
+  switched between commands: the hook reads `azul_current_deployment` from
+  `environment.hook` in the working copy, which `_select` maintains, and a
+  change there takes effect on the very next command. That file, rather than
+  Claude Code's settings, holds the selection because Claude Code applies the
+  settings of a repository's main worktree to sessions in all of its other
+  worktrees, so a deployment kept there would not be specific to one working
+  copy. Ask the user before switching it yourself. The hook also runs
+  `_login_aws` before every command,
+  so the AWS session credentials are present without being inherited, which
+  matters to Terraform because its provider configuration names no profile.
+  Refreshing them needs an MFA token and therefore a terminal, so once they
+  lapse the hook reports `Expired AWS credentials. Run _login_aws.` followed
+  by `_login_aws failed` before every command, without blocking any of them.
+  Relay that and ask the user to run `_login_aws` in a terminal; no restart is
+  needed.
 
 - *No hook, and `azul_env_hash` unset*: prefix every command that needs the
   environment with `export azul_env_quiet=1` followed by `source environment ||

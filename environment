@@ -66,19 +66,18 @@ _validate_deployment() {
 _set_deployment() {
 	_validate_deployment "$1" &&
 	export azul_current_deployment="$1" &&
-	_write_pycharm_env "$1"
+	_write_hook_env "$1"
 }
 
 _unset_deployment() {
 	unset azul_current_deployment
-	_write_pycharm_env ''
+	_write_hook_env ''
 }
 
-# Record the given deployment in `environment.pycharm` so that envhook.py can
-# inject it into Python processes started by PyCharm. We pass -S to disable site
-# hooks, and thereby envhook.py which would only get in the way here.
+# Record the given deployment for use by the hooks. We pass -S to disable site
+# hooks, and thereby envhook.py, which would only get in the way here.
 #
-_write_pycharm_env() {
+_write_hook_env() {
 	python -S "${project_root}/scripts/envhook.py" select "$1"
 }
 
@@ -157,7 +156,9 @@ _login_aws() {
 	local env
 	if ! env="$(
 		python - <<- "EOF"
+			import os
 			from pathlib import Path
+			import sys
 
 			import botocore.credentials
 			import botocore.session
@@ -168,6 +169,20 @@ _login_aws() {
 			resolver = session.get_component('credential_provider')
 			provider = resolver.get_provider('assume-role')
 			resolver.providers = [provider]
+
+			# Prompting for an MFA token requires a terminal to prompt on. The
+			# default prompter looks for one on /dev/tty, not on the standard
+			# input of this script, which is this here document. Without a
+			# terminal it warns and then fails with an EOFError, obscuring the
+			# only thing the caller can act on, so we report that instead.
+			try:
+			    tty = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
+			except OSError:
+			    def prompter(prompt):
+			        sys.exit('Expired AWS credentials. Run _login_aws.')
+			    provider._prompter = prompter
+			else:
+			    os.close(tty)
 
 			# Make the provider use the same cache as the AWS CLI
 			cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()

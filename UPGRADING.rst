@@ -28,9 +28,10 @@ environment variable instead of the ``deployments/.active`` symbolic link. There
 is no default; the variable must be set explicitly, which ``_select`` does. In a
 shell, the selection therefore lives in that shell and has to be made again in
 every new one, where previously the link persisted it on disk. A process that
-doesn't inherit its environment from a shell needs the variable from elsewhere:
-PyCharm reads it from ``environment.pycharm`` via ``envhook.py`` and Claude Code
-from the ``env`` key of its local project settings.
+doesn't inherit its environment from a shell needs the variable from elsewhere.
+The two hooks we use read it from ``environment.hook`` in the working copy:
+``envhook.py`` injects it into the Python processes PyCharm starts, and
+``claudehook.py`` exports it ahead of sourcing the environment for a command.
 
 Everyone
 --------

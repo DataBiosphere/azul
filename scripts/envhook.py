@@ -60,9 +60,9 @@ class EnvHook:
         parser.add_argument(
             'deployment',
             nargs='?',
-            help='With the `select` action, the deployment to record in '
-                 '`environment.pycharm`, or the empty string to retract the '
-                 'one on record. Not accepted otherwise.'
+            help='With the `select` action, the deployment to record, or '
+                 'the empty string to retract the one on record. Not '
+                 'accepted otherwise.'
         )
         options = parser.parse_args(argv)
         if options.action == 'select':
@@ -156,7 +156,7 @@ class EnvHook:
 
     def extra_env_files(self) -> list:
         """
-        The `environment.pycharm` file, but only for processes launched by
+        The `environment.hook` file, but only for processes launched by
         PyCharm. PyCharm doesn't usually get its environment from a shell, so
         this file is a convenient way to inject Azul environment variables into
         those processes, without affecting Python processes launched from a
@@ -166,7 +166,7 @@ class EnvHook:
 
         The key use case for this file is setting `azul_current_deployment`. In
         fact, the `_select` helper sets `azul_current_deployment` in the shell's
-        environment *and* writes it to `environment.pycharm`.
+        environment *and* writes it to that file.
 
         Being loaded as part of the environment, the file's entries are subject
         to the same resolution of references between variables as those from
@@ -181,7 +181,7 @@ class EnvHook:
 
         - environment*.py
 
-        - environment.pycharm
+        - environment.hook
 
         - PyCharm's own environment
 
@@ -189,22 +189,22 @@ class EnvHook:
           Python – Console – Python Console
         """
         if self.pycharm_hosted:
-            return [self.pycharm_env_file]
+            return [self.hook_env_file]
         else:
             return []
 
     @property
-    def pycharm_env_file(self):
-        return self.export_environment.root_dir / 'environment.pycharm'
+    def hook_env_file(self):
+        return self.export_environment.root_dir / 'environment.hook'
 
     def select(self, deployment: str) -> None:
         """
-        Record the given deployment in `environment.pycharm`, from which this
+        Record the given deployment in this hook's environment file, from this
         hook injects it into the processes PyCharm launches. Any other variable
         in that file is preserved, in its original order. An empty argument
         removes the entry instead.
         """
-        path = self.pycharm_env_file
+        path = self.hook_env_file
         name = self.export_environment.azul_current_deployment
         try:
             lines = path.read_text().splitlines()
