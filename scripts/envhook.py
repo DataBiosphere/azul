@@ -172,9 +172,13 @@ class EnvHook:
     def import_sibling_script(cls, module_name: str):
         # When this module is loaded from the `sitecustomize.py` symbolic link, the
         # directory containing the physical file may not be on the sys.path so we
-        # cannot use a normal import to load any sibling scripts.
+        # cannot use a normal import to load any sibling scripts. When it is run
+        # as a script instead, there is no such link to follow.
         file_name = module_name + '.py'
-        parent_dir = Path(__file__).follow().parent
+        this_file = Path(__file__)
+        if this_file.is_symlink():
+            this_file = this_file.follow()
+        parent_dir = this_file.parent
         path = parent_dir / file_name
         spec = importlib.util.spec_from_file_location(name=module_name, location=path)
         module = importlib.util.module_from_spec(spec)
