@@ -1835,6 +1835,10 @@ class Config:
         account_id: str
         name: str
 
+        @property
+        def logs_bucket_name(self) -> str:
+            return self.name + '-logs'
+
         @classmethod
         def parse(cls, value: str) -> Self:
             account_id, _, bucket_name = value.partition(':')

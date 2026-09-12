@@ -891,23 +891,26 @@ class Chalice:
             #
             # https://repost.aws/knowledge-center/lambda-s3-cross-account-function-invoke
             #
-            for bucket, term in [
-                (config.mirror_bucket, config.mirror_term),
-                (config.ma_mirror_bucket, config.ma_mirror_term)
+            for term, bucket in [
+                (config.mirror_term, config.qualified_mirror_bucket),
+                (config.ma_mirror_term, config.qualified_ma_mirror_bucket)
             ]:
                 if bucket is not None:
                     assert s3_log_forwarder_arn is not None
+                    assert s3_log_forwarder_arn.endswith('.arn}')
+                    qualifier = s3_log_forwarder_arn.replace('.arn', '.name')
                     permission_name = f'{app_name}_forward_s3_logs_{term}'
                     json_dict(resources['aws_lambda_permission'])[permission_name] = {
                         'statement_id': f'forward-s3-logs-{term}-bucket',
                         'action': 'lambda:InvokeFunction',
                         'function_name': s3_log_forwarder_arn,
-                        'qualifier': s3_log_forwarder_arn.replace('.arn', '.name'),
+                        'qualifier': qualifier,
                         'principal': 's3.amazonaws.com',
                         # The access logs for a mirror bucket are deposited into
                         # a dedicated bucket that is located in the same account
                         # and whose name is derived from the mirror bucket name.
-                        'source_arn': f'arn:aws:s3:::{bucket}-logs'
+                        'source_arn': f'arn:aws:s3:::{bucket.logs_bucket_name}',
+                        'source_account': bucket.account_id
                     }
         else:
             assert resource_type not in resources
