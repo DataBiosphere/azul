@@ -549,18 +549,15 @@ def env() -> Mapping[str, str | None]:
         #
         'GOOGLE_PROJECT': None,
 
-        # The path of the directory where the Google Cloud Python libraries and
+        # The path of the directory where the Google Cloud SDK for Python and
         # the Google Cloud CLI (gcloud) put their state. If this variable is not
-        # set, the state is placed in ~/.config/gcloud by default. Since we want
-        # to segregate this state per working copy and deployment, we set this
-        # variable to the path of a deployment-specific directory in the working
-        # copy. Note that this variable does not affect the Google Cloud
-        # libraries for Go, or the Google Cloud provider for Terraform which
-        # uses these Go libraries. Luckily, the Go libraries don't write any
-        # state, they only read credentials from the location configured via
+        # set, the state is placed in ~/.config/gcloud by default. Note that
+        # this variable does not affect the Google Cloud SDK for Go, or the
+        # Google Cloud provider for Terraform. They don't write any state, they
+        # only read credentials from the location configured via
         # GOOGLE_APPLICATION_CREDENTIALS below.
         #
-        'CLOUDSDK_CONFIG': '{project_root}/deployments/{azul_current_deployment}/.gcloud',
+        'CLOUDSDK_CONFIG': xdg_data_home + '/azul/gcloud/{GOOGLE_PROJECT}',
 
         # The path of a JSON file with credentials for an authorized user or a
         # service account. The Google Cloud libraries for Python and Go will

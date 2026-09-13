@@ -203,16 +203,16 @@ def load_env(deployment: str | None = None,
     # first one. IOW, the earlier mappings in the chain take precedence over
     # later ones.
     #
-    # Two variables describe the context the environment is compiled in, namely
-    # which working copy and which deployment. Neither can be stated in an
-    # environment.py, but both are needed by one: `PYTHONPATH`, `MYPYPATH`,
-    # `TF_DATA_DIR` and `CLOUDSDK_CONFIG` all refer to them. Being inputs to
-    # compiling the environment rather than products of it, they must not be
-    # overridable, which we ensure by placing them first in the chain. If no
-    # deployment is selected, the variable naming it is omitted rather than set
-    # to None, keeping every mapping in the chain free of None values.
+    # A few special environment variables describe the context the environment
+    # is compiled in. None of them can be set explicitly in an environment*.py,
+    # but they're interpolated into the value of other variables in these files.
+    # Being inputs to compiling the environment rather than products of it,
+    # these special variables must not be overridable, which we ensure by
+    # placing them first in the chain.
     #
     inputs = {'project_root': str(root_dir)}
+    # If no deployment is selected, the variable naming it is omitted rather
+    # than set to None, keeping every mapping in the chain free of None values.
     if deployment is not None:
         inputs[azul_current_deployment] = deployment
     env = ChainMap(inputs, extra_env)
