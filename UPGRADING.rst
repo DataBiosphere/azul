@@ -33,12 +33,25 @@ The two hooks we use read it from ``environment.hook`` in the working copy:
 ``envhook.py`` injects it into the Python processes PyCharm starts, and
 ``claudehook.py`` exports it ahead of sourcing the environment for a command.
 
+The Google Cloud SDK state no longer lives in the working copy. It is now kept
+under ``$XDG_DATA_HOME/azul/gcloud``, segregated by Google Cloud project, and
+shared by all Azul working copies. UCSC ITS started enforcing a session timeout
+of about a day, so the sharing should reduce the number of interactive Google
+Cloud reauthorization flows.
+
 Everyone
 --------
 
 Delete the now unused symbolic link::
 
     rm deployments/.active
+
+The state accumulated at the old Google Cloud SDK path is obsolete and should be
+removed from each working copy::
+
+    rm -rf deployments/*/.gcloud
+
+Expect to authenticate once per Google Cloud project afterwards.
 
 
 #8249 Use uv to manage Python dependencies
