@@ -758,12 +758,7 @@ class Config:
 
     @property
     def enable_log_forwarding(self) -> bool:
-        # The main deployment in a given account is responsible for forwarding
-        # logs from every deployment in that account. We expect this to be more
-        # efficient than having one forwarder per deployment because logs are
-        # delivered very frequently so each log forwarder Lambda will be
-        # constantly active.
-        return self.deployment_stage == self.main_deployment_stage
+        return True
 
     @property
     def enable_verbatim_relations(self) -> bool:
@@ -1835,13 +1830,41 @@ class Config:
     def enable_mirroring(self) -> bool:
         return self._boolean(self.environ['AZUL_ENABLE_MIRRORING'])
 
+    @frozen(kw_only=True)
+    class Bucket:
+        account_id: str
+        name: str
+
+        @property
+        def logs_bucket_name(self) -> str:
+            return self.name + '-logs'
+
+        @classmethod
+        def parse(cls, value: str) -> Self:
+            account_id, _, bucket_name = value.partition(':')
+            assert account_id and bucket_name, R(
+                'Bucket must be of the form account_id:bucket_name', value)
+            return cls(account_id=account_id, name=bucket_name)
+
+    @cached_property
+    def qualified_mirror_bucket(self) -> Bucket | None:
+        value = self.environ.get('AZUL_MIRROR_BUCKET')
+        return None if value is None else self.Bucket.parse(value)
+
+    @cached_property
+    def qualified_ma_mirror_bucket(self) -> Bucket | None:
+        value = self.environ.get('AZUL_MANAGED_ACCESS_MIRROR_BUCKET')
+        return None if value is None else self.Bucket.parse(value)
+
     @property
     def mirror_bucket(self) -> str | None:
-        return self.environ.get('AZUL_MIRROR_BUCKET')
+        bucket = self.qualified_mirror_bucket
+        return None if bucket is None else bucket.name
 
     @property
     def ma_mirror_bucket(self) -> str | None:
-        return self.environ.get('AZUL_MANAGED_ACCESS_MIRROR_BUCKET')
+        bucket = self.qualified_ma_mirror_bucket
+        return None if bucket is None else bucket.name
 
     @property
     def enable_bundle_notifications(self):
