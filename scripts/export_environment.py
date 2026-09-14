@@ -6,8 +6,13 @@ from collections import (
     ChainMap,
 )
 from collections.abc import (
+    Iterable,
     Iterator,
+    KeysView,
     Mapping,
+)
+from functools import (
+    cache,
 )
 import hashlib
 from importlib.abc import (
@@ -25,10 +30,8 @@ from pathlib import (
 import shlex
 import sys
 from typing import (
-    Iterable,
-    Optional,
+    Literal,
     TextIO,
-    Tuple,
     cast,
 )
 
@@ -36,7 +39,7 @@ this_module = Path(__file__)
 
 root_dir = this_module.parent.parent
 
-DraftEnvironment = Mapping[str, Optional[str]]
+DraftEnvironment = Mapping[str, str | None]
 
 Environment = Mapping[str, str]
 
@@ -78,17 +81,7 @@ class InvalidDeployment(RuntimeError):
 
     def __init__(self, dir_: Path) -> None:
         super().__init__(
-            f"{dir_} does not exist or is not a symbolic link to a directory."
-        )
-
-
-class InvalidActiveDeployment(RuntimeError):
-
-    def __init__(self, dir_: Path) -> None:
-        super().__init__(
-            f"{dir_} does not exist or is not a symbolic link to a directory. "
-            f"Please create a symbolic link to the active deployment, as in "
-            f"the following example: 'cd deployments && ln -snf dev .active'"
+            f"{dir_} does not exist or is not a directory."
         )
 
 
@@ -100,63 +93,81 @@ class BadParentDeployment(RuntimeError):
         )
 
 
-def load_env(deployment: Optional[str] = None
-             ) -> Tuple[Environment, Optional[str]]:
+azul_current_deployment = 'azul_current_deployment'
+
+
+def load_env(deployment: str | None = None,
+             extra_files: Iterable[Path] = ()
+             ) -> tuple[Environment, str | None]:
     """
-    Load environment.py and environment.local.py modules from the project
-    root and either the specified deployment or the current active deployment
-    directory, call their env() function to obtain the environment dictionary
-    and merge the dictionaries. The entries from an environment.local.py take
-    precedence over those from a corresponding environment.py in the same
-    directory. The modules from the deployment directory take precedence over
-    ones in the project root.
+    Load environment.py and environment.local.py modules from the project root
+    and from the directory of either the specified deployment or the one named
+    by `azul_current_deployment`, call their env() function to obtain the
+    environment dictionary and merge the dictionaries. The entries from an
+    environment.local.py take precedence over those from a corresponding
+    environment.py in the same directory. The modules from the deployment
+    directory take precedence over ones in the project root.
+
+    The given extra files, of the `name=value` form that `load_env_file`
+    parses, take precedence over all of those modules. A file that does not
+    exist is ignored. Because such a file may name the current deployment, and
+    thereby determine which modules to load, it is read before them. A later
+    file in `extra_files` takes precedence over an earlier one.
     """
 
     deployments_dir = root_dir / 'deployments'
-    active_deployment_dir = deployments_dir / '.active'
 
-    if deployment is not None:
-        deployment_dir = deployments_dir / deployment
-        if not deployment_dir.is_dir():
-            raise InvalidDeployment(deployments_dir)
-        warning = None
-    elif active_deployment_dir.is_dir() and active_deployment_dir.is_symlink():
-        deployment_dir = Path(os.readlink(str(active_deployment_dir)))
-        if not deployment_dir.is_absolute():
-            deployment_dir = deployments_dir / deployment_dir
-        if not deployment_dir.is_dir():
-            raise InvalidActiveDeployment(deployment_dir)
-        warning = None
-    elif active_deployment_dir.exists():
-        raise InvalidActiveDeployment(active_deployment_dir)
-    else:
+    extra_env: dict[str, str] = {}
+    for path in extra_files:
+        try:
+            extra_env.update(load_env_file(path))
+        except FileNotFoundError:
+            pass
+
+    if deployment is None:
+        # An empty value means the same as the variable being absent. We only
+        # afford this accommodation to this one variable, because it may have
+        # been set via `env` in Claude Code's settings, which has no way of
+        # removing a variable from the environment.
+        deployment = (
+            os.environ.get(azul_current_deployment)
+            or extra_env.get(azul_current_deployment)
+            or None
+        )
+
+    if deployment is None:
         warning = (
-            f'No active deployment (missing {str(active_deployment_dir)!r}). '
+            f'No current deployment ({azul_current_deployment} is not set). '
             f'Loaded global defaults only.'
         )
         deployment_dir = None
+    else:
+        deployment_dir = deployments_dir / deployment
+        if not deployment_dir.is_dir():
+            raise InvalidDeployment(deployment_dir)
+        warning = None
 
     if deployment_dir is None:
         parent_deployment_dir = None
     else:
         # If the deployment is a component of another one (e.g. `dev.gitlab`),
         # also get the parent deployment's directory.
-        deployment, *suffix = str(deployment_dir.relative_to(deployments_dir)).split('.')
+        parent, *suffix = deployment_dir.name.split('.')
         match suffix:
             case ['local'] | []:
                 parent_deployment_dir = None
             case [component, 'local']:
                 assert component
-                parent_deployment_dir = deployments_dir / (deployment + '.local')
+                parent_deployment_dir = deployments_dir / (parent + '.local')
             case [component]:
                 assert component
-                parent_deployment_dir = deployments_dir / deployment
+                parent_deployment_dir = deployments_dir / parent
             case _:
                 assert False, deployment_dir
         if parent_deployment_dir is not None and not parent_deployment_dir.exists():
             raise BadParentDeployment(parent_deployment_dir, deployment_dir)
 
-    def _load(dir_path: Path, local: bool = False) -> Optional[EnvironmentModule]:
+    def _load(dir_path: Path, local: bool = False) -> EnvironmentModule | None:
         """
         Load and return the `environment.py` or `environment.local.py` module
         from the given directory if such a module exists, otherwise return None.
@@ -166,8 +177,9 @@ def load_env(deployment: Optional[str] = None
         if file_path.exists():
             module_file = Path(file_path).relative_to(root_dir)
             if __name__ == '__main__':
-                print(f'{this_module.name}: Loading environment from {module_file}', file=sys.stderr)
+                log('info', f'Loading environment from {module_file}')
             spec = importlib.util.spec_from_file_location('environment', file_path)
+            assert spec is not None, file_path
             module = importlib.util.module_from_spec(spec)
             assert isinstance(spec.loader, Loader)
             spec.loader.exec_module(module)
@@ -178,59 +190,98 @@ def load_env(deployment: Optional[str] = None
             return None
 
     modules = [
-        deployment_dir and _load(deployment_dir, local=True),
-        parent_deployment_dir and _load(parent_deployment_dir, local=True),
-        _load(root_dir, local=True),
-        deployment_dir and _load(deployment_dir),
-        parent_deployment_dir and _load(parent_deployment_dir),
-        _load(root_dir)
+        _load(dir, local=local)
+        # Local environment files take precedence
+        for local in [True, False]
+        # More specific environment files take precedence
+        for dir in [deployment_dir, parent_deployment_dir, root_dir]
+        if dir is not None
     ]
-    # Note that ChainMap looks only considers the second mapping in the chain
-    # if a key is absent from the first one. IOW, the earlier mappings in the
-    # chain take precedence over later ones.
-    env = ChainMap(dict(project_root=str(root_dir)))
+
+    # Combine all deserialized environment modules. Note that ChainMap only
+    # considers the second mapping in the chain if a key is absent from the
+    # first one. IOW, the earlier mappings in the chain take precedence over
+    # later ones.
+    #
+    # A few special environment variables describe the context the environment
+    # is compiled in. None of them can be set explicitly in an environment*.py,
+    # but they're interpolated into the value of other variables in these files.
+    # Being inputs to compiling the environment rather than products of it,
+    # these special variables must not be overridable, which we ensure by
+    # placing them first in the chain.
+    #
+    inputs = {'project_root': str(root_dir)}
+    # If no deployment is selected, the variable naming it is omitted rather
+    # than set to None, keeping every mapping in the chain free of None values.
+    if deployment is not None:
+        inputs[azul_current_deployment] = deployment
+    env = ChainMap(inputs, extra_env)
     for module in modules:
         if module is not None:
-            # https://github.com/python/typeshed/issues/6042
-            # noinspection PyTypeChecker
+            # We don't want an entry whose value is None to override a
+            # lower-precedence value that isn't None.
             env.maps.append(filter_env(module.env()))
-    env.maps.append(load_boot_env(root_dir))
+    env.maps.append(load_env_file(root_dir / 'environment.boot'))
     return env, warning
 
 
-def load_boot_env(root_dir: Path) -> dict[str, str]:
-    boot = {}
-    with open(root_dir / 'environment.boot') as f:
-        for line in f:
-            k, _, v = line.partition('=')
-            boot[k.strip()] = v.strip()
-    return boot
-
-
-def filter_env(env: DraftEnvironment) -> Environment:
+def load_env_file(path: Path) -> dict[str, str]:
     """
-    Remove entries whose value is None from the environment. None values are
-    permitted in environment.py modules such that those entries can be
-    documented without having to define a value.
+    Load a file of `name=value` lines, ignoring blank lines and those commented
+    out with a `#`. Unlike the environment modules, such a file is inert: its
+    values are used verbatim, without resolving references between them.
+    """
+    env = {}
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                k, _, v = line.partition('=')
+                env[k.strip()] = v.strip()
+    return env
+
+
+def filter_env(env: DraftEnvironment) -> dict[str, str]:
+    """
+    Remove entries whose value is None from the environment. Such entries
+    arise in two ways: an environment.py module may use None to document a
+    variable without providing a value, and `resolve_env` yields None for
+    values whose variable references could not be resolved. Either way, the
+    variable is undefined and must not be emitted.
+
+    >>> filter_env({'x': '42'})
+    {'x': '42'}
+
+    >>> filter_env({'x': None})
+    {}
+
+    Note that an empty value is not the same as an undefined one, and is
+    therefore retained:
+
+    >>> filter_env({'x': '', 'y': None})
+    {'x': ''}
     """
     return {k: v for k, v in env.items() if v is not None}
 
 
 class ResolvedEnvironment(DraftEnvironment):
 
-    def __init__(self, env: Environment) -> None:
+    def __init__(self, env: DraftEnvironment) -> None:
         super().__init__()
         self._env = env
-        self._keys = set()
+        self._keys: set[str] = set()
 
-    def __getitem__(self, k: str) -> Optional[str]:
+    def __getitem__(self, k: str) -> str | None:
         if k.isidentifier():
             if k in self._keys:
                 raise RecursionError('Circular reference', k)
             else:
                 v = self._env[k]
+                # A recursive call from format_map finds at least the
+                # referencing variable. Outside calls start with no keys.
+                recursive = bool(self._keys)
                 if v is None:
-                    if self._keys:
+                    if recursive:
                         raise KeyError
                     else:
                         return v
@@ -249,7 +300,10 @@ class ResolvedEnvironment(DraftEnvironment):
                         try:
                             return self._format(v)
                         except KeyError:
-                            return None
+                            if recursive:
+                                raise
+                            else:
+                                return None
                         except ValueError:
                             return v
                     finally:
@@ -276,7 +330,7 @@ class ResolvedEnvironment(DraftEnvironment):
     def __iter__(self) -> Iterator[str]:
         return iter(self._env)
 
-    def keys(self) -> Iterable[str]:
+    def keys(self) -> KeysView[str]:
         return self._env.keys()
 
     def __repr__(self) -> str:
@@ -285,7 +339,7 @@ class ResolvedEnvironment(DraftEnvironment):
     __str__ = __repr__
 
 
-def resolve_env(env: Environment) -> Environment:
+def resolve_env(env: DraftEnvironment) -> DraftEnvironment:
     """
     Resolve references to other variables among all values in the given
     environment.
@@ -310,10 +364,10 @@ def resolve_env(env: Environment) -> Environment:
     ...
     TypeError: ('Referenced must be a string or None', 42)
 
-    A reference to a missing variable, or a variable whose value is None, causes
-    the entire referencing value to be undefined. This is unlike Unix shell
+    A reference to an absent variable, or a variable whose value is None, causes
+    the referencing variable to be set None. This is unlike Unix shell
     substitution, where the reference would be replaced with the empty string.
-    It's more akin to `null` propagation in SQL. We do this so that we don't
+    It's akin to `null` propagation in SQL. We do this so that we don't
     emit partially populated values, which allows for composing defaults that
     are dependendent on variables defined in overriding environments.
 
@@ -327,6 +381,11 @@ def resolve_env(env: Environment) -> Environment:
 
     >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '42'})
     {'x': '42', 'y': '42', 'z': '42'}
+
+    The propagation of None is transitive as well:
+
+    >>> resolve_env({'x': 'a{y}b', 'y': 'c{z}d'})
+    {'x': None, 'y': None}
 
     Circular references, direct or indirect are not supported:
 
@@ -410,7 +469,7 @@ def hash_env(env: Environment) -> Environment:
 azul_env_vars = 'azul_env_vars'
 
 
-def export_env(env: Environment, output: Optional[TextIO]) -> None:
+def export_env(env: Environment, output: TextIO | None) -> None:
     """
     Print the given environment in a form that can be evaluated by the Bash
     shell, unsetting variables that are no longer used.
@@ -418,7 +477,7 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
     try:
         old_vars = os.environ[azul_env_vars]
     except KeyError:
-        old_vars = set()
+        old_vars = set[str]()
     else:
         old_vars = set(old_vars.split(','))
     assert not any(',' in var for var in env), env
@@ -428,15 +487,13 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
     }
     for unset in old_vars - env.keys():
         assert unset != azul_env_vars
-        print(f"{this_module.name}: {'Would unset' if output is None else 'Unsetting'} "
-              f"{unset}",
-              file=sys.stderr)
+        log('info', f"{'Would unset' if output is None else 'Unsetting'} "
+                    f"{unset}")
         if output is not None:
             print(f'unset {unset}', file=output)
     for k, v in env.items():
-        print(f"{this_module.name}: {'Would set' if output is None else 'Setting'} "
-              f"{k} to {shlex.quote(redact(k, v))}",
-              file=sys.stderr)
+        log('info', f"{'Would set' if output is None else 'Setting'} "
+                    f"{k} to {shlex.quote(redact(k, v))}")
         if output is not None:
             print(f'export {k}={shlex.quote(v)}', file=output)
 
@@ -444,6 +501,31 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
 def redact(k: str, v: str) -> str:
     forbidden = ('secret', 'password', 'token')
     return 'REDACTED' if any(s in k.lower() for s in forbidden) else v
+
+
+@cache
+def verbose() -> bool:
+    azul_env_quiet = 'azul_env_quiet'
+    try:
+        value = os.environ[azul_env_quiet]
+    except KeyError:
+        return True
+    else:
+        if value == '0':
+            return True
+        elif value == '1':
+            return False
+        else:
+            raise ValueError('Expected "0" or "1"', azul_env_quiet, value)
+
+
+type LogLevel = Literal['info', 'warning', 'error']
+
+
+def log(level: LogLevel, message: str) -> None:
+    if level != 'info' or verbose():
+        prefix = '' if level == 'info' else level + ': '
+        print(f'{this_module.name}: {prefix}{message}', file=sys.stderr)
 
 
 def main():
@@ -454,21 +536,23 @@ def main():
     hashed_env, warning = prepare_env()
     export_env(hashed_env, output)
     if warning:
-        print(warning, file=sys.stderr)
+        log('warning', warning)
     if output is None:
-        print("\nStdout appears to be a terminal. No output was generated "
-              "other than the usual redacted diagnostic output to stderr. To "
-              "avoid this, pass the program's output to your shell's `eval`:\n"
-              f"eval $(python3 {sys.argv[0]}) || echo false", file=sys.stderr)
+        log('error', "Stdout appears to be a terminal. No output was generated "
+                     "other than the usual redacted diagnostic output to stderr. To "
+                     "avoid this, pass the program's output to your shell's `eval`:\n"
+                     f"eval $(python3 {sys.argv[0]}) || echo false")
         sys.exit(1)
     else:
         print(output.getvalue(), file=sys.stdout)
 
 
-def prepare_env() -> Tuple[Environment, Optional[str]]:
-    env, warning = load_env()
+def prepare_env(extra_files: Iterable[Path] = ()
+                ) -> tuple[Environment, str | None]:
+    env, warning = load_env(extra_files=extra_files)
     resolved_env = resolve_env(env)
-    hashed_env = hash_env(resolved_env)
+    filtered_env = filter_env(resolved_env)
+    hashed_env = hash_env(filtered_env)
     return hashed_env, warning
 
 

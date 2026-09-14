@@ -49,13 +49,29 @@ class EnvHook:
     def _main(self, argv):
         import argparse
 
-        from azul.args import (
-            AzulArgumentHelpFormatter,
+        parser = argparse.ArgumentParser(
+            description=__doc__,
+            formatter_class=argparse.RawDescriptionHelpFormatter
         )
-        parser = argparse.ArgumentParser(description=__doc__,
-                                         formatter_class=AzulArgumentHelpFormatter)
-        parser.add_argument('action', choices=['install', 'remove'])
+        parser.add_argument(
+            'action',
+            choices=['install', 'remove', 'select']
+        )
+        parser.add_argument(
+            'deployment',
+            nargs='?',
+            help='With the `select` action, the deployment to record in '
+                 '`environment.pycharm`, or the empty string to retract the '
+                 'one on record. Not accepted otherwise.'
+        )
         options = parser.parse_args(argv)
+        if options.action == 'select':
+            if options.deployment is None:
+                parser.error('the `select` action requires a deployment')
+            self.select(options.deployment)
+            return
+        elif options.deployment is not None:
+            parser.error(f'the `{options.action}` action takes no deployment')
 
         # Confirm virtual environment is active `venv || virtualenv`
         if 'VIRTUAL_ENV' in os.environ:
@@ -133,8 +149,75 @@ class EnvHook:
 
     def prepare_env(self) -> Mapping[str, str]:
         prepare_env = self.export_environment.prepare_env
-        new, message = prepare_env()
+        new, message = prepare_env(self.extra_env_files())
+        if message is not None:
+            self.print(message)
         return new
+
+    def extra_env_files(self) -> list:
+        """
+        The `environment.pycharm` file, but only for processes launched by
+        PyCharm. PyCharm doesn't usually get its environment from a shell, so
+        this file is a convenient way to inject Azul environment variables into
+        those processes, without affecting Python processes launched from a
+        shell with an already populated Azul environment. Note that Python
+        processes launched by a shell running in PyCharm's terminal window fall
+        into the latter category.
+
+        The key use case for this file is setting `azul_current_deployment`. In
+        fact, the `_select` helper sets `azul_current_deployment` in the shell's
+        environment *and* writes it to `environment.pycharm`.
+
+        Being loaded as part of the environment, the file's entries are subject
+        to the same resolution of references between variables as those from
+        the environment*.py files, which it takes precedence over. It does not
+        take precedence over a variable configured in a specific PyCharm run
+        configuration, nor over one from PyCharm's intrinsic environment, the
+        two being indistinguishable from each other and both being more
+        specific than this file.
+
+        The order of precedence among the different sources of environment
+        variables is as follows (from lowest to highest):
+
+        - environment*.py
+
+        - environment.pycharm
+
+        - PyCharm's own environment
+
+        - Any variable set in the active PyCharm Run Configuration, or under
+          Python – Console – Python Console
+        """
+        if self.pycharm_hosted:
+            return [self.pycharm_env_file]
+        else:
+            return []
+
+    @property
+    def pycharm_env_file(self):
+        return self.export_environment.root_dir / 'environment.pycharm'
+
+    def select(self, deployment: str) -> None:
+        """
+        Record the given deployment in `environment.pycharm`, from which this
+        hook injects it into the processes PyCharm launches. Any other variable
+        in that file is preserved, in its original order. An empty argument
+        removes the entry instead.
+        """
+        path = self.pycharm_env_file
+        name = self.export_environment.azul_current_deployment
+        try:
+            lines = path.read_text().splitlines()
+        except FileNotFoundError:
+            lines = []
+        lines = [
+            line
+            for line in lines
+            if line.partition('=')[0].strip() != name
+        ]
+        if deployment:
+            lines.append(f'{name}={deployment}')
+        path.write_text(''.join(line + '\n' for line in lines))
 
     def set_env(self, env: Mapping[str, str]):
         redact = self.export_environment.redact
@@ -150,24 +233,33 @@ class EnvHook:
 
     @property
     def pycharm_hosted(self):
-        return (
-            # Indicates Python Console, Run/Debug
-            bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
-            # Indicates interpreter is being verified before adding it to PyCharm
-            or sys.orig_argv[1:3] == ['-c', 'print(1)']
-            or sys.orig_argv[1] == '-c' and '_is_gil_enabled' in sys.orig_argv[2]
-            # Indicates sys.path and installed packages are being listed
-            or 'plugins/python-ce/helpers' in sys.argv[0]
-        )
+        # Indicates Python Console, Run/Debug
+        if int(os.environ.get('PYCHARM_HOSTED', '0')):
+            return True
+        # Indicates sys.path and installed packages are being listed
+        elif 'plugins/python-ce/helpers' in sys.argv[0]:
+            return True
+        else:
+            match sys.orig_argv:
+                case [_, '-c', script, *_]:
+                    # Indicates that the interpreter is being verified before
+                    # adding it to PyCharm. Newer versions use the latter form.
+                    return script == 'print(1)' or '_is_gil_enabled' in script
+                case _:
+                    return False
 
     @classmethod
     @cache
     def import_sibling_script(cls, module_name: str):
-        # When this module is loaded from the `sitecustomize.py` symbolic link, the
-        # directory containing the physical file may not be on the sys.path so we
-        # cannot use a normal import to load any sibling scripts.
+        # When this module is loaded from the `sitecustomize.py` symbolic link,
+        # the directory containing the physical file may not be on the sys.path
+        # so we cannot use a normal import to load any sibling scripts. When it
+        # is run as a script instead, there is no such link to follow.
         file_name = module_name + '.py'
-        parent_dir = Path(__file__).follow().parent
+        this_file = Path(__file__)
+        if this_file.is_symlink():
+            this_file = this_file.follow()
+        parent_dir = this_file.parent
         path = parent_dir / file_name
         spec = importlib.util.spec_from_file_location(name=module_name, location=path)
         module = importlib.util.module_from_spec(spec)

@@ -53,7 +53,7 @@ jobs:
           source .venv/bin/activate
           make requirements
           deployment=$(python scripts/check_branch.py --print)
-          _link $deployment
+          _set_deployment $deployment
           _refresh
 
           make environment.boot

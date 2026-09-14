@@ -39,13 +39,13 @@ compile: check_python
 		vendor $(shell find -L $$(find vendor -maxdepth 1 -type l) -maxdepth 0 -type d)
 
 .PHONY: config
-config: .chalice/config.json
+config: check_aws .chalice/config.json
 
 .PHONY: environ
-environ: vendor/resources/environ.json
+environ: check_aws vendor/resources/environ.json
 
 .PHONY: sources
-sources: vendor/resources/sources.json
+sources: check_aws vendor/resources/sources.json
 
 .PHONY: local
 local: check_python config

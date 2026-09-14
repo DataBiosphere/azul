@@ -20,6 +20,52 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8290 Use of Claude Code is complicated by .active deployment symlink
+=====================================================================
+
+The current deployment is now specified in the ``azul_current_deployment``
+environment variable instead of the ``deployments/.active`` symbolic link. There
+is no default; the variable must be set explicitly, which ``_select`` does. In a
+shell, the selection therefore lives in that shell and has to be made again in
+every new one, where previously the link persisted it on disk. A process that
+doesn't inherit its environment from a shell needs the variable from elsewhere:
+PyCharm reads it from ``environment.pycharm`` via ``envhook.py`` and Claude Code
+from the ``env`` key of its local project settings.
+
+There is also a new hook for Claude Code. The use of that hook is optional. It
+ensures that Claude Code sessions immediately pick up environmental changes but
+it does require that Claude Code is invoked without first sourcing the
+environment. It is not possible to use the hook in conjunction with Claude Code
+instances that were launched with an already populated environment, so you have
+the choice: don't use the hook and continue to run ``claude`` in shells with
+``environment`` already sourced—and thanks to ``azul_current_deployment`` above,
+these ``claude`` instances may even have different deployments selected—or enjoy
+the benefit of never having to restart ``claude``, but accept that all
+``claude`` instances running in a working copy target the same deployment. See
+`section 2.4.2 <./README.md#242-claudehookpy>`_ of the README for how to
+register the hook.
+
+The Google Cloud SDK state no longer lives in the working copy. It is now kept
+under ``$XDG_DATA_HOME/azul/gcloud``, segregated by Google Cloud project, and
+shared by all Azul working copies. UCSC ITS started enforcing a session timeout
+of about a day, so the sharing should reduce the number of interactive Google
+Cloud reauthorization flows.
+
+Everyone
+--------
+
+Delete the now unused symbolic link::
+
+    rm deployments/.active
+
+The state accumulated at the old Google Cloud SDK path is obsolete and should be
+removed from each working copy::
+
+    rm -rf deployments/*/.gcloud
+
+Expect to authenticate once per Google Cloud project afterwards.
+
+
 #8249 Use uv to manage Python dependencies
 ==========================================
 

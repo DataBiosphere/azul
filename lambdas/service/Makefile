@@ -4,7 +4,7 @@ all: package
 include ../lambdas.mk
 
 .PHONY: apat_public_key
-apat_public_key: vendor/resources/apat_public_key.json
+apat_public_key: check_aws vendor/resources/apat_public_key.json
 
 package: apat_public_key
 
