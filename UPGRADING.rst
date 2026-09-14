@@ -33,6 +33,19 @@ The two hooks we use read it from ``environment.hook`` in the working copy:
 ``envhook.py`` injects it into the Python processes PyCharm starts, and
 ``claudehook.py`` exports it ahead of sourcing the environment for a command.
 
+There is also a new hook for Claude Code. The use of that hook is optional. It
+ensures that Claude Code sessions immediately pick up environmental changes but
+it does require that Claude Code is invoked without first sourcing the
+environment. It is not possible to use the hook in conjunction with Claude Code
+instances that were launched with an already populated environment, so you have
+the choice: don't use the hook and continue to run ``claude`` in shells with
+``environment`` already sourced—and thanks to ``azul_current_deployment`` above,
+these ``claude`` instances may even have different deployments selected—or enjoy
+the benefit of never having to restart ``claude``, but accept that all
+``claude`` instances running in a working copy target the same deployment. See
+`section 2.4.2 <./README.md#242-claudehookpy>`_ of the README for how to
+register the hook.
+
 The Google Cloud SDK state no longer lives in the working copy. It is now kept
 under ``$XDG_DATA_HOME/azul/gcloud``, segregated by Google Cloud project, and
 shared by all Azul working copies. UCSC ITS started enforcing a session timeout
