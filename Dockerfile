@@ -111,11 +111,16 @@ RUN case "$TARGETARCH" in \
 # Install Docker using the Apt repository configured above. We can't use the
 # statically linked binaries because they lack buildx and buildkit.
 #
+# Only the client and buildx are installed. Containers from this image don't run
+# a daemon, they use the one that `DOCKER_HOST` refers to, so the engine and the
+# packages it pulls in, containerd among them, would only add to the size of
+# this image.
+#
 ARG azul_docker_version
 RUN set -o pipefail \
-    && version=$(apt-cache madison docker-ce | awk '{ print $3 }' | grep -P "^5:\Q${azul_docker_version}\E" | head -1) \
+    && version=$(apt-cache madison docker-ce-cli | awk '{ print $3 }' | grep -P "^5:\Q${azul_docker_version}\E" | head -1) \
     && test -n "$version" \
-    && apt-get -y install docker-ce=$version docker-ce-cli=$version docker-buildx-plugin
+    && apt-get -y install --no-install-recommends docker-ce-cli=$version docker-buildx-plugin
 
 # Install the Python formatter, which is part of PyCharm. See the `format`
 # target in the Makefile.
