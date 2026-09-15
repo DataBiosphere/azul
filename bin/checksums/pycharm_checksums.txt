@@ -1,2 +1,2 @@
-7318c435782281bf9354249eda60b45f8574bca3c8e1e857ade67d5974d3c05f *pycharm-community-2025.2.6.1.tar.gz
-3dde392df186358be8fdf8a65b4452b07abf3491960c8c6cd1d3a1ac4e0ac14a *pycharm-community-2025.2.6.1-aarch64.tar.gz
+a410c9c5834ede16373325ea21b850e309557db5d9dcca3674caf92ea7c5bf05 *pycharm-2025.3.tar.gz
+97f00b722caba564eaf4eda35bb3344a92f3bd76e798ea58e65f45efa4054e14 *pycharm-2025.3-aarch64.tar.gz

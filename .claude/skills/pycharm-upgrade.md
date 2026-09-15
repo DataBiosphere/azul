@@ -13,10 +13,10 @@ follows is needed.
 
 The image built from `Dockerfile` contains the PyCharm formatter that the
 `format`, `_format` and `__format` targets invoke. Only part of the
-distribution is extracted from the archive: the platform, the launchers and the plugins PyCharm considers
-essential. The bundled JetBrains Runtime, four dozen other plugins and the
-helper scripts of the Python plugin are left behind, and the distribution's JRE
-is installed instead of the bundled one.
+distribution is extracted from the archive: the platform, the launchers and the
+plugins PyCharm considers essential. The bundled JetBrains Runtime, the other
+plugins and the helper scripts of the Python plugin are left behind, and the
+distribution's JRE is installed instead of the bundled one.
 
 That set is coarse on purpose, in whole directories, so it usually survives an
 upgrade untouched. When it doesn't, this is how to establish the new one. Budget

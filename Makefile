@@ -90,7 +90,7 @@ pycharm_checksums: check_env
 	rm -f bin/checksums/pycharm_checksums.txt
 	for arch in "" -aarch64 ; do \
 	    curl --fail --silent --location \
-	        https://download.jetbrains.com/python/pycharm-community-$(azul_pycharm_version)$$arch.tar.gz.sha256 \
+	        https://download.jetbrains.com/python/pycharm-$(azul_pycharm_version)$$arch.tar.gz.sha256 \
 	        >> bin/checksums/pycharm_checksums.txt ; \
 	done
 
