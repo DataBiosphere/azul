@@ -34,7 +34,7 @@ build_image:
   # uv.lock, common.mk and the Makefile.
   extends: .on_push
   stage: build_image
-  timeout: 6m
+  timeout: 10m
   rules:
     - if: $CI_COMMIT_BRANCH
   script:
@@ -50,7 +50,6 @@ build_image:
   image: ${azul_image}:${azul_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
-    - source /build/.venv/bin/activate
     - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
     - _link $deployment
@@ -82,7 +81,7 @@ test:
   script:
     - make check_requirements
     - if python -m azul -t config.deployment.is_lower_sandbox ; then make check_transitive_requirements ; fi
-    - make format
+    - make __format
     - make isort
     - make -C lambdas openapi
     - make environment.boot
