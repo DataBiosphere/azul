@@ -20,6 +20,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#8239 Unused Terraform provider binaries accumulate unboundedly
+===============================================================
+
+Consider setting up a `provider cache <./README.md#terraform-provider-cache>`_
+for Terraform. To reclaim the space taken up by provider versions downloaded
+before the cache was configured, follow the `troubleshooting instructions
+<./README.md#excessive-disk-usage-by-terraform-providers>`_ in our README.
+
+
 #8249 Use uv to manage Python dependencies
 ==========================================
 

@@ -58,12 +58,7 @@ generic with minimal need for project-specific behavior.
   required version is specified in a variable called `azul_docker_version` in
   [environment.py].
 
-- Terraform, to manage deployments. Azul requires a specific version of
-  Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.py]. Refer to the official documentation on how to
-  [install terraform]. Terraform comes as a single, statically linked binary, so
-  the easiest method of installation is to download the binary and put it in a
-  directory mentioned in the `PATH` environment variable.
+- [Terraform](#212-terraform), to manage deployments
 
 - [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
   available on PyPI, it must be installed separately. Install the version pinned
@@ -89,7 +84,6 @@ generic with minimal need for project-specific behavior.
   versions should work, too). LibreSSL, which became the default on macOS at 
   some point, is an acceptible replacement. Version 2.8.3 is known to work.  
 
-[install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
@@ -150,6 +144,44 @@ been configured for the clone.
 If you get no output, the AWS provider has not been registered.
 
 [git-secrets]: https://github.com/awslabs/git-secrets
+
+
+### 2.1.2 Terraform
+
+Azul requires a specific version of Terraform, which is defined in a variable
+called `azul_terraform_version` in [environment.py]. Refer to the official
+documentation on how to [install terraform]. Terraform comes as a single,
+statically linked binary, so the easiest method of installation is to download
+the binary and put it in a directory mentioned in the `PATH` environment
+variable.
+
+#### Terraform provider cache
+
+Azul sets `TF_DATA_DIR` per deployment and AWS profile, so without a [plugin
+cache], Terraform downloads a separate copy of each provider binary into every
+deployment's data directory. Because the AWS provider alone is several hundred
+megabytes, total disk usage can reach tens of gigabytes across multiple working
+copies. To avoid this, add the following to `~/.terraformrc`:
+
+```hcl
+plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"
+```
+
+Then create the directory:
+
+```
+mkdir -p ~/.terraform.d/plugin-cache
+```
+
+With the cache configured, `terraform init` stores provider binaries in the
+cache and symlinks to them from each deployment's data directory.
+
+See also the [troubleshooting
+section](#excessive-disk-usage-by-terraform-providers) on recovering from
+long-term use without the cache.
+
+[install terraform]: https://developer.hashicorp.com/terraform/downloads
+[plugin cache]: https://developer.hashicorp.com/terraform/cli/config/config-file#provider-plugin-cache
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
@@ -1249,6 +1281,112 @@ causing a failure.
 
 If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](/test/azul_test_case.py) and commit the modifications. 
+
+
+## Excessive disk usage by Terraform providers
+
+Without a [plugin cache], Terraform downloads a separate copy of each provider
+binary into every deployment's data directory. Because Azul sets `TF_DATA_DIR`
+per deployment and AWS profile, and the AWS provider alone is several hundred
+megabytes, total disk usage can reach tens of gigabytes across multiple working
+copies.
+
+Symptoms include unexpectedly low free disk space and large
+`.terraform.*/providers` directories under `deployments/`:
+
+```
+du -sh deployments/*/.terraform.*/providers
+```
+
+To recover:
+
+1. Configure the plugin cache as described in the [Terraform provider
+   cache](#terraform-provider-cache) section.
+
+2. Remove the provider versions that are no longer pinned in this working copy's
+   lock files:
+
+   ```
+   python scripts/tf_clean_providers.py --dry-run
+   python scripts/tf_clean_providers.py
+   ```
+
+   The first invocation only reports what the second one would remove. This is
+   safe because the provider binaries are downloaded on demand by `terraform
+   init`, which runs as a prerequisite of most Terraform operations. Only the
+   `providers` directories are affected; each deployment's `terraform.tfstate`
+   (a backend configuration cache) and `modules/` directory are preserved.
+
+3. The next `terraform init` for each deployment will re-download the required
+   providers into the shared cache and symlink to them.
+
+If you have additional working copies of the repository, repeat step 2 in each
+one. The cache is shared across all working copies.
+
+Where the cache was already in use, the entries removed by step 2 are merely
+symlinks into it, and the binaries themselves remain. Once every working copy
+has been visited, reclaim those by running the script one last time, in any one
+of the working copies:
+
+```
+python scripts/tf_clean_providers.py --clean-cache --dry-run
+python scripts/tf_clean_providers.py --clean-cache
+```
+
+This removes every cached provider version that step 2 did not mark as still
+in use. Visiting *all* working copies first is therefore essential, or the
+providers used by the ones you skipped will be removed. They would be
+re-downloaded on the next `terraform init`, at the cost of the download.
+
+
+# 6. Branch flow & development process
+
+**This section should be considered a draft. It describes a future extension to the current branching flow.**
+
+The section below describes the flow we want to get to eventually, not the one
+we are currently using while this repository recovers from the aftermath of its
+inception.
+
+The declared goal here is a process that prevents diverging forks yet allows
+each project to operate independently as far as release schedule, deployment
+cadence, project management and issue tracking is concerned. The main challenges
+are 1) preventing contention on a single `develop` or `master` branch, 2)
+isolating project-specific changes from generic ones, 3) maintaining a
+reasonably linear and clean history and 4) ensuring code reuse.
+
+The [original repository](https://github.com/DataBiosphere/azul), also known as
+*upstream*, should only contain generic functionality and infrastructure code.
+Project-specific functionality should be maintained in separate project-specific
+forks of that repository. The upstream repository will only contain a `master`
+branch and the occasional PR branch.
+
+Azul dynamically imports project-specific plugin modules from a special location
+in the Python package hierarchy: `azul.projects`. The package structure in
+upstream is
+
+```
+root
+├── ...
+├── src
+│   └── azul
+│       ├── index
+│       │   └── ...
+│       ├── projects (empty)
+│       ├── service
+│       │   └── ...
+│       └── util
+│       │   └── ...
+└── ...
+```
+
+Note that the `projects` directory is empty.
+
+The directory structure in forked repositories is generally the same with one
+important difference. While a fork's `master` branch is an approximate mirror of
+upstream's `master` and therefore also lacks content in `projects`, that
+directory *does* contain modules in the fork's `develop` branch. In
+`HumanCellAtlas/azul-hca`, the fork of Azul for the HumanCellAtlas project, the
+`develop` branch would look like this:
 
 
 # 6. Operational Procedures
