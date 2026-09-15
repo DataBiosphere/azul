@@ -331,7 +331,7 @@ def env() -> Mapping[str, str | None]:
         # fraction is no longer sufficient. See the corresponding Dockerfile
         # stanza for details.
         #
-        'azul_pycharm_version': '2025.2.6.1',
+        'azul_pycharm_version': '2025.3',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image

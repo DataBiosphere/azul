@@ -126,9 +126,8 @@ RUN set -o pipefail \
 # the one of the bundled runtime.
 #
 # We only extract what the formatter needs: the platform, the launchers, and the
-# five plugins that PyCharm considers essential. We omit the bundled runtime,
-# four dozen other plugins and the helper scripts of the Python plugin, together
-# around two thirds of the distribution.
+# eight plugins that PyCharm considers essential. We omit the bundled runtime,
+# the other ninety-seven plugins and the helper scripts of the Python plugin.
 #
 # The archive member selection names the plugins individually rather than as a
 # directory because `plugins/plugin-classpath.txt` must not be extracted. That
@@ -150,7 +149,7 @@ RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
            arm64) arch=-aarch64 ;; \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
        esac \
-    && tarball=pycharm-community-${azul_pycharm_version}${arch}.tar.gz \
+    && tarball=pycharm-${azul_pycharm_version}${arch}.tar.gz \
     && curl --fail --silent --location -o /tmp/${tarball} \
        https://download.jetbrains.com/python/${tarball} \
     && cd /tmp && sha256sum --ignore-missing -c pycharm_checksums.txt \
@@ -169,8 +168,11 @@ RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
            '*/modules' \
            '*/product-info.json' \
            '*/plugins/json' \
-           '*/plugins/pycharm-community-customization' \
+           '*/plugins/jupyter-plugin' \
+           '*/plugins/markdown' \
+           '*/plugins/notebooks-plugin' \
            '*/plugins/pycharm-community-customization-shared' \
+           '*/plugins/pycharm-pro-customization' \
            '*/plugins/python-ce' \
            '*/plugins/toml' \
     && rm /tmp/${tarball} /tmp/pycharm_checksums.txt \
