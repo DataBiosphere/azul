@@ -141,6 +141,14 @@ RUN set -o pipefail \
 # discovers the plugins by scanning the directory, tolerating the absence of the
 # ones left behind.
 #
+# Two fifths of the platform's JARs are never loaded while formatting, so they
+# are removed again, by the list this build copies in. The list was derived by
+# running the formatter over this code base with `-verbose:class` and keeping
+# the JARs that no loaded class came from. It holds for both architectures, the
+# archives of which contain the same JARs, and it has to be derived anew for
+# every release. A JAR that a future source file turns out to need announces
+# itself as a `NoClassDefFoundError` from the formatter.
+#
 # If a future version of PyCharm needs more than what is extracted here, the
 # `__format` and `check_clean` targets in the GitLab build will fail. Use Claude
 # with the `pycharm-upgrade` skill to redo the archive member selections below
@@ -148,6 +156,7 @@ RUN set -o pipefail \
 #
 ARG azul_pycharm_version
 COPY bin/checksums/pycharm_checksums.txt /tmp/pycharm_checksums.txt
+COPY bin/pycharm_unused_jars.txt /tmp/pycharm_unused_jars.txt
 RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
     && case "$TARGETARCH" in \
            amd64) arch= ;; \
@@ -180,7 +189,8 @@ RUN apt-get -y install --no-install-recommends openjdk-21-jre-headless \
            '*/plugins/pycharm-pro-customization' \
            '*/plugins/python-ce' \
            '*/plugins/toml' \
-    && rm /tmp/${tarball} /tmp/pycharm_checksums.txt \
+    && cd /opt/pycharm && xargs rm < /tmp/pycharm_unused_jars.txt \
+    && rm /tmp/${tarball} /tmp/pycharm_checksums.txt /tmp/pycharm_unused_jars.txt \
     && rm -r /tmp/hsperfdata_root
 
 # Set UV_PROJECT_ENVIRONMENT to point at the image's own Python installation,

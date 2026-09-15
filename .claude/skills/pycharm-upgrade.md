@@ -100,6 +100,29 @@ are useful regression signals: a sudden jump in size means a pattern is matching
 more than intended, and a jump in noise means something the platform wants is no
 longer extracted.
 
+## Step 6: Redo the list of unused JARs
+
+`bin/pycharm_unused_jars.txt` names the JARs under `lib/` that the build removes
+after extracting them. They are the ones no class was loaded from while the
+formatter ran, two fifths of the platform by size. The list is specific to a
+release and has to be derived again for every one.
+
+Empty the list, build, and run the formatter over a copy of the sources with
+`-verbose:class` in `_JAVA_OPTIONS`, capturing standard output. Note that the
+JVM widens the decorators of those lines part way through a run, so match
+`class,load\s*\]` rather than a fixed string, or most of the trace goes
+uncounted. Index the classes in every JAR under `/opt/pycharm/lib`, subtract the
+ones the trace names, and keep the JARs left with none. Write them to the list
+as paths relative to `/opt/pycharm`.
+
+Then validate as in Step 5. The mangled copy matters most here: it exercises the
+code paths that reformatting takes, which the pristine one doesn't.
+
+The list is only as good as the sources it was derived from. A JAR that some
+future source file turns out to need announces itself as a
+`NoClassDefFoundError` from the formatter, and the remedy is to remove that JAR
+from the list.
+
 ## Gotchas
 
 `--no-wildcards-match-slash` in the `tar` invocation is load-bearing. Without
