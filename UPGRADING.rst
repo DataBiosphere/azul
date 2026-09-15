@@ -23,6 +23,19 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+#8239 Unused Terraform provider binaries accumulate unboundedly
+===============================================================
+
+Everyone
+--------
+
+Consider setting up a `provider cache <./README.md#terraform-provider-cache>`_
+for Terraform. To reclaim the space taken up by provider versions downloaded
+before the cache was configured, integrate these changes into each worktree, and
+follow the `troubleshooting instructions
+<./README.md#excessive-disk-usage-by-terraform-providers>`_ in the README.
+
+
 Suprious warning from Claude hook in linked worktree (#8308)
 ============================================================
 
