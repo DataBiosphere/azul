@@ -58,12 +58,7 @@ generic with minimal need for project-specific behavior.
   required version is specified in a variable called `azul_docker_version` in
   [environment.py].
 
-- Terraform, to manage deployments. Azul requires a specific version of
-  Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.py]. Refer to the official documentation on how to
-  [install terraform]. Terraform comes as a single, statically linked binary, so
-  the easiest method of installation is to download the binary and put it in a
-  directory mentioned in the `PATH` environment variable.
+- [Terraform](#212-terraform), to manage deployments
 
 - [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
   available on PyPI, it must be installed separately. Install the version pinned
@@ -89,7 +84,6 @@ generic with minimal need for project-specific behavior.
   versions should work, too). LibreSSL, which became the default on macOS at 
   some point, is an acceptible replacement. Version 2.8.3 is known to work.  
 
-[install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
@@ -150,6 +144,18 @@ been configured for the clone.
 If you get no output, the AWS provider has not been registered.
 
 [git-secrets]: https://github.com/awslabs/git-secrets
+
+
+### 2.1.2 Terraform
+
+Azul requires a specific version of Terraform, which is defined in a variable
+called `azul_terraform_version` in [environment.py]. Refer to the official
+documentation on how to [install terraform]. Terraform comes as a single,
+statically linked binary, so the easiest method of installation is to download
+the binary and put it in a directory mentioned in the `PATH` environment
+variable.
+
+[install terraform]: https://developer.hashicorp.com/terraform/downloads
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
