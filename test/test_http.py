@@ -20,6 +20,7 @@ from unittest import (
     mock,
 )
 from unittest.mock import (
+    MagicMock,
     PropertyMock,
     patch,
 )
@@ -201,3 +202,35 @@ class TestHttp(AzulUnitTestCase):
                             'lambda_is_handling_api_gateway_request',
                             new_callable=PropertyMock,
                             return_value=True)
+
+    def test_lambda_context_timeout(self):
+        client = LimitedRetryHttpClient(http_client(log))
+        default_margin = LimitedRetryHttpClient._default_timeout_margin
+        custom_margin = 30
+        for remaining_ms, api_gateway, margin, expected_timeout in [
+            # @formatter:off
+            (    None, False, default_margin, 20                          ),  # noqa: E201,E202
+            (    None,  True, default_margin, 5                           ),  # noqa: E201,E202
+            ( 300_000, False, default_margin, 300 - default_margin        ),  # noqa: E201,E202
+            ( 300_000, False,  custom_margin, 300 - custom_margin         ),  # noqa: E201,E202
+            ( 300_000,  True, default_margin, 5                           ),  # noqa: E201,E202
+            (  15_000, False, default_margin, max(5, 15 - default_margin) ),  # noqa: E201,E202
+            (   5_000, False, default_margin, max(5,  5 - default_margin) ),  # noqa: E201,E202
+            # @formatter:on
+        ]:
+            with self.subTest(remaining_ms=remaining_ms,
+                              api_gateway=api_gateway,
+                              margin=margin):
+                if remaining_ms is not None:
+                    lambda_context = MagicMock()
+                    lambda_context.get_remaining_time_in_millis.return_value = remaining_ms
+                else:
+                    lambda_context = None
+                with (
+                    patch.object(type(config),
+                                 'lambda_context',
+                                 new_callable=PropertyMock,
+                                 return_value=lambda_context),
+                    self.mock_api_gateway() if api_gateway else nullcontext(),
+                ):
+                    self.assertEqual(expected_timeout, client._timeout(margin))

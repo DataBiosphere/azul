@@ -1,23 +1,19 @@
 .PHONY: all
-all: layer indexer service
+all: indexer service
 
 include ../common.mk
 
-.PHONY: layer
-layer: check_env
-	$(MAKE) -C layer layer
-
 .PHONY: indexer
 indexer: check_env
-	$(MAKE) -C indexer package
+	$(MAKE) -C indexer docker_push
 
 .PHONY: service
 service: check_env
-	$(MAKE) -C service package
+	$(MAKE) -C service docker_push
 
 .PHONY: clean
 clean: check_env
-	for d in indexer service layer; do $(MAKE) -C $$d clean || ! break; done
+	for d in indexer service; do $(MAKE) -C $$d clean || ! break; done
 
 .PHONY: openapi
 openapi: check_env

@@ -22,6 +22,7 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
+import itertools
 import json
 from operator import (
     is_not_none,
@@ -127,6 +128,8 @@ from azul.indexer import (
 from azul.indexer.cache_service import (
     CacheService,
     ConcurrentCacheFetchError,
+    RateLimitingCacheService,
+    RetryingCacheService,
     UrlCacheService,
 )
 from azul.indexer.document import (
@@ -665,51 +668,61 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             entity_types = list(self.metadata_plugin(catalog).exposed_indices)
             num_threads_per_endpoint = 8
 
-            cache = CacheService(expiration=60, lock_expiration=30)
-            service = UrlCacheService(inner=cache, http_client=self._http_client)
+            rate_limiting: bool
+            retrying: bool
+            for rate_limiting, retrying in itertools.product([False, True], repeat=2):
+                with self.subTest(rate_limiting=rate_limiting, retrying=retrying):
+                    cache = CacheService(expiration=60, lock_expiration=30)
+                    if rate_limiting:
+                        cache = RateLimitingCacheService(inner=cache, max_slots=1)
+                    if retrying:
+                        cache = RetryingCacheService(inner=cache, num_retries=13, retry_delay=10.0)
+                    service = UrlCacheService(inner=cache, http_client=self._http_client)
 
-            assignments: list[tuple[EntityType, furl]] = []
-            for entity_type in entity_types:
-                url = config.service_endpoint.set(path=('index', entity_type),
-                                                  query_params=dict(catalog=catalog,
-                                                                    size='1',
-                                                                    filters=json.dumps({})))
-                for _ in range(num_threads_per_endpoint):
-                    assignments.append((entity_type, url))
-            self.random.shuffle(assignments)
+                    assignments: list[tuple[EntityType, furl]] = []
+                    for entity_type in entity_types:
+                        url = config.service_endpoint.set(path=('index', entity_type),
+                                                          query_params=dict(catalog=catalog,
+                                                                            size='1',
+                                                                            filters=json.dumps({})))
+                        for _ in range(num_threads_per_endpoint):
+                            assignments.append((entity_type, url))
+                    self.random.shuffle(assignments)
 
-            def worker(url: furl) -> BaseHTTPResponse:
-                while True:
+                    def worker(url: furl) -> BaseHTTPResponse:
+                        while True:
+                            try:
+                                return service.get_url(url)
+                            except ConcurrentCacheFetchError:
+                                if retrying:
+                                    self.assertFalse(retrying, 'Unexpected ConcurrentCacheFetchError')
+                                time.sleep(5)
+
+                    results: dict[EntityType, list[BaseHTTPResponse]] = defaultdict(list)
+                    errors: list[BaseException] = []
+                    executor = ThreadPoolExecutor(max_workers=len(assignments))
                     try:
-                        return service.get_url(url)
-                    except ConcurrentCacheFetchError:
-                        time.sleep(5)
-
-            results: dict[EntityType, list[BaseHTTPResponse]] = defaultdict(list)
-            errors: list[BaseException] = []
-            executor = ThreadPoolExecutor(max_workers=len(assignments))
-            try:
-                futures = [
-                    (entity_type, executor.submit(worker, url))
-                    for entity_type, url in assignments
-                ]
-                for entity_type, future in futures:
-                    e = future.exception(timeout=120)
-                    if e is None:
-                        results[entity_type].append(future.result())
+                        futures = [
+                            (entity_type, executor.submit(worker, url))
+                            for entity_type, url in assignments
+                        ]
+                        for entity_type, future in futures:
+                            e = future.exception(timeout=120)
+                            if e is None:
+                                results[entity_type].append(future.result())
+                            else:
+                                errors.append(e)
+                    except BaseException:
+                        executor.shutdown(wait=False, cancel_futures=True)
+                        raise
                     else:
-                        errors.append(e)
-            except BaseException:
-                executor.shutdown(wait=False, cancel_futures=True)
-                raise
-            else:
-                executor.shutdown()
-            self.assertEqual([], errors)
-            for entity_type, responses in results.items():
-                with self.subTest(entity_type=entity_type):
-                    self.assertEqual(len(responses), num_threads_per_endpoint)
-                    request_ids = {r.headers['x-amzn-RequestId'] for r in responses}
-                    self.assertEqual(len(request_ids), 1)
+                        executor.shutdown()
+                    self.assertEqual([], errors)
+                    for entity_type, responses in results.items():
+                        with self.subTest(entity_type=entity_type):
+                            self.assertEqual(len(responses), num_threads_per_endpoint)
+                            request_ids = {r.headers['x-amzn-RequestId'] for r in responses}
+                            self.assertEqual(len(request_ids), 1)
 
     def _test_manifest(self, catalog: CatalogName):
         supported_formats = self.metadata_plugin(catalog).manifest_formats

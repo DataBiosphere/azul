@@ -41,7 +41,7 @@ RUN mkdir -p ${HOME}/.docker \
 #
 # From the directory containing this file, build the image:
 #
-# $ make docker
+# $ make docker_image
 #
 # Push the image:
 #

@@ -33,11 +33,7 @@ class EnvHook:
 
     def sitecustomize(self):
         try:
-            enabled = int(os.environ.get('ENVHOOK', '1'))
-            if enabled == 0:
-                self.print('Currently disabled because the ENVHOOK environment variable is set to 0.')
-            else:
-                self.handle_env()
+            self.handle_env()
         except EnvhookError as e:
             if self.pycharm_hosted:
                 # Under PyCharm, something suppresses sys.exit, probably

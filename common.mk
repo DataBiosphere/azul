@@ -24,10 +24,6 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'python' executable from outside the virtualenv\n"; \
 		false; \
 	fi
-	@if test "$$VIRTUAL_ENV/bin/pip" != "$$(hash pip && hash -t pip)"; then \
-  		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
-		false; \
-	fi
 	@if ! python -c 'pass'; then \
 		echo -e "\nPython failed. This is most likely an issue with envhook.py aka sitecustomize.\n"; \
 		false; \
@@ -42,12 +38,6 @@ check_python: check_venv
 	@if ! python -c "import sys; \
 		             exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
 		echo -e "\nLooks like some requirements are missing. Please run 'make requirements'\n"; \
-		false; \
-	fi
-	@if ! python -c "import sys, wheel as w; \
-		             p = lambda v: tuple(map(int, v.split('.'))); \
-		             sys.exit(0 if p(w.__version__) >= p('0.32.3') else 1)"; then \
-		echo -e "\nLooks like the `wheel` package is outdated or missing. See README for instructions on how to fix this.\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; \

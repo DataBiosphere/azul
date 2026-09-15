@@ -49,6 +49,9 @@ from azul.lib import (
 from azul.lib.collections import (
     OrderedSet,
 )
+from azul.lib.strings import (
+    assert_signed_url_redactable,
+)
 
 if TYPE_CHECKING:
     from mypy_boto3_s3.client import (
@@ -371,8 +374,10 @@ class StorageService:
             params['ResponseContentDisposition'] = f'attachment;filename="{file_name}"'
         if content_type is not None:
             params['ResponseContentType'] = content_type
-        return self._s3.generate_presigned_url(Params=params,
-                                               ClientMethod=self._s3.get_object.__name__)
+        url = self._s3.generate_presigned_url(Params=params,
+                                              ClientMethod=self._s3.get_object.__name__)
+        assert_signed_url_redactable(url)
+        return url
 
     def put_object_tagging(self, object_key: str, tagging: Tagging):
         log.info('Tagging object %r with %r', object_key, tagging)

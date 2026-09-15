@@ -88,7 +88,20 @@ class TestUserController(DCP2TestCase,
     _mock_sub = '105096702580025601450'
     _mock_email = 'user@example.com'
     _mock_access_token = 'ya29.mock_access_token'
-    _mock_refresh_token = '1//mock_refresh_token'
+
+    # An authorization code consists of '4/', a digit and a variable, but much
+    # larger number of base64url characters. A mock code has to reproduce that
+    # shape, or it won't be redactable.
+    _mock_auth_code = '4/0mock_auth_code'.ljust(73, '0')
+
+    @classmethod
+    def _mock_refresh_token(cls, variable_part: str = 'mock_refresh_token') -> str:
+        """
+        A refresh token consists of '1//', two digits and a variable, but much
+        larger number of base64url characters. A mock token has to reproduce
+        that shape, or it won't be redactable.
+        """
+        return f'1//01{variable_part}'.ljust(102, '0')
 
     @classmethod
     def setUpClass(cls):
@@ -142,7 +155,7 @@ class TestUserController(DCP2TestCase,
         id_token = jwt.encode(payload=id_token, key='a' * 32, algorithm='HS256')
         response: TokenForCodeResponse = {
             'access_token': access_token or self._mock_access_token,
-            'refresh_token': refresh_token or self._mock_refresh_token,
+            'refresh_token': refresh_token or self._mock_refresh_token(),
             'expires_in': 3600,
             'scope': 'openid email',
             'token_type': 'Bearer',
@@ -162,7 +175,7 @@ class TestUserController(DCP2TestCase,
         client = self._http_client
         url = str(self.base_url.set(path='/user/authorize'))
         body = json.dumps({
-            'code': 'mock_auth_code',
+            'code': self._mock_auth_code,
             'scope': scope
         }).encode()
         return client.request('POST', url,
@@ -197,7 +210,7 @@ class TestUserController(DCP2TestCase,
             response = self._authorize()
             self.assertEqual(200, response.status)
             token_for_code.assert_called_once_with(
-                authorization_code='mock_auth_code',
+                authorization_code=self._mock_auth_code,
                 client_id='mock_client_id',
                 client_secret='mock_client_secret',
                 redirect_uri=None
@@ -208,7 +221,7 @@ class TestUserController(DCP2TestCase,
             self.assertIn('id_token', body)
             user = self._load_user()
             self.assertEqual(self._mock_access_token, user['access_token'])
-            self.assertEqual(self._mock_refresh_token, user['refresh_token'])
+            self.assertEqual(self._mock_refresh_token(), user['refresh_token'])
             self.assertEqual(self._mock_email, user['email'])
             self.assertTrue(user['email_verified'])
 
@@ -234,7 +247,7 @@ class TestUserController(DCP2TestCase,
         with self._mock_token_for_code() as token_for_code:
             self._authorize()
             new_access_token = 'ya29.new_access_token'
-            new_refresh_token = '1//new_refresh_token'
+            new_refresh_token = self._mock_refresh_token('new_refresh_token')
             token_for_code.return_value = self._mock_token_response(
                 access_token=new_access_token,
                 refresh_token=new_refresh_token
@@ -310,7 +323,7 @@ class TestUserController(DCP2TestCase,
             result = self._service.exchange_token(apat)
         self.assertEqual(refreshed_token, result.token)
         mock_token_for_refresh.assert_called_once_with(
-            refresh_token=self._mock_refresh_token,
+            refresh_token=self._mock_refresh_token(),
             client_id='mock_client_id',
             client_secret='mock_client_secret'
         )

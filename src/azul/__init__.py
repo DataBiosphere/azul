@@ -56,6 +56,7 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     JSON,
+    LambdaContext,
     MutableJSON,
     json_bool,
     json_int,
@@ -165,10 +166,6 @@ class Config:
     @property
     def project_root(self) -> str:
         return self.environ['project_root']
-
-    @property
-    def chalice_bin(self) -> str:
-        return self.environ['azul_chalice_bin']
 
     @property
     def opensearch_domain(self) -> str:
@@ -1297,10 +1294,6 @@ class Config:
         }
 
     @cached_property
-    def lambda_runtime_version(self) -> str | None:
-        return self.environ.get('azul_lambda_runtime_version')
-
-    @cached_property
     def _outsourced_environ(self) -> dict[str, str]:
         try:
             with open_resource('environ.json') as f:
@@ -1344,8 +1337,9 @@ class Config:
     def api_gateway_lambda_timeout(self) -> int:
         return self.api_gateway_timeout + self.api_gateway_timeout_padding
 
-    # This attribute is set dynamically at runtime
+    # These attributes are set dynamically at runtime
     lambda_is_handling_api_gateway_request: bool = False
+    lambda_context: LambdaContext | None = None
 
     # The length limit is more or less arbitrary. It was determined a few years
     # ago by looking at the resource name length limits for various types of AWS
@@ -1617,10 +1611,6 @@ class Config:
         return self.environ.get('azul_gitlab_data_volume_id')
 
     @property
-    def lambda_layer_key(self) -> str:
-        return 'lambda_layers'
-
-    @property
     def dynamo_sources_cache_table_name(self) -> str:
         return self.qualified_resource_name('sources_cache_by_auth')
 
@@ -1738,6 +1728,10 @@ class Config:
         'linux/arm64',
         'linux/amd64'
     ]
+
+    @property
+    def lambda_image_platforms(self) -> list[str]:
+        return self.environ['azul_lambda_image_platforms'].split()
 
     @property
     def docker_image_gists_path(self) -> Path:

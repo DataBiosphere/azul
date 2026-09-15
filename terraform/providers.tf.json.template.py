@@ -13,19 +13,19 @@ emit_tf(tag_resources=False, config={
         'required_providers': {
             'external': {
                 'source': 'hashicorp/external',
-                'version': '2.4.0'
+                'version': '2.4.1'
             },
             'null': {
                 'source': 'hashicorp/null',
-                'version': '3.3.0'
+                'version': '3.3.1'
             },
             'google': {
                 'source': 'hashicorp/google',
-                'version': '7.42.0'
+                'version': '7.46.0'
             },
             'aws': {
                 'source': 'hashicorp/aws',
-                'version': '6.57.1'
+                'version': '6.62.0'
             },
         },
     },
