@@ -161,7 +161,8 @@ def main(argv):
         body = _check_task(body, r'This PR partially resolves .*')
 
     has_u_tag = _has_commit_tag(target_branch, 'u')
-    body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
+    if args.type != 'promotion':
+        body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
     body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
 
     if args.no_upgrade:

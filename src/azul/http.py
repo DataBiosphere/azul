@@ -76,7 +76,7 @@ def redact_headers(headers: Mapping[str, str]) -> list[tuple[str, str]]:
 
 
 def redact_header(name: str, value: str) -> str:
-    result = redact(value, fullmatch=True)
+    result = redact(value)
     if result == value:
         # Our standard, pattern-based approach didn't redact anything …
         if name.lower() == 'authorization':

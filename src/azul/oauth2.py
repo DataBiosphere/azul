@@ -133,6 +133,7 @@ class OAuth2Client(HasCachedHttpClient):
                              flow.
         """
         assert_redactable(authorization_code)
+        assert_redactable(client_secret)
         if redirect_uri is None:
             # Undocumented but crucial (https://stackoverflow.com/a/48121098/4171119)
             redirect_uri = 'postmessage'
@@ -161,6 +162,7 @@ class OAuth2Client(HasCachedHttpClient):
                           client_secret: str
                           ) -> TokenResponse:
         assert_redactable(refresh_token)
+        assert_redactable(client_secret)
         fields = {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,

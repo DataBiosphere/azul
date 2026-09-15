@@ -37,8 +37,16 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python, the specific verson is defined in an environment variable called
-  `azul_python_version` defined in [environment.py](environment.py)
+- Python, the specific version is defined in an environment variable called
+  `azul_python_version` defined in [environment.py]. We frequently update Python
+  so the recommended way to install and manage Python versions is [pyenv]. The
+  easiest way to install pyenv on macOS is with [Homebrew].
+
+- [uv], to create the virtual environment and to install dependencies into it.
+  Install it with `curl -LsSf https://astral.sh/uv/x.y.z/install.sh | sh`,
+  where `x.y.z` is the version specified by the `required-version` setting in
+  [pyproject.toml]. To change versions later, run `uv self update x.y.z`. The
+  installer is only needed the first time.
 
 - The `bash` shell
 
@@ -48,23 +56,23 @@ generic with minimal need for project-specific behavior.
 
 - [Docker], for running the tests (the community edition is sufficient). The
   required version is specified in a variable called `azul_docker_version` in
-  [environment.py](environment.py).
+  [environment.py].
 
 - Terraform, to manage deployments. Azul requires a specific version of
   Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.py](environment.py). Refer to the official documentation on how
-  to [install terraform]. Terraform comes as a single, statically linked binary,
-  so the easiest method of installation is to download the binary and put it in
-  a directory mentioned in the `PATH` environment variable.
+  [environment.py]. Refer to the official documentation on how to
+  [install terraform]. Terraform comes as a single, statically linked binary, so
+  the easiest method of installation is to download the binary and put it in a
+  directory mentioned in the `PATH` environment variable.
 
 - [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
   available on PyPI, it must be installed separately. Install the version pinned
   by Azul defined in a variable called `azul_awscli_version` in
-  [environment.py](environment.py). Follow the [AWS instructions for
-  installing past releases][AWS CLI v2].
+  [environment.py]. Follow the [AWS instructions for installing past
+  releases][AWS CLI v2].
 
 - Optionally, the [GitHub CLI]. You should install
-  the version set at `azul_ghcli_version` in [environment.py](environment.py),
+  the version set at `azul_ghcli_version` in [environment.py],
   or a more recent, compatible version.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
@@ -81,16 +89,14 @@ generic with minimal need for project-specific behavior.
   versions should work, too). LibreSSL, which became the default on macOS at 
   some point, is an acceptible replacement. Version 2.8.3 is known to work.  
 
-- Users of macOS 12 (Monterey) should follow additional steps outlined in 
-  [Troubleshooting](#setting-up-the-azul-build-prerequisites-on-macos-12-monterey)
-
-- Users of macOS 11 (Big Sur) should follow additional steps outlined in 
-  [Troubleshooting](#installing-python-3812-on-macos-11-big-sur)
-
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
+[pyenv]: https://github.com/pyenv/pyenv
+[Homebrew]: https://brew.sh
+[uv]: https://docs.astral.sh/uv/getting-started/installation/
+[pyproject.toml]: /pyproject.toml
 
 ### 2.1.1 git-secrets
 
@@ -198,12 +204,12 @@ end.
    Linux users whose distribution does not offer the required Python version
    should consider installing [pyenv] first, then Python using `pyenv install
    x.y.z` and setting `PYENV_VERSION` to `x.y.z`, where `x.y.z` is the value of
-   `azul_python_version` in [environment.py](environment.py). You may need to
-   update [pyenv] itself before it recognizes the given Python version. Even if
-   a distribution provides the required minor version of Python natively, using
-   [pyenv] is generally preferred because it offers every patch-level release of
-   Python, supports an arbitrary number of different Python versions to be
-   installed concurrently and allows for easily switching between them.
+   `azul_python_version` in [environment.py]. You may need to update [pyenv]
+   itself before it recognizes the given Python version. Even if a distribution
+   provides the required minor version of Python natively, using [pyenv] is
+   generally preferred because it offers every patch-level release of Python,
+   supports an arbitrary number of different Python versions to be installed
+   concurrently and allows for easily switching between them.
 
    Ubuntu users using their system's default Python installation must
    install `python3-dev` before any wheel requirements can be built.
@@ -211,8 +217,6 @@ end.
    ```
    sudo apt install python3-dev
    ```
-
-   [pyenv]: https://github.com/pyenv/pyenv
 
 6. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
@@ -486,7 +490,7 @@ has not been used since 2020 when Azul stopped offering DRS for HCA.
 
 The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
-[src/azul/deployment.py:tags](src/azul/deployment.py).
+[src/azul/deployment.py:tags](/src/azul/deployment.py).
 
 ### 3.1.3 AWS Chatbot integration with Slack
 
@@ -576,10 +580,10 @@ The following resources must be created manually before deploying the `gitlab`
 component:
 
 - An EBS volume needs to be created. See [gitlab.tf.json.template.py] and the
-  [section on CI/CD](#85-storage) for details.
+  [section on CI/CD](#75-storage) for details.
 
 - A certificate authority must be set up for VPN access. For details refer to
-  [section on GitLab CA](#812-setting-up-the-certificate-authority).
+  [section on GitLab CA](#713-setting-up-the-certificate-authority).
 
 
 ## 3.2 One-time manual configuration of deployments
@@ -822,8 +826,8 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 ## 3.6 Private API
 
 Follow these steps to put a deployment's API Gateway in the GitLab VPC so that a
-VPN connection is required to access the deployment. See [8.1 VPN access to
-GitLab](#81-vpn-access-to-gitlab) for details. Read this entire section before
+VPN connection is required to access the deployment. See [7.1 VPN access to
+GitLab](#71-vpn-access-to-gitlab) for details. Read this entire section before
 following these steps.
 
 1. Destroy the current deployment (`make -C terraform destroy`).
@@ -1244,276 +1248,13 @@ process may also increase the chance of the `AzulTestCase` context manager
 causing a failure.
 
 If these failures occur, add the warning to the list of permitted warnings
-found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
+found in [`AzulTestCase`](/test/azul_test_case.py) and commit the modifications. 
 
 
-## Setting up the Azul build prerequisites on macOS 12 (Monterey)
-
-The steps below are examplary for Python 3.12.7. Replace `3.12.7` with the value
-of `azul_python_version` in [environment.py](environment.py).
-
-Make `bash` the default shell. Google it.
-
-Install Homebrew. Google it. 
-
-Install pyenv:
-
-```
-brew install zlib pyenv
-```
-
-Install python
-
-```
-pyenv install 3.12.7
-```
-
-Set `PYENV_VERSION` to `3.12.7` in `environment.local.py` at the project root.
-Do not set `SYSTEM_VERSION_COMPAT`. For a more maintainable configuration use 
-`os.environ['azul_python_version']` as the value and `import os` at the top.
-
-Install Docker Desktop. Google it.
-
-Install Terraform by downloading and unziping the binary to a directory on the 
-`PATH`. Be sure to download the file for the architecture of your Mac. For Apple 
-Silicon the file name contains `arm64`, for older Intel Macs it's `amd64`.
+# 6. Operational Procedures
 
 
-## Installing Python 3.8.12 on macOS 11 (Big Sur)
-
-[pyenv macOS 11 GitHub issue](https://github.com/pyenv/pyenv/issues/1740)
-
-Users of macOS 11 or later may encounter a `build failed` error when installing
-Python through pyenv. A patch was made available to remedy this:
-
-First, ensure that bzip2 and any other requirements for the Python build
-environment are met. See [pyenv wiki] for details:
-
-[pyenv wiki]:https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-
-```
-brew install openssl readline sqlite3 xz zlib bzip2
-```
-
-Follow any additional steps that `brew` prompts for at the end of the
-installation. These should include modifying path variables `LDFLAGS` and
-`CPPFLAGS`. The commands from the `brew` output to modify the aforementioned
-path variables can be placed in `~/.bash_profile` to make the change persistent.
-
-Then install Python 3.8.12 using `pyenv` by running:
-
-```
-pyenv install 3.8.12
-```
-
-Users of macOS 11 or later may encounter `pip` installation errors due to `pip`
-not being able to locate the appropriate wheels. The information below will
-help remedy this:
-
-[Resolution source](https://stackoverflow.com/a/63972598)
-
-[macOS 11 Release Notes](https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps)
-
-`pip` will not be able to locate the appropriate wheels due to the major release
-version of macOS being incremented from `10.x` to `11.x`, instead pip will
-attempt to compile wheels manually for wheels that it cannot locate.
-
-In order to be able to run `make requirements` successfully, a backwards
-compatibility flag needs to be added to the `environment.local.py` file in the
-project root. The flag is `SYSTEM_VERSION_COMPAT=1` and it needs to be inserted
-into the file (starting from line 25) as a key/value pair:
-`'SYSTEM_VERSION_COMPAT': 1`.
-
-
-# 6. Branch flow & development process
-
-**This section should be considered a draft. It describes a future extension to the current branching flow.**
-
-The section below describes the flow we want to get to eventually, not the one
-we are currently using while this repository recovers from the aftermath of its
-inception.
-
-The declared goal here is a process that prevents diverging forks yet allows
-each project to operate independently as far as release schedule, deployment
-cadence, project management and issue tracking is concerned. The main challenges
-are 1) preventing contention on a single `develop` or `master` branch, 2)
-isolating project-specific changes from generic ones, 3) maintaining a
-reasonably linear and clean history and 4) ensuring code reuse.
-
-The [original repository](https://github.com/DataBiosphere/azul), also known as
-*upstream*, should only contain generic functionality and infrastructure code.
-Project-specific functionality should be maintained in separate project-specific
-forks of that repository. The upstream repository will only contain a `master`
-branch and the occasional PR branch.
-
-Azul dynamically imports project-specific plugin modules from a special location
-in the Python package hierarchy: `azul.projects`. The package structure in
-upstream is
-
-```
-root
-├── ...
-├── src
-│   └── azul
-│       ├── index
-│       │   └── ...
-│       ├── projects (empty)
-│       ├── service
-│       │   └── ...
-│       └── util
-│       │   └── ...
-└── ...
-```
-
-Note that the `projects` directory is empty.
-
-The directory structure in forked repositories is generally the same with one
-important difference. While a fork's `master` branch is an approximate mirror of
-upstream's `master` and therefore also lacks content in `projects`, that
-directory *does* contain modules in the fork's `develop` branch. In
-`HumanCellAtlas/azul-hca`, the fork of Azul for the HumanCellAtlas project, the
-`develop` branch would look like this:
-
-
-```
-root
-├── ...
-├── src
-│   └── azul
-│       ├── index
-│       │   └── ...
-│       ├── projects
-│       │   └── hca
-│       │       └── ...
-│       ├── service
-│       │   └── ...
-│       └── util
-│       │   └── ...
-└── ...
-```
-
-The `develop` branch would only contain changes to the `azul.projects.hca`
-package. All other changes would have to be considered generic—they would occur
-on the fork's `master` branch and eventually be merged into upstream's `master`
-branch. The `master` branches in each fork should not be divergent for sustained
-periods of time while the project-specific branches can and will be.
-
-The reason why each fork maintains a copy of the `master` branch is that forks
-generally need to have a place to test and evaluate generic features before they
-are promoted upstream. If there wasn't a `master` branch in a fork, the
-project-specific `develop` branch in that fork would inevitably conflate
-project-specific changes with generic ones. It would be very hard to selectively
-promote generic changes upstream, even if the generic changes were separate
-commits.
-
-The flow presented here establishes an easy-to-follow rule: If you're modifying
-`azul.projects.hca`, you need to do so in a PR against `develop`. If you're
-modifying anything else, you need to do so in a PR against `master`. The figure
-below illustrates that.
-
-```
-                                                      ●────● feature/generic-foo
-                                                     ╱
-                                              4     ╱
-    ─────●────────────────────────────────────●────●──────────────        master
-          ╲                                  ╱
- azul      ╲                                ╱
- ─ ─ ─ ─ ─ ─╲─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ╱ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
- azul-hca    ╲                            ╱
-              ╲                          ╱
-    ──────●────●────●────●────●────●────●──────────────────────────       master
-           ╲   1     ╲    ╲   A'   B'
-            ╲         ╲    ╲
-             ╲         ╲    ●────● feature/master/generic-stuff
-              ╲         ╲   A    B
-               ╲         ╲
-                ●─────────●─────────────●────●────●─────────────────     develop
-                2         3              ╲   C'   D'
-                                          ╲
-                                           ●────● feature/develop/specific-stuff
-                                                C    D
-```
-
-Merge commit 1 from the upstream `master` branch integrates upstream changes
-into the fork. These may be generic changes merged upstream from other forks or
-changes that were directly PR-ed against `master` in upstream. Commit 2 marks
-the beginning of the `develop` branch, adding the `azul.projects.hca` package.
-Merge commit 3 brings the changes from commit 1 into the `develop` branch.
-
-Another important rule is that collaborative branches like `develop` and
-`master` are never rebased. Changes are exchanged between them using merge
-commits instead. Individual branches however, like feature branches, are always
-rebased onto the base branch. In the above example,
-`feature/master/generic-stuff` is first rebased onto `master`, creating commits
-A' and B'. Later those changes are merged upstream via commit 4. Both the rebase
-and the merge happen via a pull request, but the landing action will be "Rebase
-and merge" for the first PR and "Create a merge commit" for the second.
-
-The reason for this distinction is that rebasing usually triggers more rebasing
-of branches that were based on the rebased branch. It also rewrites the commit
-timestamps, thereby obfuscating the history to some extent. For these two
-reasons, rebasing is not a sustainable practice for collaborative branches. For
-individual branches however, rebasing is possible because feature branches are
-typically not used as a base for other branches. Rebasing is also desirable
-because it produces a cleaner, linear history and we should use it whenever
-possible. The back and forth merging between collaborative branches produces a
-history that's somewhat convoluted so it is important to keep the history as
-clean as possible in between merges.
-
-Generic changes don't have to be conceived in a fork. We can also PR them
-directly against the upstream repository as illustrated by branch
-`feature/generic-foo`.
-
-The most common type of pull request in a fork is one against that fork's
-`develop` branch, `feature/develop/specific-stuff` for example. Note that
-changes occurring on `develop` are never merged upstream.
-
-As mentioned before, merge commit 4 is done via a pull request against the
-upstream repository. It is possible and perfectly acceptable that such upstream
-PRs combine multiple unrelated changes. They should be requested by the team
-lead for the forking project and reviewed by an upstream lead. Shortly after the
-PR lands, the requesting lead should perform a fast-forward merge of the
-upstream `master` branch into the fork's `master` branch. This will propagate
-the merge commit downstream before any subsequent commits occurring on fork's
-`master` have a chance to complicate the history by introducing the infamous
-merge of merge commits.
-
-```
-$ git branch
-* master
-  develop
-$ git merge --ff-only upstream/master
-Updating 450b0c0..212003c
-Fast-forward
-```
-
-This procedure requires that the lead's local clone of the fork be set up with
-two remotes: `origin` (the forked repository) and `upstream` (the upstream
-repository). Other team members can usually get by with just one remote,
-`origin`.
-
-
-## 6.1 Deployment branches
-
-The code in the upstream repository should never be deployed anywhere because it
-does not contain any concrete modules to be loaded at runtime. The code in a
-fork, however, is typically active in a number of deployments. The specifics
-should be left to each project but the rule of thumb should be that each
-deployment corresponds to a separate branch in the fork. The `azul-hca` fork has
-four deployments: development, integration, staging and production. The
-development deployment, or `dev`, is done from the `develop` branch. Whenever a
-commit is pushed to that branch, a continuous deployment script deploys the code
-to AWS. The other deployment branches are named accordingly. Changes are
-promoted between deployments via a merge. The merge is likely going to be a
-fast-forward. A push to any of the deployment branches will trigger a CI/CD
-build that performs the deployment. The promotion could be automatic and/or
-gated on a condition, like tests passing.
-
-
-# 7. Operational Procedures
-
-
-## 7.1 Main deployments and promotions
+## 6.1 Main deployments and promotions
 
 We will refer to the branch of the stage to which you are deploying as the
 **`TARGET`** branch. The branch of the stage just below will be referred to as
@@ -1523,7 +1264,7 @@ This cheat sheet may differ from branch to branch. Be sure to follow the cheat
 sheet in the README on the branch currently checked out.
 
 
-### 7.1.1 Initial setup
+### 6.1.1 Initial setup
 
 [Gitlab instance]: https://gitlab.dev.singlecell.gi.ucsc.edu/
 
@@ -1579,7 +1320,7 @@ or `staging` selected), you may not be able to do the same for the production
 AWS account (with `prod` selected).
 
 
-### 7.1.2 Prepare for promotion
+### 6.1.2 Prepare for promotion
 
 _NOTE: Skip these steps if you are deploying without promoting changes._
 
@@ -1656,7 +1397,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    assume yes.
 
 
-### 7.1.3 Finishing up deployment / promotion
+### 6.1.3 Finishing up deployment / promotion
 
 If promoting to staging or production this part of the process must be
 coordinated on the
@@ -1766,7 +1507,7 @@ are ready to actually deploy.
    Gitlab pipeline representing the most recent build on the current branch.
 
 
-## 7.2 Big red button
+## 6.2 Big red button
 
 In the event of an emergency, Azul can be shut down immediately using the
 `enable_lambdas.py` script. Before using this script, make sure that the desired
@@ -1785,7 +1526,7 @@ python scripts/enable_lambdas.py --enable
 ```
 
 
-## 7.3 Copying bundles
+## 6.3 Copying bundles
 
 In order to copy bundles from one DSS instance to another, you can use
 `scripts/copy_bundles.py`. The script copies specific bundles or all bundles
@@ -1894,7 +1635,7 @@ Here is a complete example for copying bundles from `prod` to `integration`.
    copied file and bundle. Run `python scripts/copy_bundles --help` for details.
 
 
-# 8. Continuous deployment and integration
+# 7. Continuous deployment and integration
 
 For the purposes of continually testing and deploying the Azul application, we 
 run the community edition of GitLab on a project-specific EC2 instance. There is 
@@ -1928,7 +1669,7 @@ feature branches is `sandbox`, the protected branches (`develop` and `prod` use
 their respective deployments.
 
 
-## 8.1 VPN access to GitLab
+## 7.1 VPN access to GitLab
 
 The GitLab EC2 instance resides in a VPC that can only be accessed through a
 VPN. The VPN uses AWS Client VPN. It is Amazon's flavor of OpenVPN. The AWS
@@ -1955,7 +1696,7 @@ authenticate itself to clients and check validity of the certificates that
 clients present to the server. Both client and server keys must be signed by
 the same CA.
 
-### 8.1.1 Setting up a VPN client
+### 7.1.1 Setting up a VPN client
 
 Install an OpenVPN client. On Ubuntu, the respective package is called
 `network-manager-openvpn-gnome`. Popular clients for macOS are [Tunnelblick]
@@ -1996,7 +1737,7 @@ instructions on how to do so on Ubuntu. For other VPN clients the process is
 pretty much self-explanatory. Delete the file after importing it. It contains
 the private key and can always be regenerated again later using `make config`. 
 
-### 8.1.2 Ensuring split tunnel on client
+### 7.1.2 Ensuring split tunnel on client
 
 Except on stable deployments, you should configure the client to only route VPC
 traffic through the VPN. The VPN server will not forward any other traffic, in
@@ -2035,7 +1776,7 @@ For Tunnelblick, the steps are as follows:
 4) On the *Settings* tab of the right-hand side of the window, make sure that
    the *Route all IPv4 traffic through the VPN* option is unchecked
 
-### 8.1.3 Setting up the certificate authority
+### 7.1.3 Setting up the certificate authority
 
 This must be done by a system administrator before a GitLab instance is first 
 deployed:
@@ -2051,7 +1792,7 @@ cd ..
 make apply  # (re)deploy GitLab
 ```
 
-### 8.1.4 Issuing a certificate
+### 7.1.4 Issuing a certificate
 
 To issue a client certificate for a developer so that they can access the VPN,
 ask the developer to send you a certificate request as described in the previous 
@@ -2072,7 +1813,7 @@ The communication channel through which requests and certificates are messaged
 does not need to be private but it needs to ensure the integrity of the
 messages.
 
-### 8.1.5 Revoking a certificate
+### 7.1.5 Revoking a certificate
 
 ```
 _select dev.gitlab  # or prod.gitlab
@@ -2098,7 +1839,7 @@ make publish_revocations
 mv $EASYRSA_PKI/issued/joe@foo.org.crt.orig $EASYRSA_PKI/issued/joe@foo.org.crt
 ```
 
-### 8.1.6 Issuing a certificate on a person's behalf
+### 7.1.6 Issuing a certificate on a person's behalf
 
 A private key and OpenVPN configuration can be generated by a system
 administrator on behalf of any person that doesn't have a configured working
@@ -2108,12 +1849,12 @@ eavesdrops on the channel through which the OpenVPN configuration
 (which includes the private key) is communicated to the person.
 
 To generate the key and OpenVPN configuration file on another person's behalf, 
-invoke the `make` steps as outlined in [8.1.1](#811-setting-up-a-vpn-client) and 
-[8.1.3](#813-issuing-a-certificate) but use `make client_cn=joe@foo.org` instead 
+invoke the `make` steps as outlined in [7.1.1](#711-setting-up-a-vpn-client) and 
+[7.1.4](#714-issuing-a-certificate) but use `make client_cn=joe@foo.org` instead 
 of `make`.
 
 
-## 8.2 The Sandbox Deployment
+## 7.2 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
@@ -2121,7 +1862,7 @@ sandbox must be coordinated externally e.g., via Slack. The project lead owns
 the sandbox deployment and coordinates access to it.
 
 
-## 8.3 Security
+## 7.3 Security
 
 Gitlab has AWS write permissions for the AWS services used by Azul and the
 principle of least privilege is applied as much as IAM allows it. Some AWS
@@ -2146,10 +1887,10 @@ Code running on the Gitlab instance has access to credentials of a Google Cloud
 service account that has write privileges to Google Cloud. This service account 
 for Gitlab is created automatically by TF but its private key is not. They need 
 to created manually and copied to `/mnt/gitlab/runner/config/etc` on the 
-instance. See [section 8.10](#810-the-gitlab-build-environment) for details.
+instance. See [section 7.10](#710-the-gitlab-build-environment) for details.
 
 
-## 8.4 Networking
+## 7.4 Networking
 
 The networking details are documented in [gitlab.tf.json.template.py]. The
 Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
@@ -2158,7 +1899,7 @@ Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
 
 
-## 8.5 Storage
+## 7.5 Storage
 
 The Gitlab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
@@ -2187,7 +1928,7 @@ one. Just keep in mind that the new instance might have a newer version of
 Gitlab which may have added new settings. You may see commented-out default
 settings in the new gitlab.rb file that may be missing in the old one.
 
-## 8.5.1 Freeing up storage space
+## 7.5.1 Freeing up storage space
 
 There are three docker daemons running on the instance: the RancherOS system 
 daemon, the RancherOS user daemon and the Docker-in-Docker (DIND) daemon. For 
@@ -2208,7 +1949,7 @@ sudo docker exec -it gitlab-dind docker image prune -a --filter "until=720h"
 
 on the instance.
 
-## 8.6 The Gitlab web application
+## 7.6 The Gitlab web application
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
 Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
@@ -2217,7 +1958,7 @@ Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
 
 
-## 8.7 Registering the Gitlab runner
+## 7.7 Registering the Gitlab runner
 
 The runner is the container that performs the builds. The instance is configured
 to automatically start that container. The primary configuration for the runner
@@ -2300,7 +2041,7 @@ simply reboot the instance. Either way, the Gitlab UI should now show the newly
 registered runners.
 
 
-## 8.8 The Gitlab runner image for Azul
+## 7.8 The Gitlab runner image for Azul
 
 Because the first stage of the Azul pipeline on Gitlab creates a dedicated image
 containing the dependencies of the subsequent stages, that first stage only
@@ -2312,7 +2053,7 @@ is modified. See `terraform/gitlab/runner/Dockerfile` for details on how to
 build the image and register it with the runner.
 
 
-## 8.9 Updating Gitlab
+## 7.9 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
@@ -2320,7 +2061,7 @@ will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done regularly.
 
 
-## 8.10 The Gitlab Build Environment
+## 7.10 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
@@ -2335,7 +2076,7 @@ push access is tied to shell access which is what one would normally need to
 modify those files.
 
 
-## 8.11. Cleaning up hung test containers
+## 7.11. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in
@@ -2344,7 +2085,7 @@ xargs docker exec gitlab-dind docker kill` and again but with `rm` instead
 of `kill`.
 
 
-# 9. OpenSearch Dashboards and Cerebro
+# 8. OpenSearch Dashboards and Cerebro
 
 OpenSearch Dashboards, formerly known as Kibana, is a web UI for interactively
 querying and managing an OpenSearch instance. To use Dashboards with Azul's
@@ -2379,7 +2120,7 @@ and open the specified URLs in your browser.
 
 [Cerebro]: https://github.com/lmenezes/cerebro
 
-## 9.1 Connecting OpenSearch Dashboards to a local OpenSearch instance
+## 8.1 Connecting OpenSearch Dashboards to a local OpenSearch instance
 
 Note: The steps outlined in this section were only tested on macOS, using Docker
 Desktop. They may not work without modification with a standard installation of
@@ -2436,142 +2177,66 @@ submit queries to it via the dashboards' Dev Tools feature.
 The Dev Tools of OpenSearch Dashboards should now be available at
 `http://127.0.0.1:5601/app/dev_tools`.
 
-# 10. Managing dependencies
+# 9. Managing dependencies
 
 We pin all dependencies, direct and transitive ones alike. That's the only way
-to get a somewhat reproducible build. It's possible that the build still
-fails if a dependency version is deleted from pypi.org or if a dependency
-maintainer re-releases a version, but aside from caching all dependencies,
-pinning them is next best thing for reproducibility of the build.
+to get a reproducible build. The lock file additionally records a hash
+of every distribution, so a dependency maintainer re-releasing a version under
+the same version number is detected instead of quietly changing the build. A
+version being deleted from pypi.org still breaks it, short of caching all
+dependencies ourselves.
 
-Now, while pinning direct dependencies should be routine, chasing down
-transitive dependencies and pinning those is difficult, tedious and prone to
-errors. That's why we automate that step: When a developer updates, adds or
-removes a direct dependency, running `make requirements_update` will reevaluate
-all transitive dependencies and update their pins. If the added direct
-dependency has transitive dependencies, those will be picked up. It's likely
-that the reevaluation picks up updates to transitive dependencies unrelated to
-the modified direct dependency, but that's unavoidable. It's even possible that
-a direct dependency update causes a downgrade of a transitive dependency if the
-updated direct dependency further restricts the allowed version range of the
-transitive dependency.
+Direct dependencies are declared, and pinned, in `pyproject.toml`. The pins of
+the transitive ones, along with the resolved version of every direct one, live
+in `uv.lock`. Chasing down transitive dependencies and pinning them by hand
+would be difficult, tedious and prone to errors, so we automate that step: when
+a developer updates, adds or removes a direct dependency, running `make
+requirements_update` reevaluates all transitive dependencies and updates their
+pins. If the added direct dependency has transitive dependencies, those will be
+picked up. It's likely that the reevaluation picks up updates to transitive
+dependencies unrelated to the modified direct dependency, but that's
+unavoidable. It's even possible that a direct dependency update causes a
+downgrade of a transitive dependency if the updated direct dependency further
+restricts the allowed version range of the transitive dependency.
+
+Running `make requirements` installs exactly what the lock file specifies,
+resolving nothing. It also uninstalls any distribution the lock file does not
+specify, so that the virtual environment matches the lock file exactly.
 
 We distinguish between run-time and build-time — or _development_ —
 dependencies. A run-time dependency is a one that is needed by deployed code.
 A build-time dependency is one that is **not** needed by deployed code, but by
-some other code, like unit tests, for example. A developer's virtualenv will
-have both run-time and build-time dependencies installed. Combined with the
-distinction between direct and transitive dependencies this yields four
-categories of dependencies. Let's refer to them as DR (direct run-time), TR
-(transitive run-time), DB (direct build-time) and TB (transitive build-time).
-The intersections DR ∩ TR, DB ∩ TB, DR ∩ DB, TR ∩ TB and DR ∩ TB should all be
-empty but the intersection TR ∩ DB may not be.
+some other code, like unit tests, for example. Run-time dependencies are
+declared in the `project.dependencies` array, development dependencies in the
+`dev` dependency group. A developer's virtualenv will have both run-time and
+build-time dependencies installed, while the image for deployed code has only
+the run-time ones. Combined with the distinction between direct and transitive
+dependencies this yields four categories of dependencies. Let's refer to them as
+DR (direct run-time), TR (transitive run-time), DB (direct build-time) and TB
+(transitive build-time). The intersections DR ∩ TR, DB ∩ TB, DR ∩ DB, TR ∩ TB
+and DR ∩ TB should all be empty but the intersection TR ∩ DB may not be.
 
 ![Azul architecture diagram](docs/dependencies.svg)
 
-Ambiguities can arise as to which version of a requirement should be used when
-multiple requirements have overlapping transitive dependencies. We can't
-resolve these ambiguities automatically because different versions of a package
-may have different dependencies in and of themselves, so pinning just the
-dependency in question might omit some of its dependencies. By pinning it
-explicitly the normal dependency resolution kicks in, including all transitive
-dependencies of the pinned version.
+The resolution covers the entire project at once, so a package occurs in the
+lock file exactly once, at one version, no matter how many of the categories
+above it belongs to. Two direct dependencies that disagree about the version of
+a shared transitive dependency are therefore not a conflict to be adjudicated,
+but simply a resolution that fails.
 
-`make requirements_update` will raise an exception when ambiguous requirements
-are found.
-
-```
-ERROR   MainThread: Ambiguous version of transitive runtime requirement jsonschema==2.6.0,==3.2.0. Consider pinning it to the version used at build time (==3.2.0).
-```
-
-With this example case the solution would be to add `jsonschema` as a
-direct run-time requirement in the file `reqirements.txt` along with a comment
-`# resolve ambiguity with build-time dependency`, and then to run `make
-requirements_update` to remove the package as a transitive run-time requirement.
-
-There is a separate category for requirements that need to be installed before
-any other dependency is installed, either run-time or build-time, in order to
-ensure that the remaining dependencies are resolved and installed correctly.
-We call that category  _pip requirements_ and don't distinguish between direct
-or transitive requirements in that category.
+A few settings in `pyproject.toml` constrain the resolution further.
+`environments` and `required-environments` limit it to the platforms we deploy
+to and develop on, keeping distributions for other platforms out of the lock
+file. `constraint-dependencies` restates the upper bounds that are documented on
+individual pins, so that raising one of those pins past its bound fails the
+resolution instead of going unnoticed. `exclude-dependencies` withholds
+distributions we don't want installed even though something depends on them.
 
 
-# 11. Making wheels
-
-_Note: Support for custom wheels is currently disabled. We don't currently have 
-any dependencies for which a binary wheel is unavailable. We'll leave this 
-section in place until support is needed and enabled again_  
-
-Some of Azul's dependencies contain native code that needs to be compiled into
-a binary executable which is then dynamically loaded into the Python
-interpreter process when the package is imported. These dependencies are
-commonly distributed in the form of wheels. A wheel is a Python package
-distribution that contains the pre-compiled binary code for a particular
-operating system and processor architecture combination, aka platform. Many such
-packages lack a wheel for the `linux_x86_64` platform that Lambda functions
-execute on. Chalice will attempt to build the wheel on the fly during `chalice
-package` (`make -C lambdas`) but only if invoked on a system with `linux_x86_64`.
-On macOS, Chalice will fail to build a wheel for the `linux_x86_64` platform but
-only prints a warning that's easily missed. The deployed Lambda will likely
-fail with an import error.
-
-If you add a dependency on a package with native code, you need to build the
-wheel manually:
-
-```
-(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.12.7-slim-bookworm bash
-
-root@97804cb60d95:/# pip --version
-pip 24.2 from /usr/local/lib/python3.12/site-packages/pip (python 3.12)
-
-root@97804cb60d95:/# cd /root/azul/lambdas/.wheels
-
-root@97804cb60d95:~/azul/lambdas/.wheels# pip wheel jsonobject==2.0.0
-Collecting jsonobject==2.0.0
-  Downloading jsonobject-2.0.0.tar.gz (402 kB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 403.0/403.0 KB 9.0 MB/s eta 0:00:00
-  Preparing metadata (setup.py) ... done
-Collecting six
-  Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
-Saved ./six-1.16.0-py2.py3-none-any.whl
-Building wheels for collected packages: jsonobject
-  Building wheel for jsonobject (setup.py) ... done
-  Created wheel for jsonobject: filename=jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl size=1606493 sha256=7f69b1ef612e13265ea95817e24b7d33ec63f07c0924f8c8692ee689679e1a18
-  Stored in directory: /root/.cache/pip/wheels/c1/1b/00/8958e64a98b73db2ca8d997a7034c93b545cdcf30054aa7e43
-Successfully built jsonobject
-
-root@97804cb60d95:~/azul/lambdas/.wheels# ls -l
-total 1584
--rw-r--r-- 1 root root 1606493 May 10 00:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
--rw-r--r-- 1 root root   11053 May 10 00:35 six-1.16.0-py2.py3-none-any.whl
-
-root@97804cb60d95:~/azul/lambdas/.wheels# exit
-exit
-
-(.venv) ~/workspace/hca/azul$ ls -l lambdas/.wheels
-total 1584
--rw-r--r-- 1 root root 1606493 May  9 17:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
--rw-r--r-- 1 root root   11053 May  9 17:35 six-1.16.0-py2.py3-none-any.whl
-
-(.venv) ~/workspace/hca/azul$ sudo chown -R `id -u`:`id -g` lambdas/.wheels
-
-(.venv) ~/workspace/hca/azul$ ls -l lambdas/.wheels
-total 1584
--rw-r--r-- 1 hannes hannes 1606493 May  9 17:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
--rw-r--r-- 1 hannes hannes   11053 May  9 17:35 six-1.16.0-py2.py3-none-any.whl
-(.venv) ~/workspace/hca/azul$ 
-```
-
-Then modify the `wheels` target in `lambdas/*/Makefile` to unzip the wheel into
-the corresponding vendor directory.
-
-Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
+# 10. Development tools
 
 
-# 12. Development tools
-
-
-## 12.1 OpenAPI development
+## 10.1 OpenAPI development
 
 [Azul Service OpenAPI page]: https://service.dev.singlecell.gi.ucsc.edu/
 
@@ -2587,7 +2252,7 @@ of the API documentation is visible. Change the docs in `azul/service/app.py`,
 save, refresh the page, and your changes will appear immediately.
 
 
-## 12.2 Tracking changes to the OpenAPI definition
+## 10.2 Tracking changes to the OpenAPI definition
 
 Changes to the OpenAPI definition are tracked in the source tree. When making 
 changes that affect the definition, run:

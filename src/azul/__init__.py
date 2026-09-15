@@ -168,10 +168,6 @@ class Config:
         return self.environ['project_root']
 
     @property
-    def chalice_bin(self) -> str:
-        return self.environ['azul_chalice_bin']
-
-    @property
     def opensearch_domain(self) -> str:
         return self.environ['AZUL_OPENSEARCH_DOMAIN']
 
@@ -1298,10 +1294,6 @@ class Config:
         }
 
     @cached_property
-    def lambda_runtime_version(self) -> str | None:
-        return self.environ.get('azul_lambda_runtime_version')
-
-    @cached_property
     def _outsourced_environ(self) -> dict[str, str]:
         try:
             with open_resource('environ.json') as f:
@@ -1619,10 +1611,6 @@ class Config:
         return self.environ.get('azul_gitlab_data_volume_id')
 
     @property
-    def lambda_layer_key(self) -> str:
-        return 'lambda_layers'
-
-    @property
     def dynamo_sources_cache_table_name(self) -> str:
         return self.qualified_resource_name('sources_cache_by_auth')
 
@@ -1740,6 +1728,10 @@ class Config:
         'linux/arm64',
         'linux/amd64'
     ]
+
+    @property
+    def lambda_image_platforms(self) -> list[str]:
+        return self.environ['azul_lambda_image_platforms'].split()
 
     @property
     def docker_image_gists_path(self) -> Path:

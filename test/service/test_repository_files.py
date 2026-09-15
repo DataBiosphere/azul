@@ -47,6 +47,9 @@ from azul.indexer.mirror_service import (
     MirrorService,
     MirrorWorkerService,
 )
+from azul.lib.strings import (
+    redact,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -140,12 +143,14 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
                     if fetch:
                         azul_url.path.segments.insert(0, 'fetch')
 
-                    file_name = 'foo.gz'
-                    gs_bucket_name = 'gringotts-wizarding-bank'
-                    gs_drs_id = 'some_dataset_id/some_object_id'
-                    gs_file_url = f'gs://{gs_bucket_name}/{gs_drs_id}/{file_name}'
-
-                    pre_signed_gs = furl(url=gs_file_url,
+                    pre_signed_gs = furl(scheme='https',
+                                         host='storage.googleapis.com',
+                                         path=[
+                                             'some_bucket_name',
+                                             'some_dataset_id',
+                                             'some_object_id',
+                                             'foo.gz'
+                                         ],
                                          args={
                                              'X-Goog-Algorithm': 'SOMEALGORITHM',
                                              'X-Goog-Credential': 'SOMECREDENTIAL',
@@ -156,7 +161,19 @@ class TestRepositoryFilesWithTDR(DCP2TestCase, RepositoryFilesTestCase):
                                          })
                     access = Access(method=AccessMethod.https, url=str(pre_signed_gs))
                     with patch.object(DRSObject, 'get', return_value=access):
-                        response = client.request('GET', str(azul_url), redirect=False)
+                        with self.assertLogs('azul.chalice', level='INFO') as app_log:
+                            response = client.request('GET', str(azul_url), redirect=False)
+                        # The signature is secret, so it must not be logged
+                        signature = pre_signed_gs.args['X-Goog-Signature']
+                        for message in app_log.output:
+                            self.assertNotIn(signature, message)
+                        if not fetch:
+                            # The URL is returned in a response header, which is
+                            # logged in full, with the signature redacted
+                            redacted_url = redact(str(pre_signed_gs))
+                            self.assertNotEqual(str(pre_signed_gs), redacted_url)
+                            self.assertTrue(any(redacted_url in message
+                                                for message in app_log.output))
                         self.assertEqual(200 if fetch else 302, response.status)
                         if fetch:
                             response = json.loads(response.data)

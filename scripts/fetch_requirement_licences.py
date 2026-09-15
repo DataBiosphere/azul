@@ -1,6 +1,6 @@
 """
-Downloads the license files for each of the python packages listed in
-`requirements.all.txt`.
+Downloads the license files for each of the python packages locked in
+`uv.lock`.
 
 Recommended usage when updating the current set of license files:
 
@@ -16,6 +16,7 @@ import json
 import logging
 import sys
 import time
+import tomllib
 from typing import (
     Sequence,
 )
@@ -86,8 +87,9 @@ class Main:
         if args.package:
             packages = [p for p in args.package]
         else:
-            with open(f'{config.project_root}/requirements.all.txt', 'r') as f:
-                packages = [p.split('==')[0] for p in f.readlines() if p]
+            with open(f'{config.project_root}/uv.lock', 'rb') as f:
+                lock = tomllib.load(f)
+            packages = [package['name'] for package in lock['package']]
 
         for package in packages:
             found = False

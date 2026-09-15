@@ -30,6 +30,7 @@ from azul.lib import (
     cached_property,
 )
 from azul.lib.strings import (
+    assert_redactable,
     format_and_dedent,
 )
 from azul.logging import (
@@ -141,7 +142,9 @@ class CredentialsProvisioner:
                 3) Paste the secret value into the prompt below
             ''', url=url))
             secret_value = getpass.getpass('OAuth2 client secret (input will not be echoed back): ')
+            secret_value = secret_value.strip()
             assert secret_value, R('No secret value provided')
+            assert_redactable(secret_value)
             self._write_secret_value(secret_path, secret_value)
             print(format_and_dedent('''
                 The secret was successfully stored. Now it's time to …
