@@ -130,7 +130,7 @@ class StorageService:
     def put_object(self,
                    *,
                    object_key: str,
-                   data: bytes,
+                   data: bytes | IO,
                    content_type: str | None = None,
                    tagging: Tagging | None = None,
                    etag: str | None = None,
