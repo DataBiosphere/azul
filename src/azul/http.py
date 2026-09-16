@@ -1,6 +1,7 @@
 from collections.abc import (
     Mapping,
 )
+import http.client
 import logging
 import sys
 import time
@@ -225,6 +226,51 @@ def http_client(log: logging.Logger | None = None) -> HttpClient:
     if log is not None:
         client = LoggingHttpClient(client, log)
     return StatusRetryHttpClient(client)
+
+
+#: As of 3.13.11+ and 3.14.1+, reading more than this many bytes from a response
+#: in a single call makes CPython's HTTP client assemble the result by growing
+#: and copying a buffer, raising the peak memory footprint to 1.5 times the
+#: size of the body. Reading at or below this threshold allocates exactly once.
+#: The growth bounds the memory a server can cause a client to allocate by
+#: overstating the length of the body.
+#:
+#: https://github.com/python/cpython/blob/5a4c4a033a4a54481be6870aa1896fad732555b5/Lib/http/client.py#L116
+#:
+#: https://github.com/python/cpython/issues/119451
+#:
+_max_atomic_read_size: int = getattr(http.client, '_MIN_READ_BUF_SIZE')
+
+
+def read_large_http_response(response: urllib3.BaseHTTPResponse,
+                             size: int
+                             ) -> bytearray:
+    """
+    Read exactly the given number of bytes from the given response into a
+    buffer that is allocated up front and return that buffer. The response must
+    have been obtained with ``preload_content=False``.
+
+    Use this function instead of ``response.data`` to work around the 1.5x
+    memory footprint increase for large HTTP response bodies (see
+    :attr:`_max_atomic_read_size`). ``response.data`` is fine for small
+    responses, but anything larger than a few dozen MiB should be read with
+    this function.
+
+    The expected size is a parameter instead of being taken from the response
+    because a response that overstates the length of its body is exactly what
+    the interpreter's incremental growth defends against. Callers know the size
+    they asked for, typically because they requested a specific byte range.
+    """
+    assert not response.closed, R('Response body was already consumed')
+    buffer = bytearray(size)
+    view = memoryview(buffer)
+    offset, num_bytes = 0, None
+    while offset < size and num_bytes != 0:
+        end = min(offset + _max_atomic_read_size, size)
+        num_bytes = response.readinto(view[offset:end])
+        offset += num_bytes
+    assert offset == size, R('Response body has unexpected size', offset, size)
+    return buffer
 
 
 class HTTPStatusError(Exception):

@@ -16,6 +16,7 @@ from threading import (
     Thread,
 )
 import time
+import tracemalloc
 from unittest import (
     mock,
 )
@@ -39,7 +40,9 @@ from azul.http import (
     AcceptEncodingClient,
     LimitedRetryHttpClient,
     LimitedTimeoutException,
+    _max_atomic_read_size,
     http_client,
+    read_large_http_response,
 )
 from azul.lib.collections import (
     OrderedSet,
@@ -234,3 +237,60 @@ class TestHttp(AzulUnitTestCase):
                     self.mock_api_gateway() if api_gateway else nullcontext(),
                 ):
                     self.assertEqual(expected_timeout, client._timeout(margin))
+
+    def test_read_large_http_response(self):
+        # Large enough that a single read of the whole body costs noticeably
+        # more than the body itself, yet cheap to serve locally.
+        size = 16 * _max_atomic_read_size
+        body = (bytes(range(256)) * (size // 256 + 1))[:size]
+        self.assertEqual(size, len(body))
+
+        class Handler(BaseHTTPRequestHandler):
+
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/octet-stream')
+                self.send_header('Content-Length', str(size))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format, *args):
+                pass
+
+        def peak_of(read) -> tuple[bytes, float]:
+            response = client.request('GET', url, preload_content=False)
+            tracemalloc.start()
+            try:
+                tracemalloc.reset_peak()
+                buffer = read(response)
+                peak = tracemalloc.get_traced_memory()[1]
+            finally:
+                tracemalloc.stop()
+            return bytes(buffer), peak / size
+
+        with self.http_server(Handler) as url:
+            client = http_client()
+
+            # No single read may exceed the threshold
+            reads = []
+            response = client.request('GET', url, preload_content=False)
+            inner = response.readinto
+
+            def readinto(buffer):
+                reads.append(len(buffer))
+                return inner(buffer)
+
+            with patch.object(response, 'readinto', readinto):
+                buffer = read_large_http_response(response, size)
+            self.assertEqual(body, bytes(buffer))
+            self.assertLessEqual(max(reads), _max_atomic_read_size)
+
+            # Reading the body in one call costs half of it again, …
+            actual, ratio = peak_of(lambda response: response.read())
+            self.assertEqual(body, actual)
+            self.assertGreater(ratio, 1.4, 'growth expected on this interpreter')
+
+            # … while reading it in chunks does not
+            actual, ratio = peak_of(lambda response: read_large_http_response(response, size))
+            self.assertEqual(body, actual)
+            self.assertLess(ratio, 1.25, 'growth should have been avoided')

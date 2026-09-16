@@ -179,7 +179,7 @@ requires-dist = [
     { name = "pyjwt", specifier = "==2.13.0" },
     { name = "referencing", specifier = "==0.37.0" },
     { name = "requests", specifier = "==2.33.1" },
-    { name = "resumablehash", specifier = "==1.5" },
+    { name = "resumablehash", specifier = "==1.6" },
     { name = "setuptools", specifier = "==83.0.0" },
     { name = "urllib3", specifier = "==2.7.0" },
     { name = "werkzeug", specifier = "==3.1.8" },
@@ -1759,14 +1759,14 @@ wheels = [
 
 [[package]]
 name = "resumablehash"
-version = "1.5"
-source = { registry = "https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.5" }
+version = "1.6"
+source = { registry = "https://github.com/DataBiosphere/azul-resumablehash/releases/expanded_assets/1.6" }
 wheels = [
-    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.5/resumablehash-1.5-cp314-cp314-macosx_11_0_arm64.whl" },
-    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.5/resumablehash-1.5-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl" },
-    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.5/resumablehash-1.5-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl" },
-    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.5/resumablehash-1.5-cp314-cp314-musllinux_1_2_aarch64.whl" },
-    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.5/resumablehash-1.5-cp314-cp314-musllinux_1_2_x86_64.whl" },
+    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.6/resumablehash-1.6-cp314-cp314-macosx_11_0_arm64.whl" },
+    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.6/resumablehash-1.6-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl" },
+    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.6/resumablehash-1.6-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl" },
+    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.6/resumablehash-1.6-cp314-cp314-musllinux_1_2_aarch64.whl" },
+    { url = "https://github.com/DataBiosphere/azul-resumablehash/releases/download/1.6/resumablehash-1.6-cp314-cp314-musllinux_1_2_x86_64.whl" },
 ]
 
 [[package]]
