@@ -56,7 +56,9 @@ jobs:
             'Makefile',
             'common.mk',
             'bin/keys/*',
-            'bin/checksums/*'
+            'bin/checksums/*',
+            'bin/pycharm_unused_jars.txt',
+            '.github/workflows/ci.yml'
           ) }}"
         run: |
           source environment  # load global defaults
@@ -78,6 +80,12 @@ jobs:
           _refresh
 
           make environment.boot
+
+          # The hash above was taken of the file as committed, while the build
+          # below uses the file as it is now. Fail here if they differ, rather
+          # than after an image was pushed under a hash that doesn't describe it.
+          #
+          make check_clean
 
           # FIXME: The default Azul registry is hosted privately on ECR, so we'd
           #        have to provide credentials to use it. For now, it's
@@ -111,6 +119,13 @@ jobs:
           # which specific package versions apt-get installs, so either image is
           # as usable as the other.
           #
+          # The arguments the image is built from come from the file the hash
+          # above covers, not from the environment loaded earlier, which is
+          # derived from files that hash doesn't cover. The GitLab build sources
+          # the same file for the same reason.
+          #
+          set -o allexport ; source environment.boot ; set +o allexport
+
           export azul_image=ghcr.io/${GITHUB_REPOSITORY,,}/dev
           export azul_image_tag=${{ runner.arch }}-$azul_image_input_hash
           printenv GITHUB_TOKEN | docker login ghcr.io -u ${{ github.actor }} --password-stdin
