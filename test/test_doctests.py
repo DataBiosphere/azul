@@ -16,6 +16,7 @@ import azul.infra.terraform
 import azul.lib
 import azul.lib.attrs
 import azul.lib.bigquery
+import azul.lib.buffers
 import azul.lib.bytes
 import azul.lib.caching
 import azul.lib.collections
@@ -83,6 +84,7 @@ def load_tests(_loader,
         azul.lib,
         azul.lib.attrs,
         azul.lib.bigquery,
+        azul.lib.buffers,
         azul.lib.bytes,
         azul.lib.caching,
         azul.lib.collections,

@@ -53,6 +53,7 @@ from azul.deployment import (
 )
 from azul.http import (
     HasCachedHttpClient,
+    read_large_http_response,
 )
 from azul.lib import (
     R,
@@ -64,6 +65,9 @@ from azul.lib.attrs import (
     SerializableAttrs,
     devolve,
     serializable,
+)
+from azul.lib.buffers import (
+    BufferReader,
 )
 from azul.lib.digests import (
     Digest,
@@ -845,8 +849,11 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         hasher.update(file_content)
         self._verify_digest(file, hasher)
         storage = self._storage_for_file(file)
+        # We could pass the mutable bytearray in file_content directly, but
+        # boto3 copies it as a whole. The BufferReader wrapper prevents that
+        # copy and instead causes boto3 to copy it to the socket in chunks.
         storage.put_object(object_key=self._file_object_key(file),
-                           data=file_content,
+                           data=BufferReader(file_content),
                            content_type=self._file_object_content_type,
                            overwrite=False)
         self._create_or_update_info(file)
@@ -877,10 +884,13 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         content = self._download(file, part)
         upload.hasher.update(content)
         storage = self._storage_for_file(file)
+        # We could pass the mutable bytearray in content directly, but boto3
+        # copies it as a whole. The BufferReader wrapper prevents that copy and
+        # instead causes boto3 to copy it to the socket in chunks.
         etag = storage.upload_multipart_part(object_key=self._file_object_key(file),
                                              upload_id=upload.upload_id,
                                              part_number=part.index + 1,
-                                             buffer=content)
+                                             buffer=BufferReader(content))
         upload.etags.append(etag)
         next_part = part.next(file)
         return next_part
@@ -1016,7 +1026,7 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
         assert repository_url is not None, file
         return repository_url
 
-    def _download(self, file: File, part: FilePart | None = None) -> bytes:
+    def _download(self, file: File, part: FilePart | None = None) -> bytearray:
         url = self._repository_url(file)
         start = time.time()
         if part is None:
@@ -1029,15 +1039,21 @@ class MirrorWorkerService(MirrorService, HasCachedHttpClient):
             expected_status = 206
         # Ideally we would stream the response, but boto only supports uploading
         # from streams that are seekable.
-        response = self._http_client.request('GET', url, headers=headers)
-        if response.status == expected_status:
-            actual_size = len(response.data)
-            log.info('Downloaded %d bytes in %.3fs from file %r',
-                     actual_size, time.time() - start, file)
-            assert actual_size == size, R(f'Expected {size} bytes, got {actual_size}')
-            return response.data
-        else:
-            raise RuntimeError('Unexpected response from repository', response.status)
+        response = self._http_client.request('GET', url,
+                                             headers=headers,
+                                             preload_content=False)
+        try:
+            if response.status == expected_status:
+                content = read_large_http_response(response, size)
+                log.info('Downloaded %d bytes in %.3fs from file %r',
+                         len(content), time.time() - start, file)
+                return content
+            else:
+                raise RuntimeError('Unexpected response from repository', response.status)
+        finally:
+            # The connection is only returned to the pool once the body has
+            # been consumed. With `preload_content=False`, that's for us to do.
+            response.release_conn()
 
     def _verify_digest(self, file: File, hasher: Hasher):
         expected_digest = file.digest
