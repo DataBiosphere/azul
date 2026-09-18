@@ -29,10 +29,10 @@ RUN set -o pipefail \
 # packages below from it. That is necessary when a build fails because a version
 # in the cached index is no longer available from the repository.
 #
-ARG azul_image_version=2
+ARG azul_image_version=3
 RUN apt-get update
 
-RUN apt-get -y install build-essential curl gnupg unzip
+RUN apt-get -y install curl gnupg unzip
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
@@ -126,8 +126,20 @@ RUN set -o pipefail \
 # and install Azul's dependencies there. A container typically has no need for
 # the isolation a virtual environment provides.
 #
+# A few of the dependencies are only published as source distributions, so a
+# compiler is needed to install them. It is installed, used and removed in one
+# instruction, because an image only ever shrinks within the instruction that
+# creates the layer, never in a later one.
+#
+# `git` and `make` are needed for the Azul build. The latter is also a
+# dependency of build-essential but we list it explicitly so that purging
+# build-essential does not remove it again.
+#
 ENV UV_PROJECT_ENVIRONMENT=/usr/local
 COPY pyproject.toml uv.lock /azul/
-RUN cd /azul \
+RUN apt-get -y install build-essential git make \
+    && cd /azul \
     && uv sync --frozen \
+    && apt-get -y purge build-essential \
+    && apt-get -y autoremove \
     && rm -r /azul /tmp/uv-*.lock
