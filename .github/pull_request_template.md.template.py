@@ -4,6 +4,7 @@ from enum import (
 )
 from itertools import (
     chain,
+    count,
 )
 import json
 from pathlib import (
@@ -98,7 +99,7 @@ def emit_checklist(checklist: Iterable[LooseItem]):
             alt = ''
         else:
             alt = ' <sub>' + alt + '</sub>'
-        return *margin(i, j), '- [ ] ' + text(i['content']) + alt
+        return *margin(i, j), '- [ ] `' + number() + '` ' + text(i['content']) + alt
 
     def li(i: Item, j: Item | None) -> Iterable[str]:
         return *margin(i, j), '- ' + i['content']
@@ -110,6 +111,11 @@ def emit_checklist(checklist: Iterable[LooseItem]):
 
     def wrap(i: Item) -> Iterable[str]:
         return textwrap.wrap(text(i['content']), 80)
+
+    numbers = count(1)
+
+    def number() -> str:
+        return f'{next(numbers):03d}'
 
     footnotes = {}
     footnote_re = re.compile(r'<footnote ([^/]+)/>')
