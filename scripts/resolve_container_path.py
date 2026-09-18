@@ -63,7 +63,7 @@ def resolve_container_path(container_path):
                     host_path = os.path.normpath(os.path.join(mount['Source'], tail))
                     log.info('Resolved %s to %s', container_path, host_path)
                     return host_path
-    log.error('Failed to resolve container path %s', container_path)
+    log.info('Assuming %s is a host path', container_path)
     return None
 
 
