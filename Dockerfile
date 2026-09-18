@@ -21,7 +21,7 @@ RUN case "$TARGETARCH" in \
         arm64) sha=ff14a4da40d28a2d2d81a12a7c9c36294ddf8e6439780c4ccbc96622991f3714 ;; \
         *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
     esac \
-    && curl -o /usr/bin/docker-credential-ecr-login \
+    && curl --fail --no-progress-meter -o /usr/bin/docker-credential-ecr-login \
     https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-${TARGETARCH}/docker-credential-ecr-login \
     && printf '%s /usr/bin/docker-credential-ecr-login\n' "$sha" | sha256sum -c \
     && chmod +x /usr/bin/docker-credential-ecr-login
@@ -37,7 +37,7 @@ ARG azul_terraform_version
 RUN mkdir terraform \
     && (set -o pipefail \
         && cd terraform \
-        && curl -s -o terraform.zip \
+        && curl --fail --no-progress-meter -o terraform.zip \
            https://releases.hashicorp.com/terraform/${azul_terraform_version}/terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
         && unzip terraform.zip \
         && mv terraform /usr/local/bin) \
@@ -54,9 +54,9 @@ RUN gpg --import /tmp/awscli-public-key.asc \
            arm64) arch=aarch64 ;; \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
        esac \
-    && curl -s -o awscliv2.zip \
+    && curl --fail --no-progress-meter -o awscliv2.zip \
        https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${azul_awscli_version}.zip \
-    && curl -s -o awscliv2.sig \
+    && curl --fail --no-progress-meter -o awscliv2.sig \
        https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${azul_awscli_version}.zip.sig \
     && gpg --verify awscliv2.sig awscliv2.zip \
     && unzip awscliv2.zip \
@@ -69,7 +69,7 @@ ARG azul_ghcli_version
 COPY bin/checksums/gh_checksums.txt /tmp/gh_checksums.txt
 RUN set -o pipefail \
     && tarball=gh_${azul_ghcli_version}_linux_${TARGETARCH}.tar.gz \
-    && curl --fail --silent --location -o /tmp/${tarball} \
+    && curl --fail --no-progress-meter --location -o /tmp/${tarball} \
        https://github.com/cli/cli/releases/download/v${azul_ghcli_version}/${tarball} \
     && cd /tmp && grep "${tarball}" gh_checksums.txt | sha256sum -c \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=2 --wildcards "*/bin/gh" --occurrence=1 \
@@ -86,7 +86,7 @@ RUN set -o pipefail \
            *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
        esac \
     && tarball=uv-${arch}-unknown-linux-gnu.tar.gz \
-    && curl --fail --silent --location -o /tmp/${tarball} \
+    && curl --fail --no-progress-meter --location -o /tmp/${tarball} \
        https://github.com/astral-sh/uv/releases/download/${azul_uv_version}/${tarball} \
     && cd /tmp && grep "${tarball}" uv_checksums.txt | sha256sum -c \
     && tar -xzf /tmp/${tarball} -C /usr/local/bin --strip-components=1 --wildcards "*/uv" \
