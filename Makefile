@@ -82,7 +82,7 @@ environment.boot: check_python
 	python scripts/generate_environment_boot.py
 
 gh_checksums: check_env
-	curl --fail --silent --location -o bin/checksums/gh_checksums.txt \
+	curl --fail --no-progress-meter --location -o bin/checksums/gh_checksums.txt \
 	    https://github.com/cli/cli/releases/download/v$(azul_ghcli_version)/gh_$(azul_ghcli_version)_checksums.txt
 
 #	Unlike the GitHub CLI, uv publishes one checksum file per release asset, so
@@ -92,7 +92,7 @@ gh_checksums: check_env
 uv_checksums: check_env
 	rm -f bin/checksums/uv_checksums.txt
 	for arch in x86_64 aarch64 ; do \
-	    curl --fail --silent --location \
+	    curl --fail --no-progress-meter --location \
 	        https://github.com/astral-sh/uv/releases/download/$(azul_uv_version)/uv-$$arch-unknown-linux-gnu.tar.gz.sha256 \
 	        >> bin/checksums/uv_checksums.txt ; \
 	done
