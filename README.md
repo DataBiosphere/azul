@@ -455,11 +455,13 @@ make envunhook
 
 ### 2.4.2 claudehook.py
 
-`claudehook.py` registers a `PreToolUse` hook on Claude Code's `Bash` tool in
-`.claude/settings.local.json`, the local project settings of the
-[worktree][git-worktree]. That hook prefixes every command Claude Code runs with
-`source environment`, so each command compiles the environment anew instead of
-inheriting one.
+`claudehook.py` registers a `PreToolUse` hook on Claude Code's `Bash` tool.
+That hook prefixes every command Claude Code runs with `source environment`, so
+each command compiles the environment anew instead of inheriting one. The
+registration is written to `.claude/settings.local.json`, the local project
+settings of the repository's main [worktree][git-worktree], because that is the
+file Claude Code reads for every worktree of a repository. Each registration
+names the worktree it was made in, and takes effect only in that worktree.
 
 [git-worktree]: https://git-scm.com/docs/git-worktree
 
@@ -475,9 +477,10 @@ and to deregister it again run
 make claudeunhook
 ```
 
-Both targets modify the Claude Code settings of the worktree they are invoked
-in. Any `claude` instances already running in the worktree need to be restarted
-after registering or deregistering the hook.
+Both targets modify the Claude Code settings of the main worktree, adding or
+removing the registration for the worktree they are invoked in. Any `claude`
+instances already running in that worktree need to be restarted after
+registering or deregistering the hook.
 
 With the hook registered, `claude` must be started from a shell that has the
 virtualenv activated but that has *not* sourced `environment` yet. If either of
@@ -659,40 +662,22 @@ invoked by PyCharm
 
 As mentioned above, `claude` must be started in the root of the worktree for the
 hook to be effective. Claude Code considers the directory `claude` was launched
-in to be a *project directory*. If `claude` is launched from subdirectory `foo`
-of worktree `azul`, `azul/foo` becomes the project directory. When Claude wants
-to run a command, it looks for a hook registration in the project settings
-(`settings.json` or `settings.local.json`) at two locations: `azul/foo/.claude`
-and `azul/.claude`. Claude considers the latter, too, because it is the main Git
-worktree containing `azul/foo`. We'll assume that `azul/foo/.claude` is absent,
-as anything else would be atypical. If `claude` does find a hook registration in
-the settings at `azul/.claude`, it will use the hook, but the hook will detect
-that it was invoked for the wrong project, print a warning and let the command
-run unmodified. The user should `source environment` as described in scenario D
-above, before launching `claude` in a subdirectory, or launch it from the root
-directory and let the hook do its work (scenario B). If `claude` doesn't find a
-hook registration in `azul/.claude`, the user needs to `source environment`
-before launching `claude` in either directory (scenario D), or register the hook
-(scenario A) and launch it from the root (scenario B).
+in to be a *project directory*, and a registration acts on a command only when
+the project directory is the root of a worktree for which the hook was
+registered.
 
-If `claude` is started from a *linked* worktree that does not have the hook
-registered, whereas the main worktree does, then the main worktree's hook will
-be invoked in the linked worktree. This is because the linked worktree inherits
-the main worktree's Claude Code settings. As in the subdirectory case described
-in the previous paragraph, the hook detects that it was invoked for the wrong
-project, prints a warning, and the command runs unmodified as originally
-requested by `claude`. The user should `source environment` as described in
-scenario D above, before launching `claude` in the linked worktree.
-Alternatively, the user can register the hook in the linked worktree (scenario
-A) and use it without sourcing the environment (scenario B).
+Registering the hook in more than one worktree leaves one hook registration per
+worktree in the main worktree's settings. Claude Code runs every one of them for
+every command, but only the one matching the current project directory invokes
+`claudehook.py`. The others exit without invoking it at all.
 
-The main worktree's hook registration is even inherited by a `claude` instance
-that was launched from a subdirectory of a linked worktree, whether the linked
-worktree has a hook registration or not. The remedies should be familiar now:
-the user can run `make claudehook` from the root of the linked worktree and
-launch `claude` from there. The `claudehook` target is idempotent and won't fail
-if the hook is already registered. Alternatively, the user can `source
-environment` and launch `claude` from the subdirectory of the linked worktree.
+Launching `claude` from a subdirectory of a worktree makes that subdirectory the
+project directory. Since that's not the root of the worktree, no registration
+acts on the command, and the command runs unmodified, as in scenario D. The same
+happens in a worktree without a hook registration. Either way the user should
+`source environment` before launching `claude` (scenario D), or run `make
+claudehook` from the root of the worktree and launch `claude` there (scenarios A
+and B).
 
 
 ### 2.4.3 Configuring PyCharm

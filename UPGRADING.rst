@@ -19,6 +19,22 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+Note that as of September 2026, the issue number(s) must be occur in parentheses
+and at the end of section titles, instead of the beginning.
+
+
+Suprious warning from Claude hook in linked worktree (#8308)
+============================================================
+
+Everyone
+--------
+
+If you followed the instruction for #8290 when it was at the top of this file,
+manually remove the hook registration from ``.claude/settings.local.json`` in
+every worktree. Do not use ``make claudeunhook``. Then run ``make claudehook``
+in your worktrees as desired.
+
+
 
 #8290 Use of Claude Code is complicated by .active deployment symlink
 =====================================================================

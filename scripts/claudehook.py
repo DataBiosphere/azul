@@ -8,11 +8,14 @@ followed by a resumption of the session. The hook works by prefixing every
 command Claude wants to run with `source environment && _login_aws`, creating a
 up-to-date environment with current AWS credentials.
 
-An Azul worktree has to opt in to the hook by registering it in the local
-project settings of that worktree (`.claude/settings.local.json`). Run this
-script with the `register` argument to add that registration, or the
-`unregister` argument to remove it. Alternatively, use `make claudehook` or
-`make claudeunhook` to the same effect.
+An Azul worktree has to opt in to the hook by registering it. Run this script
+with the `register` argument to add that registration, or the `unregister`
+argument to remove it. Alternatively, use `make claudehook` or `make
+claudeunhook` to the same effects. The registration is written to the local
+project settings (`.claude/settings.local.json`) of the repository's main
+worktree, because that is the file Claude Code reads for every worktree of a
+repository. Each hook registration names the worktree it was made in, and the
+hook runs only for a `claude` instance whose project directory is that worktree.
 
 To then use the hook, start `claude` in the root of the worktree, with the
 virtualenv activated, and without having sourced the Azul environment. The hook
@@ -28,6 +31,12 @@ import argparse
 from contextlib import (
     contextmanager,
 )
+from functools import (
+    cached_property,
+)
+from hashlib import (
+    sha256,
+)
 import importlib.util
 import json
 import os
@@ -35,6 +44,7 @@ from pathlib import (
     Path,
 )
 import shlex
+import subprocess
 import sys
 import tempfile
 from textwrap import (
@@ -105,26 +115,7 @@ class Main:
         # Drain stdin and parse the JSON regardless of whether it will be used
         hook_input = json.load(sys.stdin)
         azul_env_vars = 'azul_env_vars'
-        root_dir = self._root_dir.resolve()
-        project_dir = os.environ.get('CLAUDE_PROJECT_DIR')
-        if project_dir is None or Path(project_dir).resolve() != root_dir:
-            self._warn(f"""
-                Skipping hook actions because this registration is for
-
-                {self._root_dir}
-
-                while this `claude` instance uses
-
-                {project_dir}
-
-                as its project directory.
-
-                Claude Code takes the directory that `claude` was started in as the project
-                directory, also when resuming a session, without resolving it to the root of an
-                enclosing worktree. Start `claude` in the root of the worktree you mean to work
-                in, and register the hook there.
-                """)
-        elif 'VIRTUAL_ENV' not in os.environ:
+        if 'VIRTUAL_ENV' not in os.environ:
             self._error("""
                 This `claude` instance was started without an active virtualenv, which this hook
                 needs in order to prepare the Azul environment.
@@ -183,19 +174,22 @@ class Main:
             }
             json.dump(hook_output, sys.stdout)
 
-    # A hook registration is ours if its command carries this marker. A fuzzy
-    # match allows for changes to be made to the hook command over time. It has
-    # no other purpose and should therefore never change.
+    # A hook registration is this worktree's if its command carries this
+    # marker, a hash of the path to the worktree. The registrations of every
+    # worktree share a file, so the marker has to tell them apart. Matching it
+    # loosely lets the rest of the command change over time, which is its only
+    # purpose, so the way it is derived must never change.
     #
-    _hook_marker = 'azul-claudehook-0605'
+    _hook_marker = sha256(str(_root_dir.resolve()).encode()).hexdigest()[:8]
 
     # The `envhook.py` site hook is mutually exclusive with this script so we
     # pass -S to python to disable it.
     #
-    # Both paths are absolute, naming the worktree this registration is for.
+    # All paths are absolute, naming the worktree this registration is for,
+    # including the one the command compares `CLAUDE_PROJECT_DIR` against.
     # Claude Code hands the registration to every instance of the repository,
-    # and the hook recognizes the ones it isn't for by comparing its own
-    # worktree against theirs.
+    # and only the instance whose project directory is that worktree is to act
+    # on it.
     #
     # The interpreter is named explicitly because `python` may be absent outside
     # an active virtualenv, and `python3` may be too old to parse this script.
@@ -213,9 +207,10 @@ class Main:
         if python.is_relative_to(self._root_dir):
             script = shlex.quote(str(self._this_script.resolve()))
             python = shlex.quote(str(python))
+            worktree = shlex.quote(str(self._root_dir.resolve()))
             return '; '.join([
                 f'script={script}',
-                'if [ -f "$script" ]',
+                f'if [ "$CLAUDE_PROJECT_DIR" = {worktree} ] && [ -f "$script" ]',
                 f'then exec {python} -S "$script" hook',
                 'fi'
             ]) + f' # {self._hook_marker}'
@@ -228,8 +223,6 @@ class Main:
                 """)
 
     _hook_matcher = 'Bash'
-
-    _settings_file = _root_dir / '.claude' / 'settings.local.json'
 
     # The deployment selected for this worktree lives here. `_select` maintains
     # the file and `envhook.py` injects it into the Python processes PyCharm
@@ -278,6 +271,30 @@ class Main:
             self._save_settings(settings)
             print(f'Unregistered {entry['command']} from {self._settings_file}')
             print(self._restart_warning)
+
+    # Claude reads local project settings from
+    # <main>/.claude/settings.local.json where <main> is the main worktree of
+    # the repository, the one that `git clone` creates. It also reads
+    # <linked>/.claude/settings.local.json in a linked worktree but the
+    # documentation sounds as if that might go away soon, so we don't want to
+    # rely on it. That's why we put all hook registrations in the main
+    # worktree's local settings file.
+    #
+    @cached_property
+    def _settings_file(self) -> Path:
+        return self._main_worktree() / '.claude' / 'settings.local.json'
+
+    def _main_worktree(self) -> Path:
+        # The main worktree is the first one listed
+        output = subprocess.run(['git', 'worktree', 'list', '--porcelain'],
+                                cwd=self._root_dir,
+                                check=True,
+                                capture_output=True,
+                                text=True).stdout
+        prefix = 'worktree '
+        line = output.splitlines()[0]
+        assert line.startswith(prefix), line
+        return Path(line.removeprefix(prefix))
 
     def _selected_env(self) -> dict[str, str]:
         """
