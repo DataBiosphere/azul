@@ -1,5 +1,5 @@
 ---
-name: pr-review
+name: azul-pr-review
 description: "Review an Azul PR"
 user_invocable: true
 ---
