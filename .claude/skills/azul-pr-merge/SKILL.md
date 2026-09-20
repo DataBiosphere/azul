@@ -1,5 +1,7 @@
 ---
-description: "Merge an approved PR into `develop` as the operator for the lower deployments. Covers choosing a deliberate or autonomous cadence, deciding which items are N/A, and the mechanics of ticking, merging, deploying and polling builds."
+description: "Merge an approved PR into `develop` as the operator for the lower deployments. Covers the lockstep and autonomous cadences, deciding which items are N/A, and the mechanics of ticking, merging, deploying and polling builds."
+argument-hint: [pr-number] [lockstep|autonomous]
+arguments: pr cadence
 ---
 
 # Operator merge (lower deployments)
@@ -8,26 +10,27 @@ Use this skill when asked to merge a PR, do operator work on a PR, or work
 through the operator sections of a PR checklist. It covers `dev`, `anvildev`
 and their sandboxes only.
 
+Merge PR `$pr` in cadence `$cadence`. Either argument may be absent: without a
+PR, ask which one; without a cadence, see below.
+
 ## Cadence
 
 This is the part that matters most. The work is a long sequence of small,
 mostly irreversible steps, and how much of it to do unattended is the
-operator's call, not yours.
+operator's call, not yours. Two cadences are established:
 
-**Ask which cadence to use before starting.** Do it once, at the top, before
-the first item. Two are established:
-
-- **Deliberate.** Offer one item, wait for approval, perform it, tick it, offer
+- **Lockstep.** Offer one item, wait for approval, perform it, tick it, offer
   the next. Consecutive items that are N/A or satisfiable by a read-only check
   may be offered as one batch with a single approval.
 
 - **Autonomous.** Work through the checklist unattended, stopping only at the
   boundary below or when something deviates from what the checklist assumes.
 
-Deliberate suits an unfamiliar PR, one whose labels or diff look inconsistent,
-or a first session with a new operator. Autonomous suits a PR whose shape is
-already understood. If the operator does not express a preference, use
-deliberate and say that is what you are doing.
+**If `$cadence` was not given, ask which to use before starting** — once, at the
+top, before the first item. Lockstep suits an unfamiliar PR, one whose labels
+or diff look inconsistent, or a first session with a new operator. Autonomous
+suits a PR whose shape is already understood. If the operator declines to
+choose, use lockstep and say that is what you are doing.
 
 The cadence can change mid-PR; the operator will say so. Everything below
 applies to both.

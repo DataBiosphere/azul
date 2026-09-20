@@ -1,7 +1,5 @@
 ---
-name: azul-5xx-investigation
 description: Investigate 5xx alarms from CloudWatch API Gateway logs
-user_invocable: true
 ---
 
 # 5xx Alarm Investigation
