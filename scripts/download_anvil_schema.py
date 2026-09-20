@@ -29,7 +29,7 @@ from azul.logging import (
 )
 
 repository_url = 'https://raw.githubusercontent.com/broadinstitute/anvil_tdr_ingest'
-commit = '4e3b7385d4be552a0502c7c3091e9327c183c1ed'
+commit = '442a9b8a2042bb5812d3413b1d49da32bd450c48'
 object_path = 'anvil_schema/schema/mapping_schema_object.json'
 
 log = logging.getLogger(__name__)

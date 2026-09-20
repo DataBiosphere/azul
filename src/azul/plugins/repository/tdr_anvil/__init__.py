@@ -937,6 +937,11 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 column = 'file_md5sum'
                 column_names.remove(column)
                 column_names.add(f'{self._column_from_64_to_hex(column)} AS {column}')
+                # Most snapshots were ingested under version 5 of the AnVIL
+                # schema, whose `anvil_file` table lacks this column. Selecting
+                # it would fail against those snapshots. A subsequent commit
+                # will make this workaround unnecessary.
+                column_names.remove('file_path')
             columns_by_table[table_name] = column_names
         return columns_by_table
 

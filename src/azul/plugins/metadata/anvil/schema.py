@@ -11,7 +11,7 @@ from azul.lib.types import (
 )
 
 anvil_schema: JSON = {
-    'version': 5,
+    'version': 6,
     'tables': [
         {
             'name': 'anvil_activity',
@@ -520,6 +520,12 @@ anvil_schema: JSON = {
                 },
                 {
                     'name': 'file_name',
+                    'datatype': 'string',
+                    'array_of': False,
+                    'required': False
+                },
+                {
+                    'name': 'file_path',
                     'datatype': 'string',
                     'array_of': False,
                     'required': False
