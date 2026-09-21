@@ -64,6 +64,7 @@ from azul.service.async_manifest_service import (
     GenerationFinished,
     InvalidTokenError,
     NoSuchGeneration,
+    PreviousGenerationFailed,
     Token,
 )
 from azul.service.controller import (
@@ -659,17 +660,6 @@ class ManifestController(QueryController):
         #
         generation_id = manifest_key.uuid
         iteration = 0 if previous_token is None else previous_token.iteration + 1
-        state: ManifestGenerationState = {
-            'filters': filters.to_json(),
-            'manifest_key': manifest_key.to_json(),
-            'partition': partition.to_json(),
-            'iteration': iteration
-        }
-
-        # ManifestGenerationState is also JSON but there is no way to express
-        # that since TypedDict rejects a co-parent class.
-        #
-        input = cast(JSON, state)
 
         # Depending on the configured manifest expiration, and assuming that the
         # manifest isn't deleted prematurely, there is an upper bound on the
@@ -682,16 +672,40 @@ class ManifestController(QueryController):
         #
         sfn_execution_expiration = 90  # Fixed by AWS
         max_iteration = sfn_execution_expiration // config.manifest_expiration
-        if iteration > max_iteration:
-            raise ChaliceViewError('Too many executions of this manifest generation')
-        try:
-            return self._async_service.start_generation(generation_id, input, iteration)
-        except GenerationFinished as e:
-            # Returning a token will result in a redirect. If the client follows
-            # that redirect, and if the manifest still doesn't exist, we'll end
-            # up right back in this method and can then try starting the next
-            # iteration.
-            return e.token
+        token: Token | None = None
+        while token is None:
+            if iteration > max_iteration:
+                raise ChaliceViewError('Too many executions of this manifest generation')
+
+            # The iteration is part of the input, so each turn of this loop
+            # needs an input of its own
+            #
+            state: ManifestGenerationState = {
+                'filters': filters.to_json(),
+                'manifest_key': manifest_key.to_json(),
+                'partition': partition.to_json(),
+                'iteration': iteration
+            }
+
+            # ManifestGenerationState is also JSON but there is no way to
+            # express that since TypedDict rejects a co-parent class.
+            #
+            input = cast(JSON, state)
+            try:
+                token = self._async_service.start_generation(generation_id, input, iteration)
+            except GenerationFinished as e:
+                # Returning a token will result in a redirect. If the client
+                # follows that redirect, and if the manifest still doesn't
+                # exist, we'll end up right back in this method and can then try
+                # starting the next iteration.
+                token = e.token
+            except PreviousGenerationFailed:
+                # The execution for this iteration failed and its name can't be
+                # reused, so the next iteration gets a turn. Without this, the
+                # failure would be permanent for this manifest key, until the
+                # key changes or the execution expires.
+                iteration += 1
+        return token
 
     def generate(self, state: JSON) -> ManifestGenerationState:
         assert is_of_type(state, ManifestGenerationState)

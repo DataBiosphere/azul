@@ -120,6 +120,11 @@ class GenerationFinished(Exception):
     token: Token = strict_auto()
 
 
+@attrs.frozen
+class PreviousGenerationFailed(Exception):
+    token: Token = strict_auto()
+
+
 @attrs.frozen(kw_only=True)
 class GenerationFailed(Exception):
     status: str = strict_auto()
@@ -175,11 +180,20 @@ class AsyncManifestService:
             # make another request to actually obtain the resulting manifest.
             # Strictly speaking, we could return the manifest here, but it keeps
             # the control flow simpler. This benevolent race is not probable
-            # enough to warrant an optimization.
+            # enough to warrant an optimization. If the pre-existing execution
+            # failed, however, its name is poisoned: a token referring to it
+            # would lead the client right back to that failure, so the caller
+            # needs to know to move on to the next iteration instead.
             execution = self._sfn.describe_execution(executionArn=execution_arn)
             if input == json.loads(execution['input']):
-                log.info('A completed execution %r already exists', execution_arn)
-                raise GenerationFinished(token)
+                status = execution['status']
+                if status == 'SUCCEEDED':
+                    log.info('A completed execution %r already exists', execution_arn)
+                    raise GenerationFinished(token)
+                else:
+                    log.info('A failed execution %r already exists, with status %r',
+                             execution_arn, status)
+                    raise PreviousGenerationFailed(token)
             else:
                 raise InvalidGeneration(token)
         else:

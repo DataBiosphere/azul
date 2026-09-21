@@ -56,7 +56,9 @@ from azul.plugins import (
 from azul.service.async_manifest_service import (
     AsyncManifestService,
     GenerationFailed,
+    GenerationFinished,
     InvalidTokenError,
+    PreviousGenerationFailed,
     Token,
 )
 from azul.service.manifest_controller import (
@@ -84,6 +86,23 @@ def setUpModule():
 
 
 log = get_test_logger(__name__)
+
+
+def mock_sfn_exception(_sfn: mock.MagicMock,
+                       operation_name: str,
+                       error_code: str
+                       ) -> Exception:
+    exception_cls = mock_sfn_exception_cls(_sfn, error_code)
+    error_response = {'Error': {'Code': error_code}}
+    exception = exception_cls(operation_name=operation_name,
+                              error_response=error_response)
+    return exception
+
+
+def mock_sfn_exception_cls(_sfn: mock.MagicMock, error_code: str) -> type:
+    exception_cls = type(error_code, (ClientError,), {})
+    setattr(_sfn.exceptions, error_code, exception_cls)
+    return exception_cls
 
 
 @patch.object(AsyncManifestService, '_sfn')
@@ -176,6 +195,47 @@ class TestAsyncManifestService(AzulUnitTestCase):
                       retry_after=0)
         with self.assertRaises(GenerationFailed):
             service.inspect_generation(token)
+
+    def test_start_when_previous_succeeded(self, _sfn):
+        """
+        Starting a generation for which a succeeded execution already exists
+        should raise a GenerationFinished
+        """
+        self._test_start_when_previous_ended(_sfn, 'SUCCEEDED', GenerationFinished)
+
+    def test_start_when_previous_failed(self, _sfn):
+        """
+        Starting a generation for which a failed execution already exists should
+        raise a PreviousGenerationFailed, so that the caller can move on to the
+        next iteration instead of sending the client back to that execution
+        """
+        self._test_start_when_previous_ended(_sfn, 'FAILED', PreviousGenerationFailed)
+
+    def _test_start_when_previous_ended(self,
+                                        _sfn: mock.MagicMock,
+                                        status: str,
+                                        expected: type):
+        service = AsyncManifestService()
+        execution_name = service.execution_name(self.generation_id, iteration=0)
+        input = {'filters': {}}
+        _sfn.start_execution.side_effect = mock_sfn_exception(
+            _sfn,
+            operation_name='StartExecution',
+            error_code='ExecutionAlreadyExists'
+        )
+        _sfn.describe_execution.return_value = {
+            'executionArn': service.execution_arn(execution_name),
+            'stateMachineArn': service.machine_arn,
+            'name': execution_name,
+            'status': status,
+            'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
+            'stopDate': datetime.datetime(2018, 11, 14, 16, 6, 55, 860000),
+            'input': json.dumps(input)
+        }
+        with self.assertRaises(expected) as cm:
+            service.start_generation(self.generation_id, input, iteration=0)
+        self.assertEqual(Token.first(self.generation_id, iteration=0),
+                         cm.exception.token)
 
 
 class TestManifestController(DCP1TestCase, LocalAppTestCase):
@@ -288,16 +348,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 execution_arns = list(map(service.execution_arn, execution_names))
 
                 not_found = CachedManifestNotFound(manifest_key)
-                execution_exists = self._mock_sfn_exception(
-                    _sfn,
-                    operation_name='StartExecution',
-                    error_code='ExecutionAlreadyExists'
-                )
-
-                not_found = CachedManifestNotFound(manifest_key)
-                execution_exists = self._mock_sfn_exception(_sfn,
-                                                            operation_name='StartExecution',
-                                                            error_code='ExecutionAlreadyExists')
+                execution_exists = mock_sfn_exception(_sfn,
+                                                      operation_name='StartExecution',
+                                                      error_code='ExecutionAlreadyExists')
 
                 def assert_get_cached_manifest(filters=filters):
                     get_cached_manifest.assert_called_once_with(
@@ -674,9 +727,9 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         #
         get_cached_manifest.side_effect = CachedManifestNotFound(manifest_key)
         _sfn.start_execution.side_effect = [
-            self._mock_sfn_exception(_sfn,
-                                     operation_name='StartExecution',
-                                     error_code='ExecutionAlreadyExists'),
+            mock_sfn_exception(_sfn,
+                               operation_name='StartExecution',
+                               error_code='ExecutionAlreadyExists'),
             {
                 'executionArn': execution_arns[1],
                 'startDate': 1234
@@ -734,28 +787,12 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
             # TypeError: catching classes that do not inherit from
             #            BaseException is not allowed
             #
-            self._mock_sfn_exception_cls(_sfn, error_code='ExecutionDoesNotExist')
-            exception = self._mock_sfn_exception(_sfn,
-                                                 operation_name='DescribeExecution',
-                                                 error_code=error_code)
+            mock_sfn_exception_cls(_sfn, error_code='ExecutionDoesNotExist')
+            exception = mock_sfn_exception(_sfn,
+                                           operation_name='DescribeExecution',
+                                           error_code=error_code)
             _sfn.describe_execution.side_effect = exception
             yield
-
-    def _mock_sfn_exception(self,
-                            _sfn: mock.MagicMock,
-                            operation_name: str,
-                            error_code: str
-                            ) -> Exception:
-        exception_cls = self._mock_sfn_exception_cls(_sfn, error_code)
-        error_response = {'Error': {'Code': error_code}}
-        exception = exception_cls(operation_name=operation_name,
-                                  error_response=error_response)
-        return exception
-
-    def _mock_sfn_exception_cls(self, _sfn: mock.MagicMock, error_code: str) -> type:
-        exception_cls = type(error_code, (ClientError,), {})
-        setattr(_sfn.exceptions, error_code, exception_cls)
-        return exception_cls
 
     def test_execution_not_found(self):
         """
