@@ -1018,12 +1018,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         return source.spec
 
     def _file_size_facet(self, catalog: CatalogName) -> str:
-        if config.is_hca_enabled(catalog):
-            return 'fileSize'
-        elif config.is_anvil_enabled(catalog):
-            return 'files.file_size'
-        else:
-            assert False, catalog
+        return self.metadata_plugin(catalog).special_fields.file_size.name
 
     def _fastq_filter(self, catalog: CatalogName) -> JSON:
         if config.is_hca_enabled(catalog):

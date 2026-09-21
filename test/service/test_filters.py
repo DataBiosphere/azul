@@ -40,7 +40,8 @@ class TestFilterReification(AzulUnitTestCase):
         bundle_uuid=MagicMock(),
         bundle_version=MagicMock(),
         file_uuid=MagicMock(),
-        file_name=MagicMock()
+        file_name=MagicMock(),
+        file_size=MagicMock()
     )
 
     @property
