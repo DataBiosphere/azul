@@ -95,6 +95,7 @@ class TerraValidator:
                       source_spec: TDRSourceSpec
                       ) -> None:
         plugin = self.repository_plugin(catalog)
+        plugin.validate_source_spec(source_spec)
         ref = plugin.resolve_source(source_spec)
         log.info('TDR client is authorized for API access to %s.', source_spec)
         if config.deployment.is_main:
