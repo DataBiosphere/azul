@@ -175,19 +175,19 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         ]
         expected_bundle_fqids = sorted(canned_bundle_fqids + [
             # Replica bundles for the AnVIL schema tables, which we don't can
-            self.bundle_fqid(uuid='59337757-a45e-af00-9238-34997372f696',
+            self.bundle_fqid(uuid='2a65294f-9cdf-a455-87e9-666bd8477725',
                              table_name='anvil_activity'),
-            self.bundle_fqid(uuid='1df1df09-3e18-adfa-80e2-515e71a5d3e7',
+            self.bundle_fqid(uuid='5f896854-75a9-a0be-ac10-cf4cb2ef2efd',
                              table_name='anvil_alignmentactivity'),
-            self.bundle_fqid(uuid='a70d523a-da59-aabe-8a4b-bae394df4253',
+            self.bundle_fqid(uuid='8ec98aad-7d3e-ab63-841e-2e6c40e766eb',
                              table_name='anvil_assayactivity'),
-            self.bundle_fqid(uuid='0ad2c320-4383-a5b4-87c4-cbc66527837f',
+            self.bundle_fqid(uuid='477175ff-777e-a5fc-985f-572ab137d934',
                              table_name='anvil_diagnosis'),
-            self.bundle_fqid(uuid='dfd8ff3d-de2c-a44d-bebe-f540f62a92da',
+            self.bundle_fqid(uuid='2e84f5a3-ccfe-aae7-aab0-0a5cbd78b685',
                              table_name='anvil_donor'),
-            self.bundle_fqid(uuid='4ca2319c-abe0-a583-b7a5-d3c8ad2114a0',
+            self.bundle_fqid(uuid='713f9fe8-1736-aa50-8355-d71fadaca2e1',
                              table_name='anvil_sequencingactivity'),
-            self.bundle_fqid(uuid='b47b0e77-7e5a-ab0e-917b-a7096bb7297a',
+            self.bundle_fqid(uuid='f01e33f5-71a4-a90e-9ccb-8c0f31ae3214',
                              table_name='anvil_variantcallingactivity')
         ])
         plugin = self.plugin

@@ -48,6 +48,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
 
     def test_entity_indices(self):
         self.maxDiff = None
+        source_spec = str(self.source.ref.spec)
 
         responses_by_entity_type = {
             'activities': {
@@ -57,7 +58,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
@@ -133,7 +134,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
@@ -336,7 +337,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
@@ -616,7 +617,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                             {
                                 'source_prefix': '/0',
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot'
+                                'source_spec': source_spec
                             }
                         ]
                     }
@@ -752,7 +753,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
@@ -965,7 +966,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
@@ -1176,7 +1177,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],
@@ -1260,7 +1261,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'sources': [
                             {
                                 'source_prefix': '/0',
-                                'source_spec': 'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
+                                'source_spec': source_spec,
                                 'source_id': '6c87f0e1-509d-46a4-b845-7584df39263b'
                             }
                         ],

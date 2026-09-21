@@ -1231,10 +1231,11 @@ class TestAnvilManifests(AnvilManifestTestCase):
     def test_compact_manifest(self):
         response = self._get_manifest(ManifestFormat.compact, filters={})
         self.assertEqual(200, response.status_code)
+        source_spec = str(self.source.ref.spec)
         expected = [
             (
                 'bundles.bundle_uuid',
-                '595c469e-604d-ab34-af39-f5b9f5d61818',
+                'f4962f15-ecc7-a075-b263-ac70ab0239b2',
                 '826dea02-e274-affe-aabc-eb3db63ad068',
                 '826dea02-e274-affe-aabc-eb3db63ad068'
             ),
@@ -1252,9 +1253,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'sources.source_spec',
-                'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
-                'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot',
-                'tdr:bigquery:gcp:test_anvil_project:anvil_snapshot'
+                source_spec,
+                source_spec,
+                source_spec
             ),
             (
                 'datasets.document_id',
@@ -1632,7 +1633,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/6b0f6c0f-5d80-4242-accb-840921351cd5' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="595c469e-604d-ab34-af39-f5b9f5d61818/' +
+                        'output="f4962f15-ecc7-a075-b263-ac70ab0239b2/' +
                         'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
                         ''
                     ]])

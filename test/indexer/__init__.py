@@ -216,12 +216,12 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
 
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='595c469e-604d-ab34-af39-f5b9f5d61818',
+        return cls.bundle_fqid(uuid='f4962f15-ecc7-a075-b263-ac70ab0239b2',
                                table_name=not_none(BundleType.supplementary.table_name))
 
     @classmethod
     def replica_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='f4b39881-d519-ab6f-99a0-7cc5089caee6',
+        return cls.bundle_fqid(uuid='9d2bead0-d92f-a790-b3fc-cdae8f476840',
                                table_name='non_schema_orphan_table')
 
 

@@ -599,7 +599,7 @@ class AnvilTestCase(TDRTestCase):
         config=SourceConfig(mirror=True),
         ref=TDRSourceRef(
             id='6c87f0e1-509d-46a4-b845-7584df39263b',
-            spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_anvil_project:anvil_snapshot'),
+            spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732'),
             prefix=Prefix.parse('/0')
         )
     )
