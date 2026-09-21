@@ -43,6 +43,8 @@ from azul.lib.types import (
     JSONs,
     MutableJSON,
     MutableJSONs,
+    json_str,
+    not_none,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -199,7 +201,7 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     def bundle_fqid(cls,
                     *,
                     uuid: str,
-                    table_name: str = BundleType.primary.table_name,
+                    table_name: str = not_none(BundleType.primary.table_name),
                     ) -> TDRAnvilBundleFQID:
         batched = BundleType.for_table(table_name).is_batched
         return TDRAnvilBundleFQID(source=cls.source.ref,
@@ -215,7 +217,7 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
         return cls.bundle_fqid(uuid='595c469e-604d-ab34-af39-f5b9f5d61818',
-                               table_name=BundleType.supplementary.table_name)
+                               table_name=not_none(BundleType.supplementary.table_name))
 
     @classmethod
     def replica_bundle(cls) -> TDRAnvilBundleFQID:
@@ -277,7 +279,7 @@ class IndexerTestCase(CatalogTestCase,
         expected_hits = self._load_canned_file(bundle_fqid, 'results')
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
-            index_name = IndexName.parse(hit['_index'])
+            index_name = IndexName.parse(json_str(hit['_index']))
             index_name = IndexName.create(catalog=self.catalog,
                                           qualifier=index_name.qualifier,
                                           doc_type=index_name.doc_type)
