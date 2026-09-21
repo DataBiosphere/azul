@@ -55,6 +55,7 @@ from azul.plugins.repository.tdr_anvil import (
 )
 from azul.terra import (
     TDRClient,
+    TDRSourceSpec,
 )
 from azul_test_case import (
     TDRTestCase,
@@ -234,6 +235,56 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     metadata = bundle.entities[dataset_ref]
                     self.assertIsNone(metadata['duos_id'])
                     self.assertIsNone(metadata['description'])
+
+    def test_schema_version(self):
+        plugin = self.plugin
+        for name, expected in [
+            ('ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 5),
+            ('ANVIL_1000G_high_coverage_2019_20230517_ANV6_202607071430', 6),
+            # Some snapshots spell the prefix `AnVIL`
+            ('AnVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 5)
+        ]:
+            with self.subTest(name=name):
+                self.assertEqual(expected, plugin._schema_version(self._spec(name)))
+        for name in [
+            # No version at all
+            'anvil_snapshot',
+            # A version we don't track, and therefore can't select columns for
+            'ANVIL_1000G_2019_Dev_20230609_ANV4_202306121732',
+            # No dataset name
+            'ANVIL_20230609_ANV5_202306121732',
+            # Truncated date, version and time
+            'ANVIL_1000G_2019_Dev_2023060_ANV5_202306121732',
+            'ANVIL_1000G_2019_Dev_20230609_ANV_202306121732',
+            'ANVIL_1000G_2019_Dev_20230609_ANV5_20230612173',
+            # Trailing and leading garbage
+            'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732_v2',
+            'restored_ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732',
+            # An atlas whose snapshots don't encode a schema version at all
+            'hca_prod_005d611a14d54fbf846e571a1f874f70__20220111_dcp2_20241205_dcp45'
+        ]:
+            with self.subTest(name=name):
+                with self.assertRaises(AssertionError):
+                    plugin._schema_version(self._spec(name))
+
+    def test_columns_per_schema_version(self):
+        plugin = self.plugin
+        # Version 6 added this column to the anvil_file table, so selecting it
+        # from a snapshot ingested under version 5 would fail
+        column = 'file_path'
+        for version, expected in [(5, False), (6, True)]:
+            with self.subTest(version=version):
+                name = f'ANVIL_1000G_2019_Dev_20230609_ANV{version}_202306121732'
+                columns = plugin._columns(self._spec(name), 'anvil_file')
+                self.assertEqual(expected, column in columns)
+                # Columns common to both versions are selected either way
+                self.assertIn('file_name', columns)
+        # Tables absent from the schema are replicated in their entirety
+        name = 'ANVIL_1000G_2019_Dev_20230609_ANV6_202306121732'
+        self.assertEqual({'*'}, plugin._columns(self._spec(name), 'anvil_unknown'))
+
+    def _spec(self, name: str) -> TDRSourceSpec:
+        return TDRSourceSpec.parse(f'tdr:bigquery:gcp:test_anvil_project:{name}')
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):

@@ -93,6 +93,10 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
 
 log = logging.getLogger(__name__)
 
+#: The version of the AnVIL schema that this module was written against
+#:
+anvil_schema_version = 6
+
 EntityRefsByType = dict[EntityType, set[EntityReference]]
 
 
@@ -417,8 +421,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @cached_property
     def _activity_polymorphic_types(self) -> Set[str]:
         from azul.plugins.metadata.anvil.schema import (
-            anvil_schema,
+            anvil_schemas,
         )
+        anvil_schema = anvil_schemas[anvil_schema_version]
         return {
             json_str(table['name'])
             for table in json_element_mappings(anvil_schema['tables'])

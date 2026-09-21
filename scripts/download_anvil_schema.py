@@ -5,6 +5,7 @@ from pathlib import (
 )
 from textwrap import (
     dedent,
+    indent,
 )
 
 from furl import (
@@ -29,23 +30,50 @@ from azul.logging import (
 )
 
 repository_url = 'https://raw.githubusercontent.com/broadinstitute/anvil_tdr_ingest'
-commit = '442a9b8a2042bb5812d3413b1d49da32bd450c48'
 object_path = 'anvil_schema/schema/mapping_schema_object.json'
+
+#: The commit defining each schema version. Every version a snapshot in any
+#: deployment was ingested under must be listed here, because the columns a
+#: snapshot's tables have are those of the version named in the snapshot name.
+#:
+commits = {
+    5: '4e3b7385d4be552a0502c7c3091e9327c183c1ed',
+    6: '442a9b8a2042bb5812d3413b1d49da32bd450c48'
+}
 
 log = logging.getLogger(__name__)
 
 
-def read_schema() -> MutableJSON:
+def read_schema(version: int, commit: str) -> MutableJSON:
     schema_object_url = furl(repository_url) / commit / object_path
     http = http_client(log)
     response = http.request('GET', str(schema_object_url))
     assert response.status == 200, R('Unexpected response', response.status)
     schema = json.loads(response.data)
-    log.info('Downloaded AnVIL schema version %d', schema['version'])
+    assert schema['version'] == version, R(
+        'Unexpected schema version', commit, version, schema['version'])
+    log.info('Downloaded AnVIL schema version %d', version)
     return schema
 
 
-def write_schema(schema: JSON) -> None:
+def read_schemas() -> dict[int, MutableJSON]:
+    return {
+        version: read_schema(version, commit)
+        for version, commit in sorted(commits.items())
+    }
+
+
+def format_schema(schema: JSON) -> str:
+    # FIXME: Format AnVIL schema using reprlib #6292
+    #        https://github.com/DataBiosphere/azul/issues/6292
+    return (json.dumps(schema, indent=4)
+            .replace('null', 'None')
+            .replace('true', 'True')
+            .replace('false', 'False')
+            .replace('"', "'"))
+
+
+def write_schemas(schemas: dict[int, MutableJSON]) -> None:
     script_path = Path(__file__).relative_to(config.project_root)
     output_path = Path(config.project_root) / 'src/azul/plugins/metadata/anvil/schema.py'
     with open(output_path, 'w') as f:
@@ -61,24 +89,20 @@ def write_schema(schema: JSON) -> None:
                 JSON,
             )
         '''))
-        f.write('\nanvil_schema: JSON = ')
-        # FIXME: Format AnVIL schema using reprlib #6292
-        #        https://github.com/DataBiosphere/azul/issues/6292
-        f.write(json.dumps(schema, indent=4)
-                .replace('null', 'None')
-                .replace('true', 'True')
-                .replace('false', 'False')
-                .replace('"', "'"))
-        f.write('\n')
+        f.write('\nanvil_schemas: dict[int, JSON] = {\n')
+        for version, schema in sorted(schemas.items()):
+            body = indent(format_schema(schema), ' ' * 4).lstrip()
+            f.write(f'    {version}: {body},\n')
+        f.write('}\n')
     import azul.plugins.metadata.anvil.schema as actual_schema
-    assert actual_schema.anvil_schema == schema
+    assert actual_schema.anvil_schemas == schemas
     assert actual_schema.__file__ == str(output_path)
-    log.info('Wrote AnVIL schema to %s', output_path)
+    log.info('Wrote %d AnVIL schemas to %s', len(schemas), output_path)
 
 
 def main():
-    schema = read_schema()
-    write_schema(schema)
+    schemas = read_schemas()
+    write_schemas(schemas)
 
 
 if __name__ == '__main__':
