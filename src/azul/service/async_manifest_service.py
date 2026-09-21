@@ -167,7 +167,9 @@ class AsyncManifestService:
             # in the manifest hash and therefore the execution name. Any part of
             # the input not affecting the output is constant and can only change
             # with the source code which would have resulted in a different
-            # execution name.
+            # execution name. The iteration is the exception that proves the
+            # rule: it varies, but only between executions, and the execution
+            # name names it, so two executions of the same name agree on it.
             #
             # In the former case we return the token so that the client has to
             # make another request to actually obtain the resulting manifest.

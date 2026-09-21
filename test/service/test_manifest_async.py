@@ -36,6 +36,9 @@ import requests
 from app_test_case import (
     LocalAppTestCase,
 )
+from azul import (
+    config,
+)
 from azul.filters import (
     Filters,
     FiltersJSON,
@@ -266,10 +269,14 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                       is_last_page=False,
                                       search_after=('foo', 'doc#bar'))
                 ]
-                input: ManifestGenerationState
-                input = dict(filters=filters.to_json(),
-                             manifest_key=manifest_key.to_json(),
-                             partition=partitions[0].to_json())
+
+                def input_for(iteration: int) -> ManifestGenerationState:
+                    return dict(filters=filters.to_json(),
+                                manifest_key=manifest_key.to_json(),
+                                partition=partitions[0].to_json(),
+                                iteration=iteration)
+
+                input: ManifestGenerationState = input_for(0)
                 controller: ManifestController = self._app.manifest_controller
                 service = controller._async_service
                 generation_id = manifest_key.uuid
@@ -366,7 +373,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 def put():
                     nonlocal url, state, token_url
                     get_cached_manifest.side_effect = not_found
-                    execution_inputs.append(input)
+                    execution_inputs.append(input_for(0))
                     mock_start_execution(0)
                     url = self._request('PUT', initial_url, expect=301)
                     assert_get_cached_manifest()
@@ -508,8 +515,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 def get_stale_token_when_done():
                     nonlocal url, state, token_url
                     get_cached_manifest_with_key.side_effect = not_found
-                    execution_inputs.append(input)
-                    iteration = len(execution_inputs) - 1
+                    iteration = len(execution_inputs)
+                    execution_inputs.append(input_for(iteration))
                     mock_start_execution(iteration)
                     mock_describe_execution(iteration - 1)
                     url = self._request('GET', url, expect=301)
@@ -564,6 +571,136 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
                 if key_url is not None:
                     get_key_after_expiration()
+
+    @mock.patch.object(ManifestService, 'get_manifest')
+    def test_transient_failure(self, get_manifest):
+        """
+        The sentinel lower bound on the size of a file makes the first
+        attempt at generating a manifest fail, which is how the integration
+        test provokes the failure whose recovery it then verifies. Any later
+        attempt, any other lower bound, and any catalog that isn't an IT
+        catalog all leave the generation alone.
+        """
+        controller: ManifestController = self._app.manifest_controller
+        partition = ManifestPartition.first()
+        plugin = controller._service.metadata_plugin(self.catalog)
+        file_size = plugin.special_fields.file_size.name
+
+        def state(lower_bound: int, iteration: int = 0) -> ManifestGenerationState:
+            manifest_key = ManifestKey(catalog=self.catalog,
+                                       format=ManifestFormat.compact,
+                                       manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                       source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+            filters = Filters(explicit={file_size: {'within': [[lower_bound, 1024]]}},
+                              source_ids={self.source.ref.id})
+            return dict(filters=filters.to_json(),
+                        manifest_key=manifest_key.to_json(),
+                        partition=partition.to_json(),
+                        iteration=iteration)
+
+        sentinel = controller.integration_test_sabotage_sentinel
+
+        # Unit tests may not configure an IT catalog, so the catalog at hand
+        # stands in for one, for the duration of the request that must fail
+        it_catalogs = {self.catalog: config.catalogs[self.catalog]}
+        with patch.object(type(config),
+                          'integration_test_catalogs',
+                          new_callable=mock.PropertyMock,
+                          return_value=it_catalogs):
+            with self.assertRaises(RuntimeError) as cm:
+                controller.generate(state(sentinel))
+        self.assertEqual('Deliberate manifest generation failure',
+                         cm.exception.args[0])
+        get_manifest.assert_not_called()
+
+        get_manifest.return_value = Manifest(object_key='key/of/manifest',
+                                             was_cached=False,
+                                             format=ManifestFormat.compact,
+                                             manifest_key=ManifestKey.from_json(
+                                                 state(0)['manifest_key']),
+                                             file_name='some_file_name')
+        # The sabotage is confined to the first attempt, so that the retry
+        # can be observed to succeed
+        with patch.object(type(config),
+                          'integration_test_catalogs',
+                          new_callable=mock.PropertyMock,
+                          return_value=it_catalogs):
+            controller.generate(state(sentinel, iteration=1))
+
+        # Without the sentinel the generation proceeds, and so it does with
+        # the sentinel when the catalog isn't an IT catalog, as here
+        controller.generate(state(0))
+        controller.generate(state(sentinel))
+        self.assertEqual(3, get_manifest.call_count)
+
+    @mock_aws
+    @mock.patch.object(AsyncManifestService, '_sfn')
+    @mock.patch.object(ManifestService, 'get_cached_manifest')
+    def test_put_after_failed_execution(self, get_cached_manifest, _sfn):
+        """
+        Requesting a manifest whose generation failed before should start the
+        next iteration instead of handing out a token for the failed execution,
+        which would make the failure permanent for that manifest key.
+        """
+        format = ManifestFormat.compact
+        filters = Filters(explicit={'fileFormat': {'is': ['txt']}},
+                          source_ids={self.source.ref.id})
+        params = {
+            'catalog': self.catalog,
+            'format': format.value,
+            'filters': json.dumps(filters.explicit)
+        }
+        initial_url = self.base_url.set(path=['manifest', 'files'], args=params)
+        manifest_key = ManifestKey(catalog=self.catalog,
+                                   format=format,
+                                   manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                   source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+
+        def input_for(iteration: int) -> ManifestGenerationState:
+            return dict(filters=filters.to_json(),
+                        manifest_key=manifest_key.to_json(),
+                        partition=ManifestPartition.first().to_json(),
+                        iteration=iteration)
+
+        service = self._app.manifest_controller._async_service
+        execution_names = [
+            service.execution_name(manifest_key.uuid, iteration=i)
+            for i in range(2)
+        ]
+        execution_arns = list(map(service.execution_arn, execution_names))
+
+        # The manifest isn't cached, and the execution for the first iteration
+        # exists, with the same input, but it failed.
+        #
+        get_cached_manifest.side_effect = CachedManifestNotFound(manifest_key)
+        _sfn.start_execution.side_effect = [
+            self._mock_sfn_exception(_sfn,
+                                     operation_name='StartExecution',
+                                     error_code='ExecutionAlreadyExists'),
+            {
+                'executionArn': execution_arns[1],
+                'startDate': 1234
+            }
+        ]
+        _sfn.describe_execution.return_value = {
+            'status': 'FAILED',
+            'input': json.dumps(input_for(0))
+        }
+        url = self._request('PUT', initial_url, expect=301)
+        expected_calls = [
+            mock.call(stateMachineArn=service.machine_arn,
+                      name=execution_name,
+                      input=json.dumps(input_for(iteration)))
+            for iteration, execution_name in enumerate(execution_names)
+        ]
+        self.assertEqual(expected_calls, _sfn.start_execution.mock_calls)
+        _sfn.describe_execution.assert_called_once_with(executionArn=execution_arns[0])
+
+        # The token embedded in the redirect refers to the second iteration, so
+        # following it will not lead the client back to the failed execution.
+        #
+        token = Token.decode(url.path.segments[-1])
+        self.assertEqual(1, token.iteration)
 
     def _request(self, method: str, url: furl, *, expect: int) -> furl:
         response = requests.request(method=method,

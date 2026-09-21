@@ -97,6 +97,10 @@ class ManifestGenerationState(TypedDict, total=False):
     filters: JSON
     partition: JSON | None
     manifest: JSON | None
+    #: Which attempt at generating this manifest the execution represents. It
+    #: doesn't affect the output, and is therefore absent from the manifest
+    #: key, but it does let the generation tell a first attempt from a retry.
+    iteration: int
 
 
 assert manifest_state_key in get_type_hints(ManifestGenerationState)
@@ -650,21 +654,22 @@ class ManifestController(QueryController):
                          previous_token: Token | None = None,
                          ) -> Token:
         partition = ManifestPartition.first()
-        state: ManifestGenerationState = {
-            'filters': filters.to_json(),
-            'manifest_key': manifest_key.to_json(),
-            'partition': partition.to_json()
-        }
         # Manifest keys for catalogs with long names would be too long to be
         # used directly as state machine execution names.
         #
         generation_id = manifest_key.uuid
+        iteration = 0 if previous_token is None else previous_token.iteration + 1
+        state: ManifestGenerationState = {
+            'filters': filters.to_json(),
+            'manifest_key': manifest_key.to_json(),
+            'partition': partition.to_json(),
+            'iteration': iteration
+        }
 
         # ManifestGenerationState is also JSON but there is no way to express
         # that since TypedDict rejects a co-parent class.
         #
         input = cast(JSON, state)
-        iteration = 0 if previous_token is None else previous_token.iteration + 1
 
         # Depending on the configured manifest expiration, and assuming that the
         # manifest isn't deleted prematurely, there is an upper bound on the
@@ -692,9 +697,11 @@ class ManifestController(QueryController):
         assert is_of_type(state, ManifestGenerationState)
         partition = ManifestPartition.from_json(not_none(state['partition']))
         manifest_key = ManifestKey.from_json(state['manifest_key'])
+        filters = Filters.from_json(state['filters'])
+        self._integration_test_sabotage(filters, manifest_key, state)
         result = self._service.get_manifest(format=manifest_key.format,
                                             catalog=manifest_key.catalog,
-                                            filters=Filters.from_json(state['filters']),
+                                            filters=filters,
                                             partition=partition,
                                             manifest_key=manifest_key)
         if isinstance(result, ManifestPartition):
@@ -710,3 +717,29 @@ class ManifestController(QueryController):
             }
         else:
             assert False, type(result)
+
+    #: The lower bound of a `within` filter on the size of a file that makes the
+    #: first attempt at generating a manifest fail deliberately, so that the
+    #: integration test can verify that a transient generation failure doesn't
+    #: permanently poison the manifest key. No genuine request should use this
+    #: type of non-sensical filter: a file is never smaller than zero bytes.
+    #: Furthermore, a lower bound below zero selects the same files as one of
+    #: zero, making the sentinel neutral except for the failure it induces. Only
+    #: the first attempt fails, so that the retry can be observed to succeed.
+    #:
+    integration_test_sabotage_sentinel = -8266
+
+    def _integration_test_sabotage(self,
+                                   filters: Filters,
+                                   manifest_key: ManifestKey,
+                                   state: ManifestGenerationState
+                                   ) -> None:
+        if manifest_key.catalog in config.integration_test_catalogs:
+            plugin = self._service.metadata_plugin(manifest_key.catalog)
+            filter = filters.explicit.get(plugin.special_fields.file_size.name)
+            if filter is not None and 'within' in filter:
+                if state.get('iteration') == 0:
+                    sentinel = self.integration_test_sabotage_sentinel
+                    if any(bounds[0] == sentinel for bounds in filter['within']):
+                        raise RuntimeError('Deliberate manifest generation failure',
+                                           manifest_key.to_json())

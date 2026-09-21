@@ -198,7 +198,11 @@ from azul.queues import (
     SQSMessage,
 )
 from azul.service.async_manifest_service import (
+    AsyncManifestService,
     Token,
+)
+from azul.service.manifest_controller import (
+    ManifestController,
 )
 from azul.service.manifest_service import (
     ManifestFormat,
@@ -580,6 +584,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
+            self._test_transient_manifest_failure(catalog.name)
             # FIXME: Re-enable curl manifest IT for AnVIL
             #        https://github.com/DataBiosphere/azul/issues/8095
             if config.tdr_requester_pays_project is None:
@@ -779,20 +784,94 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     else:
                         assert False
 
-    def _manifest_filters(self, catalog: CatalogName) -> JSON:
+    def _manifest_filters(self, catalog: CatalogName, lower_bound: int = 0) -> JSON:
         # IT catalogs with just one public source are always indexed completely
         # if that source contains less than the minimum number of bundles
         # required. So regardless of any randomness employed by this test,
         # manifests derived from these catalogs will always be based on the same
         # content hash. Since the resulting reuse of cached manifests interferes
         # with this test, we need another means of randomizing the manifest key:
-        # a random but all-inclusive filter.
+        # a random but all-inclusive filter. The default lower bound keeps the
+        # filter all-inclusive; a negative one selects the same files while
+        # sabotaging the generation.
         tibi_byte = 1024 ** 4
         return {
             self._file_size_facet(catalog): {
-                'within': [[0, tibi_byte + self.random.randint(0, tibi_byte)]]
+                'within': [[lower_bound, tibi_byte + self.random.randint(0, tibi_byte)]]
             }
         }
+
+    def _test_transient_manifest_failure(self, catalog: CatalogName):
+        """
+        A manifest generation that failed transiently, e.g. due to a network
+        outage, must be recoverable. Requesting the manifest again should start
+        another execution, which should succeed and yield the manifest, instead
+        of handing out a token for the execution that failed, as that would fail
+        the request again for as long as the manifest key stays the same.
+        """
+        format = first(self.metadata_plugin(catalog).manifest_formats)
+        # The sentinel lower bound causes the first generation to fail
+        sentinel = ManifestController.integration_test_sabotage_sentinel
+        filters = self._manifest_filters(catalog, lower_bound=sentinel)
+        args = {
+            'catalog': catalog,
+            'format': format.value,
+            'filters': json.dumps(filters)
+        }
+        url = mutable_furl(url=config.service_endpoint,
+                           path='/manifest/files',
+                           args=args)
+        url.path.segments.insert(0, 'fetch')
+        with self.subTest('transient_manifest_failure', catalog=catalog):
+            token = self._await_manifest_failure(url)
+            self.assertEqual(0, token.iteration)
+
+            # Only the first attempt is sabotaged, so the next request must
+            # produce the manifest, by way of another execution
+            responses: list[urllib3.HTTPResponse] = []
+            _get_url = self._get_url
+
+            def get_url(*args, **kwargs):
+                response = _get_url(*args, **kwargs)
+                responses.append(response)
+                return response
+
+            with mock.patch.object(self, '_get_url', new=get_url):
+                manifest = self._check_endpoint(PUT,
+                                                '/manifest/files',
+                                                args=args,
+                                                fetch=True)
+            self._manifest_validators[format](catalog, manifest)
+            self.assertEqual({(token.generation_id, 1)},
+                             self._manifest_execution_ids(responses))
+
+    def _await_manifest_failure(self, url: furl) -> Token:
+        """
+        Request the manifest at the given URL of the `fetch` variant of the
+        endpoint and wait for the execution that the request started to fail.
+        Returns the token naming that execution.
+
+        The failure is observed on the execution instead of by polling the
+        token, because a client polling the token of a failed execution still
+        gets a 500. That part is unchanged by the fix under test, and the HTTP
+        client used here retries and then raises on a 500 anyway.
+        """
+        response = self._get_url(PUT, url)
+        body = json.loads(response.data)
+        self.assertEqual(301, body['Status'], body)
+        token = Token.decode(furl(body['Location']).path.segments[-1])
+        service = AsyncManifestService()
+        execution_name = service.execution_name(token.generation_id,
+                                                token.iteration)
+        execution_arn = service.execution_arn(execution_name)
+        status, deadline = 'RUNNING', time.time() + 60
+        while status == 'RUNNING':
+            self.assertLess(time.time(), deadline, execution_arn)
+            time.sleep(1)
+            execution = aws.stepfunctions.describe_execution(executionArn=execution_arn)
+            status = execution['status']
+        self.assertEqual('FAILED', status)
+        return token
 
     @cached_property
     def _manifest_validators(self) -> dict[ManifestFormat, Callable[[str, bytes], None]]:
