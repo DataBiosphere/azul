@@ -324,7 +324,7 @@ def env() -> Mapping[str, str | None]:
         # After modifying this variable, run `make environment.boot` and
         # `make ecr_helper_checksums`, and commit the resulting changes.
         #
-        'azul_ecr_helper_version': '0.7.0',
+        'azul_ecr_helper_version': '0.12.0',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
