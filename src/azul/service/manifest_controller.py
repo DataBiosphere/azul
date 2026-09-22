@@ -64,6 +64,7 @@ from azul.service.async_manifest_service import (
     GenerationFinished,
     InvalidTokenError,
     NoSuchGeneration,
+    PreviousGenerationFailed,
     Token,
 )
 from azul.service.controller import (
@@ -97,6 +98,10 @@ class ManifestGenerationState(TypedDict, total=False):
     filters: JSON
     partition: JSON | None
     manifest: JSON | None
+    #: Which attempt at generating this manifest the execution represents. It
+    #: doesn't affect the output, and is therefore absent from the manifest
+    #: key, but it does let the generation tell a first attempt from a retry.
+    iteration: int
 
 
 assert manifest_state_key in get_type_hints(ManifestGenerationState)
@@ -650,20 +655,10 @@ class ManifestController(QueryController):
                          previous_token: Token | None = None,
                          ) -> Token:
         partition = ManifestPartition.first()
-        state: ManifestGenerationState = {
-            'filters': filters.to_json(),
-            'manifest_key': manifest_key.to_json(),
-            'partition': partition.to_json()
-        }
         # Manifest keys for catalogs with long names would be too long to be
         # used directly as state machine execution names.
         #
         generation_id = manifest_key.uuid
-
-        # ManifestGenerationState is also JSON but there is no way to express
-        # that since TypedDict rejects a co-parent class.
-        #
-        input = cast(JSON, state)
         iteration = 0 if previous_token is None else previous_token.iteration + 1
 
         # Depending on the configured manifest expiration, and assuming that the
@@ -677,24 +672,50 @@ class ManifestController(QueryController):
         #
         sfn_execution_expiration = 90  # Fixed by AWS
         max_iteration = sfn_execution_expiration // config.manifest_expiration
-        if iteration > max_iteration:
-            raise ChaliceViewError('Too many executions of this manifest generation')
-        try:
-            return self._async_service.start_generation(generation_id, input, iteration)
-        except GenerationFinished as e:
-            # Returning a token will result in a redirect. If the client follows
-            # that redirect, and if the manifest still doesn't exist, we'll end
-            # up right back in this method and can then try starting the next
-            # iteration.
-            return e.token
+        token: Token | None = None
+        while token is None:
+            if iteration > max_iteration:
+                raise ChaliceViewError('Too many executions of this manifest generation')
+
+            # The iteration is part of the input, so each turn of this loop
+            # needs an input of its own
+            #
+            state: ManifestGenerationState = {
+                'filters': filters.to_json(),
+                'manifest_key': manifest_key.to_json(),
+                'partition': partition.to_json(),
+                'iteration': iteration
+            }
+
+            # ManifestGenerationState is also JSON but there is no way to
+            # express that since TypedDict rejects a co-parent class.
+            #
+            input = cast(JSON, state)
+            try:
+                token = self._async_service.start_generation(generation_id, input, iteration)
+            except GenerationFinished as e:
+                # Returning a token will result in a redirect. If the client
+                # follows that redirect, and if the manifest still doesn't
+                # exist, we'll end up right back in this method and can then try
+                # starting the next iteration.
+                token = e.token
+            except PreviousGenerationFailed:
+                # The execution for this iteration failed and its name can't be
+                # reused, so the next iteration gets a turn. Without this, the
+                # failure would be permanent for this manifest key, until the
+                # key changes or the execution expires.
+                iteration += 1
+        return token
 
     def generate(self, state: JSON) -> ManifestGenerationState:
         assert is_of_type(state, ManifestGenerationState)
         partition = ManifestPartition.from_json(not_none(state['partition']))
         manifest_key = ManifestKey.from_json(state['manifest_key'])
+        filters = Filters.from_json(state['filters'])
+        self._integration_test_sabotage(filters, manifest_key, state)
         result = self._service.get_manifest(format=manifest_key.format,
                                             catalog=manifest_key.catalog,
-                                            filters=Filters.from_json(state['filters']),
+                                            filters=filters,
                                             partition=partition,
                                             manifest_key=manifest_key)
         if isinstance(result, ManifestPartition):
@@ -710,3 +731,29 @@ class ManifestController(QueryController):
             }
         else:
             assert False, type(result)
+
+    #: The lower bound of a `within` filter on the size of a file that makes the
+    #: first attempt at generating a manifest fail deliberately, so that the
+    #: integration test can verify that a transient generation failure doesn't
+    #: permanently poison the manifest key. No genuine request should use this
+    #: type of non-sensical filter: a file is never smaller than zero bytes.
+    #: Furthermore, a lower bound below zero selects the same files as one of
+    #: zero, making the sentinel neutral except for the failure it induces. Only
+    #: the first attempt fails, so that the retry can be observed to succeed.
+    #:
+    integration_test_sabotage_sentinel = -8266
+
+    def _integration_test_sabotage(self,
+                                   filters: Filters,
+                                   manifest_key: ManifestKey,
+                                   state: ManifestGenerationState
+                                   ) -> None:
+        if manifest_key.catalog in config.integration_test_catalogs:
+            plugin = self._service.metadata_plugin(manifest_key.catalog)
+            filter = filters.explicit.get(plugin.special_fields.file_size.name)
+            if filter is not None and 'within' in filter:
+                if state.get('iteration') == 0:
+                    sentinel = self.integration_test_sabotage_sentinel
+                    if any(bounds[0] == sentinel for bounds in filter['within']):
+                        raise RuntimeError('Deliberate manifest generation failure',
+                                           manifest_key.to_json())
