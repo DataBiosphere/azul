@@ -86,6 +86,10 @@ gh_checksums: check_env
 	curl --fail --no-progress-meter --location -o bin/checksums/gh_checksums.txt \
 	    https://github.com/cli/cli/releases/download/v$(azul_ghcli_version)/gh_$(azul_ghcli_version)_checksums.txt
 
+terraform_checksums: check_env
+	curl --fail --no-progress-meter --location -o bin/checksums/terraform_checksums.txt \
+	    https://releases.hashicorp.com/terraform/$(azul_terraform_version)/terraform_$(azul_terraform_version)_SHA256SUMS
+
 #	Unlike the GitHub CLI, uv publishes one checksum file per release asset, so
 #	we concatenate the ones we care about into the same format that `sha256sum
 #	-c` expects.

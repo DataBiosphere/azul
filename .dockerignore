@@ -8,3 +8,4 @@
 !bin/checksums/gh_checksums.txt
 !bin/checksums/uv_checksums.txt
 !bin/checksums/ecr_helper_checksums.txt
+!bin/checksums/terraform_checksums.txt

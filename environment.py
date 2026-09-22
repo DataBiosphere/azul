@@ -269,8 +269,9 @@ def env() -> Mapping[str, str | None]:
         # because it is referenced in the early stages of the GitLab build. The
         # next paragraph explains how to keep that file in sync.
         #
-        # After modifying this variable, run `make environment.boot` and
-        # `make -C terraform update_schema`, and commit the resulting changes.
+        # After modifying this variable, run `make environment.boot`, `make
+        # terraform_checksums` and `make -C terraform update_schema`, and commit
+        # the resulting changes.
         #
         'azul_terraform_version': '1.15.9',
 

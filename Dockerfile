@@ -58,11 +58,13 @@ RUN mkdir -p ${HOME}/.docker \
 # Install Terraform
 #
 ARG azul_terraform_version
+COPY bin/checksums/terraform_checksums.txt /tmp/terraform_checksums.txt
 RUN archive=terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
     && curl --fail --no-progress-meter --location -o /tmp/${archive} \
        https://releases.hashicorp.com/terraform/${azul_terraform_version}/${archive} \
+    && cd /tmp && sha256sum --ignore-missing -c terraform_checksums.txt \
     && unzip -q -d /usr/local/bin /tmp/${archive} terraform \
-    && rm /tmp/${archive}
+    && rm /tmp/${archive} /tmp/terraform_checksums.txt
 
 # Install AWS CLI v2
 #
