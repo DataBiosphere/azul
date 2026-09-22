@@ -34,17 +34,21 @@ RUN apt-get update
 
 RUN apt-get -y install curl gnupg unzip
 
+# We pass --ignore-missing to sha256sum so that one checksum file can cover all
+# platforms without forcing us to download a file for each one of them. With
+# this flag, at least one of the files listed in the checksum file must exist
+# and every listed file that does exist must match the listed checksum.
+
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
-RUN case "$TARGETARCH" in \
-        amd64) sha=c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db ;; \
-        arm64) sha=ff14a4da40d28a2d2d81a12a7c9c36294ddf8e6439780c4ccbc96622991f3714 ;; \
-        *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
-    esac \
-    && curl --fail --no-progress-meter -o /usr/bin/docker-credential-ecr-login \
-    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-${TARGETARCH}/docker-credential-ecr-login \
-    && printf '%s /usr/bin/docker-credential-ecr-login\n' "$sha" | sha256sum -c \
-    && chmod +x /usr/bin/docker-credential-ecr-login
+ARG azul_ecr_helper_version
+COPY bin/checksums/ecr_helper_checksums.txt /tmp/ecr_helper_checksums.txt
+RUN binary=linux-${TARGETARCH}/docker-credential-ecr-login \
+    && curl --fail --no-progress-meter --create-dirs -o /tmp/${binary} \
+       https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${azul_ecr_helper_version}/${binary} \
+    && cd /tmp && sha256sum --ignore-missing -c ecr_helper_checksums.txt \
+    && install -m 0755 /tmp/${binary} /usr/bin/docker-credential-ecr-login \
+    && rm -r /tmp/linux-${TARGETARCH} /tmp/ecr_helper_checksums.txt
 ARG azul_docker_registry
 ENV azul_docker_registry=${azul_docker_registry}
 RUN mkdir -p ${HOME}/.docker \
@@ -54,11 +58,13 @@ RUN mkdir -p ${HOME}/.docker \
 # Install Terraform
 #
 ARG azul_terraform_version
+COPY bin/checksums/terraform_checksums.txt /tmp/terraform_checksums.txt
 RUN archive=terraform_${azul_terraform_version}_linux_${TARGETARCH}.zip \
     && curl --fail --no-progress-meter --location -o /tmp/${archive} \
        https://releases.hashicorp.com/terraform/${azul_terraform_version}/${archive} \
+    && cd /tmp && sha256sum --ignore-missing -c terraform_checksums.txt \
     && unzip -q -d /usr/local/bin /tmp/${archive} terraform \
-    && rm /tmp/${archive}
+    && rm /tmp/${archive} /tmp/terraform_checksums.txt
 
 # Install AWS CLI v2
 #
