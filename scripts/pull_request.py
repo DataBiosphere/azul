@@ -233,6 +233,7 @@ def main(argv):
         assert handle == _github_user(), R(
             'Branch name does not match GitHub user', handle)
 
+    body = _check_task(body, 'PR is linked to .*')
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues?')
 
@@ -269,11 +270,12 @@ def main(argv):
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         log.info('PR URL is %r', pr_url)
 
+    pr_node_id, issue_node_id = _node_id(pr_url), _node_id(issue.url)
+    log.info('Linking PR to issue #%d …', issue_number)
+    _link_issue(issue_node_id, pr_node_id)
     log.info('Setting PR status …')
-    pr_node_id = _node_id(pr_url)
     _set_status(pr_node_id, 'In Progress')
     log.info('Setting issue status …')
-    issue_node_id = _node_id(issue.url)
     _set_status(issue_node_id, 'In Progress')
 
 
@@ -532,6 +534,21 @@ def _node_id(url: str) -> str:
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
+
+
+def _link_issue(issue_node_id: str, pr_node_id: str) -> None:
+    query = fd('''
+        mutation {{
+            addCloseIssueReferences(input: {{
+                issueId: "{issue_id}",
+                pullRequestIds: ["{pr_id}"]
+            }}) {{ issue {{ id }} }}
+        }}
+    ''', issue_id=issue_node_id, pr_id=pr_node_id)
+    subprocess.run(
+        ['gh', 'api', 'graphql', '-f', f'query={query}'],
+        capture_output=True, text=True, check=True
+    )
 
 
 def _set_status(node_id: str, status: str) -> None:
