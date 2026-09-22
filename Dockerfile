@@ -34,6 +34,11 @@ RUN apt-get update
 
 RUN apt-get -y install curl gnupg unzip
 
+# We pass --ignore-missing to sha256sum so that one checksum file can cover all
+# platforms without forcing us to download a file for each one of them. With
+# this flag, at least one of the files listed in the checksum file must exist
+# and every listed file that does exist must match the listed checksum.
+
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
 RUN case "$TARGETARCH" in \
