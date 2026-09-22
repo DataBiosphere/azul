@@ -67,6 +67,7 @@ docker_image: check_docker
 	       --build-arg azul_awscli_version=$(azul_awscli_version) \
 	       --build-arg azul_ghcli_version=$(azul_ghcli_version) \
 	       --build-arg azul_uv_version=$(azul_uv_version) \
+	       --build-arg azul_ecr_helper_version=$(azul_ecr_helper_version) \
 	       --tag $(azul_image):$(azul_image_tag) \
 	       .
 
@@ -95,6 +96,23 @@ uv_checksums: check_env
 	    curl --fail --no-progress-meter --location \
 	        https://github.com/astral-sh/uv/releases/download/$(azul_uv_version)/uv-$$arch-unknown-linux-gnu.tar.gz.sha256 \
 	        >> bin/checksums/uv_checksums.txt ; \
+	done
+
+#	Like uv, the ECR credential helper publishes one checksum file per release
+#	asset, but each of those files refers to its asset by a bare file name that
+#	is the same for every platform. We therefore prefix that name with the
+#	directory the asset resides in, so that the entries for both platforms can
+#	coexist in one file.
+#
+ecr_helper_checksums: check_env
+	rm -f bin/checksums/ecr_helper_checksums.txt
+	set -o pipefail ; \
+	for arch in amd64 arm64 ; do \
+	    curl --fail --no-progress-meter --location \
+	        https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/$(azul_ecr_helper_version)/linux-$$arch/docker-credential-ecr-login.sha256 \
+	        | sed "s|docker-credential-ecr-login|linux-$$arch/&|" \
+	        >> bin/checksums/ecr_helper_checksums.txt \
+	    || exit ; \
 	done
 
 .PHONY: lambdas

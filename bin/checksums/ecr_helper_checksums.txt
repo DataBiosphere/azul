@@ -1,0 +1,2 @@
+c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db  linux-amd64/docker-credential-ecr-login
+ff14a4da40d28a2d2d81a12a7c9c36294ddf8e6439780c4ccbc96622991f3714  linux-arm64/docker-credential-ecr-login

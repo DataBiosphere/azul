@@ -41,15 +41,14 @@ RUN apt-get -y install curl gnupg unzip
 
 # Install helper for access to ECR with credendtials from EC2 metadata service
 #
-RUN case "$TARGETARCH" in \
-        amd64) sha=c978912da7f54eb3bccf4a3f990c91cc758e1494a8af7a60f3faf77271b565db ;; \
-        arm64) sha=ff14a4da40d28a2d2d81a12a7c9c36294ddf8e6439780c4ccbc96622991f3714 ;; \
-        *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
-    esac \
-    && curl --fail --no-progress-meter -o /usr/bin/docker-credential-ecr-login \
-    https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/0.7.0/linux-${TARGETARCH}/docker-credential-ecr-login \
-    && printf '%s /usr/bin/docker-credential-ecr-login\n' "$sha" | sha256sum -c \
-    && chmod +x /usr/bin/docker-credential-ecr-login
+ARG azul_ecr_helper_version
+COPY bin/checksums/ecr_helper_checksums.txt /tmp/ecr_helper_checksums.txt
+RUN binary=linux-${TARGETARCH}/docker-credential-ecr-login \
+    && curl --fail --no-progress-meter --create-dirs -o /tmp/${binary} \
+       https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${azul_ecr_helper_version}/${binary} \
+    && cd /tmp && sha256sum --ignore-missing -c ecr_helper_checksums.txt \
+    && install -m 0755 /tmp/${binary} /usr/bin/docker-credential-ecr-login \
+    && rm -r /tmp/linux-${TARGETARCH} /tmp/ecr_helper_checksums.txt
 ARG azul_docker_registry
 ENV azul_docker_registry=${azul_docker_registry}
 RUN mkdir -p ${HOME}/.docker \
