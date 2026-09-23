@@ -205,6 +205,16 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_DEPLOYMENT_STAGE': None,
 
+        # Whether to tolerate the loss of values that don't fit into the
+        # accumulator for a field during aggregation. By default, such an
+        # overflow fails the aggregation and therefore the reindex. Setting this
+        # variable to 1 downgrades that failure to a warning, as a stopgap for a
+        # deployment that must be indexed before the accumulator limit can be
+        # adjusted. Note that the accumulators for some fields can also tolerate
+        # overflow individually, independently of this variable.
+        #
+        'AZUL_ALLOW_OVERFLOW': '0',
+
         # The Docker registry containing all 3rd party images used by this
         # project, including images used locally, in FROM clauses, for CI/CD or
         # GitLab. Must be empty or end in a slash. All references to images from

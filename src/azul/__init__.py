@@ -791,6 +791,10 @@ class Config:
     def replica_conflict_limit(self) -> int:
         return int(self.environ['AZUL_REPLICA_CONFLICT_LIMIT'])
 
+    @property
+    def allow_overflow(self) -> bool:
+        return self._boolean(self.environ['AZUL_ALLOW_OVERFLOW'])
+
     # Because this property is relatively expensive to produce and frequently
     # used we are applying aggressive caching here, knowing very well that
     # this eliminates the option to reconfigure the running process by
