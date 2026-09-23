@@ -27,7 +27,9 @@ from io import (
 )
 import itertools
 from itertools import (
+    accumulate,
     chain,
+    takewhile,
 )
 import json
 import logging
@@ -1062,6 +1064,62 @@ class ManifestGenerator(metaclass=ABCMeta):
     column_joiner = config.manifest_column_joiner
     padded_joiner = ' ' + column_joiner + ' '
 
+    #: The maximum number of characters in the value of a single column. Excel
+    #: truncates a cell beyond this length.
+    #:
+    column_size_limit = 32767
+
+    @classmethod
+    def _join_column(cls, values: Iterable[str]) -> str:
+        """
+        Join the given values into the value of a single column, discarding
+        duplicates. As many values as fit within :py:attr:`column_size_limit`
+        are listed. If any are left out, a sentinel naming their number is
+        appended in their stead, so that the omission isn't mistaken for
+        absence.
+
+        >>> ManifestGenerator._join_column(['b', 'a', 'b'])
+        'a || b'
+
+        >>> class Generator(ManifestGenerator):
+        ...     column_size_limit = 24
+
+        >>> Generator._join_column(['bbbb', 'aaaa'])
+        'aaaa || bbbb'
+
+        >>> Generator._join_column(['dddd', 'cccc', 'bbbb', 'aaaa'])
+        'aaaa || bbbb || (2 more)'
+
+        Nothing is assumed about the length of the individual values. A value
+        that doesn't fit is counted like any other.
+
+        >>> Generator._join_column(['a', 'b' * 30])
+        'a || (1 more)'
+
+        Nor is anything assumed about the length of the sentinel, for which
+        room is reserved as if every value were left out.
+
+        >>> Generator._join_column([str(i) for i in range(100)])
+        '0 || 1 || (98 more)'
+        """
+        values = sorted(set(values))
+        joiner = cls.padded_joiner
+
+        def sentinel(num_omitted: int) -> str:
+            return f'({num_omitted} more)'
+
+        size = sum(map(len, values)) + len(joiner) * max(len(values) - 1, 0)
+        if size > cls.column_size_limit:
+            # The sentinel is longest when every value is omitted, so reserving
+            # room for that version of it is always sufficient
+            budget = cls.column_size_limit - len(sentinel(len(values)))
+            # Charging every value a joiner accounts for the one that separates
+            # the listed values from the sentinel
+            sizes = accumulate(len(value) + len(joiner) for value in values)
+            num_listed = len(list(takewhile(lambda s: s <= budget, sizes)))
+            values = [*values[:num_listed], sentinel(len(values) - num_listed)]
+        return joiner.join(values)
+
     @cached_property
     def _field_types(self) -> FieldTypes:
         return self.service.field_types(self.catalog)
@@ -1117,10 +1175,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                             ]
                         else:
                             column_value.append(validate(convert(field_name, field_value)))
-                # FIXME: The slice is a hotfix. Reconsider.
-                #        https://github.com/DataBiosphere/azul/issues/2649
-                column_value = self.padded_joiner.join(sorted(set(column_value))[:100])
-                row[column_name] = column_value
+                row[column_name] = self._join_column(column_value)
 
     def _get_entities(self, field_path: FieldPath, doc: JSON) -> JSONs:
         """
