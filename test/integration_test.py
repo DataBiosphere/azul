@@ -584,7 +584,13 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
-            self._test_transient_manifest_failure(catalog.name)
+            # The only way this test knows to fail a generation is to fail the
+            # Lambda function that performs it, which trips the alarm on that
+            # function's CloudWatch error metric. Luckily, the alarm only
+            # exists where monitoring is enabled so we can run this test in the
+            # deployments where it isn't.
+            if config.disable_monitoring:
+                self._test_transient_manifest_failure(catalog.name)
             # FIXME: Re-enable curl manifest IT for AnVIL
             #        https://github.com/DataBiosphere/azul/issues/8095
             if config.tdr_requester_pays_project is None:
