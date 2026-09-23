@@ -1175,8 +1175,6 @@ class ManifestGenerator(metaclass=ABCMeta):
                             ]
                         else:
                             column_value.append(validate(convert(field_name, field_value)))
-                # FIXME: The limit is a hotfix. Reconsider.
-                #        https://github.com/DataBiosphere/azul/issues/2649
                 row[column_name] = self._join_column(column_value)
 
     def _get_entities(self, field_path: FieldPath, doc: JSON) -> JSONs:
