@@ -1062,6 +1062,35 @@ class ManifestGenerator(metaclass=ABCMeta):
     column_joiner = config.manifest_column_joiner
     padded_joiner = ' ' + column_joiner + ' '
 
+    #: The maximum number of values to list in a single column
+    column_value_limit = 100
+
+    @classmethod
+    def _join_column(cls, values: Iterable[str]) -> str:
+        """
+        Join the given values into the value of a single column, discarding
+        duplicates. Only the first :py:attr:`column_value_limit` values are
+        listed. If any are left out, their number is appended in their stead, so
+        that the omission isn't mistaken for absence.
+
+        >>> ManifestGenerator._join_column(['b', 'a', 'b'])
+        'a || b'
+
+        >>> class Generator(ManifestGenerator):
+        ...     column_value_limit = 2
+
+        >>> Generator._join_column(['d', 'c', 'b', 'a'])
+        'a || b || (2 more)'
+
+        >>> Generator._join_column(['b', 'a'])
+        'a || b'
+        """
+        values = sorted(set(values))
+        num_omitted = len(values) - cls.column_value_limit
+        if num_omitted > 0:
+            values = [*values[:cls.column_value_limit], f'({num_omitted} more)']
+        return cls.padded_joiner.join(values)
+
     @cached_property
     def _field_types(self) -> FieldTypes:
         return self.service.field_types(self.catalog)
@@ -1117,10 +1146,9 @@ class ManifestGenerator(metaclass=ABCMeta):
                             ]
                         else:
                             column_value.append(validate(convert(field_name, field_value)))
-                # FIXME: The slice is a hotfix. Reconsider.
+                # FIXME: The limit is a hotfix. Reconsider.
                 #        https://github.com/DataBiosphere/azul/issues/2649
-                column_value = self.padded_joiner.join(sorted(set(column_value))[:100])
-                row[column_name] = column_value
+                row[column_name] = self._join_column(column_value)
 
     def _get_entities(self, field_path: FieldPath, doc: JSON) -> JSONs:
         """
