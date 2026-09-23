@@ -137,7 +137,7 @@ RUN set -o pipefail \
 #
 ENV UV_PROJECT_ENVIRONMENT=/usr/local
 COPY pyproject.toml uv.lock /azul/
-RUN apt-get -y install build-essential git make \
+RUN apt-get -y install build-essential git make bzip2 \
     && cd /azul \
     && uv sync --frozen \
     && apt-get -y purge build-essential \
