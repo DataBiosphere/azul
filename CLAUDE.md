@@ -9,11 +9,19 @@
 # Environment
 
 Most commands need this project's environment, which reaches them in one of
-three ways. The optional `scripts/claudehook.py` hook is registered in
-`.claude/settings.local.json` by `python -S scripts/claudehook.py register`,
-and removed from it by `python -S scripts/claudehook.py unregister`. Whether a
-command has an environment at all is evident from `azul_env_hash` being set
-in it.
+three ways. The optional `scripts/claudehook.py` hook is registered by `python
+-S scripts/claudehook.py register` and removed by `python -S
+scripts/claudehook.py unregister`. Both edit `.claude/settings.local.json` in
+the repository's *main* worktree, whose settings Claude Code applies to
+sessions in all of its worktrees; a linked worktree need not have a file of its
+own, so its absence there is no evidence that the hook is unregistered.
+
+`azul_env_hash` being set in a command means only that the command has an
+environment, not how it got one: the hook compiles one per command, and a
+session started from a shell that sourced `environment` inherits one. To tell
+those apart, check whether `azul_env_hash` is set in the environment of the
+`claude` process itself, which `ps eww -p <pid>` prints — with the hook it is
+not, because `claude` must then be started without `environment` sourced.
 
 - *Hook registered*: nothing is needed, because the hook prefixes every command
   with the loading of a freshly compiled environment. Claude Code must have been
@@ -30,8 +38,10 @@ in it.
   Claude Code's settings, holds the selection because Claude Code applies the
   settings of a repository's main worktree to sessions in all of its other
   worktrees, so a deployment kept there would not be specific to one working
-  copy. Ask the user before switching it yourself. The hook also runs
-  `_login_aws` before every command,
+  copy. Ask the user before switching it yourself. Every `_select` rewrites
+  that file, including one run as part of a larger command, and so switches
+  the deployment for all subsequent commands. The hook also runs `_login_aws`
+  before every command,
   so the AWS session credentials are present without being inherited, which
   matters to Terraform because its provider configuration names no profile.
   Refreshing them needs an MFA token and therefore a terminal, so once they
