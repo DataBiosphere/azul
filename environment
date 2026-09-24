@@ -11,16 +11,16 @@ _refresh() {
 	source "${project_root}/environment"
 }
 
-# Manage the symlink to the active deployment
+# Manage the variable that specifies the current deployment
 #
 _select() {
 	if [ -z "$1" ] ; then
-		_show_link
+		_show_deployment
 	else
 		if ! {
-			_validate_link "$1" &&
+			_validate_deployment "$1" &&
 			_logout &&
-			_link "$1" &&
+			_set_deployment "$1" &&
 			_refresh &&
 			_login ;
 		} ; then
@@ -33,7 +33,7 @@ _select() {
 _deselect() {
 	if ! {
 		_logout &&
-		_unlink &&
+		_unset_deployment &&
 		_refresh ;
 	} ; then
 		echo >&2 "_deselect failed"
@@ -41,33 +41,44 @@ _deselect() {
 	fi
 }
 
-_show_link() {
-	( cd "${project_root}/deployments" && ls -l .active )
+_show_deployment() {
+	if [ -n "${azul_current_deployment:+x}" ] ; then
+		echo "${azul_current_deployment}"
+	else
+		echo >&2 "No deployment is currently selected"
+		return 1
+	fi
 }
 
-_validate_link() {
-	d="${project_root}/deployments/$1"
-	# -d dereferences symlinks so with -L we make sure the argument isn't one
+_validate_deployment() {
+	local d="${project_root}/deployments/$1"
+	if [ -z "$1" ] ; then
+		echo >&2 "_validate_deployment failed: no deployment specified"
+		return 1
+	fi
+	# -L is used to reject symlinks which -d would dereference
 	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
-		echo >&2 "_validate_link failed: '$1'"
+		echo >&2 "_validate_deployment failed: '$1'"
 		return 1
 	fi
 }
 
-_link() {
-	if ! (
-		_validate_link "$1" &&
-		cd "${project_root}/deployments" &&
-		{ [ ! -e .active ] || { [ -L .active ] && rm .active ; } ; } &&
-		ln -s "$1" .active
-	) ; then
-		echo >&2 "_link failed: '$1'"
-		return 1
-	fi
+_set_deployment() {
+	_validate_deployment "$1" &&
+	export azul_current_deployment="$1" &&
+	_write_hook_env "$1"
 }
 
-_unlink() {
-	rm "${project_root}/deployments/.active"
+_unset_deployment() {
+	unset azul_current_deployment
+	_write_hook_env ''
+}
+
+# Record the given deployment for use by the hooks. We pass -S to disable site
+# hooks, and thereby envhook.py, which would only get in the way here.
+#
+_write_hook_env() {
+	python -S "${project_root}/scripts/envhook.py" select "$1"
 }
 
 _login() {
@@ -145,7 +156,9 @@ _login_aws() {
 	local env
 	if ! env="$(
 		python - <<- "EOF"
+			import os
 			from pathlib import Path
+			import sys
 
 			import botocore.credentials
 			import botocore.session
@@ -156,6 +169,20 @@ _login_aws() {
 			resolver = session.get_component('credential_provider')
 			provider = resolver.get_provider('assume-role')
 			resolver.providers = [provider]
+
+			# Prompting for an MFA token requires a terminal to prompt on. The
+			# default prompter looks for one on /dev/tty, not on the standard
+			# input of this script, which is this here document. Without a
+			# terminal it warns and then fails with an EOFError, obscuring the
+			# only thing the caller can act on, so we report that instead.
+			try:
+			    tty = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
+			except OSError:
+			    def prompter(prompt):
+			        sys.exit('Expired AWS credentials. Run _login_aws.')
+			    provider._prompter = prompter
+			else:
+			    os.close(tty)
 
 			# Make the provider use the same cache as the AWS CLI
 			cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
@@ -289,7 +316,7 @@ _clone() {
 		(cd terraform/gitlab/vpn && git submodule update --init easy-rsa)
 		__update_clone
 		source environment
-		_link "${deployment}"
+		_set_deployment "${deployment}"
 		_refresh
 		make virtualenv
 		source .venv/bin/activate
@@ -355,7 +382,7 @@ _hibernate() {
         -target aws_opensearch_domain.index
     ) && (
       cd terraform/shared &&
-      _link "$AZUL_DEPLOYMENT_STAGE.shared" &&
+      _set_deployment "$AZUL_DEPLOYMENT_STAGE.shared" &&
       _refresh &&
       make validate &&
       terraform destroy \
@@ -363,7 +390,7 @@ _hibernate() {
         -target aws_cloudwatch_metric_alarm.freshclam
     ) && (
       cd terraform/gitlab &&
-      _link "$AZUL_DEPLOYMENT_STAGE.gitlab" && _refresh &&
+      _set_deployment "$AZUL_DEPLOYMENT_STAGE.gitlab" && _refresh &&
       make validate &&
       terraform destroy \
         -target aws_cloudwatch_metric_alarm.gitlab_cpu_use \
@@ -376,7 +403,7 @@ _hibernate() {
         -target aws_lb.gitlab_nlb \
         -target aws_lb.gitlab_alb
     ) &&
-    _link "$AZUL_DEPLOYMENT_STAGE" &&
+    _set_deployment "$AZUL_DEPLOYMENT_STAGE" &&
     _refresh &&
     echo "Successfully hibernated $AZUL_DEPLOYMENT_STAGE"
   } then {
@@ -386,46 +413,19 @@ _hibernate() {
   } fi
 }
 
-# Launch Claude Code in a loop, reloading the environment between invocations.
-# Each invocation will pick up where the previous one left off.
-#
-# Usage: _claude [session_id]
-#
-# To exit the loop, exit Claude and then hit any key within 3 seconds.
-#
-_claude() {
-	local session_id flag
-	if [ -n "$1" ] ; then
-		session_id="$1"
-		flag=--resume
-	else
-		session_id="$(python -c 'import uuid; print(uuid.uuid4())')"
-		flag=--session-id
-	fi
-	while claude "$flag" "$session_id" ; do
-		echo >&2 'Reloading environment in 3 seconds. Press any key to exit …'
-		if read -r -t 3 -n 1 ; then
-			break
-		fi
-		_refresh
-		flag=--resume
-	done
-}
-
 # Auto-completion for _select
 #
 _complete_env() {
 	# https://stuff-things.net/2016/05/11/bash-autocompletion/
 	local env envs
 	env="${COMP_WORDS[COMP_CWORD]}"
-	# * because of https://unix.stackexchange.com/a/537241/448602
-	envs=$(find "${project_root}/deployments" -maxdepth 1 -type d -print0 | xargs -0 basename)
+	envs=$(find "${project_root}/deployments" -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 basename)
 	# shellcheck disable=SC2207
 	COMPREPLY=($(compgen -W "$envs" -- "${env}"))
 	return 0
 }
 
-complete -F _complete_env _select _link _validate_link
+complete -F _complete_env _select _set_deployment _validate_deployment
 
 # Adds an az_foo convenience function for every scripts/foo.py
 #

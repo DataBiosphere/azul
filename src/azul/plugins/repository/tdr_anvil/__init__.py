@@ -13,6 +13,7 @@ import logging
 from operator import (
     itemgetter,
 )
+import re
 from typing import (
     Callable,
     Iterable,
@@ -47,6 +48,7 @@ from azul.lib.collections import (
     singleton,
 )
 from azul.lib.types import (
+    JSON,
     MutableJSON,
     MutableJSONs,
 )
@@ -64,7 +66,7 @@ from azul.plugins.metadata.anvil.bundle import (
     KeyReference,
 )
 from azul.plugins.metadata.anvil.schema import (
-    anvil_schema,
+    anvil_schemas,
 )
 from azul.plugins.repository.tdr import (
     TDRBundle,
@@ -80,6 +82,10 @@ from azul.terra import (
 )
 
 log = logging.getLogger(__name__)
+
+#: The version of the AnVIL schema that this module was written against
+#:
+anvil_schema = anvil_schemas[6]
 
 Keys = Set[KeyReference]
 MutableKeys = set[KeyReference]
@@ -539,7 +545,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
     def _get_dataset(self, source: TDRSourceRef) -> tuple[EntityReference, MutableJSON]:
         table_name = 'anvil_dataset'
-        columns = self._columns(table_name)
+        columns = self._columns(source.spec, table_name)
         row = dict(one(self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
             FROM {backtick(self._full_table_name(source.spec, table_name))}
@@ -568,7 +574,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                    *,
                    key_column: str
                    ) -> Iterable[tuple[EntityReference, BigQueryRow]]:
-        columns = self._columns(table_name)
+        columns = self._columns(source, table_name)
         assert not any(map(str.isupper, batch_prefix)), source
         for row in self._run_sql(f'''
             SELECT {', '.join(sorted(columns))}
@@ -899,7 +905,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                            keys: Set[Key],
                            ) -> MutableJSONs:
         if keys:
-            columns = self._columns(entity_type)
+            columns = self._columns(source, entity_type)
             table_name = self._full_table_name(source, entity_type)
             pk_column = entity_type.removeprefix('anvil_') + '_id'
             assert pk_column in columns, entity_type
@@ -926,10 +932,47 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         else:
             return []
 
+    #: Matches a snapshot name, capturing the version of the AnVIL schema the
+    #: snapshot was ingested under. The prefix is matched case insensitively
+    #: because some snapshots in the deployment configurations spell it
+    #: `AnVIL`.
+    #:
+    _snapshot_name_re = re.compile(r'(?i:ANVIL)'  # prefix
+                                   r'_\w+'  # name of the dataset
+                                   r'_\d{8}'  # date the dataset was created
+                                   r'_ANV(\d+)'  # version of the schema
+                                   r'_\d{12}',  # time the snapshot was created
+                                   re.ASCII)
+
+    def validate_source_spec(self, source_spec: TDRSourceSpec) -> None:
+        self._schema_version(source_spec)
+
+    def _schema_version(self, source: TDRSourceSpec) -> int:
+        """
+        The version of the AnVIL schema the given snapshot was ingested under.
+        A snapshot's tables have the columns of that version, not those of the
+        most recent version, so the two must not be confused when selecting
+        columns from a snapshot.
+        """
+        match = self._snapshot_name_re.fullmatch(source.name)
+        assert match is not None, R(
+            'Snapshot name does not match the expected convention', source.name)
+        version = int(match.group(1))
+        assert version in anvil_schemas, R(
+            'Snapshot was ingested under an untracked schema version',
+            source.name, version, sorted(anvil_schemas))
+        return version
+
     @cached_property
-    def _schema_columns_by_table(self) -> Mapping[str, Set[str]]:
+    def _schema_columns_by_version_and_table(self) -> Mapping[int, Mapping[str, Set[str]]]:
+        return {
+            version: self._schema_columns_by_table(schema)
+            for version, schema in anvil_schemas.items()
+        }
+
+    def _schema_columns_by_table(self, schema: JSON) -> Mapping[str, Set[str]]:
         columns_by_table = {}
-        for table in anvil_schema['tables']:
+        for table in schema['tables']:
             table_name = table['name']
             column_names = {column['name'] for column in table['columns']}
             column_names.add('datarepo_row_id')
@@ -940,9 +983,11 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             columns_by_table[table_name] = column_names
         return columns_by_table
 
-    def _columns(self, table_name: str) -> Set[str]:
+    def _columns(self, source: TDRSourceSpec, table_name: str) -> Set[str]:
+        version = self._schema_version(source)
+        columns_by_table = self._schema_columns_by_version_and_table[version]
         # Include all columns for replicas of non-schema tables
-        return self._schema_columns_by_table.get(table_name, {'*'})
+        return columns_by_table.get(table_name, {'*'})
 
     def _column_from_64_to_hex(self, column: str) -> str:
         return f'TO_HEX(FROM_BASE64({column}))'

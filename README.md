@@ -58,12 +58,7 @@ generic with minimal need for project-specific behavior.
   required version is specified in a variable called `azul_docker_version` in
   [environment.py].
 
-- Terraform, to manage deployments. Azul requires a specific version of
-  Terraform, which is defined in a variable called `azul_terraform_version` in
-  [environment.py]. Refer to the official documentation on how to
-  [install terraform]. Terraform comes as a single, statically linked binary, so
-  the easiest method of installation is to download the binary and put it in a
-  directory mentioned in the `PATH` environment variable.
+- [Terraform](#212-terraform), to manage deployments
 
 - [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
   available on PyPI, it must be installed separately. Install the version pinned
@@ -89,7 +84,6 @@ generic with minimal need for project-specific behavior.
   versions should work, too). LibreSSL, which became the default on macOS at 
   some point, is an acceptible replacement. Version 2.8.3 is known to work.  
 
-[install terraform]: https://developer.hashicorp.com/terraform/downloads
 [Docker]: https://docs.docker.com/install/overview/
 [GitHub CLI]: https://github.com/cli/cli#installation
 [AWS CLI v2]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-version.html
@@ -150,6 +144,44 @@ been configured for the clone.
 If you get no output, the AWS provider has not been registered.
 
 [git-secrets]: https://github.com/awslabs/git-secrets
+
+
+### 2.1.2 Terraform
+
+Azul requires a specific version of Terraform, which is defined in a variable
+called `azul_terraform_version` in [environment.py]. Refer to the official
+documentation on how to [install terraform]. Terraform comes as a single,
+statically linked binary, so the easiest method of installation is to download
+the binary and put it in a directory mentioned in the `PATH` environment
+variable.
+
+#### Terraform provider cache
+
+Azul sets `TF_DATA_DIR` per deployment and AWS profile, so without a [plugin
+cache], Terraform downloads a separate copy of each provider binary into every
+deployment's data directory. Because the AWS provider alone is several hundred
+megabytes, total disk usage can reach tens of gigabytes across multiple working
+copies. To avoid this, add the following to `~/.terraformrc`:
+
+```hcl
+plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"
+```
+
+Then create the directory:
+
+```
+mkdir -p ~/.terraform.d/plugin-cache
+```
+
+With the cache configured, `terraform init` stores provider binaries in the
+cache and symlinks to them from each deployment's data directory.
+
+See also the [troubleshooting
+section](#excessive-disk-usage-by-terraform-providers) on recovering from
+long-term use without the cache.
+
+[install terraform]: https://developer.hashicorp.com/terraform/downloads
+[plugin cache]: https://developer.hashicorp.com/terraform/cli/config/config-file#provider-plugin-cache
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)
@@ -254,8 +286,8 @@ navigate to *Settings* -> *Developer settings* -> *Personal access tokens*
 
 6. Click *Generate token* and copy the resulting token
 
-7. Edit the `deployments/.active/environment.local.py` file and modify the
-   `GITHUB_TOKEN` variable: 
+7. Edit `deployments/$azul_current_deployment/environment.local.py`
+   and modify the `GITHUB_TOKEN` variable:
 
    ```
    'GITHUB_TOKEN': '<the token you just copied>'
@@ -387,23 +419,52 @@ deploying to.
 2. Create a new directory for the configuration of your personal deployment:
 
    ```
-   cd deployments
-   cp -r sandbox yourname.local
-   ln -snf yourname.local .active
-   mv .active/.example.environment.local.py .active/environment.local.py 
-   cd ..
+   cp -r deployments/sandbox deployments/yourname.local
+   cd deployments/yourname.local
+   mv .example.environment.local.py environment.local.py
+   cd ../..
+   _select yourname.local
    ```
 
-3. Read all comments in `deployments/.active/environment.py` and
-   `deployments/.active/environment.local.py` and make the appropriate edits.
+3. Read all comments in `deployments/yourname.local/environment.py` and
+   `deployments/yourname.local/environment.local.py` and make the appropriate
+   edits.
 
 
-## 2.4 PyCharm
+## 2.4 PyCharm and Claude Code
+
+PyCharm and Claude Code both start processes that need the Azul environment.
+PyCharm typically inherits its environment from the Init daemon and Python
+interpreters launched in PyCharm inherit their environment from it. There is no
+convenient mechanism in PyCharm to prime those interpreter processes with a
+custom environment.
+
+Claude Code is typically started from a shell and, if that shell has already
+sourced the Azul environment, Claude will inherit it. However, Claude Code
+session can run over a long time, during which the inherited environment will go
+stale: credentials expire, the `environment*.py` files go stale, the selected
+deployment changes, etc. Every time this happens, the `claude` process must be
+restarted, and the session resumed.
+
+The Azul source code includes two hook script to address these issues:
+`envhook.py` injects the environment into Python interpreters started by
+PyCharm, and `claudehook.py` loads it before every Bash command that Claude Code
+runs.
+
+
+### 2.4.1 envhook.py
 
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
 to do this automatically is by installing `envhook.py`, a helper script that
 injects the environment variables from `environment` into the Python interpreter
 process started from the project's virtual environment in `.venv`.
+
+Because PyCharm typically doesn't get its environment from a shell, no process
+it starts inherits `azul_current_deployment`, the variable specifying the
+current deployment. `envhook.py` therefore also loads `environment.hook`. The
+`_select` helper maintains the `azul_current_deployment` entry in that file, so
+selecting a deployment in a shell selects it for PyCharm, too. The other hook
+reads the same file, as described in the next section.
 
 To install `envhook.py` run
 
@@ -417,7 +478,243 @@ Python path, its `sitecustomize.py` file must be renamed or removed before the
 installation can proceed. The current install location can be found by importing
 `sitecustomize` and inspecting the module's `__file__` attribute.
 
-Whether you installed `envook.py` or not, a couple more steps are necessary to
+To remove that file again, run
+
+```
+make envunhook
+```
+
+
+### 2.4.2 claudehook.py
+
+`claudehook.py` registers a `PreToolUse` hook on Claude Code's `Bash` tool.
+That hook prefixes every command Claude Code runs with `source environment`, so
+each command compiles the environment anew instead of inheriting one. The
+registration is written to `.claude/settings.local.json`, the local project
+settings of the repository's main [worktree][git-worktree], because that is the
+file Claude Code reads for every worktree of a repository. Each registration
+names the worktree it was made in, and takes effect only in that worktree.
+
+[git-worktree]: https://git-scm.com/docs/git-worktree
+
+To register the hook run
+
+```
+make claudehook
+```
+
+and to deregister it again run
+
+```
+make claudeunhook
+```
+
+Both targets modify the Claude Code settings of the main worktree, adding or
+removing the registration for the worktree they are invoked in. Any `claude`
+instances already running in that worktree need to be restarted after
+registering or deregistering the hook.
+
+With the hook registered, `claude` must be started from a shell that has the
+virtualenv activated but that has *not* sourced `environment` yet. If either of
+these preconditions unmet, any attempt by Claude to launch a Bash tool command
+fails with a message naming two possible remedies: starting `claude` as
+described above or deregistering the hook.
+
+Additionally, for the hook to work, `claude` must be started in the root of the
+worktree. Also see "Less common hook scenarios" below.
+
+The selected deployment does not travel through those settings, which Claude
+Code shares between a repository's worktrees. The hook reads it from
+`environment.hook`, the file `_select` maintains in the worktree, and exports it
+ahead of sourcing the environment. Selecting a deployment in another shell
+therefore selects it for Claude Code, too, and because the environment is
+sourced fresh for every command, the selection takes effect on the very next
+command in every running Claude instance, without reaching another worktree.
+
+Without the hook, `claude` must be started from a shell that has sourced
+`environment`, and it retains that environment for its entire lifetime. Changes
+to any `environment*.py` file, and expiring credentials, then require restarting
+`claude` and resuming the session.
+
+The diagram below shows the four scenarios involving the two hooks. Heavy boxes
+denote processes, and a heavy arrow connects a process to one it starts. Thin
+boxes denote files and shell functions, and thin arrows show configuration
+flowing between them. The diagram assumes that `envhook.py` was already
+installed as described in [section 2.4.1](#241-envhookpy) above.
+
+```
+                                                   ┏━━━━━━━━━━━━━━━━━━━━━┓
+                                                   ┃  launchd / systemd  ┃
+                                                   ┗━━━━━━━━━━━━━━━━━━━━━┛
+                                                              ┃
+                                                              ▼
+                                                         ┏━━━━━━━━━┓
+                                                         ┃ PyCharm ┃
+                                                         ┗━━━━━━━━━┛
+                                                              ┃
+               ┏━━━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━━━━━━┓
+               ┃                      ┃                                                       ┃                         ┃
+            D1 ▼                      ┃      ┏━━━━━━━━━━━━━━━┓   ┏━━━━━━━━━━━━━━━┓         A1 ▼                     B1  ▼
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓       ┃      ┃ claudehook.py ┃   ┃ claudehook.py ┃    ┏━━━━━━━━━━━━━━━┓            ┏━━━━━━━━┓
+┃            bash             ┃━━━━━━━┃━━━━━▶┃  unregister   ┃   ┃   register    ┃◀━━━┃     bash      ┃            ┃  bash  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛       ┃   D3 ┗━━━━━━━━━━━━━━━┛   ┗━━━━━━━━━━━━━━━┛ A3 ┗━━━━━━━━━━━━━━━┛            ┗━━━━━━━━┛
+     ┃      D2 ▲     │  D6 ▲          ┃              │                   │              │  A6 ▲     ▲ A2                ┃
+  D8 ▼         │     │     │          ┃           D4 ▼                   ▼ A4           │     │     │                B2 ▼
+┏━━━━━━━━┓     │     │     │          ┃        ┌───────────────────────────────┐        │     │     │              ┏━━━━━━━━┓
+┃ claude ┃◀────│─────│─────│──────────┃────────│  .claude/settings.local.json  │────────│─────│─────│─────────────▶┃ claude ┃
+┗━━━━━━━━┛ D9  │     │     │          ┃        └───────────────────────────────┘        │     │     │           B3 ┗━━━━━━━━┛
+     ┃         │     │     │          ┃                                                 │     │     │                   ┃
+ D10 ▼         │     │     │       C1 ▼                                                 │     │     │            ┏━━━━━━●━━━━━━┓
+┏━━━━━━━━┓     │     │     │     ┏━━━━━━━━┓                                             │     │     │            ┃             ┃
+┃  bash  ┃     │     │     │     ┃ python ┃                                             │     │     │            ┃             ┃
+┗━━━━━━━━┛     │     │     │     ┗━━━━━━━━┛                                             │     │     │            ┃             ┃
+               │     │     │       │    ▲ C5                                            │     │     │         B4 ▼             ┃
+               │     │     │    C2 ▼    │                                               │     │     │    ┏━━━━━━━━━━━━━━━┓     ┃
+               │     │     │   ┌────────────┐                                           │     │     │    ┃ claudehook.py ┃     ┃
+               │     │     │   │ envhook.py │◀────────────────┬─────────────────────────┼─────┼─────┼───▶┃     hook      ┃     ┃
+               │     │     │   └────────────┘ C3              │                         │     │     │ B5 ┗━━━━━━━━━━━━━━━┛     ┃
+               │     │     │      ▲ C4                        │                         │     │     │                       B6 ▼
+               │  D5 ▼     │      │                           │                      A5 ▼     │     │                     ┏━━━━━━━━┓
+               │   ┌─────────┐    │                ┌─────────────────────┐            ┌─────────┐   │                     ┃  bash  ┃
+               │   │ _select │────│───────────────▶│  environment.hook   │◀───────────│ _select │   │                     ┗━━━━━━━━┛
+               │   └─────────┘    │             D7 └─────────────────────┘ A7         └─────────┘   │                          ▲
+               │                  │                                                                 │                          │
+               │                  │                 ┌───────────────────┐                           │                          │
+               │                  │                 │ environment.boot  │                           │                          │
+               └──────────────────●─────────────────│  environment*.py  │───────────────────────────●──────────────────────────┘
+                                                    └───────────────────┘
+```
+
+
+#### Scenario A: registering the hook and selecting a deployment
+
+**A1**: User launches Bash from PyCharm and activates the virtualenv¹
+
+**A2**: User sources `environment`
+
+**A3**: User runs `make claudehook` to register a pre-command hook with
+Claude Code
+
+**A4**: `make claudehook` invokes `claudehook.py` to modify Claude's local
+project settings accordingly
+
+**A5**: User invokes `_select` to switch deployments
+
+**A6**: `_select` updates `azul_current_deployment` in Bash's environment
+
+**A7**: `_select` updates `azul_current_deployment` in `environment.hook`
+
+
+#### Scenario B: Claude Code with the hook registered
+
+**B1**: User launches Bash from PyCharm, activates the virtualenv¹ but does
+not source `environment`
+
+**B2**: User starts Claude Code; inheriting a clean environment
+
+**B3**: Claude Code reads the hook configuration from its local project
+settings
+
+**B4**: Before Claude Code runs a Bash command, it invokes `claudehook.py`
+
+**B5**: `claudehook.py` reads `azul_current_deployment` from
+`environment.hook` and prefixes the command with an `export` of that variable
+followed by `source environment`
+
+**B6**: Claude launches the processed Bash command; Bash inherits
+`azul_current_deployment` and sources the environment
+
+This is the main advantage of using `make claudehook`: Switching deployments,
+logging in, and changes to the `environment*.py` files are all effective
+immediately, without restart, and in all Claude Code instances for the current
+worktree.
+
+
+#### Scenario C: Python started by PyCharm
+
+**C1**: User starts Python from the virtualenv within PyCharm; this could be
+an interactive console, a unit test or some script
+
+**C2**: `envhook.py`² is activated as the virtualenv's site hook
+
+**C3**: `envhook.py` reads `azul_current_deployment` from `environment.hook`
+
+**C4**: `envhook.py` loads the environment for the specified deployment
+
+**C5**: `envhook.py` populates the environment of the Python process
+
+
+#### Scenario D: Claude Code without the hook
+
+This scenario is mutually exclusive with scenarios A and B: any attempt
+by Claude Code to run a command when Claude was launched from a populated
+environment while `claudehook.py` is registered will fail with an obvious
+error.
+
+**D1**: User launches Bash from PyCharm; activates virtualenv¹
+
+**D2**: User sources `environment`
+
+**D3**: User runs `make claudeunhook` to deregister the pre-command hook from
+Claude Code
+
+**D4**: `make claudeunhook` invokes `claudehook.py` to modify Claude's local
+project settings accordingly
+
+**D5**: User invokes `_select` to switch deployments
+
+**D6**: `_select` updates `azul_current_deployment` in Bash's environment
+
+**D7**: `_select` updates `azul_current_deployment` in `environment.hook`
+
+**D8**: User starts Claude Code; inheriting an already populated environment
+
+**D9**: `azul_current_deployment` is absent from Claude's local project settings
+
+**D10**: Claude Code runs a command; inheriting the already sourced
+environment
+
+Claude will continue to use the deployment that was selected when it was
+launched. Multiple Claude instances launched this way may use different
+deployments but any changes to `environment*.py` or expiring credentials
+require a restart of Claude and a resumption of the session.
+
+
+#### Footnotes
+
+¹ PyCharm's terminal can be configured to automatically activate the
+virtualenv
+
+² `envhook.py` is invoked in every interpreter in the virtualenv but the
+behavior described here is only activated when the interpreter is directly
+invoked by PyCharm
+
+
+#### Less common hook scenarios
+
+As mentioned above, `claude` must be started in the root of the worktree for the
+hook to be effective. Claude Code considers the directory `claude` was launched
+in to be a *project directory*, and a registration acts on a command only when
+the project directory is the root of a worktree for which the hook was
+registered.
+
+Registering the hook in more than one worktree leaves one hook registration per
+worktree in the main worktree's settings. Claude Code runs every one of them for
+every command, but only the one matching the current project directory invokes
+`claudehook.py`. The others exit without invoking it at all.
+
+Launching `claude` from a subdirectory of a worktree makes that subdirectory the
+project directory. Since that's not the root of the worktree, no registration
+acts on the command, and the command runs unmodified, as in scenario D. The same
+happens in a worktree without a hook registration. Either way the user should
+`source environment` before launching `claude` (scenario D), or run `make
+claudehook` from the root of the worktree and launch `claude` there (scenarios A
+and B).
+
+
+### 2.4.3 Configuring PyCharm
+
+Whether you installed `envhook.py` or not, a couple more steps are necessary to
 configure PyCharm for Azul:
 
 1. Under *Settings* -> *Project—Interpreter* select the virtual environment
@@ -992,7 +1289,7 @@ but they will be empty.
    your deployment.
 
 7. Delete the local Terraform state file at
-   `deployments/.active/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
+   `deployments/foo.local/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
 
 
 # 4. Running system components locally
@@ -1249,6 +1546,60 @@ causing a failure.
 
 If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](/test/azul_test_case.py) and commit the modifications. 
+
+
+## Excessive disk usage by Terraform providers
+
+Without a [plugin cache], Terraform downloads a separate copy of each provider
+binary into every deployment's data directory. Because Azul sets `TF_DATA_DIR`
+per deployment and AWS profile, and the AWS provider alone is several hundred
+megabytes, total disk usage can reach tens of gigabytes across every worktree,
+aka working copy, resulting in unexpectedly low free disk space and large
+`.terraform.*/providers` directories under `deployments/`:
+
+```
+du -sh deployments/*/.terraform.*/providers
+```
+
+To recover:
+
+1. Configure the plugin cache as described in the [Terraform provider
+   cache](#terraform-provider-cache) section.
+
+2. Remove the provider versions that are no longer pinned in this working copy's
+   lock files:
+
+   ```
+   python scripts/tf_clean_providers.py --dry-run
+   python scripts/tf_clean_providers.py
+   ```
+
+   The first invocation only reports what the second one would remove. This is
+   safe because the provider binaries are downloaded on demand by `terraform
+   init`, which runs as a prerequisite of most Terraform operations. Only the
+   `providers` directories are affected; each deployment's `terraform.tfstate`
+   (a backend configuration cache) and `modules/` directory are preserved.
+
+3. The next `terraform init` for each deployment will re-download the required
+   providers into the shared cache if necessary and symlink them.
+
+If you have additional worktrees of the repository, repeat step 2 in each of 
+them. The cache is shared across all working copies.
+
+Where the cache was already in use, the entries removed by step 2 are merely
+symlinks into it, and the binaries themselves remain. Once every worktree has 
+been visited, reclaim those by running the script one last time, in any one of 
+the working copies:
+
+```
+python scripts/tf_clean_providers.py --clean-cache --dry-run
+python scripts/tf_clean_providers.py --clean-cache
+```
+
+This removes every cached provider version that step 2 did not mark as still
+in use. Visiting *all* worktrees first is therefore essential, or the
+providers used by the ones you skipped will be removed. They would be
+re-downloaded on the next `terraform init`, at merely the cost of a download.
 
 
 # 6. Operational Procedures

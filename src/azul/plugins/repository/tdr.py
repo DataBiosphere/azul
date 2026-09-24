@@ -158,6 +158,14 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
     def _lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec)
 
+    def validate_source_spec(self, source_spec: TDRSourceSpec) -> None:
+        """
+        Raise an exception if this plugin can't index the given source, for
+        example, because the snapshot's name violates a convention the plugin
+        relies on. Called for every configured source when a deployment is
+        updated, so that such a source is rejected before it is indexed.
+        """
+
     def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> TDR_BUNDLE:
         self._assert_source(bundle_fqid.source)
         now = time.time()

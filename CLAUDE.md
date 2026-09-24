@@ -6,6 +6,60 @@
 - `mypy` — type check (no arguments; checks only files configured in `.mypy.ini`)
 
 
+# Environment
+
+Most commands need this project's environment, which reaches them in one of
+three ways. The optional `scripts/claudehook.py` hook is registered in
+`.claude/settings.local.json` by `python -S scripts/claudehook.py register`,
+and removed from it by `python -S scripts/claudehook.py unregister`. Whether a
+command has an environment at all is evident from `azul_env_hash` being set
+in it.
+
+- *Hook registered*: nothing is needed, because the hook prefixes every command
+  with the loading of a freshly compiled environment. Claude Code must have been
+  started from a shell with the virtualenv activated but *without* `environment`
+  sourced. The hook enforces both, blocking every command with a message that
+  names the two ways out: restarting `claude` as described, or unregistering
+  the hook. Relay that message; neither remedy can be applied from within the
+  session, because it inherited what is wrong with it.
+
+  Because the environment is recompiled per command, the deployment can be
+  switched between commands: the hook reads `azul_current_deployment` from
+  `environment.hook` in the working copy, which `_select` maintains, and a
+  change there takes effect on the very next command. That file, rather than
+  Claude Code's settings, holds the selection because Claude Code applies the
+  settings of a repository's main worktree to sessions in all of its other
+  worktrees, so a deployment kept there would not be specific to one working
+  copy. Ask the user before switching it yourself. The hook also runs
+  `_login_aws` before every command,
+  so the AWS session credentials are present without being inherited, which
+  matters to Terraform because its provider configuration names no profile.
+  Refreshing them needs an MFA token and therefore a terminal, so once they
+  lapse the hook reports `Expired AWS credentials. Run _login_aws.` followed
+  by `_login_aws failed` before every command, without blocking any of them.
+  Relay that and ask the user to run `_login_aws` in a terminal; no restart is
+  needed.
+
+- *No hook, and `azul_env_hash` unset*: prefix every command that needs the
+  environment with `export azul_env_quiet=1` followed by `source environment ||
+  exit`. Sourcing affects only the command that does it, so the prefix is needed
+  every time. The `|| exit` prevents the command from running without an
+  environment, and `azul_env_quiet` suppresses the 80-odd lines of diagnostics
+  that would otherwise precede the command's own output.
+
+- *No hook, but `azul_env_hash` set*: the legacy arrangement, in which Claude
+  Code was started from a shell that had sourced `environment`, so that every
+  command inherits a copy of it. Nothing is needed until that copy goes stale.
+  An `environment.py` change, or a different `azul_current_deployment`, makes
+  `envhook.py` fail every Python command with `The environment is stale`. The
+  AWS session credentials in the copy also expire on their own after a few
+  hours, which cannot change `azul_env_hash` because they are not derived from
+  any `environment.py`, and so surfaces as authentication failures from
+  anything calling AWS rather than as a complaint from `envhook.py`. Either way,
+  recovering requires the user to re-source `environment`, restart Claude Code
+  and resume the session.
+
+
 # Guidelines
 
 - In addition to the directives in this document, also respect those contained

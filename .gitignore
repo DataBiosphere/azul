@@ -13,13 +13,12 @@ __pycache__/
 ## Build products above this line. Please see the `clean` target in Makefile.
 
 # Local environment configuration
-/deployments/.active
 /deployments/*.local/
 /environment.local.py
+/environment.hook
 /deployments/*/environment.local.py
 /deployments/*/.terraform/
 /deployments/*/.terraform.*/
-/deployments/*/.gcloud/
 # Virtual environment created by Makefile
 /.venv/
 # PyCharm

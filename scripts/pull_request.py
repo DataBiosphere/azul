@@ -45,6 +45,9 @@ _project_owner = 'DataBiosphere'
 _project_repos = ['azul', 'azul-private']
 _project_title = 'Azul'
 
+#: Matches the number that prefixes every checklist item in the PR templates
+_item_number = r'(?:`\d+` )?'
+
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
@@ -138,7 +141,7 @@ def main(argv):
 
     body = _reference_issue_in_body(body, issue.ref)
 
-    m = re.search(r'^- \[[ x]] Target branch is `(.+?)`$',
+    m = re.search(r'^- \[[ x]] ' + _item_number + r'Target branch is `(.+?)`$',
                   template, flags=re.MULTILINE)
     assert m is not None, R('Target branch task not found in template')
     target_branch = m.group(1)
@@ -477,23 +480,23 @@ def _reference_issue_in_body(body: str, issue_ref: str) -> str:
 
 
 def _reindex_labels(body: str) -> list[str]:
-    return re.findall(r'^- \[[ x]] This PR is labeled `(reindex:\w+)`',
+    return re.findall(r'^- \[[ x]] ' + _item_number + r'This PR is labeled `(reindex:\w+)`',
                       body, flags=re.MULTILINE)
 
 
 def _mirror_labels(body: str) -> list[str]:
-    return re.findall(r'^- \[[ x]] This PR is labeled `(mirror:\w+)`',
+    return re.findall(r'^- \[[ x]] ' + _item_number + r'This PR is labeled `(mirror:\w+)`',
                       body, flags=re.MULTILINE)
 
 
 def _deploy_labels(body: str) -> list[str]:
-    return re.findall(r'^- \[[ x]] This PR is labeled `(deploy:\w+)`',
+    return re.findall(r'^- \[[ x]] ' + _item_number + r'This PR is labeled `(deploy:\w+)`',
                       body, flags=re.MULTILINE)
 
 
 def _check_task(body: str, task: str, checked: bool = True) -> str:
     mark = 'x' if checked else ' '
-    body, n = re.subn(r'^- \[[ x]] (' + task + ')$',
+    body, n = re.subn(r'^- \[[ x]] (' + _item_number + task + ')$',
                       r'- [' + mark + r'] \1',
                       body, flags=re.MULTILINE)
     assert n > 0, R('Task item not found in template', task)

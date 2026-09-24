@@ -50,10 +50,9 @@ build_image:
   image: ${azul_image}:${azul_image_tag}
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
-    - source /build/.venv/bin/activate
     - source environment  # load global defaults
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print)
-    - _link $deployment
+    - _set_deployment $deployment
     - _refresh
     - status_context="gitlab/${azul_gitlab_instance_name}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
@@ -98,7 +97,7 @@ deploy_base:
   stage: deploy
   timeout: 20m
   script:
-    - _link $deployment.base
+    - _set_deployment $deployment.base
     - _refresh
     - cd terraform/base
     - make auto_apply
@@ -130,7 +129,7 @@ deploy_browser:
     - deploy
   script:
     - if [[ ! -e deployments/$deployment.browser ]] ; then exit 0 ; fi
-    - _link $deployment.browser
+    - _set_deployment $deployment.browser
     - _refresh
     - cd terraform/browser
     - make auto_apply

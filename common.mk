@@ -11,17 +11,34 @@ check_env:
 		false; \
 	fi
 
+# An empty value means the same as the variable being absent, which is how
+# `environment` treats it, too.
+#
+.PHONY: check_deployment
+check_deployment: check_env
+	@if ! test -n "$$azul_current_deployment"; then \
+		echo -e "\nPlease select a deployment by running '_select <deployment>'\n"; \
+		false; \
+	fi
+
+# On a developer machine, Azul's dependencies are installed into the virtual
+# environment at $VIRTUAL_ENV. On the dev image, the one built from the
+# Dockerfile at the project root, they are installed directly into the image's
+# Python installation at $UV_PROJECT_ENVIRONMENT.
+#
+python_env = $(or $(VIRTUAL_ENV),$(UV_PROJECT_ENVIRONMENT))
+
 .PHONY: check_venv
 check_venv: check_env
-	@if ! test -n "$$VIRTUAL_ENV"; then \
+	@if ! test -n "$(python_env)"; then \
 		echo -e "\nError: Run 'source .venv/bin/activate' first\n"; \
 		false; \
 	fi
 
 .PHONY: check_python
 check_python: check_venv
-	@if test "$$VIRTUAL_ENV/bin/python" != "$$(hash python && hash -t python)"; then \
-  		echo -e "\nPATH lookup yields a 'python' executable from outside the virtualenv\n"; \
+	@if test "$(python_env)/bin/python" != "$$(hash python && hash -t python)"; then \
+  		echo -e "\nPATH lookup yields a 'python' executable from outside $(python_env)\n"; \
 		false; \
 	fi
 	@if ! python -c 'pass'; then \
@@ -81,7 +98,7 @@ check_awscli: check_env
 	fi
 
 .PHONY: check_aws
-check_aws: check_python check_awscli
+check_aws: check_python check_awscli check_deployment
 	@if ! python -c "import os, sys, boto3 as b; \
 		             expected = os.environ['AZUL_AWS_ACCOUNT_ID']; \
 		             actual = b.client('sts').get_caller_identity()['Account']; \

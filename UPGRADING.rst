@@ -19,6 +19,82 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+Note that as of September 2026, the issue number(s) must be occur in parentheses
+and at the end of section titles, instead of the beginning.
+
+
+#8239 Unused Terraform provider binaries accumulate unboundedly
+===============================================================
+
+Everyone
+--------
+
+Consider setting up a `provider cache <./README.md#terraform-provider-cache>`_
+for Terraform. To reclaim the space taken up by provider versions downloaded
+before the cache was configured, integrate these changes into each worktree, and
+follow the `troubleshooting instructions
+<./README.md#excessive-disk-usage-by-terraform-providers>`_ in the README.
+
+
+Suprious warning from Claude hook in linked worktree (#8308)
+============================================================
+
+Everyone
+--------
+
+If you followed the instruction for #8290 when it was at the top of this file,
+manually remove the hook registration from ``.claude/settings.local.json`` in
+every worktree. Do not use ``make claudeunhook``. Then run ``make claudehook``
+in your worktrees as desired.
+
+
+
+#8290 Use of Claude Code is complicated by .active deployment symlink
+=====================================================================
+
+The current deployment is now specified in the ``azul_current_deployment``
+environment variable instead of the ``deployments/.active`` symbolic link. There
+is no default; the variable must be set explicitly, which ``_select`` does. In a
+shell, the selection therefore lives in that shell and has to be made again in
+every new one, where previously the link persisted it on disk. A process that
+doesn't inherit its environment from a shell needs the variable from elsewhere.
+The two hooks we use read it from ``environment.hook`` in the working copy:
+``envhook.py`` injects it into the Python processes PyCharm starts, and
+``claudehook.py`` exports it ahead of sourcing the environment for a command.
+
+There is also a new hook for Claude Code. The use of that hook is optional. It
+ensures that Claude Code sessions immediately pick up environmental changes but
+it does require that Claude Code is invoked without first sourcing the
+environment. It is not possible to use the hook in conjunction with Claude Code
+instances that were launched with an already populated environment, so you have
+the choice: don't use the hook and continue to run ``claude`` in shells with
+``environment`` already sourced—and thanks to ``azul_current_deployment`` above,
+these ``claude`` instances may even have different deployments selected—or enjoy
+the benefit of never having to restart ``claude``, but accept that all
+``claude`` instances running in a working copy target the same deployment. See
+`section 2.4.2 <./README.md#242-claudehookpy>`_ of the README for how to
+register the hook.
+
+The Google Cloud SDK state no longer lives in the working copy. It is now kept
+under ``$XDG_DATA_HOME/azul/gcloud``, segregated by Google Cloud project, and
+shared by all Azul working copies. UCSC ITS started enforcing a session timeout
+of about a day, so the sharing should reduce the number of interactive Google
+Cloud reauthorization flows.
+
+Everyone
+--------
+
+Delete the now unused symbolic link::
+
+    rm deployments/.active
+
+The state accumulated at the old Google Cloud SDK path is obsolete and should be
+removed from each working copy::
+
+    rm -rf deployments/*/.gcloud
+
+Expect to authenticate once per Google Cloud project afterwards.
+
 
 #8249 Use uv to manage Python dependencies
 ==========================================

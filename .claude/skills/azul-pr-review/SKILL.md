@@ -1,7 +1,5 @@
 ---
-name: pr-review
 description: "Review an Azul PR"
-user_invocable: true
 ---
 
 # PR review
