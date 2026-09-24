@@ -77,7 +77,7 @@ anvil_sources = union({}, 6, delta([
     # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
     #        https://github.com/DataBiosphere/azul/issues/7634
     source('e53e74aa', '1000G_2019_Dev_20230609_ANV5_202306121732', no_mirror),
-    source('42c70e6a', 'CCDG_Sample_1_20230228_ANV5_202302281520', no_ma_mirror),
+    source('42c70e6a', 'CCDG_Sample_1_20230228_ANV5_202302281520'),
     source('dd576076', 'CMG_Sample_1_20230225_ANV5_202512031111'),
     source('492d963b', 'Test_RAS_DRS_Datastorage_phs002410_c2_20260812_ANV6_202608241619'),
     source('5b1d8d31', 'Test_RAS_DRS_Datastorage_phs003472_NRES_20260812_ANV6_202608241622'),
