@@ -32,7 +32,6 @@ from azul.lib.types import (
     json_sequence_of_mappings,
     json_str,
     json_untyped_dict,
-    optional,
 )
 from azul.plugins import (
     SpecialFields,
@@ -229,9 +228,7 @@ class AnvilSearchResponseStage(SearchResponseStage):
                         ) -> MutableJSON:
         inner_entity = copy_json(inner_entity)
         if inner_entity_type == 'files':
-            inner_entity['azul_url'] = self._file_url(uuid=json_str(inner_entity['document_id']),
-                                                      version=json_str(inner_entity['version']),
-                                                      drs_uri=optional(json_str, inner_entity['drs_uri']))
+            inner_entity['azul_url'] = self._file_url(inner_entity)
             inner_entity['azul_mirror_uri'] = self._file_mirror_uri(source, inner_entity)
             inner_entity.pop('version', None)
         return inner_entity
