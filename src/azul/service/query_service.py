@@ -318,8 +318,6 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
     def prepare_request(self, request: Search) -> Search:
         field_mapping = self.plugin.field_mapping
         for facet in self.plugin.facets:
-            # FIXME: Aggregation filters may be redundant when post_filter is false
-            #        https://github.com/DataBiosphere/azul/issues/3435
             aggregate = self._prepare_aggregation(facet=facet,
                                                   facet_path=field_mapping[facet])
             request.aggs.bucket(facet, aggregate)
@@ -341,9 +339,14 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         """
         Creates an aggregation to be used in an OpenSearch search request.
         """
-        # Create a filter agg using a query that represents all filters
-        # except for the current facet.
-        query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
+        if self.filter_stage.post_filter:
+            # Create a filter agg using a query that represents all filters
+            # except for the current facet.
+            query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
+        else:
+            # The top-level query in FilterStage already applies every
+            # filter, so filtering again here would be redundant.
+            query = Q('match_all')
         agg = A('filter', query)
 
         field_type = self.service.field_type(self.catalog, facet_path)

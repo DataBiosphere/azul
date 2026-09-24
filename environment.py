@@ -329,7 +329,7 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.2.6.1-87',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2025.3-88',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
@@ -549,18 +549,15 @@ def env() -> Mapping[str, str | None]:
         #
         'GOOGLE_PROJECT': None,
 
-        # The path of the directory where the Google Cloud Python libraries and
+        # The path of the directory where the Google Cloud SDK for Python and
         # the Google Cloud CLI (gcloud) put their state. If this variable is not
-        # set, the state is placed in ~/.config/gcloud by default. Since we want
-        # to segregate this state per working copy and deployment, we set this
-        # variable to the path of a deployment-specific directory in the working
-        # copy. Note that this variable does not affect the Google Cloud
-        # libraries for Go, or the Google Cloud provider for Terraform which
-        # uses these Go libraries. Luckily, the Go libraries don't write any
-        # state, they only read credentials from the location configured via
+        # set, the state is placed in ~/.config/gcloud by default. Note that
+        # this variable does not affect the Google Cloud SDK for Go, or the
+        # Google Cloud provider for Terraform. They don't write any state, they
+        # only read credentials from the location configured via
         # GOOGLE_APPLICATION_CREDENTIALS below.
         #
-        'CLOUDSDK_CONFIG': '{project_root}/deployments/.active/.gcloud',
+        'CLOUDSDK_CONFIG': xdg_data_home + '/azul/gcloud/{GOOGLE_PROJECT}',
 
         # The path of a JSON file with credentials for an authorized user or a
         # service account. The Google Cloud libraries for Python and Go will
@@ -759,7 +756,7 @@ def env() -> Mapping[str, str | None]:
         # different AWS accounts, we need a discriminator for the state directory and
         # the best I could come up with is the profile name.
         #
-        'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
+        'TF_DATA_DIR': '{project_root}/deployments/{azul_current_deployment}/.terraform.{AWS_PROFILE}',
 
         # Make Terraform's deprecation warnings more compact
         #
@@ -1026,5 +1023,37 @@ def env() -> Mapping[str, str | None]:
         # URL of Terra's external credentials manager (ECM) service used by the
         # Azul deployment.
         #
-        'azul_ecm_service_url': None
+        'azul_ecm_service_url': None,
+
+        # A digest of the names and values of all variables in this
+        # environment. `scripts/export_environment.py` adds it after merging
+        # and resolving all `environment.py` modules, which is why it must not
+        # be defined here. `scripts/envhook.py` compares it against the digest
+        # of a freshly compiled environment, to detect that a Python process
+        # inherited a stale environment from the shell that started it.
+        #
+        'azul_env_hash': None,
+
+        # A comma-separated list of the names of all other variables in this
+        # environment, including `azul_env_hash`. Variable names may therefore
+        # not contain a comma. `scripts/export_environment.py` adds it while
+        # exporting the environment, which is why it must not be defined here.
+        # When the environment is exported again, the list is read back from
+        # the shell to determine which of the previously exported variables are
+        # no longer part of the environment, and must be unset.
+        #
+        'azul_env_vars': None,
+
+        # Whether to suppress the diagnostic output that
+        # `scripts/export_environment.py` emits about the modules the
+        # environment is loaded from, and the variables it consists of.
+        # Warnings and errors are emitted either way. The only accepted values
+        # are "0" and "1"; the variable being absent means the same as "0".
+        #
+        # This variable is an input to loading the environment rather than a
+        # part of it, which is why it is not defined here. Defining it would
+        # also export it, overriding the value in the shell that loads the
+        # environment.
+        #
+        'azul_env_quiet': None,
     }

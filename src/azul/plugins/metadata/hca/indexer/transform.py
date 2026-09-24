@@ -125,7 +125,6 @@ from azul.plugins.metadata.hca.indexer.aggregate import (
     ProtocolAggregator,
     SampleAggregator,
     SequencingInputAggregator,
-    SequencingProcessAggregator,
     SpecimenAggregator,
 )
 from azul.plugins.metadata.hca.service.contributor_matrices import (
@@ -504,8 +503,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return ProtocolAggregator
         elif entity_type == 'sequencing_inputs':
             return SequencingInputAggregator
-        elif entity_type == 'sequencing_processes':
-            return SequencingProcessAggregator
         elif entity_type in ('matrices', 'contributed_analyses'):
             return MatricesAggregator
         elif entity_type == 'dates':
@@ -1090,17 +1087,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _sequencing_process_types(cls) -> FieldTypes:
-        return {
-            **cls._entity_types(),
-        }
-
-    def _sequencing_process(self, process: api.Process) -> MutableJSON:
-        return {
-            **self._entity(process),
-        }
-
-    @classmethod
     def _sequencing_input_types(cls) -> FieldTypes:
         return {
             **cls._biomaterial_types(),
@@ -1311,7 +1297,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'imaging_protocols': cls._imaging_protocol_types(),
             'library_preparation_protocols': cls._library_preparation_protocol_types(),
             'sequencing_protocols': cls._sequencing_protocol_types(),
-            'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
             'matrices': cls._matrix_types(),
             'contributed_analyses': cls._matrix_types(),
@@ -1428,6 +1413,9 @@ class TransformerVisitor(api.EntityVisitor):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
             if entity.is_sequencing_process():
+                # Sequencing processes are not included in contributions, but
+                # the FileTransformer still needs to visit them to emit them as
+                # replicas.
                 self.sequencing_processes[entity.document_id] = entity
             for protocol in entity.protocols.values():
                 if isinstance(protocol, api.AnalysisProtocol):
@@ -1565,9 +1553,6 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=[self._file(file, related_files=related_files)],
                                 **self._protocols(visitor),
-                                sequencing_processes=list(
-                                    map(self._sequencing_process, visitor.sequencing_processes.values())
-                                ),
                                 dates=[self._date(file)],
                                 projects=[self._project(self._api_project)])
                 # Supplementary file matrices provide stratification values that
@@ -1688,9 +1673,6 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             organoids=list(map(self._organoid, visitor.organoids.values())),
                             files=list(map(self._file, visitor.files.values())),
                             **self._protocols(visitor),
-                            sequencing_processes=list(
-                                map(self._sequencing_process, visitor.sequencing_processes.values())
-                            ),
                             dates=[self._date(cell_suspension)],
                             projects=[self._project(self._api_project)])
             yield self._contribution(contents, cell_suspension.ref.entity_id)
@@ -1734,9 +1716,6 @@ class SampleTransformer(PartitionedTransformer):
                             organoids=list(map(self._organoid, visitor.organoids.values())),
                             files=list(map(self._file, visitor.files.values())),
                             **self._protocols(visitor),
-                            sequencing_processes=list(
-                                map(self._sequencing_process, visitor.sequencing_processes.values())
-                            ),
                             dates=[self._date(sample)],
                             projects=[self._project(self._api_project)])
             yield self._contribution(contents, sample.ref.entity_id)
@@ -1831,9 +1810,6 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         organoids=list(map(self._organoid, visitor.organoids.values())),
                         files=list(map(self._file, visitor.files.values())),
                         **self._protocols(visitor),
-                        sequencing_processes=list(
-                            map(self._sequencing_process, visitor.sequencing_processes.values())
-                        ),
                         matrices=matrices,
                         contributed_analyses=contributed_analyses,
                         dates=[self._date(self._singleton_entity())],

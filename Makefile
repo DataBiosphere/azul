@@ -20,6 +20,18 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
+.PHONY: envunhook
+envunhook: check_venv
+	python scripts/envhook.py remove
+
+.PHONY: claudehook
+claudehook: check_venv
+	python scripts/claudehook.py register
+
+.PHONY: claudeunhook
+claudeunhook: check_venv
+	python scripts/claudehook.py unregister
+
 #	`--frozen` installs exactly what `uv.lock` specifies, without resolving
 #	dependencies and without checking the lock against `pyproject.toml`. This
 #	is what installing the pins from `requirements*.txt` with `--no-deps` used
@@ -70,7 +82,7 @@ environment.boot: check_python
 	python scripts/generate_environment_boot.py
 
 gh_checksums: check_env
-	curl --fail --silent --location -o bin/checksums/gh_checksums.txt \
+	curl --fail --no-progress-meter --location -o bin/checksums/gh_checksums.txt \
 	    https://github.com/cli/cli/releases/download/v$(azul_ghcli_version)/gh_$(azul_ghcli_version)_checksums.txt
 
 #	Unlike the GitHub CLI, uv publishes one checksum file per release asset, so
@@ -80,7 +92,7 @@ gh_checksums: check_env
 uv_checksums: check_env
 	rm -f bin/checksums/uv_checksums.txt
 	for arch in x86_64 aarch64 ; do \
-	    curl --fail --silent --location \
+	    curl --fail --no-progress-meter --location \
 	        https://github.com/astral-sh/uv/releases/download/$(azul_uv_version)/uv-$$arch-unknown-linux-gnu.tar.gz.sha256 \
 	        >> bin/checksums/uv_checksums.txt ; \
 	done
@@ -89,7 +101,7 @@ uv_checksums: check_env
 lambdas: check_env
 	$(MAKE) -C lambdas
 
-anvil_schema: check_python
+anvil_schema: check_python check_deployment
 	python scripts/download_anvil_schema.py
 
 define deploy
@@ -110,25 +122,25 @@ destroy:
 	$(MAKE) -C terraform destroy
 
 .PHONY: create
-create: check_python check_branch
+create: check_aws check_python check_branch
 	python scripts/reindex.py --create
 
 .PHONY: delete
-delete: check_python check_branch
+delete: check_aws check_python check_branch
 	python scripts/reindex.py --delete
 
 .PHONY: index
-index: check_python check_branch
+index: check_aws check_python check_branch
 	python scripts/reindex.py --index
 
 reindex_args = --delete --index --purge
 
 .PHONY: reindex
-reindex: check_python check_branch
+reindex: check_aws check_python check_branch
 	python scripts/reindex.py ${reindex_args}
 
 .PHONY: reindex_no_slots
-reindex_no_slots: check_python check_branch
+reindex_no_slots: check_aws check_python check_branch
 	python scripts/reindex.py ${reindex_args} --no-slots
 
 # By our own convention, a line starting with `##` in the top-level `.gitignore`
@@ -291,7 +303,7 @@ tag: check_branch
 	git tag $$tag_name && echo Run '"'git push origin tag $$tag_name'"' now to push the tag
 
 .PHONY: integration_test
-integration_test: check_python check_branch $(project_root)/lambdas/service/.chalice/config.json
+integration_test: check_aws check_python check_branch $(project_root)/lambdas/service/.chalice/config.json
 	python -m unittest --verbose integration_test
 
 .PHONY: check_clean

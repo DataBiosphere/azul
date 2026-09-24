@@ -1322,23 +1322,6 @@
                     "fields": [
                         {
                             "name": "document_id",
-                            "namespace": "sequencing_processes",
-                            "type": {
-                                "items": [
-                                    "null",
-                                    "string"
-                                ],
-                                "type": "array"
-                            }
-                        }
-                    ],
-                    "name": "sequencing_processes",
-                    "type": "record"
-                },
-                {
-                    "fields": [
-                        {
-                            "name": "document_id",
                             "namespace": "matrices",
                             "type": {
                                 "items": [

@@ -899,6 +899,14 @@
                         },
                         {
                             "namespace": "anvil_file",
+                            "name": "file_path",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "namespace": "anvil_file",
                             "name": "file_ref",
                             "type": [
                                 "null",

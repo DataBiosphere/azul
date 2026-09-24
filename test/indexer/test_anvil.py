@@ -55,6 +55,7 @@ from azul.plugins.repository.tdr_anvil import (
 )
 from azul.terra import (
     TDRClient,
+    TDRSourceSpec,
 )
 from azul_test_case import (
     TDRTestCase,
@@ -175,19 +176,19 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         ]
         expected_bundle_fqids = sorted(canned_bundle_fqids + [
             # Replica bundles for the AnVIL schema tables, which we don't can
-            self.bundle_fqid(uuid='59337757-a45e-af00-9238-34997372f696',
+            self.bundle_fqid(uuid='2a65294f-9cdf-a455-87e9-666bd8477725',
                              table_name='anvil_activity'),
-            self.bundle_fqid(uuid='1df1df09-3e18-adfa-80e2-515e71a5d3e7',
+            self.bundle_fqid(uuid='5f896854-75a9-a0be-ac10-cf4cb2ef2efd',
                              table_name='anvil_alignmentactivity'),
-            self.bundle_fqid(uuid='a70d523a-da59-aabe-8a4b-bae394df4253',
+            self.bundle_fqid(uuid='8ec98aad-7d3e-ab63-841e-2e6c40e766eb',
                              table_name='anvil_assayactivity'),
-            self.bundle_fqid(uuid='0ad2c320-4383-a5b4-87c4-cbc66527837f',
+            self.bundle_fqid(uuid='477175ff-777e-a5fc-985f-572ab137d934',
                              table_name='anvil_diagnosis'),
-            self.bundle_fqid(uuid='dfd8ff3d-de2c-a44d-bebe-f540f62a92da',
+            self.bundle_fqid(uuid='2e84f5a3-ccfe-aae7-aab0-0a5cbd78b685',
                              table_name='anvil_donor'),
-            self.bundle_fqid(uuid='4ca2319c-abe0-a583-b7a5-d3c8ad2114a0',
+            self.bundle_fqid(uuid='713f9fe8-1736-aa50-8355-d71fadaca2e1',
                              table_name='anvil_sequencingactivity'),
-            self.bundle_fqid(uuid='b47b0e77-7e5a-ab0e-917b-a7096bb7297a',
+            self.bundle_fqid(uuid='f01e33f5-71a4-a90e-9ccb-8c0f31ae3214',
                              table_name='anvil_variantcallingactivity')
         ])
         plugin = self.plugin
@@ -234,6 +235,56 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     metadata = bundle.entities[dataset_ref]
                     self.assertIsNone(metadata['duos_id'])
                     self.assertIsNone(metadata['description'])
+
+    def test_schema_version(self):
+        plugin = self.plugin
+        for name, expected in [
+            ('ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 5),
+            ('ANVIL_1000G_high_coverage_2019_20230517_ANV6_202607071430', 6),
+            # Some snapshots spell the prefix `AnVIL`
+            ('AnVIL_1000G_2019_Dev_20230609_ANV5_202306121732', 5)
+        ]:
+            with self.subTest(name=name):
+                self.assertEqual(expected, plugin._schema_version(self._spec(name)))
+        for name in [
+            # No version at all
+            'anvil_snapshot',
+            # A version we don't track, and therefore can't select columns for
+            'ANVIL_1000G_2019_Dev_20230609_ANV4_202306121732',
+            # No dataset name
+            'ANVIL_20230609_ANV5_202306121732',
+            # Truncated date, version and time
+            'ANVIL_1000G_2019_Dev_2023060_ANV5_202306121732',
+            'ANVIL_1000G_2019_Dev_20230609_ANV_202306121732',
+            'ANVIL_1000G_2019_Dev_20230609_ANV5_20230612173',
+            # Trailing and leading garbage
+            'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732_v2',
+            'restored_ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732',
+            # An atlas whose snapshots don't encode a schema version at all
+            'hca_prod_005d611a14d54fbf846e571a1f874f70__20220111_dcp2_20241205_dcp45'
+        ]:
+            with self.subTest(name=name):
+                with self.assertRaises(AssertionError):
+                    plugin._schema_version(self._spec(name))
+
+    def test_columns_per_schema_version(self):
+        plugin = self.plugin
+        # Version 6 added this column to the anvil_file table, so selecting it
+        # from a snapshot ingested under version 5 would fail
+        column = 'file_path'
+        for version, expected in [(5, False), (6, True)]:
+            with self.subTest(version=version):
+                name = f'ANVIL_1000G_2019_Dev_20230609_ANV{version}_202306121732'
+                columns = plugin._columns(self._spec(name), 'anvil_file')
+                self.assertEqual(expected, column in columns)
+                # Columns common to both versions are selected either way
+                self.assertIn('file_name', columns)
+        # Tables absent from the schema are replicated in their entirety
+        name = 'ANVIL_1000G_2019_Dev_20230609_ANV6_202306121732'
+        self.assertEqual({'*'}, plugin._columns(self._spec(name), 'anvil_unknown'))
+
+    def _spec(self, name: str) -> TDRSourceSpec:
+        return TDRSourceSpec.parse(f'tdr:bigquery:gcp:test_anvil_project:{name}')
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
