@@ -1147,7 +1147,7 @@ def emit(t: T, target_branch: str):
                 *[
                     {
                         'type': 'cli',
-                        'content': f'{action} in `{d}`',
+                        'content': f'{action} in `{d}`, and it succeeded',
                         'alt': f'or this PR is not labeled `reindex:{d}`'
                     }
                     for d, s in t.target_deployments(target_branch).items()

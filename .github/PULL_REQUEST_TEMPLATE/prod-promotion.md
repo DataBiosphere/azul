@@ -123,9 +123,9 @@ Promoted PRs in status *Done* do not need to be moved.
 - [ ] `058` Started full reindex in `prod` <sub>or this PR is not labeled `reindex:prod` or it is labeled reindex:partial</sub>
 - [ ] `059` Checked for, triaged and possibly requeued messages in both fail queues in `prod` <sub>or this PR is not labeled `reindex:prod` or it is labeled reindex:partial</sub>
 - [ ] `060` Emptied fail queues in `prod` <sub>or this PR is not labeled `reindex:prod` or it is labeled reindex:partial</sub>
-- [ ] `061` Restarted the Data Browser pipeline for the [ucsc/hca/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fprod) on GitLab in `prod` <sub>or this PR is not labeled `reindex:prod`</sub>
-- [ ] `062` Restarted the Data Browser pipeline for the [ucsc/lungmap/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fprod) on GitLab in `prod` <sub>or this PR is not labeled `reindex:prod`</sub>
-- [ ] `063` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `prod` <sub>or this PR is not labeled `reindex:prod`</sub>
+- [ ] `061` Restarted the Data Browser pipeline for the [ucsc/hca/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fprod) on GitLab in `prod`, and it succeeded <sub>or this PR is not labeled `reindex:prod`</sub>
+- [ ] `062` Restarted the Data Browser pipeline for the [ucsc/lungmap/prod branch](https://gitlab.azul.data.humancellatlas.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fprod) on GitLab in `prod`, and it succeeded <sub>or this PR is not labeled `reindex:prod`</sub>
+- [ ] `063` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `prod`, and it succeeded <sub>or this PR is not labeled `reindex:prod`</sub>
 
 
 ### Operator (mirroring)

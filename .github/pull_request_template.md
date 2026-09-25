@@ -225,11 +225,11 @@ Note that after requesting changes, the PR must be assigned to only the author.
 - [ ] `136` Checked for, triaged and possibly requeued messages in both fail queues in `anvildev` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
 - [ ] `137` Emptied fail queues in `dev` <sub>or this PR is not labeled `reindex:dev` or it is labeled reindex:partial</sub>
 - [ ] `138` Emptied fail queues in `anvildev` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
-- [ ] `139` Restarted the Data Browser pipeline for the [ucsc/hca/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fdev) on GitLab in `dev` <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] `140` Restarted the Data Browser pipeline for the [ucsc/lungmap/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fdev) on GitLab in `dev` <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] `141` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `dev` <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] `142` Restarted the Data Browser pipeline for the [ucsc/anvil/anvildev branch](https://gitlab.anvil.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvildev) on GitLab in `anvildev` <sub>or this PR is not labeled `reindex:anvildev`</sub>
-- [ ] `143` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvildev` <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] `139` Restarted the Data Browser pipeline for the [ucsc/hca/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fdev) on GitLab in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] `140` Restarted the Data Browser pipeline for the [ucsc/lungmap/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fdev) on GitLab in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] `141` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] `142` Restarted the Data Browser pipeline for the [ucsc/anvil/anvildev branch](https://gitlab.anvil.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvildev) on GitLab in `anvildev`, and it succeeded <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] `143` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvildev`, and it succeeded <sub>or this PR is not labeled `reindex:anvildev`</sub>
 
 
 ### Operator (mirroring)

@@ -107,8 +107,8 @@ Linked issue: #0000
 - [ ] `063` Started full reindex in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
 - [ ] `064` Checked for, triaged and possibly requeued messages in both fail queues in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
 - [ ] `065` Emptied fail queues in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod` or it is labeled reindex:partial</sub>
-- [ ] `066` Restarted the Data Browser pipeline for the [ucsc/anvil/anvilprod branch](https://gitlab.explore.anvilproject.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvilprod) on GitLab in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
-- [ ] `067` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvilprod` <sub>or this PR is not labeled `reindex:anvilprod`</sub>
+- [ ] `066` Restarted the Data Browser pipeline for the [ucsc/anvil/anvilprod branch](https://gitlab.explore.anvilproject.org/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvilprod) on GitLab in `anvilprod`, and it succeeded <sub>or this PR is not labeled `reindex:anvilprod`</sub>
+- [ ] `067` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvilprod`, and it succeeded <sub>or this PR is not labeled `reindex:anvilprod`</sub>
 - [ ] `068` Created backport PR and linked to it in a comment on this PR
 
 
