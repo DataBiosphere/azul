@@ -748,12 +748,15 @@ class ManifestController(QueryController):
                                    manifest_key: ManifestKey,
                                    state: ManifestGenerationState
                                    ) -> None:
-        if manifest_key.catalog in config.integration_test_catalogs:
-            plugin = self._service.metadata_plugin(manifest_key.catalog)
-            filter = filters.explicit.get(plugin.special_fields.file_size.name)
-            if filter is not None and 'within' in filter:
-                if state.get('iteration') == 0:
-                    sentinel = self.integration_test_sabotage_sentinel
-                    if any(bounds[0] == sentinel for bounds in filter['within']):
-                        raise RuntimeError('Deliberate manifest generation failure',
-                                           manifest_key.to_json())
+        # Deployments with monitoring enabled don't run the integration test
+        # that uses the sabotage because the failure it induces trips an alarm.
+        if config.disable_monitoring:
+            if manifest_key.catalog in config.integration_test_catalogs:
+                plugin = self._service.metadata_plugin(manifest_key.catalog)
+                filter = filters.explicit.get(plugin.special_fields.file_size.name)
+                if filter is not None and 'within' in filter:
+                    if state.get('iteration') == 0:
+                        sentinel = self.integration_test_sabotage_sentinel
+                        if any(bounds[0] == sentinel for bounds in filter['within']):
+                            raise RuntimeError('Deliberate manifest generation failure',
+                                               manifest_key.to_json())

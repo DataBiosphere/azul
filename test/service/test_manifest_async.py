@@ -77,6 +77,7 @@ from azul.service.manifest_service import (
 from azul_test_case import (
     AzulUnitTestCase,
     DCP1TestCase,
+    patch_config,
 )
 
 
@@ -653,13 +654,26 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
 
         sentinel = controller.integration_test_sabotage_sentinel
 
-        # Unit tests may not configure an IT catalog, so the catalog at hand
-        # stands in for one, for the duration of the request that must fail
-        it_catalogs = {self.catalog: config.catalogs[self.catalog]}
-        with patch.object(type(config),
-                          'integration_test_catalogs',
-                          new_callable=mock.PropertyMock,
-                          return_value=it_catalogs):
+        @contextmanager
+        def deployment(*, monitoring: bool, it_catalog: bool):
+            """
+            Pin both conditions the sabotage depends on. Without pinning the
+            first, this test would assert what the selected deployment enables
+            rather than what the code does. Unit tests may not configure an IT
+            catalog, so the catalog at hand stands in for one.
+            """
+            it_catalogs = (
+                {self.catalog: config.catalogs[self.catalog]}
+                if it_catalog else
+                {}
+            )
+            with (
+                patch_config('integration_test_catalogs', it_catalogs),
+                patch_config('enable_monitoring', monitoring)
+            ):
+                yield
+
+        with deployment(monitoring=False, it_catalog=True):
             with self.assertRaises(RuntimeError) as cm:
                 controller.generate(state(sentinel))
         self.assertEqual('Deliberate manifest generation failure',
@@ -672,19 +686,26 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                              manifest_key=ManifestKey.from_json(
                                                  state(0)['manifest_key']),
                                              file_name='some_file_name')
-        # The sabotage is confined to the first attempt, so that the retry
-        # can be observed to succeed
-        with patch.object(type(config),
-                          'integration_test_catalogs',
-                          new_callable=mock.PropertyMock,
-                          return_value=it_catalogs):
+
+        # The sabotage is confined to the first attempt, so that the retry can
+        # be observed to succeed
+        with deployment(monitoring=False, it_catalog=True):
             controller.generate(state(sentinel, iteration=1))
 
-        # Without the sentinel the generation proceeds, and so it does with
-        # the sentinel when the catalog isn't an IT catalog, as here
-        controller.generate(state(0))
-        controller.generate(state(sentinel))
-        self.assertEqual(3, get_manifest.call_count)
+        # It is also confined to deployments with monitoring disabled, because
+        # the failure it induces would trip the alarm on this Lambda function's
+        # error metric …
+        with deployment(monitoring=True, it_catalog=True):
+            controller.generate(state(sentinel))
+
+        # … and to IT catalogs, which keeps it away from real data
+        with deployment(monitoring=False, it_catalog=False):
+            controller.generate(state(sentinel))
+
+        # Without the sentinel the generation proceeds in any case
+        with deployment(monitoring=False, it_catalog=True):
+            controller.generate(state(0))
+        self.assertEqual(4, get_manifest.call_count)
 
     @mock_aws
     @mock.patch.object(AsyncManifestService, '_sfn')
