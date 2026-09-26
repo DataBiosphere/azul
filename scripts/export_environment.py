@@ -125,15 +125,9 @@ def load_env(deployment: str | None = None,
             pass
 
     if deployment is None:
-        # An empty value means the same as the variable being absent. We only
-        # afford this accommodation to this one variable, because it may have
-        # been set via `env` in Claude Code's settings, which has no way of
-        # removing a variable from the environment.
-        deployment = (
-            os.environ.get(azul_current_deployment)
-            or extra_env.get(azul_current_deployment)
-            or None
-        )
+        deployment = os.environ.get(azul_current_deployment)
+        if deployment is None:
+            deployment = extra_env.get(azul_current_deployment)
 
     if deployment is None:
         warning = (
