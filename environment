@@ -51,11 +51,11 @@ _show_deployment() {
 }
 
 _validate_deployment() {
-	local d="${project_root}/deployments/$1"
 	if [ -z "$1" ] ; then
 		echo >&2 "_validate_deployment failed: no deployment specified"
 		return 1
 	fi
+	local d="${project_root}/deployments/$1"
 	# -L is used to reject symlinks which -d would dereference
 	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
 		echo >&2 "_validate_deployment failed: '$1'"
