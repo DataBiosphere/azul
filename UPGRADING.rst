@@ -23,6 +23,16 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Index v6 schema snapshots in anvildev (#8316)
+=============================================
+
+Copy the ``anvil_sources`` definition from ``anvilbox``'s ``environment.py``
+into that of each of your personal deployments colocated with it.
+
+Besides the three snapshots that were added, the ``no_ma_mirror`` flag was
+removed from every managed-access source.
+
+
 Update Terraform to 1.16.x (#8072)
 ==================================
 

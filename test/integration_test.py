@@ -1537,22 +1537,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertNotIn(str(config.tdr_service_url), msg)
             return None
         elif response.status == 403:
-            msg = json.loads(response.data)['Message']
-            prefix = 'DRS server requires requester-pays for '
-            self.assertEqual(prefix, msg[:len(prefix)])
-            if config.tdr_requester_pays_project is None:
-                # A requester-pays project ought to be configured in every
-                # deployment that reads from a TDR instance where requester-pays
-                # is required.
-                self.fail(msg)
-            else:
-                # We intentionally omit the x-user-project header from all file
-                # download requests except for those made during mirroring.
-                # Consequently, a 403 response is expected when attempting to
-                # download non-mirrored files. This test runs before the
-                # mirroring subtest, so the file being downloaded is never
-                # mirrored.
-                return None
+            self._assert_requester_pays_denial(response)
+            return None
         else:
             self.assertEqual(200, response.status)
             response = json.loads(response.data)
@@ -1561,6 +1547,25 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             response = self._get_url(GET, final_file_url, stream=True)
             self._validate_file_response(response, source, file)
             return final_file_url
+
+    def _assert_requester_pays_denial(self, response: urllib3.HTTPResponse) -> None:
+        """
+        Assert that the given response is evidence of Azul relaying the DRS
+        server's refusal to mint a download URL for a file in a requester-pays
+        snapshot. Also assert that a requester-pays project is configured.
+
+        Azul includes the `x-user-project` header in a DRS file resolution
+        request only when it's mirroring a file. It intentionally omits the
+        header for user-initiated downloads that can't be served by the mirror.
+        The DRS server's refusal to mint a download URL is therefore expected
+        for a file that has yet to be mirrored, and the best we can do is assert
+        that Azul *will* be able to mirror the file.
+        """
+        msg = json.loads(response.data)['Message']
+        prefix = 'DRS server requires requester-pays for '
+        self.assertEqual(prefix, msg[:len(prefix)])
+        if config.tdr_requester_pays_project is None:
+            self.fail(msg)
 
     def _file_ext(self, file: JSON) -> str:
         # We believe that the file extension is a more reliable indicator than
@@ -1944,7 +1949,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         self.assertEqual(404, response.status)
         with self._service_account_credentials:
             response = self._get_url_unchecked(GET, file_url)
-            self.assertIn(response.status, (301, 302))
+            if response.status == 403:
+                self._assert_requester_pays_denial(response)
+            else:
+                self.assertIn(response.status, (301, 302))
         return files
 
     def _test_managed_access_summary(self,
