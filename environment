@@ -41,6 +41,26 @@ _deselect() {
 	fi
 }
 
+# Select the deployment that this working copy's hook uses
+#
+_reselect() {
+	local d='' hook="${project_root}/environment.hook"
+	if [ ! -f "$hook" ] ; then
+		echo >&2 "_reselect failed: $hook does not exist"
+		return 1
+	fi
+	# Only the recorded assignment is evaluated, so nothing else in the hook file
+	# has an effect here.
+	eval "$(sed -n 's/^azul_current_deployment=/d=/p' "$hook")"
+	if [ -z "$d" ] ; then
+		echo >&2 "_reselect failed: no deployment recorded in $hook"
+		return 1
+	elif ! _select "$d" ; then
+		echo >&2 "_reselect failed"
+		return 1
+	fi
+}
+
 _show_deployment() {
 	if [ -n "${azul_current_deployment:+x}" ] ; then
 		echo "${azul_current_deployment}"
