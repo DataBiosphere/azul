@@ -2,128 +2,130 @@
 
 - `make pep8` — lint check
 - `make isort` — fix import ordering issues
-- `make format` — fix other Python source code formatting issues  
+- `make format` — fix other Python source code formatting issues
 - `mypy` — type check (no arguments; checks only files configured in `.mypy.ini`)
 
 
 # Environment
 
-Most commands need this project's environment, which reaches them in one of
-three ways. The optional `scripts/claudehook.py` hook is registered by `python
--S scripts/claudehook.py register` and removed by `python -S
-scripts/claudehook.py unregister`. Both edit `.claude/settings.local.json` in
-the repository's *main* worktree, whose settings Claude Code applies to
-sessions in all of its worktrees; a linked worktree need not have a file of its
-own, so its absence there is no evidence that the hook is unregistered.
+Most commands need this project's environment. There are three ways for a
+command to get one, depending on whether the optional `scripts/claudehook.py`
+hook is registered and on how Claude Code was started. The hook is registered
+with `python -S scripts/claudehook.py register` and unregistered with `python
+-S scripts/claudehook.py unregister`. Both commands edit
+`.claude/settings.local.json` in the repository's *main* worktree. Claude Code
+applies that file to sessions in all of the repository's worktrees, so a linked
+worktree needs no copy of its own, and the absence of one there says nothing
+about whether the hook is registered.
 
-`azul_env_hash` being set in a command means only that the command has an
-environment, not how it got one: the hook compiles one per command, and a
-session started from a shell that sourced `environment` inherits one. To tell
-those apart, check whether `azul_env_hash` is set in the environment of the
-`claude` process itself, which `ps eww -p <pid>` prints — with the hook it is
-not, because `claude` must then be started without `environment` sourced.
+A command in which `azul_env_hash` is set has an environment, but the variable
+does not tell how it got one: the hook compiles a fresh one for every command,
+whereas a session started from a shell that sourced `environment` inherits
+one. To tell the two apart, look at the environment of the `claude` process
+itself, which `ps eww -p <pid>` prints. With the hook, `azul_env_hash` is
+absent there, because `claude` must have been started without `environment`
+sourced.
 
-- *Hook registered*: nothing is needed, because the hook prefixes every command
-  with the loading of a freshly compiled environment, whether the command comes
-  from the `Bash` tool or the `Monitor` one. A monitor is prefixed once, when it
-  starts, so a long-running one keeps the environment, deployment and
-  credentials it started with, and has to renew them itself if it outlives
-  them. Claude Code must have been started from a shell with the virtualenv
-  activated but *without* `environment` sourced. The hook enforces both,
-  blocking every command with a message that names the two ways out: restarting
-  `claude` as described, or unregistering the hook. Relay that message; neither
-  remedy can be applied from within the session, because it inherited what is
-  wrong with it.
+- *Hook registered*: nothing is needed. The hook prefixes every command,
+  whether from the `Bash` tool or the `Monitor` tool, with the loading of a
+  freshly compiled environment. A monitor's command is prefixed only once, when
+  the monitor starts, so a long-running monitor keeps the environment,
+  deployment and credentials it started with and must renew them itself if it
+  outlives them. Claude Code must have been started from a shell with the
+  virtualenv activated but *without* `environment` sourced. The hook enforces
+  both conditions by blocking every command with a message that names the two
+  ways out: restarting `claude` as described, or unregistering the hook. Relay
+  that message. Neither remedy can be applied from within the session, because
+  the session inherited the defect from the shell that started it.
 
-  Because the environment is recompiled per command, the deployment can be
-  switched between commands: the hook reads `azul_current_deployment` from
-  `environment.hook` in the working copy, which `_select` maintains, and a
-  change there takes effect on the very next command. That file, rather than
-  Claude Code's settings, holds the selection because Claude Code applies the
-  settings of a repository's main worktree to sessions in all of its other
-  worktrees, so a deployment kept there would not be specific to one working
-  copy. Ask the user before switching it yourself. Every `_select` rewrites that
-  file, including one run as part of a larger command, and so switches the
-  deployment for all subsequent commands. The hook also runs `_login_aws` before
-  every command, so the AWS session credentials are present without being
-  inherited, which matters to Terraform because its provider configuration names
-  no profile. Refreshing them needs an MFA token and therefore a terminal, so
-  once they lapse the hook reports `Expired AWS credentials for <deployment>
-  (see Environment in CLAUDE.md).` followed by `_login_aws failed` before every
-  command, without blocking any of them. Relay that, naming the deployment, and
-  ask the user to run `_reselect` in a terminal on this working copy, or
-  `_login_aws` if that deployment is already selected there. Their terminal may
-  have a different deployment selected than the hook does, in which case a login
-  there would refresh the credentials of the wrong account. No restart is
-  needed.
+  Because the environment is recompiled for every command, the deployment can
+  be switched between commands. The hook reads `azul_current_deployment` from
+  `environment.hook` in the working copy, a file that `_select` maintains, and
+  a change to that file takes effect on the very next command. The selection
+  lives in that file rather than in Claude Code's settings because those
+  settings are shared by all worktrees of a repository, so a deployment kept
+  there could not be specific to one working copy. Ask the user before
+  switching the deployment yourself, and keep in mind that every `_select`
+  rewrites that file, even one run as part of a larger command, and thereby
+  switches the deployment for all subsequent commands.
 
-- *No hook, and `azul_env_hash` unset*: prefix every command that needs the
+  The hook also runs `_login_aws` before every command, so that the AWS session
+  credentials are present without having been inherited. This matters to
+  Terraform, whose provider configuration names no profile. Refreshing those
+  credentials requires an MFA token and therefore a terminal. Once they expire,
+  the hook prints `Expired AWS credentials for <deployment> (see Environment in
+  CLAUDE.md).` followed by `_login_aws failed` before every command, but blocks
+  none of them. Relay that message, naming the deployment, and ask the user to
+  run `_reselect` in a terminal on this working copy, or `_login_aws` if that
+  terminal already has the same deployment selected. The user's terminal may
+  have a different deployment selected than the hook does, in which case
+  `_login_aws` there would refresh the credentials of the wrong account. No
+  restart is needed.
+
+- *No hook, `azul_env_hash` unset*: prefix every command that needs the
   environment with `export azul_env_quiet=1` followed by `source environment ||
-  exit`. Sourcing affects only the command that does it, so the prefix is needed
-  every time. The `|| exit` prevents the command from running without an
+  exit`. Sourcing affects only the command that does it, so the prefix is
+  needed every time. The `|| exit` keeps the command from running without an
   environment, and `azul_env_quiet` suppresses the 80-odd lines of diagnostics
   that would otherwise precede the command's own output.
 
-- *No hook, but `azul_env_hash` set*: the legacy arrangement, in which Claude
-  Code was started from a shell that had sourced `environment`, so that every
-  command inherits a copy of it. Nothing is needed until that copy goes stale.
-  An `environment.py` change, or a different `azul_current_deployment`, makes
-  `envhook.py` fail every Python command with `The environment is stale`. The
-  AWS session credentials in the copy also expire on their own after a few
-  hours, which cannot change `azul_env_hash` because they are not derived from
-  any `environment.py`, and so surfaces as authentication failures from
-  anything calling AWS rather than as a complaint from `envhook.py`. Either way,
-  recovering requires the user to re-source `environment`, restart Claude Code
-  and resume the session.
+- *No hook, `azul_env_hash` set*: the legacy arrangement. Claude Code was
+  started from a shell that had sourced `environment`, so every command
+  inherits a copy of that environment. Nothing is needed until the copy goes
+  stale. A change to `environment.py`, or a different
+  `azul_current_deployment`, makes `envhook.py` fail every Python command with
+  `The environment is stale`. The AWS session credentials in the copy also
+  expire on their own after a few hours. Since they are not derived from any
+  `environment.py`, their expiry leaves `azul_env_hash` unchanged and shows up
+  not as a complaint from `envhook.py` but as authentication failures from
+  anything that calls AWS. Either way, recovery requires the user to re-source
+  `environment`, restart Claude Code and resume the session.
 
 
 # Guidelines
 
-- In addition to the directives in this document, also respect those contained
-  in `CONTRIBUTING.rst`
+- Follow the directives in `CONTRIBUTING.rst` in addition to those in this
+  document
 
-- After making any code changes, always verify them with `make pep8` and `mypy` 
+- After making any code changes, always verify them with `make pep8` and `mypy`
 
-- Don't worry about manually ordering imports. Instead, just run `make isort`
+- Don't order imports by hand; run `make isort` instead
 
-- When extracting code out of a module covered by `mypy` into a new module,
-  remember to add the new module to `.mypy.ini`. Ask for confirmation before
-  making changes that would reduce `mypy` coverage
+- When extracting code from a module covered by `mypy` into a new module, add
+  the new module to `.mypy.ini`. Ask for confirmation before making any change
+  that would reduce `mypy` coverage
 
-- Remember that in `.mypy.ini`, there are two ways to configure a Python module
-  for coverage by `mypy`: *explicitly*, by listing its fully qualified module
-  path in the `modules` section of that file, or *implicitly*, by listing its
-  parent or ancestor package in the `packages` section
+- `.mypy.ini` covers a module in one of two ways: *explicitly*, by listing its
+  fully qualified name in the `modules` section, or *implicitly*, by listing
+  one of its ancestor packages in the `packages` section
 
-- When adding a module to the `modules` list in `.mypy.ini`, always append it
-  at the end of the list
+- Append new entries at the end of the `modules` list in `.mypy.ini`
 
-- Prefer to use `git mv` when renaming or moving files
+- Prefer `git mv` for renaming or moving files
 
-- Do not commit or amend any changes unless explicitly asked to do so. A prior
-  request to commit does not authorize subsequent commits or amends. However,
-  it's OK to propose committing changes. When committing changes, include a
-  trailer in the commit message that attributes the change to you
+- Do not commit or amend unless explicitly asked to. A prior request to commit
+  does not authorize later commits or amends, though proposing a commit is
+  always fine. When you do commit, add a trailer to the commit message that
+  attributes the change to you
 
-- You can usually disregard any files under `attic/`, except for reference.
-  Never modify the attic, except when instructed to move files there.
+- Files under `attic/` can usually be disregarded, except as reference. Never
+  modify the attic, except when instructed to move files there
 
-- Passing `--config-file .mypy.ini` to `mypy` is unnecessary; since `.mypy.ini` 
-  is the default config
+- `.mypy.ini` is the default config for `mypy`, so passing `--config-file
+  .mypy.ini` is unnecessary
 
-- Do not quote type hints in annotations. The project uses Python 3.14, which
-  defers evaluation of annotations by default (PEP 649), so forward references
-  and `TYPE_CHECKING`-guarded imports work without quotes
+- Do not quote annotations. The project uses Python 3.14, which defers the
+  evaluation of annotations by default (PEP 649), so forward references and
+  `TYPE_CHECKING`-guarded imports need no quotes
 
-- When using `assert` with `R()` and at least one assertion in the function
-  needs line wrapping, wrap all of them consistently. The convention is:
+- When any `assert` with `R()` in a function needs line wrapping, wrap all of
+  them in that function the same way:
   ```python
   assert condition, R(
       'message', value)
   ```
-  `R(` goes at the end of the `assert` line, the closing `)` at the end of
-  the following line
+  `R(` ends the `assert` line and the closing `)` ends the next one
 
-- For pairs of symmetric assignments like `a = foo(x)` and `b = foo(y)`, use
-  tuple assignment: `a, b = foo(x), foo(y)`. Do not apply this when it would
-  require wrapping the line
+- Combine pairs of symmetric assignments like `a = foo(x)` and `b = foo(y)`
+  into one tuple assignment, `a, b = foo(x), foo(y)`, unless the result would
+  need to be wrapped
