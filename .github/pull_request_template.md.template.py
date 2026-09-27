@@ -245,6 +245,8 @@ class T(Enum):
 
     def labels_to_promote(self, target_branch: str) -> AbstractSet[str]:
         return OrderedSet([
+            'upgrade',
+            'API',
             'deploy:shared',
             'deploy:gitlab',
             'deploy:runner',
@@ -1259,13 +1261,6 @@ def emit(t: T, target_branch: str):
                 }
             ]),
             *iif(target_branch == 'develop' and t is not T.backport, [
-                {
-                    'type': 'cli',
-                    'content': (
-                        'Propagated the `upgrade` and `API` labels to the next promotion PRs'
-                    ),
-                    'alt': 'or this PR carries neither of these labels'
-                },
                 {
                     'type': 'cli',
                     'content': (
