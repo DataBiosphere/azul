@@ -23,6 +23,20 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Claude Code monitors run without the environment the hook provides (#8323)
+==========================================================================
+
+Everyone
+--------
+
+The hook now covers Claude Code's ``Monitor`` tool in addition to its ``Bash``
+tool. *Before* integrating these changes, run ``make claudeunhook`` in every
+worktree that has the hook registered, and ``make claudehook`` afterwards.
+Alternatively, replace ``"matcher": "Bash"`` with ``"matcher": "Bash|Monitor"``
+in every ``PreToolUse`` hook registration in your main worktree's local Claude
+Code settings (``.claude/settings.local.json``).
+
+
 Index v6 schema snapshots in anvildev (#8316)
 =============================================
 

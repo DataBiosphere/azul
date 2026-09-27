@@ -24,12 +24,16 @@ those apart, check whether `azul_env_hash` is set in the environment of the
 not, because `claude` must then be started without `environment` sourced.
 
 - *Hook registered*: nothing is needed, because the hook prefixes every command
-  with the loading of a freshly compiled environment. Claude Code must have been
-  started from a shell with the virtualenv activated but *without* `environment`
-  sourced. The hook enforces both, blocking every command with a message that
-  names the two ways out: restarting `claude` as described, or unregistering
-  the hook. Relay that message; neither remedy can be applied from within the
-  session, because it inherited what is wrong with it.
+  with the loading of a freshly compiled environment, whether the command comes
+  from the `Bash` tool or the `Monitor` one. A monitor is prefixed once, when it
+  starts, so a long-running one keeps the environment, deployment and
+  credentials it started with, and has to renew them itself if it outlives
+  them. Claude Code must have been started from a shell with the virtualenv
+  activated but *without* `environment` sourced. The hook enforces both,
+  blocking every command with a message that names the two ways out: restarting
+  `claude` as described, or unregistering the hook. Relay that message; neither
+  remedy can be applied from within the session, because it inherited what is
+  wrong with it.
 
   Because the environment is recompiled per command, the deployment can be
   switched between commands: the hook reads `azul_current_deployment` from

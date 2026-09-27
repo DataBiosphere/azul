@@ -487,13 +487,14 @@ make envunhook
 
 ### 2.4.2 claudehook.py
 
-`claudehook.py` registers a `PreToolUse` hook on Claude Code's `Bash` tool.
-That hook prefixes every command Claude Code runs with `source environment`, so
-each command compiles the environment anew instead of inheriting one. The
-registration is written to `.claude/settings.local.json`, the local project
-settings of the repository's main [worktree][git-worktree], because that is the
-file Claude Code reads for every worktree of a repository. Each registration
-names the worktree it was made in, and takes effect only in that worktree.
+`claudehook.py` registers a `PreToolUse` hook on Claude Code's `Bash` and
+`Monitor` tools. That hook prefixes every command Claude Code runs with `source
+environment`, so each command compiles the environment anew instead of
+inheriting one. The registration is written to `.claude/settings.local.json`,
+the local project settings of the repository's main [worktree][git-worktree],
+because that is the file Claude Code reads for every worktree of a repository.
+Each registration names the worktree it was made in, and takes effect only in
+that worktree.
 
 [git-worktree]: https://git-scm.com/docs/git-worktree
 
