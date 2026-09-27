@@ -20,6 +20,7 @@ Linked issue: #0000
 - [ ] `A08` Title of linked issue matches `Promotion yyyy-mm-dd`
 - [ ] `A09` PR title starts with title of linked issue followed by ` anvilprod`
 - [ ] `A10` PR title references the linked issue
+- [ ] `A11` Propagated the `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `backup:gitlab`, `reindex:partial`, `reindex:anvilprod`, `mirror:partial` and `mirror:anvilprod` labels and associated notes from the PRs included in this promotion <sub>or none of the promoted PRs include any of these labels</sub>
 
 
 ### Author (reindex)

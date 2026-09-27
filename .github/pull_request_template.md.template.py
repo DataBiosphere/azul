@@ -243,7 +243,7 @@ class T(Enum):
     def has_sandbox_for(self, target_branch: str) -> bool:
         return {None} != set(self.target_deployments(target_branch).values())
 
-    def labels_to_promote(self, target_branch: str) -> AbstractSet[str]:
+    def _labels_to_promote(self, deployments: AbstractSet[str]) -> AbstractSet[str]:
         return OrderedSet([
             'upgrade',
             'API',
@@ -252,11 +252,26 @@ class T(Enum):
             'deploy:runner',
             *iif(self is T.upgrade, ['backup:gitlab'], [
                 'reindex:partial',
-                *('reindex:' + d for d in self.downstream_deployments(target_branch)),
+                *('reindex:' + d for d in deployments),
                 'mirror:partial',
-                *('mirror:' + d for d in self.downstream_deployments(target_branch)),
+                *('mirror:' + d for d in deployments),
             ])
         ])
+
+    def labels_to_promote_from_this_pr(self, target_branch: str) -> AbstractSet[str]:
+        """
+        The labels a lower PR contributes to the PR that promotes it.
+        """
+        return self._labels_to_promote(self.downstream_deployments(target_branch))
+
+    def labels_to_promote_to_this_pr(self, target_branch: str) -> AbstractSet[str]:
+        """
+        The labels a promotion PR inherits from the PRs it promotes.
+        """
+        return OrderedSet(chain.from_iterable(
+            t._labels_to_promote(self.affected_deployments(target_branch))
+            for t in (T.upgrade, T.default)
+        ))
 
     @property
     def needs_shared_deploy(self):
@@ -416,6 +431,15 @@ def emit(t: T, target_branch: str):
             iif(t is not T.backport, {
                 'type': 'cli',
                 'content': f'PR title references {t.issues('all', 'the')} linked {t.issues}'
+            }),
+            iif(t is T.promotion, {
+                'type': 'cli',
+                'content': (
+                    'Propagated the ' +
+                    join_grammatically(list(map(bq, t.labels_to_promote_to_this_pr(target_branch)))) +
+                    ' labels and associated notes from the PRs included in this promotion'
+                ),
+                'alt': 'or none of the promoted PRs include any of these labels'
             }),
             *(
                 [
@@ -1265,18 +1289,18 @@ def emit(t: T, target_branch: str):
                     'type': 'cli',
                     'content': (
                         'Propagated the ' +
-                        join_grammatically(list(map(bq, t.labels_to_promote(target_branch)))) +
-                        ' labels to the next promotion PRs'
+                        join_grammatically(list(map(bq, t.labels_to_promote_from_this_pr(target_branch)))) +
+                        ' labels to any open promotion PRs'
                     ),
-                    'alt': 'or this PR carries none of these labels'
+                    'alt': 'or this PR carries none of these labels, or is not included in an open promotion PR'
                 },
                 {
                     'type': 'cli',
                     'content': (
                         'Propagated any specific instructions related to those labels, '
-                        'from the description of this PR to that of the next promotion PRs'
+                        'from the description of this PR to that of any open promotion PRs'
                     ),
-                    'alt': 'or this PR carries none of them'
+                    'alt': 'or this PR carries none of those labels, or is not included in an open promotion PR'
                 }
             ]),
             {
