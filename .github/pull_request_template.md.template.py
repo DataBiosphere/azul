@@ -11,6 +11,9 @@ from pathlib import (
     Path,
 )
 import re
+from string import (
+    ascii_uppercase,
+)
 import sys
 import textwrap
 from typing import (
@@ -60,6 +63,7 @@ class Item(TypedDict):
     type: str
     content: str
     alt: NotRequired[str | None]
+    label: NotRequired[str]
 
 
 class Handler(Protocol):
@@ -91,6 +95,7 @@ def emit_checklist(checklist: Iterable[LooseItem]):
         return '', '', '## ' + text(i['content'])
 
     def h2(i: Item, _) -> Iterable[str]:
+        start_section(i['label'])
         return '', '', '### ' + text(i['content'])
 
     def cli(i: Item, j: Item | None) -> Iterable[str]:
@@ -112,10 +117,27 @@ def emit_checklist(checklist: Iterable[LooseItem]):
     def wrap(i: Item) -> Iterable[str]:
         return textwrap.wrap(text(i['content']), 80)
 
-    numbers = count(1)
+    # Items are labelled with the letter of the section they occur in. Each
+    # section carries its own letter so that a section has the same letter in
+    # every template it occurs in, even though not every template has every
+    # section, and a section occurs at different positions in different ones.
+    # `I` and `O` are not used, so that a label can't be mistaken for one of
+    # the all-digit labels that preceded this scheme.
+    alphabet = ascii_uppercase.replace('I', '').replace('O', '')
+    letter = None
+    letters = set()
+    numbers = None
+
+    def start_section(section: str) -> None:
+        nonlocal letter, numbers
+        assert section in alphabet, ('section label is not a usable letter', section)
+        assert section not in letters, ('duplicate section label', section)
+        letters.add(section)
+        letter, numbers = section, count(1)
 
     def number() -> str:
-        return f'{next(numbers):03d}'
+        assert letter is not None, 'checklist item outside of any section'
+        return f'{letter}{next(numbers):02d}'
 
     footnotes = {}
     footnote_re = re.compile(r'<footnote ([^/]+)/>')
@@ -321,6 +343,7 @@ def emit(t: T, target_branch: str):
             },
             {
                 'type': 'h2',
+                'label': 'A',
                 'content': 'Author'
             },
             {
@@ -419,6 +442,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'h2',
+                    'label': 'B',
                     'content': 'Author (partiality)'
                 },
                 {
@@ -439,6 +463,7 @@ def emit(t: T, target_branch: str):
             *iif(t in (T.default, T.promotion), [
                 {
                     'type': 'h2',
+                    'label': 'C',
                     'content': 'Author (reindex)'
                 },
                 iif(t is T.default, {
@@ -476,6 +501,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'h2',
+                    'label': 'D',
                     'content': 'Author (mirror)'
                 },
                 *[
@@ -509,6 +535,7 @@ def emit(t: T, target_branch: str):
                 *iif(t is T.default, [
                     {
                         'type': 'h2',
+                        'label': 'E',
                         'content': 'Author (API changes)'
                     },
                     {
@@ -531,6 +558,7 @@ def emit(t: T, target_branch: str):
             *iif(t not in (T.hotfix, T.backport), [
                 {
                     'type': 'h2',
+                    'label': 'F',
                     'content': 'Author (upgrading deployments)'
                 },
                 *iif(target_branch == 'develop', [
@@ -580,6 +608,7 @@ def emit(t: T, target_branch: str):
             *iif(t in (T.default, T.hotfix), [
                 {
                     'type': 'h2',
+                    'label': 'G',
                     'content': 'Author (hotfixes)'
                 },
                 *(
@@ -636,6 +665,7 @@ def emit(t: T, target_branch: str):
             ]),
             {
                 'type': 'h2',
+                'label': 'H',
                 'content': 'Author (before every review)'
             },
             {
@@ -692,6 +722,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'h2',
+                    'label': 'J',
                     'content': 'Peer reviewer (after approval)'
                 },
                 {
@@ -722,6 +753,7 @@ def emit(t: T, target_branch: str):
             },
             {
                 'type': 'h2',
+                'label': 'K',
                 'content': 'System administrator (after approval)'
             },
             {
@@ -771,6 +803,7 @@ def emit(t: T, target_branch: str):
             },
             {
                 'type': 'h2',
+                'label': 'L',
                 'content': 'Operator'
             },
             *iif(t is T.default, [
@@ -803,6 +836,7 @@ def emit(t: T, target_branch: str):
             *iif(t.needs_shared_deploy, [
                 {
                     'type': 'h2',
+                    'label': 'M',
                     'content': 'Operator (deploy `.shared` and `.gitlab` components)'
                 },
                 *flatten([
@@ -849,6 +883,7 @@ def emit(t: T, target_branch: str):
                 },
                 {
                     'type': 'h2',
+                    'label': 'N',
                     'content': 'System administrator (post-deploy of `.gitlab` component)'
                 },
                 *[
@@ -869,6 +904,7 @@ def emit(t: T, target_branch: str):
             *iif(t not in (T.hotfix, T.backport), [
                 {
                     'type': 'h2',
+                    'label': 'P',
                     'content': 'Operator (deploy runner image)'
                 },
                 *[
@@ -886,6 +922,7 @@ def emit(t: T, target_branch: str):
             *iif(t.has_sandbox_for(target_branch), [
                 {
                     'type': 'h2',
+                    'label': 'Q',
                     'content': 'Operator (sandbox build)'
                 },
                 {
@@ -962,6 +999,7 @@ def emit(t: T, target_branch: str):
             )),
             {
                 'type': 'h2',
+                'label': 'R',
                 'content': 'Operator (merge the branch)'
             },
             {
@@ -1009,6 +1047,7 @@ def emit(t: T, target_branch: str):
             }),
             {
                 'type': 'h2',
+                'label': 'S',
                 'content': 'Operator (main build)'
             },
             *[
@@ -1114,6 +1153,7 @@ def emit(t: T, target_branch: str):
             *iif(t in (T.default, T.hotfix, T.promotion), [
                 {
                     'type': 'h2',
+                    'label': 'T',
                     'content': 'Operator (reindex)'
                 },
                 # unzip() is used to interleave the steps for each deployment so
@@ -1176,6 +1216,7 @@ def emit(t: T, target_branch: str):
             *iif(t in (T.default, T.hotfix, T.promotion), [
                 {
                     'type': 'h2',
+                    'label': 'U',
                     'content': 'Operator (mirroring)'
                 },
                 # unzip() is used to interleave the steps for each deployment so
@@ -1201,6 +1242,7 @@ def emit(t: T, target_branch: str):
             ]),
             {
                 'type': 'h2',
+                'label': 'V',
                 'content': 'Operator'
             },
             *iif(t is T.upgrade, [
@@ -1257,6 +1299,7 @@ def emit(t: T, target_branch: str):
             *iif(t in (T.upgrade, T.promotion), [
                 {
                     'type': 'h2',
+                    'label': 'W',
                     'content': 'System administrator'
                 },
                 iif(t is T.upgrade, {
