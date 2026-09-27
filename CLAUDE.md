@@ -55,8 +55,11 @@ sourced.
   credentials requires an MFA token and therefore a terminal. Once they expire,
   the hook prints `Expired AWS credentials for <deployment> (see Environment in
   CLAUDE.md).` followed by `_login_aws failed` before every command, but blocks
-  none of them. Relay that message, naming the deployment, and ask the user to
-  run `_reselect` in a terminal on this working copy, or `_login_aws` if that
+  none of them. This happens all the time and is only a distraction when the
+  task at hand doesn't involve AWS, so don't mention it then. Only when a
+  command fails for lack of credentials, or the task is about to need them,
+  relay the message, naming the deployment, and ask the user to run
+  `_reselect` in a terminal on this working copy, or `_login_aws` if that
   terminal already has the same deployment selected. The user's terminal may
   have a different deployment selected than the hook does, in which case
   `_login_aws` there would refresh the credentials of the wrong account. No
