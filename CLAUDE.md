@@ -38,16 +38,19 @@ not, because `claude` must then be started without `environment` sourced.
   Claude Code's settings, holds the selection because Claude Code applies the
   settings of a repository's main worktree to sessions in all of its other
   worktrees, so a deployment kept there would not be specific to one working
-  copy. Ask the user before switching it yourself. Every `_select` rewrites
-  that file, including one run as part of a larger command, and so switches
-  the deployment for all subsequent commands. The hook also runs `_login_aws`
-  before every command,
-  so the AWS session credentials are present without being inherited, which
-  matters to Terraform because its provider configuration names no profile.
-  Refreshing them needs an MFA token and therefore a terminal, so once they
-  lapse the hook reports `Expired AWS credentials. Run _login_aws.` followed
-  by `_login_aws failed` before every command, without blocking any of them.
-  Relay that and ask the user to run `_login_aws` in a terminal; no restart is
+  copy. Ask the user before switching it yourself. Every `_select` rewrites that
+  file, including one run as part of a larger command, and so switches the
+  deployment for all subsequent commands. The hook also runs `_login_aws` before
+  every command, so the AWS session credentials are present without being
+  inherited, which matters to Terraform because its provider configuration names
+  no profile. Refreshing them needs an MFA token and therefore a terminal, so
+  once they lapse the hook reports `Expired AWS credentials for <deployment>
+  (see Environment in CLAUDE.md).` followed by `_login_aws failed` before every
+  command, without blocking any of them. Relay that, naming the deployment, and
+  ask the user to run `_reselect` in a terminal on this working copy, or
+  `_login_aws` if that deployment is already selected there. Their terminal may
+  have a different deployment selected than the hook does, in which case a login
+  there would refresh the credentials of the wrong account. No restart is
   needed.
 
 - *No hook, and `azul_env_hash` unset*: prefix every command that needs the

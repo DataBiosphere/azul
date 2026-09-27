@@ -194,12 +194,17 @@ _login_aws() {
 			# default prompter looks for one on /dev/tty, not on the standard
 			# input of this script, which is this here document. Without a
 			# terminal it warns and then fails with an EOFError, obscuring the
-			# only thing the caller can act on, so we report that instead.
+			# only thing the caller can act on, so we report that instead. The
+			# deployment is named because a process without a terminal typically
+			# had its deployment selected for it, and the terminal the caller
+			# turns to may have a different one selected.
 			try:
 			    tty = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
 			except OSError:
 			    def prompter(prompt):
-			        sys.exit('Expired AWS credentials. Run _login_aws.')
+			        deployment = os.environ['azul_current_deployment']
+			        sys.exit(f'Expired AWS credentials for {deployment} '
+			                 f'(see Environment in CLAUDE.md).')
 			    provider._prompter = prompter
 			else:
 			    os.close(tty)
