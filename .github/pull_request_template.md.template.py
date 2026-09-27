@@ -1273,11 +1273,10 @@ def emit(t: T, target_branch: str):
                 {
                     'type': 'cli',
                     'content': (
-                        'Propagated any specific instructions related to the ' +
-                        join_grammatically(list(map(bq, t.labels_to_promote(target_branch)))) +
-                        ' labels, from the description of this PR to that of the next promotion PRs'
+                        'Propagated any specific instructions related to those labels, '
+                        'from the description of this PR to that of the next promotion PRs'
                     ),
-                    'alt': 'or this PR carries none of these labels'
+                    'alt': 'or this PR carries none of them'
                 }
             ]),
             {

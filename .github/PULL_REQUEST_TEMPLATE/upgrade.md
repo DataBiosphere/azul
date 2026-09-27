@@ -140,7 +140,7 @@ Linked issue: #0000
 - [ ] `V01` At least 24 hours have passed since `anvildev.shared` was last deployed
 - [ ] `V02` Ran `scripts/export_inspector_findings.py` against `anvildev`, imported results to [Google Sheet](https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8) and posted screenshot of relevant<sup>1</sup> findings as a comment on the linked issue.
 - [ ] `V03` Propagated the `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner` and `backup:gitlab` labels to the next promotion PRs <sub>or this PR carries none of these labels</sub>
-- [ ] `V04` Propagated any specific instructions related to the `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner` and `backup:gitlab` labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of these labels</sub>
+- [ ] `V04` Propagated any specific instructions related to those labels, from the description of this PR to that of the next promotion PRs <sub>or this PR carries none of them</sub>
 - [ ] `V05` PR is assigned to only the system administrator
 
 <sup>1</sup>A relevant finding is a high or critical vulnerability in an image
