@@ -689,15 +689,19 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_ENABLE_MIRRORING': '0',
 
-        # The name of an external bucket to use for mirroring. This requires
-        # deploying the GitLab component to update the boundary policy.
+        # The ID of the AWS account owning, and the name of, an external
+        # bucket to use for mirroring, in the form `account_id:bucket_name`.
+        # This requires deploying the GitLab component to update the boundary
+        # policy.
         #
         # If None, a provisioned bucket will be used.
         #
         'AZUL_MIRROR_BUCKET': None,
 
-        # The name of an external bucket to use for mirroring managed access
-        # files. If None, a provisioned bucket will be used.
+        # The ID of the AWS account owning, and the name of, an external
+        # bucket to use for mirroring managed access files, in the form
+        # `account_id:bucket_name`. If None, a provisioned bucket will be
+        # used.
         #
         'AZUL_MANAGED_ACCESS_MIRROR_BUCKET': None,
 

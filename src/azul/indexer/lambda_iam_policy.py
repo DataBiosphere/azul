@@ -107,11 +107,21 @@ policy = {
                         's3:GetObject',
                     ],
                     'Resource': [
-                        f'arn:aws:s3:::{aws.logs_bucket}/{prefix}'
-                        for prefix in (
-                            config.alb_access_log_path_prefix('*', deployment=None),
-                            config.s3_access_log_path_prefix('*', deployment=None),
-                        )
+                        *[
+                            f'arn:aws:s3:::{aws.logs_bucket}/{prefix}'
+                            for prefix in (
+                                config.alb_access_log_path_prefix('*', deployment=None),
+                                config.s3_access_log_path_prefix('*', deployment=None),
+                            )
+                        ],
+                        *[
+                            f'arn:aws:s3:::{bucket.logs_bucket_name}/'
+                            f'{config.s3_access_log_path_prefix("*", deployment=None)}'
+                            for bucket in alist(
+                                config.qualified_mirror_bucket,
+                                config.qualified_ma_mirror_bucket
+                            )
+                        ]
                     ]
                 },
             ] if config.enable_log_forwarding else []
