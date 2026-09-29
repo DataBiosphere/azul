@@ -5,7 +5,7 @@ Getting started as operator
 
 * Read the entire document
 
-* It is **strongly recommend** that you install `SmartGit`_
+* It is **strongly recommended** that you install `SmartGit`_
 
 .. _SmartGit: https://www.syntevo.com/smartgit/download/
 
@@ -38,25 +38,36 @@ Getting started as operator
          ssh -T git@ssh.gitlab.dev.singlecell.gi.ucsc.edu
          Welcome to GitLab, @amarjandu!
 
-  #. Add the gitlab instances to the local working copy's ``.git/config`` file
+  #. Add the GitLab instances to the local working copy's ``.git/config`` file
      using::
 
-         [remote "gitlab.dcp2.dev"]
-             url = git@ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul
-             fetch = +refs/heads/*:refs/remotes/gitlab.dcp2.dev/*
-         [remote "gitlab.dcp2.prod"]
-             url = git@ssh.gitlab.azul.data.humancellatlas.org:ucsc/azul.git
-             fetch = +refs/heads/*:refs/remotes/gitlab.dcp2.prod/*
-         [remote "gitlab.anvil.dev"]
+         [remote "gitlab.dev"]
+             url = git@ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.dev/*
+         [remote "gitlab.tempdev"]
+             url = git@ssh.gitlab.temp.gi.ucsc.edu:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.tempdev/*
+         [remote "gitlab.anvildev"]
              url = git@ssh.gitlab.anvil.gi.ucsc.edu:ucsc/azul.git
-             fetch = +refs/heads/*:refs/remotes/gitlab.anvil.dev/*
+             fetch = +refs/heads/*:refs/remotes/gitlab.anvildev/*
+         [remote "gitlab.anvilprod"]
+             url = git@ssh.gitlab.explore.anvilproject.org:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.anvilprod/*
+         [remote "gitlab.prod"]
+             url = git@ssh.gitlab.azul.data.humancellatlas.org:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.prod/*
+
+     Each remote is named after the deployment whose GitLab instance it refers
+     to, matching the names used in ``README.md`` and in the PR checklists. The
+     ``tempdev`` deployment is often in hibernation, in which case its remote
+     won't resolve to a running instance.
 
   #. Confirm access to fetch branches::
 
-         git fetch -v gitlab.dcp2.dev
+         git fetch -v gitlab.dev
          From ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul
-         = [up to date]        develop                    -> gitlab.dcp2.dev/develop
-         = [up to date]        issues/amar/2653-es-2-slow -> gitlab.dcp2.dev/issues/amar/2653-es-2-slow`
+         = [up to date]        develop                    -> gitlab.dev/develop
+         = [up to date]        issues/amar/2653-es-2-slow -> gitlab.dev/issues/amar/2653-es-2-slow`
 
 * Standardize remote repository names. If the name of the remote repository on
   GitHub is set to ``origin`` rename the remote repository to ``github``. Run::
@@ -136,7 +147,7 @@ stays on. If the build fails, the label is removed. Only one un-merged PR should
 have the label.
 
 If the tests fail while running a sandbox PR, an operator should do minor
-failure triage.
+failure triage as described below.
 
 Triaging ``sandbox`` failures
 """""""""""""""""""""""""""""
@@ -515,18 +526,25 @@ whether indexing failures are caused by the changes or the snapshots.
 Removing catalogs from ``prod`` and setting a new default
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PRs which remove catalogs or set a new default for ``prod`` should be filed
-against the ``prod`` branch instead of ``develop``.
+As with snapshots, we decide on a case-by-case basis whether PRs which remove
+catalogs or set a new default for ``prod`` should be filed against the ``prod``
+branch instead of ``develop``.
 
 When setting a new default catalog in ``prod``, the operator shall also delete
-the old default catalog unless the ticket explicitly specifies not to delete the
-old catalog.
+the old default catalog, as well as the integration test catalog belonging to
+it, unless the ticket explicitly specifies not to delete them. An integration
+test catalog is named after the catalog it corresponds to, with an ``-it``
+suffix. To delete a catalog, run::
 
-Add a checklist item at the end of the PR checklist to file a back-merge PR from
-``prod`` to ``develop``.
+    python scripts/reindex.py --delete --catalogs <name>
 
-Add another checklist item instructing the operator to manually delete the old
-catalog.
+Add a note to the PR naming those catalogs, and label the PR ``reindex:prod``
+and ``reindex:partial``. The note takes effect only under both labels: every
+template requires it under them (``C06`` in the default template, ``C02`` in the
+promotion ones) and gates the operator's deletion item (``T01``) on them. If the
+PR targets ``develop``, the labels and the note must also reach the promotion PR
+that carries it to ``prod`` (``V01`` in the default template, ``A11`` in the
+promotion ones).
 
 Promoting to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -537,35 +555,28 @@ We promote at 3pm to give a cushion of time in case anything goes wrong.
 
 To do a promotion:
 
-#. Decide together with lead up to which commit to promote. This commit will be
-   the HEAD of the promotions branch.
+#. Decide together with the lead up to which commit to promote. This commit will
+   be the HEAD of the promotion branch.
 
-#. Create a new GitHub issue with the title ``Promotion yyyy-mm-dd``
+#. Create a new GitHub issue for the promotion.
 
 #. Make sure your ``prod`` branch is up to date with the remote.
 
-#. Create a branch at the commit chosen above. Name the branch correctly. See
-   `promotion PR template`_ for what the correct branch name is.
+#. Create the promotion branch at the commit chosen above.
 
-#. File a PR on GitHub from the new promotion branch and connect it to the
-   issue. The PR must target ``prod``. Use the `promotion PR template`_.
+#. File a PR on GitHub from the promotion branch, using the `promotion PR
+   template`_, and follow that template's checklist from there on. The checklist
+   prescribes the title of the issue, the name of the branch, the reviewer, the
+   contents of the merge commit title and the order in which the merge commit is
+   pushed.
 
-#. Request a review from the primary reviewer.
+#. Once the PR is approved, announce in the `#team-boardwalk Slack channel`_
+   that you plan to promote to ``prod``.
 
-#. Once PR is approved, announce in the `#team-boardwalk Slack channel`_ that
-   you plan to promote to ``prod``
+Never rebase the promotion branch, and never push it to GitLab. Of the
+promotion, only the merge commit on ``prod`` is pushed to GitLab.
 
-#. Search for and follow any special ``[u]`` upgrading instructions that were
-   added.
-
-#. When merging, follow the checklist and making sure to carry over any commit
-   title tags (``[u r R]`` for example) into the default merge commit title
-   e.g., ``[u r R] Merge branch 'promotions/2022-02-22' into prod``. Don't
-   rebase the promotion branch and don't push the promotion branch to GitLab.
-   Merge the promotion branch into ``prod`` and push the merge commit on the
-   ``prod`` branch first to GitHub and then to the ``prod`` instance of GitLab.
-
-.. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/promotion.md
+.. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/prod-promotion.md
 
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -590,15 +601,15 @@ backport PR first. The new PR will include the changes from the old one.
 
    ::
 
-       Backport 32c55d7 (#3383, PR #3384) and d574f91 (#3327, PR #3328)
+       Backport: 32c55d7 (#3383, PR #3384) and d574f91 (#3327, PR #3328)
 
    Be sure to use the PR template for backports by appending
    ``&template=backport.md`` to the URL in your browser's address bar.
 
-#. Assign and request review from the primary reviewer. The PR should only be
-   assigned to one person at a time, either the reviewer or the operator.
+#. Request the review and set the assignees as prescribed by that template's
+   checklist.
 
-#. Perform the merge. The commit title should match the PR title ::
+#. Perform the merge::
 
        git merge prod --no-ff
 
@@ -850,6 +861,11 @@ into the Terraform state using ``terraform import``.
 
 Push errors
 ^^^^^^^^^^^
+
+Rebasing a PR branch rewrites it, so pushing it afterwards is rejected as a
+non-fast-forward update. Force-push it with ``git push --force-with-lease``,
+which, unlike ``--force``, refuses the push if someone else has updated the
+branch since you last fetched it.
 
 If an error occurs when pushing to the develop branch, ensure that the branch
 you would like to merge in is rebased on develop and has completed its CI
