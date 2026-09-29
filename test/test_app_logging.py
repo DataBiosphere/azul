@@ -12,9 +12,6 @@ from unittest import (
 )
 import warnings
 
-from chalice.config import (
-    Config as ChaliceConfig,
-)
 from more_itertools import (
     one,
 )
@@ -23,9 +20,6 @@ from app_test_case import (
     ChaliceServerThread,
 )
 import azul
-from azul import (
-    config,
-)
 from azul.chalice import (
     AzulChaliceApp,
 )
@@ -69,10 +63,7 @@ class TestAppLogging(AzulUnitTestCase):
                     def fail():
                         raise ValueError(magic_message)
 
-                    chalice_config = ChaliceConfig.create(
-                        lambda_timeout=config.api_gateway_lambda_timeout
-                    )
-                    server_thread = ChaliceServerThread(app, chalice_config, 'localhost', 0)
+                    server_thread = ChaliceServerThread(app, 'localhost', 0)
                     server_thread.start()
                     try:
                         host, port = server_thread.address
