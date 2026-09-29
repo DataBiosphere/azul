@@ -401,7 +401,6 @@ class TestAccessorApi(AzulUnitTestCase):
 
         actual_diseases = set(chain(*(bm.diseases for bm in biomaterials
                                       if isinstance(bm, (DonorOrganism, SpecimenFromOrganism)))))
-        # noinspection PyDeprecation
         actual_disease = set(chain(*(bm.disease for bm in biomaterials
                                      if isinstance(bm, (DonorOrganism, SpecimenFromOrganism)))))
         self.assertEqual(actual_diseases, diseases)
@@ -414,17 +413,13 @@ class TestAccessorApi(AzulUnitTestCase):
             cell_suspension = next(x for x in bundle.biomaterials.values() if isinstance(x, CellSuspension))
             self.assertEqual(CellSuspension, type(cell_suspension))
             self.assertEqual(selected_cell_types, cell_suspension.selected_cell_types)
-            # noinspection PyDeprecation
             self.assertEqual(cell_suspension.selected_cell_types, cell_suspension.selected_cell_type)
-            # noinspection PyDeprecation
             self.assertEqual(cell_suspension.estimated_cell_count, cell_suspension.total_estimated_cells)
 
         project = list(bundle.projects.values())[0]
         self.assertEqual(Project, type(project))
         self.assertEqual(project_roles, {c.project_role for c in project.contributors})
-        # noinspection PyDeprecation
         self.assertLessEqual(len(project.laboratory_names), len(project.contributors))
-        # noinspection PyDeprecation
         self.assertEqual(project.project_short_name, project.project_shortname)
 
         self.assertEqual(insdc_project_accessions, project.insdc_project_accessions)
@@ -442,7 +437,6 @@ class TestAccessorApi(AzulUnitTestCase):
         self.assertIsInstance(root_entity, DonorOrganism)
         self.assertEqual(root_entity.organism_age_in_seconds, age_range)
         self.assertIn(root_entity.sex, {'female', 'male', 'unknown'})
-        # noinspection PyDeprecation
         self.assertEqual(root_entity.sex, root_entity.biological_sex)
 
         if is_sequencing_bundle:
@@ -477,7 +471,6 @@ class TestAccessorApi(AzulUnitTestCase):
         self.assertEqual(preservation_methods, {s.preservation_method for s in bundle.specimens})
 
         if has_specimens:
-            # noinspection PyDeprecation
             self.assertRaises(AttributeError, lambda: bundle.specimens[0].organ_part)
 
         # Prove that as_json returns a valid JSON structure (no cycles, correct types, etc.)
@@ -488,7 +481,6 @@ class TestAccessorApi(AzulUnitTestCase):
         has_library_preps = library_construction_methods != set() or len(library_prep_protos) > 0
         self.assertEqual({LibraryPreparationProtocol} if has_library_preps else set(), library_prep_proto_types)
         self.assertEqual(library_construction_methods, {p.library_construction_method for p in library_prep_protos})
-        # noinspection PyDeprecation
         self.assertEqual(library_construction_methods, {p.library_construction_approach for p in library_prep_protos})
 
         if slice_thickness is not None:
@@ -533,7 +525,6 @@ class TestAccessorApi(AzulUnitTestCase):
         self.assertEqual(cell_lines[0].biomaterial_id, 'cell_line_at_day_54')
         self.assertEqual(cell_lines[0].has_input_biomaterial, None)
         self.assertEqual(cell_lines[0].type, 'stem cell-derived')
-        # noinspection PyDeprecation
         self.assertEqual(cell_lines[0].type, cell_lines[0].cell_line_type)
         self.assertEqual(cell_lines[0].model_organ, 'brain')
 
@@ -569,12 +560,10 @@ class TestAccessorApi(AzulUnitTestCase):
             publication = project.publications.pop()
             title = 'Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.'
             self.assertEqual(publication.title, title)
-            # noinspection PyDeprecation
             self.assertEqual(publication.doi, '10.1126/sciimmunol.aan8664')
             self.assertEqual(publication.official_hca, None)
             self.assertEqual(publication.title, publication.publication_title)
             self.assertEqual(publication.url, 'http://immunology.sciencemag.org/content/3/19/eaan8664.long')
-            # noinspection PyDeprecation
             self.assertEqual(publication.url, publication.publication_url)
             project_roles = {c.project_role for c in project.contributors}
             self.assertEqual(project_roles, {None, 'external curator', 'Human Cell Atlas wrangler'})
@@ -609,7 +598,6 @@ class TestAccessorApi(AzulUnitTestCase):
                 'Zhisong,,He'
             }
             self.assertEqual({c.name for c in project.contributors}, expected_names)
-            # noinspection PyDeprecation
             self.assertEqual({c.contact_name for c in project.contributors}, expected_names)
 
         assert_bundle()
@@ -632,7 +620,6 @@ class TestAccessorApi(AzulUnitTestCase):
                     self.assertEqual(file.format, 'fastq.gz')
                 if isinstance(file, SupplementaryFile):
                     self.assertEqual(file.format, 'pdf')
-                # noinspection PyDeprecation
                 self.assertEqual(file.format, file.file_format)
 
         assert_bundle()
