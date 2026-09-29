@@ -47,9 +47,14 @@ log = get_test_logger(__name__)
 
 class ChaliceServerThread(Thread):
 
-    def __init__(self, app, config, host, port):
+    def __init__(self, app, host, port):
         super().__init__()
-        self.server_wrapper = LocalDevServer(app, config, host, port)
+        # Give the locally running app the same Lambda timeout that the
+        # REST API Lambda of a deployed app runs with
+        chalice_config = ChaliceConfig.create(
+            lambda_timeout=config.api_gateway_lambda_timeout
+        )
+        self.server_wrapper = LocalDevServer(app, chalice_config, host, port)
 
     def run(self):
         # FIXME: A newline should separate the unit test description and log output
@@ -124,7 +129,6 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
     def setUp(self):
         super().setUp()
         self.server_thread = ChaliceServerThread(app=self._app,
-                                                 config=self.chalice_config(),
                                                  host='localhost',
                                                  port=0)
         self.server_thread.start()
@@ -144,9 +148,6 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
     def _ping(self) -> urllib3.BaseHTTPResponse:
         return self._http_client.request('GET',
                                          str(self.base_url.set(path='/health/basic')))
-
-    def chalice_config(self):
-        return ChaliceConfig.create(lambda_timeout=config.api_gateway_lambda_timeout)
 
     def tearDown(self):
         log.debug('Tearing down server thread …')
