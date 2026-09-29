@@ -94,7 +94,7 @@ more than one consecutive stints, create events for those as well.
 .. _`Team Boardwalk calendar`: https://calendar.google.com/calendar/u/0/r?cid=dWNzYy5lZHVfMDRuZ3J1NXQzNDB0aWd0cW5qYWQ5Nm5jOWtAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ
 
 Apply Amazon OpenSearch Service updates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Every two weeks, an issue labeled ``operator`` and titled *Apply Amazon
 OpenSearch software updates* is created automatically from the `issue
@@ -499,10 +499,10 @@ Export AWS Inspector findings
 
 .. _Anvilprod Inspector Findings spreadsheet: https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8/edit#gid=1657352747
 
-Adding snapshots to ``dev``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding snapshots to lower deployments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When adding a new snapshot to ``dev``, ``anvildev``, the operator should also
+When adding a new snapshot to ``dev`` or ``anvildev``, the operator should also
 add the snapshot to ``sandbox`` or ``anvilbox``, respectively.
 
 The ``post_deploy_tdr.py`` script will fail if the computed common prefix
@@ -512,46 +512,52 @@ common prefix is too long, truncate it by 1 character. If it's too short, append
 to the ``mksrc`` function for the affected source(s), including a partition
 prefix length of 1. Then refresh the environment and re-attempt the deployment.
 
-Adding snapshots to ``prod``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding snapshots to stable deployments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We decide on a case-by-case basis whether PRs which update or add new snapshots
-to ``prod`` should be filed against the ``prod`` branch instead of ``develop``.
-When deciding whether to perform snapshot changes directly to ``prod`` or
+to a stable deployment should be filed against that deployment's branch instead
+of ``develop``. When deciding whether to perform snapshot changes directly or to
 include them in a routine promotion, the system admin considers the scope of
 changes to be promoted. It would be a mistake to promote large changes in
 combination with snapshots because that would make it difficult to diagnose
 whether indexing failures are caused by the changes or the snapshots.
 
-Removing catalogs from ``prod`` and setting a new default
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Removing catalogs from stable deployments and setting a new default
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As with snapshots, we decide on a case-by-case basis whether PRs which remove
-catalogs or set a new default for ``prod`` should be filed against the ``prod``
-branch instead of ``develop``.
+catalogs or set a new default for a stable deployment should be filed against
+that deployment's branch instead of ``develop``.
 
-When setting a new default catalog in ``prod``, the operator shall also delete
-the old default catalog, as well as the integration test catalog belonging to
-it, unless the ticket explicitly specifies not to delete them. An integration
-test catalog is named after the catalog it corresponds to, with an ``-it``
-suffix. To delete a catalog, run::
+When setting a new default catalog in a stable deployment, the operator shall
+also delete the old default catalog, as well as the integration test catalog
+belonging to it, unless the ticket explicitly specifies not to delete them. An
+integration test catalog is named after the catalog it corresponds to, with an
+``-it`` suffix. To delete a catalog, run::
 
     python scripts/reindex.py --delete --catalogs <name>
 
-Add a note to the PR naming those catalogs, and label the PR ``reindex:prod``
-and ``reindex:partial``. The note takes effect only under both labels: every
-template requires it under them (``C06`` in the default template, ``C02`` in the
-promotion ones) and gates the operator's deletion item (``T01``) on them. If the
-PR targets ``develop``, the labels and the note must also reach the promotion PR
-that carries it to ``prod`` (``V01`` in the default template, ``A11`` in the
-promotion ones).
+Add a note to the PR naming those catalogs, and label the PR
+``reindex:partial`` together with the label for the deployment,
+``reindex:prod`` or ``reindex:anvilprod``. The note takes effect only under
+both labels: every template requires it under them (``C06`` in the default
+template, ``C02`` in the promotion ones) and gates the operator's deletion item
+(``T01``) on them. If the PR targets ``develop``, the labels and the note must
+also reach the promotion PR that carries it to that stable deployment (``V01``
+in the default template, ``A11`` in the promotion ones).
 
-Promoting to ``prod``
-^^^^^^^^^^^^^^^^^^^^^
+Promoting to stable deployments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Promotions to ``prod`` should happen weekly on Wednesdays, at 3pm. We promote
-earlier in the week in order to triage any potential issues during reindexing.
-We promote at 3pm to give a cushion of time in case anything goes wrong.
+Promotions should happen weekly on Wednesdays, at 3pm. We promote earlier in the
+week in order to triage any potential issues during reindexing. We promote at
+3pm to give a cushion of time in case anything goes wrong.
+
+Both stable deployments are promoted on the same date, under one issue, but each
+with its own branch, PR and template. The steps below name ``prod``; for
+``anvilprod`` they apply in kind, with the `anvilprod promotion PR template`_ in
+place of the `promotion PR template`_.
 
 To do a promotion:
 
@@ -571,19 +577,23 @@ To do a promotion:
    pushed.
 
 #. Once the PR is approved, announce in the `#team-boardwalk Slack channel`_
-   that you plan to promote to ``prod``.
+   that you plan to promote.
 
-Never rebase the promotion branch, and never push it to GitLab. Of the
-promotion, only the merge commit on ``prod`` is pushed to GitLab.
+Never rebase a promotion branch, and never push one to GitLab. Of the promotion,
+only the merge commit on the stable branch is pushed to GitLab.
 
 .. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/prod-promotion.md
+.. _anvilprod promotion PR template: /.github/PULL_REQUEST_TEMPLATE/anvilprod-promotion.md
 
-Backporting from ``prod`` to ``develop``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Backporting from stable deployments to ``develop``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There should only ever be one open backport PR against ``develop``. If more
-commits accumulate on ``prod``, waiting to be backported, close the existing
-backport PR first. The new PR will include the changes from the old one.
+The steps below name ``prod``; backporting from ``anvilprod`` works the same.
+
+For each stable deployment there should only ever be one open backport PR
+against ``develop``. If more commits accumulate on that deployment's branch,
+waiting to be backported, close the existing backport PR first. The new PR will
+include the changes from the old one.
 
 #. Make a branch from ``prod`` at the most recent commit being backported. Name
    the branch following this pattern::
