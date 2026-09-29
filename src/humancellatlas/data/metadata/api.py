@@ -82,8 +82,6 @@ class ManifestEntry:
     # only populated if bundle was requested with `directurls` or `directurls` set
     url: str | None
     uuid: UUID4 = field(init=False)
-    # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
-    #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
 
     def __init__(self, json: MutableJSON):
@@ -927,8 +925,6 @@ class Link:
 @dataclass(init=False)
 class Bundle:
     uuid: UUID4
-    # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
-    #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
     projects: MutableMapping[UUID4, Project]
     biomaterials: MutableMapping[UUID4, Biomaterial]
