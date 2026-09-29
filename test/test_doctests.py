@@ -56,6 +56,7 @@ import azul.service.manifest_service
 import azul.service.repository_controller
 import azul.terra
 import azul.vendored.frozendict
+import indexer
 import service
 
 
@@ -123,6 +124,7 @@ def load_tests(_loader,
         load_script('export_environment'),
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
         load_module(root + '/.github/workflows/schedule.py', 'schedule'),
+        indexer,
         service
     ]:
         suite = doctest.DocTestSuite(module)
