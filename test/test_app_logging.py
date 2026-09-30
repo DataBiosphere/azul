@@ -89,7 +89,7 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertEqual(5, len(azul_log.output))
                     info = {
                         'host': f'{host}:{port}',
-                        'user-agent': 'python-urllib3/2.7.0',
+                        'user-agent': 'python-urllib3/2.8.0',
                         # Since the type of the secret is unrecognized, the
                         # entire header value is redacted
                         'authorization': 'REDACTED',
