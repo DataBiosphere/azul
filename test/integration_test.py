@@ -2464,15 +2464,16 @@ class ResponseHeadersTest(IntegrationTestCase):
         no_cache = 'no-store'
         short_cache = 'public, max-age=60, must-revalidate'
         long_cache = 'public, max-age=86400, must-revalidate'
+        # The Swagger UI page is the only route that doesn't enable CORS
         test_cases = {
-            '/swagger/index.html': long_cache,
-            '/swagger/swagger-initializer.js': short_cache,
-            '/swagger/swagger-ui.css': long_cache,
-            '/openapi.json': short_cache,
-            '/health/basic': no_cache
+            '/swagger/index.html': (long_cache, False),
+            '/swagger/swagger-initializer.js': (short_cache, True),
+            '/swagger/swagger-ui.css': (long_cache, True),
+            '/openapi.json': (short_cache, True),
+            '/health/basic': (no_cache, True)
         }
         for endpoint in (config.service_endpoint, config.indexer_endpoint):
-            for path, cache_control in test_cases.items():
+            for path, (cache_control, cors) in test_cases.items():
                 with self.subTest(endpoint=endpoint, path=path):
                     response = self._http_client.request(GET, str(endpoint / path))
                     raise_on_status(response)
@@ -2490,7 +2491,7 @@ class ResponseHeadersTest(IntegrationTestCase):
                         # not much that can break in that method, and even
                         # if one of the literals in it had an error, that
                         # error would likely be repeated in a literal here.
-                        **AzulChaliceApp.security_headers(),
+                        **AzulChaliceApp.security_headers(cors=cors),
                         'Cache-Control': cache_control,
                         # The random nonce in the actual CSP makes it hard
                         # to compose an expected value for it. Instead, we
