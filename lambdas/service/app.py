@@ -176,12 +176,6 @@ spec = {
             ''')
         },
         {
-            'name': 'DSS',
-            'description': fd('''
-                Access to files maintained in the Data Store
-            ''')
-        },
-        {
             'name': 'DRS',
             'description': fd('''
                 DRS-compliant proxy of the underlying repository
