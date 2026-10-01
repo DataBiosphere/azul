@@ -47,6 +47,9 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul.plugins.metadata.anvil.schema import (
+    anvil_schemas,
+)
 from azul.plugins.repository import (
     tdr_anvil,
 )
@@ -294,6 +297,24 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             with self.subTest(spec=str(other_spec), table=other_table):
                 self.assertNotEqual(entity_id,
                                     plugin._entity_id(other_spec, other_table, key))
+
+    def test_pk_column(self):
+        plugin = self.plugin
+        for version, schema in anvil_schemas.items():
+            spec = self._spec(f'ANVIL_1000G_2019_Dev_20230609_ANV{version}_202306121732')
+            for table in schema['tables']:
+                table_name = table['name']
+                with self.subTest(version=version, table=table_name):
+                    # Every table the schema describes declares exactly one
+                    # primary key, and names it after the table. The plugin
+                    # used to hard-code that convention instead of reading the
+                    # declaration, so this pins the two together.
+                    self.assertEqual(table_name.removeprefix('anvil_') + '_id',
+                                     plugin._pk_column(spec, table_name))
+            # Tables absent from the schema declare no primary key
+            with self.subTest(version=version, table='anvil_unknown'):
+                with self.assertRaises(KeyError):
+                    plugin._pk_column(spec, 'anvil_unknown')
 
     def test_columns_per_schema_version(self):
         plugin = self.plugin
