@@ -8,6 +8,9 @@ import datetime
 from enum import (
     Enum,
 )
+from functools import (
+    cache,
+)
 import itertools
 import logging
 from operator import (
@@ -16,8 +19,10 @@ from operator import (
 import re
 from typing import (
     Callable,
+    ClassVar,
     Iterable,
     Mapping,
+    Self,
 )
 import uuid
 
@@ -33,6 +38,7 @@ from azul.drs import (
     DRSURI,
 )
 from azul.indexer.document import (
+    EntityID,
     EntityReference,
     EntityType,
 )
@@ -92,6 +98,86 @@ MutableKeys = set[KeyReference]
 KeysByType = dict[EntityType, Set[Key]]
 MutableKeysByType = dict[EntityType, set[Key]]
 KeyLinks = set[KeyLink]
+
+
+@attrs.frozen(kw_only=True)
+class SnapshotName:
+    """
+    The name of an AnVIL snapshot, broken into its components.
+    """
+
+    #: Most snapshots spell the prefix `ANVIL`, a few outliers use `AnVIL`
+    #:
+    prefix: str
+
+    #: How the name spells the dataset.
+    #:
+    dataset: str
+
+    #: The date the dataset was created, as `YYYYMMDD`
+    #:
+    dataset_date: str
+
+    #: The version of the AnVIL schema the snapshot was ingested under
+    #:
+    schema_version: int = attrs.field(converter=int)
+
+    #: The time the snapshot was created, as `YYYYMMDDhhmm`
+    #:
+    snapshot_time: str
+
+    # The names of the attributes above must match those of the capture groups
+    _pattern: ClassVar[re.Pattern] = re.compile(r'(?P<prefix>(?i:ANVIL))'
+                                                r'_(?P<dataset>\w+)'
+                                                r'_(?P<dataset_date>\d{8})'
+                                                r'_ANV(?P<schema_version>\d+)'
+                                                r'_(?P<snapshot_time>\d{12})',
+                                                re.ASCII)
+
+    @classmethod
+    @cache
+    def parse(cls, name: str) -> Self:
+        """
+        >>> SnapshotName.parse('ANVIL_CMG_UWash_GRU_20240301_ANV5_202403040330')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        SnapshotName(prefix='ANVIL',
+                     dataset='CMG_UWash_GRU',
+                     dataset_date='20240301',
+                     schema_version=5,
+                     snapshot_time='202403040330')
+
+        >>> SnapshotName.parse('AnVIL_GTEx_V8_hg38_20230419_ANV5_202304202007').prefix
+        'AnVIL'
+
+        >>> SnapshotName.parse('ANVIL_1000G_2019_Dev_20230609_ANV_202306121732')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        AssertionError: R('Snapshot name does not match the expected convention',
+        'ANVIL_1000G_2019_Dev_20230609_ANV_202306121732')
+        """
+        match = cls._pattern.fullmatch(name)
+        assert match is not None, R(
+            'Snapshot name does not match the expected convention', name)
+        self = cls(**match.groupdict())
+        assert name == str(self), R('Snapshot name is not canonical', name)
+        return self
+
+    def __str__(self) -> str:
+        """
+        The inverse of :py:meth:`parse`.
+
+        >>> name = 'ANVIL_CMG_UWash_GRU_20240301_ANV5_202403040330'
+        >>> name == str(SnapshotName.parse(name))
+        True
+        """
+        return '_'.join([
+            self.prefix,
+            self.dataset,
+            self.dataset_date,
+            f'ANV{self.schema_version}',
+            self.snapshot_time
+        ])
 
 
 class BundleType(Enum):
@@ -258,6 +344,33 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     datarepo_row_uuid_version = 4
     batch_uuid_version = 5
     bundle_uuid_version = 10
+
+    #: The namespace of the v5 UUIDs identifying AnVIL entities
+    #:
+    _entity_id_namespace = uuid.UUID('06d615ea-1a34-41c0-8780-135ebaead1c7')
+
+    def _entity_id(self,
+                   source: TDRSourceSpec,
+                   table_name: str,
+                   key: Key
+                   ) -> EntityID:
+        """
+        The ID of the entity with the given primary key, in the given table of
+        the given snapshot.
+
+        AnVIL primary keys are only unique per table and snapshot. Qualifying
+        the key with the table and the dataset makes the resulting ID globally
+        unique while also maximizing stability across releases of that dataset.
+        Previously this plugin used the datarepo_row_id to identify entities,
+        which was globally unique but would change with every new snapshot for
+        any given dataset.
+
+        The letter case of a dataset name has been observed to vary between
+        releases, so it needs to be normalized to lower case.
+        """
+        dataset = SnapshotName.parse(source.name).dataset.lower()
+        name = ':'.join([dataset, table_name, key])
+        return str(uuid.uuid5(self._entity_id_namespace, name))
 
     def _batch_uuid(self,
                     source: TDRSourceSpec,
@@ -932,18 +1045,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         else:
             return []
 
-    #: Matches a snapshot name, capturing the version of the AnVIL schema the
-    #: snapshot was ingested under. The prefix is matched case insensitively
-    #: because some snapshots in the deployment configurations spell it
-    #: `AnVIL`.
-    #:
-    _snapshot_name_re = re.compile(r'(?i:ANVIL)'  # prefix
-                                   r'_\w+'  # name of the dataset
-                                   r'_\d{8}'  # date the dataset was created
-                                   r'_ANV(\d+)'  # version of the schema
-                                   r'_\d{12}',  # time the snapshot was created
-                                   re.ASCII)
-
     def validate_source_spec(self, source_spec: TDRSourceSpec) -> None:
         self._schema_version(source_spec)
 
@@ -954,10 +1055,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         most recent version, so the two must not be confused when selecting
         columns from a snapshot.
         """
-        match = self._snapshot_name_re.fullmatch(source.name)
-        assert match is not None, R(
-            'Snapshot name does not match the expected convention', source.name)
-        version = int(match.group(1))
+        version = SnapshotName.parse(source.name).schema_version
         assert version in anvil_schemas, R(
             'Snapshot was ingested under an untracked schema version',
             source.name, version, sorted(anvil_schemas))

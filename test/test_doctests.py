@@ -49,6 +49,7 @@ import azul.plugins
 import azul.plugins.metadata.hca.indexer.transform
 import azul.plugins.metadata.hca.service.contributor_matrices
 import azul.plugins.repository.canned
+import azul.plugins.repository.tdr_anvil
 import azul.plugins.repository.tdr_hca
 import azul.service.controller
 import azul.service.drs_controller
@@ -110,6 +111,7 @@ def load_tests(_loader,
         azul.plugins,
         azul.plugins.metadata.hca.service.contributor_matrices,
         azul.plugins.repository.canned,
+        azul.plugins.repository.tdr_anvil,
         azul.plugins.repository.tdr_hca,
         azul.plugins.metadata.hca.indexer.transform,
         azul.service.controller,
