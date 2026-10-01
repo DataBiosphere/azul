@@ -597,7 +597,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         result = TDRAnvilBundle(fqid=bundle_fqid)
         entities_by_key: dict[KeyReference, EntityReference] = {}
         for entity_type, typed_keys in sorted(keys_by_type.items()):
-            pk_column = entity_type.removeprefix('anvil_') + '_id'
+            pk_column = self._pk_column(source.spec, entity_type)
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
             if entity_type == 'anvil_dataset':
                 for row in rows:
@@ -712,7 +712,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                                    self.bundle_uuid_version,
                                    self.datarepo_row_uuid_version)
         table_name = bundle_fqid.table_name
-        pk_column = table_name.removeprefix('anvil_') + '_id'
+        pk_column = self._pk_column(source.spec, table_name)
         bundle_entity = one(self._run_sql(f'''
             SELECT {pk_column}
             FROM {backtick(self._full_table_name(source.spec, table_name))}
@@ -1020,7 +1020,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         if keys:
             columns = self._columns(source, entity_type)
             table_name = self._full_table_name(source, entity_type)
-            pk_column = entity_type.removeprefix('anvil_') + '_id'
+            pk_column = self._pk_column(source, entity_type)
             assert pk_column in columns, entity_type
             log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
             rows = self._run_sql(f'''
@@ -1080,6 +1080,25 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 column_names.add(f'{self._column_from_64_to_hex(column)} AS {column}')
             columns_by_table[table_name] = column_names
         return columns_by_table
+
+    @cached_property
+    def _pk_columns_by_schema_version_and_table(self) -> Mapping[int, Mapping[str, str]]:
+        return {
+            schema_version: {
+                table['name']: one(table['primaryKey'])
+                for table in schema['tables']
+            }
+            for schema_version, schema in anvil_schemas.items()
+        }
+
+    def _pk_column(self, source: TDRSourceSpec, table_name: str) -> str:
+        """
+        The name of the column holding the primary key of the given table, as
+        declared by the schema the given snapshot was ingested under. Tables
+        that aren't described by that schema have no declared primary key.
+        """
+        version = self._schema_version(source)
+        return self._pk_columns_by_schema_version_and_table[version][table_name]
 
     def _columns(self, source: TDRSourceSpec, table_name: str) -> Set[str]:
         version = self._schema_version(source)
