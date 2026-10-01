@@ -192,12 +192,6 @@ spec = {
             'description': fd('''
                 Describes various aspects of the Azul service
             ''')
-        },
-        {
-            'name': 'Deprecated',
-            'description': fd('''
-                Endpoints that should not be used and that will be removed
-            ''')
         }
     ]
 }
