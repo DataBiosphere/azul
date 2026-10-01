@@ -267,6 +267,34 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                 with self.assertRaises(AssertionError):
                     plugin._schema_version(self._spec(name))
 
+    def test_entity_id(self):
+        plugin = self.plugin
+        key = 'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
+        spec = self._spec('ANVIL_CMG_UWASH_DS_BDIS_20230418_ANV5_202304201958')
+        entity_id = plugin._entity_id(spec, 'anvil_biosample', key)
+        self.assertEqual('6f8461fd-0e84-524e-9488-7614e45e2eec', entity_id)
+        # A later release of the same dataset yields the same ID, even if it
+        # spells the dataset differently, or was ingested under a different
+        # schema version, or the dataset was created anew …
+        for name in [
+            'ANVIL_CMG_UWASH_DS_BDIS_20250206_ANV6_202502201850',
+            'ANVIL_cmg_uwash_ds_bdis_20250206_ANV6_202502201850',
+            'AnVIL_CMG_UWash_DS_BDIS_20230418_ANV5_202304201958'
+        ]:
+            with self.subTest(name=name):
+                self.assertEqual(entity_id,
+                                 plugin._entity_id(self._spec(name), 'anvil_biosample', key))
+        # … while another dataset, or another table, does not. Primary keys are
+        # only unique within a table of a snapshot, so without these
+        # qualifiers, entities would share an ID.
+        for other_spec, other_table in [
+            (self._spec('ANVIL_CMG_UWASH_DS_HFA_20230418_ANV5_202304201932'), 'anvil_biosample'),
+            (spec, 'anvil_donor')
+        ]:
+            with self.subTest(spec=str(other_spec), table=other_table):
+                self.assertNotEqual(entity_id,
+                                    plugin._entity_id(other_spec, other_table, key))
+
     def test_columns_per_schema_version(self):
         plugin = self.plugin
         # Version 6 added this column to the anvil_file table, so selecting it
