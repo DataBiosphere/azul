@@ -263,16 +263,23 @@ class AzulChaliceApp(Chalice):
         Add headers to the response
         """
         response = get_response(event)
-        route = self.routes[event.path][event.method]
-        cors = route.cors is not None
+        try:
+            route = self.routes[event.path][event.method]
+            cors = route.cors is not None
+        except KeyError:
+            route, cors = None, False
         # Add security headers to the response without overwriting any headers
         # that might have been added already (e.g. Content-Security-Policy)
         for k, v in self.security_headers(cors=cors).items():
             response.headers.setdefault(k, v)
-        cache_control = getattr(route.view_function, 'cache_control')
-        # Caching defeats the automatic reloading of application source code by
-        # `chalice local`, which is useful, so we disable caching in that case.
-        cache_control = 'no-store' if self.is_running_locally else cache_control
+        if self.is_running_locally or route is None:
+            # Caching defeats the automatic reloading of application source code
+            # by `chalice local`, which is useful, so we disable caching in that
+            # case. We also don't want to cache a response to a request that
+            # wasn't handled by a route.
+            cache_control = 'no-store'
+        else:
+            cache_control = getattr(route.view_function, 'cache_control')
         response.headers['Cache-Control'] = cache_control
         return response
 
