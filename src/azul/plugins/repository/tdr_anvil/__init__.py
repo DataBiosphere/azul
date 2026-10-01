@@ -372,6 +372,26 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         name = ':'.join([dataset, table_name, key])
         return str(uuid.uuid5(self._entity_id_namespace, name))
 
+    def _entity_ref(self,
+                    source: TDRSourceSpec,
+                    table_name: str,
+                    row: BigQueryRow
+                    ) -> EntityReference:
+        """
+        A reference to the entity represented by the given row of the given
+        table of the given snapshot.
+        """
+        try:
+            pk_column = self._pk_column(source, table_name)
+        except KeyError:
+            # The schema doesn't describe this table, so it declares no primary
+            # key, leaving nothing stable to derive an ID from. Entities from
+            # such tables only ever occur as replicas.
+            entity_id = row['datarepo_row_id']
+        else:
+            entity_id = self._entity_id(source, table_name, row[pk_column])
+        return EntityReference(entity_type=table_name, entity_id=entity_id)
+
     def _batch_uuid(self,
                     source: TDRSourceSpec,
                     table_name: str,
@@ -615,8 +635,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                         'Conflicting keys', donor_dataset_id, dataset_id)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
-                entity = EntityReference(entity_id=row['datarepo_row_id'],
-                                         entity_type=entity_type)
+                entity = self._entity_ref(source.spec, entity_type, row)
                 entities_by_key[key] = entity
                 result.add_entity(entity, self._version, row)
         result.add_links(link.to_entity_link(entities_by_key) for link in links)
@@ -663,7 +682,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             SELECT {', '.join(sorted(columns))}
             FROM {backtick(self._full_table_name(source.spec, table_name))}
         ''')))
-        ref = EntityReference(entity_type=table_name, entity_id=row['datarepo_row_id'])
+        ref = self._entity_ref(source.spec, table_name, row)
         self._augment_dataset_with_duos(row, source)
         return ref, row
 
@@ -694,7 +713,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             FROM {backtick(self._full_table_name(source, table_name))}
             WHERE STARTS_WITH(LOWER({key_column}), {batch_prefix!r})
         '''):
-            ref = EntityReference(entity_type=table_name, entity_id=row['datarepo_row_id'])
+            ref = self._entity_ref(source, table_name, row)
             yield ref, row
 
     def _get_bundle_batch(self,

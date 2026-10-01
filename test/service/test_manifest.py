@@ -1259,9 +1259,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'datasets.document_id',
-                '2370f948-2783-4eb6-afea-e022897f4dcf',
-                '2370f948-2783-4eb6-afea-e022897f4dcf',
-                '2370f948-2783-4eb6-afea-e022897f4dcf'
+                '208441e2-cf28-584e-a0ac-7553c7118412',
+                '208441e2-cf28-584e-a0ac-7553c7118412',
+                '208441e2-cf28-584e-a0ac-7553c7118412'
             ),
             (
                 'datasets.source_datarepo_row_ids',
@@ -1326,8 +1326,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'donors.document_id',
                 '',
-                'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
-                'bfd991f2-2797-4083-972a-da7c6d7f1b2e'
+                '71c9a86b-d96b-523b-939e-d03d7e68f94a',
+                '71c9a86b-d96b-523b-939e-d03d7e68f94a'
             ),
             (
                 'donors.source_datarepo_row_ids',
@@ -1368,8 +1368,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'diagnoses.document_id',
                 '',
-                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461',
-                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461'
+                '8c554d97-fffa-52d4-884d-b40b1aa5a7ff || cefd0ad2-e855-57c6-ae97-954032ef628c',
+                '8c554d97-fffa-52d4-884d-b40b1aa5a7ff || cefd0ad2-e855-57c6-ae97-954032ef628c'
             ),
             (
                 'diagnoses.source_datarepo_row_ids',
@@ -1428,8 +1428,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'biosamples.document_id',
                 '',
-                '826dea02-e274-4ffe-aabc-eb3db63ad068',
-                '826dea02-e274-4ffe-aabc-eb3db63ad068'
+                'cf0fbe53-a7a9-59e8-85a4-3db742afb603',
+                'cf0fbe53-a7a9-59e8-85a4-3db742afb603'
             ),
             (
                 'biosamples.source_datarepo_row_ids',
@@ -1482,8 +1482,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'activities.document_id',
                 '',
-                '1509ef40-d1ba-440d-b298-16b7c173dcd4',
-                '816e364e-1193-4e5b-a91a-14e4b009157c'
+                'd23548da-8c3e-51b3-8766-28d02ce558cd',
+                '9af629c7-a4b2-520c-a03a-bdef5ee55d09'
             ),
             (
                 'activities.source_datarepo_row_ids',
@@ -1523,9 +1523,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.document_id',
-                '6b0f6c0f-5d80-4242-accb-840921351cd5',
-                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
-                '3b17377b-16b1-431c-9967-e5d01fc5923f'
+                '4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132',
+                'a76526dc-d42f-5b97-ab14-56eb3c9bdfec',
+                'dc53dde6-280c-501c-a95d-4157e13c66dc'
             ),
             (
                 'files.source_datarepo_row_ids',
@@ -1589,9 +1589,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.azul_url',
-                self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
-                self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
-                self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
+                self._file_url('4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132', self.version),
+                self._file_url('a76526dc-d42f-5b97-ab14-56eb3c9bdfec', self.version),
+                self._file_url('dc53dde6-280c-501c-a95d-4157e13c66dc', self.version)
             ),
             (
                 'files.azul_mirror_uri',
@@ -1616,25 +1616,25 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self.assertEqual(200, response.status_code)
                 base_url = str(self.base_url.set(path='/repository/files'))
                 expected_body = [
+                    *iif(file_size_1 <= mirror_limit, [[
+                        f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
+                        '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
+                        'output="f4962f15-ecc7-a075-b263-ac70ab0239b2/' +
+                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
+                        ''
+                    ]]),
                     *iif(file_size_2 <= mirror_limit, [[
-                        f'url="{base_url}/15b76f9c-6b46-433f-851d-34e89f1b9ba6' +
+                        f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
                         'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
                     *iif(file_size_3 <= mirror_limit, [[
-                        f'url="{base_url}/3b17377b-16b1-431c-9967-e5d01fc5923f' +
+                        f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
                         'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
-                        ''
-                    ]]),
-                    *iif(file_size_1 <= mirror_limit, [[
-                        f'url="{base_url}/6b0f6c0f-5d80-4242-accb-840921351cd5' +
-                        '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="f4962f15-ecc7-a075-b263-ac70ab0239b2/' +
-                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
                         ''
                     ]])
                 ]
