@@ -57,6 +57,7 @@ from azul.lib.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
+    not_none,
 )
 from azul.lib.uuids import (
     change_version,
@@ -381,9 +382,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         A reference to the entity represented by the given row of the given
         table of the given snapshot.
         """
-        try:
-            pk_column = self._pk_column(source, table_name)
-        except KeyError:
+        pk_column = self._pk_column(source, table_name)
+        if pk_column is None:
             # The schema doesn't describe this table, so it declares no primary
             # key, leaving nothing stable to derive an ID from. Entities from
             # such tables only ever occur as replicas.
@@ -416,10 +416,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     def count_bundles(self, source: TDRSourceRef) -> int:
         prefix = '' if source.prefix is None else source.prefix.common
         assert prefix == prefix.lower(), source
+        table_name = BundleType.primary.table_name
+        pk_column = not_none(self._pk_column(source.spec, table_name))
         primary_count = one(self._run_sql(f'''
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source.spec, BundleType.primary.table_name))}
-            WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
+            FROM {backtick(self._full_table_name(source.spec, table_name))}
+            WHERE STARTS_WITH(LOWER({pk_column}), {prefix!r})
         '''))['count']
         sizes_by_table = self._batch_tables(source.spec, prefix)
         batched_count = sum(batch_size for (_, batch_size) in sizes_by_table.values())
@@ -434,10 +436,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         assert prefix == prefix.lower(), prefix
         bundles = []
         spec = source.spec
+        table_name = BundleType.primary.table_name
+        pk_column = not_none(self._pk_column(spec, table_name))
         for row in self._run_sql(f'''
             SELECT datarepo_row_id
-            FROM {backtick(self._full_table_name(spec, BundleType.primary.table_name))}
-            WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
+            FROM {backtick(self._full_table_name(spec, table_name))}
+            WHERE STARTS_WITH(LOWER({pk_column}), {prefix!r})
         '''):
             bundle_uuid = change_version(row['datarepo_row_id'],
                                          self.datarepo_row_uuid_version,
@@ -546,6 +550,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # replica bundle, so a dedicated anvil_dataset batch would be redundant.
         table_names.discard(BundleType.no_bundle.table_name)
         table_names = sorted(filter(is_batched, table_names))
+        batch_columns_by_table = {
+            table_name: self._batch_column(source, table_name)
+            for table_name in table_names
+        }
         log.info('Calculating batch prefix lengths for partition %r of %d tables '
                  'in source %s', prefix, len(table_names), source)
         # The extraneous outer 'SELECT *' works around a bug in BigQuery emulator
@@ -562,17 +570,17 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     COUNT(*) AS num_batches
                 FROM (
                     SELECT
-                        {repeat(f'LOWER(SUBSTR(datarepo_row_id, {prefix_len} + {{i}}, 1)) AS p{{i}}')},
+                        {repeat(f'LOWER(SUBSTR({batch_column}, {prefix_len} + {{i}}, 1)) AS p{{i}}')},
                         COUNT(*) AS num_rows
                     FROM {backtick(self._full_table_name(source, table_name))}
-                    WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
+                    WHERE STARTS_WITH(LOWER({batch_column}), {prefix!r})
                     GROUP BY ROLLUP ({repeat('p{i}')})
                 )
                 GROUP BY batch_prefix_length
                 ORDER BY ABS({target_size} - average_batch_size), batch_prefix_length
                 LIMIT 1
             )
-        )''' for table_name in table_names)
+        )''' for table_name, batch_column in batch_columns_by_table.items())
 
         def result(row):
             table_name = row['table_name']
@@ -617,7 +625,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         result = TDRAnvilBundle(fqid=bundle_fqid)
         entities_by_key: dict[KeyReference, EntityReference] = {}
         for entity_type, typed_keys in sorted(keys_by_type.items()):
-            pk_column = self._pk_column(source.spec, entity_type)
+            pk_column = not_none(self._pk_column(source.spec, entity_type))
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
             if entity_type == 'anvil_dataset':
                 for row in rows:
@@ -719,10 +727,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     def _get_bundle_batch(self,
                           bundle_fqid: TDRAnvilBundleFQID
                           ) -> Iterable[tuple[EntityReference, BigQueryRow]]:
-        return self._get_batch(bundle_fqid.source.spec,
-                               bundle_fqid.table_name,
+        source = bundle_fqid.source.spec
+        table_name = bundle_fqid.table_name
+        return self._get_batch(source,
+                               table_name,
                                bundle_fqid.batch_prefix,
-                               key_column='datarepo_row_id')
+                               key_column=self._batch_column(source, table_name))
 
     def _bundle_entity(self, bundle_fqid: TDRAnvilBundleFQID) -> KeyReference:
         source = bundle_fqid.source
@@ -731,7 +741,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                                    self.bundle_uuid_version,
                                    self.datarepo_row_uuid_version)
         table_name = bundle_fqid.table_name
-        pk_column = self._pk_column(source.spec, table_name)
+        pk_column = not_none(self._pk_column(source.spec, table_name))
         bundle_entity = one(self._run_sql(f'''
             SELECT {pk_column}
             FROM {backtick(self._full_table_name(source.spec, table_name))}
@@ -1039,7 +1049,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         if keys:
             columns = self._columns(source, entity_type)
             table_name = self._full_table_name(source, entity_type)
-            pk_column = self._pk_column(source, entity_type)
+            pk_column = not_none(self._pk_column(source, entity_type))
             assert pk_column in columns, entity_type
             log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
             rows = self._run_sql(f'''
@@ -1110,14 +1120,22 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             for schema_version, schema in anvil_schemas.items()
         }
 
-    def _pk_column(self, source: TDRSourceSpec, table_name: str) -> str:
+    def _pk_column(self, source: TDRSourceSpec, table_name: str) -> str | None:
         """
         The name of the column holding the primary key of the given table, as
-        declared by the schema the given snapshot was ingested under. Tables
-        that aren't described by that schema have no declared primary key.
+        declared by the schema the given snapshot was ingested under, or None
+        for tables the schema doesn't describe.
         """
         version = self._schema_version(source)
-        return self._pk_columns_by_schema_version_and_table[version][table_name]
+        return self._pk_columns_by_schema_version_and_table[version].get(table_name)
+
+    def _batch_column(self, source: TDRSourceSpec, table_name: str) -> str:
+        """
+        The name of the column whose value's prefix assigns a row of the given
+        batched table to a batch. Tables the schema doesn't describe declare no
+        primary key, so their rows are batched by their row ID instead.
+        """
+        return self._pk_column(source, table_name) or 'datarepo_row_id'
 
     def _columns(self, source: TDRSourceSpec, table_name: str) -> Set[str]:
         version = self._schema_version(source)

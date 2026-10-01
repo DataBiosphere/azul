@@ -311,10 +311,12 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     # declaration, so this pins the two together.
                     self.assertEqual(table_name.removeprefix('anvil_') + '_id',
                                      plugin._pk_column(spec, table_name))
-            # Tables absent from the schema declare no primary key
+            # Tables absent from the schema declare no primary key, so their
+            # rows are identified, partitioned and batched by their row ID
             with self.subTest(version=version, table='anvil_unknown'):
-                with self.assertRaises(KeyError):
-                    plugin._pk_column(spec, 'anvil_unknown')
+                self.assertIsNone(plugin._pk_column(spec, 'anvil_unknown'))
+                self.assertEqual('datarepo_row_id',
+                                 plugin._batch_column(spec, 'anvil_unknown'))
 
     def test_columns_per_schema_version(self):
         plugin = self.plugin
