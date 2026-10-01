@@ -17,4 +17,4 @@ In each deployment, keep
 - [ ] The `dev.gitlab` data volume snapshots have been pruned
 - [ ] The `anvildev.gitlab` data volume snapshots have been pruned
 - [ ] The `anvilprod.gitlab` data volume snapshots have been pruned
-- [ ] The `anvilprod.gitlab` data volume snapshots have been pruned
+- [ ] The `prod.gitlab` data volume snapshots have been pruned
