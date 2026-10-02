@@ -1,6 +1,7 @@
 """
 Load this project's environment before every command that Claude Code runs, by
-registering this script as a `PreToolUse` hook on Claude Code's `Bash` tool.
+registering this script as a `PreToolUse` hook on Claude Code's `Bash` and
+`Monitor` tools.
 
 The hook eliminates the need to run `claude` with an already populated Azul
 environment, which can quickly become stale and require a restart of `claude`
@@ -222,7 +223,7 @@ class Main:
                 Interpreter: {python} Worktree: {self._root_dir}
                 """)
 
-    _hook_matcher = 'Bash'
+    _hook_matcher = 'Bash|Monitor'
 
     # The deployment selected for this worktree lives here. `_select` maintains
     # the file and `envhook.py` injects it into the Python processes PyCharm

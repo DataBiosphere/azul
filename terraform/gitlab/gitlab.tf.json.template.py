@@ -1378,7 +1378,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'port': 443,
                 'protocol': 'HTTPS',
                 'ssl_policy': 'ELBSecurityPolicy-FS-1-2-Res-2019-08',
-                'certificate_arn': '${aws_acm_certificate.gitlab.arn}',
+                # Referring to the validation instead of the certificate itself
+                # defers the creation of this listener until the certificate is
+                # issued. ELB rejects a certificate that's still pending
+                # validation, with a misleading `UnsupportedCertificate` error.
+                'certificate_arn': '${aws_acm_certificate_validation.gitlab.certificate_arn}',
                 'default_action': [
                     {
                         'target_group_arn': '${aws_lb_target_group.gitlab_http.id}',

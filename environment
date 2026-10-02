@@ -41,6 +41,26 @@ _deselect() {
 	fi
 }
 
+# Select the deployment that this working copy's hook uses
+#
+_reselect() {
+	local d='' hook="${project_root}/environment.hook"
+	if [ ! -f "$hook" ] ; then
+		echo >&2 "_reselect failed: $hook does not exist"
+		return 1
+	fi
+	# Only the recorded assignment is evaluated, so nothing else in the hook file
+	# has an effect here.
+	eval "$(sed -n 's/^azul_current_deployment=/d=/p' "$hook")"
+	if [ -z "$d" ] ; then
+		echo >&2 "_reselect failed: no deployment recorded in $hook"
+		return 1
+	elif ! _select "$d" ; then
+		echo >&2 "_reselect failed"
+		return 1
+	fi
+}
+
 _show_deployment() {
 	if [ -n "${azul_current_deployment:+x}" ] ; then
 		echo "${azul_current_deployment}"
@@ -51,11 +71,11 @@ _show_deployment() {
 }
 
 _validate_deployment() {
-	local d="${project_root}/deployments/$1"
 	if [ -z "$1" ] ; then
 		echo >&2 "_validate_deployment failed: no deployment specified"
 		return 1
 	fi
+	local d="${project_root}/deployments/$1"
 	# -L is used to reject symlinks which -d would dereference
 	if ! { [ ! -L "$d" ] && [ -d "$d" ] ; } ; then
 		echo >&2 "_validate_deployment failed: '$1'"
@@ -174,12 +194,17 @@ _login_aws() {
 			# default prompter looks for one on /dev/tty, not on the standard
 			# input of this script, which is this here document. Without a
 			# terminal it warns and then fails with an EOFError, obscuring the
-			# only thing the caller can act on, so we report that instead.
+			# only thing the caller can act on, so we report that instead. The
+			# deployment is named because a process without a terminal typically
+			# had its deployment selected for it, and the terminal the caller
+			# turns to may have a different one selected.
 			try:
 			    tty = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
 			except OSError:
 			    def prompter(prompt):
-			        sys.exit('Expired AWS credentials. Run _login_aws.')
+			        deployment = os.environ['azul_current_deployment']
+			        sys.exit(f'Expired AWS credentials for {deployment} '
+			                 f'(see Environment in CLAUDE.md).')
 			    provider._prompter = prompter
 			else:
 			    os.close(tty)

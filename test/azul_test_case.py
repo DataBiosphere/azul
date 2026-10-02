@@ -101,7 +101,7 @@ def setUpModule():
 type Patch = _patch | _patch_dict
 
 
-def patch_config(name: str, value: bool | int | str) -> Patch:
+def patch_config(name: str, value: bool | int | str | Mapping) -> Patch:
     return patch.object(Config, name, new=PropertyMock(return_value=value))
 
 

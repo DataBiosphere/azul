@@ -205,6 +205,16 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_DEPLOYMENT_STAGE': None,
 
+        # Whether to tolerate the loss of values that don't fit into the
+        # accumulator for a field during aggregation. By default, such an
+        # overflow fails the aggregation and therefore the reindex. Setting this
+        # variable to 1 downgrades that failure to a warning, as a stopgap for a
+        # deployment that must be indexed before the accumulator limit can be
+        # adjusted. Note that the accumulators for some fields can also tolerate
+        # overflow individually, independently of this variable.
+        #
+        'AZUL_ALLOW_OVERFLOW': '0',
+
         # The Docker registry containing all 3rd party images used by this
         # project, including images used locally, in FROM clauses, for CI/CD or
         # GitLab. Must be empty or end in a slash. All references to images from
@@ -269,10 +279,11 @@ def env() -> Mapping[str, str | None]:
         # because it is referenced in the early stages of the GitLab build. The
         # next paragraph explains how to keep that file in sync.
         #
-        # After modifying this variable, run `make environment.boot` and
-        # `make -C terraform update_schema`, and commit the resulting changes.
+        # After modifying this variable, run `make environment.boot`, `make
+        # terraform_checksums` and `make -C terraform update_schema`, and commit
+        # the resulting changes.
         #
-        'azul_terraform_version': '1.15.9',
+        'azul_terraform_version': '1.16.3',
 
         # The version of the AWS CLI v2 used throughout the system.
         #
@@ -309,6 +320,22 @@ def env() -> Mapping[str, str | None]:
         # procedure for updating it is documented.
         #
         'azul_uv_version': _pin('tool', 'uv', 'required-version'),
+
+        # The version of the Amazon ECR credential helper used by the dev image
+        # to authenticate against the ECR registry that mirrors the Docker
+        # images Azul depends on.
+        #
+        # This variable is not intended to be overridden per deployment or
+        # locally.
+        #
+        # This variable is duplicated in a file called `environment.boot`
+        # because it is referenced in the early stages of the GitLab build. The
+        # next paragraph explains how to keep that file in sync.
+        #
+        # After modifying this variable, run `make environment.boot` and
+        # `make ecr_helper_checksums`, and commit the resulting changes.
+        #
+        'azul_ecr_helper_version': '0.12.0',
 
         # A dictionary mapping the short name of each Docker image used in Azul
         # to its fully qualified name. Note that a change to any of the image
