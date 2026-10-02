@@ -2050,14 +2050,34 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertEqual(len(manifest_lines), len(manifest_content))
             return manifest_content
 
-        def read_verbatim_pfb_manifest(manifest: IO) -> set[str]:
+        def read_verbatim_pfb_manifest(manifest: IO) -> set[tuple[str, ...]]:
             entities = list(fastavro.reader(manifest))
+            is_anvil = config.is_anvil_enabled(catalog)
             manifest_content = {
                 # We can't assert the full contents of each entity because the
                 # schema changes depending on the filters used.
+                #
                 # FIXME: Generate Avro schema from AnVIL schema
                 #        https://github.com/DataBiosphere/azul/issues/6109
-                entity['id']
+                #
+                # The ID of an AnVIL entity is the primary key of the row
+                # it represents. Since those keys are only unique within a
+                # table of a snapshot, we need to additionally key the
+                # assertion on the snapshot of the row, or a proxy thereof. The
+                # table can be left out because any two rows from the same
+                # snapshot are either both authorized or both unauthorized, so
+                # a collision between tables can't affect the assertion.
+                #
+                # FIXME: Identify an AnVIL entity by its ID alone
+                #        https://github.com/DataBiosphere/azul/issues/8364
+                (
+                    entity['id'],
+                    *(
+                        [entity['object']['source_datarepo_snapshot_id']]
+                        if is_anvil else
+                        []
+                    )
+                )
                 for entity in entities
                 # The special "Metadata" entity is always present. Dropping it
                 # from the result streamlines the set logic used in the
