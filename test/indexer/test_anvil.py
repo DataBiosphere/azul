@@ -55,6 +55,7 @@ from azul.plugins.repository import (
 )
 from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundle,
+    _entity_id,
 )
 from azul.terra import (
     TDRClient,
@@ -179,20 +180,13 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         ]
         expected_bundle_fqids = sorted(canned_bundle_fqids + [
             # Replica bundles for the AnVIL schema tables, which we don't can
-            self.bundle_fqid(uuid='2a65294f-9cdf-a455-87e9-666bd8477725',
-                             table_name='anvil_activity'),
-            self.bundle_fqid(uuid='5f896854-75a9-a0be-ac10-cf4cb2ef2efd',
-                             table_name='anvil_alignmentactivity'),
-            self.bundle_fqid(uuid='8ec98aad-7d3e-ab63-841e-2e6c40e766eb',
-                             table_name='anvil_assayactivity'),
-            self.bundle_fqid(uuid='477175ff-777e-a5fc-985f-572ab137d934',
-                             table_name='anvil_diagnosis'),
-            self.bundle_fqid(uuid='2e84f5a3-ccfe-aae7-aab0-0a5cbd78b685',
-                             table_name='anvil_donor'),
-            self.bundle_fqid(uuid='713f9fe8-1736-aa50-8355-d71fadaca2e1',
-                             table_name='anvil_sequencingactivity'),
-            self.bundle_fqid(uuid='f01e33f5-71a4-a90e-9ccb-8c0f31ae3214',
-                             table_name='anvil_variantcallingactivity')
+            self.bundle_fqid(table_name='anvil_activity'),
+            self.bundle_fqid(table_name='anvil_alignmentactivity'),
+            self.bundle_fqid(table_name='anvil_assayactivity'),
+            self.bundle_fqid(table_name='anvil_diagnosis'),
+            self.bundle_fqid(table_name='anvil_donor'),
+            self.bundle_fqid(table_name='anvil_sequencingactivity'),
+            self.bundle_fqid(table_name='anvil_variantcallingactivity')
         ])
         plugin = self.plugin
         bundle_fqids = sorted(plugin.list_bundles(source_ref, ''))
@@ -271,10 +265,9 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     plugin._schema_version(self._spec(name))
 
     def test_entity_id(self):
-        plugin = self.plugin
         key = 'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
         spec = self._spec('ANVIL_CMG_UWASH_DS_BDIS_20230418_ANV5_202304201958')
-        entity_id = plugin._entity_id(spec, 'anvil_biosample', key)
+        entity_id = _entity_id(spec, 'anvil_biosample', key)
         self.assertEqual('6f8461fd-0e84-524e-9488-7614e45e2eec', entity_id)
         # A later release of the same dataset yields the same ID, even if it
         # spells the dataset differently, or was ingested under a different
@@ -286,7 +279,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         ]:
             with self.subTest(name=name):
                 self.assertEqual(entity_id,
-                                 plugin._entity_id(self._spec(name), 'anvil_biosample', key))
+                                 _entity_id(self._spec(name), 'anvil_biosample', key))
         # … while another dataset, or another table, does not. Primary keys are
         # only unique within a table of a snapshot, so without these
         # qualifiers, entities would share an ID.
@@ -296,7 +289,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         ]:
             with self.subTest(spec=str(other_spec), table=other_table):
                 self.assertNotEqual(entity_id,
-                                    plugin._entity_id(other_spec, other_table, key))
+                                    _entity_id(other_spec, other_table, key))
 
     def test_pk_column(self):
         plugin = self.plugin

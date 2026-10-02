@@ -66,6 +66,9 @@ def main(argv):
     parser.add_argument('--batch-prefix',
                         help='The batch prefix of the bundle to can. Only applicable for AnVIL. '
                              'Use "null" for non-batched bundle formats.')
+    parser.add_argument('--primary-key',
+                        help='The primary key of the bundle entity. Only applicable for AnVIL. '
+                             'Use "null" for batched bundle formats.')
     parser.add_argument('--output-dir', '-O',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the output directory (default: %(default)s).')
@@ -88,6 +91,11 @@ def parse_fqid_fields(args: argparse.Namespace) -> JSON:
         if batch_prefix == 'null':
             batch_prefix = None
         fields['batch_prefix'] = batch_prefix
+    primary_key = args.primary_key
+    if primary_key is not None:
+        if primary_key == 'null':
+            primary_key = None
+        fields['primary_key'] = primary_key
     return fields
 
 
