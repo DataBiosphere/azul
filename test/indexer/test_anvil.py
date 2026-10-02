@@ -39,6 +39,9 @@ from azul.indexer.document import (
     DocumentType,
     EntityReference,
 )
+from azul.lib import (
+    R,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -56,6 +59,7 @@ from azul.plugins.repository import (
 from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundle,
     _entity_id,
+    fixed_version,
 )
 from azul.terra import (
     TDRClient,
@@ -290,6 +294,22 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             with self.subTest(spec=str(other_spec), table=other_table):
                 self.assertNotEqual(entity_id,
                                     _entity_id(other_spec, other_table, key))
+
+    def test_duplicate_entity(self):
+        """
+        Test the detection of duplicate primary keys.
+        """
+        for bundle in [
+            self._load_canned_bundle(self.primary_bundle()),
+            self._load_canned_bundle(self.replica_bundle())
+        ]:
+            listed = bundle.entities or bundle.orphans
+            entity, row = next(iter(listed.items()))
+            for is_orphan in [False, True]:
+                with self.subTest(bundle=bundle.uuid, is_orphan=is_orphan):
+                    with self.assertRaises(AssertionError) as cm:
+                        bundle.add_entity(entity, fixed_version, row, is_orphan=is_orphan)
+                    self.assertTrue(R.caused(cm.exception))
 
     def test_pk_column(self):
         plugin = self.plugin
