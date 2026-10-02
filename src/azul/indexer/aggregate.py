@@ -17,6 +17,9 @@ from typing import (
 
 import attrs
 
+from azul import (
+    config,
+)
 from azul.indexer.document import (
     EntityType,
 )
@@ -636,7 +639,7 @@ class SimpleAggregator(EntityAggregator):
                         f'Values were dropped {accumulator.dropped} times while aggregating '
                         f'{self.entity_type}.{k} into {self.outer_entity_type}'
                     )
-                    if accumulator.allow_overflow:
+                    if accumulator.allow_overflow or config.allow_overflow:
                         log.warning(message)
                     else:
                         assert False, R(message)

@@ -3,9 +3,12 @@ Create or update a PR for the current branch, takeing care of some of the CL
 items in the template. Uses the default PR template unless the --type option is
 passed. Use --help to see which types are currently supported.
 
-The script infers the linked issue from the name of the currently checked out
-branch, so make sure that the branch name matches our conventions. The inferral
-is straight-forward for the default type, but it also supports the other types.
+The script infers the linked issues from the name of the currently checked out
+branch, so make sure that the branch name matches our conventions. A branch
+that resolves more than one issue names them all, and the PR then refers to,
+links and advances every one of them, while its title is derived from the
+first. The inferral is straight-forward for the default type, but it also
+supports the other types.
 
 For the default type, the script guesses whether to prefix the PR title with
 "Fix: " but since there is some ambiguity for debt issues you can override the
@@ -45,8 +48,9 @@ _project_owner = 'DataBiosphere'
 _project_repos = ['azul', 'azul-private']
 _project_title = 'Azul'
 
-#: Matches the number that prefixes every checklist item in the PR templates
-_item_number = r'(?:`\d+` )?'
+#: Matches the label that prefixes every checklist item in the PR templates
+#:
+_item_label = r'`[A-Z]\d\d` '
 
 
 def main(argv):
@@ -98,31 +102,36 @@ def main(argv):
     title_suffix = ''
     if args.type is None:
         template_path = _project_root / '.github' / 'pull_request_template.md'
-        issue_number = _issue_number(branch)
+        issue_numbers = _issue_numbers(branch)
     elif args.type == 'upgrade':
         template_path = _template_dir / 'upgrade.md'
         date = _upgrade_date(branch)
         log.info('Searching for upgrade issue …')
-        issue_number = _issue_number_by_title(
+        issue_numbers = [_issue_number_by_title(
             f'Upgrade software dependencies {date}'
-        )
+        )]
     elif args.type == 'promotion':
         date, target = _promotion_date_and_target(branch)
         template_path = _template_dir / f'{target}-promotion.md'
         log.info('Searching for promotion issue …')
-        issue_number = _issue_number_by_title(
+        issue_numbers = [_issue_number_by_title(
             f'Promotion {date}'
-        )
+        )]
         title_suffix = f' {target}'
     else:
         assert False, R('Unsupported template', args.type)
-    log.info('Fetching issue #%d …', issue_number)
-    issue = _issue_info(issue_number)
+    log.info('Fetching issue %s …',
+             join_grammatically([f'#{n}' for n in issue_numbers]))
+    issues = [_issue_info(issue_number) for issue_number in issue_numbers]
+    # The PR is assumed to resolve every issue whose number appears in the
+    # branch name. The issue whose number appears first determines the PR title.
+    issue = issues[0]
     if args.fix is None:
         fix = issue.type == 'Defect'
     else:
         fix = args.fix
-    title = _pr_title(issue.ref, issue.title, fix, suffix=title_suffix)
+    issue_refs = [issue.ref for issue in issues]
+    title = _pr_title(issue_refs, issue.title, fix, suffix=title_suffix)
 
     log.info('Checking for existing PR …')
     existing_pr = _existing_pr()
@@ -139,9 +148,9 @@ def main(argv):
     # Normalize line endings from GitHub API responses
     body = '\n'.join(body.splitlines())
 
-    body = _reference_issue_in_body(body, issue.ref)
+    body = _reference_issues_in_body(body, issue_refs)
 
-    m = re.search(r'^- \[[ x]] ' + _item_number + r'Target branch is `(.+?)`$',
+    m = re.search(r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
                   template, flags=re.MULTILINE)
     assert m is not None, R('Target branch task not found in template')
     target_branch = m.group(1)
@@ -233,6 +242,7 @@ def main(argv):
         assert handle == _github_user(), R(
             'Branch name does not match GitHub user', handle)
 
+    body = _check_task(body, 'PR is linked to .*')
     body = _check_task(body, r'Status of linked issues? is \*In progress\*')
     body = _check_task(body, 'PR description links to linked issues?')
 
@@ -269,12 +279,15 @@ def main(argv):
         subprocess.run(cmd, capture_output=True, text=True, check=True)
         log.info('PR URL is %r', pr_url)
 
-    log.info('Setting PR status …')
     pr_node_id = _node_id(pr_url)
+    log.info('Setting PR status …')
     _set_status(pr_node_id, 'In Progress')
-    log.info('Setting issue status …')
-    issue_node_id = _node_id(issue.url)
-    _set_status(issue_node_id, 'In Progress')
+    for issue in issues:
+        issue_node_id = _node_id(issue.url)
+        log.info('Linking PR to issue %s …', issue.ref)
+        _link_issue(issue_node_id, pr_node_id)
+        log.info('Setting status of issue %s …', issue.ref)
+        _set_status(issue_node_id, 'In Progress')
 
 
 def _current_branch() -> str:
@@ -342,10 +355,10 @@ def _has_commit_tag(target_branch: str, tag: str) -> bool:
     )
 
 
-def _issue_number(branch: str) -> int:
-    m = re.fullmatch(r'issues/[^/]+/(\d+)-.*', branch)
-    assert m is not None, R('Cannot extract issue number from branch name', branch)
-    return int(m.group(1))
+def _issue_numbers(branch: str) -> list[int]:
+    m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', branch)
+    assert m is not None, R('Cannot extract issue numbers from branch name', branch)
+    return [int(number) for number in m.group(1).split('-')]
 
 
 def _upgrade_date(branch: str) -> str:
@@ -451,13 +464,13 @@ def _issue_info(issue_number: int) -> _IssueInfo:
     )
 
 
-def _pr_title(issue_ref: str,
+def _pr_title(issue_refs: list[str],
               issue_title: str,
               fix: bool,
               suffix: str = ''
               ) -> str:
     prefix = 'Fix: ' if fix else ''
-    return f'{prefix}{issue_title}{suffix} ({issue_ref})'
+    return f'{prefix}{issue_title}{suffix} ({", ".join(issue_refs)})'
 
 
 def _existing_pr() -> dict | None:
@@ -470,9 +483,9 @@ def _existing_pr() -> dict | None:
     return json.loads(result.stdout)
 
 
-def _reference_issue_in_body(body: str, issue_ref: str) -> str:
-    body, n = re.subn(r'^(Linked issues?: *)\S+',
-                      rf'\1{issue_ref}',
+def _reference_issues_in_body(body: str, issue_refs: list[str]) -> str:
+    body, n = re.subn(r'^(Linked issues?: *).*$',
+                      lambda m: m.group(1) + ', '.join(issue_refs),
                       body, flags=re.MULTILINE)
     assert n > 0, R('Linked issues reference not found in body')
     assert n < 2, R('Multiple linked issues references found in body')
@@ -480,23 +493,23 @@ def _reference_issue_in_body(body: str, issue_ref: str) -> str:
 
 
 def _reindex_labels(body: str) -> list[str]:
-    return re.findall(r'^- \[[ x]] ' + _item_number + r'This PR is labeled `(reindex:\w+)`',
+    return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(reindex:\w+)`',
                       body, flags=re.MULTILINE)
 
 
 def _mirror_labels(body: str) -> list[str]:
-    return re.findall(r'^- \[[ x]] ' + _item_number + r'This PR is labeled `(mirror:\w+)`',
+    return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(mirror:\w+)`',
                       body, flags=re.MULTILINE)
 
 
 def _deploy_labels(body: str) -> list[str]:
-    return re.findall(r'^- \[[ x]] ' + _item_number + r'This PR is labeled `(deploy:\w+)`',
+    return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(deploy:\w+)`',
                       body, flags=re.MULTILINE)
 
 
 def _check_task(body: str, task: str, checked: bool = True) -> str:
     mark = 'x' if checked else ' '
-    body, n = re.subn(r'^- \[[ x]] (' + _item_number + task + ')$',
+    body, n = re.subn(r'^- \[[ x]] (' + _item_label + task + ')$',
                       r'- [' + mark + r'] \1',
                       body, flags=re.MULTILINE)
     assert n > 0, R('Task item not found in template', task)
@@ -532,6 +545,21 @@ def _node_id(url: str) -> str:
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
+
+
+def _link_issue(issue_node_id: str, pr_node_id: str) -> None:
+    query = fd('''
+        mutation {{
+            addCloseIssueReferences(input: {{
+                issueId: "{issue_id}",
+                pullRequestIds: ["{pr_id}"]
+            }}) {{ issue {{ id }} }}
+        }}
+    ''', issue_id=issue_node_id, pr_id=pr_node_id)
+    subprocess.run(
+        ['gh', 'api', 'graphql', '-f', f'query={query}'],
+        capture_output=True, text=True, check=True
+    )
 
 
 def _set_status(node_id: str, status: str) -> None:

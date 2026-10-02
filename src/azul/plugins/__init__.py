@@ -250,6 +250,7 @@ class SpecialFields(Iterable[SpecialField]):
     bundle_version: SpecialField
     file_uuid: SpecialField
     file_name: SpecialField
+    file_size: SpecialField
 
     def __iter__(self):
         attr: attrs.Attribute

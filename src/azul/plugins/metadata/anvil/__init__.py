@@ -25,6 +25,7 @@ from azul import (
     config,
 )
 from azul.field_type import (
+    pass_thru_int,
     pass_thru_str,
 )
 from azul.indexer.document import (
@@ -292,6 +293,9 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         file_name=SpecialField(name='files.file_name',
                                name_in_hit='file_name',
                                type=pass_thru_str),
+        file_size=SpecialField(name='files.file_size',
+                               name_in_hit='file_size',
+                               type=pass_thru_int)
     )
 
     @property

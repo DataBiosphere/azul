@@ -58,13 +58,13 @@ class ActivityAggregator(AnVILEntityAggregator):
 class BiosampleAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if (
-            field in self._never_accumulate()
-            and self.outer_entity_type != 'files'
-        ):
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            return None
+        if field in self._never_accumulate():
+            if self.outer_entity_type == 'files':
+                # These fields are only aggregated for files, where they are
+                # needed for compact and PFB manifests.
+                return SetAccumulator(max_size=1500)
+            else:
+                return None
         elif field == 'donor_age_at_collection':
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
@@ -95,22 +95,28 @@ class DatasetAggregator(SimpleAggregator):
 class DiagnosisAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if (
-            field in self._never_accumulate()
-            and self.outer_entity_type != 'files'
-        ):
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            return None
+        if field in self._never_accumulate():
+            if self.outer_entity_type == 'files':
+                # These fields are only aggregated for files, where they are
+                # needed for compact and PFB manifests
+                return SetAccumulator(max_size=200)
+            else:
+                return None
         elif field in ('diagnosis_age', 'onset_age'):
             return SetOfDictAccumulator(max_size=100,
                                         key=compose_keys(none_safe_tuple_key(none_last=True),
                                                          itemgetter('lte', 'gte')))
         elif field == 'disease':
-            return SetAccumulator(max_size=100,
-                                  # Some AnVIL datasets have excessive numbers
-                                  # of disease values, all being accessions.
-                                  allow_overflow=self.outer_entity_type == 'datasets')
+            if self.outer_entity_type == 'datasets':
+                # Some AnVIL datasets have excessive numbers of disease values,
+                # all being accessions.
+                return SetAccumulator(max_size=100, allow_overflow=True)
+            elif self.outer_entity_type == 'files':
+                return SetAccumulator(max_size=200)
+            else:
+                return SetAccumulator(max_size=500)
+        elif field == 'phenotype' and self.outer_entity_type == 'datasets':
+            return SetAccumulator(max_size=500)
         else:
             return super()._accumulator(field)
 
