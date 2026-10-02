@@ -8,6 +8,9 @@ import datetime
 from enum import (
     Enum,
 )
+from functools import (
+    cache,
+)
 import itertools
 import logging
 from operator import (
@@ -16,8 +19,10 @@ from operator import (
 import re
 from typing import (
     Callable,
+    ClassVar,
     Iterable,
     Mapping,
+    Self,
 )
 import uuid
 
@@ -32,7 +37,12 @@ from azul import (
 from azul.drs import (
     DRSURI,
 )
+from azul.indexer import (
+    BundleUUID,
+    BundleVersion,
+)
 from azul.indexer.document import (
+    EntityID,
     EntityReference,
     EntityType,
 )
@@ -47,10 +57,14 @@ from azul.lib.bigquery import (
 from azul.lib.collections import (
     singleton,
 )
+from azul.lib.time import (
+    format_dcp2_datetime,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
+    not_none,
 )
 from azul.lib.uuids import (
     change_version,
@@ -87,11 +101,140 @@ log = logging.getLogger(__name__)
 #:
 anvil_schema = anvil_schemas[6]
 
+#: AnVIL snapshots are not versioned, so every AnVIL bundle has this version,
+#: and so does every entity in one
+#:
+fixed_version: BundleVersion = format_dcp2_datetime(
+    datetime.datetime(year=2022, month=6, day=1, hour=0,
+                      tzinfo=datetime.timezone.utc))
+
 Keys = Set[KeyReference]
 MutableKeys = set[KeyReference]
 KeysByType = dict[EntityType, Set[Key]]
 MutableKeysByType = dict[EntityType, set[Key]]
 KeyLinks = set[KeyLink]
+
+
+@attrs.frozen(kw_only=True)
+class SnapshotName:
+    """
+    The name of an AnVIL snapshot, broken into its components.
+    """
+
+    #: Most snapshots spell the prefix `ANVIL`, a few outliers use `AnVIL`
+    #:
+    prefix: str
+
+    #: How the name spells the dataset.
+    #:
+    dataset: str
+
+    #: The date the dataset was created, as `YYYYMMDD`
+    #:
+    dataset_date: str
+
+    #: The version of the AnVIL schema the snapshot was ingested under
+    #:
+    schema_version: int = attrs.field(converter=int)
+
+    #: The time the snapshot was created, as `YYYYMMDDhhmm`
+    #:
+    snapshot_time: str
+
+    # The names of the attributes above must match those of the capture groups
+    _pattern: ClassVar[re.Pattern] = re.compile(r'(?P<prefix>(?i:ANVIL))'
+                                                r'_(?P<dataset>\w+)'
+                                                r'_(?P<dataset_date>\d{8})'
+                                                r'_ANV(?P<schema_version>\d+)'
+                                                r'_(?P<snapshot_time>\d{12})',
+                                                re.ASCII)
+
+    @classmethod
+    @cache
+    def parse(cls, name: str) -> Self:
+        """
+        >>> SnapshotName.parse('ANVIL_CMG_UWash_GRU_20240301_ANV5_202403040330')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        SnapshotName(prefix='ANVIL',
+                     dataset='CMG_UWash_GRU',
+                     dataset_date='20240301',
+                     schema_version=5,
+                     snapshot_time='202403040330')
+
+        >>> SnapshotName.parse('AnVIL_GTEx_V8_hg38_20230419_ANV5_202304202007').prefix
+        'AnVIL'
+
+        >>> SnapshotName.parse('ANVIL_1000G_2019_Dev_20230609_ANV_202306121732')
+        ... # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        AssertionError: R('Snapshot name does not match the expected convention',
+        'ANVIL_1000G_2019_Dev_20230609_ANV_202306121732')
+        """
+        match = cls._pattern.fullmatch(name)
+        assert match is not None, R(
+            'Snapshot name does not match the expected convention', name)
+        self = cls(**match.groupdict())
+        assert name == str(self), R('Snapshot name is not canonical', name)
+        return self
+
+    def __str__(self) -> str:
+        """
+        The inverse of :py:meth:`parse`.
+
+        >>> name = 'ANVIL_CMG_UWash_GRU_20240301_ANV5_202403040330'
+        >>> name == str(SnapshotName.parse(name))
+        True
+        """
+        return '_'.join([
+            self.prefix,
+            self.dataset,
+            self.dataset_date,
+            f'ANV{self.schema_version}',
+            self.snapshot_time
+        ])
+
+
+#: The namespace of the UUIDs identifying AnVIL entities
+#:
+_entity_id_namespace = uuid.UUID('06d615ea-1a34-41c0-8780-135ebaead1c7')
+
+
+def _entity_id(source: TDRSourceSpec, table_name: str, key: Key) -> EntityID:
+    """
+    The ID of the entity with the given primary key, in the given table of the
+    given snapshot.
+
+    AnVIL primary keys are only unique per table and snapshot. Qualifying the
+    key with the table and the dataset makes the resulting ID globally unique
+    while also maximizing stability across releases of that dataset. Previously
+    this plugin used the datarepo_row_id to identify entities, which was
+    globally unique but would change with every new snapshot for any given
+    dataset.
+
+    The letter case of a dataset name has been observed to vary between
+    releases, so it needs to be normalized to lower case.
+    """
+    dataset = SnapshotName.parse(source.name).dataset.lower()
+    name = ':'.join([dataset, table_name, key])
+    return str(uuid.uuid5(_entity_id_namespace, name))
+
+
+#: The namespace of the UUIDs identifying batches of AnVIL rows
+#:
+_batch_id_namespace = uuid.UUID('b8b3ac80-e035-4904-8b02-2d04f9e9a369')
+
+
+def _batch_id(source: TDRSourceSpec, table_name: str, batch_prefix: str) -> str:
+    """
+    The ID of the batch of rows whose primary key, or, for non-schema tables,
+    whose row ID starts with the given prefix, in the given table of the given
+    snapshot. The UUID of non-batched bundles is derived from the entity ID of
+    their singular bundle entity. Batched bundles have no such entity, so the
+    batch ID is used instead.
+    """
+    name = f'{source}:{table_name}:{batch_prefix}'
+    return str(uuid.uuid5(_batch_id_namespace, name))
 
 
 class BundleType(Enum):
@@ -186,15 +329,72 @@ class BundleType(Enum):
         return cls.replica
 
 
-@attrs.frozen(kw_only=True, eq=False)
+@attrs.frozen(kw_only=True, eq=False, init=False)
 class TDRAnvilBundleFQID(TDRBundleFQID):
     table_name: str
     batch_prefix: str | None
+
+    #: The primary key of the bundle entity. A bundle's UUID is derived from
+    #: this key, and that derivation can't be inverted, so the key has to
+    #: travel with the FQID for the bundle to be fetched. Batched bundles have
+    #: no bundle entity, and therefore no key.
+    #:
+    primary_key: Key | None
+
+    #: The version of the UUIDs we derive with `uuid5`
+    #:
+    _derived_uuid_version: ClassVar[int] = 5
+
+    #: The version of bundle UUIDs, which distinguishes them from the entity
+    #: and batch IDs they are derived from
+    #:
+    _bundle_uuid_version: ClassVar[int] = 10
+
+    def __init__(self,
+                 *,
+                 uuid: BundleUUID | None = None,
+                 version: BundleVersion = fixed_version,
+                 source: TDRSourceRef,
+                 table_name: str,
+                 batch_prefix: str | None = None,
+                 primary_key: Key | None = None
+                 ) -> None:
+        """
+        Construct an AnVIL bundle FQID. The `uuid` parameter can be omitted,
+        in which case it will be derived from the other arguments. If it is
+        passed, it must be consistent with the other arguments. Similarly, the
+        `version` parameter can be omitted. If it is passed, it must be equal
+        to `fixed_version`.
+
+        Either `batch_prefix` or `primary_key` must be given and the choice must
+        match `table_name`: batched tables require the former, all other tables
+        the latter.
+        """
+        if batch_prefix is None:
+            derived_uuid = _entity_id(source.spec, table_name, not_none(primary_key))
+        else:
+            derived_uuid = _batch_id(source.spec, table_name, batch_prefix)
+        derived_uuid = change_version(derived_uuid,
+                                      self._derived_uuid_version,
+                                      self._bundle_uuid_version)
+        assert uuid is None or uuid == derived_uuid, R(
+            'Bundle UUID disagrees with the attributes it is derived from',
+            uuid, derived_uuid)
+        assert version == fixed_version, R(
+            'AnVIL bundles all have the same version',
+            version, fixed_version)
+        self.__attrs_init__(uuid=derived_uuid,
+                            version=version,
+                            source=source,
+                            table_name=table_name,
+                            batch_prefix=batch_prefix,
+                            primary_key=primary_key)
 
     def __attrs_post_init__(self):
         should_be_batched = BundleType.for_table(self.table_name).is_batched
         is_batched = self.is_batched
         assert is_batched == should_be_batched, self
+        assert is_batched == (self.primary_key is None), self
         if is_batched:
             assert len(self.batch_prefix) <= 8, self
 
@@ -217,7 +417,15 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                    is_orphan: bool = False
                    ) -> None:
         target = self.orphans if is_orphan else self.entities
-        assert entity not in target, entity
+        # The assertion below detects duplicate primary keys within a table, for
+        # all but one table. Partitioning, batching and graph traversal are all
+        # keyed on the primary key, so two rows sharing a primary key always end
+        # up in the same bundle and trip this assertion, causing an obvious
+        # failure during indexing. Note that this assertion does not detect
+        # duplicates in `anvil_dataset`; those are detected by `_get_dataset`.
+        assert entity not in self.entities and entity not in self.orphans, R(
+            'Two rows are identified by the same entity reference',
+            entity, self.fqid)
         metadata = dict(row,
                         version=version)
         if entity.entity_type == 'anvil_file':
@@ -247,28 +455,24 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
 
 class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
-    @cached_property
-    def _version(self):
-        return self.format_version(datetime.datetime(year=2022,
-                                                     month=6,
-                                                     day=1,
-                                                     hour=0,
-                                                     tzinfo=datetime.timezone.utc))
-
-    datarepo_row_uuid_version = 4
-    batch_uuid_version = 5
-    bundle_uuid_version = 10
-
-    def _batch_uuid(self,
+    def _entity_ref(self,
                     source: TDRSourceSpec,
                     table_name: str,
-                    batch_prefix: str
-                    ) -> str:
-        namespace = uuid.UUID('b8b3ac80-e035-4904-8b02-2d04f9e9a369')
-        batch_uuid = uuid.uuid5(namespace, f'{source}:{table_name}:{batch_prefix}')
-        return change_version(str(batch_uuid),
-                              self.batch_uuid_version,
-                              self.bundle_uuid_version)
+                    row: BigQueryRow
+                    ) -> EntityReference:
+        """
+        A reference to the entity represented by the given row of the given
+        table of the given snapshot.
+        """
+        pk_column = self._pk_column(source, table_name)
+        if pk_column is None:
+            # The schema doesn't describe this table, so it declares no primary
+            # key, leaving nothing stable to derive an ID from. Entities from
+            # such tables only ever occur as replicas.
+            entity_id = row['datarepo_row_id']
+        else:
+            entity_id = _entity_id(source, table_name, row[pk_column])
+        return EntityReference(entity_type=table_name, entity_id=entity_id)
 
     def count_files(self, source: TDRSourceRef) -> int:
         prefix = '' if source.prefix is None else source.prefix.common
@@ -283,10 +487,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     def count_bundles(self, source: TDRSourceRef) -> int:
         prefix = '' if source.prefix is None else source.prefix.common
         assert prefix == prefix.lower(), source
+        table_name = BundleType.primary.table_name
+        pk_column = not_none(self._pk_column(source.spec, table_name))
         primary_count = one(self._run_sql(f'''
             SELECT COUNT(*) AS count
-            FROM {backtick(self._full_table_name(source.spec, BundleType.primary.table_name))}
-            WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
+            FROM {backtick(self._full_table_name(source.spec, table_name))}
+            WHERE STARTS_WITH(LOWER({pk_column}), {prefix!r})
         '''))['count']
         sizes_by_table = self._batch_tables(source.spec, prefix)
         batched_count = sum(batch_size for (_, batch_size) in sizes_by_table.values())
@@ -301,31 +507,26 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         assert prefix == prefix.lower(), prefix
         bundles = []
         spec = source.spec
+        table_name = BundleType.primary.table_name
+        pk_column = not_none(self._pk_column(spec, table_name))
         for row in self._run_sql(f'''
-            SELECT datarepo_row_id
-            FROM {backtick(self._full_table_name(spec, BundleType.primary.table_name))}
-            WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
+            SELECT {pk_column}
+            FROM {backtick(self._full_table_name(spec, table_name))}
+            WHERE STARTS_WITH(LOWER({pk_column}), {prefix!r})
         '''):
-            bundle_uuid = change_version(row['datarepo_row_id'],
-                                         self.datarepo_row_uuid_version,
-                                         self.bundle_uuid_version)
-            bundle_fqid = TDRAnvilBundleFQID(uuid=bundle_uuid,
-                                             version=self._version,
-                                             source=source,
-                                             table_name=BundleType.primary.table_name,
-                                             batch_prefix=None)
+            bundle_fqid = TDRAnvilBundleFQID(source=source,
+                                             table_name=table_name,
+                                             primary_key=row[pk_column])
             bundles.append(bundle_fqid)
         prefix_lengths_by_table = self._batch_tables(source.spec, prefix)
         for table_name, (batch_prefix_length, _) in prefix_lengths_by_table.items():
             batch_prefixes = Prefix(common=prefix,
                                     partition=batch_prefix_length - len(prefix)).partition_prefixes()
             for batch_prefix in batch_prefixes:
-                bundle_uuid = self._batch_uuid(spec, table_name, batch_prefix)
-                bundles.append(TDRAnvilBundleFQID(uuid=bundle_uuid,
-                                                  version=self._version,
-                                                  source=source,
-                                                  table_name=table_name,
-                                                  batch_prefix=batch_prefix))
+                bundle_fqid = TDRAnvilBundleFQID(source=source,
+                                                 table_name=table_name,
+                                                 batch_prefix=batch_prefix)
+                bundles.append(bundle_fqid)
         return bundles
 
     def list_files(self, source: TDRSourceRef, prefix: str) -> list[AnvilFile]:
@@ -348,7 +549,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         return [
             AnvilFile(uuid=ref.entity_id,
                       name=row['file_name'],
-                      version=self._version,
+                      version=fixed_version,
                       size=row['file_size'],
                       md5=row['file_md5sum'],
                       drs_uri=row['file_ref'],
@@ -413,6 +614,10 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # replica bundle, so a dedicated anvil_dataset batch would be redundant.
         table_names.discard(BundleType.no_bundle.table_name)
         table_names = sorted(filter(is_batched, table_names))
+        batch_columns_by_table = {
+            table_name: self._batch_column(source, table_name)
+            for table_name in table_names
+        }
         log.info('Calculating batch prefix lengths for partition %r of %d tables '
                  'in source %s', prefix, len(table_names), source)
         # The extraneous outer 'SELECT *' works around a bug in BigQuery emulator
@@ -429,17 +634,17 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     COUNT(*) AS num_batches
                 FROM (
                     SELECT
-                        {repeat(f'LOWER(SUBSTR(datarepo_row_id, {prefix_len} + {{i}}, 1)) AS p{{i}}')},
+                        {repeat(f'LOWER(SUBSTR({batch_column}, {prefix_len} + {{i}}, 1)) AS p{{i}}')},
                         COUNT(*) AS num_rows
                     FROM {backtick(self._full_table_name(source, table_name))}
-                    WHERE STARTS_WITH(LOWER(datarepo_row_id), {prefix!r})
+                    WHERE STARTS_WITH(LOWER({batch_column}), {prefix!r})
                     GROUP BY ROLLUP ({repeat('p{i}')})
                 )
                 GROUP BY batch_prefix_length
                 ORDER BY ABS({target_size} - average_batch_size), batch_prefix_length
                 LIMIT 1
             )
-        )''' for table_name in table_names)
+        )''' for table_name, batch_column in batch_columns_by_table.items())
 
         def result(row):
             table_name = row['table_name']
@@ -456,7 +661,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         assert not bundle_fqid.is_batched, bundle_fqid
         source = bundle_fqid.source
-        bundle_entity = self._bundle_entity(bundle_fqid)
+        bundle_entity = KeyReference(key=not_none(bundle_fqid.primary_key),
+                                     entity_type=bundle_fqid.table_name)
 
         keys: MutableKeys = {bundle_entity}
         links: KeyLinks = set()
@@ -484,7 +690,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         result = TDRAnvilBundle(fqid=bundle_fqid)
         entities_by_key: dict[KeyReference, EntityReference] = {}
         for entity_type, typed_keys in sorted(keys_by_type.items()):
-            pk_column = entity_type.removeprefix('anvil_') + '_id'
+            pk_column = not_none(self._pk_column(source.spec, entity_type))
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
             if entity_type == 'anvil_dataset':
                 for row in rows:
@@ -502,10 +708,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                         'Conflicting keys', donor_dataset_id, dataset_id)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
-                entity = EntityReference(entity_id=row['datarepo_row_id'],
-                                         entity_type=entity_type)
+                entity = self._entity_ref(source.spec, entity_type, row)
                 entities_by_key[key] = entity
-                result.add_entity(entity, self._version, row)
+                result.add_entity(entity, fixed_version, row)
         result.add_links(link.to_entity_link(entities_by_key) for link in links)
         return result
 
@@ -516,13 +721,13 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         for file_ref, file_row in self._get_bundle_batch(bundle_fqid):
             is_supplementary = file_row['is_supplementary']
             result.add_entity(file_ref,
-                              self._version,
+                              fixed_version,
                               dict(file_row),
                               is_orphan=not is_supplementary)
             if is_supplementary:
                 linked_file_refs.add(file_ref)
         dataset_ref, dataset_row = self._get_dataset(bundle_fqid.source)
-        result.add_entity(dataset_ref, self._version, dataset_row)
+        result.add_entity(dataset_ref, fixed_version, dataset_row)
         # Avoid inserting "degenerate" links with an empty list of outputs, i.e.
         # in case of an empty batch (as is common on `anvilbox`). Such links
         # would be harmless in production, but would complicate the bundle
@@ -540,7 +745,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         batch = self._get_bundle_batch(bundle_fqid)
         dataset = self._get_dataset(bundle_fqid.source)
         for ref, row in itertools.chain([dataset], batch):
-            result.add_entity(ref, self._version, dict(row), is_orphan=True)
+            result.add_entity(ref, fixed_version, dict(row), is_orphan=True)
         return result
 
     def _get_dataset(self, source: TDRSourceRef) -> tuple[EntityReference, MutableJSON]:
@@ -550,7 +755,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             SELECT {', '.join(sorted(columns))}
             FROM {backtick(self._full_table_name(source.spec, table_name))}
         ''')))
-        ref = EntityReference(entity_type=table_name, entity_id=row['datarepo_row_id'])
+        ref = self._entity_ref(source.spec, table_name, row)
         self._augment_dataset_with_duos(row, source)
         return ref, row
 
@@ -581,34 +786,18 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             FROM {backtick(self._full_table_name(source, table_name))}
             WHERE STARTS_WITH(LOWER({key_column}), {batch_prefix!r})
         '''):
-            ref = EntityReference(entity_type=table_name, entity_id=row['datarepo_row_id'])
+            ref = self._entity_ref(source, table_name, row)
             yield ref, row
 
     def _get_bundle_batch(self,
                           bundle_fqid: TDRAnvilBundleFQID
                           ) -> Iterable[tuple[EntityReference, BigQueryRow]]:
-        return self._get_batch(bundle_fqid.source.spec,
-                               bundle_fqid.table_name,
-                               bundle_fqid.batch_prefix,
-                               key_column='datarepo_row_id')
-
-    def _bundle_entity(self, bundle_fqid: TDRAnvilBundleFQID) -> KeyReference:
-        source = bundle_fqid.source
-        bundle_uuid = bundle_fqid.uuid
-        entity_id = change_version(bundle_uuid,
-                                   self.bundle_uuid_version,
-                                   self.datarepo_row_uuid_version)
+        source = bundle_fqid.source.spec
         table_name = bundle_fqid.table_name
-        pk_column = table_name.removeprefix('anvil_') + '_id'
-        bundle_entity = one(self._run_sql(f'''
-            SELECT {pk_column}
-            FROM {backtick(self._full_table_name(source.spec, table_name))}
-            WHERE datarepo_row_id = '{entity_id}'
-        '''))[pk_column]
-        bundle_entity = KeyReference(key=bundle_entity, entity_type=table_name)
-        log.info('Bundle UUID %r resolved to primary key %r in table %r',
-                 bundle_uuid, bundle_entity.key, table_name)
-        return bundle_entity
+        return self._get_batch(source,
+                               table_name,
+                               bundle_fqid.batch_prefix,
+                               key_column=self._batch_column(source, table_name))
 
     def _consolidate_by_type(self, entities: Keys) -> MutableKeysByType:
         result = {
@@ -907,7 +1096,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         if keys:
             columns = self._columns(source, entity_type)
             table_name = self._full_table_name(source, entity_type)
-            pk_column = entity_type.removeprefix('anvil_') + '_id'
+            pk_column = not_none(self._pk_column(source, entity_type))
             assert pk_column in columns, entity_type
             log.debug('Retrieving %i entities of type %r ...', len(keys), entity_type)
             rows = self._run_sql(f'''
@@ -932,18 +1121,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         else:
             return []
 
-    #: Matches a snapshot name, capturing the version of the AnVIL schema the
-    #: snapshot was ingested under. The prefix is matched case insensitively
-    #: because some snapshots in the deployment configurations spell it
-    #: `AnVIL`.
-    #:
-    _snapshot_name_re = re.compile(r'(?i:ANVIL)'  # prefix
-                                   r'_\w+'  # name of the dataset
-                                   r'_\d{8}'  # date the dataset was created
-                                   r'_ANV(\d+)'  # version of the schema
-                                   r'_\d{12}',  # time the snapshot was created
-                                   re.ASCII)
-
     def validate_source_spec(self, source_spec: TDRSourceSpec) -> None:
         self._schema_version(source_spec)
 
@@ -954,10 +1131,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         most recent version, so the two must not be confused when selecting
         columns from a snapshot.
         """
-        match = self._snapshot_name_re.fullmatch(source.name)
-        assert match is not None, R(
-            'Snapshot name does not match the expected convention', source.name)
-        version = int(match.group(1))
+        version = SnapshotName.parse(source.name).schema_version
         assert version in anvil_schemas, R(
             'Snapshot was ingested under an untracked schema version',
             source.name, version, sorted(anvil_schemas))
@@ -982,6 +1156,33 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 column_names.add(f'{self._column_from_64_to_hex(column)} AS {column}')
             columns_by_table[table_name] = column_names
         return columns_by_table
+
+    @cached_property
+    def _pk_columns_by_schema_version_and_table(self) -> Mapping[int, Mapping[str, str]]:
+        return {
+            schema_version: {
+                table['name']: one(table['primaryKey'])
+                for table in schema['tables']
+            }
+            for schema_version, schema in anvil_schemas.items()
+        }
+
+    def _pk_column(self, source: TDRSourceSpec, table_name: str) -> str | None:
+        """
+        The name of the column holding the primary key of the given table, as
+        declared by the schema the given snapshot was ingested under, or None
+        for tables the schema doesn't describe.
+        """
+        version = self._schema_version(source)
+        return self._pk_columns_by_schema_version_and_table[version].get(table_name)
+
+    def _batch_column(self, source: TDRSourceSpec, table_name: str) -> str:
+        """
+        The name of the column whose value's prefix assigns a row of the given
+        batched table to a batch. Tables the schema doesn't describe declare no
+        primary key, so their rows are batched by their row ID instead.
+        """
+        return self._pk_column(source, table_name) or 'datarepo_row_id'
 
     def _columns(self, source: TDRSourceSpec, table_name: str) -> Set[str]:
         version = self._schema_version(source)
