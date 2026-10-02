@@ -1161,6 +1161,28 @@ tf_config = {
                 })
             }
         },
+        'aws_ecr_lifecycle_policy': {
+            'lambda': {
+                'repository': '${aws_ecr_repository.lambda.name}',
+                'policy': json.dumps({
+                    'rules': [
+                        {
+                            'rulePriority': 1,
+                            'description': 'Delete untagged images after 1 day',
+                            'selection': {
+                                'tagStatus': 'untagged',
+                                'countType': 'sinceImagePushed',
+                                'countUnit': 'days',
+                                'countNumber': 1
+                            },
+                            'action': {
+                                'type': 'expire'
+                            }
+                        }
+                    ]
+                })
+            }
+        },
         'null_resource': {
             **{
                 # Copy image from upstream to ECR
