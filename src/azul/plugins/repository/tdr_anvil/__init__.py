@@ -57,6 +57,9 @@ from azul.lib.bigquery import (
 from azul.lib.collections import (
     singleton,
 )
+from azul.lib.time import (
+    format_dcp2_datetime,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
@@ -97,6 +100,13 @@ log = logging.getLogger(__name__)
 #: The version of the AnVIL schema that this module was written against
 #:
 anvil_schema = anvil_schemas[6]
+
+#: AnVIL snapshots are not versioned, so every AnVIL bundle has this version,
+#: and so does every entity in one
+#:
+fixed_version: BundleVersion = format_dcp2_datetime(
+    datetime.datetime(year=2022, month=6, day=1, hour=0,
+                      tzinfo=datetime.timezone.utc))
 
 Keys = Set[KeyReference]
 MutableKeys = set[KeyReference]
@@ -343,7 +353,7 @@ class TDRAnvilBundleFQID(TDRBundleFQID):
     def __init__(self,
                  *,
                  uuid: BundleUUID | None = None,
-                 version: BundleVersion,
+                 version: BundleVersion = fixed_version,
                  source: TDRSourceRef,
                  table_name: str,
                  batch_prefix: str | None = None,
@@ -352,7 +362,9 @@ class TDRAnvilBundleFQID(TDRBundleFQID):
         """
         Construct an AnVIL bundle FQID. The `uuid` parameter can be omitted,
         in which case it will be derived from the other arguments. If it is
-        passed, it must be consistent with the other arguments.
+        passed, it must be consistent with the other arguments. Similarly, the
+        `version` parameter can be omitted. If it is passed, it must be equal
+        to `fixed_version`.
 
         Either `batch_prefix` or `primary_key` must be given and the choice must
         match `table_name`: batched tables require the former, all other tables
@@ -368,6 +380,9 @@ class TDRAnvilBundleFQID(TDRBundleFQID):
         assert uuid is None or uuid == derived_uuid, R(
             'Bundle UUID disagrees with the attributes it is derived from',
             uuid, derived_uuid)
+        assert version == fixed_version, R(
+            'AnVIL bundles all have the same version',
+            version, fixed_version)
         self.__attrs_init__(uuid=derived_uuid,
                             version=version,
                             source=source,
@@ -432,14 +447,6 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
 
 class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
-    @cached_property
-    def _version(self):
-        return self.format_version(datetime.datetime(year=2022,
-                                                     month=6,
-                                                     day=1,
-                                                     hour=0,
-                                                     tzinfo=datetime.timezone.utc))
-
     def _entity_ref(self,
                     source: TDRSourceSpec,
                     table_name: str,
@@ -500,7 +507,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             WHERE STARTS_WITH(LOWER({pk_column}), {prefix!r})
         '''):
             bundle_fqid = TDRAnvilBundleFQID(source=source,
-                                             version=self._version,
                                              table_name=table_name,
                                              primary_key=row[pk_column])
             bundles.append(bundle_fqid)
@@ -510,7 +516,6 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                                     partition=batch_prefix_length - len(prefix)).partition_prefixes()
             for batch_prefix in batch_prefixes:
                 bundle_fqid = TDRAnvilBundleFQID(source=source,
-                                                 version=self._version,
                                                  table_name=table_name,
                                                  batch_prefix=batch_prefix)
                 bundles.append(bundle_fqid)
@@ -536,7 +541,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         return [
             AnvilFile(uuid=ref.entity_id,
                       name=row['file_name'],
-                      version=self._version,
+                      version=fixed_version,
                       size=row['file_size'],
                       md5=row['file_md5sum'],
                       drs_uri=row['file_ref'],
@@ -697,7 +702,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
                 entity = self._entity_ref(source.spec, entity_type, row)
                 entities_by_key[key] = entity
-                result.add_entity(entity, self._version, row)
+                result.add_entity(entity, fixed_version, row)
         result.add_links(link.to_entity_link(entities_by_key) for link in links)
         return result
 
@@ -708,13 +713,13 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         for file_ref, file_row in self._get_bundle_batch(bundle_fqid):
             is_supplementary = file_row['is_supplementary']
             result.add_entity(file_ref,
-                              self._version,
+                              fixed_version,
                               dict(file_row),
                               is_orphan=not is_supplementary)
             if is_supplementary:
                 linked_file_refs.add(file_ref)
         dataset_ref, dataset_row = self._get_dataset(bundle_fqid.source)
-        result.add_entity(dataset_ref, self._version, dataset_row)
+        result.add_entity(dataset_ref, fixed_version, dataset_row)
         # Avoid inserting "degenerate" links with an empty list of outputs, i.e.
         # in case of an empty batch (as is common on `anvilbox`). Such links
         # would be harmless in production, but would complicate the bundle
@@ -732,7 +737,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         batch = self._get_bundle_batch(bundle_fqid)
         dataset = self._get_dataset(bundle_fqid.source)
         for ref, row in itertools.chain([dataset], batch):
-            result.add_entity(ref, self._version, dict(row), is_orphan=True)
+            result.add_entity(ref, fixed_version, dict(row), is_orphan=True)
         return result
 
     def _get_dataset(self, source: TDRSourceRef) -> tuple[EntityReference, MutableJSON]:

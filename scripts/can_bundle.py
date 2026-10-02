@@ -9,6 +9,9 @@ Note: silently overwrites the destination file.
 
 import argparse
 import base64
+from collections.abc import (
+    Mapping,
+)
 import hashlib
 import json
 import logging
@@ -35,7 +38,6 @@ from azul.lib.files import (
 from azul.lib.types import (
     AnyJSON,
     AnyMutableJSON,
-    JSON,
     json_dict,
 )
 from azul.logging import (
@@ -57,49 +59,66 @@ def main(argv):
                         required=True,
                         help='The repository source containing the bundle')
     parser.add_argument('--uuid', '-b',
-                        required=True,
-                        help='The UUID of the bundle to can.')
+                        help='The UUID of the bundle to can. Required for HCA. For AnVIL, '
+                             'the UUID is derived, so pass the AnVIL options instead.')
     parser.add_argument('--version', '-v',
-                        help='The version of the bundle to can. Required for HCA, ignored for AnVIL.')
+                        help='The version of the bundle to can. Required for HCA. AnVIL '
+                             'bundles all share one version, which is used automatically.')
     parser.add_argument('--table-name',
-                        help='The BigQuery table of the bundle to can. Only applicable for AnVIL.')
+                        help='The BigQuery table of the bundle to can. AnVIL only.')
     parser.add_argument('--batch-prefix',
-                        help='The batch prefix of the bundle to can. Only applicable for AnVIL. '
-                             'Use "null" for non-batched bundle formats.')
+                        help='The prefix defining the batch of rows to can. AnVIL only, '
+                             'and only for bundles of a batched table.')
     parser.add_argument('--primary-key',
-                        help='The primary key of the bundle entity. Only applicable for AnVIL. '
-                             'Use "null" for batched bundle formats.')
+                        help='The primary key of the bundle entity. AnVIL only, and only '
+                             'for bundles of a table that is not batched.')
     parser.add_argument('--output-dir', '-O',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the output directory (default: %(default)s).')
     parser.add_argument('--redaction-key', '-K',
                         help='Provide a key to redact confidential or sensitive information from the output files')
     args = parser.parse_args(argv)
-    fqid_fields = parse_fqid_fields(args)
+    fqid_fields = parse_fqid_fields(parser, args)
     bundle = fetch_bundle(args.source, fqid_fields)
     if args.redaction_key:
         redact_bundle(bundle, args.redaction_key.encode())
     save_bundle(bundle, args.output_dir)
 
 
-def parse_fqid_fields(args: argparse.Namespace) -> JSON:
-    fields = {'uuid': args.uuid, 'version': args.version}
-    if args.table_name is not None:
-        fields['table_name'] = args.table_name
-    batch_prefix = args.batch_prefix
-    if batch_prefix is not None:
-        if batch_prefix == 'null':
-            batch_prefix = None
-        fields['batch_prefix'] = batch_prefix
-    primary_key = args.primary_key
-    if primary_key is not None:
-        if primary_key == 'null':
-            primary_key = None
-        fields['primary_key'] = primary_key
-    return fields
+def parse_fqid_fields(parser: argparse.ArgumentParser,
+                      args: argparse.Namespace
+                      ) -> Mapping[str, str]:
+    """
+    The attributes identifying the requested bundle, as keyword arguments to
+    the constructor of the repository's FQID class. An AnVIL bundle is
+    identified by the table it is drawn from and either the batch or the bundle
+    entity it contains, from which its UUID and version are derived. A bundle
+    of any other repository is identified by its UUID and version.
+    """
+    anvil_fields = {
+        field: value
+        for field, value in [('table_name', args.table_name),
+                             ('batch_prefix', args.batch_prefix),
+                             ('primary_key', args.primary_key)]
+        if value is not None
+    }
+    other_fields = {
+        field: value
+        for field, value in [('uuid', args.uuid), ('version', args.version)]
+        if value is not None
+    }
+    if anvil_fields:
+        if other_fields:
+            parser.error('--uuid and --version are derived from the AnVIL '
+                         'options, and must not be combined with them')
+        return anvil_fields
+    elif 'uuid' in other_fields:
+        return other_fields
+    else:
+        parser.error('Either --uuid or the AnVIL options are required')
 
 
-def fetch_bundle(source: str, fqid_args: JSON) -> Bundle:
+def fetch_bundle(source: str, fqid_args: Mapping[str, str]) -> Bundle:
     for catalog in config.catalogs:
         plugin = plugin_for(catalog)
         try:
@@ -110,8 +129,9 @@ def fetch_bundle(source: str, fqid_args: JSON) -> Bundle:
             source_ref = plugin.resolve_source(source_spec)
             log.debug('Searching for %r in catalog %r', source, catalog)
             if source_spec in plugin.sources:
-                fqid = dict(fqid_args, source=source_ref.to_json())
-                fqid = plugin.bundle_fqid_cls.from_json(fqid)
+                # Constructing, rather than deserializing, lets a plugin
+                # derive the attributes that aren't given
+                fqid = plugin.bundle_fqid_cls(source=source_ref, **fqid_args)
                 bundle = plugin.fetch_bundle(fqid)
                 log.info('Fetched bundle %r version %r from catalog %r.',
                          fqid.uuid, fqid.version, catalog)
