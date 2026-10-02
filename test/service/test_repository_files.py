@@ -15,9 +15,6 @@ from unittest.mock import (
 
 import attr
 import certifi
-from chalice.config import (
-    Config as ChaliceConfig,
-)
 from furl import (
     furl,
 )
@@ -91,9 +88,6 @@ class RepositoryFilesTestCase(LocalAppTestCase, metaclass=ABCMeta):
     @classmethod
     def app_name(cls) -> str:
         return 'service'
-
-    def chalice_config(self):
-        return ChaliceConfig.create(lambda_timeout=15)
 
     def assertUrlEqual(self, a: Union[str, furl], b: Union[str, furl]):
         if isinstance(a, str):

@@ -234,15 +234,15 @@ class AzulChaliceApp(Chalice):
             config.lambda_is_handling_api_gateway_request = False
 
     @classmethod
-    def security_headers(cls) -> dict[str, str]:
+    def security_headers(cls, cors: bool = False) -> dict[str, str]:
         """
         Default values for headers added to every response from the app, as well
-        as canned 4XX and 5XX responses from API Gateway. Use of these headers
-        addresses known security vulnerabilities.
+        as canned 4XX and 5XX responses from API Gateway. Pass ``cors`` for the
+        response to a request against a route that enables CORS.
         """
         hsts_max_age = 60 * 60 * 24 * 365 * 2
         csp = CSP.for_azul()
-        return {
+        headers = {
             'Content-Security-Policy': str(csp),
             'Referrer-Policy': 'strict-origin-when-cross-origin',
             'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
@@ -252,21 +252,34 @@ class AzulChaliceApp(Chalice):
             'X-Frame-Options': 'DENY',
             'X-XSS-Protection': '1; mode=block'
         }
+        if cors:
+            # So that client-side scripts like the Data Browser UI can access
+            # Retry-After
+            headers['Access-Control-Expose-Headers'] = '*'
+        return headers
 
     def _security_headers_middleware(self, event, get_response):
         """
         Add headers to the response
         """
         response = get_response(event)
+        try:
+            route = self.routes[event.path][event.method]
+            cors = route.cors is not None
+        except KeyError:
+            route, cors = None, False
         # Add security headers to the response without overwriting any headers
         # that might have been added already (e.g. Content-Security-Policy)
-        for k, v in self.security_headers().items():
+        for k, v in self.security_headers(cors=cors).items():
             response.headers.setdefault(k, v)
-        view_function = self.routes[event.path][event.method].view_function
-        cache_control = getattr(view_function, 'cache_control')
-        # Caching defeats the automatic reloading of application source code by
-        # `chalice local`, which is useful, so we disable caching in that case.
-        cache_control = 'no-store' if self.is_running_locally else cache_control
+        if self.is_running_locally or route is None:
+            # Caching defeats the automatic reloading of application source code
+            # by `chalice local`, which is useful, so we disable caching in that
+            # case. We also don't want to cache a response to a request that
+            # wasn't handled by a route.
+            cache_control = 'no-store'
+        else:
+            cache_control = getattr(route.view_function, 'cache_control')
         response.headers['Cache-Control'] = cache_control
         return response
 

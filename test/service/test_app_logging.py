@@ -112,7 +112,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                                                     'X-Amz-Date,'
                                                     'X-Amz-Security-Token,'
                                                     'X-Api-Key',
-                    **AzulChaliceApp.security_headers(),
+                    **AzulChaliceApp.security_headers(cors=True),
                     'Cache-Control': 'no-store'
                 }
                 body_prefix = body[:prefix_len - 3] + b'...'
