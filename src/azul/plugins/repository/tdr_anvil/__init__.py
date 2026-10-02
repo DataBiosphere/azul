@@ -417,7 +417,15 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                    is_orphan: bool = False
                    ) -> None:
         target = self.orphans if is_orphan else self.entities
-        assert entity not in target, entity
+        # The assertion below detects duplicate primary keys within a table, for
+        # all but one table. Partitioning, batching and graph traversal are all
+        # keyed on the primary key, so two rows sharing a primary key always end
+        # up in the same bundle and trip this assertion, causing an obvious
+        # failure during indexing. Note that this assertion does not detect
+        # duplicates in `anvil_dataset`; those are detected by `_get_dataset`.
+        assert entity not in self.entities and entity not in self.orphans, R(
+            'Two rows are identified by the same entity reference',
+            entity, self.fqid)
         metadata = dict(row,
                         version=version)
         if entity.entity_type == 'anvil_file':
