@@ -14,7 +14,9 @@ In each deployment, keep
 - one backup per quarter for the 12 months before that (4 backups) 
 - and one per year for older backups
 
+Use `scripts/prune_gitlab_snapshots.py` to do so (see [operator manual](https://github.com/DataBiosphere/azul/blob/develop/OPERATOR.rst#prune-gitlab-volume-backups) for details).
+
 - [ ] The `dev.gitlab` data volume snapshots have been pruned
 - [ ] The `anvildev.gitlab` data volume snapshots have been pruned
 - [ ] The `anvilprod.gitlab` data volume snapshots have been pruned
-- [ ] The `anvilprod.gitlab` data volume snapshots have been pruned
+- [ ] The `prod.gitlab` data volume snapshots have been pruned
