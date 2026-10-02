@@ -1236,8 +1236,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'bundles.bundle_uuid',
                 'f4962f15-ecc7-a075-b263-ac70ab0239b2',
-                '826dea02-e274-affe-aabc-eb3db63ad068',
-                '826dea02-e274-affe-aabc-eb3db63ad068'
+                'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
+                'cf0fbe53-a7a9-a9e8-85a4-3db742afb603'
             ),
             (
                 'bundles.bundle_version',
@@ -1626,14 +1626,14 @@ class TestAnvilManifests(AnvilManifestTestCase):
                     *iif(file_size_2 <= mirror_limit, [[
                         f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
+                        'output="cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
                     *iif(file_size_3 <= mirror_limit, [[
                         f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
+                        'output="cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
                         ''
                     ]])

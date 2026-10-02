@@ -64,7 +64,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -140,7 +140,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -343,7 +343,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -562,7 +562,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'accessible': True,
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -594,7 +594,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'reported_ethnicity': ['redacted-NSkwDycK']
                             }
                         ],
-                        'entryId': '826dea02-e274-affe-aabc-eb3db63ad068',
+                        'entryId': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                         'files': [
                             {
                                 'count': 1,
@@ -759,7 +759,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -972,7 +972,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -1183,7 +1183,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -1267,7 +1267,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
