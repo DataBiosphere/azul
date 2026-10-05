@@ -1155,7 +1155,7 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
     }
 
     dataset_title_filters: FiltersJSON = {
-        'datasets.title': {'is': ['ANVIL_CMG_UWASH_DS_BDIS']}
+        'datasets.title': {'is': ['ANVIL_Test']}
     }
 
     neutral_file_filters: FiltersJSON = {
@@ -1307,9 +1307,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'datasets.title',
-                'ANVIL_CMG_UWASH_DS_BDIS',
-                'ANVIL_CMG_UWASH_DS_BDIS',
-                'ANVIL_CMG_UWASH_DS_BDIS'
+                'ANVIL_Test',
+                'ANVIL_Test',
+                'ANVIL_Test'
             ),
             (
                 'datasets.data_modality',

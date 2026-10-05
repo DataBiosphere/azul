@@ -98,7 +98,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -174,7 +174,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -271,7 +271,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 2}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
@@ -376,7 +376,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -481,7 +481,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -574,7 +574,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -684,7 +684,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'count': 1, 'term': 'ANVIL_CMG_UWASH_DS_BDIS'}],
+                        'terms': [{'count': 1, 'term': 'ANVIL_Test'}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -791,7 +791,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'owner': ['Debbie Nickerson'],
                                 'principal_investigator': [None],
                                 'registered_identifier': ['phs000693'],
-                                'title': 'ANVIL_CMG_UWASH_DS_BDIS',
+                                'title': 'ANVIL_Test',
                                 'data_modality': [None],
                                 'accessible': True,
                                 'description': 'Study description from DUOS',
@@ -900,7 +900,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -1000,7 +1000,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1111,7 +1111,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -1211,7 +1211,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1295,7 +1295,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1406,7 +1406,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 2}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },

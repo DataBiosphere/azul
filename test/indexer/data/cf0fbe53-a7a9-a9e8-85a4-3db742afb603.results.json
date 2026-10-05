@@ -76,7 +76,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -241,7 +241,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
@@ -488,7 +488,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -677,7 +677,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
@@ -945,7 +945,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ]
@@ -1143,7 +1143,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ]
@@ -1279,7 +1279,7 @@
     },
     {
         "_index": "azul_v2_nadove4_test_replica",
-        "_id": "anvil_dataset_208441e2-cf28-584e-a0ac-7553c7118412_62afceb18d036f92e1641b515ff3a42222e3967e",
+        "_id": "anvil_dataset_208441e2-cf28-584e-a0ac-7553c7118412_2fa26839f498ec0930ab40037f5b3daec29dda1c",
         "_score": 1.0,
         "_source": {
             "entity_id": "208441e2-cf28-584e-a0ac-7553c7118412",
@@ -1315,7 +1315,7 @@
                 "source_datarepo_row_ids": [
                     "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
                 ],
-                "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                "title": "ANVIL_Test",
                 "version": "2022-06-01T00:00:00.000000Z"
             }
         }
@@ -1417,7 +1417,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -1642,7 +1642,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
@@ -1833,7 +1833,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -2034,7 +2034,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
@@ -2219,7 +2219,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -2419,7 +2419,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
@@ -2674,7 +2674,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -2874,7 +2874,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
@@ -3127,7 +3127,7 @@
                             "phs000693"
                         ],
                         "title": [
-                            "ANVIL_CMG_UWASH_DS_BDIS"
+                            "ANVIL_Test"
                         ],
                         "data_modality": [
                             "~null"
@@ -3328,7 +3328,7 @@
                         "registered_identifier": [
                             "phs000693"
                         ],
-                        "title": "ANVIL_CMG_UWASH_DS_BDIS",
+                        "title": "ANVIL_Test",
                         "data_modality": [
                             "~null"
                         ],
