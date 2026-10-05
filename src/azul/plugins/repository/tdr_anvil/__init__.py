@@ -65,6 +65,7 @@ from azul.lib.types import (
     MutableJSON,
     MutableJSONs,
     not_none,
+    optional,
 )
 from azul.lib.uuids import (
     change_version,
@@ -755,6 +756,14 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             SELECT {', '.join(sorted(columns))}
             FROM {backtick(self._full_table_name(source.spec, table_name))}
         ''')))
+        # Check that the dataset name encoded in the snapshot name matches the
+        # dataset title from the anvil_dataset table row within that snapshot.
+        # See :func:`_entity_id` for why the comparison is case-insensitive.
+        name = SnapshotName.parse(source.spec.name)
+        title = row['title']
+        expected_title = f'{name.prefix}_{name.dataset}'
+        assert optional(str.lower, title) == expected_title.lower(), R(
+            'Dataset title does not match the snapshot name', title, expected_title)
         ref = self._entity_ref(source.spec, table_name, row)
         self._augment_dataset_with_duos(row, source)
         return ref, row
