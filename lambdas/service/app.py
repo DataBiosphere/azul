@@ -176,12 +176,6 @@ spec = {
             ''')
         },
         {
-            'name': 'DSS',
-            'description': fd('''
-                Access to files maintained in the Data Store
-            ''')
-        },
-        {
             'name': 'DRS',
             'description': fd('''
                 DRS-compliant proxy of the underlying repository
@@ -197,12 +191,6 @@ spec = {
             'name': 'Auxiliary',
             'description': fd('''
                 Describes various aspects of the Azul service
-            ''')
-        },
-        {
-            'name': 'Deprecated',
-            'description': fd('''
-                Endpoints that should not be used and that will be removed
             ''')
         }
     ]

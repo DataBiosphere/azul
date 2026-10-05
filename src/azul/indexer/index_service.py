@@ -285,10 +285,12 @@ class IndexService(DocumentService):
         num_entities = sum(transformer.estimate(partition) for transformer in transformers)
         num_divisions = partition.divisions(num_entities)
         if num_divisions > 1:
+            divisions = partition.divide(num_divisions)
             log.info('Dividing partition %s of bundle %s, version %s, '
-                     'with %i entities into %i sub-partitions.',
-                     partition, bundle.uuid, bundle.version, num_entities, num_divisions)
-            return partition.divide(num_divisions)
+                     'with %i entities into %i (>= %i) sub-partitions.',
+                     partition, bundle.uuid, bundle.version, num_entities,
+                     len(divisions), num_divisions)
+            return divisions
         else:
             log.info('Transforming %i entities in partition %s of bundle %s, version %s.',
                      num_entities, partition, bundle.uuid, bundle.version)

@@ -37,6 +37,9 @@ from azul.indexer.index_service import (
     IndexService,
     IndexWriter,
 )
+from azul.lib import (
+    R,
+)
 from azul.lib.types import (
     AnyJSON,
     JSON,
@@ -225,6 +228,85 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
                                table_name='non_schema_orphan_table')
 
 
+def verify_sorted_lists(data: AnyJSON, path: FieldPath = ()) -> int:
+    """
+    Traverse an index document or service response and assert that every list
+    of primitives in it is sorted, with None sorted last, and that every list
+    of ranges, each a list of two values, is sorted. Return the number of lists
+    checked.
+
+    >>> verify_sorted_lists({'a': [1, 2, 3], 'b': {'c': ['x', 'y']}})
+    2
+
+    >>> verify_sorted_lists({'a': [None, 1]})
+    Traceback (most recent call last):
+    ...
+    AssertionError: R('List is not sorted', ('a',), [None, 1])
+
+    >>> verify_sorted_lists({'a': [[3, 4], [1, 2]]})
+    Traceback (most recent call last):
+    ...
+    AssertionError: R('List is not sorted', ('a',), [[3, 4], [1, 2]])
+
+    Lists of objects are traversed, not compared:
+
+    >>> verify_sorted_lists({'a': [{'b': ['y', 'x']}]})
+    Traceback (most recent call last):
+    ...
+    AssertionError: R('List is not sorted', ('a', 'b'), ['y', 'x'])
+
+    Empty lists and scalars are not counted:
+
+    >>> verify_sorted_lists({'a': [], 'b': 1, 'c': None})
+    0
+
+    Some project fields are exempt because their order is significant:
+
+    >>> verify_sorted_lists({'projects': {'laboratory': ['b', 'a']}})
+    0
+    """
+    if isinstance(data, dict):
+        return sum(verify_sorted_lists(val, (*path, key))
+                   for key, val in cast(JSON, data).items())
+    elif isinstance(data, list):
+        if data:
+            if isinstance(data[0], dict):
+                return sum(verify_sorted_lists(v, (*path, k))
+                           for val in cast(JSONs, data)
+                           for k, v in val.items())
+            elif isinstance(data[0], (type(None), bool, int, float, str)):
+                # FIXME: Field types don't express ordering requirements
+                #        https://github.com/DataBiosphere/azul/issues/4664
+                ordered_fields = {
+                    'laboratory',
+                    'institutions',
+                    'contact_names',
+                    'publication_titles'
+                }
+                if len(path) > 1 and path[-2] == 'projects' and path[-1] in ordered_fields:
+                    return 0
+                else:
+                    expected = sorted(data, key=lambda x: (x is None, x))
+                    assert data == expected, R('List is not sorted', path, data)
+                    return 1
+            elif isinstance(data[0], list):
+                # In lieu of tuples, a range in JSON is a list of two values
+                def pair(t: tuple) -> list:
+                    return list(t)
+
+                expected = list(map(pair, sorted(map(tuple, data))))
+                assert data == expected, R('List is not sorted', path, data)
+                return 1
+            else:
+                assert False, str(type(data[0]))
+        else:
+            return 0
+    elif isinstance(data, (type(None), bool, int, float, str)):
+        return 0
+    else:
+        assert False, str(type(data))
+
+
 class IndexerTestCase(CatalogTestCase,
                       OpenSearchTestCase,
                       CannedBundleTestCase,
@@ -308,46 +390,5 @@ class IndexerTestCase(CatalogTestCase,
         Traverse through an index document or service response to verify all
         lists of primitives are sorted. Fails if no lists to check are found.
         """
-
-        def verify_sorted_lists(data: AnyJSON, path: FieldPath = ()) -> int:
-            if isinstance(data, dict):
-                return sum(verify_sorted_lists(val, (*path, key))
-                           for key, val in cast(JSON, data).items())
-            elif isinstance(data, list):
-                if data:
-                    if isinstance(data[0], dict):
-                        return sum(verify_sorted_lists(v, (*path, k))
-                                   for val in cast(JSONs, data)
-                                   for k, v in val.items())
-                    elif isinstance(data[0], (type(None), bool, int, float, str)):
-                        # FIXME: Field types don't express ordering requirements
-                        #        https://github.com/DataBiosphere/azul/issues/4664
-                        ordered_fields = {
-                            'laboratory',
-                            'institutions',
-                            'contact_names',
-                            'publication_titles'
-                        }
-                        if path[-2] == 'projects' and path[-1] in ordered_fields:
-                            return 0
-                        else:
-                            self.assertEqual(data, sorted(data, key=lambda x: (x is None, x)))
-                            return 1
-                    elif isinstance(data[0], list):
-                        # In lieu of tuples, a range in JSON is a list of two values
-                        def pair(t: tuple) -> list:
-                            return list(t)
-
-                        self.assertEqual(data, list(map(pair, sorted(map(tuple, data)))))
-                        return 1
-                    else:
-                        assert False, str(type(data[0]))
-                else:
-                    return 0
-            elif isinstance(data, (type(None), bool, int, float, str)):
-                return 0
-            else:
-                assert False, str(type(data))
-
         num_lists_counted = verify_sorted_lists(data)
         self.assertGreater(num_lists_counted, 0)

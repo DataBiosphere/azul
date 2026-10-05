@@ -817,6 +817,9 @@ def env() -> Mapping[str, str | None]:
         #
         # https://cloud.google.com/bigquery/docs/running-queries
         #
+        # FIXME: Revalidate slot utilization before enabling batch mode
+        #        https://github.com/DataBiosphere/azul/issues/4276
+        #
         'AZUL_BIGQUERY_BATCH_MODE': '0',
 
         # The URL of the Terra Data Repository instance to index metadata from.

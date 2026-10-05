@@ -5,7 +5,7 @@ Getting started as operator
 
 * Read the entire document
 
-* It is **strongly recommend** that you install `SmartGit`_
+* It is **strongly recommended** that you install `SmartGit`_
 
 .. _SmartGit: https://www.syntevo.com/smartgit/download/
 
@@ -38,25 +38,36 @@ Getting started as operator
          ssh -T git@ssh.gitlab.dev.singlecell.gi.ucsc.edu
          Welcome to GitLab, @amarjandu!
 
-  #. Add the gitlab instances to the local working copy's ``.git/config`` file
+  #. Add the GitLab instances to the local working copy's ``.git/config`` file
      using::
 
-         [remote "gitlab.dcp2.dev"]
-             url = git@ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul
-             fetch = +refs/heads/*:refs/remotes/gitlab.dcp2.dev/*
-         [remote "gitlab.dcp2.prod"]
-             url = git@ssh.gitlab.azul.data.humancellatlas.org:ucsc/azul.git
-             fetch = +refs/heads/*:refs/remotes/gitlab.dcp2.prod/*
-         [remote "gitlab.anvil.dev"]
+         [remote "gitlab.dev"]
+             url = git@ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.dev/*
+         [remote "gitlab.tempdev"]
+             url = git@ssh.gitlab.temp.gi.ucsc.edu:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.tempdev/*
+         [remote "gitlab.anvildev"]
              url = git@ssh.gitlab.anvil.gi.ucsc.edu:ucsc/azul.git
-             fetch = +refs/heads/*:refs/remotes/gitlab.anvil.dev/*
+             fetch = +refs/heads/*:refs/remotes/gitlab.anvildev/*
+         [remote "gitlab.anvilprod"]
+             url = git@ssh.gitlab.explore.anvilproject.org:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.anvilprod/*
+         [remote "gitlab.prod"]
+             url = git@ssh.gitlab.azul.data.humancellatlas.org:ucsc/azul.git
+             fetch = +refs/heads/*:refs/remotes/gitlab.prod/*
+
+     Each remote is named after the deployment whose GitLab instance it refers
+     to, matching the names used in ``README.md`` and in the PR checklists. The
+     ``tempdev`` deployment is often in hibernation, in which case its remote
+     won't resolve to a running instance.
 
   #. Confirm access to fetch branches::
 
-         git fetch -v gitlab.dcp2.dev
+         git fetch -v gitlab.dev
          From ssh.gitlab.dev.singlecell.gi.ucsc.edu:ucsc/azul
-         = [up to date]        develop                    -> gitlab.dcp2.dev/develop
-         = [up to date]        issues/amar/2653-es-2-slow -> gitlab.dcp2.dev/issues/amar/2653-es-2-slow`
+         = [up to date]        develop                    -> gitlab.dev/develop
+         = [up to date]        issues/amar/2653-es-2-slow -> gitlab.dev/issues/amar/2653-es-2-slow`
 
 * Standardize remote repository names. If the name of the remote repository on
   GitHub is set to ``origin`` rename the remote repository to ``github``. Run::
@@ -83,7 +94,7 @@ more than one consecutive stints, create events for those as well.
 .. _`Team Boardwalk calendar`: https://calendar.google.com/calendar/u/0/r?cid=dWNzYy5lZHVfMDRuZ3J1NXQzNDB0aWd0cW5qYWQ5Nm5jOWtAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ
 
 Apply Amazon OpenSearch Service updates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Every two weeks, an issue labeled ``operator`` and titled *Apply Amazon
 OpenSearch software updates* is created automatically from the `issue
@@ -136,7 +147,7 @@ stays on. If the build fails, the label is removed. Only one un-merged PR should
 have the label.
 
 If the tests fail while running a sandbox PR, an operator should do minor
-failure triage.
+failure triage as described below.
 
 Triaging ``sandbox`` failures
 """""""""""""""""""""""""""""
@@ -488,10 +499,10 @@ Export AWS Inspector findings
 
 .. _Anvilprod Inspector Findings spreadsheet: https://docs.google.com/spreadsheets/d/1RWF7g5wRKWPGovLw4jpJGX_XMi8aWLXLOvvE5rxqgH8/edit#gid=1657352747
 
-Adding snapshots to ``dev``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding snapshots to lower deployments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When adding a new snapshot to ``dev``, ``anvildev``, the operator should also
+When adding a new snapshot to ``dev`` or ``anvildev``, the operator should also
 add the snapshot to ``sandbox`` or ``anvilbox``, respectively.
 
 The ``post_deploy_tdr.py`` script will fail if the computed common prefix
@@ -501,78 +512,88 @@ common prefix is too long, truncate it by 1 character. If it's too short, append
 to the ``mksrc`` function for the affected source(s), including a partition
 prefix length of 1. Then refresh the environment and re-attempt the deployment.
 
-Adding snapshots to ``prod``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding snapshots to stable deployments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We decide on a case-by-case basis whether PRs which update or add new snapshots
-to ``prod`` should be filed against the ``prod`` branch instead of ``develop``.
-When deciding whether to perform snapshot changes directly to ``prod`` or
+to a stable deployment should be filed against that deployment's branch instead
+of ``develop``. When deciding whether to perform snapshot changes directly or to
 include them in a routine promotion, the system admin considers the scope of
 changes to be promoted. It would be a mistake to promote large changes in
 combination with snapshots because that would make it difficult to diagnose
 whether indexing failures are caused by the changes or the snapshots.
 
-Removing catalogs from ``prod`` and setting a new default
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Removing catalogs from stable deployments and setting a new default
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PRs which remove catalogs or set a new default for ``prod`` should be filed
-against the ``prod`` branch instead of ``develop``.
+As with snapshots, we decide on a case-by-case basis whether PRs which remove
+catalogs or set a new default for a stable deployment should be filed against
+that deployment's branch instead of ``develop``.
 
-When setting a new default catalog in ``prod``, the operator shall also delete
-the old default catalog unless the ticket explicitly specifies not to delete the
-old catalog.
+When setting a new default catalog in a stable deployment, the operator shall
+also delete the old default catalog, as well as the integration test catalog
+belonging to it, unless the ticket explicitly specifies not to delete them. An
+integration test catalog is named after the catalog it corresponds to, with an
+``-it`` suffix. To delete a catalog, run::
 
-Add a checklist item at the end of the PR checklist to file a back-merge PR from
-``prod`` to ``develop``.
+    python scripts/reindex.py --delete --catalogs <name>
 
-Add another checklist item instructing the operator to manually delete the old
-catalog.
+Add a note to the PR naming those catalogs, and label the PR
+``reindex:partial`` together with the label for the deployment,
+``reindex:prod`` or ``reindex:anvilprod``. The note takes effect only under
+both labels: every template requires it under them (``C06`` in the default
+template, ``C02`` in the promotion ones) and gates the operator's deletion item
+(``T01``) on them. If the PR targets ``develop``, the labels and the note must
+also reach the promotion PR that carries it to that stable deployment (``V01``
+in the default template, ``A11`` in the promotion ones).
 
-Promoting to ``prod``
-^^^^^^^^^^^^^^^^^^^^^
+Promoting to stable deployments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Promotions to ``prod`` should happen weekly on Wednesdays, at 3pm. We promote
-earlier in the week in order to triage any potential issues during reindexing.
-We promote at 3pm to give a cushion of time in case anything goes wrong.
+Promotions should happen weekly on Wednesdays, at 3pm. We promote earlier in the
+week in order to triage any potential issues during reindexing. We promote at
+3pm to give a cushion of time in case anything goes wrong.
+
+Both stable deployments are promoted on the same date, under one issue, but each
+with its own branch, PR and template. The steps below name ``prod``; for
+``anvilprod`` they apply in kind, with the `anvilprod promotion PR template`_ in
+place of the `promotion PR template`_.
 
 To do a promotion:
 
-#. Decide together with lead up to which commit to promote. This commit will be
-   the HEAD of the promotions branch.
+#. Decide together with the lead up to which commit to promote. This commit will
+   be the HEAD of the promotion branch.
 
-#. Create a new GitHub issue with the title ``Promotion yyyy-mm-dd``
+#. Create a new GitHub issue for the promotion.
 
 #. Make sure your ``prod`` branch is up to date with the remote.
 
-#. Create a branch at the commit chosen above. Name the branch correctly. See
-   `promotion PR template`_ for what the correct branch name is.
+#. Create the promotion branch at the commit chosen above.
 
-#. File a PR on GitHub from the new promotion branch and connect it to the
-   issue. The PR must target ``prod``. Use the `promotion PR template`_.
+#. File a PR on GitHub from the promotion branch, using the `promotion PR
+   template`_, and follow that template's checklist from there on. The checklist
+   prescribes the title of the issue, the name of the branch, the reviewer, the
+   contents of the merge commit title and the order in which the merge commit is
+   pushed.
 
-#. Request a review from the primary reviewer.
+#. Once the PR is approved, announce in the `#team-boardwalk Slack channel`_
+   that you plan to promote.
 
-#. Once PR is approved, announce in the `#team-boardwalk Slack channel`_ that
-   you plan to promote to ``prod``
+Never rebase a promotion branch, and never push one to GitLab. Of the promotion,
+only the merge commit on the stable branch is pushed to GitLab.
 
-#. Search for and follow any special ``[u]`` upgrading instructions that were
-   added.
+.. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/prod-promotion.md
+.. _anvilprod promotion PR template: /.github/PULL_REQUEST_TEMPLATE/anvilprod-promotion.md
 
-#. When merging, follow the checklist and making sure to carry over any commit
-   title tags (``[u r R]`` for example) into the default merge commit title
-   e.g., ``[u r R] Merge branch 'promotions/2022-02-22' into prod``. Don't
-   rebase the promotion branch and don't push the promotion branch to GitLab.
-   Merge the promotion branch into ``prod`` and push the merge commit on the
-   ``prod`` branch first to GitHub and then to the ``prod`` instance of GitLab.
+Backporting from stable deployments to ``develop``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _promotion PR template: /.github/PULL_REQUEST_TEMPLATE/promotion.md
+The steps below name ``prod``; backporting from ``anvilprod`` works the same.
 
-Backporting from ``prod`` to ``develop``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-There should only ever be one open backport PR against ``develop``. If more
-commits accumulate on ``prod``, waiting to be backported, close the existing
-backport PR first. The new PR will include the changes from the old one.
+For each stable deployment there should only ever be one open backport PR
+against ``develop``. If more commits accumulate on that deployment's branch,
+waiting to be backported, close the existing backport PR first. The new PR will
+include the changes from the old one.
 
 #. Make a branch from ``prod`` at the most recent commit being backported. Name
    the branch following this pattern::
@@ -590,15 +611,15 @@ backport PR first. The new PR will include the changes from the old one.
 
    ::
 
-       Backport 32c55d7 (#3383, PR #3384) and d574f91 (#3327, PR #3328)
+       Backport: 32c55d7 (#3383, PR #3384) and d574f91 (#3327, PR #3328)
 
    Be sure to use the PR template for backports by appending
    ``&template=backport.md`` to the URL in your browser's address bar.
 
-#. Assign and request review from the primary reviewer. The PR should only be
-   assigned to one person at a time, either the reviewer or the operator.
+#. Request the review and set the assignees as prescribed by that template's
+   checklist.
 
-#. Perform the merge. The commit title should match the PR title ::
+#. Perform the merge::
 
        git merge prod --no-ff
 
@@ -850,6 +871,11 @@ into the Terraform state using ``terraform import``.
 
 Push errors
 ^^^^^^^^^^^
+
+Rebasing a PR branch rewrites it, so pushing it afterwards is rejected as a
+non-fast-forward update. Force-push it with ``git push --force-with-lease``,
+which, unlike ``--force``, refuses the push if someone else has updated the
+branch since you last fetched it.
 
 If an error occurs when pushing to the develop branch, ensure that the branch
 you would like to merge in is rebased on develop and has completed its CI
