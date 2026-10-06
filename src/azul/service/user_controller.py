@@ -60,6 +60,7 @@ log = logging.getLogger(__name__)
 
 
 class UserController(Controller):
+    accepts_personal_access_token = True
     _json_content_type = 'application/json'
     _form_content_type = 'application/x-www-form-urlencoded'
 
