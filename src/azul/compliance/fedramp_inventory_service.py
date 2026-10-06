@@ -46,6 +46,7 @@ from azul.deployment import (
     aws,
 )
 from azul.lib import (
+    R,
     cached_property,
 )
 from azul.lib.types import (
@@ -123,6 +124,16 @@ class Mapper(metaclass=ABCMeta):
     def map(self, resource: ResourceConfig) -> Iterable[InventoryRow]:
         raise NotImplementedError
 
+    def validate_types(self, resource_types: Sequence[str]) -> None:
+        """
+        Verify this mapper's assumptions about the types of resource that are
+        going to be discovered. Called once, before discovery.
+        """
+        undiscovered = self._supported_resource_types() - set(resource_types)
+        assert not undiscovered, R(
+            'Mapper supports resource types that are not discovered',
+            type(self).__name__, sorted(undiscovered))
+
     def _common_fields(self,
                        resource: ResourceConfig,
                        *,
@@ -163,19 +174,31 @@ class LambdaMapper(Mapper):
         )
 
 
-class ElasticSearchMapper(Mapper):
+class OpenSearchMapper(Mapper):
+    #: AWS Config reports every OpenSearch domain under this deprecated type
+    #: as well as under the modern one this mapper supports. Discovering both
+    #: would inventory each domain twice, so only the modern one is
+    #: discovered, and `validate_types` ensures that remains so.
+    #:
+    _deprecated_type = 'AWS::Elasticsearch::Domain'
 
     def _supported_resource_types(self) -> set[str]:
-        return {'AWS::Elasticsearch::Domain'}
+        return {'AWS::OpenSearch::Domain'}
+
+    def validate_types(self, resource_types: Sequence[str]) -> None:
+        super().validate_types(resource_types)
+        assert self._deprecated_type not in resource_types, R(
+            'Discovering this type would inventory every OpenSearch domain '
+            'twice', self._deprecated_type)
 
     def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
         yield InventoryRow(
             asset_type='AWS OpenSearch Domain',
-            baseline_config=resource.config['elasticsearchVersion'],
+            baseline_config=resource.config['EngineVersion'],
             is_public=YesNo.no,
             is_virtual=YesNo.yes,
-            network_id=resource.config['endpoints'].get('vpc'),
-            patch_level=resource.config.get('serviceSoftwareOptions', {}).get('currentVersion'),
+            network_id=resource.config['DomainEndpoints'].get('vpc'),
+            patch_level=resource.config.get('ServiceSoftwareOptions', {}).get('CurrentVersion'),
             software_product_name='AWS OpenSearch',
             **self._common_fields(resource)
         )
@@ -520,6 +543,8 @@ class FedRAMPInventoryService:
 
     def resource_ids_by_type(self) -> defaultdict[str, list[str]]:
         resource_ids_by_type = defaultdict(list)
+        for mapper in self._mappers:
+            mapper.validate_types(self._all_aws_resource_types)
         for resource_type in self._all_aws_resource_types:
             args = dict(resourceType=resource_type)
             while True:
@@ -813,7 +838,6 @@ class FedRAMPInventoryService:
         'AWS::ElasticLoadBalancing::LoadBalancer',
         'AWS::ElasticLoadBalancingV2::Listener',
         'AWS::ElasticLoadBalancingV2::LoadBalancer',
-        'AWS::Elasticsearch::Domain',
         'AWS::EventSchemas::Discoverer',
         'AWS::EventSchemas::Registry',
         'AWS::EventSchemas::RegistryPolicy',
