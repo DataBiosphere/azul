@@ -1576,6 +1576,12 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 '307500.merged.matefixed.sorted.markeddups.recal.bam'
             ),
             (
+                'files.file_path',
+                '',
+                'somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                'somedir/307500.merged.matefixed.sorted.markeddups.recal.bam'
+            ),
+            (
                 'files.is_supplementary',
                 'True',
                 'False',

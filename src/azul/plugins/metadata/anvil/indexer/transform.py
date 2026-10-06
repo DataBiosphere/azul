@@ -318,6 +318,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_md5sum': null_str,
             'reference_assembly': [null_str],
             'file_name': null_str,
+            'file_path': null_str,
             'is_supplementary': null_bool,
             # Not in schema
             'version': null_str,

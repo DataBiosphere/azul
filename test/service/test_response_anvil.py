@@ -1244,6 +1244,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_md5sum': 'beec606ee0aa299fdf913f4259316622',
                                 'reference_assembly': [None],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                                'file_path': 'somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
                                 'is_supplementary': False,
                                 'accessible': True,
                                 'drs_uri': f'drs://{self._drs_domain_name}/v1_6c87f0e1-509d-46a4-b845-7584df39263b_'
@@ -1328,6 +1329,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'file_md5sum': '7cd9fd7b54a8bf380e44e93706f1fa2d',
                                 'reference_assembly': [None],
                                 'file_name': '307500.merged.matefixed.sorted.markeddups.recal.bam',
+                                'file_path': 'somedir/307500.merged.matefixed.sorted.markeddups.recal.bam',
                                 'is_supplementary': False,
                                 'accessible': True,
                                 'drs_uri': f'drs://{self._drs_domain_name}/v1_6c87f0e1-509d-46a4-b845-7584df39263b_'

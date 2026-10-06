@@ -264,6 +264,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                             'file_md5sum',
                             'reference_assembly',
                             'file_name',
+                            'file_path',
                             'is_supplementary',
                             # Not in schema
                             'drs_uri',

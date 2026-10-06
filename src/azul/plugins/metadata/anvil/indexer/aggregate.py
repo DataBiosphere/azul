@@ -155,6 +155,7 @@ class FileAggregator(AnVILEntityAggregator, GroupingAggregator):
             'drs_uri',
             'file_md5sum',
             'file_name',
+            'file_path',
             'version'
         }:
             return None

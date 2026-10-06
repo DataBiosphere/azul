@@ -434,6 +434,8 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
             # Validate URI syntax
             DRSURI.parse(drs_uri)
             metadata.update(drs_uri=drs_uri)
+            # Optional column, added in v6 of the schema
+            metadata.setdefault('file_path', None)
         target[entity] = metadata
 
     def add_links(self, links: Iterable[EntityLink]):
