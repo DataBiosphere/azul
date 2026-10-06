@@ -432,3 +432,15 @@ class TestUserController(DCP2TestCase,
     def test_revoke_unauthenticated(self):
         response = self._revoke()
         self.assertEqual(401, response.status)
+
+    def test_unsupported_endpoint_rejects_pat(self):
+        apat = self._authorize_and_mint()
+        url = str(self.base_url.set(path='/index/summary'))
+        headers = {'Authorization': f'Bearer {apat.token}'}
+        response = self._http_client.request('GET', url, headers=headers)
+        self.assertEqual(401, response.status)
+        self.assertEqual({
+            'Code': 'UnauthorizedError',
+            'Message': 'This endpoint does not support a '
+                       'personal access token (APAT)'
+        }, json.loads(response.data))

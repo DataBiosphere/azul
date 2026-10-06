@@ -18,6 +18,7 @@ import pathlib
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Iterator,
     Literal,
     Mapping,
@@ -39,6 +40,7 @@ from chalice.app import (
     NotFoundError,
     Request,
     Response,
+    UnauthorizedError,
 )
 import chevron
 from furl import (
@@ -50,6 +52,7 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
+    PersonalAccessTokenAuthentication,
 )
 from azul.csp import (
     CSP,
@@ -974,6 +977,11 @@ class AzulChaliceApp(Chalice):
 class Controller:
     app: AzulChaliceApp
 
+    #: Whether the endpoints handled by this controller accept a personal
+    #: access token (APAT) as the credentials of the requesting user.
+    #:
+    accepts_personal_access_token: ClassVar[bool] = False
+
     @property
     def lambda_context(self) -> LambdaContext:
         return not_none(self.app.lambda_context)
@@ -986,6 +994,12 @@ class Controller:
         authentication = getattr(request, 'authentication', None)
         if authentication is not None:
             assert isinstance(authentication, Authentication)
+            if (
+                isinstance(authentication, PersonalAccessTokenAuthentication)
+                and not self.accepts_personal_access_token
+            ):
+                raise UnauthorizedError('This endpoint does not support a '
+                                        'personal access token (APAT)')
         return authentication
 
     def _query_params(self, request: Request) -> MultiDict:
