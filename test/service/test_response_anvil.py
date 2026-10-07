@@ -54,7 +54,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'activities': {
                 'hits': [
                     {
-                        'entryId': '1509ef40-d1ba-440d-b298-16b7c173dcd4',
+                        'entryId': 'd23548da-8c3e-51b3-8766-28d02ce558cd',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -64,13 +64,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
                             {
-                                'document_id': '1509ef40-d1ba-440d-b298-16b7c173dcd4',
+                                'document_id': 'd23548da-8c3e-51b3-8766-28d02ce558cd',
                                 'source_datarepo_row_ids': ['sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051'],
                                 'activity_id': '18b3be87-e26b-4376-0d8d-c1e370e90e07',
                                 'activity_table': 'anvil_sequencingactivity',
@@ -98,7 +98,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -130,7 +130,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ]
                     },
                     {
-                        'entryId': '816e364e-1193-4e5b-a91a-14e4b009157c',
+                        'entryId': '9af629c7-a4b2-520c-a03a-bdef5ee55d09',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -140,13 +140,13 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
                         'activities': [
                             {
-                                'document_id': '816e364e-1193-4e5b-a91a-14e4b009157c',
+                                'document_id': '9af629c7-a4b2-520c-a03a-bdef5ee55d09',
                                 'source_datarepo_row_ids': ['sequencing:a6c663c7-6f26-4ed2-af9d-48e9c709a22b'],
                                 'activity_id': 'a60c5138-3749-f7cb-8714-52d389ad5231',
                                 'activity_table': 'anvil_sequencingactivity',
@@ -174,7 +174,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -271,7 +271,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 2}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },
@@ -333,7 +333,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'biosamples': {
                 'hits': [
                     {
-                        'entryId': '826dea02-e274-4ffe-aabc-eb3db63ad068',
+                        'entryId': 'cf0fbe53-a7a9-59e8-85a4-3db742afb603',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -343,7 +343,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -356,7 +356,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'biosamples': [
                             {
-                                'document_id': '826dea02-e274-4ffe-aabc-eb3db63ad068',
+                                'document_id': 'cf0fbe53-a7a9-59e8-85a4-3db742afb603',
                                 'source_datarepo_row_ids': ['sample:98048c3b-2525-4090-94fd-477de31f2608'],
                                 'biosample_id': 'f9d40cf6-37b8-22f3-ce35-0dc614d2452b',
                                 'anatomical_site': None,
@@ -376,7 +376,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -481,7 +481,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -562,7 +562,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'bundles': [
                             {
                                 'accessible': True,
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -574,7 +574,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -594,7 +594,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'reported_ethnicity': ['redacted-NSkwDycK']
                             }
                         ],
-                        'entryId': '826dea02-e274-affe-aabc-eb3db63ad068',
+                        'entryId': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                         'files': [
                             {
                                 'count': 1,
@@ -684,7 +684,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'count': 1, 'term': 'ANVIL_CMG_UWASH_DS_BDIS'}],
+                        'terms': [{'count': 1, 'term': 'ANVIL_Test'}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -749,7 +749,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'datasets': {
                 'hits': [
                     {
-                        'entryId': '2370f948-2783-4eb6-afea-e022897f4dcf',
+                        'entryId': '208441e2-cf28-584e-a0ac-7553c7118412',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -759,7 +759,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -781,7 +781,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'datasets': [
                             {
-                                'document_id': '2370f948-2783-4eb6-afea-e022897f4dcf',
+                                'document_id': '208441e2-cf28-584e-a0ac-7553c7118412',
                                 'source_datarepo_row_ids': [
                                     'workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc'
                                 ],
@@ -791,7 +791,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'owner': ['Debbie Nickerson'],
                                 'principal_investigator': [None],
                                 'registered_identifier': ['phs000693'],
-                                'title': 'ANVIL_CMG_UWASH_DS_BDIS',
+                                'title': 'ANVIL_Test',
                                 'data_modality': [None],
                                 'accessible': True,
                                 'description': 'Study description from DUOS',
@@ -900,7 +900,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -962,7 +962,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'donors': {
                 'hits': [
                     {
-                        'entryId': 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
+                        'entryId': '71c9a86b-d96b-523b-939e-d03d7e68f94a',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -972,7 +972,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -1000,7 +1000,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1016,7 +1016,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'donors': [
                             {
-                                'document_id': 'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
+                                'document_id': '71c9a86b-d96b-523b-939e-d03d7e68f94a',
                                 'source_datarepo_row_ids': ['subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef'],
                                 'donor_id': '1e2bd7e5-f45e-a391-daea-7c060be76acd',
                                 'organism_type': 'redacted-ACw+6ecI',
@@ -1111,7 +1111,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 1}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 1}],
                         'total': 1,
                         'type': 'terms'
                     },
@@ -1173,7 +1173,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'files': {
                 'hits': [
                     {
-                        'entryId': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                        'entryId': 'a76526dc-d42f-5b97-ab14-56eb3c9bdfec',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -1183,7 +1183,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -1211,7 +1211,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1233,7 +1233,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'files': [
                             {
-                                'document_id': '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                                'document_id': 'a76526dc-d42f-5b97-ab14-56eb3c9bdfec',
                                 'source_datarepo_row_ids': [
                                     'file_inventory:81d16471-97ac-48fe-99a0-73d9ec62c2c0'
                                 ],
@@ -1249,7 +1249,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'drs_uri': f'drs://{self._drs_domain_name}/v1_6c87f0e1-509d-46a4-b845-7584df39263b_'
                                            f'1e269f04-4347-4188-b060-1dcc69e71d67',
                                 'azul_url': str(self.base_url.set(
-                                    path='/repository/files/15b76f9c-6b46-433f-851d-34e89f1b9ba6',
+                                    path='/repository/files/a76526dc-d42f-5b97-ab14-56eb3c9bdfec',
                                     args=dict(catalog='test', version=self.version)
                                 )),
                                 'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/beec606ee0aa299fdf913f4259316622.md5'
@@ -1257,7 +1257,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ]
                     },
                     {
-                        'entryId': '3b17377b-16b1-431c-9967-e5d01fc5923f',
+                        'entryId': 'dc53dde6-280c-501c-a95d-4157e13c66dc',
                         'sources': [
                             {
                                 'source_prefix': '/0',
@@ -1267,7 +1267,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'bundles': [
                             {
-                                'bundle_uuid': '826dea02-e274-affe-aabc-eb3db63ad068',
+                                'bundle_uuid': 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                                 'bundle_version': '2022-06-01T00:00:00.000000Z'
                             }
                         ],
@@ -1295,7 +1295,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_CMG_UWASH_DS_BDIS']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1317,7 +1317,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         ],
                         'files': [
                             {
-                                'document_id': '3b17377b-16b1-431c-9967-e5d01fc5923f',
+                                'document_id': 'dc53dde6-280c-501c-a95d-4157e13c66dc',
                                 'source_datarepo_row_ids': [
                                     'file_inventory:9658d94a-511d-4b49-82c3-d0cb07e0cff2'
                                 ],
@@ -1333,7 +1333,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'drs_uri': f'drs://{self._drs_domain_name}/v1_6c87f0e1-509d-46a4-b845-7584df39263b_'
                                            f'8b722e88-8103-49c1-b351-e64fa7c6ab37',
                                 'azul_url': str(self.base_url.set(
-                                    path='/repository/files/3b17377b-16b1-431c-9967-e5d01fc5923f',
+                                    path='/repository/files/dc53dde6-280c-501c-a95d-4157e13c66dc',
                                     args=dict(catalog='test', version=self.version)
                                 )),
                                 'azul_mirror_uri': f's3://{aws.mirror_bucket}/file/7cd9fd7b54a8bf380e44e93706f1fa2d.md5'
@@ -1406,7 +1406,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                         'type': 'terms'
                     },
                     'datasets.title': {
-                        'terms': [{'term': 'ANVIL_CMG_UWASH_DS_BDIS', 'count': 2}],
+                        'terms': [{'term': 'ANVIL_Test', 'count': 2}],
                         'total': 2,
                         'type': 'terms'
                     },

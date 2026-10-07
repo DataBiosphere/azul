@@ -36,12 +36,13 @@ from azul.lib.types import (
     json_element_strings,
 )
 
-# AnVIL snapshots do not use UUIDs for primary/foreign keys. This type alias
-# helps us distinguish these keys from the document UUIDs, which are drawn from
-# the `datarepo_row_id` column. Note that entities from different tables may
-# have the same key, so `KeyReference` should be used when mixing keys from
-# different entity types.
-Key = str
+#: A type alias for the values of a table's primary key column, which the AnVIL
+#: schema declares to be a string. This type alias distinguishes such a key from
+#: an entity ID, which is derived from it. A key is only unique within a single
+#: table, so `KeyReference` should be used when mixing keys from different
+#: entity types.
+#:
+type Key = str
 
 
 @attrs.frozen(kw_only=True, order=True)

@@ -55,6 +55,9 @@ from azul.opensearch import (
 from azul.plugins import (
     FieldPath,
 )
+from azul.plugins.metadata.anvil.bundle import (
+    Key,
+)
 from azul.plugins.repository.dss import (
     DSSBundle,
     DSSBundleFQID,
@@ -203,29 +206,27 @@ class AnvilCannedBundleTestCase(AnvilTestCase,
     @classmethod
     def bundle_fqid(cls,
                     *,
-                    uuid: str,
                     table_name: str = not_none(BundleType.primary.table_name),
+                    primary_key: Key | None = None,
                     ) -> TDRAnvilBundleFQID:
         batched = BundleType.for_table(table_name).is_batched
         return TDRAnvilBundleFQID(source=cls.source.ref,
-                                  uuid=uuid,
                                   version=cls.version,
                                   table_name=table_name,
-                                  batch_prefix='' if batched else None)
+                                  batch_prefix='' if batched else None,
+                                  primary_key=primary_key)
 
     @classmethod
     def primary_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='826dea02-e274-affe-aabc-eb3db63ad068')
+        return cls.bundle_fqid(primary_key='f9d40cf6-37b8-22f3-ce35-0dc614d2452b')
 
     @classmethod
     def supplementary_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='f4962f15-ecc7-a075-b263-ac70ab0239b2',
-                               table_name=not_none(BundleType.supplementary.table_name))
+        return cls.bundle_fqid(table_name=not_none(BundleType.supplementary.table_name))
 
     @classmethod
     def replica_bundle(cls) -> TDRAnvilBundleFQID:
-        return cls.bundle_fqid(uuid='9d2bead0-d92f-a790-b3fc-cdae8f476840',
-                               table_name='non_schema_orphan_table')
+        return cls.bundle_fqid(table_name='non_schema_orphan_table')
 
 
 def verify_sorted_lists(data: AnyJSON, path: FieldPath = ()) -> int:

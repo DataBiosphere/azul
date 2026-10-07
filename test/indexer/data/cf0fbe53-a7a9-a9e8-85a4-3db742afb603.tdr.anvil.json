@@ -1,6 +1,6 @@
 {
     "entities": {
-        "anvil_biosample/826dea02-e274-4ffe-aabc-eb3db63ad068": {
+        "anvil_biosample/cf0fbe53-a7a9-59e8-85a4-3db742afb603": {
             "anatomical_site": null,
             "apriori_cell_type": [
                 "foo",
@@ -24,7 +24,7 @@
             ],
             "version": "2022-06-01T00:00:00.000000Z"
         },
-        "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf": {
+        "anvil_dataset/208441e2-cf28-584e-a0ac-7553c7118412": {
             "consent_group": [
                 "DS-BDIS"
             ],
@@ -46,32 +46,10 @@
             "source_datarepo_row_ids": [
                 "workspace_attributes:7a22b629-9d81-4e4d-9297-f9e44ed760bc"
             ],
-            "title": "ANVIL_CMG_UWASH_DS_BDIS",
+            "title": "ANVIL_Test",
             "version": "2022-06-01T00:00:00.000000Z"
         },
-        "anvil_diagnosis/15d85d30-ad4a-4f50-87a8-a27f59dd1b5f": {
-            "datarepo_row_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
-            "diagnosis_age_lower_bound": null,
-            "diagnosis_age_unit": null,
-            "diagnosis_age_upper_bound": null,
-            "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
-            "disease": [
-                "redacted-A61iJlLx"
-            ],
-            "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
-            "onset_age_lower_bound": null,
-            "onset_age_unit": null,
-            "onset_age_upper_bound": null,
-            "phenopacket": [],
-            "phenotype": [
-                "redacted-acSYHZUr"
-            ],
-            "source_datarepo_row_ids": [
-                "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
-            ],
-            "version": "2022-06-01T00:00:00.000000Z"
-        },
-        "anvil_diagnosis/939a4bd3-86ed-4a8a-81f4-fbe0ee673461": {
+        "anvil_diagnosis/8c554d97-fffa-52d4-884d-b40b1aa5a7ff": {
             "datarepo_row_id": "939a4bd3-86ed-4a8a-81f4-fbe0ee673461",
             "diagnosis_age_lower_bound": null,
             "diagnosis_age_unit": null,
@@ -93,7 +71,29 @@
             ],
             "version": "2022-06-01T00:00:00.000000Z"
         },
-        "anvil_donor/bfd991f2-2797-4083-972a-da7c6d7f1b2e": {
+        "anvil_diagnosis/cefd0ad2-e855-57c6-ae97-954032ef628c": {
+            "datarepo_row_id": "15d85d30-ad4a-4f50-87a8-a27f59dd1b5f",
+            "diagnosis_age_lower_bound": null,
+            "diagnosis_age_unit": null,
+            "diagnosis_age_upper_bound": null,
+            "diagnosis_id": "5ebe9bc4-a1be-0ddf-7277-b1e88276d0f6",
+            "disease": [
+                "redacted-A61iJlLx"
+            ],
+            "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
+            "onset_age_lower_bound": null,
+            "onset_age_unit": null,
+            "onset_age_upper_bound": null,
+            "phenopacket": [],
+            "phenotype": [
+                "redacted-acSYHZUr"
+            ],
+            "source_datarepo_row_ids": [
+                "subject:c23887a0-20c1-44e4-a09e-1c5dfdc2d0ef"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_donor/71c9a86b-d96b-523b-939e-d03d7e68f94a": {
             "datarepo_row_id": "bfd991f2-2797-4083-972a-da7c6d7f1b2e",
             "donor_id": "1e2bd7e5-f45e-a391-daea-7c060be76acd",
             "genetic_ancestry": [],
@@ -108,7 +108,7 @@
             ],
             "version": "2022-06-01T00:00:00.000000Z"
         },
-        "anvil_file/15b76f9c-6b46-433f-851d-34e89f1b9ba6": {
+        "anvil_file/a76526dc-d42f-5b97-ab14-56eb3c9bdfec": {
             "data_modality": [],
             "datarepo_row_id": "15b76f9c-6b46-433f-851d-34e89f1b9ba6",
             "file_format": ".vcf.gz",
@@ -125,7 +125,7 @@
             "version": "2022-06-01T00:00:00.000000Z",
             "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
         },
-        "anvil_file/3b17377b-16b1-431c-9967-e5d01fc5923f": {
+        "anvil_file/dc53dde6-280c-501c-a95d-4157e13c66dc": {
             "data_modality": [],
             "datarepo_row_id": "3b17377b-16b1-431c-9967-e5d01fc5923f",
             "file_format": ".bam",
@@ -142,24 +142,7 @@
             "version": "2022-06-01T00:00:00.000000Z",
             "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
         },
-        "anvil_sequencingactivity/1509ef40-d1ba-440d-b298-16b7c173dcd4": {
-            "activity_type": "Sequencing",
-            "assay_type": [],
-            "data_modality": [],
-            "datarepo_row_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
-            "generated_file_id": [
-                "1e269f04-4347-4188-b060-1dcc69e71d67"
-            ],
-            "sequencingactivity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
-            "source_datarepo_row_ids": [
-                "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
-            ],
-            "used_biosample_id": [
-                "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
-            ],
-            "version": "2022-06-01T00:00:00.000000Z"
-        },
-        "anvil_sequencingactivity/816e364e-1193-4e5b-a91a-14e4b009157c": {
+        "anvil_sequencingactivity/9af629c7-a4b2-520c-a03a-bdef5ee55d09": {
             "activity_type": "Sequencing",
             "assay_type": [],
             "data_modality": [],
@@ -175,61 +158,78 @@
                 "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
             ],
             "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_sequencingactivity/d23548da-8c3e-51b3-8766-28d02ce558cd": {
+            "activity_type": "Sequencing",
+            "assay_type": [],
+            "data_modality": [],
+            "datarepo_row_id": "1509ef40-d1ba-440d-b298-16b7c173dcd4",
+            "generated_file_id": [
+                "1e269f04-4347-4188-b060-1dcc69e71d67"
+            ],
+            "sequencingactivity_id": "18b3be87-e26b-4376-0d8d-c1e370e90e07",
+            "source_datarepo_row_ids": [
+                "sequencing:d4f6c0c4-1e11-438e-8218-cfea63b8b051"
+            ],
+            "used_biosample_id": [
+                "f9d40cf6-37b8-22f3-ce35-0dc614d2452b"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
         }
     },
     "links": [
         {
             "inputs": [
-                "anvil_biosample/826dea02-e274-4ffe-aabc-eb3db63ad068"
+                "anvil_biosample/cf0fbe53-a7a9-59e8-85a4-3db742afb603"
             ],
-            "activity": "anvil_sequencingactivity/816e364e-1193-4e5b-a91a-14e4b009157c",
+            "activity": "anvil_sequencingactivity/9af629c7-a4b2-520c-a03a-bdef5ee55d09",
             "outputs": [
-                "anvil_file/3b17377b-16b1-431c-9967-e5d01fc5923f"
+                "anvil_file/dc53dde6-280c-501c-a95d-4157e13c66dc"
             ]
         },
         {
             "inputs": [
-                "anvil_biosample/826dea02-e274-4ffe-aabc-eb3db63ad068"
+                "anvil_biosample/cf0fbe53-a7a9-59e8-85a4-3db742afb603"
             ],
-            "activity": "anvil_sequencingactivity/1509ef40-d1ba-440d-b298-16b7c173dcd4",
+            "activity": "anvil_sequencingactivity/d23548da-8c3e-51b3-8766-28d02ce558cd",
             "outputs": [
-                "anvil_file/15b76f9c-6b46-433f-851d-34e89f1b9ba6"
+                "anvil_file/a76526dc-d42f-5b97-ab14-56eb3c9bdfec"
             ]
         },
         {
             "inputs": [
-                "anvil_dataset/2370f948-2783-4eb6-afea-e022897f4dcf"
+                "anvil_dataset/208441e2-cf28-584e-a0ac-7553c7118412"
             ],
             "activity": null,
             "outputs": [
-                "anvil_biosample/826dea02-e274-4ffe-aabc-eb3db63ad068"
+                "anvil_biosample/cf0fbe53-a7a9-59e8-85a4-3db742afb603"
             ]
         },
         {
             "inputs": [
-                "anvil_diagnosis/15d85d30-ad4a-4f50-87a8-a27f59dd1b5f"
+                "anvil_diagnosis/8c554d97-fffa-52d4-884d-b40b1aa5a7ff"
             ],
             "activity": null,
             "outputs": [
-                "anvil_donor/bfd991f2-2797-4083-972a-da7c6d7f1b2e"
+                "anvil_donor/71c9a86b-d96b-523b-939e-d03d7e68f94a"
             ]
         },
         {
             "inputs": [
-                "anvil_diagnosis/939a4bd3-86ed-4a8a-81f4-fbe0ee673461"
+                "anvil_diagnosis/cefd0ad2-e855-57c6-ae97-954032ef628c"
             ],
             "activity": null,
             "outputs": [
-                "anvil_donor/bfd991f2-2797-4083-972a-da7c6d7f1b2e"
+                "anvil_donor/71c9a86b-d96b-523b-939e-d03d7e68f94a"
             ]
         },
         {
             "inputs": [
-                "anvil_donor/bfd991f2-2797-4083-972a-da7c6d7f1b2e"
+                "anvil_donor/71c9a86b-d96b-523b-939e-d03d7e68f94a"
             ],
             "activity": null,
             "outputs": [
-                "anvil_biosample/826dea02-e274-4ffe-aabc-eb3db63ad068"
+                "anvil_biosample/cf0fbe53-a7a9-59e8-85a4-3db742afb603"
             ]
         }
     ],
