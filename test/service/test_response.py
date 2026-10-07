@@ -238,6 +238,33 @@ class IndexResponseTestCase(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
         return result
 
+    def _actual_dates(self,
+                      entity_type: str,
+                      date_field: str,
+                      **query_params
+                      ) -> list[tuple[str | None, str]]:
+        """
+        The given date of every hit on the given index, in the order in which
+        the index returns them, and the ID of the entity reporting it.
+        """
+        size = self._metadata_plugin.exposed_indices[entity_type].max_page_size
+        args = self._params(size=size, sort=date_field, **query_params)
+        url = self.base_url.set(path=('index', entity_type), args=args)
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        response_json = response.json()
+        # A page of the index's maximum size holds every hit, so that what the
+        # caller asserts is not an assertion about an arbitrary page
+        self.assertEqual(response_json['pagination']['total'],
+                         len(response_json['hits']))
+        dates = [
+            (one(hit['dates'])[date_field], hit['entryId'])
+            for hit in response_json['hits']
+        ]
+        for date, entity_id in dates:
+            self.assertEqual(self._expected_dates[entity_id][date_field], date, entity_id)
+        return dates
+
 
 class TestIndexResponse(IndexResponseTestCase):
     maxDiff = None
@@ -1888,17 +1915,7 @@ class TestIndexResponse(IndexResponseTestCase):
                     if direction == 'asc':
                         self.assertEqual(expected,
                                          sorted(expected, key=lambda x: (x[0] is None, x[0])))
-                    size = self._metadata_plugin.exposed_indices[entity_type].max_page_size
-                    params = self._params(size=size, sort=field, order=direction)
-                    url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = self._http_client.request('GET', str(url))
-                    raise_on_status(response)
-                    response_json = response.json()
-                    actual = [
-                        (dates[field], hit['entryId'])
-                        for hit in response_json['hits']
-                        for dates in hit['dates']
-                    ]
+                    actual = self._actual_dates(entity_type, field, order=direction)
                     expected = fields[field] if direction == 'asc' else fields[field][::-1]
                     self.assertEqual(expected, actual)
 
@@ -2162,17 +2179,10 @@ class TestIndexResponse(IndexResponseTestCase):
                             ]
                         }
                     }
-                    size = self._metadata_plugin.exposed_indices[entity_type].max_page_size
-                    params = self._params(filters=filters, size=size, sort=field, order='asc')
-                    url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = self._http_client.request('GET', str(url))
-                    raise_on_status(response)
-                    response_json = response.json()
-                    actual = [
-                        (dates[field], hit['entryId'])
-                        for hit in response_json['hits']
-                        for dates in hit['dates']
-                    ]
+                    actual = self._actual_dates(entity_type,
+                                                field,
+                                                order='asc',
+                                                filters=filters)
                     self.assertEqual(expected, actual)
 
     def test_contributors_order(self):
