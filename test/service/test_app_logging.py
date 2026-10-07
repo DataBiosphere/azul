@@ -98,7 +98,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                 request_headers = {
                     'host': url.netloc,
                     'content-length': str(len(body)),
-                    'user-agent': 'python-urllib3/2.7.0',
+                    'user-agent': 'python-urllib3/2.8.0',
                     **request_headers,
                     'accept-encoding': AcceptEncodingClient.accept_encoding_header(),
                 }
