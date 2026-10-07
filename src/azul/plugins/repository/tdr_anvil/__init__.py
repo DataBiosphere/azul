@@ -65,6 +65,7 @@ from azul.lib.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
+    json_str,
     not_none,
     optional,
 )
@@ -439,16 +440,29 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
             metadata.setdefault('file_path', None)
         target[entity] = metadata
 
-    def reject_duplicate_file_names(self) -> None:
-        file_names = Counter(
-            metadata['file_name']
-            for entity, metadata in itertools.chain(self.entities.items(),
-                                                    self.orphans.items())
+    def warn_duplicate_files(self) -> None:
+        """
+        Report the files in this bundle that a download could not tell apart.
+        They are too common in AnVIL to reject, but a duplicate overwrites its
+        twin, so they are worth reporting.
+        """
+
+        def name(metadata: JSON) -> str:
+            # Version 6 of the schema added `file_path`. This plugin back-fills
+            # it with null in rows from snapshots ingested under an older schema
+            file_path = metadata['file_path']
+            return json_str(metadata['file_name'] if file_path is None else file_path)
+
+        entities = itertools.chain(self.entities.items(), self.orphans.items())
+        names = Counter(
+            name(metadata)
+            for entity, metadata in entities
             if entity.entity_type == 'anvil_file'
         )
-        duplicates = sorted(name for name, count in file_names.items() if count > 1)
-        assert not duplicates, R(
-            'Bundle contains duplicate file names', self.fqid, duplicates)
+        duplicates = sorted(name for name, count in names.items() if count > 1)
+        if duplicates:
+            log.warning('Bundle %r contains duplicate file names or paths %r',
+                        self.fqid, duplicates)
 
     def add_links(self, links: Iterable[EntityLink]):
         self.links.update(links)
@@ -583,7 +597,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         else:
             log.info('Bundle %r is a replica bundle', bundle_fqid.uuid)
             bundle = self._replica_bundle(bundle_fqid)
-        bundle.reject_duplicate_file_names()
+        bundle.warn_duplicate_files()
         return bundle
 
     def _batch_tables(self,
