@@ -1,9 +1,13 @@
 from collections import (
     Counter,
+    defaultdict,
 )
 from collections.abc import (
     Mapping,
     Sequence,
+)
+from datetime import (
+    datetime,
 )
 from itertools import (
     product,
@@ -67,9 +71,14 @@ from azul.lib import (
 from azul.lib.collections import (
     none_safe_key,
 )
+from azul.lib.time import (
+    format_dcp2_datetime,
+    parse_dcp2_datetime,
+)
 from azul.lib.types import (
     JSON,
     JSONs,
+    optional,
 )
 from azul.logging import (
     configure_test_logging,
@@ -144,6 +153,90 @@ class IndexResponseTestCase(DCP1CannedBundleTestCase, WebServiceTestCase):
         plugin = self._controller._metadata_plugin
         assert isinstance(plugin, MetadataPlugin)
         return plugin
+
+    #: The dates that every entity has, and the ones that only a bundle or a
+    #: project has, because only their transformers have dated entities to
+    #: aggregate over
+    #:
+    _entity_date_fields = ('submissionDate', 'updateDate', 'lastModifiedDate')
+    _aggregate_date_fields = tuple(
+        'aggregate' + field[0].upper() + field[1:]
+        for field in _entity_date_fields
+    )
+
+    @cached_property
+    def _expected_dates(self) -> Mapping[str, Mapping[str, str | None]]:
+        """
+        The dates that the index is expected to report for every entity of the
+        canned bundles, and for those bundles, by the ID of the entity and the
+        name of the field containing the date.
+
+        An entity's own dates are those of its provenance, reduced over the
+        bundles the entity occurs in the way the index reduces them, by taking
+        the earliest submission date and the latest update date. All three of a
+        bundle's own dates are the bundle's version.
+
+        A bundle's (project's) aggregate dates are that same reduction over all
+        entities in that bundle (project).
+        """
+
+        type Date = datetime
+
+        # submissionDate and updateDate
+        type Dates = tuple[Date, Date | None]
+
+        # submissionDate, updateDate and lastModifiedDate
+        type EffectiveDates = tuple[Date, Date | None, Date]
+
+        def _reduce(dates: list[Dates]) -> EffectiveDates:
+            submissions = [submission for submission, update in dates]
+            updates = [update for submission, update in dates if update is not None]
+            return (
+                min(submissions),
+                max(updates, default=None),
+                max(submissions + updates)
+            )
+
+        def reduce(date_fields: tuple[str, ...],
+                   dates: list[Dates]
+                   ) -> dict[str, str | None]:
+            return {
+                date_field: optional(format_dcp2_datetime, date)
+                for date_field, date in zip(date_fields, _reduce(dates))
+            }
+
+        dates_by_entity = defaultdict(list)
+        dates_by_bundle = defaultdict(list)
+        bundles_by_project = defaultdict(list)
+        versions = {}
+        for fqid in self.bundles():
+            bundle = self._load_canned_bundle(fqid)
+            versions[fqid.uuid] = fqid.version
+            for key, entity in bundle.metadata.items():
+                provenance = entity['provenance']
+                entity_id = provenance['document_id']
+                dates = (parse_dcp2_datetime(provenance['submission_date']),
+                         optional(parse_dcp2_datetime, provenance.get('update_date')))
+                dates_by_entity[entity_id].append(dates)
+                if entity_id not in bundle.stitched:
+                    dates_by_bundle[fqid.uuid].append(dates)
+                if key.startswith('project/'):
+                    bundles_by_project[entity_id].append(fqid.uuid)
+
+        result = {
+            entity_id: reduce(self._entity_date_fields, dates)
+            for entity_id, dates in dates_by_entity.items()
+        }
+        for project_id, uuids in bundles_by_project.items():
+            result[project_id].update(reduce(self._aggregate_date_fields, [
+                dates for uuid in uuids for dates in dates_by_bundle[uuid]
+            ]))
+        for uuid, dates in dates_by_bundle.items():
+            result[uuid] = {
+                **dict.fromkeys(self._entity_date_fields, versions[uuid]),
+                **reduce(self._aggregate_date_fields, dates)
+            }
+        return result
 
 
 class TestIndexResponse(IndexResponseTestCase):
@@ -1786,6 +1879,12 @@ class TestIndexResponse(IndexResponseTestCase):
             for field, direction in product(fields, ['asc', 'desc']):
                 with self.subTest(entity_type=entity_type, field=field, direction=direction):
                     expected = fields[field]
+                    # Assert that the literal expectations above match the ones
+                    # derived from the canned bundles
+                    self.assertEqual(expected, [
+                        (self._expected_dates[entity_id][field], entity_id)
+                        for date, entity_id in expected
+                    ])
                     if direction == 'asc':
                         self.assertEqual(expected,
                                          sorted(expected, key=lambda x: (x[0] is None, x[0])))
@@ -2047,6 +2146,12 @@ class TestIndexResponse(IndexResponseTestCase):
         for entity_type, fields in test_cases.items():
             for field, expected in fields.items():
                 with self.subTest(entity_type=entity_type, field=field):
+                    # Assert that the literal expectations above match the ones
+                    # derived from the canned bundles
+                    self.assertEqual(expected, [
+                        (self._expected_dates[entity_id][field], entity_id)
+                        for date, entity_id in expected
+                    ])
                     filters = {
                         field: {
                             'within': [
