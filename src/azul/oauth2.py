@@ -99,6 +99,13 @@ class TokenInfoResponse(TypedDict):
     access_type: str  # "online"
 
 
+class InvalidAccessTokenError(Exception):
+    """
+    The authorization server rejected the access token. It may be expired,
+    revoked or forged.
+    """
+
+
 class OAuth2Client(HasCachedHttpClient):
     """
     A client for Google's implementation of the OAuth 2.0 authorization server
@@ -184,11 +191,14 @@ class OAuth2Client(HasCachedHttpClient):
         url = furl(url='https://www.googleapis.com/oauth2/v3/tokeninfo',
                    args=dict(access_token=access_token))
         response = self._http_client.request('GET', str(url))
-        assert response.status != 400, R('The token is not valid')
-        assert response.status == 200, R('Unexpected response status', response.status)
-        response = json.loads(response.data)
-        assert is_of_type(response, TokenInfoResponse)
-        return response
+        if response.status == 400:
+            raise InvalidAccessTokenError
+        else:
+            assert response.status == 200, R('Unexpected response status',
+                                             response.status)
+            response = json.loads(response.data)
+            assert is_of_type(response, TokenInfoResponse)
+            return response
 
 
 TokenCredentials = google.oauth2.credentials.Credentials
@@ -276,6 +286,9 @@ class CredentialedClient(HasCachedHttpClient):
         the service account's private key by some other party) to be valid, the
         token must not be expired and the service account must belong to the
         current Google Cloud project.
+
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
 
         :raise AssertionError: if the token is definitely invalid
 

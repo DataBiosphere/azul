@@ -5,6 +5,9 @@ from contextlib import (
     contextmanager,
 )
 import json
+from typing import (
+    ContextManager,
+)
 from unittest.mock import (
     PropertyMock,
     patch,
@@ -32,6 +35,7 @@ from azul.http import (
     HasCachedHttpClient,
 )
 from azul.lib import (
+    R,
     cached_property,
 )
 from azul.logging import (
@@ -39,6 +43,7 @@ from azul.logging import (
     get_test_logger,
 )
 from azul.oauth2 import (
+    InvalidAccessTokenError,
     OAuth2Client,
     TokenForCodeResponse,
     TokenInfoResponse,
@@ -125,11 +130,11 @@ class TestUserController(DCP2TestCase,
         UserService._apat_public_key.fdel(self._service)
 
     @contextmanager
-    def _mock_token_info(self):
+    def _mock_token_info(self, aud: str = 'mock_client_id'):
         with patch.object(OAuth2Client, 'token_info') as mock:
             mock.return_value = TokenInfoResponse(
-                azp='mock_client_id',
-                aud='mock_client_id',
+                azp=aud,
+                aud=aud,
                 sub=self._mock_sub,
                 scope='https://www.googleapis.com/auth/userinfo.email openid',
                 exp='9999999999',
@@ -432,6 +437,47 @@ class TestUserController(DCP2TestCase,
     def test_revoke_unauthenticated(self):
         response = self._revoke()
         self.assertEqual(401, response.status)
+
+    def test_unexpected_token_info_response(self):
+        # A response from the authorization server that we aren't prepared to
+        # interpret is not necessarily the client's fault, and we don't know
+        # what to make of it. The resulting 5xx trips an alarm, which is how
+        # we'd learn that it needs handling.
+        token = self._mock_access_token
+        error = AssertionError(R('Unexpected response status', 503))
+        with patch.object(OAuth2Client, 'token_info', side_effect=error):
+            for response in self._get_token(token), self._revoke(token):
+                self.assertEqual(500, response.status)
+
+    def test_unusable_access_token(self):
+        token = self._mock_access_token
+        # The user of a foreign token is never loaded, and the user of the
+        # token in the third case was never authorized, so neither case
+        # reaches the point of needing a user
+        contexts: list[tuple[str, ContextManager]] = [
+            (
+                'rejected by the authorization server',
+                patch.object(OAuth2Client, 'token_info', side_effect=InvalidAccessTokenError)
+            ),
+            (
+                'issued to another client',
+                self._mock_token_info(aud='other_client_id')
+            ),
+            (
+                'issued to an unknown user',
+                self._mock_token_info()
+            )
+        ]
+        for description, context in contexts:
+            with self.subTest(description):
+                with context:
+                    for response in self._get_token(token), self._revoke(token):
+                        self.assertEqual(401, response.status)
+                        expected_body = {
+                            'Code': 'UnauthorizedError',
+                            'Message': 'Valid access token required'
+                        }
+                        self.assertEqual(expected_body, json.loads(response.data))
 
     def test_unsupported_endpoint_rejects_pat(self):
         apat = self._authorize_and_mint()
