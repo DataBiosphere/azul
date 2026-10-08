@@ -20,9 +20,6 @@ jobs:
         with:
           python-version: '${{ env.azul_python_version }}'
 
-      # The action is referenced by commit, not by tag, because the project
-      # doesn't publish a tag for the major version this commit belongs to.
-      #
       - uses: 'astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d'  # v10.0.1
         # The action reads `required-version` from `pyproject.toml`.
         with:
