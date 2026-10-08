@@ -1,3 +1,9 @@
+from collections.abc import (
+    Iterator,
+)
+from contextlib import (
+    contextmanager,
+)
 from copy import (
     copy,
 )
@@ -43,6 +49,7 @@ from azul.lib.types import (
 )
 from azul.oauth2 import (
     Authorization,
+    InvalidAccessTokenError,
 )
 from azul.openapi.responses import (
     json_content,
@@ -53,6 +60,8 @@ from azul.openapi.schema import (
     optional,
 )
 from azul.service.user_service import (
+    ForeignTokenException,
+    UnknownUserException,
     UserService,
 )
 
@@ -320,7 +329,8 @@ class UserController(Controller):
         if isinstance(auth, PersonalAccessTokenAuthentication):
             raise BadRequestError('Cannot exchange a personal access token for another')
         elif isinstance(auth, AccessTokenAuthentication):
-            apat_auth = self._service.mint_personal_access_token(auth)
+            with self._rejecting_unusable_token(auth):
+                apat_auth = self._service.mint_personal_access_token(auth)
             return {'token': apat_auth.token}
         else:
             raise UnauthorizedError('Valid access token required')
@@ -330,7 +340,26 @@ class UserController(Controller):
         if isinstance(auth, PersonalAccessTokenAuthentication):
             raise BadRequestError('Cannot revoke using a personal access token')
         elif isinstance(auth, AccessTokenAuthentication):
-            self._service.revoke_personal_access_tokens(auth)
+            with self._rejecting_unusable_token(auth):
+                self._service.revoke_personal_access_tokens(auth)
             return Response(status_code=204, body='')
         else:
+            raise UnauthorizedError('Valid access token required')
+
+    @contextmanager
+    def _rejecting_unusable_token(self,
+                                  auth: AccessTokenAuthentication
+                                  ) -> Iterator[None]:
+        """
+        Translate the ways in which an access token can turn out to be unusable
+        into the 401 response both endpoints document for that case. An
+        unexpected response from the authorization server is not one of them;
+        it raises, and the resulting 5xx trips an alarm, as it should.
+        """
+        try:
+            yield
+        except (InvalidAccessTokenError,
+                ForeignTokenException,
+                UnknownUserException) as e:
+            log.warning('Rejecting %s', auth, exc_info=e)
             raise UnauthorizedError('Valid access token required')

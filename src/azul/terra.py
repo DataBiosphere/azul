@@ -106,6 +106,7 @@ from azul.lib.types import (
 from azul.oauth2 import (
     CredentialedClient,
     CredentialsProvider,
+    InvalidAccessTokenError,
     ServiceAccountCredentials,
     TokenCredentials,
 )
@@ -677,6 +678,9 @@ class TDRClient(SAMClient, DRSClient):
         self = cls(credentials_provider=UserCredentialsProvider(authentication))
         try:
             self.validate()
+        except InvalidAccessTokenError as e:
+            log.warning('Invalid credentials', exc_info=e)
+            raise UnauthorizedError('Invalid credentials')
         except AssertionError as e:
             if R.caused(e):
                 log.warning('Invalid credentials', exc_info=e)
