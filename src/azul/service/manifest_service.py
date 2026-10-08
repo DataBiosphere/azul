@@ -1658,15 +1658,21 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 output.write(f"# File {file[file_uuid_field]!r}, version {file['version']!r} "
                              f"is currently not available in catalog {self.catalog!r}.\n\n")
             else:
-                # To prevent overwriting one file with another one of the same name
-                # but different content we nest each file in a folder using the
-                # bundle UUID. Because a file can belong to multiple bundles we use
-                # the one with the most recent version.
-                bundle = max(json_element_mappings(doc['bundles']),
-                             key=itemgetter('version', 'uuid'))
-                output_name = '/'.join([download_dir,
-                                        json_str(bundle['uuid']),
-                                        file_name])
+                file_path = optional(json_str, file.get('file_path'))
+                if file_path is None:
+                    # To prevent overwriting one file with another one of the same name
+                    # but different content we nest each file in a folder using the
+                    # bundle UUID. Because a file can belong to multiple bundles we use
+                    # the one with the most recent version.
+                    bundle = max(json_element_mappings(doc['bundles']),
+                                 key=itemgetter('version', 'uuid'))
+                    output_name = '/'.join([download_dir,
+                                            json_str(bundle['uuid']),
+                                            file_name])
+                else:
+                    # A file's path distinguishes it from the files it shares a
+                    # name with, so there is nothing for the bundle to add
+                    output_name = '/'.join([download_dir, file_path])
                 output_name = self._sanitize_path(output_name)
                 output.write(f'url={self._option(file_url)}\n'
                              f'output={self._option(output_name)}\n\n')
@@ -1778,6 +1784,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
         >>> f('foo/bar/file.fastq.gz')
         'foo/bar/file.fastq.gz'
 
+        Empty path components are collapsed:
+
+        >>> f('foo//bar///file.fastq.gz')
+        'foo/bar/file.fastq.gz'
+
         Invalid paths:
 
         >>> s: str  # work around false `Unresolved reference` warning by PyCharm
@@ -1801,6 +1812,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
                                 'Control character or backslash at position', match.start())
 
         path = cls._problematic_chars.sub('_', path)
+
+        # FIXME: Stop collapsing empty path components
+        #        https://github.com/DataBiosphere/azul/issues/8377
+        #
+        path = re.sub('//+', '/', path)
 
         assert cls._valid_path.fullmatch(path) is not None, R('Invalid file path', path)
 
