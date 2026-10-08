@@ -9,3 +9,16 @@ updates:
     # Ignored if open-pull-requests-limit is 0
     schedule:
       interval: 'weekly'
+
+  # The pins in the workflows are updated as part of the biweekly upgrade, by
+  # `scripts/upgrade_actions.py`. This entry is only here so that security
+  # updates are raised against them in between.
+  #
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    target-branch: 'develop'
+    # Disable routine dependency updates, but keep security updates active
+    open-pull-requests-limit: 0
+    # Ignored if open-pull-requests-limit is 0
+    schedule:
+      interval: 'weekly'
