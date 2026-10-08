@@ -8,7 +8,7 @@ from typing import (
 
 import attr
 from chalice.app import (
-    BadRequestError,
+    UnauthorizedError,
 )
 
 from azul import (
@@ -62,7 +62,7 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
         elif looks_like_access_token(token):
             return AccessTokenAuthentication(token)
         else:
-            raise BadRequestError('Unexpected token syntax')
+            raise UnauthorizedError('Unexpected token syntax')
 
     def identity(self) -> str:
         return self.token

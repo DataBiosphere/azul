@@ -1,7 +1,6 @@
 import logging.config
 
 from chalice import (
-    BadRequestError,
     UnauthorizedError,
 )
 
@@ -266,15 +265,15 @@ class ServiceApp(HealthApp):
             try:
                 auth_type, auth_token = header.split()
             except ValueError:
-                raise UnauthorizedError(header)
+                raise UnauthorizedError('Malformed Authorization header')
             else:
                 if auth_type.lower() == 'bearer':
                     if not is_redactable(auth_token):
-                        raise BadRequestError('Unexpected token syntax')
+                        raise UnauthorizedError('Unexpected token syntax')
                     else:
                         return BearerTokenAuthentication.for_token(auth_token)
                 else:
-                    raise UnauthorizedError(header)
+                    raise UnauthorizedError('Unsupported authorization scheme')
 
 
 app = ServiceApp()

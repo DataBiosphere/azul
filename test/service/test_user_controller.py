@@ -438,6 +438,25 @@ class TestUserController(DCP2TestCase,
         response = self._revoke()
         self.assertEqual(401, response.status)
 
+    def test_unusable_authorization_header(self):
+        url = str(self.base_url.set(path='/user/token'))
+        # A refresh token is redactable, so it passes the syntax check in the
+        # app and is rejected by `BearerTokenAuthentication.for_token` instead
+        refresh_token = self._mock_refresh_token()
+        for description, header, message in [
+            ('no scheme', self._mock_access_token, 'Malformed Authorization header'),
+            ('other scheme', 'Basic dXNlcjpwYXNz', 'Unsupported authorization scheme'),
+            ('unredactable token', 'Bearer not_a_token', 'Unexpected token syntax'),
+            ('token of another kind', f'Bearer {refresh_token}', 'Unexpected token syntax')
+        ]:
+            with self.subTest(description):
+                headers = {'Authorization': header}
+                response = self._http_client.request('GET', url, headers=headers)
+                self.assertEqual(401, response.status)
+                body = response.data.decode()
+                self.assertEqual(message, json.loads(body)['Message'])
+                self.assertNotIn(header, body)
+
     def test_unexpected_token_info_response(self):
         # A response from the authorization server that we aren't prepared to
         # interpret is not necessarily the client's fault, and we don't know
