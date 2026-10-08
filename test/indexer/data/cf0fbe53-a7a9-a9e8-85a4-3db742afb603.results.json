@@ -158,7 +158,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -337,6 +337,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -346,7 +347,7 @@
             "document_id": "d23548da-8c3e-51b3-8766-28d02ce558cd_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -368,7 +369,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -584,6 +585,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -594,7 +596,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -773,6 +775,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -782,7 +785,7 @@
             "document_id": "a76526dc-d42f-5b97-ab14-56eb3c9bdfec_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -793,7 +796,7 @@
     },
     {
         "_index": "azul_v2_nadove4_test_replica",
-        "_id": "anvil_file_a76526dc-d42f-5b97-ab14-56eb3c9bdfec_7fd61c786c7deb23d54719db32381147c648f2dd",
+        "_id": "anvil_file_a76526dc-d42f-5b97-ab14-56eb3c9bdfec_4075c20a5333dd023c14e49d18f84909181ae0b2",
         "_score": 1.0,
         "_source": {
             "entity_id": "a76526dc-d42f-5b97-ab14-56eb3c9bdfec",
@@ -804,7 +807,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -815,6 +818,7 @@
                 "file_id": "1e269f04-4347-4188-b060-1dcc69e71d67",
                 "file_md5sum": "beec606ee0aa299fdf913f4259316622",
                 "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                 "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67",
                 "file_size": 213021639,
                 "is_supplementary": false,
@@ -841,7 +845,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -1040,7 +1044,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -1238,6 +1242,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -1259,6 +1264,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -1268,7 +1274,7 @@
             "document_id": "208441e2-cf28-584e-a0ac-7553c7118412_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -1289,7 +1295,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -1513,6 +1519,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -1523,7 +1530,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -1538,7 +1545,7 @@
     },
     {
         "_index": "azul_v2_nadove4_test_replica",
-        "_id": "anvil_file_dc53dde6-280c-501c-a95d-4157e13c66dc_4e91ba6c986387ca2552997338b6b796f625553c",
+        "_id": "anvil_file_dc53dde6-280c-501c-a95d-4157e13c66dc_7127c0c2af9d101d0ac1bdd8c5e5653a6c90009e",
         "_score": 1.0,
         "_source": {
             "entity_id": "dc53dde6-280c-501c-a95d-4157e13c66dc",
@@ -1549,6 +1556,7 @@
                 "file_id": "8b722e88-8103-49c1-b351-e64fa7c6ab37",
                 "file_md5sum": "7cd9fd7b54a8bf380e44e93706f1fa2d",
                 "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                 "file_ref": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37",
                 "file_size": 3306845592,
                 "is_supplementary": false,
@@ -1562,7 +1570,7 @@
             "replica_type": "anvil_file",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -1738,6 +1746,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -1747,7 +1756,7 @@
             "document_id": "dc53dde6-280c-501c-a95d-4157e13c66dc_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -1915,7 +1924,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -1941,7 +1950,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -2130,6 +2139,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -2139,7 +2149,7 @@
             "document_id": "9af629c7-a4b2-520c-a03a-bdef5ee55d09_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -2318,7 +2328,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -2515,6 +2525,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -2536,6 +2547,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -2545,7 +2557,7 @@
             "document_id": "cf0fbe53-a7a9-59e8-85a4-3db742afb603_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -2568,7 +2580,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -2773,7 +2785,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -2970,6 +2982,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -2991,6 +3004,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -3000,7 +3014,7 @@
             "document_id": "cf0fbe53-a7a9-a9e8-85a4-3db742afb603_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -3023,7 +3037,7 @@
             ],
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -3227,7 +3241,7 @@
             "sources": [
                 {
                     "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                    "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                     "prefix": "/0",
                     "type": "azul.terra.TDRSourceRef"
                 }
@@ -3424,6 +3438,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_1e269f04-4347-4188-b060-1dcc69e71d67"
@@ -3445,6 +3460,7 @@
                             "~null"
                         ],
                         "file_name": "307500.merged.matefixed.sorted.markeddups.recal.bam",
+                        "file_path": "somedir/307500.merged.matefixed.sorted.markeddups.recal.bam",
                         "is_supplementary": 0,
                         "version": "2022-06-01T00:00:00.000000Z",
                         "drs_uri": "drs://mock_tdr.lan/v1_6c87f0e1-509d-46a4-b845-7584df39263b_8b722e88-8103-49c1-b351-e64fa7c6ab37"
@@ -3454,7 +3470,7 @@
             "document_id": "71c9a86b-d96b-523b-939e-d03d7e68f94a_cf0fbe53-a7a9-a9e8-85a4-3db742afb603_2022-06-01T00:00:00.000000Z_exists",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },
@@ -3487,7 +3503,7 @@
             "replica_type": "anvil_donor",
             "source": {
                 "id": "6c87f0e1-509d-46a4-b845-7584df39263b",
-                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV5_202306121732",
+                "spec": "tdr:bigquery:gcp:test_anvil_project:ANVIL_Test_20230609_ANV6_202306121732",
                 "prefix": "/0",
                 "type": "azul.terra.TDRSourceRef"
             },

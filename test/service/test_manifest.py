@@ -1235,7 +1235,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
         expected = [
             (
                 'bundles.bundle_uuid',
-                'f4962f15-ecc7-a075-b263-ac70ab0239b2',
+                '8a41df4f-a0ec-a83f-8a15-362fc7fe6269',
                 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
                 'cf0fbe53-a7a9-a9e8-85a4-3db742afb603'
             ),
@@ -1576,6 +1576,12 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 '307500.merged.matefixed.sorted.markeddups.recal.bam'
             ),
             (
+                'files.file_path',
+                '',
+                'somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                'somedir/307500.merged.matefixed.sorted.markeddups.recal.bam'
+            ),
+            (
                 'files.is_supplementary',
                 'True',
                 'False',
@@ -1619,7 +1625,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="f4962f15-ecc7-a075-b263-ac70ab0239b2/' +
+                        'output="8a41df4f-a0ec-a83f-8a15-362fc7fe6269/' +
                         'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
                         ''
                     ]]),

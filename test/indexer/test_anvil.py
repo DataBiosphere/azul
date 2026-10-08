@@ -311,6 +311,23 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                         bundle.add_entity(entity, fixed_version, row, is_orphan=is_orphan)
                     self.assertTrue(R.caused(cm.exception))
 
+    def test_absent_file_path(self):
+        """
+        Test that the `file_path` column, which version 6 of the schema added,
+        is null in rows from a snapshot that was ingested under version 5.
+        """
+        bundle = self._load_canned_bundle(self.primary_bundle())
+        entity, row = next(
+            (entity, row)
+            for entity, row in bundle.entities.items()
+            if entity.entity_type == 'anvil_file'
+        )
+        self.assertIsNotNone(row['file_path'])
+        del row['file_path']
+        bundle = TDRAnvilBundle(fqid=bundle.fqid)
+        bundle.add_entity(entity, fixed_version, row)
+        self.assertIsNone(bundle.entities[entity]['file_path'])
+
     def test_pk_column(self):
         plugin = self.plugin
         for version, schema in anvil_schemas.items():
