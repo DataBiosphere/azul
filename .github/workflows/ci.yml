@@ -12,11 +12,11 @@ jobs:
     timeout-minutes: 45
     steps:
 
-      - uses: 'actions/checkout@v4'
+      - uses: 'actions/checkout@v7'
 
       - run: 'cat environment.boot >> "$GITHUB_ENV"'
 
-      - uses: 'actions/setup-python@v5'
+      - uses: 'actions/setup-python@v7'
         with:
           python-version: '${{ env.azul_python_version }}'
 
@@ -82,7 +82,7 @@ jobs:
           make check_clean
           coverage xml
 
-      - uses: 'actions/upload-artifact@v4'
+      - uses: 'actions/upload-artifact@v7'
         with:
           name: 'coverage-file'
           path: 'coverage.xml'
@@ -92,11 +92,11 @@ jobs:
     runs-on: 'ubuntu-22.04'
     steps:
 
-      - uses: 'actions/checkout@v4'
+      - uses: 'actions/checkout@v7'
 
       - run: 'cat environment.boot >> "$GITHUB_ENV"'
 
-      - uses: 'actions/download-artifact@v4'
+      - uses: 'actions/download-artifact@v8'
         with:
           name: 'coverage-file'
 
@@ -110,11 +110,11 @@ jobs:
     needs: 'test'
     runs-on: 'ubuntu-22.04'
     steps:
-      - uses: 'actions/checkout@v4'
+      - uses: 'actions/checkout@v7'
 
       - run: 'cat environment.boot >> "$GITHUB_ENV"'
 
-      - uses: 'actions/download-artifact@v4'
+      - uses: 'actions/download-artifact@v8'
         with:
           name: 'coverage-file'
 
@@ -134,16 +134,16 @@ jobs:
         language: [ 'python', 'javascript' ]
     steps:
 
-      - uses: 'actions/checkout@v4'
+      - uses: 'actions/checkout@v7'
 
       - run: 'cat environment.boot >> "$GITHUB_ENV"'
 
-      - uses: 'github/codeql-action/init@v3'
+      - uses: 'github/codeql-action/init@v4'
         with:
           languages: '${{ matrix.language }}'
           config-file: './.github/codeql/codeql-config.yml'
           queries: 'security-and-quality'
 
-      - uses: 'github/codeql-action/analyze@v3'
+      - uses: 'github/codeql-action/analyze@v4'
         with:
           category: '/language:${{matrix.language}}'
