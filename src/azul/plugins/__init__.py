@@ -556,11 +556,10 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         raise NotImplementedError
 
     @abstractmethod
-    def azul_slug(self, document: JSON) -> str | list[str] | None:
+    def download_dir(self, document: JSON) -> str:
         """
-        A collision-resistant slug derived from the title of the project (HCA)
-        or dataset (AnVIL). The result mirrors the shape of the title in the
-        document: a string, a list of strings, or None.
+        The name of the top-level directory that the file described by the given
+        aggregate file document should be downloaded to on a user's disk.
         """
         raise NotImplementedError
 

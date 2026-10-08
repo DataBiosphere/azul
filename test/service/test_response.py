@@ -305,7 +305,8 @@ class TestIndexResponse(IndexResponseTestCase):
                         'drs_uri': f'drs://{self._drs_domain_name}/'
                                    f'7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z',
                         'uuid': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                        'version': '2018-11-02T11:33:44.698028Z'
+                        'version': '2018-11-02T11:33:44.698028Z',
+                        'downloadDirectory': 'single-cell-transcriptom-patterns--yh4k31'
                     }
                 ],
                 'organoids': [
@@ -317,7 +318,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'projectId': ['e8642221-4c2c-4fd7-b926-a68bce363c88'],
                         'projectShortname': ['Single of human pancreas'],
                         'projectTitle': ['Single cell transcriptome patterns.'],
-                        'azulSlug': ['single-cell-transcriptom-patterns--yh4k31'],
                         'bionetworkName': [None],
                         'isTissueAtlasProject': [False],
                         'tissueAtlas': [],
@@ -628,7 +628,6 @@ class TestIndexResponse(IndexResponseTestCase):
                             'projectId': 'e8642221-4c2c-4fd7-b926-a68bce363c88',
                             'projectShortname': 'Single of human pancreas',
                             'projectTitle': 'Single cell transcriptome patterns.',
-                            'azulSlug': 'single-cell-transcriptom-patterns--yh4k31',
                             'publications': [
                                 {
                                     'doi': '10.1016/j.cell.2017.09.004',
@@ -890,7 +889,6 @@ class TestIndexResponse(IndexResponseTestCase):
                         'projectId': '627cb0ba-b8a1-405a-b58f-0add82c3d635',
                         'projectShortname': 'staging/10x/2019-02-14T18:29:38Z',
                         'projectTitle': '10x 1 Run Integration Test',
-                        'azulSlug': '10x-1-run-integration-test--tsvh2p',
                         'publications': [
                             {
                                 'doi': '10.1016/j.cell.2016.07.054',
@@ -1035,10 +1033,32 @@ class TestIndexResponse(IndexResponseTestCase):
             'drs_uri': f'drs://{self._drs_domain_name}/'
                        f'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T17%3A22%3A51.560099Z',
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
-            'version': '2019-10-09T17:22:51.560099Z'
+            'version': '2019-10-09T17:22:51.560099Z',
+            'downloadDirectory': 'systematic-comparative-analysis-of-single'
+                                 '--rnasequencin-methods--esvnab'
         }
         file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
+
+    def test_download_directory(self):
+        """
+        Every file listed by a hit names the directory it is downloaded to,
+        after the title of the project the file belongs to.
+        """
+        filters = {'projectId': {'is': ['e8642221-4c2c-4fd7-b926-a68bce363c88']}}
+        for entity_type in 'files', 'bundles':
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url.set(path=('index', entity_type),
+                                        args=self._params(filters=filters))
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
+                hits = response.json()['hits']
+                self.assertGreater(len(hits), 0)
+                self.assertEqual({'single-cell-transcriptom-patterns--yh4k31'}, {
+                    file['downloadDirectory']
+                    for hit in hits
+                    for file in hit['files']
+                })
 
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':

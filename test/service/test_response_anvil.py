@@ -98,8 +98,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -175,8 +174,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -378,8 +376,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -577,8 +574,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -799,8 +795,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'accessible': True,
                                 'description': 'Study description from DUOS',
-                                'duos_id': 'DUOS-000000',
-                                'azul_slug': 'anvil-test--nxdpzm'
+                                'duos_id': 'DUOS-000000'
                             }
                         ],
                         'diagnoses': [
@@ -1005,8 +1000,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1217,8 +1211,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [
@@ -1303,8 +1296,7 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'dataset_id': ['52ee7665-7033-63f2-a8d9-ce8e32666739'],
                                 'duos_id': ['DUOS-000000'],
                                 'registered_identifier': ['phs000693'],
-                                'title': ['ANVIL_Test'],
-                                'azul_slug': ['anvil-test--nxdpzm']
+                                'title': ['ANVIL_Test']
                             }
                         ],
                         'diagnoses': [

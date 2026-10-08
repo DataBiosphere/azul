@@ -79,7 +79,6 @@ class TestIndexProjectsEndpoint(DCP1CannedBundleTestCase, WebServiceTestCase):
             'projectId',
             'projectTitle',
             'projectShortname',
-            'azulSlug',
             'laboratory',
             'projectDescription',
             'contributors',
