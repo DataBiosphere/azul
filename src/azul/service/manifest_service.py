@@ -1635,12 +1635,12 @@ class CurlManifestGenerator(PagedManifestGenerator):
                       partition: ManifestPartition,
                       output: IO[str]
                       ) -> ManifestPartition:
+        special_fields = self.metadata_plugin.special_fields
+        file_name_field = special_fields.file_name.name_in_hit
+        file_uuid_field = special_fields.file_uuid.name_in_hit
+        file_size_field = special_fields.file_size.name_in_hit
 
         def _write(file: JSON, download_dir: str, is_related_file: bool = False):
-            special_fields = self.metadata_plugin.special_fields
-            file_name_field = special_fields.file_name.name_in_hit
-            file_uuid_field = special_fields.file_uuid.name_in_hit
-
             file_name = json_str(file[file_name_field])
             # Related files are indexed differently than normal files (they
             # don't have their own document but are listed inside the main
@@ -1712,9 +1712,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 # in GCP. Note that the conditional below indicates that a file
                 # will *eventually* be mirrored, not that it already has been.
                 #
+                file_size = json_int(file[file_size_field])
                 if (
                     not config.is_anvil_enabled(self.catalog)
-                    or self.mirror_service.will_mirror(source.spec, json_int(file['file_size']))
+                    or self.mirror_service.will_mirror(source.spec, file_size)
                 ):
                     _write(file, download_dir)
                     if config.is_hca_enabled(self.catalog):
