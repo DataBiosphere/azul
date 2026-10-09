@@ -1640,8 +1640,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
         file_uuid_field = special_fields.file_uuid.name_in_hit
         file_size_field = special_fields.file_size.name_in_hit
 
-        def _write(file: JSON, download_dir: str, is_related_file: bool = False):
-            file_name = json_str(file[file_name_field])
+        def _write(inner_file: JSON, download_dir: str, is_related: bool = False):
+            file_name = json_str(inner_file[file_name_field])
             # Related files are indexed differently than normal files (they
             # don't have their own document but are listed inside the main
             # file's document), so the /repository/files can't resolve them
@@ -1651,31 +1651,31 @@ class CurlManifestGenerator(PagedManifestGenerator):
             # FIXME: Retire support for related files
             #        https://github.com/DataBiosphere/azul/issues/8090
             #
-            assert not is_related_file, R('Download of related file', file)
+            assert not is_related, R('Download of related file', inner_file)
 
-            file_url = self._azul_file_url(file)
+            file_url = self._azul_file_url(inner_file)
             if file_url is None:
-                output.write(f"# File {file[file_uuid_field]!r}, version {file['version']!r} "
+                output.write(f"# File {inner_file[file_uuid_field]!r}, version {inner_file['version']!r} "
                              f"is currently not available in catalog {self.catalog!r}.\n\n")
             else:
-                file_path = optional(json_str, file.get('file_path'))
+                file_path = optional(json_str, inner_file.get('file_path'))
                 if file_path is None:
                     # To prevent overwriting one file with another one of the same name
                     # but different content we nest each file in a folder using the
                     # bundle UUID. Because a file can belong to multiple bundles we use
                     # the one with the most recent version.
-                    bundle = max(json_element_mappings(doc['bundles']),
+                    bundle = max(json_element_mappings(outer_file['bundles']),
                                  key=itemgetter('version', 'uuid'))
-                    output_name = '/'.join([download_dir,
-                                            json_str(bundle['uuid']),
-                                            file_name])
+                    download_path = '/'.join([download_dir,
+                                              json_str(bundle['uuid']),
+                                              file_name])
                 else:
                     # A file's path distinguishes it from the files it shares a
                     # name with, so there is nothing for the bundle to add
-                    output_name = '/'.join([download_dir, file_path])
-                output_name = self._sanitize_path(output_name)
+                    download_path = '/'.join([download_dir, file_path])
+                download_path = self._sanitize_path(download_path)
                 output.write(f'url={self._option(file_url)}\n'
-                             f'output={self._option(output_name)}\n\n')
+                             f'output={self._option(download_path)}\n\n')
 
         if partition.page_index == 0:
             curl_options = [
@@ -1699,12 +1699,12 @@ class CurlManifestGenerator(PagedManifestGenerator):
         if response.hits:
             hit = None
             for hit in response.hits:
-                doc = self._hit_to_doc(hit)
-                download_dir = self.metadata_plugin.download_dir(doc)
-                contents = json_mapping(doc['contents'])
-                files = json_sequence(contents['files'])
-                file = json_mapping(one(files))
-                source_json = json_mapping(one(json_sequence(doc['sources'])))
+                outer_file = self._hit_to_doc(hit)
+                download_dir = self.metadata_plugin.download_dir(outer_file)
+                contents = json_mapping(outer_file['contents'])
+                inner_files = json_sequence(contents['files'])
+                inner_file = json_mapping(one(inner_files))
+                source_json = json_mapping(one(json_sequence(outer_file['sources'])))
                 source: SourceRef = SourceRef.from_json(source_json)
 
                 # On AnVIL, we are only permitted to include mirrored files, in
@@ -1712,15 +1712,15 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 # in GCP. Note that the conditional below indicates that a file
                 # will *eventually* be mirrored, not that it already has been.
                 #
-                file_size = json_int(file[file_size_field])
+                file_size = json_int(inner_file[file_size_field])
                 if (
                     not config.is_anvil_enabled(self.catalog)
                     or self.mirror_service.will_mirror(source.spec, file_size)
                 ):
-                    _write(file, download_dir)
+                    _write(inner_file, download_dir)
                     if config.is_hca_enabled(self.catalog):
-                        for related_file in json_element_mappings(file['related_files']):
-                            _write(related_file, download_dir, is_related_file=True)
+                        for related_file in json_element_mappings(inner_file['related_files']):
+                            _write(related_file, download_dir, is_related=True)
             assert hit is not None
             return partition.next_page(file_name=None,
                                        search_after=self._search_after(hit))
@@ -2015,7 +2015,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
 
     @property
     def include_orphans(self) -> bool:
-
         # When filtering exclusively by properties of implicit hubs, e.g.,
         # data sets for AnVIL or projects for HCA, we include replicas of all
         # entities implicitly connected to the matching hubs, even replicas of
