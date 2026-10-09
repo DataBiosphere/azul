@@ -370,7 +370,8 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
     def test_duplicate_file_paths(self):
         """
         A file from a snapshot that was ingested under version 6 of the schema
-        is told apart by its path, not by its name.
+        is told apart by its path, not by its name, so two files sharing a path
+        are rejected.
         """
         tables = self._canned_tables()
         rows = tables['anvil_file']['rows']
@@ -383,7 +384,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         """
         A file from a snapshot that was ingested under version 5 of the schema
         has no path. A prefix of its digest tells it apart from the files it
-        shares a name with, so a duplicate name is not worth reporting.
+        shares a name with, so a duplicate name is not rejected.
         """
         tables = self._canned_tables()
         rows = tables['anvil_file']['rows']
@@ -411,16 +412,14 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                                   table['rows'],
                                   table.get('schema'))
         if expected:
-            with self.assertLogs(logger=tdr_anvil.log, level='WARNING') as logs:
-                bundle = self.plugin.fetch_bundle(bundle_fqid)
-            self.assertEqual(f'WARNING:{tdr_anvil.log.name}:'
-                             f'Bundle {bundle_fqid!r} contains duplicate file '
-                             f'paths {expected!r}',
-                             one(logs.output))
+            with self.assertRaises(AssertionError) as error:
+                self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(R('Bundle contains duplicate file paths',
+                               bundle_fqid, expected),
+                             error.exception.args[0])
         else:
-            with self.assertNoLogs(logger=tdr_anvil.log, level='WARNING'):
-                bundle = self.plugin.fetch_bundle(bundle_fqid)
-        self.assertEqual(bundle_fqid, bundle.fqid)
+            bundle = self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(bundle_fqid, bundle.fqid)
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
