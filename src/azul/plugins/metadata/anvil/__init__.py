@@ -299,10 +299,29 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                                type=pass_thru_int)
     )
 
-    def download_dir(self, document: JSON) -> str:
-        contents = json_mapping(document['contents'])
+    #: The number of hexadecimal digits of a file's digest that distinguish it
+    #: from the files it shares a name with. Sixteen digits carry 64 bits, so
+    #: against the 1.9e7 pairs of same-name files in one dataset observed in
+    #: `anvil15`, the chance of any two of them colliding is around 1e-12.
+    #:
+    _digest_length = 16
+
+    def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
+        contents = json_mapping(outer_entity['contents'])
         dataset = one(json_element_mappings(contents['datasets']))
-        return one(json_element_strings(dataset['title']))
+        title = one(json_element_strings(dataset['title']))
+        file_path = optional(json_str, inner_file['file_path'])
+        if file_path is None:
+            # Version 5 of the schema records only a file's name, which is not
+            # unique within a dataset. A prefix of the file's digest sets the
+            # duplicates apart, and does so for files that are merely similar
+            # while letting identical ones share a path, which is harmless.
+            digest = json_str(inner_file['file_md5sum'])[:self._digest_length]
+            name = '-'.join([digest, json_str(inner_file['file_name'])])
+        else:
+            # Version 6 added the full path, which is unique within a dataset
+            name = file_path
+        return '/'.join([title, name])
 
     @property
     def root_entity_type(self) -> str:

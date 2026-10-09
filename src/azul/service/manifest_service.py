@@ -1636,12 +1636,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
                       output: IO[str]
                       ) -> ManifestPartition:
         special_fields = self.metadata_plugin.special_fields
-        file_name_field = special_fields.file_name.name_in_hit
         file_uuid_field = special_fields.file_uuid.name_in_hit
         file_size_field = special_fields.file_size.name_in_hit
 
-        def _write(inner_file: JSON, download_dir: str, is_related: bool = False):
-            file_name = json_str(inner_file[file_name_field])
+        def _write(outer_file: JSON, inner_file: JSON, is_related: bool = False):
             # Related files are indexed differently than normal files (they
             # don't have their own document but are listed inside the main
             # file's document), so the /repository/files can't resolve them
@@ -1658,21 +1656,9 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 output.write(f"# File {inner_file[file_uuid_field]!r}, version {inner_file['version']!r} "
                              f"is currently not available in catalog {self.catalog!r}.\n\n")
             else:
-                file_path = optional(json_str, inner_file.get('file_path'))
-                if file_path is None:
-                    # To prevent overwriting one file with another one of the same name
-                    # but different content we nest each file in a folder using the
-                    # bundle UUID. Because a file can belong to multiple bundles we use
-                    # the one with the most recent version.
-                    bundle = max(json_element_mappings(outer_file['bundles']),
-                                 key=itemgetter('version', 'uuid'))
-                    download_path = '/'.join([download_dir,
-                                              json_str(bundle['uuid']),
-                                              file_name])
-                else:
-                    # A file's path distinguishes it from the files it shares a
-                    # name with, so there is nothing for the bundle to add
-                    download_path = '/'.join([download_dir, file_path])
+                # What sets two files of the same name apart differs between
+                # catalogs, so the path is left to the metadata plugin
+                download_path = self.metadata_plugin.download_path(outer_file, inner_file)
                 download_path = self._sanitize_path(download_path)
                 output.write(f'url={self._option(file_url)}\n'
                              f'output={self._option(download_path)}\n\n')
@@ -1700,7 +1686,6 @@ class CurlManifestGenerator(PagedManifestGenerator):
             hit = None
             for hit in response.hits:
                 outer_file = self._hit_to_doc(hit)
-                download_dir = self.metadata_plugin.download_dir(outer_file)
                 contents = json_mapping(outer_file['contents'])
                 inner_files = json_sequence(contents['files'])
                 inner_file = json_mapping(one(inner_files))
@@ -1717,10 +1702,10 @@ class CurlManifestGenerator(PagedManifestGenerator):
                     not config.is_anvil_enabled(self.catalog)
                     or self.mirror_service.will_mirror(source.spec, file_size)
                 ):
-                    _write(inner_file, download_dir)
+                    _write(outer_file, inner_file)
                     if config.is_hca_enabled(self.catalog):
                         for related_file in json_element_mappings(inner_file['related_files']):
-                            _write(related_file, download_dir, is_related=True)
+                            _write(outer_file, related_file, is_related=True)
             assert hit is not None
             return partition.next_page(file_name=None,
                                        search_after=self._search_after(hit))

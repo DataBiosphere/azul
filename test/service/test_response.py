@@ -432,7 +432,9 @@ class TestIndexResponse(IndexResponseTestCase):
                                    f'7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z',
                         'uuid': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
                         'version': '2018-11-02T11:33:44.698028Z',
-                        'downloadDirectory': 'single-cell-transcriptom-patterns--yh4k31'
+                        'downloadPath': 'single-cell-transcriptom-patterns--yh4k31'
+                                        '/aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
+                                        '/SRR3562915_1.fastq.gz'
                     }
                 ],
                 'organoids': [
@@ -1160,18 +1162,23 @@ class TestIndexResponse(IndexResponseTestCase):
                        f'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T17%3A22%3A51.560099Z',
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T17:22:51.560099Z',
-            'downloadDirectory': 'systematic-comparative-analysis-of-single'
-                                 '--rnasequencin-methods--esvnab'
+            'downloadPath': 'systematic-comparative-analysis-of-single'
+                            '--rnasequencin-methods--esvnab'
+                            '/ffac201f-4b1c-4455-bd58-19c1a9e863b4'
+                            '/Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz'
         }
         file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
 
-    def test_download_directory(self):
+    def test_download_path(self):
         """
-        Every file listed by a hit names the directory it is downloaded to,
-        after the title of the project the file belongs to.
+        Every file listed by a hit names the path it is downloaded to, which
+        starts with a directory named after the title of the project the file
+        belongs to. Two files never share a path, or downloading both would
+        leave only one of them on disk.
         """
         filters = {'projectId': {'is': ['e8642221-4c2c-4fd7-b926-a68bce363c88']}}
+        directory = 'single-cell-transcriptom-patterns--yh4k31'
         for entity_type in 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
                 url = self.base_url.set(path=('index', entity_type),
@@ -1180,11 +1187,16 @@ class TestIndexResponse(IndexResponseTestCase):
                 raise_on_status(response)
                 hits = response.json()['hits']
                 self.assertGreater(len(hits), 0)
-                self.assertEqual({'single-cell-transcriptom-patterns--yh4k31'}, {
-                    file['downloadDirectory']
-                    for hit in hits
-                    for file in hit['files']
-                })
+                files_by_path = {}
+                for hit in hits:
+                    for file in hit['files']:
+                        path = file['downloadPath']
+                        self.assertEqual(directory, path.split('/')[0])
+                        # A file listed by more than one bundle hit yields the
+                        # same path each time, since the path is derived from
+                        # the most recent of the bundles it belongs to
+                        uuid = file['uuid']
+                        self.assertEqual(uuid, files_by_path.setdefault(path, uuid))
 
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
