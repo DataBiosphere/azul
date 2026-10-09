@@ -406,11 +406,12 @@ class HCASearchResponseStage(SearchResponseStage):
 
     def make_files(self, source: SourceRef, entry: JSON) -> JSONs:
         download_dir = self.plugin.download_dir(entry)
-        files = []
-        for _file in json_element_mappings(json_mapping(entry['contents'])['files']):
-            translated_file = self.make_file(source, _file, download_dir)
-            files.append(translated_file)
-        return files
+        files = json_element_mappings(json_mapping(entry['contents'])['files'])
+        translated_files = []
+        for file in files:
+            translated_file = self.make_file(source, file, download_dir)
+            translated_files.append(translated_file)
+        return translated_files
 
     def make_file(self,
                   source: SourceRef,
