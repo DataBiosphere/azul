@@ -1294,7 +1294,7 @@ class TestAnvilDownloadPath(AzulUnitTestCase):
         A file is grouped by the biosample it was taken from.
         """
         path = self.plugin.download_path(self._outer('b1'), self._inner())
-        self.assertEqual(f'{self.title}/b1/{self.digest}-reads.bam', path)
+        self.assertEqual(f'{self.title}/b1/reads-{self.digest}.bam', path)
 
     def test_many_biosamples(self):
         """
@@ -1305,7 +1305,7 @@ class TestAnvilDownloadPath(AzulUnitTestCase):
             with self.subTest(ids=ids):
                 outer = self._outer(*ids)
                 path = self.plugin.download_path(outer, self._inner())
-                self.assertEqual(f'{self.title}/b1/{self.digest}-reads.bam',
+                self.assertEqual(f'{self.title}/b1/reads-{self.digest}.bam',
                                  path)
 
     def test_supplementary(self):
@@ -1316,7 +1316,7 @@ class TestAnvilDownloadPath(AzulUnitTestCase):
         path = self.plugin.download_path(self._outer(),
                                          self._inner(is_supplementary=True))
         self.assertEqual(f'{self.title}/supplementary/'
-                         f'{self.digest}-reads.bam',
+                         f'reads-{self.digest}.bam',
                          path)
 
     def test_orphan(self):
@@ -1325,7 +1325,7 @@ class TestAnvilDownloadPath(AzulUnitTestCase):
         downloaded to a directory of its own (#8386).
         """
         path = self.plugin.download_path(self._outer(), self._inner())
-        self.assertEqual(f'{self.title}/orphan/{self.digest}-reads.bam', path)
+        self.assertEqual(f'{self.title}/orphan/reads-{self.digest}.bam', path)
 
     def test_without_digest(self):
         """
@@ -1335,7 +1335,7 @@ class TestAnvilDownloadPath(AzulUnitTestCase):
         inner = self._inner(file_md5sum=None)
         outer = self._outer('b1', snapshot=snapshot_without_md5s)
         path = self.plugin.download_path(outer, inner)
-        self.assertEqual(f'{self.title}/b1/4e9f39f9139f3785-reads.bam', path)
+        self.assertEqual(f'{self.title}/b1/reads-4e9f39f9139f3785.bam', path)
 
         with self.assertRaises(AssertionError):
             self.plugin.download_path(self._outer('b1'), inner)
@@ -1738,13 +1738,19 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self.assertEqual(200, response.status_code)
                 base_url = str(self.base_url.set(path='/repository/files'))
                 expected_body = [
+                    # This file has no file_path, so a prefix of its digest sets
+                    # it apart, and it is supplementary, which puts it with
+                    # the other files belonging to the dataset as a whole
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        f'output="{download_dir}/supplementary/4bf181ad18f36404-' +
-                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
+                        f'output="{download_dir}/supplementary/' +
+                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+                        '.recalibrated_variants.annotated.coding'
+                        '-4bf181ad18f36404.txt"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_2 <= mirror_limit, [[
                         f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
@@ -1752,6 +1758,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_3 <= mirror_limit, [[
                         f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
