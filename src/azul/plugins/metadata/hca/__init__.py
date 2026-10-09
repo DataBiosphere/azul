@@ -1,4 +1,7 @@
 import logging
+from operator import (
+    itemgetter,
+)
 import re
 from typing import (
     Iterable,
@@ -330,17 +333,28 @@ class Plugin(MetadataPlugin[HCABundle]):
         file_size=SpecialField(name='fileSize', name_in_hit='size', type=pass_thru_int)
     )
 
-    def download_dir(self, document: JSON) -> str:
-        contents = json_mapping(document['contents'])
+    def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
+        contents = json_mapping(outer_entity['contents'])
         project = one(json_element_mappings(contents['projects']))
         title = one(json_element_strings(project['project_title']))
         # Unlike an AnVIL dataset title, a project title is long, and contains
         # characters that a file system or a shell would take exception to
-        return strings.azul_slug(title,
+        slug = strings.azul_slug(title,
                                  words_left=5,
                                  words_right=2,
                                  word_length=12,
                                  hash_length=6)
+        # A bundle is a real artifact of the HCA data model, so grouping a
+        # project's files by the subgraph they belong to is meaningful, and it
+        # also tells apart the files that share a name. A file can belong to
+        # more than one bundle, in which case the most recent one is used.
+        bundle = max(json_element_mappings(outer_entity['bundles']),
+                     key=itemgetter('version', 'uuid'))
+        return '/'.join([
+            slug,
+            json_str(bundle['uuid']),
+            json_str(inner_file['name'])
+        ])
 
     @property
     def root_entity_type(self) -> str:

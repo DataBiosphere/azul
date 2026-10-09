@@ -556,10 +556,22 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         raise NotImplementedError
 
     @abstractmethod
-    def download_dir(self, document: JSON) -> str:
+    def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
         """
-        The name of the top-level directory that the file described by the given
-        aggregate file document should be downloaded to on a user's disk.
+        A catalog-unique path to store the given file at, on a user's disk.
+
+        Every file in a catalog must yield a distinct path, or one download
+        would overwrite another. How that is ensured is up to each plugin,
+        because what distinguishes two files of the same name differs between
+        catalogs.
+
+        The returned path is sanitized by the caller, so an implementation need
+        not concern itself with characters a file system takes exception to.
+
+        :param outer_entity: A document from an aggregate index
+
+        :param inner_file: One of the inner file entities contained in that
+                           outer entity document
         """
         raise NotImplementedError
 

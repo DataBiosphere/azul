@@ -1627,7 +1627,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        f'output="{download_dir}/8a41df4f-a0ec-a83f-8a15-362fc7fe6269/' +
+                        f'output="{download_dir}/4bf181ad18f36404-' +
                         'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
                         ''
                     ]]),
