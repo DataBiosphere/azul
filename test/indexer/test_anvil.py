@@ -367,6 +367,60 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
     def _spec(self, name: str) -> TDRSourceSpec:
         return TDRSourceSpec.parse(f'tdr:bigquery:gcp:test_anvil_project:{name}')
 
+    def test_duplicate_file_paths(self):
+        """
+        A file from a snapshot that was ingested under version 6 of the schema
+        is told apart by its path, not by its name, so two files sharing a path
+        are rejected.
+        """
+        tables = self._canned_tables()
+        rows = tables['anvil_file']['rows']
+        file_path = 'somedir/dup-file-path-test.txt'
+        rows[0]['file_path'] = file_path
+        rows[1]['file_path'] = file_path
+        self._assert_duplicate_files(tables, [file_path])
+
+    def test_duplicate_file_names(self):
+        """
+        A file from a snapshot that was ingested under version 5 of the schema
+        has no path. A prefix of its digest tells it apart from the files it
+        shares a name with, so a duplicate name is not rejected.
+        """
+        tables = self._canned_tables()
+        rows = tables['anvil_file']['rows']
+        file_name = 'dup-file-name-test.txt'
+        for row in rows[:2]:
+            row['file_name'] = file_name
+            row['file_path'] = None
+        self._assert_duplicate_files(tables, [])
+
+    def _canned_tables(self) -> MutableJSON:
+        canned_file = self._load_canned_file_version(uuid=self.source.ref.id,
+                                                     version=None,
+                                                     extension='tables.tdr')
+        return canned_file['tables']
+
+    def _assert_duplicate_files(self,
+                                tables: MutableJSON,
+                                expected: list[str]
+                                ) -> None:
+        self._mock_normal_duos()
+        bundle_fqid = self.primary_bundle()
+        for name, table in tables.items():
+            self._make_mock_table(self.source.ref.spec,
+                                  name,
+                                  table['rows'],
+                                  table.get('schema'))
+        if expected:
+            with self.assertRaises(AssertionError) as error:
+                self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(R('Bundle contains duplicate file paths',
+                               bundle_fqid, expected),
+                             error.exception.args[0])
+        else:
+            bundle = self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(bundle_fqid, bundle.fqid)
+
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     """

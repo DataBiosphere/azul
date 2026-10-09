@@ -35,6 +35,9 @@ from azul.indexer.document import (
     FieldPathElement,
     IndexName,
 )
+from azul.lib import (
+    R,
+)
 from azul.lib.digests import (
     Digest,
 )
@@ -101,6 +104,13 @@ from azul.source import (
 #: The version of the AnVIL schema that this module was written against
 #:
 anvil_schema = anvil_schemas[6]
+
+#: The one snapshot whose files may lack an MD5 digest
+#:
+#: FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+#:        https://github.com/DataBiosphere/azul/issues/7634
+#:
+snapshot_without_md5s = 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'
 
 
 class Plugin(MetadataPlugin[AnvilBundle]):
@@ -298,6 +308,90 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                                name_in_hit='file_size',
                                type=pass_thru_int)
     )
+
+    #: The number of hexadecimal digits of a file's digest that distinguish it
+    #: from the files it shares a name with. Sixteen digits carry 64 bits, so
+    #: against the 1.9e7 pairs of same-name files in one dataset observed in
+    #: `anvil15`, the chance of any two of them colliding is around 1e-12.
+    #:
+    _digest_length = 16
+
+    #: The directory holding the files that belong to the dataset as a whole,
+    #: rather than to any one sample taken for it
+    #:
+    _supplementary_directory = 'supplementary'
+
+    #: The directory holding the files that belong to neither
+    #:
+    _orphan_directory = 'orphan'
+
+    def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
+        contents = json_mapping(outer_entity['contents'])
+        dataset = one(json_element_mappings(contents['datasets']))
+        title = one(json_element_strings(dataset['title']))
+        file_path = optional(json_str, inner_file['file_path'])
+        if file_path is None:
+            # Version 5 of the schema records only a file's name, which is not
+            # unique within a dataset. A prefix of the file's digest sets the
+            # duplicates apart, and does so for files that are merely similar
+            # while letting identical ones share a path, which is harmless.
+            digest = optional(json_str, inner_file['file_md5sum'])
+            if digest is None:
+                # Only that one snapshot's files lack a digest, so the file's
+                # primary key stands in.
+                #
+                # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+                #        https://github.com/DataBiosphere/azul/issues/7634
+                #
+                sources = json_element_mappings(outer_entity['sources'])
+                source: SourceRef = SourceRef.from_json(one(sources))
+                assert source.spec.name == snapshot_without_md5s, R(
+                    'File lacks MD5 digest', inner_file)
+                digest = json_str(inner_file['file_id']).replace('-', '')
+            # The digest goes after the stem, not in front of the name, so that
+            # a listing sorted by name keeps a file next to similarly named ones
+            stem, extension = _split_extension(json_str(inner_file['file_name']))
+            prefix = digest[:self._digest_length]
+            name = ''.join(['-'.join([stem, prefix]), extension])
+            # Grouping a dataset's files by the sample they were taken from is
+            # what the bundle UUID used to do, incidentally, by virtue of a
+            # primary bundle being rooted at a biosample
+            path = '/'.join([title,
+                             self._intermediate_directory(contents, inner_file),
+                             name])
+        else:
+            # Version 6 added the full path, which is unique within a dataset,
+            # and which carries the hierarchy the submitter chose
+            path = '/'.join([title, file_path])
+        return path
+
+    @property
+    def download_path_fields(self) -> Sequence[FieldPath]:
+        return [
+            ('contents', 'biosamples', 'biosample_id'),
+            ('contents', 'files', 'is_supplementary')
+        ]
+
+    def _intermediate_directory(self, contents: JSON, inner_file: JSON) -> str:
+        if json_bool(inner_file['is_supplementary']):
+            directory = self._supplementary_directory
+        else:
+            # The aggregate of a file that was taken from no biosample holds
+            # null for them, and the source filtering that a manifest applies
+            # omits a null field, so the two spellings mean the same here
+            biosamples = contents.get('biosamples')
+            if biosamples is None:
+                # FIXME: A file in ANVIL_ALSCompute_Collection_HMB is linked to
+                #        no biosample
+                #        https://github.com/DataBiosphere/azul/issues/8386
+                directory = self._orphan_directory
+            else:
+                # A file may be taken from more than one biosample, in which
+                # case the aggregate lists them all. The lowest ID is picked,
+                # so that the directory doesn't depend on their order
+                biosample = one(json_element_mappings(biosamples))
+                directory = min(json_element_strings(biosample['biosample_id']))
+        return directory
 
     @property
     def root_entity_type(self) -> str:
@@ -567,3 +661,84 @@ class AnvilFile(File):
     @property
     def digest(self) -> Digest:
         return Digest(value=self.md5, type='md5')
+
+
+#: The dot-separated components of a file name that belong to its extension
+#: rather than to its stem. A component such as `md`, `final` or `stats`, which
+#: frequently precedes a real extension, is deliberately absent.
+#:
+#: The set was compiled by sampling the file names in `anvil15`. The
+#: `azul-anvil-extensions` skill describes how to redo that analysis against a
+#: later release.
+#:
+_extensions = frozenset([
+    # Compression
+    'bz2', 'gz', 'xz', 'zst',
+    # Content. A lone `g` is how a gVCF is conventionally marked, as in
+    # `.g.vcf.gz`, and it occurs in no other role in `anvil15`
+    'bam', 'bed', 'cram', 'csv', 'fa', 'fasta', 'fastq', 'fq', 'g', 'gff3',
+    'gvcf', 'idat', 'junc', 'sam', 'svs', 'tab', 'tar', 'tsv', 'txt', 'vcf',
+    'yaml',
+    # Indices and checksums
+    'bai', 'crai', 'csi', 'idx', 'md5', 'tbi'
+])
+
+
+def _split_extension(file_name: str) -> tuple[str, str]:
+    """
+    Split the given file name into its stem and its extension, the latter
+    including the leading dot, or empty if the name has none.
+
+    The last component is taken to be an extension even if it isn't a known
+    one, because most are. Further components are taken only while they are
+    known, so that a name ending in a component that merely looks like an
+    extension is left intact.
+
+    >>> _split_extension('NA19189.chr2.hc.vcf.gz')
+    ('NA19189.chr2.hc', '.vcf.gz')
+
+    An index sorts next to what it indexes, so its extension is taken whole:
+
+    >>> _split_extension('A0-03569.cram.crai')
+    ('A0-03569', '.cram.crai')
+
+    >>> _split_extension('NWD1234.vcf.gz.tbi')
+    ('NWD1234', '.vcf.gz.tbi')
+
+    >>> _split_extension('RES03249.rb.g.vcf.gz')
+    ('RES03249.rb', '.g.vcf.gz')
+
+    A component that merely precedes the extension stays with the stem:
+
+    >>> _split_extension('NWD1234.md.bam')
+    ('NWD1234.md', '.bam')
+
+    >>> _split_extension('chr5.136400001_136500001.tar')
+    ('chr5.136400001_136500001', '.tar')
+
+    An unknown extension is still an extension:
+
+    >>> _split_extension('sample.crosscheck')
+    ('sample', '.crosscheck')
+
+    A name without a dot is all stem:
+
+    >>> _split_extension('README')
+    ('README', '')
+
+    The first component is never consumed, so a name that is all extension
+    keeps an empty stem:
+
+    >>> _split_extension('.bashrc')
+    ('', '.bashrc')
+    """
+    components = file_name.split('.')
+    i = len(components) - 1
+    while i > 1 and components[i - 1].lower() in _extensions:
+        i -= 1
+    if len(components) == 1:
+        stem, extension = file_name, ''
+    else:
+        stem = '.'.join(components[:i])
+        extension = '.' + '.'.join(components[i:])
+    return stem, extension

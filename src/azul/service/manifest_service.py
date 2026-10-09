@@ -1557,7 +1557,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
     def included_fields(self) -> list[FieldPath] | None:
         return [
             *not_none(super().included_fields),
-            ('contents', 'files', 'related_files')
+            ('contents', 'files', 'related_files'),
+            *self.metadata_plugin.download_path_fields
         ]
 
     @classmethod
@@ -1635,13 +1636,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
                       partition: ManifestPartition,
                       output: IO[str]
                       ) -> ManifestPartition:
+        special_fields = self.metadata_plugin.special_fields
+        file_uuid_field = special_fields.file_uuid.name_in_hit
+        file_size_field = special_fields.file_size.name_in_hit
 
-        def _write(file: JSON, is_related_file: bool = False):
-            special_fields = self.metadata_plugin.special_fields
-            file_name_field = special_fields.file_name.name_in_hit
-            file_uuid_field = special_fields.file_uuid.name_in_hit
-
-            file_name = json_str(file[file_name_field])
+        def _write(outer_file: JSON, inner_file: JSON, is_related: bool = False):
             # Related files are indexed differently than normal files (they
             # don't have their own document but are listed inside the main
             # file's document), so the /repository/files can't resolve them
@@ -1651,23 +1650,19 @@ class CurlManifestGenerator(PagedManifestGenerator):
             # FIXME: Retire support for related files
             #        https://github.com/DataBiosphere/azul/issues/8090
             #
-            assert not is_related_file, R('Download of related file', file)
+            assert not is_related, R('Download of related file', inner_file)
 
-            file_url = self._azul_file_url(file)
+            file_url = self._azul_file_url(inner_file)
             if file_url is None:
-                output.write(f"# File {file[file_uuid_field]!r}, version {file['version']!r} "
+                output.write(f"# File {inner_file[file_uuid_field]!r}, version {inner_file['version']!r} "
                              f"is currently not available in catalog {self.catalog!r}.\n\n")
             else:
-                # To prevent overwriting one file with another one of the same name
-                # but different content we nest each file in a folder using the
-                # bundle UUID. Because a file can belong to multiple bundles we use
-                # the one with the most recent version.
-                bundle = max(json_element_mappings(doc['bundles']),
-                             key=itemgetter('version', 'uuid'))
-                output_name = json_str(bundle['uuid']) + '/' + file_name
-                output_name = self._sanitize_path(output_name)
+                # What sets two files of the same name apart differs between
+                # catalogs, so the path is left to the metadata plugin
+                download_path = self.metadata_plugin.download_path(outer_file, inner_file)
+                download_path = self._sanitize_path(download_path)
                 output.write(f'url={self._option(file_url)}\n'
-                             f'output={self._option(output_name)}\n\n')
+                             f'output={self._option(download_path)}\n\n')
 
         if partition.page_index == 0:
             curl_options = [
@@ -1691,11 +1686,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
         if response.hits:
             hit = None
             for hit in response.hits:
-                doc = self._hit_to_doc(hit)
-                contents = json_mapping(doc['contents'])
-                files = json_sequence(contents['files'])
-                file = json_mapping(one(files))
-                source_json = json_mapping(one(json_sequence(doc['sources'])))
+                outer_file = self._hit_to_doc(hit)
+                contents = json_mapping(outer_file['contents'])
+                inner_files = json_sequence(contents['files'])
+                inner_file = json_mapping(one(inner_files))
+                source_json = json_mapping(one(json_sequence(outer_file['sources'])))
                 source: SourceRef = SourceRef.from_json(source_json)
 
                 # On AnVIL, we are only permitted to include mirrored files, in
@@ -1703,14 +1698,15 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 # in GCP. Note that the conditional below indicates that a file
                 # will *eventually* be mirrored, not that it already has been.
                 #
+                file_size = json_int(inner_file[file_size_field])
                 if (
                     not config.is_anvil_enabled(self.catalog)
-                    or self.mirror_service.will_mirror(source.spec, json_int(file['file_size']))
+                    or self.mirror_service.will_mirror(source.spec, file_size)
                 ):
-                    _write(file)
+                    _write(outer_file, inner_file)
                     if config.is_hca_enabled(self.catalog):
-                        for related_file in json_element_mappings(file['related_files']):
-                            _write(related_file, is_related_file=True)
+                        for related_file in json_element_mappings(inner_file['related_files']):
+                            _write(outer_file, related_file, is_related=True)
             assert hit is not None
             return partition.next_page(file_name=None,
                                        search_after=self._search_after(hit))
@@ -1775,6 +1771,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
         >>> f('foo/bar/file.fastq.gz')
         'foo/bar/file.fastq.gz'
 
+        Empty path components are collapsed:
+
+        >>> f('foo//bar///file.fastq.gz')
+        'foo/bar/file.fastq.gz'
+
         Invalid paths:
 
         >>> s: str  # work around false `Unresolved reference` warning by PyCharm
@@ -1798,6 +1799,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
                                 'Control character or backslash at position', match.start())
 
         path = cls._problematic_chars.sub('_', path)
+
+        # FIXME: Stop collapsing empty path components
+        #        https://github.com/DataBiosphere/azul/issues/8377
+        #
+        path = re.sub('//+', '/', path)
 
         assert cls._valid_path.fullmatch(path) is not None, R('Invalid file path', path)
 
@@ -1995,7 +2001,6 @@ class VerbatimManifestGenerator(ClientSidePagingManifestGenerator,
 
     @property
     def include_orphans(self) -> bool:
-
         # When filtering exclusively by properties of implicit hubs, e.g.,
         # data sets for AnVIL or projects for HCA, we include replicas of all
         # entities implicitly connected to the matching hubs, even replicas of

@@ -108,6 +108,9 @@ from azul.plugins import (
     ManifestFormat,
     MetadataPlugin,
 )
+from azul.plugins.metadata.anvil import (
+    Plugin as AnvilPlugin,
+)
 from azul.plugins.metadata.hca import (
     FileTransformer,
 )
@@ -115,6 +118,9 @@ from azul.plugins.repository.dss import (
     DSSBundle,
     DSSBundleFQID,
     DSSSourceRef,
+)
+from azul.plugins.repository.tdr_anvil import (
+    snapshot_without_md5s,
 )
 from azul.service import (
     avro_pfb,
@@ -141,6 +147,7 @@ from azul.source import (
     SimpleSourceSpec,
 )
 from azul_test_case import (
+    AzulUnitTestCase,
     patch_config,
 )
 from indexer import (
@@ -685,23 +692,24 @@ class TestManifests(DCP1ManifestTestCase):
         response = self._get_manifest(ManifestFormat.curl, filters)
         self.assertEqual(200, response.status_code)
         base_url = str(self.base_url.set(path='/repository/files'))
+        download_dir = 'melanoma-infiltration-of-stromal-and-immune-cells--6qb17r'
         expected_body = [
             [
                 f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.221025Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_sequencing_protocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/SmartSeq2_sequencing_protocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59'
                 '?catalog=test&version=2018-09-14T12%3A33%3A46.866929Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/TissueDissociationProtocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/TissueDissociationProtocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.012715Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_RTPCR_protocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/SmartSeq2_RTPCR_protocol.pdf"',
                 ''
             ],
         ]
@@ -1226,6 +1234,113 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
         return pfb_schema, pfb_entities
 
 
+class TestAnvilDownloadPath(AzulUnitTestCase):
+    """
+    The path an AnVIL file is downloaded to, for the cases that the canned
+    bundles don't cover.
+    """
+    title = 'ANVIL_Test'
+    md5 = '0123456789abcdef0123456789abcdef'
+    digest = '0123456789abcdef'
+    file_id = '4e9f39f9-139f-3785-a096-8e9d5bf8fc55'
+    other_snapshot = 'ANVIL_Other_20230609_ANV5_202306121732'
+
+    @property
+    def plugin(self) -> AnvilPlugin:
+        return AnvilPlugin()
+
+    def _outer(self,
+               *biosample_ids: str,
+               snapshot: str | None = None
+               ) -> JSON:
+        contents = {'datasets': [{'title': [self.title]}]}
+        if biosample_ids:
+            # A file taken from no biosample has no such entry at all, source
+            # filtering omitting the null the aggregate holds for it
+            contents['biosamples'] = [{'biosample_id': list(biosample_ids)}]
+        name = self.other_snapshot if snapshot is None else snapshot
+        return {
+            'contents': contents,
+            'sources': [
+                {
+                    'id': '790795c4-49b1-4ac8-a060-207b92ea08c5',
+                    'spec': f'tdr:bigquery:gcp:datarepo-test:{name}',
+                    'prefix': '/0',
+                    'type': 'azul.terra.TDRSourceRef'
+                }
+            ]
+        }
+
+    def _inner(self, **overrides) -> JSON:
+        return dict({
+            'file_name': 'reads.bam',
+            'file_path': None,
+            'file_md5sum': self.md5,
+            'is_supplementary': False,
+            'file_id': self.file_id
+        }, **overrides)
+
+    def test_file_path(self):
+        """
+        A path from the snapshot is used as is, with no directory interposed,
+        because it already carries the hierarchy the submitter chose.
+        """
+        path = self.plugin.download_path(self._outer('b1'),
+                                         self._inner(file_path='x/reads.bam'))
+        self.assertEqual(f'{self.title}/x/reads.bam', path)
+
+    def test_biosample(self):
+        """
+        A file is grouped by the biosample it was taken from.
+        """
+        path = self.plugin.download_path(self._outer('b1'), self._inner())
+        self.assertEqual(f'{self.title}/b1/reads-{self.digest}.bam', path)
+
+    def test_many_biosamples(self):
+        """
+        A file taken from more than one biosample is grouped by the lowest of
+        their IDs, so that the directory doesn't depend on their order.
+        """
+        for ids in [('b1', 'b2', 'b3'), ('b3', 'b1', 'b2')]:
+            with self.subTest(ids=ids):
+                outer = self._outer(*ids)
+                path = self.plugin.download_path(outer, self._inner())
+                self.assertEqual(f'{self.title}/b1/reads-{self.digest}.bam',
+                                 path)
+
+    def test_supplementary(self):
+        """
+        A supplementary file belongs to the dataset rather than to any one
+        biosample, so all of them share a directory.
+        """
+        path = self.plugin.download_path(self._outer(),
+                                         self._inner(is_supplementary=True))
+        self.assertEqual(f'{self.title}/supplementary/'
+                         f'reads-{self.digest}.bam',
+                         path)
+
+    def test_orphan(self):
+        """
+        A file that is neither supplementary nor taken from a biosample is
+        downloaded to a directory of its own (#8386).
+        """
+        path = self.plugin.download_path(self._outer(), self._inner())
+        self.assertEqual(f'{self.title}/orphan/reads-{self.digest}.bam', path)
+
+    def test_without_digest(self):
+        """
+        A file without a digest is set apart by its primary key, but only in
+        the one snapshot whose files lack a digest.
+        """
+        inner = self._inner(file_md5sum=None)
+        outer = self._outer('b1', snapshot=snapshot_without_md5s)
+        path = self.plugin.download_path(outer, inner)
+        self.assertEqual(f'{self.title}/b1/reads-4e9f39f9139f3785.bam', path)
+
+        with self.assertRaises(AssertionError):
+            self.plugin.download_path(self._outer('b1'), inner)
+
+
 class TestAnvilManifests(AnvilManifestTestCase):
 
     def test_compact_manifest(self):
@@ -1613,6 +1728,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
         file_size_2 = 213021639
         file_size_3 = 3306845592
         cases = [-1, file_size_1, file_size_2, file_size_3]
+        download_dir = 'ANVIL_Test'
         for i, mirror_limit in enumerate(cases, start=1):
             with self.subTest(mirror_limit=mirror_limit):
                 with self._patch_mirror_limit(self.catalog, mirror_limit):
@@ -1622,24 +1738,31 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self.assertEqual(200, response.status_code)
                 base_url = str(self.base_url.set(path='/repository/files'))
                 expected_body = [
+                    # This file has no file_path, so a prefix of its digest sets
+                    # it apart, and it is supplementary, which puts it with
+                    # the other files belonging to the dataset as a whole
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="8a41df4f-a0ec-a83f-8a15-362fc7fe6269/' +
-                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
+                        f'output="{download_dir}/supplementary/' +
+                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+                        '.recalibrated_variants.annotated.coding'
+                        '-4bf181ad18f36404.txt"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_2 <= mirror_limit, [[
                         f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_3 <= mirror_limit, [[
                         f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
                         ''
                     ]])
