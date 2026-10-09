@@ -35,6 +35,9 @@ from azul.indexer.document import (
     FieldPathElement,
     IndexName,
 )
+from azul.lib import (
+    R,
+)
 from azul.lib.digests import (
     Digest,
 )
@@ -101,6 +104,13 @@ from azul.source import (
 #: The version of the AnVIL schema that this module was written against
 #:
 anvil_schema = anvil_schemas[6]
+
+#: The one snapshot whose files may lack an MD5 digest
+#:
+#: FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+#:        https://github.com/DataBiosphere/azul/issues/7634
+#:
+snapshot_without_md5s = 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'
 
 
 class Plugin(MetadataPlugin[AnvilBundle]):
@@ -316,8 +326,21 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             # unique within a dataset. A prefix of the file's digest sets the
             # duplicates apart, and does so for files that are merely similar
             # while letting identical ones share a path, which is harmless.
-            digest = json_str(inner_file['file_md5sum'])[:self._digest_length]
-            name = '-'.join([digest, json_str(inner_file['file_name'])])
+            digest = optional(json_str, inner_file['file_md5sum'])
+            if digest is None:
+                # Only that one snapshot's files lack a digest, so the file's
+                # primary key stands in.
+                #
+                # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+                #        https://github.com/DataBiosphere/azul/issues/7634
+                #
+                sources = json_element_mappings(outer_entity['sources'])
+                source: SourceRef = SourceRef.from_json(one(sources))
+                assert source.spec.name == snapshot_without_md5s, R(
+                    'File lacks MD5 digest', inner_file)
+                digest = json_str(inner_file['file_id']).replace('-', '')
+            prefix = digest[:self._digest_length]
+            name = '-'.join([prefix, json_str(inner_file['file_name'])])
         else:
             # Version 6 added the full path, which is unique within a dataset
             name = file_path

@@ -74,6 +74,7 @@ from azul.lib.uuids import (
 )
 from azul.plugins.metadata.anvil import (
     AnvilFile,
+    snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
@@ -438,6 +439,11 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
             metadata.update(drs_uri=drs_uri)
             # Optional column, added in v6 of the schema
             metadata.setdefault('file_path', None)
+            if row['file_md5sum'] is None:
+                # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+                #        https://github.com/DataBiosphere/azul/issues/7634
+                assert self.fqid.source.spec.name == snapshot_without_md5s, R(
+                    'File lacks MD5 digest', entity, self.fqid)
         target[entity] = metadata
 
     def warn_duplicate_files(self) -> None:
@@ -571,7 +577,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             if missing:
                 # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
                 #        https://github.com/DataBiosphere/azul/issues/7634
-                assert source.spec.name == 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', R(
+                assert source.spec.name == snapshot_without_md5s, R(
                     'File lacks MD5 digest', source, dict(row))
             return missing
 
