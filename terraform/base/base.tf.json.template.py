@@ -3,32 +3,9 @@ import shlex
 from azul import (
     config,
 )
-from azul.deployment import (
-    aws,
-)
 from azul.infra.terraform import (
     emit_tf,
 )
-
-
-def _kms_key_id(key: config.KMSKey) -> str | None:
-    try:
-        response = aws.kms.describe_key(KeyId=key.alias)
-    except aws.kms.exceptions.NotFoundException:
-        return None
-    else:
-        return response['KeyMetadata']['KeyId']
-
-
-def _sa_secret_exists(service_account: config.ServiceAccount) -> bool:
-    try:
-        aws.secretsmanager.describe_secret(
-            SecretId=config.secret_path(service_account.secret_name)
-        )
-    except aws.secretsmanager.exceptions.ResourceNotFoundException:
-        return False
-    else:
-        return True
 
 
 emit_tf({
@@ -143,50 +120,5 @@ emit_tf({
                 for key in config.kms_keys
             }
         },
-    ],
-    # FIXME: Remove after all deployments are upgraded
-    #        https://github.com/DataBiosphere/azul/issues/8215
-    'import': [
-        *[
-            entry
-            for key in config.kms_keys
-            for key_id in [_kms_key_id(key)]
-            if key_id is not None
-            for entry in [
-                {
-                    'to': f'aws_kms_key.{key.name}',
-                    'id': key_id
-                },
-                {
-                    'to': f'aws_kms_alias.{key.name}',
-                    'id': key.alias
-                }
-            ]
-        ],
-        *[
-            {
-                'to': f'google_service_account.azul{service_account.value}',
-                'id': (
-                    f'projects/{config.google_project()}'
-                    f'/serviceAccounts/{service_account.id(config)}'
-                    f'@{config.google_project()}.iam.gserviceaccount.com'
-                )
-            }
-            for service_account in config.ServiceAccount
-            if _sa_secret_exists(service_account)
-        ],
-        *(
-            [
-                {
-                    'to': 'google_project_iam_custom_role.azul',
-                    'id': (
-                        f'projects/{config.google_project()}'
-                        f'/roles/azul_{config.deployment_stage}_{config.deployment_incarnation}'
-                    )
-                },
-            ]
-            if config.is_tdr_enabled() and _sa_secret_exists(config.ServiceAccount.indexer) else
-            []
-        ),
     ]
 })

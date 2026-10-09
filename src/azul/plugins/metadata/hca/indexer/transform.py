@@ -645,7 +645,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _contact(self, p: api.ProjectContact):
-        # noinspection PyDeprecation
         return {
             'contact_name': p.contact_name,
             'corresponding_contributor': p.corresponding_contributor,
@@ -665,7 +664,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _publication(self, p: api.ProjectPublication) -> MutableJSON:
-        # noinspection PyDeprecation
         return {
             'publication_title': p.publication_title,
             'publication_url': p.publication_url,
@@ -720,17 +718,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         for contributor in project.contributors:
             if contributor.laboratory:
                 laboratories.add(contributor.laboratory)
-            # noinspection PyDeprecation
             if contributor.contact_name:
-                # noinspection PyDeprecation
                 contact_names.add(contributor.contact_name)
             if contributor.institution:
                 institutions.add(contributor.institution)
 
         for publication in project.publications:
-            # noinspection PyDeprecation
             if publication.publication_title:
-                # noinspection PyDeprecation
                 publication_titles.add(publication.publication_title)
 
         return {
@@ -847,7 +841,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _cell_line(self, cell_line: api.CellLine) -> MutableJSON:
-        # noinspection PyDeprecation
         return {
             **self._biomaterial(cell_line),
             'cell_line_type': cell_line.cell_line_type,
@@ -960,7 +953,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _file_base(self, file: api.File) -> MutableJSON:
-        # noinspection PyDeprecation
         return {
             **self._entity(file),
             'content-type': file.manifest_entry.content_type,
@@ -1006,7 +998,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
               file: api.File,
               related_files: Iterable[api.File] = ()
               ) -> MutableJSON:
-        # noinspection PyDeprecation
         return {
             **self._file_base(file),
             'related_files': list(map(self._related_file, related_files)),
@@ -1427,7 +1418,6 @@ class TransformerVisitor(api.EntityVisitor):
                 elif isinstance(protocol, api.SequencingProtocol):
                     self.sequencing_protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
-            # noinspection PyDeprecation
             file_name = entity.manifest_entry.name
             zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # zarray files no longer exist in DCP2. This condition may no longer

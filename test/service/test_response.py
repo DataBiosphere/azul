@@ -40,6 +40,9 @@ from app_test_case import (
 from azul import (
     config,
 )
+from azul.chalice import (
+    AzulChaliceApp,
+)
 from azul.deployment import (
     aws,
 )
@@ -3814,6 +3817,16 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
                 }
             }
         }, response.json())
+
+    def test_unregistered_method(self):
+        url = self.base_url.set(path='/index/catalogs')
+        response = self._http_client.request('DELETE', str(url))
+        self.assertEqual(405, response.status)
+        self.assertEqual('GET', response.headers['Allow'])
+        self.assertIsSubset(AzulChaliceApp.security_headers().items(),
+                            set(list(response.headers.items())))
+        self.assertEqual('no-store', response.headers['Cache-Control'])
+        self.assertNotIn('Access-Control-Expose-Headers', response.headers)
 
 
 class DCP2ResponseTestCase(DCP2CannedBundleTestCase, WebServiceTestCase):
