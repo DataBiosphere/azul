@@ -1557,7 +1557,8 @@ class CurlManifestGenerator(PagedManifestGenerator):
     def included_fields(self) -> list[FieldPath] | None:
         return [
             *not_none(super().included_fields),
-            ('contents', 'files', 'related_files')
+            ('contents', 'files', 'related_files'),
+            *self.metadata_plugin.download_path_fields
         ]
 
     @classmethod

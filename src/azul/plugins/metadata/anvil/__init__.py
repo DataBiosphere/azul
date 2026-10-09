@@ -316,6 +316,15 @@ class Plugin(MetadataPlugin[AnvilBundle]):
     #:
     _digest_length = 16
 
+    #: The directory holding the files that belong to the dataset as a whole,
+    #: rather than to any one sample taken for it
+    #:
+    _supplementary_directory = 'supplementary'
+
+    #: The directory holding the files that belong to neither
+    #:
+    _orphan_directory = 'orphan'
+
     def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
         contents = json_mapping(outer_entity['contents'])
         dataset = one(json_element_mappings(contents['datasets']))
@@ -341,10 +350,45 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                 digest = json_str(inner_file['file_id']).replace('-', '')
             prefix = digest[:self._digest_length]
             name = '-'.join([prefix, json_str(inner_file['file_name'])])
+            # Grouping a dataset's files by the sample they were taken from is
+            # what the bundle UUID used to do, incidentally, by virtue of a
+            # primary bundle being rooted at a biosample
+            path = '/'.join([title,
+                             self._intermediate_directory(contents, inner_file),
+                             name])
         else:
-            # Version 6 added the full path, which is unique within a dataset
-            name = file_path
-        return '/'.join([title, name])
+            # Version 6 added the full path, which is unique within a dataset,
+            # and which carries the hierarchy the submitter chose
+            path = '/'.join([title, file_path])
+        return path
+
+    @property
+    def download_path_fields(self) -> Sequence[FieldPath]:
+        return [
+            ('contents', 'biosamples', 'biosample_id'),
+            ('contents', 'files', 'is_supplementary')
+        ]
+
+    def _intermediate_directory(self, contents: JSON, inner_file: JSON) -> str:
+        if json_bool(inner_file['is_supplementary']):
+            directory = self._supplementary_directory
+        else:
+            # The aggregate of a file that was taken from no biosample holds
+            # null for them, and the source filtering that a manifest applies
+            # omits a null field, so the two spellings mean the same here
+            biosamples = contents.get('biosamples')
+            if biosamples is None:
+                # FIXME: A file in ANVIL_ALSCompute_Collection_HMB is linked to
+                #        no biosample
+                #        https://github.com/DataBiosphere/azul/issues/8386
+                directory = self._orphan_directory
+            else:
+                # A file may be taken from more than one biosample, in which
+                # case the aggregate lists them all. The lowest ID is picked,
+                # so that the directory doesn't depend on their order
+                biosample = one(json_element_mappings(biosamples))
+                directory = min(json_element_strings(biosample['biosample_id']))
+        return directory
 
     @property
     def root_entity_type(self) -> str:

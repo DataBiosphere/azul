@@ -576,6 +576,15 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         raise NotImplementedError
 
     @property
+    def download_path_fields(self) -> Sequence[FieldPath]:
+        """
+        The paths of any document fields that :py:meth:`download_path` reads
+        and that a manifest would not otherwise list. A generator that calls
+        that method must include these fields when requesting documents.
+        """
+        return ()
+
+    @property
     def root_entity_type(self) -> EntityType:
         """
         The type of entity that sits at the root of the entity graph, and that
