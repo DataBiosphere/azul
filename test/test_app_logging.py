@@ -12,9 +12,6 @@ from unittest import (
 )
 import warnings
 
-from chalice.config import (
-    Config as ChaliceConfig,
-)
 from more_itertools import (
     one,
 )
@@ -66,7 +63,7 @@ class TestAppLogging(AzulUnitTestCase):
                     def fail():
                         raise ValueError(magic_message)
 
-                    server_thread = ChaliceServerThread(app, ChaliceConfig(), 'localhost', 0)
+                    server_thread = ChaliceServerThread(app, 'localhost', 0)
                     server_thread.start()
                     try:
                         host, port = server_thread.address
@@ -89,7 +86,7 @@ class TestAppLogging(AzulUnitTestCase):
                     self.assertEqual(5, len(azul_log.output))
                     info = {
                         'host': f'{host}:{port}',
-                        'user-agent': 'python-urllib3/2.7.0',
+                        'user-agent': 'python-urllib3/2.8.0',
                         # Since the type of the secret is unrecognized, the
                         # entire header value is redacted
                         'authorization': 'REDACTED',
