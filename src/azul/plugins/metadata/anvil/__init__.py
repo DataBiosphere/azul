@@ -107,6 +107,9 @@ anvil_schema = anvil_schemas[6]
 
 #: The one snapshot whose files may lack an MD5 digest
 #:
+#: FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+#:        https://github.com/DataBiosphere/azul/issues/7634
+#:
 snapshot_without_md5s = 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'
 
 
