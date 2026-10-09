@@ -90,6 +90,13 @@ trail_alarms = [
                                 '$.userIdentity.accountId != "anonymous"',
                                 '$.requestParameters.bucketName NOT EXISTS',
                                 f'$.requestParameters.bucketName != "{aws.qualified_bucket_name('*')}"'
+                            ),
+                            _or(
+                                '$.eventSource != "inspector2.amazonaws.com"',
+                                _and(
+                                    '$.eventName != "DescribeOrganizationConfiguration"',
+                                    '$.eventName != "ListDelegatedAdminAccounts"'
+                                )
                             )
                         )
                     )),
