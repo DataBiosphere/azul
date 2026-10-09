@@ -348,8 +348,11 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                 assert source.spec.name == snapshot_without_md5s, R(
                     'File lacks MD5 digest', inner_file)
                 digest = json_str(inner_file['file_id']).replace('-', '')
+            # The digest goes after the stem, not in front of the name, so that
+            # a listing sorted by name keeps a file next to similarly named ones
+            stem, extension = _split_extension(json_str(inner_file['file_name']))
             prefix = digest[:self._digest_length]
-            name = '-'.join([prefix, json_str(inner_file['file_name'])])
+            name = ''.join(['-'.join([stem, prefix]), extension])
             # Grouping a dataset's files by the sample they were taken from is
             # what the bundle UUID used to do, incidentally, by virtue of a
             # primary bundle being rooted at a biosample
@@ -658,3 +661,84 @@ class AnvilFile(File):
     @property
     def digest(self) -> Digest:
         return Digest(value=self.md5, type='md5')
+
+
+#: The dot-separated components of a file name that belong to its extension
+#: rather than to its stem. A component such as `md`, `final` or `stats`, which
+#: frequently precedes a real extension, is deliberately absent.
+#:
+#: The set was compiled by sampling the file names in `anvil15`. The
+#: `azul-anvil-extensions` skill describes how to redo that analysis against a
+#: later release.
+#:
+_extensions = frozenset([
+    # Compression
+    'bz2', 'gz', 'xz', 'zst',
+    # Content. A lone `g` is how a gVCF is conventionally marked, as in
+    # `.g.vcf.gz`, and it occurs in no other role in `anvil15`
+    'bam', 'bed', 'cram', 'csv', 'fa', 'fasta', 'fastq', 'fq', 'g', 'gff3',
+    'gvcf', 'idat', 'junc', 'sam', 'svs', 'tab', 'tar', 'tsv', 'txt', 'vcf',
+    'yaml',
+    # Indices and checksums
+    'bai', 'crai', 'csi', 'idx', 'md5', 'tbi'
+])
+
+
+def _split_extension(file_name: str) -> tuple[str, str]:
+    """
+    Split the given file name into its stem and its extension, the latter
+    including the leading dot, or empty if the name has none.
+
+    The last component is taken to be an extension even if it isn't a known
+    one, because most are. Further components are taken only while they are
+    known, so that a name ending in a component that merely looks like an
+    extension is left intact.
+
+    >>> _split_extension('NA19189.chr2.hc.vcf.gz')
+    ('NA19189.chr2.hc', '.vcf.gz')
+
+    An index sorts next to what it indexes, so its extension is taken whole:
+
+    >>> _split_extension('A0-03569.cram.crai')
+    ('A0-03569', '.cram.crai')
+
+    >>> _split_extension('NWD1234.vcf.gz.tbi')
+    ('NWD1234', '.vcf.gz.tbi')
+
+    >>> _split_extension('RES03249.rb.g.vcf.gz')
+    ('RES03249.rb', '.g.vcf.gz')
+
+    A component that merely precedes the extension stays with the stem:
+
+    >>> _split_extension('NWD1234.md.bam')
+    ('NWD1234.md', '.bam')
+
+    >>> _split_extension('chr5.136400001_136500001.tar')
+    ('chr5.136400001_136500001', '.tar')
+
+    An unknown extension is still an extension:
+
+    >>> _split_extension('sample.crosscheck')
+    ('sample', '.crosscheck')
+
+    A name without a dot is all stem:
+
+    >>> _split_extension('README')
+    ('README', '')
+
+    The first component is never consumed, so a name that is all extension
+    keeps an empty stem:
+
+    >>> _split_extension('.bashrc')
+    ('', '.bashrc')
+    """
+    components = file_name.split('.')
+    i = len(components) - 1
+    while i > 1 and components[i - 1].lower() in _extensions:
+        i -= 1
+    if len(components) == 1:
+        stem, extension = file_name, ''
+    else:
+        stem = '.'.join(components[:i])
+        extension = '.' + '.'.join(components[i:])
+    return stem, extension
