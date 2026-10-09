@@ -446,28 +446,25 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                     'File lacks MD5 digest', entity, self.fqid)
         target[entity] = metadata
 
-    def warn_duplicate_files(self) -> None:
+    def warn_duplicate_file_paths(self) -> None:
         """
         Report the files in this bundle that a download could not tell apart.
         They are too common in AnVIL to reject, but a duplicate overwrites its
         twin, so they are worth reporting.
+
+        Only a file that has a path can collide. A file without one is
+        downloaded under a name carrying a prefix of its digest, which sets it
+        apart from the files it shares a name with.
         """
-
-        def name(metadata: JSON) -> str:
-            # Version 6 of the schema added `file_path`. This plugin back-fills
-            # it with null in rows from snapshots ingested under an older schema
-            file_path = metadata['file_path']
-            return json_str(metadata['file_name'] if file_path is None else file_path)
-
         entities = itertools.chain(self.entities.items(), self.orphans.items())
-        names = Counter(
-            name(metadata)
+        paths = Counter(
+            json_str(metadata['file_path'])
             for entity, metadata in entities
-            if entity.entity_type == 'anvil_file'
+            if entity.entity_type == 'anvil_file' and metadata['file_path'] is not None
         )
-        duplicates = sorted(name for name, count in names.items() if count > 1)
+        duplicates = sorted(path for path, count in paths.items() if count > 1)
         if duplicates:
-            log.warning('Bundle %r contains duplicate file names or paths %r',
+            log.warning('Bundle %r contains duplicate file paths %r',
                         self.fqid, duplicates)
 
     def add_links(self, links: Iterable[EntityLink]):
@@ -603,7 +600,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         else:
             log.info('Bundle %r is a replica bundle', bundle_fqid.uuid)
             bundle = self._replica_bundle(bundle_fqid)
-        bundle.warn_duplicate_files()
+        bundle.warn_duplicate_file_paths()
         return bundle
 
     def _batch_tables(self,

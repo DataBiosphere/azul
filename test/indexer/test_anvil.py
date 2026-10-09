@@ -382,7 +382,8 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
     def test_duplicate_file_names(self):
         """
         A file from a snapshot that was ingested under version 5 of the schema
-        has no path, so it is told apart by its name.
+        has no path. A prefix of its digest tells it apart from the files it
+        shares a name with, so a duplicate name is not worth reporting.
         """
         tables = self._canned_tables()
         rows = tables['anvil_file']['rows']
@@ -390,7 +391,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         for row in rows[:2]:
             row['file_name'] = file_name
             row['file_path'] = None
-        self._assert_duplicate_files(tables, [file_name])
+        self._assert_duplicate_files(tables, [])
 
     def _canned_tables(self) -> MutableJSON:
         canned_file = self._load_canned_file_version(uuid=self.source.ref.id,
@@ -409,13 +410,17 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                                   name,
                                   table['rows'],
                                   table.get('schema'))
-        with self.assertLogs(logger=tdr_anvil.log, level='WARNING') as logs:
-            bundle = self.plugin.fetch_bundle(bundle_fqid)
+        if expected:
+            with self.assertLogs(logger=tdr_anvil.log, level='WARNING') as logs:
+                bundle = self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(f'WARNING:{tdr_anvil.log.name}:'
+                             f'Bundle {bundle_fqid!r} contains duplicate file '
+                             f'paths {expected!r}',
+                             one(logs.output))
+        else:
+            with self.assertNoLogs(logger=tdr_anvil.log, level='WARNING'):
+                bundle = self.plugin.fetch_bundle(bundle_fqid)
         self.assertEqual(bundle_fqid, bundle.fqid)
-        self.assertEqual(f'WARNING:{tdr_anvil.log.name}:'
-                         f'Bundle {bundle_fqid!r} contains duplicate file names '
-                         f'or paths {expected!r}',
-                         one(logs.output))
 
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
