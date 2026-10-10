@@ -443,6 +443,18 @@ For GitLab or ClamAV updates, use the ``--no-restart`` flag in order to leave
 the instance stopped after the snapshot has been created. There is no point in
 starting the instance only to have the update terminate it again.
 
+Prune GitLab volume backups
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use the ``prune_gitlab_snapshots.py`` script to delete old snapshots of the
+GitLab data volume. Without arguments, the script only lists the snapshots it
+would keep and those it would delete. Use the ``--delete`` flag to actually
+delete them::
+
+	python scripts/prune_gitlab_snapshots.py --delete
+
+The ``prune_plan`` function in that script describes which snapshots are kept.
+
 Updating the Swagger UI
 ^^^^^^^^^^^^^^^^^^^^^^^
 
