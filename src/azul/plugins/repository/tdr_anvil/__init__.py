@@ -444,6 +444,23 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                     'File lacks MD5 digest', entity, self.fqid)
         target[entity] = metadata
 
+    def add_links(self, links: Iterable[EntityLink]):
+        self.links.update(links)
+        # Merge links that share the same (non-null) activity
+        groups_by_activity: dict[EntityReference, set[EntityLink]] = defaultdict(set)
+        for link in self.links:
+            if link.activity is not None:
+                groups_by_activity[link.activity].add(link)
+        for activity, group in groups_by_activity.items():
+            if len(group) > 1:
+                self.links -= group
+                merged_link = EntityLink(
+                    inputs=frozenset.union(*[link.inputs for link in group]),
+                    activity=activity,
+                    outputs=frozenset.union(*[link.outputs for link in group])
+                )
+                self.links.add(merged_link)
+
     def reject_duplicate_file_paths(self) -> None:
         """
         Reject the files in this bundle that a download could not tell apart,
@@ -468,23 +485,6 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
         duplicates = sorted(path for path, count in paths.items() if count > 1)
         assert not duplicates, R('Bundle contains duplicate file paths',
                                  self.fqid, duplicates)
-
-    def add_links(self, links: Iterable[EntityLink]):
-        self.links.update(links)
-        # Merge links that share the same (non-null) activity
-        groups_by_activity: dict[EntityReference, set[EntityLink]] = defaultdict(set)
-        for link in self.links:
-            if link.activity is not None:
-                groups_by_activity[link.activity].add(link)
-        for activity, group in groups_by_activity.items():
-            if len(group) > 1:
-                self.links -= group
-                merged_link = EntityLink(
-                    inputs=frozenset.union(*[link.inputs for link in group]),
-                    activity=activity,
-                    outputs=frozenset.union(*[link.outputs for link in group])
-                )
-                self.links.add(merged_link)
 
 
 class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
