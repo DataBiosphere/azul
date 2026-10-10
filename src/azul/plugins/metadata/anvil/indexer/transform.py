@@ -7,7 +7,6 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
-    Collection,
     Set,
 )
 from functools import (
@@ -24,8 +23,6 @@ from operator import (
 from typing import (
     Callable,
     Iterable,
-    Iterator,
-    Self,
 )
 from uuid import (
     UUID,
@@ -80,7 +77,7 @@ from azul.lib.types import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
-    EntityLink,
+    LinkedEntities,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
     ActivityAggregator,
@@ -96,55 +93,6 @@ log = logging.getLogger(__name__)
 #: The version of the AnVIL schema that this module was written against
 #:
 anvil_schema_version = 6
-
-EntityRefsByType = dict[EntityType, set[EntityReference]]
-
-
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class LinkedEntities(Iterable[EntityReference]):
-    origin: EntityReference
-    ancestors: EntityRefsByType
-    descendants: EntityRefsByType
-
-    def __getitem__(self, item: EntityType) -> set[EntityReference]:
-        return self.ancestors[item] | self.descendants[item]
-
-    def __iter__(self) -> Iterator[EntityReference]:
-        for entities in self.ancestors.values():
-            yield from entities
-        for entities in self.descendants.values():
-            yield from entities
-
-    @classmethod
-    def from_links(cls,
-                   origin: EntityReference,
-                   links: Collection[EntityLink]
-                   ) -> Self:
-        return cls(origin=origin,
-                   ancestors=cls._search(origin, links, from_='outputs', to='inputs'),
-                   descendants=cls._search(origin, links, from_='inputs', to='outputs'))
-
-    @classmethod
-    def _search(cls,
-                entity_ref: EntityReference,
-                links: Collection[EntityLink],
-                entities: EntityRefsByType | None = None,
-                *,
-                from_: str,
-                to: str
-                ) -> EntityRefsByType:
-        entities = defaultdict(set) if entities is None else entities
-        if entity_ref.entity_type.endswith('activity'):
-            follow = [one(link for link in links if entity_ref == link.activity)]
-        else:
-            follow = [link for link in links if entity_ref in getattr(link, from_)]
-        for link in follow:
-            for relative in [link.activity, *getattr(link, to)]:
-                if relative is not None:
-                    if relative != entity_ref and relative.entity_id not in entities[relative.entity_type]:
-                        entities[relative.entity_type].add(relative)
-                        cls._search(relative, links, entities, from_=from_, to=to)
-        return entities
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)

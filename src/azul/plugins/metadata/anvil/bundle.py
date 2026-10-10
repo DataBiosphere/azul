@@ -1,6 +1,9 @@
 from abc import (
     ABCMeta,
 )
+from collections import (
+    defaultdict,
+)
 from functools import (
     total_ordering,
 )
@@ -8,11 +11,17 @@ from itertools import (
     chain,
 )
 from typing import (
+    Collection,
+    Iterable,
+    Iterator,
     Mapping,
     Self,
 )
 
 import attrs
+from more_itertools import (
+    one,
+)
 
 from azul.indexer import (
     Bundle,
@@ -87,6 +96,56 @@ class KeyLink(Link[KeyReference]):
         return EntityLink(inputs=frozenset(map(lookup, self.inputs)),
                           activity=none_safe_apply(lookup, self.activity),
                           outputs=frozenset(map(lookup, self.outputs)))
+
+
+EntityRefsByType = dict[EntityType, set[EntityReference]]
+
+
+@attrs.frozen(kw_only=True)
+class LinkedEntities(Iterable[EntityReference]):
+    origin: EntityReference
+    ancestors: EntityRefsByType
+    descendants: EntityRefsByType
+
+    def __getitem__(self, item: EntityType) -> set[EntityReference]:
+        return self.ancestors[item] | self.descendants[item]
+
+    def __iter__(self) -> Iterator[EntityReference]:
+        for entities in self.ancestors.values():
+            yield from entities
+        for entities in self.descendants.values():
+            yield from entities
+
+    @classmethod
+    def from_links(cls,
+                   origin: EntityReference,
+                   links: Collection[EntityLink]
+                   ) -> Self:
+        return cls(origin=origin,
+                   ancestors=cls._search(origin, links, from_='outputs', to='inputs'),
+                   descendants=cls._search(origin, links, from_='inputs', to='outputs'))
+
+    @classmethod
+    def _search(cls,
+                entity_ref: EntityReference,
+                links: Collection[EntityLink],
+                entities: EntityRefsByType | None = None,
+                *,
+                from_: str,
+                to: str
+                ) -> EntityRefsByType:
+        entities = defaultdict(set) if entities is None else entities
+        if entity_ref.entity_type.endswith('activity'):
+            follow = [one(link for link in links if entity_ref == link.activity)]
+        else:
+            follow = [link for link in links if entity_ref in getattr(link, from_)]
+        for link in follow:
+            for relative in [link.activity, *getattr(link, to)]:
+                if relative is not None:
+                    if relative != entity_ref and relative.entity_id not in entities[relative.entity_type]:
+                        entities[relative.entity_type].add(relative)
+                        cls._search(relative, links, entities, from_=from_, to=to)
+        return entities
 
 
 @attrs.define(kw_only=True)
