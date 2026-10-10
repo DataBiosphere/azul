@@ -1,10 +1,6 @@
 """
-Prune the snapshots of the GitLab data volume in the currently selected
-deployment. Every snapshot from the last 6 months is kept, as is the latest
-snapshot of each month for the 12 months before that, the latest snapshot of
-each quarter for the 12 months before that, and the latest snapshot of each year
-for anything older. Unless --delete is given, the script only lists the
-snapshots it would keep and those it would delete.
+Delete old snapshots of the EBS data volume attached to the GitLab instance in
+the currently selected deployment.
 """
 
 import argparse
@@ -93,14 +89,16 @@ def prune_plan(snapshots: list[SnapshotTypeDef],
                now: datetime
                ) -> list[tuple[SnapshotTypeDef, bool, str | None]]:
     """
+    Decide which of the given snapshots to keep: every snapshot from the last 6
+    months, the latest snapshot of each month for the 12 months before that,
+    the latest snapshot of each quarter for the 12 months before that, and the
+    latest snapshot of each year for anything older.
+
     Return a tuple for each of the given snapshots, newest first, consisting of
     the snapshot, whether to keep it and the period it represents, or None if
-    the snapshot is recent enough to be kept unconditionally. Within each
-    period, only the latest snapshot is kept. Because the latest snapshot of a
-    quarter is also the latest snapshot of one of its months, and the latest
-    snapshot of a year the latest of one of its quarters, a snapshot kept by one
-    run of this function won't be deleted by a later run, merely because the
-    snapshot moved on to a coarser period.
+    the snapshot is recent enough to be kept unconditionally. Because the latest
+    snapshot of a quarter or year is also the latest of one of its months or
+    quarters, a snapshot kept by one run won't be deleted by a later one.
     """
     cutoffs = [months_before(now, months) for months in (6, 18, 30)]
     seen = set()
