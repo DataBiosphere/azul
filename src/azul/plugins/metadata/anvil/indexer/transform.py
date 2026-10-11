@@ -626,10 +626,10 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
             metadata = self.bundle.entities[file]
             if metadata['file_path'] is None:
                 if json_bool(metadata['is_supplementary']):
-                    directory = self._supplementary_directory
+                    dir = self._supplementary_dir
                 else:
-                    directory = self._biosample_directory(file)
-                groups[directory, json_str(metadata['file_name'])].append(file)
+                    dir = self._biosample_dir(file)
+                groups[dir, json_str(metadata['file_name'])].append(file)
 
         # Only a bundle that holds every file in a group can tell whether the
         # group needs deduplication, and a file can be part of more than one
@@ -659,32 +659,32 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         # biosample can be the reliable one for any of the groups below
         entity = self.bundle.bundle_entity
         if entity is None or entity.entity_type != 'anvil_biosample':
-            root_biosample_directory = None
+            root_biosample_dir = None
         else:
             root_biosample = self.bundle.entities[entity]
-            root_biosample_directory = json_str(root_biosample['biosample_id'])
-        for (directory, name), files in groups.items():
+            root_biosample_dir = json_str(root_biosample['biosample_id'])
+        for (dir, name), files in groups.items():
             deduplicate = (
-                len(files) > 1 and directory == root_biosample_directory
-                or directory in (self._supplementary_directory, self._detached_directory)
+                len(files) > 1 and dir == root_biosample_dir
+                or dir in (self._supplementary_dir, self._detached_dir)
             )
             for file in files:
                 file_name = self._deduplicate_file_name(file) if deduplicate else name
-                paths[file] = '/'.join([directory, file_name])
+                paths[file] = '/'.join([dir, file_name])
         return paths
 
     #: The directory holding the files that belong to a dataset as a whole,
     #: rather than to any one sample taken for it
     #:
-    _supplementary_directory = 'supplementary'
+    _supplementary_dir = 'supplementary'
 
     #: The directory holding the files that belong to neither, being linked to
     #: no biosample at all. The existence of such a file is a metadata defect.
     # It should either be declared to be supplementary or linked to a biosample.
     #:
-    _detached_directory = 'detached'
+    _detached_dir = 'detached'
 
-    def _biosample_directory(self, file: EntityReference) -> str:
+    def _biosample_dir(self, file: EntityReference) -> str:
         # Of the biosamples a file was derived from, the one with lowest ID is
         # picked, so that every bundle containing the file agrees on the
         # directory, even though that biosample may not be the one the bundle is
@@ -696,7 +696,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         )
         # FIXME: Remove the default
         #        https://github.com/DataBiosphere/azul/issues/8386
-        return min(biosample_ids, default=self._detached_directory)
+        return min(biosample_ids, default=self._detached_dir)
 
     #: The number of hexadecimal digits of a file's digest that distinguish it
     #: from the files it shares a name with. Sixteen digits carry 64 bits, so
