@@ -400,12 +400,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         # All AnVIL bundles use a fixed known version
         assert this_bundle.version == that_bundle.version, (this, that)
         assert this_entity.keys() == that_entity.keys(), (this, that)
-        # A file's backfilled path may have been lengthened, to set it apart
-        # from the files it would otherwise collide with on a user's disk.
-        # Only the bundle that holds every file a given one could collide
-        # with can make that decision, so the longer of two paths is the
-        # considered one, and the copy carrying it wins. Copies of any other
-        # entity are equal. See :py:meth:`FileTransformer._file_paths`.
+        # A file's backfilled path may have been lengthened by deduplication.
+        # See :py:meth:`FileTransformer._backfilled_file_paths` for details.
         if entity_type == 'files':
             this_path = json_str(this_entity['file_path'])
             that_path = json_str(that_entity['file_path'])
@@ -602,11 +598,11 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
     def _file(self, file: EntityReference) -> MutableJSON:
         entity = super()._file(file)
         if entity['file_path'] is None:
-            entity['file_path'] = self._file_paths[file]
+            entity['file_path'] = self._backfilled_file_paths[file]
         return entity
 
     @cached_property
-    def _file_paths(self) -> dict[EntityReference, str]:
+    def _backfilled_file_paths(self) -> dict[EntityReference, str]:
         """
         A path for each file in this bundle that lacks an explicitly provided
         path, relative to an imagined directory that holds all the files in the
