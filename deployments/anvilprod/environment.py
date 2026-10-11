@@ -1549,7 +1549,7 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_ENABLE_MIRRORING': '1',
 
-        'AZUL_MIRROR_BUCKET': 'anvilproject',
+        'AZUL_MIRROR_BUCKET': '160936121715:anvilproject',
 
         'AZUL_MIRRORING_CONCURRENCY': '128',
 

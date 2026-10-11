@@ -1982,7 +1982,7 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_ENABLE_MIRRORING': '1',
 
-        'AZUL_MIRROR_BUCKET': 'humancellatlas',
+        'AZUL_MIRROR_BUCKET': '495862637420:humancellatlas',
 
         'AZUL_MIRRORING_CONCURRENCY': '128',
 
