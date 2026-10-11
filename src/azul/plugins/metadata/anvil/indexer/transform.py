@@ -604,19 +604,38 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
     @cached_property
     def _backfilled_file_paths(self) -> dict[EntityReference, str]:
         """
-        A path for each file in this bundle that lacks an explicitly provided
-        path, relative to an imagined directory that holds all the files in the
-        dataset containing the bundle. Version 5 of the schema records only a
-        file's name, which is not even unique within a bundle, let alone the
-        dataset. Based on the file's name, this method builds a path that's
-        unique within the dataset.
+        Provide a dataset-unique download path for those files in the bundle
+        that don't already have such a path specified in the metadata. The first
+        component in the returned path is a directory, the file name is taken
+        from the metadata. The directory name will be the primary key of the
+        biosample from which the file was derived, or a fallback for files that
+        aren't linked to a biosample, either as expected ("supplementary") or by
+        accident ("detached").
+
+        File names that are not unique within their directory are deduplicated
+        by inserting a prefix of their digest in between the stem and the
+        extension parts of their name. If the uniqueness of a file name can't be
+        decided based on just this bundle, as is the case with detached and
+        supplementary files, it will be deduplicated defensively.
         """
-        # Group files by intermediate directory and file name. Every file in the
-        # bundle is grouped, not just those in the current partition, otherwise
-        # the set of files that need deduplication would be incomplete. Normal
-        # files go into a directory named after one of the biosamples they are
-        # derived from while supplementary files are collected in a single,
-        # statically named directory.
+        # Determine the root biosample. Only a primary bundle has one.
+        #
+        entity = self.bundle.bundle_entity
+        if entity is None or entity.entity_type != 'anvil_biosample':
+            root_biosample_dir = None
+        else:
+            root_biosample = self.bundle.entities[entity]
+            root_biosample_dir = json_str(root_biosample['biosample_id'])
+
+        # Group all files in the bundle by intermediate directory and file name.
+        # If we grouped only the files in the current partition, the groups
+        # would be incomplete. If a file is derived from multiple biosamples, we
+        # pick the one with the lowest primary key. Note that every primary
+        # bundle contains the complete set of files derived from its root
+        # biosample, and the complete set of biosamples these files are derived
+        # from. This is why our pick is consistent for every file, even if the
+        # file is also part of other bundles.
+        #
         groups = defaultdict(list)
         for file in self._entities_by_type['anvil_file']:
             metadata = self.bundle.entities[file]
@@ -624,41 +643,27 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 if json_bool(metadata['is_supplementary']):
                     dir = self._supplementary_dir
                 else:
-                    dir = self._biosample_dir(file)
+                    biosamples = self._linked_entities(file)['anvil_biosample']
+                    biosample_ids = (
+                        json_str(self.bundle.entities[biosample]['biosample_id'])
+                        for biosample in biosamples
+                    )
+                    # FIXME: Remove the default
+                    #        https://github.com/DataBiosphere/azul/issues/8386
+                    dir = min(biosample_ids, default=self._detached_dir)
                 groups[dir, json_str(metadata['file_name'])].append(file)
 
-        # Only a bundle that holds every file in a group can tell whether the
-        # group needs deduplication, and a file can be part of more than one
-        # bundle. The bundle rooted at the biosample that names a group's
-        # directory is the one that holds the complete group, because every
-        # file in the group is derived from that biosample, and a bundle
-        # rooted at a biosample holds every file derived from it. Any other
-        # bundle holds a subset, so it leaves the group alone and emits the
-        # file's name unchanged. Since a deduplicated name is longer, keeping
-        # the longer of two paths in reconcile_inner_entities() settles which
-        # of the two decisions prevails.
-        #
-        # This assumes that every bundle containing a file also contains all
-        # of that file's biosample ancestors, otherwise we wouldn't be able to
-        # deterministically pick a biosample for naming the file's directory.
-        # The repository plugin is expected to satisfy this assumption.
-        #
-        # Neither of the two directories that aren't named after a biosample
-        # has a bundle that holds its complete group. A supplementary bundle
-        # is a batch, and a detached file has no biosample for a bundle to be
-        # rooted at. Files in them are therefore deduplicated unconditionally,
-        # which also makes every bundle agree on their paths without
-        # reconciling them.
+        # The grouping is only authoritative for files whose directory biosample
+        # is the root biosample. Other biosamples in the bundle may show up as a
+        # co-parent of a file, but unless that file's directory names the root
+        # biosample it may have siblings not included in this bundle. Another
+        # bundle, one whose root biosample matches the file's directory, will
+        # deduplicate the file's name. This will produce a mix of contributions
+        # some with the original file and some with the deduplicated one. The
+        # :meth:`BaseTransformer.reconcile_inner_entities` method will pick the
+        # longer, deduplicated one.
         #
         paths = {}
-        # A batched bundle is rooted at nothing, and only a bundle rooted at a
-        # biosample can be the reliable one for any of the groups below
-        entity = self.bundle.bundle_entity
-        if entity is None or entity.entity_type != 'anvil_biosample':
-            root_biosample_dir = None
-        else:
-            root_biosample = self.bundle.entities[entity]
-            root_biosample_dir = json_str(root_biosample['biosample_id'])
         for (dir, name), files in groups.items():
             deduplicate = (
                 len(files) > 1 and dir == root_biosample_dir
@@ -669,30 +674,15 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 paths[file] = '/'.join([dir, file_name])
         return paths
 
-    #: The directory holding the files that belong to a dataset as a whole,
-    #: rather than to any one sample taken for it
+    #: The directory holding files the metadata explicitly declares as not
+    #: having been derived from a biosample.
     #:
     _supplementary_dir = 'supplementary'
 
-    #: The directory holding the files that belong to neither, being linked to
-    #: no biosample at all. The existence of such a file is a metadata defect.
-    # It should either be declared to be supplementary or linked to a biosample.
+    #: The directory holding the files that are not linked to a biosample in the
+    #: metadata but that are not declared to be supplementary either.
     #:
     _detached_dir = 'detached'
-
-    def _biosample_dir(self, file: EntityReference) -> str:
-        # Of the biosamples a file was derived from, the one with lowest ID is
-        # picked, so that every bundle containing the file agrees on the
-        # directory, even though that biosample may not be the one the bundle is
-        # rooted at.
-        biosamples = self._linked_entities(file)['anvil_biosample']
-        biosample_ids = (
-            json_str(self.bundle.entities[biosample]['biosample_id'])
-            for biosample in biosamples
-        )
-        # FIXME: Remove the default
-        #        https://github.com/DataBiosphere/azul/issues/8386
-        return min(biosample_ids, default=self._detached_dir)
 
     #: The number of hexadecimal digits of a file's digest that distinguish it
     #: from the files it shares a name with. Sixteen digits carry 64 bits, so
