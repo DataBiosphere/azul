@@ -1319,6 +1319,14 @@ class TestAnvilDownloadPath(AzulUnitTestCase):
                          f'{self.digest}-reads.bam',
                          path)
 
+    def test_orphan(self):
+        """
+        A file that is neither supplementary nor taken from a biosample is
+        downloaded to a directory of its own (#8386).
+        """
+        path = self.plugin.download_path(self._outer(), self._inner())
+        self.assertEqual(f'{self.title}/orphan/{self.digest}-reads.bam', path)
+
     def test_without_digest(self):
         """
         A file without a digest is set apart by its primary key, but only in
