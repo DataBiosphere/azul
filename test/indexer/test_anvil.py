@@ -594,14 +594,16 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                 self.assertEqual({f'{lowest}/reads.bam', f'{lowest}/writes.bam'},
                                  self._paths(bundle))
 
-    def test_orphan(self):
+    def test_detached(self):
         """
         A file that is neither supplementary nor taken from a biosample is
-        downloaded to a directory of its own (#8386).
+        downloaded to a directory of its own, and is set apart there whether
+        it shares its name or not, no bundle being able to tell (#8386).
         """
         bundle = self._bundle('reads.bam', 'writes.bam')
         bundle.links = set()
-        self.assertEqual({'orphan/reads.bam', 'orphan/writes.bam'},
+        self.assertEqual({f'detached/reads-{self.digest}.bam',
+                          f'detached/writes-{self.digest}.bam'},
                          self._paths(bundle))
 
     def test_without_digest(self):

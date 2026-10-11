@@ -582,9 +582,11 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
     #:
     _supplementary_directory = 'supplementary'
 
-    #: The directory holding the files that belong to neither
+    #: The directory holding the files that belong to neither, being linked to
+    #: no biosample at all. The existence of such a file is a metadata defect.
+    # It should either be declared to be supplementary or linked to a biosample.
     #:
-    _orphan_directory = 'orphan'
+    _detached_directory = 'detached'
 
     @cached_property
     def _file_paths(self) -> dict[EntityReference, str]:
@@ -636,13 +638,19 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         # to deterministically pick a biosample for naming the file's directory.
         # The repository plugin is expected to satisfy this assumption.
         #
-        # A supplementary bundle is a batch and so never holds a complete
-        # group, hence a supplementary file is set apart whether it shares
-        # its name or not.
+        # None of this applies to the two directories that aren't named after
+        # a biosample. A supplementary bundle is a batch, and a detached file
+        # belongs to no biosample and so has no reliable bundle at all, so no
+        # bundle ever holds a complete group in either directory. Files in
+        # them are therefore deduplicated unconditionally, which also makes
+        # every bundle agree on their paths without reconciling them.
         #
         paths = {}
         for (directory, name), files in groups.items():
-            deduplicate = len(files) > 1 or directory == self._supplementary_directory
+            deduplicate = (
+                len(files) > 1
+                or directory in (self._supplementary_directory, self._detached_directory)
+            )
             for file in files:
                 file_name = self._deduplicate_file_name(file) if deduplicate else name
                 paths[file] = '/'.join([directory, file_name])
@@ -660,7 +668,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         )
         # FIXME: Remove the default
         #        https://github.com/DataBiosphere/azul/issues/8386
-        return min(biosample_ids, default=self._orphan_directory)
+        return min(biosample_ids, default=self._detached_directory)
 
     #: The number of hexadecimal digits of a file's digest that distinguish it
     #: from the files it shares a name with. Sixteen digits carry 64 bits, so
