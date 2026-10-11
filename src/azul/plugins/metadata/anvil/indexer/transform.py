@@ -571,22 +571,39 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
             'anvil_dataset': 'datasets',
         }
 
+    def _transform(self,
+                   entity: EntityReference
+                   ) -> Iterable[Contribution | Replica]:
+        linked = self._linked_entities(entity)
+        dataset = self._only_dataset()
+        contents = dict(
+            activities=self._entities(self._activity, chain.from_iterable(
+                linked[activity_type]
+                for activity_type in self._activity_polymorphic_types
+            )),
+            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
+            datasets=[self._dataset(self._only_dataset())],
+            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
+            donors=self._entities(self._donor, linked['anvil_donor']),
+            files=[self._file(entity)],
+        )
+        file_id = entity.entity_id
+        yield self._contribution(contents, file_id)
+        if config.enable_replicas:
+            dataset_id = dataset.entity_id
+            yield self._replica(entity, file_hub=file_id, root_hub=dataset_id)
+            for linked_entity in linked:
+                yield self._replica(
+                    linked_entity,
+                    file_hub=None if linked_entity.entity_type in self.hot_entity_types() else file_id,
+                    root_hub=dataset_id
+                )
+
     def _file(self, file: EntityReference) -> MutableJSON:
         entity = super()._file(file)
         if entity['file_path'] is None:
             entity['file_path'] = self._file_paths[file]
         return entity
-
-    #: The directory holding the files that belong to a dataset as a whole,
-    #: rather than to any one sample taken for it
-    #:
-    _supplementary_directory = 'supplementary'
-
-    #: The directory holding the files that belong to neither, being linked to
-    #: no biosample at all. The existence of such a file is a metadata defect.
-    # It should either be declared to be supplementary or linked to a biosample.
-    #:
-    _detached_directory = 'detached'
 
     @cached_property
     def _file_paths(self) -> dict[EntityReference, str]:
@@ -656,6 +673,17 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 paths[file] = '/'.join([directory, file_name])
         return paths
 
+    #: The directory holding the files that belong to a dataset as a whole,
+    #: rather than to any one sample taken for it
+    #:
+    _supplementary_directory = 'supplementary'
+
+    #: The directory holding the files that belong to neither, being linked to
+    #: no biosample at all. The existence of such a file is a metadata defect.
+    # It should either be declared to be supplementary or linked to a biosample.
+    #:
+    _detached_directory = 'detached'
+
     def _biosample_directory(self, file: EntityReference) -> str:
         # Of the biosamples a file was derived from, the one with lowest ID is
         # picked, so that every bundle containing the file agrees on the
@@ -691,34 +719,6 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
             digest = json_str(metadata['file_id']).replace('-', '')
         infix = json_str(digest)[:self._digest_length]
         return ''.join([stem, '-', infix, extension])
-
-    def _transform(self,
-                   entity: EntityReference
-                   ) -> Iterable[Contribution | Replica]:
-        linked = self._linked_entities(entity)
-        dataset = self._only_dataset()
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=[self._file(entity)],
-        )
-        file_id = entity.entity_id
-        yield self._contribution(contents, file_id)
-        if config.enable_replicas:
-            dataset_id = dataset.entity_id
-            yield self._replica(entity, file_hub=file_id, root_hub=dataset_id)
-            for linked_entity in linked:
-                yield self._replica(
-                    linked_entity,
-                    file_hub=None if linked_entity.entity_type in self.hot_entity_types() else file_id,
-                    root_hub=dataset_id
-                )
 
 
 #: The dot-separated components of a file name that belong to its extension
