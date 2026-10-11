@@ -413,6 +413,19 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
     def canning_qualifier(cls) -> str:
         return super().canning_qualifier() + '.anvil'
 
+    @property
+    def bundle_entity(self) -> EntityReference | None:
+        fqid = self.fqid
+        if fqid.is_batched:
+            return None
+        else:
+            table_name = fqid.table_name
+            entity_id = _entity_id(fqid.source.spec,
+                                   table_name,
+                                   not_none(fqid.primary_key))
+            return EntityReference(entity_type=table_name,
+                                   entity_id=entity_id)
+
     def add_entity(self,
                    entity: EntityReference,
                    version: str,

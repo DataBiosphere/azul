@@ -614,41 +614,41 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                     directory = self._biosample_directory(file)
                 groups[directory, json_str(metadata['file_name'])].append(file)
 
-        # Only a bundle that holds every file in a group can reliably determine
-        # whether the group needs deduplication. A file can be part of more than
-        # one bundle. Among the bundles containing a given file, we can only
-        # rely on the bundle that is rooted at the biosample we picked to name
-        # the file's intermediate directory.
+        # Only a bundle that holds every file in a group can tell whether the
+        # group needs deduplication, and a file can be part of more than one
+        # bundle. The bundle rooted at the biosample that names a group's
+        # directory is the one that holds the complete group, because every
+        # file in the group is derived from that biosample, and a bundle
+        # rooted at a biosample holds every file derived from it. Any other
+        # bundle holds a subset, so it leaves the group alone and emits the
+        # file's name unchanged. Since a deduplicated name is longer, keeping
+        # the longer of two paths in reconcile_inner_entities() settles which
+        # of the two decisions prevails.
         #
-        # Another bundle may have a group with the same key but that group may
-        # be a subset of the corresponding group in the reliable bundle. It
-        # can't be a strict superset because that other bundle cannot contain
-        # more files derived from the biosample that defines the group. The
-        # reliable bundle already contains *all* files derived from that
-        # biosample.
-        #
-        # If that other group has just one member, that bundle will not
-        # contribute a properly deduplicated path. This is why we keep the
-        # longer of two paths in reconcile_inner_entities(): a deduplicated path
-        # is longer than a path built under the assumption that the file name is
-        # already unique within its directory.
-        #
-        # The above assumes that every bundle containing a file also contains
-        # all of that file's biosample ancestors, otherwise we wouldn't be able
-        # to deterministically pick a biosample for naming the file's directory.
+        # This assumes that every bundle containing a file also contains all
+        # of that file's biosample ancestors, otherwise we wouldn't be able to
+        # deterministically pick a biosample for naming the file's directory.
         # The repository plugin is expected to satisfy this assumption.
         #
-        # None of this applies to the two directories that aren't named after
-        # a biosample. A supplementary bundle is a batch, and a detached file
-        # belongs to no biosample and so has no reliable bundle at all, so no
-        # bundle ever holds a complete group in either directory. Files in
-        # them are therefore deduplicated unconditionally, which also makes
-        # every bundle agree on their paths without reconciling them.
+        # Neither of the two directories that aren't named after a biosample
+        # has a bundle that holds its complete group. A supplementary bundle
+        # is a batch, and a detached file has no biosample for a bundle to be
+        # rooted at. Files in them are therefore deduplicated unconditionally,
+        # which also makes every bundle agree on their paths without
+        # reconciling them.
         #
         paths = {}
+        # A batched bundle is rooted at nothing, and only a bundle rooted at a
+        # biosample can be the reliable one for any of the groups below
+        entity = self.bundle.bundle_entity
+        if entity is None or entity.entity_type != 'anvil_biosample':
+            root_biosample_directory = None
+        else:
+            root_biosample = self.bundle.entities[entity]
+            root_biosample_directory = json_str(root_biosample['biosample_id'])
         for (directory, name), files in groups.items():
             deduplicate = (
-                len(files) > 1
+                len(files) > 1 and directory == root_biosample_directory
                 or directory in (self._supplementary_directory, self._detached_directory)
             )
             for file in files:

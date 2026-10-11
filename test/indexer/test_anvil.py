@@ -57,8 +57,8 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
-from azul.plugins.metadata.anvil.bundle import (
-    snapshot_without_md5s,
+from azul.plugins.metadata.anvil.indexer import (
+    transform,
 )
 from azul.plugins.metadata.anvil.indexer.transform import (
     FileTransformer,
@@ -570,6 +570,31 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                           f'supplementary/writes-{self.digest}.bam'},
                          self._paths(bundle))
 
+    def _add_biosample(self,
+                       bundle: TDRAnvilBundle,
+                       biosample_id: str
+                       ) -> EntityReference:
+        """
+        Link every file in the given bundle to an additional biosample with
+        the given ID, besides the one the bundle is rooted at, and return a
+        reference to that biosample.
+        """
+        root = one(e
+                   for e in bundle.entities
+                   if e.entity_type == 'anvil_biosample')
+        clone = EntityReference(entity_type=root.entity_type,
+                                entity_id=_entity_id(self.source.ref.spec,
+                                                     root.entity_type,
+                                                     biosample_id))
+        bundle.entities[clone] = {**bundle.entities[root],
+                                  'biosample_id': biosample_id}
+        bundle.links = {
+            attrs.evolve(link, inputs=link.inputs | {clone})
+            if root in link.inputs else link
+            for link in bundle.links
+        }
+        return clone
+
     def test_many_biosamples(self):
         """
         A file taken from more than one biosample is grouped by the lowest of
@@ -578,21 +603,28 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         for other in ['00000000-0000-0000-0000-000000000000', 'ffffffff']:
             with self.subTest(other=other):
                 bundle = self._bundle('reads.bam', 'writes.bam')
-                biosample = one(e
-                                for e in bundle.entities
-                                if e.entity_type == 'anvil_biosample')
-                clone = EntityReference(entity_type=biosample.entity_type,
-                                        entity_id='cf0fbe53-a7a9-59e8-85a4-000000000000')
-                bundle.entities[clone] = {**bundle.entities[biosample],
-                                          'biosample_id': other}
-                bundle.links = {
-                    attrs.evolve(link, inputs=link.inputs | {clone})
-                    if biosample in link.inputs else link
-                    for link in bundle.links
-                }
+                self._add_biosample(bundle, other)
                 lowest = min(other, self.biosample)
                 self.assertEqual({f'{lowest}/reads.bam', f'{lowest}/writes.bam'},
                                  self._paths(bundle))
+
+    def test_unreliable_bundle(self):
+        """
+        A bundle leaves a group alone unless it is rooted at the biosample
+        that names the group's directory, there being no guarantee that it
+        holds the group in full. The bundle rooted at that biosample does, and
+        the longer path it derives wins reconciliation.
+        """
+        other = '00000000-0000-0000-0000-000000000000'
+        bundle = self._bundle('reads.bam', 'reads.bam')
+        clone = self._add_biosample(bundle, other)
+        self.assertNotEqual(clone, bundle.bundle_entity)
+        self.assertEqual({f'{other}/reads.bam'}, self._paths(bundle))
+        # Root the bundle at the other biosample, which also changes its UUID
+        bundle.fqid = attrs.evolve(bundle.fqid, primary_key=other, uuid=None)
+        self.assertEqual(clone, bundle.bundle_entity)
+        self.assertEqual({f'{other}/reads-{self.digest}.bam'},
+                         self._paths(bundle))
 
     def test_detached(self):
         """
@@ -614,12 +646,13 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         bundle = self._bundle('reads.bam', 'reads.bam', file_md5sum=None)
         with self.assertRaises(AssertionError):
             self._paths(bundle)
-        spec = attrs.evolve(bundle.fqid.source.spec, name=snapshot_without_md5s)
-        source = attrs.evolve(bundle.fqid.source, spec=spec)
-        # The bundle UUID is derived from the source, so it can't be kept
-        bundle.fqid = attrs.evolve(bundle.fqid, source=source, uuid=None)
         expected = {
             f'{self.biosample}/reads-{file_id}.bam'
             for file_id in ['1e269f0443474188', '8b722e88810349c1']
         }
-        self.assertEqual(expected, self._paths(bundle))
+        # Every entity ID in the bundle is derived from the name of its
+        # snapshot, so the carve-out is moved to that name instead
+        with patch.object(transform,
+                          'snapshot_without_md5s',
+                          bundle.fqid.source.spec.name):
+            self.assertEqual(expected, self._paths(bundle))

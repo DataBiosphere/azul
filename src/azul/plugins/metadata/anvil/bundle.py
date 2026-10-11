@@ -1,5 +1,6 @@
 from abc import (
     ABCMeta,
+    abstractmethod,
 )
 from collections import (
     defaultdict,
@@ -169,6 +170,14 @@ class AnvilBundle[BUNDLE_FQID: SourcedBundleFQID](Bundle[BUNDLE_FQID],
         to_json=lambda x: [v.to_json() for v in sorted(x)]
     )
     orphans: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
+
+    @property
+    @abstractmethod
+    def bundle_entity(self) -> EntityReference | None:
+        """
+        A reference to the bundle entity, or None if the bundle is batched
+        """
+        raise NotImplementedError
 
     def reject_joiner(self):
         # We can skip the `links` attribute because the only strings it contains
