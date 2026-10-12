@@ -826,7 +826,7 @@ scan results.
 #. From the app menu bar, select *Report*, then *Generate Report*.
 
 #. Navigate to the *Template* tab of the *Generate Report* window, and select
-   *Modern HTML report with themse and options* from the *Template* option.
+   *Modern HTML Report with themes and options* from the *Template* option.
 
 #. Navigate to the *Scope* tab, and enter a value such as "AnVIL Data Portal"
    in the *Report Title* field.
