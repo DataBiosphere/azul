@@ -755,6 +755,11 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     donor_dataset_id = row['part_of_dataset_id']
                     assert donor_dataset_id == dataset_id, R(
                         'Conflicting keys', donor_dataset_id, dataset_id)
+            if entity_type == 'anvil_file':
+                for row in rows:
+                    assert not row['is_supplementary'], R(
+                        'File derived from biosample cannot be supplementary',
+                        row[pk_column], bundle_fqid)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
                 entity = self._entity_ref(source.spec, entity_type, row)
