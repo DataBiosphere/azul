@@ -1410,7 +1410,27 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         )
 
     def _check_compact_manifest(self, catalog: CatalogName, response: bytes):
-        self.__check_csv_manifest(BytesIO(response), self._uuid_column_name(catalog))
+        rows = self.__check_csv_manifest(BytesIO(response),
+                                         self._uuid_column_name(catalog))
+        if config.is_anvil_enabled(catalog):
+            self._check_download_paths(rows)
+
+    def _check_download_paths(self, rows: list[Mapping[str, str]]) -> None:
+        """
+        Assert that no two files whose contents differ are downloaded to the
+        same path. Two files that are identical may share a path, since
+        whichever of them is downloaded second is a copy of the first.
+        """
+        digests_by_path = defaultdict(set)
+        for row in rows:
+            path = (row['datasets.title'], row['files.file_path'])
+            digests_by_path[path].add(row['files.file_md5sum'])
+        collisions = {
+            path: digests
+            for path, digests in digests_by_path.items()
+            if len(digests) > 1
+        }
+        self.assertEqual({}, collisions)
 
     def _check_terra_pfb_manifest(self, _catalog: CatalogName, response: bytes):
         # A PFB is an Avro Object Container File, i.e., a stream of Avro objects
