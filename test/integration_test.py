@@ -206,6 +206,7 @@ from azul.service.manifest_controller import (
     ManifestController,
 )
 from azul.service.manifest_service import (
+    CurlManifestGenerator,
     ManifestFormat,
     ManifestGenerator,
 )
@@ -1540,13 +1541,33 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             for line in text
             if not (line == '\n' or line.startswith('--') or line.startswith('#'))
         )
-        num_files = 0
+        paths = []
         for url, output in grouper(lines, 2):
-            num_files += 1
             self.assertTrue(url.startswith('url='), url)
             self.assertTrue(output.startswith('output='), output)
-        log.info(f'Manifest contains {num_files} files.')
-        self.assertGreater(num_files, 0)
+            path = output.removeprefix('output=').rstrip('\n')
+            paths.append(path.removeprefix('"').removesuffix('"'))
+        log.info(f'Manifest contains {len(paths)} files.')
+        self.assertGreater(len(paths), 0)
+        if config.is_anvil_enabled(catalog):
+            self._check_download_directories(catalog, paths)
+
+    def _check_download_directories(self,
+                                    catalog: CatalogName,
+                                    paths: list[str]
+                                    ) -> None:
+        """
+        Assert that every file is downloaded into a directory named after the
+        dataset it belongs to, and to a name below that directory.
+        """
+        expected_dataset_directories = {
+            CurlManifestGenerator._sanitize_path(one(hit['datasets'])['title'])
+            for hit in self._get_entities(catalog, self._project_type(catalog))
+        }
+        for path in paths:
+            directory, _, name = path.partition('/')
+            self.assertIn(directory, expected_dataset_directories)
+            self.assertNotEqual('', name)
 
     def _check_jsonl_manifest(self, _catalog: CatalogName, response: bytes):
         text = TextIOWrapper(BytesIO(response))
