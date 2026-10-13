@@ -1524,7 +1524,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
 
-    def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
+    def _check_curl_manifest(self, catalog: CatalogName, response: bytes):
         text = TextIOWrapper(BytesIO(response))
         # Skip over empty lines, comments and curl configurations to count and
         # verify that all the remaining lines are pairs of 'url=' and 'output='
