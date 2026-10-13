@@ -766,12 +766,17 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     else:
                         args['format'] = format.value
 
-                    # Wrap self._get_url to collect all HTTP responses
+                    # Wrap self._get_url to collect the responses received by
+                    # _check_endpoint as it follows the redirect dance resulting
+                    # from the initial manifest request
                     _get_url = self._get_url
                     responses = list()
 
                     def get_url(*args, **kwargs):
                         response = _get_url(*args, **kwargs)
+                        # Stash the response for later validation. Validating
+                        # the response immediately would risk re-entering the
+                        # wrapper if the validator made some other request.
                         responses.append(response)
                         return response
 
@@ -781,14 +786,15 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                         # resilience against DOS attacks.
 
                         def worker(_):
-                            response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
-                            self._manifest_validators[format](catalog, response)
+                            return self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
 
                         num_workers = 3
                         with ThreadPoolExecutor(max_workers=num_workers) as tpe:
-                            results = list(tpe.map(worker, range(num_workers)))
+                            manifests = list(tpe.map(worker, range(num_workers)))
 
-                    self.assertEqual([None] * num_workers, results)
+                    self.assertEqual(num_workers, len(manifests))
+                    for manifest in manifests:
+                        self._manifest_validators[format](catalog, manifest)
 
                     execution_ids.update(self._manifest_execution_ids(responses))
                     bucket, key = one(self._manifest_objects(responses))
