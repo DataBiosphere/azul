@@ -1013,6 +1013,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     file_uuid = lookup(inner_file, 'document_id', 'uuid')
                     special_fields = self.metadata_plugin(catalog).special_fields
                     filters = {special_fields.file_uuid.name: {'is': [file_uuid]}}
+                    if config.is_anvil_enabled(catalog):
+                        expected_path = self._file_download_path(catalog, filters)
+                    else:
+                        expected_path = None
                     manifest_url = mutable_furl(
                         url=config.service_endpoint,
                         path='/manifest/files',
@@ -1040,11 +1044,25 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                             cwd=tmpdir,
                                             timeout=600)
                     self.assertEqual(0, result.returncode)
-                    num_files = sum(
-                        len(filenames)
+                    paths = [
+                        os.path.relpath(os.path.join(dirpath, filename), tmpdir)
                         for dirpath, _, filenames in os.walk(tmpdir)
-                    )
-                    self.assertEqual(1, num_files)
+                        for filename in filenames
+                    ]
+                    self.assertEqual(1, len(paths))
+                    if expected_path is not None:
+                        self.assertEqual(expected_path, one(paths))
+
+    def _file_download_path(self, catalog: CatalogName, filters: JSON) -> str:
+        """
+        The path the file matching the given filters is expected to be
+        downloaded to, relative to the directory `curl` is run in. The filter
+        must match exactly one file entity.
+        """
+        hit = one(self._get_entities(catalog, 'files', filters=filters))
+        title = one(one(hit['datasets'])['title'])
+        file_path = one(hit['files'])['file_path']
+        return CurlManifestGenerator._sanitize_path('/'.join([title, file_path]))
 
     def _get_one_mirrorable_file(self,
                                  catalog: CatalogName
