@@ -1634,14 +1634,14 @@ class TestAnvilManifests(AnvilManifestTestCase):
                     *iif(file_size_2 <= mirror_limit, [[
                         f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        f'output="{download_dir}/cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
                     *iif(file_size_3 <= mirror_limit, [[
                         f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        f'output="{download_dir}/cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
                         ''
                     ]])

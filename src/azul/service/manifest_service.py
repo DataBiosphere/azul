@@ -1658,15 +1658,21 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 output.write(f"# File {file[file_uuid_field]!r}, version {file['version']!r} "
                              f"is currently not available in catalog {self.catalog!r}.\n\n")
             else:
-                # To prevent overwriting one file with another one of the same name
-                # but different content we nest each file in a folder using the
-                # bundle UUID. Because a file can belong to multiple bundles we use
-                # the one with the most recent version.
-                bundle = max(json_element_mappings(doc['bundles']),
-                             key=itemgetter('version', 'uuid'))
-                output_name = '/'.join([download_dir,
-                                        json_str(bundle['uuid']),
-                                        file_name])
+                file_path = optional(json_str, file.get('file_path'))
+                if file_path is None:
+                    # To prevent overwriting one file with another one of the same name
+                    # but different content we nest each file in a folder using the
+                    # bundle UUID. Because a file can belong to multiple bundles we use
+                    # the one with the most recent version.
+                    bundle = max(json_element_mappings(doc['bundles']),
+                                 key=itemgetter('version', 'uuid'))
+                    output_name = '/'.join([download_dir,
+                                            json_str(bundle['uuid']),
+                                            file_name])
+                else:
+                    # A file's path distinguishes it from the files it shares a
+                    # name with, so there is nothing for the bundle to add
+                    output_name = '/'.join([download_dir, file_path])
                 output_name = self._sanitize_path(output_name)
                 output.write(f'url={self._option(file_url)}\n'
                              f'output={self._option(output_name)}\n\n')
