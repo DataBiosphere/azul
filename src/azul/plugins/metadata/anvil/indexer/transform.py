@@ -658,8 +658,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
             json_str(self.bundle.entities[biosample]['biosample_id'])
             for biosample in biosamples
         )
-        # FIXME: A file in ANVIL_ALSCompute_Collection_HMB is linked to
-        #        no biosample
+        # FIXME: Remove the default
         #        https://github.com/DataBiosphere/azul/issues/8386
         return min(biosample_ids, default=self._orphan_directory)
 
