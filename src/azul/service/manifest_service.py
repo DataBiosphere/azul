@@ -1784,6 +1784,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
         >>> f('foo/bar/file.fastq.gz')
         'foo/bar/file.fastq.gz'
 
+        Empty path components are collapsed:
+
+        >>> f('foo//bar///file.fastq.gz')
+        'foo/bar/file.fastq.gz'
+
         Invalid paths:
 
         >>> s: str  # work around false `Unresolved reference` warning by PyCharm
@@ -1807,6 +1812,11 @@ class CurlManifestGenerator(PagedManifestGenerator):
                                 'Control character or backslash at position', match.start())
 
         path = cls._problematic_chars.sub('_', path)
+
+        # FIXME: Stop collapsing empty path components
+        #        https://github.com/DataBiosphere/azul/issues/8377
+        #
+        path = re.sub('//+', '/', path)
 
         assert cls._valid_path.fullmatch(path) is not None, R('Invalid file path', path)
 
