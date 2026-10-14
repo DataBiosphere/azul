@@ -74,7 +74,6 @@ from azul.lib.uuids import (
 )
 from azul.plugins.metadata.anvil import (
     AnvilFile,
-    snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
@@ -82,6 +81,7 @@ from azul.plugins.metadata.anvil.bundle import (
     Key,
     KeyLink,
     KeyReference,
+    snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.schema import (
     anvil_schemas,

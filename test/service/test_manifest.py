@@ -119,9 +119,6 @@ from azul.plugins.repository.dss import (
     DSSBundleFQID,
     DSSSourceRef,
 )
-from azul.plugins.repository.tdr_anvil import (
-    snapshot_without_md5s,
-)
 from azul.service import (
     avro_pfb,
     manifest_service,
@@ -1235,110 +1232,16 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
 
 
 class TestAnvilDownloadPath(AzulUnitTestCase):
-    """
-    The path an AnVIL file is downloaded to, for the cases that the canned
-    bundles don't cover.
-    """
-    title = 'ANVIL_Test'
-    md5 = '0123456789abcdef0123456789abcdef'
-    digest = '0123456789abcdef'
-    file_id = '4e9f39f9-139f-3785-a096-8e9d5bf8fc55'
-    other_snapshot = 'ANVIL_Other_20230609_ANV5_202306121732'
 
-    @property
-    def plugin(self) -> AnvilPlugin:
-        return AnvilPlugin()
-
-    def _outer(self,
-               *biosample_ids: str,
-               snapshot: str | None = None
-               ) -> JSON:
-        contents = {'datasets': [{'title': [self.title]}]}
-        if biosample_ids:
-            # A file taken from no biosample has no such entry at all, source
-            # filtering omitting the null the aggregate holds for it
-            contents['biosamples'] = [{'biosample_id': list(biosample_ids)}]
-        name = self.other_snapshot if snapshot is None else snapshot
-        return {
-            'contents': contents,
-            'sources': [
-                {
-                    'id': '790795c4-49b1-4ac8-a060-207b92ea08c5',
-                    'spec': f'tdr:bigquery:gcp:datarepo-test:{name}',
-                    'prefix': '/0',
-                    'type': 'azul.terra.TDRSourceRef'
-                }
-            ]
-        }
-
-    def _inner(self, **overrides) -> JSON:
-        return dict({
-            'file_name': 'reads.bam',
-            'file_path': None,
-            'file_md5sum': self.md5,
-            'is_supplementary': False,
-            'file_id': self.file_id
-        }, **overrides)
-
-    def test_file_path(self):
+    def test(self):
         """
-        A path from the snapshot is used as is, with no directory interposed,
-        because it already carries the hierarchy the submitter chose.
+        A file is downloaded to the path it carries, below a directory named
+        after its dataset.
         """
-        path = self.plugin.download_path(self._outer('b1'),
-                                         self._inner(file_path='x/reads.bam'))
-        self.assertEqual(f'{self.title}/x/reads.bam', path)
-
-    def test_biosample(self):
-        """
-        A file is grouped by the biosample it was taken from.
-        """
-        path = self.plugin.download_path(self._outer('b1'), self._inner())
-        self.assertEqual(f'{self.title}/b1/reads-{self.digest}.bam', path)
-
-    def test_many_biosamples(self):
-        """
-        A file taken from more than one biosample is grouped by the lowest of
-        their IDs, so that the directory doesn't depend on their order.
-        """
-        for ids in [('b1', 'b2', 'b3'), ('b3', 'b1', 'b2')]:
-            with self.subTest(ids=ids):
-                outer = self._outer(*ids)
-                path = self.plugin.download_path(outer, self._inner())
-                self.assertEqual(f'{self.title}/b1/reads-{self.digest}.bam',
-                                 path)
-
-    def test_supplementary(self):
-        """
-        A supplementary file belongs to the dataset rather than to any one
-        biosample, so all of them share a directory.
-        """
-        path = self.plugin.download_path(self._outer(),
-                                         self._inner(is_supplementary=True))
-        self.assertEqual(f'{self.title}/supplementary/'
-                         f'reads-{self.digest}.bam',
-                         path)
-
-    def test_orphan(self):
-        """
-        A file that is neither supplementary nor taken from a biosample is
-        downloaded to a directory of its own (#8386).
-        """
-        path = self.plugin.download_path(self._outer(), self._inner())
-        self.assertEqual(f'{self.title}/orphan/reads-{self.digest}.bam', path)
-
-    def test_without_digest(self):
-        """
-        A file without a digest is set apart by its primary key, but only in
-        the one snapshot whose files lack a digest.
-        """
-        inner = self._inner(file_md5sum=None)
-        outer = self._outer('b1', snapshot=snapshot_without_md5s)
-        path = self.plugin.download_path(outer, inner)
-        self.assertEqual(f'{self.title}/b1/reads-4e9f39f9139f3785.bam', path)
-
-        with self.assertRaises(AssertionError):
-            self.plugin.download_path(self._outer('b1'), inner)
+        outer_entity = {'contents': {'datasets': [{'title': ['ANVIL_Test']}]}}
+        inner_file = {'file_path': 'b1/reads-0123456789abcdef.bam'}
+        path = AnvilPlugin().download_path(outer_entity, inner_file)
+        self.assertEqual('ANVIL_Test/b1/reads-0123456789abcdef.bam', path)
 
 
 class TestAnvilManifests(AnvilManifestTestCase):
@@ -1347,6 +1250,10 @@ class TestAnvilManifests(AnvilManifestTestCase):
         response = self._get_manifest(ManifestFormat.compact, filters={})
         self.assertEqual(200, response.status_code)
         source_spec = str(self.source.ref.spec)
+        supplementary_path = (
+            'supplementary/CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+            '.recalibrated_variants.annotated.coding-4bf181ad18f36404.txt'
+        )
         expected = [
             (
                 'bundles.bundle_uuid',
@@ -1692,7 +1599,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.file_path',
-                '',
+                supplementary_path,
                 'somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
                 'somedir/307500.merged.matefixed.sorted.markeddups.recal.bam'
             ),

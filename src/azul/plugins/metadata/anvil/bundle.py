@@ -45,6 +45,13 @@ from azul.lib.types import (
     json_element_strings,
 )
 
+#: The one snapshot whose files may lack an MD5 digest
+#:
+#: FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+#:        https://github.com/DataBiosphere/azul/issues/7634
+#:
+snapshot_without_md5s = 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'
+
 #: A type alias for the values of a table's primary key column, which the AnVIL
 #: schema declares to be a string. This type alias distinguishes such a key from
 #: an entity ID, which is derived from it. A key is only unique within a single

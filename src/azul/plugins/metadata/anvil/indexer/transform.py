@@ -62,6 +62,9 @@ from azul.indexer.transform import (
     ReplicaTransformer,
     Transformer,
 )
+from azul.lib import (
+    R,
+)
 from azul.lib.strings import (
     pluralize,
 )
@@ -70,6 +73,7 @@ from azul.lib.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
+    json_bool,
     json_element_mappings,
     json_sequence_of_optional_strings,
     json_sorted,
@@ -78,6 +82,7 @@ from azul.lib.types import (
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
     LinkedEntities,
+    snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
     ActivityAggregator,
@@ -395,7 +400,19 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         # All AnVIL bundles use a fixed known version
         assert this_bundle.version == that_bundle.version, (this, that)
         assert this_entity.keys() == that_entity.keys(), (this, that)
-        return this
+        # A file's backfilled path may have been lengthened, to set it apart
+        # from the files it would otherwise collide with on a user's disk.
+        # Only the bundle that holds every file a given one could collide
+        # with can make that decision, so the longer of two paths is the
+        # considered one, and the copy carrying it wins. Copies of any other
+        # entity are equal. See :py:meth:`FileTransformer._file_paths`.
+        if entity_type == 'files':
+            this_path = json_str(this_entity['file_path'])
+            that_path = json_str(that_entity['file_path'])
+            result = that if len(that_path) > len(this_path) else this
+        else:
+            result = this
+        return result
 
 
 class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
@@ -554,6 +571,120 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
             'anvil_dataset': 'datasets',
         }
 
+    def _file(self, file: EntityReference) -> MutableJSON:
+        entity = super()._file(file)
+        if entity['file_path'] is None:
+            entity['file_path'] = self._file_paths[file]
+        return entity
+
+    #: The directory holding the files that belong to a dataset as a whole,
+    #: rather than to any one sample taken for it
+    #:
+    _supplementary_directory = 'supplementary'
+
+    #: The directory holding the files that belong to neither
+    #:
+    _orphan_directory = 'orphan'
+
+    @cached_property
+    def _file_paths(self) -> dict[EntityReference, str]:
+        """
+        A path for each file in this bundle that lacks an explicitly provided
+        path, relative to an imagined directory that holds all the files in the
+        dataset containing the bundle. Version 5 of the schema records only a
+        file's name, which is not even unique within a bundle, let alone the
+        dataset. Based on the file's name, this method builds a path that's
+        unique within the dataset.
+        """
+        # Group files by intermediate directory and file name. Every file in the
+        # bundle is grouped, not just those in the current partition, otherwise
+        # the set of files that need deduplication would be incomplete. Normal
+        # files go into a directory named after one of the biosamples they are
+        # derived from while supplementary files are collected in a single,
+        # statically named directory.
+        groups = defaultdict(list)
+        for file in self._entities_by_type['anvil_file']:
+            metadata = self.bundle.entities[file]
+            if metadata['file_path'] is None:
+                if json_bool(metadata['is_supplementary']):
+                    directory = self._supplementary_directory
+                else:
+                    directory = self._biosample_directory(file)
+                groups[directory, json_str(metadata['file_name'])].append(file)
+
+        # Only a bundle that holds every file in a group can reliably determine
+        # whether the group needs deduplication. A file can be part of more than
+        # one bundle. Among the bundles containing a given file, we can only
+        # rely on the bundle that is rooted at the biosample we picked to name
+        # the file's intermediate directory.
+        #
+        # Another bundle may have a group with the same key but that group may
+        # be a subset of the corresponding group in the reliable bundle. It
+        # can't be a strict superset because that other bundle cannot contain
+        # more files derived from the biosample that defines the group. The
+        # reliable bundle already contains *all* files derived from that
+        # biosample.
+        #
+        # If that other group has just one member, that bundle will not
+        # contribute a properly deduplicated path. This is why we keep the
+        # longer of two paths in reconcile_inner_entities(): a deduplicated path
+        # is longer than a path built under the assumption that the file name is
+        # already unique within its directory.
+        #
+        # The above assumes that every bundle containing a file also contains
+        # all of that file's biosample ancestors, otherwise we wouldn't be able
+        # to deterministically pick a biosample for naming the file's directory.
+        # The repository plugin is expected to satisfy this assumption.
+        #
+        # A supplementary bundle is a batch and so never holds a complete
+        # group, hence a supplementary file is set apart whether it shares
+        # its name or not.
+        #
+        paths = {}
+        for (directory, name), files in groups.items():
+            deduplicate = len(files) > 1 or directory == self._supplementary_directory
+            for file in files:
+                file_name = self._deduplicate_file_name(file) if deduplicate else name
+                paths[file] = '/'.join([directory, file_name])
+        return paths
+
+    def _biosample_directory(self, file: EntityReference) -> str:
+        # Of the biosamples a file was derived from, the one with lowest ID is
+        # picked, so that every bundle containing the file agrees on the
+        # directory, even though that biosample may not be the one the bundle is
+        # rooted at.
+        biosamples = self._linked_entities(file)['anvil_biosample']
+        biosample_ids = (
+            json_str(self.bundle.entities[biosample]['biosample_id'])
+            for biosample in biosamples
+        )
+        # FIXME: A file in ANVIL_ALSCompute_Collection_HMB is linked to
+        #        no biosample
+        #        https://github.com/DataBiosphere/azul/issues/8386
+        return min(biosample_ids, default=self._orphan_directory)
+
+    #: The number of hexadecimal digits of a file's digest that distinguish it
+    #: from the files it shares a name with. Sixteen digits carry 64 bits, so
+    #: against the 1.9e7 pairs of same-name files in one dataset observed in
+    #: `anvil15`, the chance of any two of them colliding is around 1e-12.
+    #:
+    _digest_length = 16
+
+    def _deduplicate_file_name(self, file: EntityReference) -> str:
+        metadata = self.bundle.entities[file]
+        # The digest goes after the stem, not in front of the name, so that a
+        # listing sorted by name keeps a file next to similarly named ones
+        stem, extension = _split_extension(json_str(metadata['file_name']))
+        digest = metadata['file_md5sum']
+        if digest is None:
+            # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+            #        https://github.com/DataBiosphere/azul/issues/7634
+            assert self.bundle.fqid.source.spec.name == snapshot_without_md5s, R(
+                'File lacks MD5 digest', file, self.bundle.fqid)
+            digest = json_str(metadata['file_id']).replace('-', '')
+        infix = json_str(digest)[:self._digest_length]
+        return ''.join([stem, '-', infix, extension])
+
     def _transform(self,
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
@@ -581,3 +712,84 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                     file_hub=None if linked_entity.entity_type in self.hot_entity_types() else file_id,
                     root_hub=dataset_id
                 )
+
+
+#: The dot-separated components of a file name that belong to its extension
+#: rather than to its stem. A component such as `md`, `final` or `stats`, which
+#: frequently precedes a real extension, is deliberately absent.
+#:
+#: The set was compiled by sampling the file names in `anvil15`. The
+#: `azul-anvil-extensions` skill describes how to redo that analysis against a
+#: later release.
+#:
+_extensions = frozenset([
+    # Compression
+    'bz2', 'gz', 'xz', 'zst',
+    # Content. A lone `g` is how a gVCF is conventionally marked, as in
+    # `.g.vcf.gz`, and it occurs in no other role in `anvil15`
+    'bam', 'bed', 'cram', 'csv', 'fa', 'fasta', 'fastq', 'fq', 'g', 'gff3',
+    'gvcf', 'idat', 'junc', 'sam', 'svs', 'tab', 'tar', 'tsv', 'txt', 'vcf',
+    'yaml',
+    # Indices and checksums
+    'bai', 'crai', 'csi', 'idx', 'md5', 'tbi'
+])
+
+
+def _split_extension(file_name: str) -> tuple[str, str]:
+    """
+    Split the given file name into its stem and its extension, the latter
+    including the leading dot, or empty if the name has none.
+
+    The last component is taken to be an extension even if it isn't a known
+    one, because most are. Further components are taken only while they are
+    known, so that a name ending in a component that merely looks like an
+    extension is left intact.
+
+    >>> _split_extension('NA19189.chr2.hc.vcf.gz')
+    ('NA19189.chr2.hc', '.vcf.gz')
+
+    An index sorts next to what it indexes, so its extension is taken whole:
+
+    >>> _split_extension('A0-03569.cram.crai')
+    ('A0-03569', '.cram.crai')
+
+    >>> _split_extension('NWD1234.vcf.gz.tbi')
+    ('NWD1234', '.vcf.gz.tbi')
+
+    >>> _split_extension('RES03249.rb.g.vcf.gz')
+    ('RES03249.rb', '.g.vcf.gz')
+
+    A component that merely precedes the extension stays with the stem:
+
+    >>> _split_extension('NWD1234.md.bam')
+    ('NWD1234.md', '.bam')
+
+    >>> _split_extension('chr5.136400001_136500001.tar')
+    ('chr5.136400001_136500001', '.tar')
+
+    An unknown extension is still an extension:
+
+    >>> _split_extension('sample.crosscheck')
+    ('sample', '.crosscheck')
+
+    A name without a dot is all stem:
+
+    >>> _split_extension('README')
+    ('README', '')
+
+    The first component is never consumed, so a name that is all extension
+    keeps an empty stem:
+
+    >>> _split_extension('.bashrc')
+    ('', '.bashrc')
+    """
+    components = file_name.split('.')
+    i = len(components) - 1
+    while i > 1 and components[i - 1].lower() in _extensions:
+        i -= 1
+    if len(components) == 1:
+        stem, extension = file_name, ''
+    else:
+        stem = '.'.join(components[:i])
+        extension = '.' + '.'.join(components[i:])
+    return stem, extension
