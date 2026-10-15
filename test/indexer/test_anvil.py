@@ -84,6 +84,7 @@ from azul_test_case import (
 from indexer import (
     AnvilCannedBundleTestCase,
     IndexerTestCase,
+    WithIndexesSetUpTestCase,
 )
 from indexer.test_tdr import (
     TDRPluginTestCase,
@@ -435,18 +436,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             self.assertEqual(bundle_fqid, bundle.fqid)
 
 
-class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
-    """
-    Conveniently sets up (tears down) indices before (after) each test.
-    """
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.index_service.create_indices(self.catalog)
-
-    def tearDown(self):
-        super().tearDown()
-        self._purge_indices()
+class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTestCase):
 
     def test_dataset_description(self):
         dataset_ref = EntityReference(entity_type='anvil_dataset',

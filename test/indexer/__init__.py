@@ -393,3 +393,18 @@ class IndexerTestCase(CatalogTestCase,
         """
         num_lists_counted = verify_sorted_lists(data)
         self.assertGreater(num_lists_counted, 0)
+
+
+class WithIndexesSetUpTestCase:
+    """
+    Creates the indices of the catalog under test before each test and deletes
+    them afterwards. Mix into an :class:`IndexerTestCase`, ahead of it.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.index_service.create_indices(self.catalog)
+
+    def tearDown(self):
+        self._purge_indices()
+        super().tearDown()
