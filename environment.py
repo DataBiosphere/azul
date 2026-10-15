@@ -356,7 +356,7 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.3.6.1-89',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2025.3.6.1-90',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
