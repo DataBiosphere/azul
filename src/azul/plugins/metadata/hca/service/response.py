@@ -405,13 +405,19 @@ class HCASearchResponseStage(SearchResponseStage):
         return make_stratification_tree(files)
 
     def make_files(self, source: SourceRef, entry: JSON) -> JSONs:
-        files = []
-        for _file in json_element_mappings(json_mapping(entry['contents'])['files']):
-            translated_file = self.make_file(source, _file)
-            files.append(translated_file)
-        return files
+        files = json_element_mappings(json_mapping(entry['contents'])['files'])
+        translated_files = []
+        for file in files:
+            download_path = self.plugin.download_path(entry, file)
+            translated_file = self.make_file(source, file, download_path)
+            translated_files.append(translated_file)
+        return translated_files
 
-    def make_file(self, source: SourceRef, file: JSON) -> JSON:
+    def make_file(self,
+                  source: SourceRef,
+                  file: JSON,
+                  download_path: str | None = None
+                  ) -> JSON:
         translated_file = {
             'contentDescription': file.get('content_description'),
             'format': file.get('file_format'),
@@ -429,6 +435,8 @@ class HCASearchResponseStage(SearchResponseStage):
                                        drs_uri=optional(json_str, file['drs_uri'])),
             'azul_mirror_uri': self._file_mirror_uri(source, file),
         }
+        if download_path is not None:
+            translated_file['downloadPath'] = download_path
         return translated_file
 
     def make_specimen(self, specimen) -> MutableJSON:

@@ -108,6 +108,9 @@ from azul.plugins import (
     ManifestFormat,
     MetadataPlugin,
 )
+from azul.plugins.metadata.anvil import (
+    Plugin as AnvilPlugin,
+)
 from azul.plugins.metadata.hca import (
     FileTransformer,
 )
@@ -141,6 +144,7 @@ from azul.source import (
     SimpleSourceSpec,
 )
 from azul_test_case import (
+    AzulUnitTestCase,
     patch_config,
 )
 from indexer import (
@@ -685,23 +689,24 @@ class TestManifests(DCP1ManifestTestCase):
         response = self._get_manifest(ManifestFormat.curl, filters)
         self.assertEqual(200, response.status_code)
         base_url = str(self.base_url.set(path='/repository/files'))
+        download_dir = 'melanoma-infiltration-of-stromal-and-immune-cells--6qb17r'
         expected_body = [
             [
                 f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.221025Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_sequencing_protocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/SmartSeq2_sequencing_protocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59'
                 '?catalog=test&version=2018-09-14T12%3A33%3A46.866929Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/TissueDissociationProtocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/TissueDissociationProtocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.012715Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_RTPCR_protocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/SmartSeq2_RTPCR_protocol.pdf"',
                 ''
             ],
         ]
@@ -1226,12 +1231,29 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
         return pfb_schema, pfb_entities
 
 
+class TestAnvilDownloadPath(AzulUnitTestCase):
+
+    def test(self):
+        """
+        A file is downloaded to the path it carries, below a directory named
+        after its dataset.
+        """
+        outer_entity = {'contents': {'datasets': [{'title': ['ANVIL_Test']}]}}
+        inner_file = {'file_path': 'b1/reads-0123456789abcdef.bam'}
+        path = AnvilPlugin().download_path(outer_entity, inner_file)
+        self.assertEqual('ANVIL_Test/b1/reads-0123456789abcdef.bam', path)
+
+
 class TestAnvilManifests(AnvilManifestTestCase):
 
     def test_compact_manifest(self):
         response = self._get_manifest(ManifestFormat.compact, filters={})
         self.assertEqual(200, response.status_code)
         source_spec = str(self.source.ref.spec)
+        supplementary_path = (
+            'supplementary/CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+            '.recalibrated_variants.annotated.coding-4bf181ad18f36404.txt'
+        )
         expected = [
             (
                 'bundles.bundle_uuid',
@@ -1577,7 +1599,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.file_path',
-                '',
+                supplementary_path,
                 'somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
                 'somedir/307500.merged.matefixed.sorted.markeddups.recal.bam'
             ),
@@ -1613,6 +1635,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
         file_size_2 = 213021639
         file_size_3 = 3306845592
         cases = [-1, file_size_1, file_size_2, file_size_3]
+        download_dir = 'ANVIL_Test'
         for i, mirror_limit in enumerate(cases, start=1):
             with self.subTest(mirror_limit=mirror_limit):
                 with self._patch_mirror_limit(self.catalog, mirror_limit):
@@ -1622,24 +1645,31 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self.assertEqual(200, response.status_code)
                 base_url = str(self.base_url.set(path='/repository/files'))
                 expected_body = [
+                    # This file has no file_path, so a prefix of its digest sets
+                    # it apart, and it is supplementary, which puts it with
+                    # the other files belonging to the dataset as a whole
                     *iif(file_size_1 <= mirror_limit, [[
                         f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="8a41df4f-a0ec-a83f-8a15-362fc7fe6269/' +
-                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
+                        f'output="{download_dir}/supplementary/' +
+                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+                        '.recalibrated_variants.annotated.coding'
+                        '-4bf181ad18f36404.txt"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_2 <= mirror_limit, [[
                         f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_3 <= mirror_limit, [[
                         f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="cf0fbe53-a7a9-a9e8-85a4-3db742afb603/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
                         ''
                     ]])

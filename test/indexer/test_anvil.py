@@ -6,6 +6,7 @@ from collections import (
 )
 import json
 from operator import (
+    attrgetter,
     itemgetter,
 )
 from typing import (
@@ -19,6 +20,7 @@ from unittest.mock import (
     patch,
 )
 
+import attrs
 from furl import (
     furl,
 )
@@ -32,10 +34,14 @@ from urllib3 import (
 from azul import (
     config,
 )
+from azul.indexer import (
+    BundlePartition,
+)
 from azul.indexer.cache_service import (
     UrlCacheService,
 )
 from azul.indexer.document import (
+    Contribution,
     DocumentType,
     EntityReference,
 )
@@ -45,10 +51,17 @@ from azul.lib import (
 from azul.lib.types import (
     JSON,
     MutableJSON,
+    json_str,
 )
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.plugins.metadata.anvil.indexer import (
+    transform,
+)
+from azul.plugins.metadata.anvil.indexer.transform import (
+    FileTransformer,
 )
 from azul.plugins.metadata.anvil.schema import (
     anvil_schemas,
@@ -367,6 +380,60 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
     def _spec(self, name: str) -> TDRSourceSpec:
         return TDRSourceSpec.parse(f'tdr:bigquery:gcp:test_anvil_project:{name}')
 
+    def test_duplicate_file_paths(self):
+        """
+        A file from a snapshot that was ingested under version 6 of the schema
+        is told apart by its path, not by its name, so two files sharing a path
+        are rejected.
+        """
+        tables = self._canned_tables()
+        rows = tables['anvil_file']['rows']
+        file_path = 'somedir/dup-file-path-test.txt'
+        rows[0]['file_path'] = file_path
+        rows[1]['file_path'] = file_path
+        self._assert_duplicate_files(tables, [file_path])
+
+    def test_duplicate_file_names(self):
+        """
+        A file from a snapshot that was ingested under version 5 of the schema
+        has no path. A prefix of its digest tells it apart from the files it
+        shares a name with, so a duplicate name is not rejected.
+        """
+        tables = self._canned_tables()
+        rows = tables['anvil_file']['rows']
+        file_name = 'dup-file-name-test.txt'
+        for row in rows[:2]:
+            row['file_name'] = file_name
+            row['file_path'] = None
+        self._assert_duplicate_files(tables, [])
+
+    def _canned_tables(self) -> MutableJSON:
+        canned_file = self._load_canned_file_version(uuid=self.source.ref.id,
+                                                     version=None,
+                                                     extension='tables.tdr')
+        return canned_file['tables']
+
+    def _assert_duplicate_files(self,
+                                tables: MutableJSON,
+                                expected: list[str]
+                                ) -> None:
+        self._mock_normal_duos()
+        bundle_fqid = self.primary_bundle()
+        for name, table in tables.items():
+            self._make_mock_table(self.source.ref.spec,
+                                  name,
+                                  table['rows'],
+                                  table.get('schema'))
+        if expected:
+            with self.assertRaises(AssertionError) as error:
+                self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(R('Bundle contains duplicate file paths',
+                               bundle_fqid, expected),
+                             error.exception.args[0])
+        else:
+            bundle = self.plugin.fetch_bundle(bundle_fqid)
+            self.assertEqual(bundle_fqid, bundle.fqid)
+
 
 class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
     """
@@ -434,3 +501,158 @@ class TestAnvilIndexerWithIndexesSetUp(AnvilIndexerTestCase):
                                   entity_id=source['entity_id'])
             actual[ref] = source['contents']
         self.assertEqual(expected, actual)
+
+
+class TestAnvilFilePaths(AnvilCannedBundleTestCase):
+    """
+    The path backfilled for an AnVIL file that the snapshot gives none of its
+    own, for the cases that the canned bundles don't cover.
+    """
+
+    #: The biosample that the canned primary bundle is rooted at
+    #:
+    biosample = 'f9d40cf6-37b8-22f3-ce35-0dc614d2452b'
+
+    digest = '0123456789abcdef'
+
+    def _bundle(self, *names: str, **overrides) -> TDRAnvilBundle:
+        """
+        The canned primary bundle, with each of its two files renamed to the
+        correspondingly positioned one of the given names, stripped of the
+        path the snapshot gave it, and overridden with the given fields.
+        """
+        bundle = self._load_canned_bundle(self.primary_bundle())
+        files = sorted((e for e in bundle.entities if e.entity_type == 'anvil_file'),
+                       key=attrgetter('entity_id'))
+        for file, name in zip(files, names, strict=False):
+            metadata = bundle.entities[file]
+            metadata['file_name'] = name
+            metadata['file_path'] = None
+            metadata['file_md5sum'] = self.digest + self.digest
+            metadata.update(overrides)
+        return bundle
+
+    def _paths(self, bundle: TDRAnvilBundle) -> set[str]:
+        transformer = FileTransformer(bundle=bundle, deleted=False)
+        return {
+            json_str(one(doc.contents['files'])['file_path'])
+            for doc in transformer.transform(BundlePartition.root)
+            if isinstance(doc, Contribution)
+        }
+
+    def test_shared_name(self):
+        """
+        Two files that would be downloaded to the same path are set apart by a
+        prefix of their digests, inserted before the extension.
+        """
+        bundle = self._bundle('reads.bam', 'reads.bam')
+        self.assertEqual({f'{self.biosample}/reads-{self.digest}.bam'},
+                         self._paths(bundle))
+
+    def test_own_name(self):
+        """
+        A file that shares its name with no other keeps the name the snapshot
+        gave it.
+        """
+        bundle = self._bundle('reads.bam', 'writes.bam')
+        self.assertEqual({f'{self.biosample}/reads.bam',
+                          f'{self.biosample}/writes.bam'},
+                         self._paths(bundle))
+
+    def test_supplementary(self):
+        """
+        A supplementary file belongs to the dataset rather than to any one
+        biosample, and is set apart even when its name is its own, no bundle
+        holding all of the files it could collide with.
+        """
+        bundle = self._bundle('reads.bam', 'writes.bam', is_supplementary=True)
+        self.assertEqual({f'supplementary/reads-{self.digest}.bam',
+                          f'supplementary/writes-{self.digest}.bam'},
+                         self._paths(bundle))
+
+    def _add_biosample(self,
+                       bundle: TDRAnvilBundle,
+                       biosample_id: str
+                       ) -> EntityReference:
+        """
+        Link every file in the given bundle to an additional biosample with
+        the given ID, besides the one the bundle is rooted at, and return a
+        reference to that biosample.
+        """
+        root = one(e
+                   for e in bundle.entities
+                   if e.entity_type == 'anvil_biosample')
+        clone = EntityReference(entity_type=root.entity_type,
+                                entity_id=_entity_id(self.source.ref.spec,
+                                                     root.entity_type,
+                                                     biosample_id))
+        bundle.entities[clone] = {**bundle.entities[root],
+                                  'biosample_id': biosample_id}
+        bundle.links = {
+            attrs.evolve(link, inputs=link.inputs | {clone})
+            if root in link.inputs else link
+            for link in bundle.links
+        }
+        return clone
+
+    def test_many_biosamples(self):
+        """
+        A file taken from more than one biosample is grouped by the lowest of
+        their IDs, so that the directory doesn't depend on their order.
+        """
+        for other in ['00000000-0000-0000-0000-000000000000', 'ffffffff']:
+            with self.subTest(other=other):
+                bundle = self._bundle('reads.bam', 'writes.bam')
+                self._add_biosample(bundle, other)
+                lowest = min(other, self.biosample)
+                self.assertEqual({f'{lowest}/reads.bam', f'{lowest}/writes.bam'},
+                                 self._paths(bundle))
+
+    def test_unreliable_bundle(self):
+        """
+        A bundle leaves a group alone unless it is rooted at the biosample
+        that names the group's directory, there being no guarantee that it
+        holds the group in full. The bundle rooted at that biosample does, and
+        the longer path it derives wins reconciliation.
+        """
+        other = '00000000-0000-0000-0000-000000000000'
+        bundle = self._bundle('reads.bam', 'reads.bam')
+        clone = self._add_biosample(bundle, other)
+        self.assertNotEqual(clone, bundle.bundle_entity)
+        self.assertEqual({f'{other}/reads.bam'}, self._paths(bundle))
+        # Root the bundle at the other biosample, which also changes its UUID
+        bundle.fqid = attrs.evolve(bundle.fqid, primary_key=other, uuid=None)
+        self.assertEqual(clone, bundle.bundle_entity)
+        self.assertEqual({f'{other}/reads-{self.digest}.bam'},
+                         self._paths(bundle))
+
+    def test_detached(self):
+        """
+        A file that is neither supplementary nor taken from a biosample is
+        downloaded to a directory of its own, and is set apart there whether
+        it shares its name or not, no bundle being able to tell (#8386).
+        """
+        bundle = self._bundle('reads.bam', 'writes.bam')
+        bundle.links = set()
+        self.assertEqual({f'detached/reads-{self.digest}.bam',
+                          f'detached/writes-{self.digest}.bam'},
+                         self._paths(bundle))
+
+    def test_without_digest(self):
+        """
+        A file without a digest is set apart by its primary key, but only in
+        the one snapshot whose files lack a digest.
+        """
+        bundle = self._bundle('reads.bam', 'reads.bam', file_md5sum=None)
+        with self.assertRaises(AssertionError):
+            self._paths(bundle)
+        expected = {
+            f'{self.biosample}/reads-{file_id}.bam'
+            for file_id in ['1e269f0443474188', '8b722e88810349c1']
+        }
+        # Every entity ID in the bundle is derived from the name of its
+        # snapshot, so the carve-out is moved to that name instead
+        with patch.object(transform,
+                          'snapshot_without_md5s',
+                          bundle.fqid.source.spec.name):
+            self.assertEqual(expected, self._paths(bundle))

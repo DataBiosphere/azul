@@ -1,4 +1,5 @@
 ﻿from collections import (
+    Counter,
     defaultdict,
 )
 from collections.abc import (
@@ -64,6 +65,7 @@ from azul.lib.types import (
     JSON,
     MutableJSON,
     MutableJSONs,
+    json_str,
     not_none,
     optional,
 )
@@ -79,6 +81,7 @@ from azul.plugins.metadata.anvil.bundle import (
     Key,
     KeyLink,
     KeyReference,
+    snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.schema import (
     anvil_schemas,
@@ -410,6 +413,19 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
     def canning_qualifier(cls) -> str:
         return super().canning_qualifier() + '.anvil'
 
+    @property
+    def bundle_entity(self) -> EntityReference | None:
+        fqid = self.fqid
+        if fqid.is_batched:
+            return None
+        else:
+            table_name = fqid.table_name
+            entity_id = _entity_id(fqid.source.spec,
+                                   table_name,
+                                   not_none(fqid.primary_key))
+            return EntityReference(entity_type=table_name,
+                                   entity_id=entity_id)
+
     def add_entity(self,
                    entity: EntityReference,
                    version: str,
@@ -436,6 +452,9 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
             metadata.update(drs_uri=drs_uri)
             # Optional column, added in v6 of the schema
             metadata.setdefault('file_path', None)
+            if row['file_md5sum'] is None:
+                assert self.fqid.source.spec.name == snapshot_without_md5s, R(
+                    'File lacks MD5 digest', entity, self.fqid)
         target[entity] = metadata
 
     def add_links(self, links: Iterable[EntityLink]):
@@ -454,6 +473,31 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                     outputs=frozenset.union(*[link.outputs for link in group])
                 )
                 self.links.add(merged_link)
+
+    def reject_duplicate_file_paths(self) -> None:
+        """
+        Reject the files in this bundle that a download could not tell apart,
+        because one of them would overwrite its twin.
+
+        Only a file that has a path can collide. A file without one is
+        downloaded under a name carrying a prefix of its digest, which sets it
+        apart from the files it shares a name with.
+
+        Orphans are not considered. They don't appear in the aggregate files
+        index and are therefore absent from any manifest that would rely on the
+        uniqueness of the file path.
+
+        Being limited to a single bundle this is a best effort only, as it
+        can't guarantee the uniqueness of file paths within an entire dataset.
+        """
+        paths = Counter(
+            json_str(metadata['file_path'])
+            for entity, metadata in self.entities.items()
+            if entity.entity_type == 'anvil_file' and metadata['file_path'] is not None
+        )
+        duplicates = sorted(path for path, count in paths.items() if count > 1)
+        assert not duplicates, R('Bundle contains duplicate file paths',
+                                 self.fqid, duplicates)
 
 
 class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
@@ -545,7 +589,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             if missing:
                 # FIXME: Files from 1000G snapshot in anvildev can't be mirrored
                 #        https://github.com/DataBiosphere/azul/issues/7634
-                assert source.spec.name == 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732', R(
+                assert source.spec.name == snapshot_without_md5s, R(
                     'File lacks MD5 digest', source, dict(row))
             return missing
 
@@ -564,13 +608,15 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
     def _emulate_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         if bundle_fqid.table_name == BundleType.primary.table_name:
             log.info('Bundle %r is a primary bundle', bundle_fqid.uuid)
-            return self._primary_bundle(bundle_fqid)
+            bundle = self._primary_bundle(bundle_fqid)
         elif bundle_fqid.table_name == BundleType.supplementary.table_name:
             log.info('Bundle %r is a supplementary bundle', bundle_fqid.uuid)
-            return self._supplementary_bundle(bundle_fqid)
+            bundle = self._supplementary_bundle(bundle_fqid)
         else:
             log.info('Bundle %r is a replica bundle', bundle_fqid.uuid)
-            return self._replica_bundle(bundle_fqid)
+            bundle = self._replica_bundle(bundle_fqid)
+        bundle.reject_duplicate_file_paths()
+        return bundle
 
     def _batch_tables(self,
                       source: TDRSourceSpec,
@@ -709,6 +755,11 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     donor_dataset_id = row['part_of_dataset_id']
                     assert donor_dataset_id == dataset_id, R(
                         'Conflicting keys', donor_dataset_id, dataset_id)
+            if entity_type == 'anvil_file':
+                for row in rows:
+                    assert not row['is_supplementary'], R(
+                        'File derived from biosample cannot be supplementary',
+                        row[pk_column], bundle_fqid)
             for row in sorted(rows, key=itemgetter(pk_column)):
                 key = KeyReference(key=row[pk_column], entity_type=entity_type)
                 entity = self._entity_ref(source.spec, entity_type, row)

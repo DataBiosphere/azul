@@ -299,6 +299,15 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                                type=pass_thru_int)
     )
 
+    def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
+        contents = json_mapping(outer_entity['contents'])
+        dataset = one(json_element_mappings(contents['datasets']))
+        title = one(json_element_strings(dataset['title']))
+        # Every file has a path, either the one the submitter gave it, in
+        # version 6 of the schema, or one backfilled when its bundle was
+        # indexed
+        return '/'.join([title, json_str(inner_file['file_path'])])
+
     @property
     def root_entity_type(self) -> str:
         return 'datasets'

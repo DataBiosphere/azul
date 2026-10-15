@@ -56,7 +56,7 @@ from unittest import (
 import uuid
 import webbrowser
 
-import attr
+import attrs
 from chalice import (
     UnauthorizedError,
 )
@@ -206,6 +206,7 @@ from azul.service.manifest_controller import (
     ManifestController,
 )
 from azul.service.manifest_service import (
+    CurlManifestGenerator,
     ManifestFormat,
     ManifestGenerator,
 )
@@ -521,7 +522,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 self.assertEqual(snapshots, paged_snapshots)
 
     def test_indexing(self):
-        @attr.s(auto_attribs=True, kw_only=True)
+        @attrs.define(kw_only=True)
         class Catalog:
             name: CatalogName
             bundles: set[SourcedBundleFQID]
@@ -582,6 +583,15 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                               bundle_fqids=catalog.bundles)
                 self._test_single_entity_response(catalog=catalog.name)
 
+        # Mirroring precedes the tests that download files because a file from
+        # a requester-pays source can only be downloaded once it is mirrored.
+        if mirror and config.enable_mirroring:
+            mirror_states = self._test_mirroring(delete=delete)
+        else:
+            mirror_states = {}
+
+        requester_pays = config.tdr_requester_pays_project is not None
+
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_manifest_tagging_race(catalog.name)
@@ -592,10 +602,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             # deployments where it isn't.
             if config.disable_monitoring:
                 self._test_transient_manifest_failure(catalog.name)
-            # FIXME: Re-enable curl manifest IT for AnVIL
-            #        https://github.com/DataBiosphere/azul/issues/8095
-            if config.tdr_requester_pays_project is None:
-                self._test_curl_manifest(catalog.name)
+            mirror_state = mirror_states.get(catalog.name)
+            mirrored_file = None if mirror_state is None else mirror_state.file
+            if mirrored_file is None and requester_pays:
+                # FIXME: Cover the curl manifest when nothing was mirrored
+                #        https://github.com/DataBiosphere/azul/issues/8095
+                pass
+            else:
+                self._test_curl_manifest(catalog.name, mirrored_file)
             self._test_drs(catalog.name)
             self._test_repository_files(catalog.name)
             self._test_managed_access(catalog=catalog.name,
@@ -603,7 +617,9 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                       ma_source=catalog.ma_source)
 
         if mirror and config.enable_mirroring:
-            self._test_mirroring(delete=delete)
+            self._sweep_mirrored_files(mirror_states)
+            if delete:
+                self._delete_mirrored_files(mirror_states)
 
         if index and delete:
             # FIXME: Test delete notifications
@@ -751,12 +767,17 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     else:
                         args['format'] = format.value
 
-                    # Wrap self._get_url to collect all HTTP responses
+                    # Wrap self._get_url to collect the responses received by
+                    # _check_endpoint as it follows the redirect dance resulting
+                    # from the initial manifest request
                     _get_url = self._get_url
                     responses = list()
 
                     def get_url(*args, **kwargs):
                         response = _get_url(*args, **kwargs)
+                        # Stash the response for later validation. Validating
+                        # the response immediately would risk re-entering the
+                        # wrapper if the validator made some other request.
                         responses.append(response)
                         return response
 
@@ -766,14 +787,15 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                         # resilience against DOS attacks.
 
                         def worker(_):
-                            response = self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
-                            self._manifest_validators[format](catalog, response)
+                            return self._check_endpoint(PUT, '/manifest/files', args=args, fetch=fetch)
 
                         num_workers = 3
                         with ThreadPoolExecutor(max_workers=num_workers) as tpe:
-                            results = list(tpe.map(worker, range(num_workers)))
+                            manifests = list(tpe.map(worker, range(num_workers)))
 
-                    self.assertEqual([None] * num_workers, results)
+                    self.assertEqual(num_workers, len(manifests))
+                    for manifest in manifests:
+                        self._manifest_validators[format](catalog, manifest)
 
                     execution_ids.update(self._manifest_execution_ids(responses))
                     bucket, key = one(self._manifest_objects(responses))
@@ -971,7 +993,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 urls.append(furl(response.headers['Location']))
         return urls
 
-    def _test_curl_manifest(self, catalog: CatalogName):
+    def _test_curl_manifest(self,
+                            catalog: CatalogName,
+                            inner_file: JSON | None
+                            ) -> None:
         supported_formats = self._manifest_formats(catalog)
         if ManifestFormat.curl in supported_formats:
             with self.subTest('curl_manifest', catalog=catalog):
@@ -980,13 +1005,18 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 else:
                     credentials = self._user_credentials
                 with credentials:
-                    max_size = 512 * 2 ** 20
-                    outer_file, inner_file = self._get_one_file(catalog,
-                                                                max_size=max_size,
-                                                                downloadable=True)
+                    if inner_file is None:
+                        max_size = 512 * 2 ** 20
+                        outer_file, inner_file = self._get_one_file(catalog,
+                                                                    max_size=max_size,
+                                                                    downloadable=True)
                     file_uuid = lookup(inner_file, 'document_id', 'uuid')
                     special_fields = self.metadata_plugin(catalog).special_fields
                     filters = {special_fields.file_uuid.name: {'is': [file_uuid]}}
+                    if config.is_anvil_enabled(catalog):
+                        expected_path = self._file_download_path(catalog, filters)
+                    else:
+                        expected_path = None
                     manifest_url = mutable_furl(
                         url=config.service_endpoint,
                         path='/manifest/files',
@@ -1014,11 +1044,25 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                             cwd=tmpdir,
                                             timeout=600)
                     self.assertEqual(0, result.returncode)
-                    num_files = sum(
-                        len(filenames)
+                    paths = [
+                        os.path.relpath(os.path.join(dirpath, filename), tmpdir)
                         for dirpath, _, filenames in os.walk(tmpdir)
-                    )
-                    self.assertEqual(1, num_files)
+                        for filename in filenames
+                    ]
+                    self.assertEqual(1, len(paths))
+                    if expected_path is not None:
+                        self.assertEqual(expected_path, one(paths))
+
+    def _file_download_path(self, catalog: CatalogName, filters: JSON) -> str:
+        """
+        The path the file matching the given filters is expected to be
+        downloaded to, relative to the directory `curl` is run in. The filter
+        must match exactly one file entity.
+        """
+        hit = one(self._get_entities(catalog, 'files', filters=filters))
+        title = one(one(hit['datasets'])['title'])
+        file_path = one(hit['files'])['file_path']
+        return CurlManifestGenerator._sanitize_path('/'.join([title, file_path]))
 
     def _get_one_mirrorable_file(self,
                                  catalog: CatalogName
@@ -1391,7 +1435,27 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         )
 
     def _check_compact_manifest(self, catalog: CatalogName, response: bytes):
-        self.__check_csv_manifest(BytesIO(response), self._uuid_column_name(catalog))
+        rows = self.__check_csv_manifest(BytesIO(response),
+                                         self._uuid_column_name(catalog))
+        if config.is_anvil_enabled(catalog):
+            self._check_download_paths(rows)
+
+    def _check_download_paths(self, rows: list[Mapping[str, str]]) -> None:
+        """
+        Assert that no two files whose contents differ are downloaded to the
+        same path. Two files that are identical may share a path, since
+        whichever of them is downloaded second is a copy of the first.
+        """
+        digests_by_path = defaultdict(set)
+        for row in rows:
+            path = (row['datasets.title'], row['files.file_path'])
+            digests_by_path[path].add(row['files.file_md5sum'])
+        collisions = {
+            path: digests
+            for path, digests in digests_by_path.items()
+            if len(digests) > 1
+        }
+        self.assertEqual({}, collisions)
 
     def _check_terra_pfb_manifest(self, _catalog: CatalogName, response: bytes):
         # A PFB is an Avro Object Container File, i.e., a stream of Avro objects
@@ -1485,7 +1549,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
 
-    def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
+    def _check_curl_manifest(self, catalog: CatalogName, response: bytes):
         text = TextIOWrapper(BytesIO(response))
         # Skip over empty lines, comments and curl configurations to count and
         # verify that all the remaining lines are pairs of 'url=' and 'output='
@@ -1495,13 +1559,33 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             for line in text
             if not (line == '\n' or line.startswith('--') or line.startswith('#'))
         )
-        num_files = 0
+        paths = []
         for url, output in grouper(lines, 2):
-            num_files += 1
             self.assertTrue(url.startswith('url='), url)
             self.assertTrue(output.startswith('output='), output)
-        log.info(f'Manifest contains {num_files} files.')
-        self.assertGreater(num_files, 0)
+            path = output.removeprefix('output=').rstrip('\n')
+            paths.append(path.removeprefix('"').removesuffix('"'))
+        log.info(f'Manifest contains {len(paths)} files.')
+        self.assertGreater(len(paths), 0)
+        if config.is_anvil_enabled(catalog):
+            self._check_download_directories(catalog, paths)
+
+    def _check_download_directories(self,
+                                    catalog: CatalogName,
+                                    paths: list[str]
+                                    ) -> None:
+        """
+        Assert that every file is downloaded into a directory named after the
+        dataset it belongs to, and to a name below that directory.
+        """
+        expected_dataset_directories = {
+            CurlManifestGenerator._sanitize_path(one(hit['datasets'])['title'])
+            for hit in self._get_entities(catalog, self._project_type(catalog))
+        }
+        for path in paths:
+            directory, _, name = path.partition('/')
+            self.assertIn(directory, expected_dataset_directories)
+            self.assertNotEqual('', name)
 
     def _check_jsonl_manifest(self, _catalog: CatalogName, response: bytes):
         text = TextIOWrapper(BytesIO(response))
@@ -2138,39 +2222,37 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
     def _curl_manifest_command_lines(self, data: bytes) -> list[str]:
         return list(filter(None, data.decode().split('\n')))[1::2]
 
+    @attrs.define
+    class MirrorState:
+        service: MirrorService
+        sources: list[Source] = attrs.field(factory=list)
+        file: JSON | None = None
+
     def _mirror_service(self, catalog: CatalogName) -> MirrorService:
         return MirrorService.for_catalog(catalog)
 
-    def _test_mirroring(self, *, delete: bool):
+    def _test_mirroring(self, *, delete: bool) -> dict[CatalogName, MirrorState]:
+        """
+        Mirror one file per catalog and return the state of each, so that a
+        test which can only download mirrored files knows which one that is.
+        """
+        states = {}
+        for catalog in config.catalogs.values():
+            if catalog.is_integration_test_catalog:
+                service = self._mirror_service(catalog.name)
+                if service.may_mirror():
+                    states[catalog.name] = self.MirrorState(service=service)
         with self.subTest('mirroring'):
-            service_by_catalog = {}
-            for catalog in config.catalogs.values():
-                if catalog.is_integration_test_catalog:
-                    service = self._mirror_service(catalog.name)
-                    if service.may_mirror():
-                        service_by_catalog[catalog.name] = service
-
-            sources_by_catalog = {
-                catalog: list(filter(is_not_none, (
+            for catalog, state in states.items():
+                state.sources = list(filter(is_not_none, (
                     self._select_source(catalog, public=public, mirror=True)
                     for public in [True, False]
                 )))
-                for catalog in service_by_catalog
-            }
-
-            def _delete():
-                if delete:
-                    # Multiple catalogs may share a mirror prefix, so we
-                    # group by prefix to avoid redundant deletions.
-                    services_by_prefix: dict[str, MirrorService] = {}
-                    for service in service_by_catalog.values():
-                        services_by_prefix.setdefault(service._mirror_prefix, service)
-                    for service in services_by_prefix.values():
-                        service.delete_it_files()
 
             self._assert_queues_empty([config.mirror_queue.name,
                                        config.mirror_queue.to_fail.name])
-            _delete()
+            if delete:
+                self._delete_mirrored_files(states)
 
             # The files accumulate across catalogs, so each entry records the
             # catalog it was mirrored for. A file must only ever be passed to the
@@ -2180,13 +2262,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             # be absent from another, in which case the file would be mistaken
             # for one from a managed access source.
             indexed_files: dict[File, tuple[CatalogName, SourceRef, JSON]] = {}
-            for catalog, sources in sources_by_catalog.items():
+            for catalog, state in states.items():
                 with self.subTest('mirror_sources_and_files', catalog=catalog):
-                    service = service_by_catalog[catalog]
+                    service, sources = state.service, state.sources
                     # _get_one_mirrorable_file uses the public service account,
                     # so the file will always be from the public source
                     repository_file, source, file_response = self._get_one_mirrorable_file(catalog)
                     indexed_files[repository_file] = catalog, source, file_response
+                    state.file = file_response
                     service.mirror_sources(sources)
                     service.mirror_file(source, repository_file)
                     self.azul_client.wait_for_mirroring()
@@ -2219,7 +2302,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
             with self.subTest('validate_info_schemas'):
                 info_objects = [
-                    service_by_catalog[catalog].info(file)
+                    states[catalog].service.info(file)
                     for file, (catalog, source, file_response) in indexed_files.items()
                 ]
                 schema_url = info_objects[0]['$schema']
@@ -2230,24 +2313,43 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     self.assertEqual(schema_url, info_object['$schema'])
                     jsonschema.validate(info_object, schema_response)
 
-                with self.subTest('sweep', catalog=catalog):
-                    service = service_by_catalog[catalog]
-                    if expect_garbage:
-                        dropped_source = sources[1]
-                        storage = service._storage_for_source(dropped_source.ref.spec)
-                        info_dir = service._mirror_prefix + service.info_prefix + '/'
-                        num_before = sum(1 for _ in storage.list_objects(info_dir))
-                        self.assertGreater(num_before, 0)
-                    service._sweep(dry_run=True)
-                    if expect_garbage:
-                        num_after_dry = sum(1 for _ in storage.list_objects(info_dir))
-                        self.assertEqual(num_before, num_after_dry)
-                    service._sweep(dry_run=False)
-                    if expect_garbage:
-                        num_after_wet = sum(1 for _ in storage.list_objects(info_dir))
-                        self.assertEqual(0, num_after_wet)
+        return states
 
-            _delete()
+    def _sweep_mirrored_files(self, states: dict[CatalogName, MirrorState]) -> None:
+        # All IT catalogs share the mirror prefix, and a sweep covers every
+        # storage of the service it is invoked on, so sweeping once suffices.
+        # The assertions below only hold for that first sweep, which empties
+        # the directory a second one would measure.
+        if states:
+            catalog, state = first(states.items())
+            service, sources = state.service, state.sources
+            with self.subTest('sweep', catalog=catalog):
+                expect_garbage = len(sources) > 1
+                if expect_garbage:
+                    dropped_source = sources[1]
+                    storage = service._storage_for_source(dropped_source.ref.spec)
+                    info_dir = service._mirror_prefix + service.info_prefix + '/'
+                    num_before = sum(1 for _ in storage.list_objects(info_dir))
+                    self.assertGreater(num_before, 0)
+                service._sweep(dry_run=True)
+                if expect_garbage:
+                    num_after_dry = sum(1 for _ in storage.list_objects(info_dir))
+                    self.assertEqual(num_before, num_after_dry)
+                service._sweep(dry_run=False)
+                if expect_garbage:
+                    num_after_wet = sum(1 for _ in storage.list_objects(info_dir))
+                    self.assertEqual(0, num_after_wet)
+
+    def _delete_mirrored_files(self,
+                               states: dict[CatalogName, MirrorState]
+                               ) -> None:
+        # Multiple catalogs may share a mirror prefix, so we group by prefix
+        # to avoid redundant deletions.
+        services_by_prefix: dict[str, MirrorService] = {}
+        for state in states.values():
+            services_by_prefix.setdefault(state.service._mirror_prefix, state.service)
+        for service in services_by_prefix.values():
+            service.delete_it_files()
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):

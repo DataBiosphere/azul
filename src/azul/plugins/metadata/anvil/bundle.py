@@ -1,5 +1,9 @@
 from abc import (
     ABCMeta,
+    abstractmethod,
+)
+from collections import (
+    defaultdict,
 )
 from functools import (
     total_ordering,
@@ -8,11 +12,17 @@ from itertools import (
     chain,
 )
 from typing import (
+    Collection,
+    Iterable,
+    Iterator,
     Mapping,
     Self,
 )
 
 import attrs
+from more_itertools import (
+    one,
+)
 
 from azul.indexer import (
     Bundle,
@@ -35,6 +45,13 @@ from azul.lib.types import (
     json_element_mappings,
     json_element_strings,
 )
+
+#: The one snapshot whose files may lack an MD5 digest
+#:
+#: FIXME: Files from 1000G snapshot in anvildev can't be mirrored
+#:        https://github.com/DataBiosphere/azul/issues/7634
+#:
+snapshot_without_md5s = 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'
 
 #: A type alias for the values of a table's primary key column, which the AnVIL
 #: schema declares to be a string. This type alias distinguishes such a key from
@@ -89,6 +106,56 @@ class KeyLink(Link[KeyReference]):
                           outputs=frozenset(map(lookup, self.outputs)))
 
 
+EntityRefsByType = dict[EntityType, set[EntityReference]]
+
+
+@attrs.frozen(kw_only=True)
+class LinkedEntities(Iterable[EntityReference]):
+    origin: EntityReference
+    ancestors: EntityRefsByType
+    descendants: EntityRefsByType
+
+    def __getitem__(self, item: EntityType) -> set[EntityReference]:
+        return self.ancestors[item] | self.descendants[item]
+
+    def __iter__(self) -> Iterator[EntityReference]:
+        for entities in self.ancestors.values():
+            yield from entities
+        for entities in self.descendants.values():
+            yield from entities
+
+    @classmethod
+    def from_links(cls,
+                   origin: EntityReference,
+                   links: Collection[EntityLink]
+                   ) -> Self:
+        return cls(origin=origin,
+                   ancestors=cls._search(origin, links, from_='outputs', to='inputs'),
+                   descendants=cls._search(origin, links, from_='inputs', to='outputs'))
+
+    @classmethod
+    def _search(cls,
+                entity_ref: EntityReference,
+                links: Collection[EntityLink],
+                entities: EntityRefsByType | None = None,
+                *,
+                from_: str,
+                to: str
+                ) -> EntityRefsByType:
+        entities = defaultdict(set) if entities is None else entities
+        if entity_ref.entity_type.endswith('activity'):
+            follow = [one(link for link in links if entity_ref == link.activity)]
+        else:
+            follow = [link for link in links if entity_ref in getattr(link, from_)]
+        for link in follow:
+            for relative in [link.activity, *getattr(link, to)]:
+                if relative is not None:
+                    if relative != entity_ref and relative.entity_id not in entities[relative.entity_type]:
+                        entities[relative.entity_type].add(relative)
+                        cls._search(relative, links, entities, from_=from_, to=to)
+        return entities
+
+
 @attrs.define(kw_only=True)
 class AnvilBundle[BUNDLE_FQID: SourcedBundleFQID](Bundle[BUNDLE_FQID],
                                                   metaclass=ABCMeta):
@@ -103,6 +170,14 @@ class AnvilBundle[BUNDLE_FQID: SourcedBundleFQID](Bundle[BUNDLE_FQID],
         to_json=lambda x: [v.to_json() for v in sorted(x)]
     )
     orphans: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
+
+    @property
+    @abstractmethod
+    def bundle_entity(self) -> EntityReference | None:
+        """
+        A reference to the bundle entity, or None if the bundle is batched
+        """
+        raise NotImplementedError
 
     def reject_joiner(self):
         # We can skip the `links` attribute because the only strings it contains
