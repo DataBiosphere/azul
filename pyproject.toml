@@ -17,21 +17,21 @@ requires-python = "==3.14.7"
 dependencies = [
     "attrs==26.1.0",
     # Match version of the `boto3-stubs` dev dependency
-    "boto3==1.43.106",
-    "botocore==1.43.106",
+    "boto3==1.43.115",
+    "botocore==1.43.115",
     # Match with `types-chevron` in the `dev` group
     "chevron==0.14.0",
     "cryptography==50.0.2",
-    "fastavro==1.12.2",
+    "fastavro==1.13.1",
     "furl==2.1.4",
-    "google-api-core==2.40.0",
-    "google-auth[pyopenssl]==2.59.1",
-    "google-cloud-bigquery==3.45.2",
-    "http-message-signatures==2.0.1",
+    "google-api-core==2.42.0",
+    "google-auth[pyopenssl]==2.62.0",
+    "google-cloud-bigquery==3.46.2",
+    "http-message-signatures==2.1.0",
     "http-sfv==0.9.9",
     "jmespath==1.1.0",
     "jsonschema==4.26.0",
-    "more-itertools==11.1.0",
+    "more-itertools==11.2.1",
     # Versioned independently from the type stub dependency but when updating
     # one, the other should be updated, too, if possible
     "msgpack==1.2.3",
@@ -43,7 +43,7 @@ dependencies = [
     "resumablehash==1.6",
     # Python 3.12 removed distutils, which we depended on transitively. Luckily,
     # setuptools includes a vendored copy.
-    "setuptools==84.0.0",
+    "setuptools==84.2.0",
     "urllib3==2.8.0",
     "werkzeug==3.1.9",
 ]
@@ -61,25 +61,25 @@ lambda = [
 dev = [
     "atomicwrites==1.4.1",
     # Match this with the version of the `boto3` runtime dependency
-    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.106",
+    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.43.115",
     # Match version with the `chalice` index below
     "chalice==1.32.0+21",
     "coverage==7.16.2",
     "docker==7.2.0",
     "flake8==7.4.1",
     "gevent==26.9.0",
-    "gitpython==3.2.0",
+    "gitpython==3.2.1",
     "google-api-python-client==2.201.0",
-    "google-cloud-bigquery-reservation==1.27.0",
-    "google-cloud-storage==3.15.1",
+    "google-cloud-bigquery-reservation==1.28.0",
+    "google-cloud-storage==3.17.1",
     "isort==9.0.2",
-    "jq==1.12.0",
+    "jq==1.13.0",
     # Match the extras with the backends listed in AzulUnitTestCase._reset_moto
-    "moto[dynamodb,iam,s3,sns,sqs]==5.2.3",
+    "moto[dynamodb,iam,s3,sns,sqs]==5.2.4",
     # Versioned independently from the corresponding runtime dependency but when
     # updating one, the other should be updated, too
     "msgpack-types==0.8.0",
-    "mypy==2.3.1",
+    "mypy==2.4.0",
     "openapi-spec-validator==0.9.0",
     "openpyxl==3.1.5",
     "posix-ipc==1.3.2",
@@ -91,7 +91,7 @@ dev = [
     "strict-rfc3339==0.7",
     # Match with `chevron` in the runtime dependencies
     "types-chevron==0.14.2.20260408",
-    "types-jsonschema==4.26.0.20260518",
+    "types-jsonschema==4.26.0.20261006",
     "watchdog==6.0.0",
 ]
 
