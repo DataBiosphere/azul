@@ -40,6 +40,7 @@ import more_itertools
 from more_itertools import (
     chunked,
     one,
+    only,
 )
 
 from azul import (
@@ -82,6 +83,7 @@ if TYPE_CHECKING:
     )
     from mypy_boto3_sqs.type_defs import (
         ChangeMessageVisibilityBatchRequestEntryTypeDef,
+        ListMessageMoveTasksResultEntryTypeDef,
         SendMessageBatchRequestEntryTypeDef,
         SendMessageRequestQueueSendMessageTypeDef,
     )
@@ -151,6 +153,18 @@ class Queues:
     #: messages.
     #:
     batch_size = 10
+
+    #: The number of seconds to wait between consecutive polls of the progress
+    #: of a message move task. Such a task may run for up to 36 hours.
+    #:
+    redrive_poll_interval = 10
+
+    #: The number of seconds to wait between consecutive polls of the queue
+    #: lengths in :meth:`wait_to_stabilize`. That method derives the length of
+    #: its observation window from this interval, and asserts that the window
+    #: covers the SQS consistency delay, so this value can't be raised freely.
+    #:
+    stabilization_poll_interval = 10
 
     def __init__(self, delete: bool = False, json_body: bool = True):
         self._delete = delete
@@ -380,14 +394,13 @@ class Queues:
         :return: The total final length of the stabilized queues. The only
                  observable is zero; otherwise, an exception is raised.
         """
-        sleep_time = 10
         queues = self.get_queues(queue_names)
-        maxlen = ceil(timeout / sleep_time)
+        maxlen = ceil(timeout / self.stabilization_poll_interval)
         total_lengths: deque[int] = deque(maxlen=maxlen)
         # Two minutes to safely accommodate SQS eventual consistency window of
         # one minute. For more info, read WARNING section on
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
-        assert maxlen * sleep_time >= 2 * 60
+        assert maxlen * self.stabilization_poll_interval >= 2 * 60
 
         while True:
             # Determine queue lengths
@@ -398,7 +411,7 @@ class Queues:
             log.info('Message count history (most recent first) is %r.',
                      list(reversed(total_lengths)))
 
-            min_num_zeros = 60 // sleep_time
+            min_num_zeros = 60 // self.stabilization_poll_interval
             assert min_num_zeros <= maxlen, min_num_zeros
             num_total_lengths = len(total_lengths)
             if num_total_lengths >= min_num_zeros:
@@ -417,7 +430,7 @@ class Queues:
                         break
 
             log.info('Waiting for %s queue(s) to stabilize ...', len(queues))
-            time.sleep(sleep_time)
+            time.sleep(self.stabilization_poll_interval)
 
         if final_length != 0:
             raise Exception('The queues have stalled', final_length)
@@ -465,6 +478,55 @@ class Queues:
             else:
                 log.info('All messages were submitted, removing local file %r', path)
                 os.unlink(path)
+
+    def redrive(self, source_queue_name: str, destination_queue_name: str):
+        """
+        Move all messages from one queue to another, using the SQS redrive
+        facility, and wait for the move to complete. Unlike :meth:`dump` and
+        :meth:`feed`, this does not receive the messages, so it is not subject
+        to the limitations of receiving from a FIFO queue.
+
+        SQS only moves messages out of a queue that is configured as the
+        dead-letter queue of another queue, and only into a queue of the same
+        type, i.e., either both queues are FIFO or neither is.
+        """
+        source = aws.sqs_queue(source_queue_name)
+        destination = aws.sqs_queue(destination_queue_name)
+        source_arn = source.attributes['QueueArn']
+        # SQS only reports the handle of a task while that task is running, so
+        # the task started below can only be told apart from the tasks that
+        # preceded it by when it was started.
+        task = self._latest_message_move_task(source_arn)
+        previously_started = None if task is None else task['StartedTimestamp']
+        log.info('Moving messages from queue %r to queue %r',
+                 source.url, destination.url)
+        aws.sqs.start_message_move_task(SourceArn=source_arn,
+                                        DestinationArn=destination.attributes['QueueArn'])
+        while True:
+            task = self._latest_message_move_task(source_arn)
+            if task is None or task['StartedTimestamp'] == previously_started:
+                log.info('Waiting for the move to start ...')
+            else:
+                num_moved = task.get('ApproximateNumberOfMessagesMoved', 0)
+                status = task['Status']
+                if status == 'RUNNING':
+                    log.info('Moved %i of %i messages',
+                             num_moved, task.get('ApproximateNumberOfMessagesToMove', 0))
+                elif status == 'COMPLETED':
+                    log.info('Moved %i messages', num_moved)
+                    break
+                else:
+                    raise RuntimeError('Failed to move messages',
+                                       status, task.get('FailureReason'), num_moved)
+            time.sleep(self.redrive_poll_interval)
+
+    def _latest_message_move_task(self,
+                                  source_arn: str
+                                  ) -> ListMessageMoveTasksResultEntryTypeDef | None:
+        response = aws.sqs.list_message_move_tasks(SourceArn=source_arn, MaxResults=1)
+        # SQS omits the key entirely if no task was ever started on the queue,
+        # even though the Boto3 type stub declares it to be present
+        return only(response.get('Results', []))
 
     def purge(self, queue_name: str):
         queues = self.get_queues([queue_name])

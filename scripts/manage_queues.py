@@ -44,6 +44,15 @@ def main(argv):
                     help='Remove messages from the file after adding them to the specified queue. '
                          'By default the messages will remain in the file')
 
+    sp = sps.add_parser('redrive',
+                        help='Move all messages from one queue to another. '
+                             'The source queue must be configured as the dead-letter queue of '
+                             'another queue, and both queues must be either FIFO or standard.')
+    sp.add_argument('source_queue', metavar='SOURCE_QUEUE_NAME',
+                    help='Name of the queue to move messages from')
+    sp.add_argument('destination_queue', metavar='DESTINATION_QUEUE_NAME',
+                    help='Name of the queue to move messages to')
+
     sp = sps.add_parser('purge',
                         help='Purge all messages in a queue')
     sp.add_argument('queue', metavar='QUEUE_NAME',
@@ -74,7 +83,14 @@ def main(argv):
 
     args = p.parse_args(argv)
 
-    commands = ('list', 'purge', 'purge_all', 'purge_indexer', 'purge_mirror')
+    commands = (
+        'list',
+        'purge',
+        'purge_all',
+        'purge_indexer',
+        'purge_mirror',
+        'redrive'
+    )
     if args.command in commands:
         queues = Queues()
         if args.command == 'list':
@@ -87,6 +103,8 @@ def main(argv):
             queues.purge_indexer()
         elif args.command == 'purge_mirror':
             queues.purge_mirror()
+        elif args.command == 'redrive':
+            queues.redrive(args.source_queue, args.destination_queue)
         else:
             assert False, args.command
     elif args.command in ('dump', 'dump_all'):
