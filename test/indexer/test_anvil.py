@@ -41,9 +41,13 @@ from azul.indexer.cache_service import (
     UrlCacheService,
 )
 from azul.indexer.document import (
+    CataloguedEntityReference,
     Contribution,
     DocumentType,
     EntityReference,
+)
+from azul.indexer.index_service import (
+    IndexService,
 )
 from azul.lib import (
     R,
@@ -74,8 +78,14 @@ from azul.plugins.repository.tdr_anvil import (
     _entity_id,
     fixed_version,
 )
+from azul.source import (
+    Prefix,
+    Source,
+    SourceConfig,
+)
 from azul.terra import (
     TDRClient,
+    TDRSourceRef,
     TDRSourceSpec,
 )
 from azul_test_case import (
@@ -602,8 +612,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         """
         A bundle leaves a group alone unless it is rooted at the biosample
         that names the group's directory, there being no guarantee that it
-        holds the group in full. The bundle rooted at that biosample does, and
-        the longer path it derives wins reconciliation.
+        holds the group in full. The bundle rooted at that biosample does.
         """
         other = '00000000-0000-0000-0000-000000000000'
         bundle = self._bundle('reads.bam', 'reads.bam')
@@ -615,6 +624,36 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         self.assertEqual(clone, bundle.bundle_entity)
         self.assertEqual({f'{other}/reads-{self.digest}.bam'},
                          self._paths(bundle))
+
+    def test_longer_path_wins(self):
+        """
+        Of the two paths that two bundles derive for a file they share, the
+        one that deduplication lengthened prevails, the bundle that derived
+        the other one not holding the file's namesakes in full.
+        """
+        other = '00000000-0000-0000-0000-000000000000'
+        service = IndexService()
+        contributions = []
+        for primary_key in [self.biosample, other]:
+            bundle = self._bundle('reads.bam', 'reads.bam')
+            self._add_biosample(bundle, other)
+            bundle.fqid = attrs.evolve(bundle.fqid,
+                                       primary_key=primary_key,
+                                       uuid=None)
+            documents = service.transform(self.catalog, bundle, delete=False)
+            assert isinstance(documents, tuple), documents
+            for contribution in documents[0]:
+                entity = CataloguedEntityReference.for_entity(
+                    self.catalog, contribution.coordinates.entity)
+                coordinates = attrs.evolve(contribution.coordinates, entity=entity)
+                contributions.append(attrs.evolve(contribution,
+                                                  coordinates=coordinates))
+        paths = {
+            json_str(one(aggregate.contents['files'])['file_path'])
+            for aggregate in service._aggregate(contributions)
+            if aggregate.coordinates.entity.entity_type == 'files'
+        }
+        self.assertEqual({f'{other}/reads-{self.digest}.bam'}, paths)
 
     def test_detached(self):
         """
@@ -646,3 +685,94 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                           'snapshot_without_md5s',
                           bundle.fqid.source.spec.name):
             self.assertEqual(expected, self._paths(bundle))
+
+
+class TestAnvilSharedFile(WithIndexesSetUpTestCase, AnvilIndexerTestCase):
+    """
+    Tests involving files derived from two biosamples. Each parent biosample
+    incurs a separate primary bundle, which is why this test uses two cans.
+
+    One of the files the two bundles share is stripped of its path before
+    they are indexed, leaving them with a mix of files that have a path and
+    files that don't, a scenario we want to test explicitly. The doctoring is
+    necessary because the v6 schema snapshots currently found in the wild all
+    specify a non-null file_path.
+    """
+
+    #: Every entity ID in a bundle is derived from the name of the snapshot the
+    #: bundle was taken from, so the cans only load under that name.
+    #:
+    source = Source(
+        config=SourceConfig(mirror=True),
+        ref=TDRSourceRef(
+            id='4b4c1e4e-2a17-4b9e-9f1a-9e8e0a3b2d55',
+            spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_anvil_project:'
+                                     'ANVIL_1000G_high_coverage_2019'
+                                     '_20230517_ANV6_202607071430'),
+            prefix=Prefix.parse('/0')
+        )
+    )
+
+    #: The primary key of the biosample root of each canned bundle. The first
+    #: one sorts lower and therefore names the directory a backfilled path uses.
+    #:
+    biosamples = [
+        '52cb7acf-36e4-7ee2-33b7-7772edd60b3f',
+        '72ee95e4-04b7-93c1-36c7-b3f06058407f'
+    ]
+
+    #: The entity ID of the doctored file
+    #:
+    pathless_file = '121f8754-7639-5977-9e0f-c9f0095f2a57'
+
+    directory = '/'.join([
+        'CCDG_13607',
+        'Project_CCDG_13607_B01_GRM_WGS.gVCF.2019-02-06',
+        'Sample_HG02089',
+        'analysis'
+    ])
+
+    name = 'HG02089.haplotypeCalls.er.raw.g.vcf.gz'
+
+    #: The paths of all shared files, by entity ID
+    #:
+    expected_paths = {
+        '5ea88d0a-9bbf-55b5-8df3-69bc20355333': f'{directory}/{name}',
+        '045547b7-12b1-5e4d-9eb5-854c963a6522': f'{directory}/{name}.tbi',
+        'b117471b-ad63-5581-b87e-139e2be35a46': f'{directory}/checksum/{name}.tbi.md5',
+        pathless_file: f'{biosamples[0]}/{name}.md5'
+    }
+
+    def _index_bundles(self) -> None:
+        """
+        Index both canned bundles, after doctoring them as described in the
+        docstring of this class.
+        """
+        for primary_key in self.biosamples:
+            bundle = self._load_canned_bundle(self.bundle_fqid(primary_key=primary_key))
+            for entity, metadata in bundle.entities.items():
+                if entity.entity_id == self.pathless_file:
+                    metadata['file_path'] = None
+            self._index_bundle(bundle)
+
+    def test_shared_files(self):
+        """
+        Each shared file gets a contribution from each bundle. The undoctored
+        files end up at their original paths, but the doctored one is placed in
+        a directory named after the lower-sorting of its two parent biosamples.
+        """
+        self._index_bundles()
+        actual = {}
+        for hit in self._get_all_hits():
+            qualifier, doc_type = self._parse_index_name(hit)
+            if qualifier == 'files' and doc_type is DocumentType.aggregate:
+                contents = one(hit['_source']['contents']['files'])
+                entity_id = json_str(contents['document_id'])
+                if entity_id in self.expected_paths:
+                    actual[entity_id] = (hit['_source']['num_contributions'],
+                                         contents['file_path'])
+        expected = {
+            entity_id: (2, path)
+            for entity_id, path in self.expected_paths.items()
+        }
+        self.assertEqual(expected, actual)

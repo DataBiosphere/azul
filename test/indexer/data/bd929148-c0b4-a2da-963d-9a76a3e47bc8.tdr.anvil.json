@@ -1,0 +1,328 @@
+{
+    "entities": {
+        "anvil_activity/298e38fa-f15c-5d4c-acaa-e2c363f03ab8": {
+            "activity_id": "22cb7282-91a5-207c-9c97-66c88033f141",
+            "activity_type": "Unknown",
+            "datarepo_row_id": "ea0a5ced-b99d-4252-810a-71ef45754eab",
+            "generated_file_id": [
+                "dba73b92-8e32-3fed-bef4-9eae496a4214",
+                "bca72044-66f3-3e0c-8d79-0199b453dee3",
+                "bf0d1dfe-3a22-30b2-8b80-7f91e34e720d"
+            ],
+            "source_datarepo_row_ids": [
+                "sample:2ed35e19-af95-4612-bfc9-2429dac71b4b"
+            ],
+            "used_biosample_id": [
+                "52cb7acf-36e4-7ee2-33b7-7772edd60b3f"
+            ],
+            "used_file_id": [],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_activity/d2ef2898-86ba-596c-82a2-be09056f9a30": {
+            "activity_id": "89f73647-6c63-dab9-0ae8-72c16a58489f",
+            "activity_type": "Unknown",
+            "datarepo_row_id": "52b5b8d9-c1d6-4943-8dff-343b56de48f8",
+            "generated_file_id": [
+                "bca72044-66f3-3e0c-8d79-0199b453dee3",
+                "bf0d1dfe-3a22-30b2-8b80-7f91e34e720d"
+            ],
+            "source_datarepo_row_ids": [
+                "participant:e92121e7-4814-4d2c-8da6-7ec8ee08291c"
+            ],
+            "used_biosample_id": [
+                "72ee95e4-04b7-93c1-36c7-b3f06058407f"
+            ],
+            "used_file_id": [],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_activity/e2350cbe-5fb2-5618-ba57-6c67132a4242": {
+            "activity_id": "97d5cfe3-994c-e724-ce01-981bffa3b2b1",
+            "activity_type": "Indexing",
+            "datarepo_row_id": "39d4ef1d-13b1-4e75-b06d-c499237c9230",
+            "generated_file_id": [
+                "bf0d1dfe-3a22-30b2-8b80-7f91e34e720d"
+            ],
+            "source_datarepo_row_ids": [
+                "file_inventory:9ffd2d54-5036-48e9-ad8f-092c13c62cb8",
+                "file_inventory:7a001935-18ce-4b60-9292-209bd71edcdf"
+            ],
+            "used_biosample_id": [],
+            "used_file_id": [
+                "bca72044-66f3-3e0c-8d79-0199b453dee3"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_activity/431834d9-757b-5424-b0ef-cd3b4736db4e": {
+            "activity_id": "c703319c-62e7-0519-f009-5a6c1816d827",
+            "activity_type": "Checksum",
+            "datarepo_row_id": "bb82b776-e0e3-4a98-a18c-fc15c261fb6c",
+            "generated_file_id": [
+                "ce734db2-ccc0-3112-87fd-7b886d4b166b"
+            ],
+            "source_datarepo_row_ids": [
+                "file_inventory:2be1761e-1c95-4e24-856d-5e9c7e3a23e6",
+                "file_inventory:9ffd2d54-5036-48e9-ad8f-092c13c62cb8"
+            ],
+            "used_biosample_id": [],
+            "used_file_id": [
+                "bf0d1dfe-3a22-30b2-8b80-7f91e34e720d"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_activity/fcd72c18-88fa-5d01-a777-77f765908aa6": {
+            "activity_id": "e650eb2f-f9de-2c56-19f2-b99f4aba5dd6",
+            "activity_type": "Checksum",
+            "datarepo_row_id": "bdcc363b-f4f1-4899-8e98-1031193e73b9",
+            "generated_file_id": [
+                "3365296c-cfd1-37d6-9e26-97363e1badfc"
+            ],
+            "source_datarepo_row_ids": [
+                "file_inventory:b2606562-edbb-4444-8273-da84cb4d2a55",
+                "file_inventory:7a001935-18ce-4b60-9292-209bd71edcdf"
+            ],
+            "used_biosample_id": [],
+            "used_file_id": [
+                "bca72044-66f3-3e0c-8d79-0199b453dee3"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_biosample/f0a8980f-e515-5e24-96d3-fd8bfc8d4060": {
+            "anatomical_site": null,
+            "apriori_cell_type": [],
+            "biosample_id": "52cb7acf-36e4-7ee2-33b7-7772edd60b3f",
+            "biosample_type": null,
+            "datarepo_row_id": "59be4156-6469-4daf-8c67-b5a7a4974533",
+            "disease": null,
+            "donor_age_at_collection_lower_bound": null,
+            "donor_age_at_collection_unit": null,
+            "donor_age_at_collection_upper_bound": null,
+            "donor_id": [
+                "52cb7acf-36e4-7ee2-33b7-7772edd60b3f"
+            ],
+            "part_of_dataset_id": [
+                "8a756d17-c54c-3b33-312b-c767552a8516"
+            ],
+            "source_datarepo_row_ids": [
+                "sample:2ed35e19-af95-4612-bfc9-2429dac71b4b"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8": {
+            "anatomical_site": null,
+            "apriori_cell_type": [],
+            "biosample_id": "72ee95e4-04b7-93c1-36c7-b3f06058407f",
+            "biosample_type": null,
+            "datarepo_row_id": "bd3c909b-9228-429f-9db1-d2aff492f512",
+            "disease": null,
+            "donor_age_at_collection_lower_bound": null,
+            "donor_age_at_collection_unit": null,
+            "donor_age_at_collection_upper_bound": null,
+            "donor_id": [
+                "52cb7acf-36e4-7ee2-33b7-7772edd60b3f"
+            ],
+            "part_of_dataset_id": [
+                "8a756d17-c54c-3b33-312b-c767552a8516"
+            ],
+            "source_datarepo_row_ids": [
+                "participant:e92121e7-4814-4d2c-8da6-7ec8ee08291c"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_dataset/57c19f3f-17cd-5b67-adf6-27ca9820394d": {
+            "consent_group": [
+                "NRES"
+            ],
+            "data_modality": [
+                "whole genome"
+            ],
+            "data_use_permission": [
+                "NRES"
+            ],
+            "datarepo_row_id": "5671c9ff-1045-4467-88d6-7e56ca77668c",
+            "dataset_id": "8a756d17-c54c-3b33-312b-c767552a8516",
+            "owner": [
+                "AnVIL Team"
+            ],
+            "principal_investigator": [],
+            "registered_identifier": [],
+            "source_datarepo_row_ids": [
+                "workspace_attributes:d1dc8065-acfd-4758-8a1c-c24b20cf0b4c"
+            ],
+            "title": "ANVIL_1000G_high_coverage_2019",
+            "duos_id": "DUOS-000267",
+            "description": "Data Release notes for the workspace\n\n1000 Genomes 3202 phase 3, Update May 23, 2023\n\nFrom March 8, 2023 to May 8, 2023, the following files below were temporarily unavailable. As of May 8, 2023, these files have been restored. \n\nHG00257.final.cram\nHG00369.final.cram\nHG00657.final.cram\nHG00684.final.cram\nHG01079.final.cram\nHG01110.final.cram\nHG01122.final.cram\nHG01491.final.cram\nHG01697.final.cram\nHG01777.final.cram\nHG01976.final.cram\nHG02164.final.cram\nHG02312.final.cram\nHG02380.final.cram\nHG02512.final.cram\nHG02557.final.cram\nHG02681.final.cram\nHG02769.final.cram\nHG03063.final.cram\nHG03563.final.cram\nHG03844.final.cram\nHG03898.final.cram\nHG03937.final.cram\nHG04141.final.cram\nNA18912.final.cram\nNA19060.final.cram\nNA19238.final.cram\nNA19360.final.cram\nNA19474.final.cram\nNA20790.final.cram\nNA21126.final.cram\nHG00408.final.cram\nHG00639.final.cram\nHG01096.final.cram\nHG01529.final.cram\nHG02821.final.cram\nHG03047.final.cram\nHG03487.final.cram\nNA18487.final.cram\nNA18500.final.cram\nNA20279.final.cram\nHG01141.haplotypeCalls.er.raw.vcf.gz\nNA10830.haplotypeCalls.er.raw.vcf.gz\nNA18863.haplotypeCalls.er.raw.vcf.gz\n\n\n1000 Genomes 3202 phase 3 panel samples sequenced to high coverage\n==================================================================\n\nThis policy refers to 30x Illumina NovaSeq sequencing of 3202 samples from the 1000 Genomes project phase 3 sample set, along with 698 family members that complete trios in the phase 3 data . These data were generated at the New York Genome Center with funds provided by NHGRI Grant 3UM1HG008901. Please email service@nygenome.org with questions or interest in undertaking collaborative analysis of this dataset. All cell lines were obtained from the Coriell Institute for Medical Research and were consented for full public release of genomic data. Please see Coriell (https://www.coriell.org) for more information about specific cell lines. The following cell lines/DNA samples were obtained from the NIGMS Human Genetic Cell Repository at the Coriell Institute for Medical Research: [NA06984, NA06985, NA06986, NA06989, NA06994, NA07000, NA07037, NA07048, NA07051, NA07056, NA07347, NA07357, NA10847, NA10851, NA11829, NA11830, NA11831, NA11832, NA11840, NA11843, NA11881, NA11892, NA11893, NA11894, NA11918, NA11919, NA11920, NA11930. NA11931, NA11932, NA11933, NA11992, NA11994, NA11995, NA12003, NA12004, NA12005, NA12006, NA12043, NA12044, NA12045, NA12046, NA12058, NA12144, NA12154, NA12155, NA12156, NA12234, NA12249, NA12272, NA12273, NA12275, NA12282, NA12283, NA12286, NA12287, NA12340, NA12341, NA12342, NA12347, NA12348, NA12383, NA12399, NA12400, NA12413,, NA12414, NA12489, NA12546, NA12716, NA12717, NA12718, NA12748, NA12749, NA12750, NA12751, NA12760, NA12761, NA12762, NA12763, NA12775, NA12776, NA12777, NA12778, NA12812, NA12813, NA12814, NA12815, NA12827, NA12828, NA12829, NA12830, NA12842, NA12843, NA12872, NA12873, NA12874, NA12878, NA12889, NA12890, NA12376, NA10838, NA12329, NA10852, NA10840, NA12386, NA12864, NA12801, NA12344, NA10861, NA07029, NA12753, NA12832, NA12485, NA12802, NA12739, NA10856, NA10845, NA12818, NA10831, NA12766, NA10864, NA10843, NA12877, NA12335, NA12817, NA12752, NA12767, NA10855, NA12707, NA10857, NA10839, NA12740, NA10837, NA10836, NA07348, NA11993, NA12057, NA11839, NA06993, NA07014, NA06995, NA12146, NA12865, NA10859,\nNA06991, NA12336, NA10860, NA12145, NA07045, NA07349, NA07031, NA07345, NA12891, NA07055, NA07435, NA10835, NA12274, NA12875, NA10842, NA12239, NA10830, NA12056, NA11917, NA12892, NA06997, NA07022, NA12264, NA11891, NA07034, NA12248, NA10865, , NA10863, NA10854, NA11882, NA07346, NA07019, NA12343, NA10846].\n\nIf using this data please acknowledge that: These data were generated at the New York Genome Center with funds provided by NHGRI Grant 3UM1HG008901-03S1. Additionally, if data from any of the cell lines listed were used, then they should be cited specifically as coming from NIGMS.\n\nFor more general information about the consent for the samples in this data set, please see http://www.internationalgenome.org/about#g1k_data_reuse.\n\nFor general enquiries, please contact info@1000genomes.org.\n\n\n==================================================================\n\n1000 Genomes Processing README\n\nThis README contains information relating to data associated with the 1000 Genomes \nresequencing done at New York Genome Center.\nAlignment, post-processing and variant calling\nAlignment and post-processing are performed exactly as outlined by the Center for\nCommon Disease Genomics project: https://github.com/CCDG/PipelineStandardization/blob/master/PipelineStandard.md .\nPrograms and reference data\nThe data was aligned to the reference genome using the following programs and reference \ndatasets:\n1. BWA-MEM bwakit-0.7.15\n2. Samtools-1.3.1\n3. Picard-2.4.1\n4. GATK-3.5-0\n5. Resource files - All the resource files used in the analysis can be obtained here: \nhttps://console.cloud.google.com/storage/browser/genomics-publicdata/resources/broad/hg38/v0/ .\nReference genome: GRCh38 with alternative sequences, plus decoys and HLA\nThe reference genome that the data was aligned to can be obtained here: \nftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome\n/GRCh38_full_analysis_set_plus_decoy_hla.fa\n\n==================================================================\n\nAnalysis work is being done by a number of groups, working toward variant calling, including identification of structural variation.\n\nInitial analysis has been done by NYGC, including aligning the data to GRCh38, creating the CRAMs in ENA. The document [NYGC_b38_pipeline_description.pdf](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_cov/NYGC_b38_pipeline_description.pdf) contains a description of that analysis work and details of the alignment pipeline.\n\nShould you have questions about this data please contact info@1000genomes.org\n Platform: AnVIL",
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_donor/c7214518-6fe4-59d0-a37a-e4ef97e0260b": {
+            "datarepo_row_id": "6b600794-e738-4744-953e-5942e8170874",
+            "donor_id": "52cb7acf-36e4-7ee2-33b7-7772edd60b3f",
+            "genetic_ancestry": [],
+            "organism_type": "Human",
+            "part_of_dataset_id": "8a756d17-c54c-3b33-312b-c767552a8516",
+            "phenotypic_sex": null,
+            "reported_ethnicity": [],
+            "source_datarepo_row_ids": [
+                "participant:e92121e7-4814-4d2c-8da6-7ec8ee08291c"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z"
+        },
+        "anvil_file/121f8754-7639-5977-9e0f-c9f0095f2a57": {
+            "file_md5sum": "1735764bdad4b4bdf1583ea2e42f73da",
+            "data_modality": [],
+            "datarepo_row_id": "d28b2795-091c-4f09-a8a0-fc5e808f0b5f",
+            "file_format": ".md5",
+            "file_id": "3365296c-cfd1-37d6-9e26-97363e1badfc",
+            "file_name": "HG02089.haplotypeCalls.er.raw.g.vcf.gz.md5",
+            "file_path": "CCDG_13607/Project_CCDG_13607_B01_GRM_WGS.gVCF.2019-02-06/Sample_HG02089/analysis/checksum/HG02089.haplotypeCalls.er.raw.g.vcf.gz.md5",
+            "file_ref": "drs://drs.anv0:v2_3365296c-cfd1-37d6-9e26-97363e1badfc",
+            "file_size": 70,
+            "is_supplementary": false,
+            "reference_assembly": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:b2606562-edbb-4444-8273-da84cb4d2a55"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z",
+            "drs_uri": "drs://drs.anv0:v2_3365296c-cfd1-37d6-9e26-97363e1badfc"
+        },
+        "anvil_file/5ea88d0a-9bbf-55b5-8df3-69bc20355333": {
+            "file_md5sum": "ecc77161ffb51e58a82fc4ed0977c5c1",
+            "data_modality": [],
+            "datarepo_row_id": "52565b25-b6b3-493e-b384-428bcbdb95cc",
+            "file_format": ".vcf.gz",
+            "file_id": "bca72044-66f3-3e0c-8d79-0199b453dee3",
+            "file_name": "HG02089.haplotypeCalls.er.raw.g.vcf.gz",
+            "file_path": "CCDG_13607/Project_CCDG_13607_B01_GRM_WGS.gVCF.2019-02-06/Sample_HG02089/analysis/HG02089.haplotypeCalls.er.raw.g.vcf.gz",
+            "file_ref": "drs://drs.anv0:v2_bca72044-66f3-3e0c-8d79-0199b453dee3",
+            "file_size": 6043285664,
+            "is_supplementary": false,
+            "reference_assembly": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:7a001935-18ce-4b60-9292-209bd71edcdf"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z",
+            "drs_uri": "drs://drs.anv0:v2_bca72044-66f3-3e0c-8d79-0199b453dee3"
+        },
+        "anvil_file/045547b7-12b1-5e4d-9eb5-854c963a6522": {
+            "file_md5sum": "2c67a42d7acd37fd2c9b10e453432627",
+            "data_modality": [],
+            "datarepo_row_id": "bf0da5ed-2136-47df-9c6d-7ff79978ce9d",
+            "file_format": ".tbi",
+            "file_id": "bf0d1dfe-3a22-30b2-8b80-7f91e34e720d",
+            "file_name": "HG02089.haplotypeCalls.er.raw.g.vcf.gz.tbi",
+            "file_path": "CCDG_13607/Project_CCDG_13607_B01_GRM_WGS.gVCF.2019-02-06/Sample_HG02089/analysis/HG02089.haplotypeCalls.er.raw.g.vcf.gz.tbi",
+            "file_ref": "drs://drs.anv0:v2_bf0d1dfe-3a22-30b2-8b80-7f91e34e720d",
+            "file_size": 4071840,
+            "is_supplementary": false,
+            "reference_assembly": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:9ffd2d54-5036-48e9-ad8f-092c13c62cb8"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z",
+            "drs_uri": "drs://drs.anv0:v2_bf0d1dfe-3a22-30b2-8b80-7f91e34e720d"
+        },
+        "anvil_file/b117471b-ad63-5581-b87e-139e2be35a46": {
+            "file_md5sum": "339108784bf2a95f212d408e41ca253c",
+            "data_modality": [],
+            "datarepo_row_id": "98c7660b-a087-469a-9468-641cfe88b7d4",
+            "file_format": ".md5",
+            "file_id": "ce734db2-ccc0-3112-87fd-7b886d4b166b",
+            "file_name": "HG02089.haplotypeCalls.er.raw.g.vcf.gz.tbi.md5",
+            "file_path": "CCDG_13607/Project_CCDG_13607_B01_GRM_WGS.gVCF.2019-02-06/Sample_HG02089/analysis/checksum/HG02089.haplotypeCalls.er.raw.g.vcf.gz.tbi.md5",
+            "file_ref": "drs://drs.anv0:v2_ce734db2-ccc0-3112-87fd-7b886d4b166b",
+            "file_size": 74,
+            "is_supplementary": false,
+            "reference_assembly": [],
+            "source_datarepo_row_ids": [
+                "file_inventory:2be1761e-1c95-4e24-856d-5e9c7e3a23e6"
+            ],
+            "version": "2022-06-01T00:00:00.000000Z",
+            "drs_uri": "drs://drs.anv0:v2_ce734db2-ccc0-3112-87fd-7b886d4b166b"
+        }
+    },
+    "links": [
+        {
+            "inputs": [
+                "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8"
+            ],
+            "activity": "anvil_activity/d2ef2898-86ba-596c-82a2-be09056f9a30",
+            "outputs": [
+                "anvil_file/045547b7-12b1-5e4d-9eb5-854c963a6522",
+                "anvil_file/5ea88d0a-9bbf-55b5-8df3-69bc20355333"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_biosample/f0a8980f-e515-5e24-96d3-fd8bfc8d4060"
+            ],
+            "activity": "anvil_activity/298e38fa-f15c-5d4c-acaa-e2c363f03ab8",
+            "outputs": [
+                "anvil_file/045547b7-12b1-5e4d-9eb5-854c963a6522",
+                "anvil_file/5ea88d0a-9bbf-55b5-8df3-69bc20355333"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_dataset/57c19f3f-17cd-5b67-adf6-27ca9820394d"
+            ],
+            "activity": null,
+            "outputs": [
+                "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_dataset/57c19f3f-17cd-5b67-adf6-27ca9820394d"
+            ],
+            "activity": null,
+            "outputs": [
+                "anvil_biosample/f0a8980f-e515-5e24-96d3-fd8bfc8d4060"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_donor/c7214518-6fe4-59d0-a37a-e4ef97e0260b"
+            ],
+            "activity": null,
+            "outputs": [
+                "anvil_biosample/f0a8980f-e515-5e24-96d3-fd8bfc8d4060"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_donor/c7214518-6fe4-59d0-a37a-e4ef97e0260b"
+            ],
+            "activity": null,
+            "outputs": [
+                "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_file/045547b7-12b1-5e4d-9eb5-854c963a6522"
+            ],
+            "activity": "anvil_activity/431834d9-757b-5424-b0ef-cd3b4736db4e",
+            "outputs": [
+                "anvil_file/b117471b-ad63-5581-b87e-139e2be35a46"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_file/5ea88d0a-9bbf-55b5-8df3-69bc20355333"
+            ],
+            "activity": "anvil_activity/e2350cbe-5fb2-5618-ba57-6c67132a4242",
+            "outputs": [
+                "anvil_file/045547b7-12b1-5e4d-9eb5-854c963a6522"
+            ]
+        },
+        {
+            "inputs": [
+                "anvil_file/5ea88d0a-9bbf-55b5-8df3-69bc20355333"
+            ],
+            "activity": "anvil_activity/fcd72c18-88fa-5d01-a777-77f765908aa6",
+            "outputs": [
+                "anvil_file/121f8754-7639-5977-9e0f-c9f0095f2a57"
+            ]
+        }
+    ],
+    "orphans": {}
+}

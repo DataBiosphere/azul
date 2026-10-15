@@ -65,6 +65,9 @@ from azul.indexer.transform import (
 from azul.lib import (
     R,
 )
+from azul.lib.functions import (
+    either,
+)
 from azul.lib.strings import (
     pluralize,
 )
@@ -403,8 +406,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         # A file's backfilled path may have been lengthened by deduplication.
         # See :py:meth:`FileTransformer._backfilled_file_paths` for details.
         if entity_type == 'files':
-            this_path = json_str(this_entity['file_path'])
-            that_path = json_str(that_entity['file_path'])
+            this_path = json_str(either(this_entity['file_path'], ''))
+            that_path = json_str(either(that_entity['file_path'], ''))
             result = that if len(that_path) > len(this_path) else this
         else:
             result = this
