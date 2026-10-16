@@ -163,22 +163,26 @@ class LambdaMapper(Mapper):
         )
 
 
-class ElasticSearchMapper(Mapper):
+class OpenSearchMapper(Mapper):
 
     def _supported_resource_types(self) -> set[str]:
-        return {'AWS::Elasticsearch::Domain'}
+        # AWS Config reports every OpenSearch domain under both of the types
+        # below. We only map the modern configuration item, but claim both to
+        # prevent DefaultMapper from emitting a generic row for the other one.
+        return {'AWS::Elasticsearch::Domain', 'AWS::OpenSearch::Domain'}
 
     def map(self, resource: ResourceConfig) -> Iterator[InventoryRow]:
-        yield InventoryRow(
-            asset_type='AWS OpenSearch Domain',
-            baseline_config=resource.config['elasticsearchVersion'],
-            is_public=YesNo.no,
-            is_virtual=YesNo.yes,
-            network_id=resource.config['endpoints'].get('vpc'),
-            patch_level=resource.config.get('serviceSoftwareOptions', {}).get('currentVersion'),
-            software_product_name='AWS OpenSearch',
-            **self._common_fields(resource)
-        )
+        if resource.type == 'AWS::OpenSearch::Domain':
+            yield InventoryRow(
+                asset_type='AWS OpenSearch Domain',
+                baseline_config=resource.config['EngineVersion'],
+                is_public=YesNo.no,
+                is_virtual=YesNo.yes,
+                network_id=resource.config['DomainEndpoints'].get('vpc'),
+                patch_level=resource.config.get('ServiceSoftwareOptions', {}).get('CurrentVersion'),
+                software_product_name='AWS OpenSearch',
+                **self._common_fields(resource)
+            )
 
 
 class EC2Mapper(Mapper):
