@@ -78,6 +78,9 @@ from azul.modules import (
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from mypy_boto3_sqs.literals import (
+        QueueAttributeNameType,
+    )
     from mypy_boto3_sqs.service_resource import (
         Message,
         Queue,
@@ -175,6 +178,28 @@ class Queues:
     #:
     receive_wait_time = 20
 
+    #: The number of consecutive empty receives after which a queue is
+    #: considered drained even though it still reports messages. Each of those
+    #: receives long-polls every SQS host, but the reported counts are
+    #: approximate, and a queue whose producers are still running may never
+    #: report zero. AWS prescribes observing the counts instead of trusting a
+    #: single empty receive, but their procedure also assumes that the
+    #: producers of the queue have been stopped.
+    #:
+    #: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/confirm-queue-is-empty.html
+    #:
+    max_empty_receives = 3
+
+    #: The names of the queue attributes counting the messages that are
+    #: available, in flight and delayed, respectively. All three are
+    #: approximate.
+    #:
+    message_count_attributes: tuple[QueueAttributeNameType, ...] = (
+        'ApproximateNumberOfMessages',
+        'ApproximateNumberOfMessagesNotVisible',
+        'ApproximateNumberOfMessagesDelayed'
+    )
+
     def __init__(self, delete: bool = False, json_body: bool = True):
         self._delete = delete
         self._json_body = json_body
@@ -208,12 +233,13 @@ class Queues:
         # Messages that are not deleted must be held in flight until the dump
         # ends, or receiving them again would make the dump run forever
         messages: list[Message] = []
-        num_messages = 0
+        num_messages, num_empty_receives = 0, 0
         with open(path, 'w') as file:
             self._write_line(file, {'queue': queue.url})
             while True:
                 message_batch = self._receive_messages(queue)
                 if message_batch:
+                    num_empty_receives = 0
                     for message in message_batch:
                         self._write_line(file, self._condense(message))
                     file.flush()
@@ -224,11 +250,38 @@ class Queues:
                     else:
                         messages.extend(message_batch)
                 else:
-                    break
+                    num_empty_receives += 1
+                    num_remaining = self._num_remaining_messages(queue, len(messages))
+                    if num_remaining == 0:
+                        break
+                    elif num_empty_receives < self.max_empty_receives:
+                        log.info('Queue %r reports %i message(s) left after an '
+                                 'empty receive, polling it again',
+                                 queue.url, num_remaining)
+                    else:
+                        log.warning('Queue %r still reports %i message(s) after '
+                                    '%i empty receives, dumping it no further',
+                                    queue.url, num_remaining, num_empty_receives)
+                        break
         log.info('Wrote %i messages', num_messages)
         log.info(f'Finished writing {path!r}')
         if not self._delete:
             self._cleanup_messages(queue, messages)
+
+    def _num_remaining_messages(self, queue: Queue, num_in_flight: int) -> int:
+        """
+        The number of messages the given queue reports, other than the given
+        number of messages this dump itself holds in flight. The counts are
+        approximate, so the result is, too.
+        """
+        queue.reload()
+        return max(0, sum(self._message_counts(queue)) - num_in_flight)
+
+    def _message_counts(self, queue: Queue) -> builtins.list[int]:
+        return [
+            int(queue.attributes[name])
+            for name in self.message_count_attributes
+        ]
 
     def _is_fifo(self, queue: Queue) -> bool:
         return queue.attributes.get('FifoQueue') == 'true'
@@ -400,11 +453,7 @@ class Queues:
         total, lengths = 0, {}
         for queue_name, queue in queues.items():
             queue.reload()
-            message_counts = [
-                int(queue.attributes['ApproximateNumberOfMessages']),
-                int(queue.attributes['ApproximateNumberOfMessagesNotVisible']),
-                int(queue.attributes['ApproximateNumberOfMessagesDelayed']),
-            ]
+            message_counts = self._message_counts(queue)
             length = sum(message_counts)
             log.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
                       queue_name, length, *message_counts)
@@ -601,11 +650,7 @@ class Queues:
 
     def _wait_for_queue_empty(self, queue: Queue):
         while True:
-            num_messages = (
-                int(queue.attributes['ApproximateNumberOfMessages']) +
-                int(queue.attributes['ApproximateNumberOfMessagesNotVisible']) +
-                int(queue.attributes['ApproximateNumberOfMessagesDelayed'])
-            )
+            num_messages = sum(self._message_counts(queue))
             if num_messages == 0:
                 break
             log.info('Queue %r still has %i messages', queue.url, num_messages)

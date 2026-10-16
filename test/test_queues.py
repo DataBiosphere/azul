@@ -6,6 +6,9 @@ from unittest.mock import (
     patch,
 )
 
+from more_itertools import (
+    one,
+)
 from moto import (
     mock_aws,
 )
@@ -108,6 +111,22 @@ class TestQueues(SqsTestCase):
         with patch.object(time, 'sleep', side_effect=Waited):
             with self.assertRaises(Waited):
                 queues._wait_for_queue_empty(queue)
+
+    def test_dump_of_queue_that_keeps_reporting_messages(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 1)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            # A queue whose producers are still running may never report zero,
+            # so the dump gives up instead of polling it forever
+            with patch.object(Queues, '_num_remaining_messages', return_value=7):
+                with self.assertLogs('azul.queues', level='WARNING') as logs:
+                    Queues(delete=True).dump(queue_name, path)
+            envelope, dumped_messages = self._read_dump(path)
+        message = one(logs.records).getMessage()
+        self.assertIn('still reports 7 message(s)', message)
+        self.assertIn(f'after {Queues.max_empty_receives} empty receives', message)
+        self.assertEqual(1, len(dumped_messages))
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()
