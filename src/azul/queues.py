@@ -26,6 +26,7 @@ from math import (
 import os
 import time
 from typing import (
+    ClassVar,
     Self,
     TYPE_CHECKING,
     TextIO,
@@ -148,7 +149,13 @@ class SQSFifoMessage(SQSMessage):
                    dedup_id=json_str(attributes['MessageDeduplicationId']))
 
 
+@attrs.frozen(kw_only=True, slots=False)
 class Queues:
+    #: Whether to remove the messages from the queue they are dumped from, and
+    #: from the file they are fed from
+    #:
+    _delete: bool = False
+
     #: The number of messages to be queued in a single SQS SendMessageBatch
     #: action. Theoretically, larger batches are better but SQS currently limits
     #: the SendMessageBatch size to 10. This is also used to configure the
@@ -194,14 +201,11 @@ class Queues:
     #: available, in flight and delayed, respectively. All three are
     #: approximate.
     #:
-    message_count_attributes: tuple[QueueAttributeNameType, ...] = (
+    message_count_attributes: ClassVar[tuple[QueueAttributeNameType, ...]] = (
         'ApproximateNumberOfMessages',
         'ApproximateNumberOfMessagesNotVisible',
         'ApproximateNumberOfMessagesDelayed'
     )
-
-    def __init__(self, delete: bool = False):
-        self._delete = delete
 
     def list(self):
         log.info('Listing queues')
