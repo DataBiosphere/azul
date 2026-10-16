@@ -167,6 +167,14 @@ class Queues:
     #:
     stabilization_poll_interval = 10
 
+    #: The number of seconds a receive waits for messages to arrive. Any value
+    #: above zero selects long polling, which queries all SQS hosts instead of
+    #: a sample of them and therefore eliminates the empty responses a short
+    #: poll can return while messages remain. The documented maximum is used
+    #: because AWS notes that lower values make such responses more likely.
+    #:
+    receive_wait_time = 20
+
     def __init__(self, delete: bool = False, json_body: bool = True):
         self._delete = delete
         self._json_body = json_body
@@ -228,7 +236,8 @@ class Queues:
     def _receive_messages(self, queue: Queue) -> builtins.list[Message]:
         return queue.receive_messages(AttributeNames=['All'],
                                       MaxNumberOfMessages=self.batch_size,
-                                      VisibilityTimeout=300)
+                                      VisibilityTimeout=300,
+                                      WaitTimeSeconds=self.receive_wait_time)
 
     def _get_messages(self, queue: Queue) -> builtins.list[Message]:
         messages: list[Message] = []
