@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import time
 from unittest.mock import (
     patch,
 )
@@ -88,6 +89,25 @@ class TestQueues(SqsTestCase):
                              [message['Body'] for message in dumped_messages])
         queue.reload()
         self.assertEqual('0', queue.attributes['ApproximateNumberOfMessages'])
+
+    def test_wait_for_queue_empty_counts_in_flight_messages(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 3)
+        queues = Queues()
+        # Receiving the messages without deleting them puts them in flight,
+        # which leaves the queue anything but empty
+        self.assertEqual(3, len(queues._receive_messages(queue)))
+        queue.reload()
+        self.assertEqual('3', queue.attributes['ApproximateNumberOfMessagesNotVisible'])
+
+        class Waited(Exception):
+            pass
+
+        # The method waits by sleeping, so a sleep means it did not mistake
+        # the queue for an empty one
+        with patch.object(time, 'sleep', side_effect=Waited):
+            with self.assertRaises(Waited):
+                queues._wait_for_queue_empty(queue)
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()

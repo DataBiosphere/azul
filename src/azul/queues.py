@@ -603,8 +603,8 @@ class Queues:
         while True:
             num_messages = (
                 int(queue.attributes['ApproximateNumberOfMessages']) +
-                int(queue.attributes['ApproximateNumberOfMessagesDelayed']) +
-                int(queue.attributes['ApproximateNumberOfMessages'])
+                int(queue.attributes['ApproximateNumberOfMessagesNotVisible']) +
+                int(queue.attributes['ApproximateNumberOfMessagesDelayed'])
             )
             if num_messages == 0:
                 break
