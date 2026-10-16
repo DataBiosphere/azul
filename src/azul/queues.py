@@ -291,7 +291,11 @@ class Queues:
         messages: list[Message] = []
         num_messages, num_empty_receives = 0, 0
         with open(path, 'w') as file:
-            self._write_line(file, {'queue': queue.url})
+            envelope = {
+                'queue': queue.url,
+                'message_type': self._message_type(queue)
+            }
+            self._write_line(file, envelope)
             while True:
                 message_batch = self._receive_messages(queue)
                 if message_batch:
@@ -338,6 +342,38 @@ class Queues:
             int(queue.attributes[name])
             for name in self.message_count_attributes
         ]
+
+    def _message_type(self, queue: Queue) -> str:
+        """
+        The name of the class whose instances are the bodies of the messages in
+        the given queue.
+        """
+        queue_name = queue.url.rsplit('/', 1)[-1]
+        return self._message_types[queue_name]
+
+    @cached_property
+    def _message_types(self) -> dict[str, str]:
+        # These modules import this one, so they can only be imported from here
+        from azul.indexer.index_queue_service import (
+            DocumentTally,
+            IndexAction,
+        )
+        from azul.indexer.mirror_service import (
+            MirrorAction,
+        )
+        return {
+            queue.derive(retry=retry, fail=fail).name: message_type.__name__
+            for queue, message_type in [
+                (config.notifications_queue, IndexAction),
+                (config.tallies_queue, DocumentTally),
+                (config.mirror_queue, MirrorAction)
+            ]
+            for retry, fail in [
+                (False, False),
+                (True, False),
+                (False, True)
+            ]
+        }
 
     def _is_fifo(self, queue: Queue) -> bool:
         return queue.attributes.get('FifoQueue') == 'true'
@@ -573,6 +609,13 @@ class Queues:
             envelope, *messages = (json.loads(line) for line in file)
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
+        message_type = self._message_type(queue)
+        if envelope['message_type'] != message_type:
+            raise RuntimeError(
+                'The type of message to be fed does not match the type of '
+                'message the target queue is expected to hold',
+                envelope['message_type'], message_type
+            )
         progress_path = path + self.progress_suffix
         num_fed = self._read_progress(progress_path, queue)
         if num_fed > 0:

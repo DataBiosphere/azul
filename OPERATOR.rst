@@ -229,6 +229,11 @@ A feed that is interrupted records how many messages it submitted in a file
 beside the dump, and skips those messages when it is run again. Remove that
 file to feed the dump from the beginning instead.
 
+A feed refuses a dump whose messages the target queue does not carry, so that
+tallies cannot be fed into a queue of notifications or vice versa. Feeding the
+dump of a fail queue into the work queue it belongs to, as prescribed above,
+needs nothing of the sort.
+
 This may cause the previously failed messages to succeed. Repeat this procedure
 until the set of failed notifications stabilizes, i.e., the
 ``notifications_fail`` queue is empty or no previously failed notifications

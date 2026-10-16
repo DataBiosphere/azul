@@ -66,7 +66,8 @@ class TestQueues(SqsTestCase):
             queue.reload()
             self.assertEqual('0', queue.attributes['ApproximateNumberOfMessages'])
             envelope, dumped_messages = self._read_dump(path)
-            self.assertEqual(queue.url, envelope['queue'])
+            expected_envelope = {'queue': queue.url, 'message_type': 'DocumentTally'}
+            self.assertEqual(expected_envelope, envelope)
             self.assertEqual([message.body for message in messages],
                              [message['Body'] for message in dumped_messages])
             Queues().feed(path, queue_name)
@@ -170,6 +171,23 @@ class TestQueues(SqsTestCase):
                           ' '.join(record.getMessage() for record in logs.records))
             envelope, dumped_messages = self._read_dump(path)
             self.assertEqual(2, len(dumped_messages))
+
+    def test_feed_of_incompatible_messages(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 1)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            Queues(delete=True).dump(queue_name, path)
+            # Notifications are not tallies, whichever queue of theirs is fed
+            for other_name in [config.notifications_queue.name,
+                               config.notifications_queue.to_fail.name]:
+                with self.assertRaises(RuntimeError) as context:
+                    Queues().feed(path, other_name)
+                self.assertEqual(('DocumentTally', 'IndexAction'),
+                                 context.exception.args[1:])
+            # The queue the messages came from carries them, as does its
+            # counterpart that the retries of those messages end up in
+            Queues().feed(path, config.tallies_queue.to_retry.name)
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()
