@@ -44,20 +44,21 @@ class TestQueues(SqsTestCase):
 
     def _read_dump(self, path: str):
         with open(path) as file:
-            return json.load(file)
+            envelope, *messages = (json.loads(line) for line in file)
+        return envelope, messages
 
     def test_round_trip(self):
         queue_name, queue = self._create_queue()
         messages = self._send_messages(queue, 3)
         with tempfile.TemporaryDirectory() as dir_path:
-            path = os.path.join(dir_path, 'dump.json')
+            path = os.path.join(dir_path, 'dump.jsonl')
             Queues(delete=True).dump(queue_name, path)
             queue.reload()
             self.assertEqual('0', queue.attributes['ApproximateNumberOfMessages'])
-            content = self._read_dump(path)
-            self.assertEqual(queue.url, content['queue'])
+            envelope, dumped_messages = self._read_dump(path)
+            self.assertEqual(queue.url, envelope['queue'])
             self.assertEqual([message.body for message in messages],
-                             [message['Body'] for message in content['messages']])
+                             [message['Body'] for message in dumped_messages])
             Queues().feed(path, queue_name)
         fed_messages = Queues(delete=True).read_messages(queue)
         self.assertEqual([message.body for message in messages],
@@ -69,9 +70,9 @@ class TestQueues(SqsTestCase):
         num_messages = Queues.batch_size + 1
         self._send_messages(queue, num_messages)
         with tempfile.TemporaryDirectory() as dir_path:
-            path = os.path.join(dir_path, 'dump.json')
+            path = os.path.join(dir_path, 'dump.jsonl')
             Queues(delete=True).dump(queue_name, path)
-            dumped_messages = self._read_dump(path)['messages']
+            envelope, dumped_messages = self._read_dump(path)
             self.assertEqual(num_messages, len(dumped_messages))
 
             send_messages = type(queue).send_messages
@@ -92,8 +93,8 @@ class TestQueues(SqsTestCase):
             # sees, not a failure of the cleanup that follows it
             self.assertEqual(('simulated failure',), context.exception.args)
             # Only the messages that were not sent remain in the file
-            self.assertEqual(dumped_messages[Queues.batch_size:],
-                             self._read_dump(path)['messages'])
+            envelope, remaining_messages = self._read_dump(path)
+            self.assertEqual(dumped_messages[Queues.batch_size:], remaining_messages)
         queue.reload()
         self.assertEqual(str(Queues.batch_size),
                          queue.attributes['ApproximateNumberOfMessages'])

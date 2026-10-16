@@ -71,8 +71,8 @@ def main(argv):
 
     sp = sps.add_parser('dump_all',
                         help='Dump all messages in all queues in the current deployment. '
-                             'Each queue will be dumped into a separate JSON file. '
-                             'The name of the JSON file is the name of the queue followed by ".json"')
+                             'Each queue will be dumped into a separate JSONL file. '
+                             'The name of that file is the name of the queue followed by ".jsonl"')
     sp.add_argument('--delete', '-D', action='store_true',
                     help='Remove messages from each queue after writing them to the its file. '
                          'By default the messages will be returned to the queue')

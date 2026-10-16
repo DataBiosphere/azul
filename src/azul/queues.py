@@ -189,7 +189,7 @@ class Queues:
 
     def dump_all(self):
         for queue_name, queue in self.all_queues().items():
-            self._dump(queue, queue_name + '.json')
+            self._dump(queue, queue_name + '.jsonl')
 
     def _dump(self, queue: Queue, path: str):
         log.info('Writing messages from queue %r to file %r', queue.url, path)
@@ -262,11 +262,9 @@ class Queues:
                        path: str):
         messages = list(messages)
         with write_file_atomically(path) as file:
-            content = {
-                'queue': queue_url,
-                'messages': messages
-            }
-            json.dump(content, file, indent=4)
+            for content in chain([{'queue': queue_url}], messages):
+                json.dump(content, file)
+                file.write('\n')
         log.info('Wrote %i messages', len(messages))
 
     def _return_messages(self,
@@ -438,9 +436,8 @@ class Queues:
 
     def feed(self, path: str, queue_name: str):
         with open(path) as file:
-            content = json.load(file)
-            orig_queue = content['queue']
-            messages = content['messages']
+            envelope, *messages = (json.loads(line) for line in file)
+        orig_queue = envelope['queue']
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
         message_batches = list(more_itertools.chunked(messages, self.batch_size))

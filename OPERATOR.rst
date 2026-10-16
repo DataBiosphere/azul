@@ -209,7 +209,7 @@ failures. Use ``python scripts/manage_queues.py`` to identify any failed
 messages. If failed messages are found, use ``python scripts/manage_queues.py``
 to
 
-- dump the failed notifications to JSON file(s), using ``--delete`` to
+- dump the failed notifications to JSON Lines file(s), using ``--delete`` to
   simultaneously clear the ``notifications_fail`` queue
 
 - feed the failed notifications back into the ``notifications_retry``
