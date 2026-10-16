@@ -3,12 +3,12 @@ Create or update a PR for the current branch, takeing care of some of the CL
 items in the template. Uses the default PR template unless the --type option is
 passed. Use --help to see which types are currently supported.
 
-The script infers the linked issues from the name of the currently checked out
-branch, so make sure that the branch name matches our conventions. A branch
-that resolves more than one issue names them all, and the PR then refers to,
-links and advances every one of them, while its title is derived from the
-first. The inferral is straight-forward for the default type, but it also
-supports the other types.
+Unless the --issues option names the linked issues, the script infers them from
+the name of the currently checked out branch, so make sure that the branch name
+matches our conventions. A branch that resolves more than one issue names them
+all. The inferral is straight-forward for the default type, but it also supports
+the other types. Either way, the PR refers to, links and advances every linked
+issue, while its title is derived from the first one.
 
 For the default type, the script guesses whether to prefix the PR title with
 "Fix: " but since there is some ambiguity for debt issues you can override the
@@ -60,6 +60,12 @@ def main(argv):
                         choices=['upgrade', 'promotion'],
                         help='Type of PR to create. '
                              'If omitted, a regular PR is created.')
+    parser.add_argument('--issues', '-i',
+                        nargs='+', type=int, default=None, metavar='NUMBER',
+                        help='The numbers of the issues linked to this PR, the '
+                             'first of which determines the PR title. '
+                             'If omitted, the issues are inferred from the name '
+                             'of the current branch.')
     section_flags = {
         'partial': 'Remove partial label and check partiality tasks.',
         'mirror': 'Remove mirror labels and check mirror tasks.',
@@ -100,31 +106,35 @@ def main(argv):
     log.info('Checking remote branch …')
     _check_remote_branch(branch)
     title_suffix = ''
+    issue_numbers = args.issues
     if args.type is None:
         template_path = _project_root / '.github' / 'pull_request_template.md'
-        issue_numbers = _issue_numbers(branch)
+        if issue_numbers is None:
+            issue_numbers = _issue_numbers(branch)
     elif args.type == 'upgrade':
         template_path = _template_dir / 'upgrade.md'
-        date = _upgrade_date(branch)
-        log.info('Searching for upgrade issue …')
-        issue_numbers = [_issue_number_by_title(
-            f'Upgrade software dependencies {date}'
-        )]
+        if issue_numbers is None:
+            date = _upgrade_date(branch)
+            log.info('Searching for upgrade issue …')
+            issue_numbers = [_issue_number_by_title(
+                f'Upgrade software dependencies {date}'
+            )]
     elif args.type == 'promotion':
         date, target = _promotion_date_and_target(branch)
         template_path = _template_dir / f'{target}-promotion.md'
-        log.info('Searching for promotion issue …')
-        issue_numbers = [_issue_number_by_title(
-            f'Promotion {date}'
-        )]
+        if issue_numbers is None:
+            log.info('Searching for promotion issue …')
+            issue_numbers = [_issue_number_by_title(
+                f'Promotion {date}'
+            )]
         title_suffix = f' {target}'
     else:
         assert False, R('Unsupported template', args.type)
     log.info('Fetching issue %s …',
              join_grammatically([f'#{n}' for n in issue_numbers]))
     issues = [_issue_info(issue_number) for issue_number in issue_numbers]
-    # The PR is assumed to resolve every issue whose number appears in the
-    # branch name. The issue whose number appears first determines the PR title.
+    # The PR is assumed to resolve every one of the linked issues. The first
+    # of them determines the PR title.
     issue = issues[0]
     if args.fix is None:
         fix = issue.type == 'Defect'
