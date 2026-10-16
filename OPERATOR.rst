@@ -216,6 +216,15 @@ to
   queue. We feed directly into the retry queue, not the primary queue, to save
   time if/when the messages fail again.
 
+A dump refuses to run while the work queues hold messages, because the lambdas
+reading those queues produce the messages in the queue being dumped, and the
+dump would miss the ones arriving while it runs. After a reindex those queues
+are empty. If they are not, pass ``--safe`` to disable those lambdas for the
+duration of the dump, which is the only way to dump a busy deployment
+completely, or ``--unsafe`` to accept a dump that is probably incomplete. The
+latter is refused in combination with ``--delete``, which would discard the
+messages the dump missed.
+
 This may cause the previously failed messages to succeed. Repeat this procedure
 until the set of failed notifications stabilizes, i.e., the
 ``notifications_fail`` queue is empty or no previously failed notifications

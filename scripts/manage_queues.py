@@ -24,6 +24,17 @@ def main(argv):
     dump_options.add_argument('--delete', '-D', action='store_true',
                               help='Permanently remove queued messages after writing them to the '
                                    'file. By default the messages will be returned to the queue')
+    group = dump_options.add_mutually_exclusive_group()
+    group.add_argument('--safe', '-S', dest='safe_dump', action='store_true', default=None,
+                       help='Disable the lambdas reading the work queues of the current '
+                            'deployment for the duration of the dump. Those lambdas produce the '
+                            'messages in every queue, so only while they are disabled is a dump '
+                            'of a busy deployment complete.')
+    group.add_argument('--unsafe', '-U', dest='safe_dump', action='store_false', default=None,
+                       help='Dump even though the work queues hold messages, accepting that the '
+                            'dump will likely miss the messages arriving while it runs. Refused '
+                            'in combination with --delete, which would irreversibly split the '
+                            'messages between the incomplete dump and the queue.')
 
     sp = sps.add_parser('dump',
                         parents=[dump_options],
@@ -103,7 +114,7 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command in ('dump', 'dump_all'):
-        queues = Queues(delete=args.delete)
+        queues = Queues(delete=args.delete, safe_dump=args.safe_dump)
         if args.command == 'dump':
             queues.dump(args.queue, args.path)
         elif args.command == 'dump_all':

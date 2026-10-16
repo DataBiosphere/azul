@@ -32,9 +32,14 @@ from sqs_test_case import (
 class TestQueues(SqsTestCase):
 
     def _create_queue(self):
+        # Every queue is created because a dump inspects the work queues
+        self._create_mock_queues()
         queue_name = config.tallies_queue.to_fail.name
-        self._create_mock_queues([queue_name])
         return queue_name, aws.sqs_queue(queue_name)
+
+    def _fill_work_queue(self, num_messages: int = 1):
+        queue = aws.sqs_queue(config.tallies_queue.name)
+        self._send_messages(queue, num_messages)
 
     def _send_messages(self, queue, num_messages: int, num_groups: int | None = None):
         # By default, each message is put in a group of its own so that none of
@@ -123,10 +128,48 @@ class TestQueues(SqsTestCase):
                 with self.assertLogs('azul.queues', level='WARNING') as logs:
                     Queues(delete=True).dump(queue_name, path)
             envelope, dumped_messages = self._read_dump(path)
-        message = one(logs.records).getMessage()
+        message = one(record.getMessage()
+                      for record in logs.records
+                      if 'still reports' in record.getMessage())
         self.assertIn('still reports 7 message(s)', message)
         self.assertIn(f'after {Queues.max_empty_receives} empty receives', message)
         self.assertEqual(1, len(dumped_messages))
+
+    def test_dump_of_busy_deployment(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 2)
+        self._fill_work_queue(3)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            # Neither flag leaves the operator with no decision made
+            with self.assertRaises(RuntimeError) as context:
+                Queues().dump(queue_name, path)
+            self.assertIn('--safe', context.exception.args[0])
+            self.assertIn('--unsafe', context.exception.args[0])
+            self.assertEqual(3, context.exception.args[1])
+            # Deleting what is likely an incomplete dump is refused as well
+            with self.assertRaises(RuntimeError) as context:
+                Queues(delete=True, safe_dump=False).dump(queue_name, path)
+            self.assertIn('making --delete unsafe', context.exception.args[0])
+            # Dumping without deleting is permitted, with a warning
+            with self.assertLogs('azul.queues', level='WARNING') as logs:
+                Queues(safe_dump=False).dump(queue_name, path)
+            self.assertIn('probably incomplete',
+                          ' '.join(record.getMessage() for record in logs.records))
+            envelope, dumped_messages = self._read_dump(path)
+            self.assertEqual(2, len(dumped_messages))
+
+    def test_dump_of_idle_deployment(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 2)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            with self.assertLogs('azul.queues', level='WARNING') as logs:
+                Queues(delete=True).dump(queue_name, path)
+            self.assertIn('snatched up by the lambdas',
+                          ' '.join(record.getMessage() for record in logs.records))
+            envelope, dumped_messages = self._read_dump(path)
+            self.assertEqual(2, len(dumped_messages))
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()

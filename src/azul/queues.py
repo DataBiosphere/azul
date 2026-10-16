@@ -4,12 +4,16 @@ from collections import (
 )
 from collections.abc import (
     Iterable,
+    Iterator,
     Mapping,
 )
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor,
     as_completed,
+)
+from contextlib import (
+    contextmanager,
 )
 from datetime import (
     datetime,
@@ -156,6 +160,12 @@ class Queues:
     #:
     _delete: bool = False
 
+    #: If True, disable the queue worker lambdas for the duration of a dump.
+    #: If False, leave them enabled even if the queues hold messages. If None,
+    #: force a decision unless the work queues are empty.
+    #:
+    _safe_dump: bool | None = None
+
     #: The number of messages to be queued in a single SQS SendMessageBatch
     #: action. Theoretically, larger batches are better but SQS currently limits
     #: the SendMessageBatch size to 10. This is also used to configure the
@@ -222,11 +232,50 @@ class Queues:
 
     def dump(self, queue_name: str, path: str):
         queue = aws.sqs_queue(queue_name)
-        self._dump(queue, path)
+        with self._managed_lambdas():
+            self._dump(queue, path)
 
     def dump_all(self):
-        for queue_name, queue in self.all_queues().items():
-            self._dump(queue, queue_name + '.jsonl')
+        with self._managed_lambdas():
+            for queue_name, queue in self.all_queues().items():
+                self._dump(queue, queue_name + '.jsonl')
+
+    @contextmanager
+    def _managed_lambdas(self) -> Iterator[None]:
+        queues = self.get_queues(config.work_queue_names)
+        if self._safe_dump is True:
+            self.manage_lambdas(queues, enable=False)
+            try:
+                yield
+            finally:
+                self.manage_lambdas(queues, enable=True)
+        else:
+            num_messages, _ = self.get_queue_lengths(queues)
+            if num_messages == 0:
+                yield
+                log.warning(
+                    'The work queues were empty before the dump, but messages arriving '
+                    'afterwards could still have been snatched up by the lambdas'
+                )
+            elif self._safe_dump is None:
+                raise RuntimeError(
+                    'The work queues hold messages. Pass --safe to disable the lambdas '
+                    'during the dump, or --unsafe to dump anyway.',
+                    num_messages
+                )
+            elif self._delete:
+                raise RuntimeError(
+                    'The work queues hold messages, making --delete unsafe. '
+                    'Pass --safe instead of --unsafe.',
+                    num_messages
+                )
+            else:
+                yield
+                log.warning(
+                    'The work queues held %i message(s) before the dump, and more have '
+                    'likely arrived during the dump, so the dump is probably incomplete',
+                    num_messages
+                )
 
     def _dump(self, queue: Queue, path: str):
         log.info('Writing messages from queue %r to file %r', queue.url, path)
