@@ -212,7 +212,7 @@ to
 - dump the failed notifications to JSON file(s), using ``--delete`` to
   simultaneously clear the ``notifications_fail`` queue
 
-- force-feed the failed notifications back into the ``notifications_retry``
+- feed the failed notifications back into the ``notifications_retry``
   queue. We feed directly into the retry queue, not the primary queue, to save
   time if/when the messages fail again.
 
@@ -221,7 +221,7 @@ until the set of failed notifications stabilizes, i.e., the
 ``notifications_fail`` queue is empty or no previously failed notifications
 succeeded.
 
-Next, repeat the dump/delete/force-feed steps with the failed tallies, feeding
+Next, repeat the dump/delete/feed steps with the failed tallies, feeding
 them into ``tallies_retry`` queue (again, **NOT** the primary queue) until the
 set of failed tallies stabilizes.
 

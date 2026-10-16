@@ -436,20 +436,13 @@ class Queues:
             raise Exception('The queues have stalled', final_length)
         return final_length
 
-    def feed(self, path: str, queue_name: str, force: bool = False):
+    def feed(self, path: str, queue_name: str):
         with open(path) as file:
             content = json.load(file)
             orig_queue = content['queue']
             messages = content['messages']
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
-        if orig_queue != queue.url:
-            if force:
-                log.warning('Messages originating from queue %r are being fed into queue %r',
-                            orig_queue, queue.url)
-            else:
-                raise RuntimeError(f'Cannot feed messages originating from {orig_queue!r} to {queue.url!r}. '
-                                   f'Use --force to override.')
         message_batches = list(more_itertools.chunked(messages, self.batch_size))
 
         def _cleanup():

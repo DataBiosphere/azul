@@ -38,8 +38,6 @@ def main(argv):
                     help='Path of file to read messages from')
     sp.add_argument('queue', metavar='QUEUE_NAME',
                     help='Name of the queue to feed messages into')
-    sp.add_argument('--force', '-F', action='store_true',
-                    help='Force feeding messages to a queue they did not originate from.')
     sp.add_argument('--delete', '-D', action='store_true',
                     help='Remove messages from the file after adding them to the specified queue. '
                          'By default the messages will remain in the file')
@@ -117,7 +115,7 @@ def main(argv):
             assert False, args.command
     elif args.command == 'feed':
         queues = Queues(delete=args.delete)
-        queues.feed(args.path, args.queue, force=args.force)
+        queues.feed(args.path, args.queue)
     else:
         p.print_usage()
 
