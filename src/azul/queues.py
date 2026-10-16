@@ -449,7 +449,7 @@ class Queues:
             if self._delete:
                 remaining_messages = list(chain.from_iterable(message_batches))
                 if len(remaining_messages) < len(messages):
-                    self._dump_messages(messages, orig_queue, path)
+                    self._dump_messages(remaining_messages, orig_queue, path)
                 else:
                     assert len(remaining_messages) == len(messages)
                     log.info('No messages were submitted, not touching local file %r', path)
