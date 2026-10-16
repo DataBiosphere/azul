@@ -29,8 +29,6 @@ def main(argv):
     sp.add_argument('--delete', '-D', action='store_true',
                     help='Remove messages from the queue after writing them to the specified file. '
                          'By default the messages will be returned to the queue')
-    sp.add_argument('--no-json-body', '-J', dest='json_body', action='store_false',
-                    help='Do not deserialize JSON in queue message body.')
 
     sp = sps.add_parser('feed',
                         help='Feed messages from file back into queue')
@@ -76,8 +74,6 @@ def main(argv):
     sp.add_argument('--delete', '-D', action='store_true',
                     help='Remove messages from each queue after writing them to the its file. '
                          'By default the messages will be returned to the queue')
-    sp.add_argument('--no-json-body', '-J', dest='json_body', action='store_false',
-                    help='Do not deserialize JSON in queue message body.')
 
     args = p.parse_args(argv)
 
@@ -106,7 +102,7 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command in ('dump', 'dump_all'):
-        queues = Queues(delete=args.delete, json_body=args.json_body)
+        queues = Queues(delete=args.delete)
         if args.command == 'dump':
             queues.dump(args.queue, args.path)
         elif args.command == 'dump_all':

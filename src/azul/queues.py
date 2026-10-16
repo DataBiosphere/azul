@@ -200,9 +200,8 @@ class Queues:
         'ApproximateNumberOfMessagesDelayed'
     )
 
-    def __init__(self, delete: bool = False, json_body: bool = True):
+    def __init__(self, delete: bool = False):
         self._delete = delete
-        self._json_body = json_body
 
     def list(self):
         log.info('Listing queues')
@@ -400,7 +399,7 @@ class Queues:
             'MessageId': message.message_id,
             'ReceiptHandle': message.receipt_handle,
             'MD5OfBody': message.md5_of_body,
-            'Body': json.loads(message.body) if self._json_body else message.body,
+            'Body': json.loads(message.body),
             'Attributes': json_mapping(attributes),
             '_Attributes': {
                 k: datetime.fromtimestamp(int(json_str(attributes[k])) / 1000).astimezone().isoformat()
@@ -414,13 +413,10 @@ class Queues:
 
         The inverse of _condense().
         """
-        body = message['Body']
-        if not isinstance(body, str):
-            body = json.dumps(body)
         attributes = json_mapping(message['Attributes'])
         result: SendMessageBatchRequestEntryTypeDef = {
             'Id': json_str(message['MessageId']),
-            'MessageBody': body,
+            'MessageBody': json.dumps(message['Body']),
         }
         for key in ('MessageGroupId', 'MessageDeduplicationId'):
             try:
