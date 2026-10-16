@@ -19,7 +19,6 @@ from datetime import (
     datetime,
 )
 from itertools import (
-    chain,
     islice,
 )
 import json
@@ -211,6 +210,11 @@ class Queues:
     #: available, in flight and delayed, respectively. All three are
     #: approximate.
     #:
+    #: Appended to the path of a dump to name the file tracking how much of
+    #: that dump a feed has submitted
+    #:
+    progress_suffix = '.progress'
+
     message_count_attributes: ClassVar[tuple[QueueAttributeNameType, ...]] = (
         'ApproximateNumberOfMessages',
         'ApproximateNumberOfMessagesNotVisible',
@@ -400,16 +404,6 @@ class Queues:
             log.info('Returning messages to queue %r', queue.url)
             self._return_messages(message_batches, queue)
 
-    def _dump_messages(self,
-                       messages: Iterable[JSON],
-                       queue_url: str,
-                       path: str):
-        messages = list(messages)
-        with write_file_atomically(path) as file:
-            for content in chain([{'queue': queue_url}], messages):
-                self._write_line(file, content)
-        log.info('Wrote %i messages', len(messages))
-
     def _write_line(self, file: TextIO, content: JSON):
         json.dump(content, file)
         file.write('\n')
@@ -577,37 +571,53 @@ class Queues:
     def feed(self, path: str, queue_name: str):
         with open(path) as file:
             envelope, *messages = (json.loads(line) for line in file)
-        orig_queue = envelope['queue']
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
-        message_batches = list(more_itertools.chunked(messages, self.batch_size))
-
-        def _cleanup():
-            if self._delete:
-                remaining_messages = list(chain.from_iterable(message_batches))
-                if len(remaining_messages) < len(messages):
-                    self._dump_messages(remaining_messages, orig_queue, path)
-                else:
-                    assert len(remaining_messages) == len(messages)
-                    log.info('No messages were submitted, not touching local file %r', path)
-
-        while message_batches:
-            message_batch = message_batches[0]
+        progress_path = path + self.progress_suffix
+        num_fed = self._read_progress(progress_path, queue)
+        if num_fed > 0:
+            log.info('Skipping the %i message(s) of %r that were fed before',
+                     num_fed, path)
+        for message_batch in chunked(messages[num_fed:], self.batch_size):
             entries = [self._reconstitute(message) for message in message_batch]
-            try:
-                queue.send_messages(Entries=entries)
-            except BaseException:
-                assert message_batches
-                _cleanup()
-                raise
-            message_batches.pop(0)
-
+            queue.send_messages(Entries=entries)
+            num_fed += len(message_batch)
+            self._write_progress(progress_path, queue, num_fed)
+        log.info('Wrote %i messages', len(messages))
+        assert num_fed == len(messages), (num_fed, len(messages))
+        # Feeding an empty dump would have skipped writing a progress file
+        if num_fed > 0:
+            os.unlink(progress_path)
         if self._delete:
-            if message_batches:
-                _cleanup()
+            log.info('All messages were submitted, removing local file %r', path)
+            os.unlink(path)
+
+    def _read_progress(self, path: str, queue: Queue) -> int:
+        """
+        The number of messages at the beginning of a dump that an earlier,
+        interrupted feed of it into the given queue already submitted.
+        """
+        try:
+            file = open(path)
+        except FileNotFoundError:
+            return 0
+        else:
+            with file:
+                progress = json.load(file)
+            if progress['queue'] == queue.url:
+                return progress['num_messages']
             else:
-                log.info('All messages were submitted, removing local file %r', path)
-                os.unlink(path)
+                raise RuntimeError(
+                    'A feed of this file into another queue was interrupted. '
+                    'Resume that feed by changing the target queue argument or '
+                    'remove the .progress file to feed into the current target '
+                    'queue from the beginning.',
+                    progress['queue'], queue.url
+                )
+
+    def _write_progress(self, path: str, queue: Queue, num_messages: int):
+        with write_file_atomically(path) as file:
+            json.dump({'queue': queue.url, 'num_messages': num_messages}, file)
 
     def redrive(self, source_queue_name: str, destination_queue_name: str):
         """

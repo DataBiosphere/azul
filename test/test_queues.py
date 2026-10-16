@@ -196,11 +196,22 @@ class TestQueues(SqsTestCase):
                 with self.assertRaises(RuntimeError) as context:
                     Queues(delete=True).feed(path, queue_name)
             # The exception that interrupted the feed is the one the operator
-            # sees, not a failure of the cleanup that follows it
+            # sees, not a failure of the bookkeeping that follows it
             self.assertEqual(('simulated failure',), context.exception.args)
-            # Only the messages that were not sent remain in the file
+            # The dump is left as it was, and what was fed is recorded beside it
             envelope, remaining_messages = self._read_dump(path)
-            self.assertEqual(dumped_messages[Queues.batch_size:], remaining_messages)
+            self.assertEqual(dumped_messages, remaining_messages)
+            with open(path + Queues.progress_suffix) as file:
+                self.assertEqual({'queue': queue.url,
+                                  'num_messages': Queues.batch_size},
+                                 json.load(file))
+            queue.reload()
+            self.assertEqual(str(Queues.batch_size),
+                             queue.attributes['ApproximateNumberOfMessages'])
+            # Feeding again submits only the messages that are left
+            Queues(delete=True).feed(path, queue_name)
+            self.assertFalse(os.path.exists(path + Queues.progress_suffix))
+            self.assertFalse(os.path.exists(path))
         queue.reload()
-        self.assertEqual(str(Queues.batch_size),
+        self.assertEqual(str(num_messages),
                          queue.attributes['ApproximateNumberOfMessages'])
