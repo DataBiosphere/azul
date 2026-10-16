@@ -32,11 +32,12 @@ class TestQueues(SqsTestCase):
         self._create_mock_queues([queue_name])
         return queue_name, aws.sqs_queue(queue_name)
 
-    def _send_messages(self, queue, num_messages: int):
-        # Each message is put in a group of its own so that none of them is
-        # withheld while another one of the same group is in flight
+    def _send_messages(self, queue, num_messages: int, num_groups: int | None = None):
+        # By default, each message is put in a group of its own so that none of
+        # them is withheld while another one of the same group is in flight
         messages = [
-            SQSFifoMessage(body={'i': i}, group_id=str(i))
+            SQSFifoMessage(body={'i': i},
+                           group_id=str(i if num_groups is None else i % num_groups))
             for i in range(num_messages)
         ]
         Queues().send_messages(queue, messages)
@@ -64,6 +65,29 @@ class TestQueues(SqsTestCase):
         self.assertEqual([message.body for message in messages],
                          sorted((json.loads(message.body) for message in fed_messages),
                                 key=lambda body: body['i']))
+
+    def test_fifo_dump_needs_delete(self):
+        queue_name, queue = self._create_queue()
+        num_messages = Queues.batch_size + 5
+        self._send_messages(queue, num_messages, num_groups=1)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            # Messages held in flight block the rest of their group, so a dump
+            # that returns them captures only as many as one receive yields
+            Queues().dump(queue_name, path)
+            envelope, dumped_messages = self._read_dump(path)
+            self.assertEqual(Queues.batch_size, len(dumped_messages))
+            queue.reload()
+            self.assertEqual(str(num_messages),
+                             queue.attributes['ApproximateNumberOfMessages'])
+            # Deleting each batch as it is written unblocks the next one
+            Queues(delete=True).dump(queue_name, path)
+            envelope, dumped_messages = self._read_dump(path)
+            self.assertEqual(num_messages, len(dumped_messages))
+            self.assertEqual([{'i': i} for i in range(num_messages)],
+                             [message['Body'] for message in dumped_messages])
+        queue.reload()
+        self.assertEqual('0', queue.attributes['ApproximateNumberOfMessages'])
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()

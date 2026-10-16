@@ -28,6 +28,7 @@ import time
 from typing import (
     Self,
     TYPE_CHECKING,
+    TextIO,
     cast,
 )
 import uuid
@@ -193,17 +194,46 @@ class Queues:
 
     def _dump(self, queue: Queue, path: str):
         log.info('Writing messages from queue %r to file %r', queue.url, path)
-        messages = self._get_messages(queue)
-        self._dump_messages(map(self._condense, messages), queue.url, path)
+        if self._is_fifo(queue) and not self._delete:
+            log.warning('Without --delete, only the messages at the head of '
+                        'each group will be dumped from FIFO queue %r', queue.url)
+        # Messages that are not deleted must be held in flight until the dump
+        # ends, or receiving them again would make the dump run forever
+        messages: list[Message] = []
+        num_messages = 0
+        with open(path, 'w') as file:
+            self._write_line(file, {'queue': queue.url})
+            while True:
+                message_batch = self._receive_messages(queue)
+                if message_batch:
+                    for message in message_batch:
+                        self._write_line(file, self._condense(message))
+                    file.flush()
+                    os.fsync(file.fileno())
+                    num_messages += len(message_batch)
+                    if self._delete:
+                        self._delete_messages([message_batch], queue)
+                    else:
+                        messages.extend(message_batch)
+                else:
+                    break
+        log.info('Wrote %i messages', num_messages)
         log.info(f'Finished writing {path!r}')
-        self._cleanup_messages(queue, messages)
+        if not self._delete:
+            self._cleanup_messages(queue, messages)
+
+    def _is_fifo(self, queue: Queue) -> bool:
+        return queue.attributes.get('FifoQueue') == 'true'
+
+    def _receive_messages(self, queue: Queue) -> builtins.list[Message]:
+        return queue.receive_messages(AttributeNames=['All'],
+                                      MaxNumberOfMessages=self.batch_size,
+                                      VisibilityTimeout=300)
 
     def _get_messages(self, queue: Queue) -> builtins.list[Message]:
         messages: list[Message] = []
         while True:
-            message_batch = queue.receive_messages(AttributeNames=['All'],
-                                                   MaxNumberOfMessages=10,
-                                                   VisibilityTimeout=300)
+            message_batch = self._receive_messages(queue)
             if not message_batch:  # Nothing left in queue
                 return messages
             else:
@@ -263,9 +293,12 @@ class Queues:
         messages = list(messages)
         with write_file_atomically(path) as file:
             for content in chain([{'queue': queue_url}], messages):
-                json.dump(content, file)
-                file.write('\n')
+                self._write_line(file, content)
         log.info('Wrote %i messages', len(messages))
+
+    def _write_line(self, file: TextIO, content: JSON):
+        json.dump(content, file)
+        file.write('\n')
 
     def _return_messages(self,
                          message_batches: Iterable[Iterable[Message]],
