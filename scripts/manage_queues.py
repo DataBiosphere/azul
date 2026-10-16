@@ -27,7 +27,7 @@ def main(argv):
     sp.add_argument('path', metavar='FILE_PATH',
                     help='Path of file to write messages to')
     sp.add_argument('--delete', '-D', action='store_true',
-                    help='Remove messages from the queue after writing them to the specified file. '
+                    help='Permanently remove queued messages after writing them to the file. '
                          'By default the messages will be returned to the queue')
 
     sp = sps.add_parser('feed',
@@ -72,7 +72,7 @@ def main(argv):
                              'Each queue will be dumped into a separate JSONL file. '
                              'The name of that file is the name of the queue followed by ".jsonl"')
     sp.add_argument('--delete', '-D', action='store_true',
-                    help='Remove messages from each queue after writing them to the its file. '
+                    help='Permanently remove queued messages after writing them to the file. '
                          'By default the messages will be returned to the queue')
 
     args = p.parse_args(argv)
