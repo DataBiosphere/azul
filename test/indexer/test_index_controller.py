@@ -88,6 +88,9 @@ from azul_test_case import (
     DCP1TestCase,
     DCP2TestCase,
 )
+from indexer import (
+    WithIndexesSetUpTestCase,
+)
 from indexer.test_indexer import (
     DCP2IndexerTestCase,
 )
@@ -105,7 +108,9 @@ def setUpModule():
 
 
 @mock_aws
-class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
+class TestIndexController(WithIndexesSetUpTestCase,
+                          DCP2IndexerTestCase,
+                          WorkQueueTestCase):
     source = DCP2TestCase.source.with_prefix(
         attrs.evolve(DCP2TestCase.source.ref.prefix,
                      partition=0)
@@ -113,7 +118,6 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.index_service.create_indices(self.catalog)
         app = MagicMock()
         self.controller = IndexController(app=app)
         app.catalog = self.catalog
@@ -126,10 +130,6 @@ class TestIndexController(DCP2IndexerTestCase, WorkQueueTestCase):
     @property
     def index_repository_service(self):
         return self.queue_service._repository_service
-
-    def tearDown(self):
-        self._purge_indices()
-        super().tearDown()
 
     def _fqid_from_message(self, message: JSON) -> TDRBundleFQID:
         fqid = message['bundle_fqid']

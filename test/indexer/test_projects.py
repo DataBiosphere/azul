@@ -15,6 +15,9 @@ from azul.logging import (
 from azul.opensearch import (
     OpenSearchClientFactory,
 )
+from indexer import (
+    WithIndexesSetUpTestCase,
+)
 from indexer.test_indexer import (
     DCP1IndexerTestCase,
 )
@@ -25,20 +28,13 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestDataExtractorTestCase(DCP1IndexerTestCase):
+class TestDataExtractorTestCase(WithIndexesSetUpTestCase,
+                                DCP1IndexerTestCase):
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.opensearch = OpenSearchClientFactory.get()
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.index_service.create_indices(self.catalog)
-
-    def tearDown(self) -> None:
-        self._purge_indices()
-        super().tearDown()
 
     def test_hca_extraction(self):
         bundle_fqids = [

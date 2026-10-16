@@ -1,9 +1,13 @@
 from collections import (
     Counter,
+    defaultdict,
 )
 from collections.abc import (
     Mapping,
     Sequence,
+)
+from datetime import (
+    datetime,
 )
 from itertools import (
     product,
@@ -67,9 +71,14 @@ from azul.lib import (
 from azul.lib.collections import (
     none_safe_key,
 )
+from azul.lib.time import (
+    format_dcp2_datetime,
+    parse_dcp2_datetime,
+)
 from azul.lib.types import (
     JSON,
     JSONs,
+    optional,
 )
 from azul.logging import (
     configure_test_logging,
@@ -144,6 +153,123 @@ class IndexResponseTestCase(DCP1CannedBundleTestCase, WebServiceTestCase):
         plugin = self._controller._metadata_plugin
         assert isinstance(plugin, MetadataPlugin)
         return plugin
+
+    #: The dates that every entity has, and the ones that only a bundle or a
+    #: project has, because only their transformers have dated entities to
+    #: aggregate over
+    #:
+    _entity_date_fields = ('submissionDate', 'updateDate', 'lastModifiedDate')
+    _aggregate_date_fields = tuple(
+        'aggregate' + field[0].upper() + field[1:]
+        for field in _entity_date_fields
+    )
+
+    def _date_fields(self, entity_type: str) -> tuple[str, ...]:
+        if entity_type in ('bundles', 'projects'):
+            return self._entity_date_fields + self._aggregate_date_fields
+        else:
+            return self._entity_date_fields
+
+    @cached_property
+    def _expected_dates(self) -> Mapping[str, Mapping[str, str | None]]:
+        """
+        The dates that the index is expected to report for every entity of the
+        canned bundles, and for those bundles, by the ID of the entity and the
+        name of the field containing the date.
+
+        An entity's own dates are those of its provenance, reduced over the
+        bundles the entity occurs in the way the index reduces them, by taking
+        the earliest submission date and the latest update date. All three of a
+        bundle's own dates are the bundle's version.
+
+        A bundle's (project's) aggregate dates are that same reduction over all
+        entities in that bundle (project).
+        """
+
+        type Date = datetime
+
+        # submissionDate and updateDate
+        type Dates = tuple[Date, Date | None]
+
+        # submissionDate, updateDate and lastModifiedDate
+        type EffectiveDates = tuple[Date, Date | None, Date]
+
+        def _reduce(dates: list[Dates]) -> EffectiveDates:
+            submissions = [submission for submission, update in dates]
+            updates = [update for submission, update in dates if update is not None]
+            return (
+                min(submissions),
+                max(updates, default=None),
+                max(submissions + updates)
+            )
+
+        def reduce(date_fields: tuple[str, ...],
+                   dates: list[Dates]
+                   ) -> dict[str, str | None]:
+            return {
+                date_field: optional(format_dcp2_datetime, date)
+                for date_field, date in zip(date_fields, _reduce(dates))
+            }
+
+        dates_by_entity = defaultdict(list)
+        dates_by_bundle = defaultdict(list)
+        bundles_by_project = defaultdict(list)
+        versions = {}
+        for fqid in self.bundles():
+            bundle = self._load_canned_bundle(fqid)
+            versions[fqid.uuid] = fqid.version
+            for key, entity in bundle.metadata.items():
+                provenance = entity['provenance']
+                entity_id = provenance['document_id']
+                dates = (parse_dcp2_datetime(provenance['submission_date']),
+                         optional(parse_dcp2_datetime, provenance.get('update_date')))
+                dates_by_entity[entity_id].append(dates)
+                if entity_id not in bundle.stitched:
+                    dates_by_bundle[fqid.uuid].append(dates)
+                if key.startswith('project/'):
+                    bundles_by_project[entity_id].append(fqid.uuid)
+
+        result = {
+            entity_id: reduce(self._entity_date_fields, dates)
+            for entity_id, dates in dates_by_entity.items()
+        }
+        for project_id, uuids in bundles_by_project.items():
+            result[project_id].update(reduce(self._aggregate_date_fields, [
+                dates for uuid in uuids for dates in dates_by_bundle[uuid]
+            ]))
+        for uuid, dates in dates_by_bundle.items():
+            result[uuid] = {
+                **dict.fromkeys(self._entity_date_fields, versions[uuid]),
+                **reduce(self._aggregate_date_fields, dates)
+            }
+        return result
+
+    def _actual_dates(self,
+                      entity_type: str,
+                      date_field: str,
+                      **query_params
+                      ) -> list[tuple[str | None, str]]:
+        """
+        The given date of every hit on the given index, in the order in which
+        the index returns them, and the ID of the entity reporting it.
+        """
+        size = self._metadata_plugin.exposed_indices[entity_type].max_page_size
+        args = self._params(size=size, sort=date_field, **query_params)
+        url = self.base_url.set(path=('index', entity_type), args=args)
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        response_json = response.json()
+        # A page of the index's maximum size holds every hit, so that what the
+        # caller asserts is not an assertion about an arbitrary page
+        self.assertEqual(response_json['pagination']['total'],
+                         len(response_json['hits']))
+        dates = [
+            (one(hit['dates'])[date_field], hit['entryId'])
+            for hit in response_json['hits']
+        ]
+        for date, entity_id in dates:
+            self.assertEqual(self._expected_dates[entity_id][date_field], date, entity_id)
+        return dates
 
 
 class TestIndexResponse(IndexResponseTestCase):
@@ -305,7 +431,10 @@ class TestIndexResponse(IndexResponseTestCase):
                         'drs_uri': f'drs://{self._drs_domain_name}/'
                                    f'7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T11%3A33%3A44.698028Z',
                         'uuid': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                        'version': '2018-11-02T11:33:44.698028Z'
+                        'version': '2018-11-02T11:33:44.698028Z',
+                        'downloadPath': 'single-cell-transcriptom-patterns--yh4k31'
+                                        '/aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
+                                        '/SRR3562915_1.fastq.gz'
                     }
                 ],
                 'organoids': [
@@ -1032,10 +1161,42 @@ class TestIndexResponse(IndexResponseTestCase):
             'drs_uri': f'drs://{self._drs_domain_name}/'
                        f'a8b8479d-cfa9-4f74-909f-49552439e698?version=2019-10-09T17%3A22%3A51.560099Z',
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
-            'version': '2019-10-09T17:22:51.560099Z'
+            'version': '2019-10-09T17:22:51.560099Z',
+            'downloadPath': 'systematic-comparative-analysis-of-single'
+                            '--rnasequencin-methods--esvnab'
+                            '/ffac201f-4b1c-4455-bd58-19c1a9e863b4'
+                            '/Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz'
         }
         file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
+
+    def test_download_path(self):
+        """
+        Every file listed by a hit names the path it is downloaded to, which
+        starts with a directory named after the title of the project the file
+        belongs to. Two files never share a path, or downloading both would
+        leave only one of them on disk.
+        """
+        filters = {'projectId': {'is': ['e8642221-4c2c-4fd7-b926-a68bce363c88']}}
+        directory = 'single-cell-transcriptom-patterns--yh4k31'
+        for entity_type in 'files', 'bundles':
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url.set(path=('index', entity_type),
+                                        args=self._params(filters=filters))
+                response = self._http_client.request('GET', str(url))
+                raise_on_status(response)
+                hits = response.json()['hits']
+                self.assertGreater(len(hits), 0)
+                files_by_path = {}
+                for hit in hits:
+                    for file in hit['files']:
+                        path = file['downloadPath']
+                        self.assertEqual(directory, path.split('/')[0])
+                        # A file listed by more than one bundle hit yields the
+                        # same path each time, since the path is derived from
+                        # the most recent of the bundles it belongs to
+                        uuid = file['uuid']
+                        self.assertEqual(uuid, files_by_path.setdefault(path, uuid))
 
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
@@ -1396,491 +1557,38 @@ class TestIndexResponse(IndexResponseTestCase):
         """
         Verify the search results can be sorted by the entity and aggregate dates.
         """
-        test_cases = {
-            'bundles': {
-                'submissionDate': [
-                    ('2018-10-03T14:41:37.044509Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:46:55.866661Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:46:55.866661Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-11-02T11:33:44.698028Z', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                    ('2018-12-05T23:09:17.591044Z', 'e0ae8cfa-2b51-4419-9cde-34df44c6458a'),
-                    ('2019-02-14T19:24:38.034764Z', 'fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a'),
-                    ('2019-10-09T17:07:35.528600Z', 'ffac201f-4b1c-4455-bd58-19c1a9e863b4'),
-                ],
-                'updateDate': [
-                    ('2018-10-03T14:41:37.044509Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:46:55.866661Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:46:55.866661Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-11-02T11:33:44.698028Z', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                    ('2018-12-05T23:09:17.591044Z', 'e0ae8cfa-2b51-4419-9cde-34df44c6458a'),
-                    ('2019-02-14T19:24:38.034764Z', 'fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a'),
-                    ('2019-10-09T17:07:35.528600Z', 'ffac201f-4b1c-4455-bd58-19c1a9e863b4'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-03T14:41:37.044509Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:46:55.866661Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:46:55.866661Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-11-02T11:33:44.698028Z', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                    ('2018-12-05T23:09:17.591044Z', 'e0ae8cfa-2b51-4419-9cde-34df44c6458a'),
-                    ('2019-02-14T19:24:38.034764Z', 'fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a'),
-                    ('2019-10-09T17:07:35.528600Z', 'ffac201f-4b1c-4455-bd58-19c1a9e863b4'),
-                ],
-                'aggregateSubmissionDate': [
-                    ('2018-10-01T14:22:24.370000Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-11T21:18:01.605000Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-11T21:18:01.605000Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-11-02T10:02:12.133000Z', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                    ('2018-12-04T16:22:45.367000Z', 'e0ae8cfa-2b51-4419-9cde-34df44c6458a'),
-                    ('2019-02-14T18:29:42.531000Z', 'fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a'),
-                    ('2019-10-09T15:31:09.188000Z', 'ffac201f-4b1c-4455-bd58-19c1a9e863b4'),
-                ],
-                'aggregateUpdateDate': [
-                    ('2018-10-01T20:13:06.669000Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:45:01.366000Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:45:01.366000Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-11-02T10:35:07.705000Z', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                    ('2019-02-14T19:19:57.464000Z', 'fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a'),
-                    ('2019-10-09T15:52:49.512000Z', 'ffac201f-4b1c-4455-bd58-19c1a9e863b4'),
-                    (None, 'e0ae8cfa-2b51-4419-9cde-34df44c6458a'),
-                ],
-                'aggregateLastModifiedDate': [
-                    ('2018-10-01T20:13:06.669000Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:45:01.366000Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:45:01.366000Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-11-02T10:35:07.705000Z', 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'),
-                    ('2018-12-04T16:22:46.893000Z', 'e0ae8cfa-2b51-4419-9cde-34df44c6458a'),
-                    ('2019-02-14T19:19:57.464000Z', 'fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a'),
-                    ('2019-10-09T15:52:49.512000Z', 'ffac201f-4b1c-4455-bd58-19c1a9e863b4'),
-                ],
-            },
-            'projects': {
-                'submissionDate': [
-                    ('2018-10-01T14:22:24.370000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:01.605000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:01.605000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-11-02T10:02:12.133000Z', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-                    ('2018-12-04T16:22:45.367000Z', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-                    ('2019-02-14T18:29:42.531000Z', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-                    ('2019-10-09T15:31:09.188000Z', '88ec040b-8705-4f77-8f41-f81e57632f7d'),
-                ],
-                'updateDate': [
-                    ('2018-10-01T14:34:10.121000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:06.651000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:06.651000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-11-02T10:07:39.499000Z', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-                    ('2019-02-14T18:29:48.555000Z', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-                    ('2019-10-09T15:32:48.934000Z', '88ec040b-8705-4f77-8f41-f81e57632f7d'),
-                    (None, 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-01T14:34:10.121000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:06.651000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:06.651000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-11-02T10:07:39.499000Z', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-                    ('2018-12-04T16:22:45.367000Z', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-                    ('2019-02-14T18:29:48.555000Z', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-                    ('2019-10-09T15:32:48.934000Z', '88ec040b-8705-4f77-8f41-f81e57632f7d'),
-                ],
-                'aggregateSubmissionDate': [
-                    ('2018-10-01T14:22:24.370000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:01.605000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:01.605000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-11-02T10:02:12.133000Z', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-                    ('2018-12-04T16:22:45.367000Z', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-                    ('2019-02-14T18:29:42.531000Z', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-                    ('2019-10-09T15:31:09.188000Z', '88ec040b-8705-4f77-8f41-f81e57632f7d'),
-                ],
-                'aggregateUpdateDate': [
-                    ('2018-10-01T20:13:06.669000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-18T20:45:01.366000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-18T20:45:01.366000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-11-02T10:35:07.705000Z', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-                    ('2019-02-14T19:19:57.464000Z', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-                    ('2019-10-09T15:52:49.512000Z', '88ec040b-8705-4f77-8f41-f81e57632f7d'),
-                    (None, 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-                ],
-                'aggregateLastModifiedDate': [
-                    ('2018-10-01T20:13:06.669000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-18T20:45:01.366000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-18T20:45:01.366000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-11-02T10:35:07.705000Z', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-                    ('2018-12-04T16:22:46.893000Z', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-                    ('2019-02-14T19:19:57.464000Z', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-                    ('2019-10-09T15:52:49.512000Z', '88ec040b-8705-4f77-8f41-f81e57632f7d'),
-                ],
-            },
-            'samples': {
-                'submissionDate': [
-                    ('2018-10-01T14:22:25.143000Z', '79682426-b813-4f69-8c9c-2764ffac5dc1'),
-                    ('2018-10-11T21:18:02.654000Z', '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'),
-                    ('2018-10-11T21:18:02.696000Z', 'b7214641-1ac5-4f60-b795-cb33a7c25434'),
-                    ('2018-10-11T21:18:02.732000Z', '308eea51-d14b-4036-8cd1-cfd81d7532c3'),
-                    ('2018-10-11T21:18:02.785000Z', '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'),
-                    ('2018-11-02T10:02:12.298000Z', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-                    ('2018-12-04T16:22:45.625000Z', '195b2621-ec05-4618-9063-c56048de97d1'),
-                    ('2019-02-14T18:29:42.550000Z', '58c60e15-e07c-4875-ac34-f026d6912f1c'),
-                    ('2019-10-09T15:31:09.237000Z', 'caadf4b5-f5e4-4416-9f04-9c1f902cc601'),
-                ],
-                'updateDate': [
-                    ('2018-10-01T14:57:17.976000Z', '79682426-b813-4f69-8c9c-2764ffac5dc1'),
-                    ('2018-10-11T21:18:06.725000Z', '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'),
-                    ('2018-10-11T21:18:06.730000Z', '308eea51-d14b-4036-8cd1-cfd81d7532c3'),
-                    ('2018-10-11T21:18:12.763000Z', 'b7214641-1ac5-4f60-b795-cb33a7c25434'),
-                    ('2018-10-11T21:18:12.864000Z', '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'),
-                    ('2018-11-02T10:09:26.517000Z', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-                    ('2019-02-14T18:29:49.006000Z', '58c60e15-e07c-4875-ac34-f026d6912f1c'),
-                    ('2019-10-09T15:32:51.765000Z', 'caadf4b5-f5e4-4416-9f04-9c1f902cc601'),
-                    (None, '195b2621-ec05-4618-9063-c56048de97d1'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-01T14:57:17.976000Z', '79682426-b813-4f69-8c9c-2764ffac5dc1'),
-                    ('2018-10-11T21:18:06.725000Z', '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'),
-                    ('2018-10-11T21:18:06.730000Z', '308eea51-d14b-4036-8cd1-cfd81d7532c3'),
-                    ('2018-10-11T21:18:12.763000Z', 'b7214641-1ac5-4f60-b795-cb33a7c25434'),
-                    ('2018-10-11T21:18:12.864000Z', '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'),
-                    ('2018-11-02T10:09:26.517000Z', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-                    ('2018-12-04T16:22:45.625000Z', '195b2621-ec05-4618-9063-c56048de97d1'),
-                    ('2019-02-14T18:29:49.006000Z', '58c60e15-e07c-4875-ac34-f026d6912f1c'),
-                    ('2019-10-09T15:32:51.765000Z', 'caadf4b5-f5e4-4416-9f04-9c1f902cc601'),
-                ],
-                # samples have no 'aggregate…Date' values
-            },
-            'files': {
-                'submissionDate': [
-                    ('2018-10-01T14:22:24.380000Z', '665b4341-9950-4e59-a401-e4a097256f1e'),
-                    ('2018-10-01T14:22:24.389000Z', '300ee490-edca-46b1-b23d-c9458ebb9c6e'),
-                    ('2018-10-01T14:22:24.511000Z', '042dce4a-003b-492b-9371-e1897f52d8d9'),
-                    ('2018-10-01T14:22:24.755000Z', '80036f72-7fde-46e9-821b-17dbbe0509bb'),
-                    ('2018-10-11T21:18:01.623000Z', '281c2d08-9e43-47f9-b937-e733e3ba3322'),
-                    ('2018-10-11T21:18:01.642000Z', 'ae1d6fa7-964f-465a-8c78-565206827434'),
-                    ('2018-10-11T21:18:01.654000Z', 'f518a8cc-e1d9-4fc9-bc32-491dd8543902'),
-                    ('2018-10-11T21:18:01.964000Z', '213381ea-6161-4159-853e-cfcae4968001'),
-                    ('2018-10-11T21:18:01.979000Z', '9ee3da9e-83ca-4c02-84d6-ac09702b12ba'),
-                    ('2018-10-11T21:18:01.990000Z', '330a08ca-ae8e-4f1f-aa03-970abcd27f39'),
-                    ('2018-10-18T20:32:25.801000Z', 'cf93f747-1392-4670-8eb3-3ac60a96855e'),
-                    ('2018-10-18T20:32:25.877000Z', '477c0b3e-4a06-4214-8f27-58199ba63528'),
-                    ('2018-10-18T20:32:25.951000Z', 'ad6d5170-d74b-408c-af6b-25a14315c9da'),
-                    ('2018-10-18T20:32:26.026000Z', '50be9b67-fae5-4472-9719-478dd1303d6e'),
-                    ('2018-10-18T20:32:26.097000Z', 'fd16b62e-e540-4f03-8ba0-07d0c204e3c8'),
-                    ('2018-10-18T20:32:26.174000Z', '3c41b5b6-f480-4d47-8c5e-155e7c1adf54'),
-                    ('2018-10-18T20:32:26.243000Z', '022a217c-384d-4d9d-8631-6397b6838e3a'),
-                    ('2018-10-18T20:32:26.313000Z', '9b778e46-0c51-4260-8e3f-000ecc145f0a'),
-                    ('2018-10-18T20:32:26.383000Z', 'af025a74-53f1-4972-b50d-53095b5ffac2'),
-                    ('2018-10-18T20:32:26.453000Z', 'e8395271-7c8e-4ec4-9598-495df43fe5fd'),
-                    ('2018-10-18T20:32:26.528000Z', '211a8fbf-b190-4576-ac2f-2b1a91743abb'),
-                    ('2018-10-18T20:32:26.603000Z', '17222e3a-5757-45e9-9dfe-c4b6aa10f28a'),
-                    ('2018-10-18T20:32:26.681000Z', '2fb8a975-b50c-4528-b850-838a19e19a1e'),
-                    ('2018-11-02T10:03:39.593000Z', '70d1af4a-82c8-478a-8960-e9028b3616ca'),
-                    ('2018-11-02T10:03:39.600000Z', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
-                    ('2018-12-04T16:22:46.380000Z', '12b25cbd-8cfa-4f0e-818f-d6ba3e823af4'),
-                    ('2018-12-04T16:22:46.388000Z', '65d3d936-ae9d-4a18-a8c7-73ce6132355e'),
-                    ('2019-02-14T18:29:42.574000Z', '7df5d656-43cb-49f9-b81d-86cca3c44a65'),
-                    ('2019-02-14T18:29:42.587000Z', 'acd7d986-73ab-4d0b-9ead-377f3a2d646d'),
-                    ('2019-02-14T18:29:42.597000Z', 'f9a78d6a-7c80-4c45-bedf-4bc152dc172d'),
-                    ('2019-02-14T19:15:11.524000Z', 'bd1307b9-70b5-49e4-8e02-9d4ca0d64747'),
-                    ('2019-02-14T19:15:11.667000Z', 'cf3453a3-68fb-4156-bc3e-0f08f7e6512c'),
-                    ('2019-02-14T19:15:11.818000Z', '234b0359-3853-4df4-898f-5182f698d48b'),
-                    ('2019-02-14T19:15:11.972000Z', 'd95392c5-1958-4825-9076-2a9c130c53f3'),
-                    ('2019-02-14T19:15:12.117000Z', 'b9609367-7006-4055-8815-1bad881a1502'),
-                    ('2019-02-14T19:15:12.259000Z', 'ebb2ec91-2cd0-4ec4-ba2b-5a6d6630bc5a'),
-                    ('2019-02-14T19:15:12.404000Z', '1ab612ca-2a5a-4443-8004-bb5f0f784c67'),
-                    ('2019-02-14T19:15:12.551000Z', '34c64244-d3ed-4841-84b7-aa4cbb9d794b'),
-                    ('2019-02-14T19:15:12.703000Z', '71710439-3864-4fc6-bc48-ca2ac90f7ccf'),
-                    ('2019-02-14T19:15:12.844000Z', '2ab5242e-f118-48e3-afe5-c2287fa2e2b1'),
-                    ('2019-02-14T19:15:12.989000Z', '6da39577-256d-43fd-97c4-a3bedaa54273'),
-                    ('2019-02-14T19:15:13.138000Z', '86a93e19-eb89-4c27-8b64-006f96bb2c83'),
-                    ('2019-02-14T19:15:13.280000Z', '0f858ddb-6d93-404e-95fd-0c200921dd40'),
-                    ('2019-10-09T15:31:58.607000Z', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
-                    ('2019-10-09T15:31:58.617000Z', 'fa17159e-52ec-4a88-80cf-a3be5e2e9988'),
-                ],
-                'updateDate': [
-                    ('2018-10-01T15:40:51.754000Z', '80036f72-7fde-46e9-821b-17dbbe0509bb'),
-                    ('2018-10-01T15:42:33.208000Z', '042dce4a-003b-492b-9371-e1897f52d8d9'),
-                    ('2018-10-01T16:09:56.972000Z', '300ee490-edca-46b1-b23d-c9458ebb9c6e'),
-                    ('2018-10-01T16:09:57.110000Z', '665b4341-9950-4e59-a401-e4a097256f1e'),
-                    ('2018-10-18T20:32:16.894000Z', '213381ea-6161-4159-853e-cfcae4968001'),
-                    ('2018-10-18T20:32:18.864000Z', '9ee3da9e-83ca-4c02-84d6-ac09702b12ba'),
-                    ('2018-10-18T20:32:20.845000Z', '330a08ca-ae8e-4f1f-aa03-970abcd27f39'),
-                    ('2018-10-18T20:37:28.333000Z', 'fd16b62e-e540-4f03-8ba0-07d0c204e3c8'),
-                    ('2018-10-18T20:39:10.339000Z', '9b778e46-0c51-4260-8e3f-000ecc145f0a'),
-                    ('2018-10-18T20:39:13.335000Z', 'cf93f747-1392-4670-8eb3-3ac60a96855e'),
-                    ('2018-10-18T20:39:16.337000Z', '477c0b3e-4a06-4214-8f27-58199ba63528'),
-                    ('2018-10-18T20:39:22.340000Z', '50be9b67-fae5-4472-9719-478dd1303d6e'),
-                    ('2018-10-18T20:39:25.337000Z', 'ad6d5170-d74b-408c-af6b-25a14315c9da'),
-                    ('2018-10-18T20:39:40.335000Z', 'af025a74-53f1-4972-b50d-53095b5ffac2'),
-                    ('2018-10-18T20:39:55.336000Z', 'e8395271-7c8e-4ec4-9598-495df43fe5fd'),
-                    ('2018-10-18T20:39:58.363000Z', '17222e3a-5757-45e9-9dfe-c4b6aa10f28a'),
-                    ('2018-10-18T20:39:58.363000Z', '211a8fbf-b190-4576-ac2f-2b1a91743abb'),
-                    ('2018-10-18T20:40:01.344000Z', '3c41b5b6-f480-4d47-8c5e-155e7c1adf54'),
-                    ('2018-10-18T20:40:13.334000Z', '2fb8a975-b50c-4528-b850-838a19e19a1e'),
-                    ('2018-10-18T20:40:54.699000Z', '281c2d08-9e43-47f9-b937-e733e3ba3322'),
-                    ('2018-10-18T20:40:55.940000Z', 'ae1d6fa7-964f-465a-8c78-565206827434'),
-                    ('2018-10-18T20:40:57.146000Z', 'f518a8cc-e1d9-4fc9-bc32-491dd8543902'),
-                    ('2018-10-18T20:45:01.366000Z', '022a217c-384d-4d9d-8631-6397b6838e3a'),
-                    ('2018-11-02T10:35:03.810000Z', '70d1af4a-82c8-478a-8960-e9028b3616ca'),
-                    ('2018-11-02T10:35:07.705000Z', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
-                    ('2019-02-14T18:31:45.892000Z', '7df5d656-43cb-49f9-b81d-86cca3c44a65'),
-                    ('2019-02-14T18:31:46.472000Z', 'f9a78d6a-7c80-4c45-bedf-4bc152dc172d'),
-                    ('2019-02-14T18:32:02.053000Z', 'acd7d986-73ab-4d0b-9ead-377f3a2d646d'),
-                    ('2019-02-14T19:19:33.461000Z', 'b9609367-7006-4055-8815-1bad881a1502'),
-                    ('2019-02-14T19:19:36.460000Z', '1ab612ca-2a5a-4443-8004-bb5f0f784c67'),
-                    ('2019-02-14T19:19:39.469000Z', 'bd1307b9-70b5-49e4-8e02-9d4ca0d64747'),
-                    ('2019-02-14T19:19:39.470000Z', '34c64244-d3ed-4841-84b7-aa4cbb9d794b'),
-                    ('2019-02-14T19:19:42.465000Z', '234b0359-3853-4df4-898f-5182f698d48b'),
-                    ('2019-02-14T19:19:42.465000Z', 'cf3453a3-68fb-4156-bc3e-0f08f7e6512c'),
-                    ('2019-02-14T19:19:45.468000Z', '71710439-3864-4fc6-bc48-ca2ac90f7ccf'),
-                    ('2019-02-14T19:19:45.468000Z', 'd95392c5-1958-4825-9076-2a9c130c53f3'),
-                    ('2019-02-14T19:19:48.464000Z', 'ebb2ec91-2cd0-4ec4-ba2b-5a6d6630bc5a'),
-                    ('2019-02-14T19:19:51.465000Z', '2ab5242e-f118-48e3-afe5-c2287fa2e2b1'),
-                    ('2019-02-14T19:19:54.466000Z', '6da39577-256d-43fd-97c4-a3bedaa54273'),
-                    ('2019-02-14T19:19:54.466000Z', '86a93e19-eb89-4c27-8b64-006f96bb2c83'),
-                    ('2019-02-14T19:19:57.464000Z', '0f858ddb-6d93-404e-95fd-0c200921dd40'),
-                    ('2019-10-09T15:52:46.609000Z', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
-                    ('2019-10-09T15:52:49.512000Z', 'fa17159e-52ec-4a88-80cf-a3be5e2e9988'),
-                    (None, '12b25cbd-8cfa-4f0e-818f-d6ba3e823af4'),
-                    (None, '65d3d936-ae9d-4a18-a8c7-73ce6132355e'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-01T15:40:51.754000Z', '80036f72-7fde-46e9-821b-17dbbe0509bb'),
-                    ('2018-10-01T15:42:33.208000Z', '042dce4a-003b-492b-9371-e1897f52d8d9'),
-                    ('2018-10-01T16:09:56.972000Z', '300ee490-edca-46b1-b23d-c9458ebb9c6e'),
-                    ('2018-10-01T16:09:57.110000Z', '665b4341-9950-4e59-a401-e4a097256f1e'),
-                    ('2018-10-18T20:32:16.894000Z', '213381ea-6161-4159-853e-cfcae4968001'),
-                    ('2018-10-18T20:32:18.864000Z', '9ee3da9e-83ca-4c02-84d6-ac09702b12ba'),
-                    ('2018-10-18T20:32:20.845000Z', '330a08ca-ae8e-4f1f-aa03-970abcd27f39'),
-                    ('2018-10-18T20:37:28.333000Z', 'fd16b62e-e540-4f03-8ba0-07d0c204e3c8'),
-                    ('2018-10-18T20:39:10.339000Z', '9b778e46-0c51-4260-8e3f-000ecc145f0a'),
-                    ('2018-10-18T20:39:13.335000Z', 'cf93f747-1392-4670-8eb3-3ac60a96855e'),
-                    ('2018-10-18T20:39:16.337000Z', '477c0b3e-4a06-4214-8f27-58199ba63528'),
-                    ('2018-10-18T20:39:22.340000Z', '50be9b67-fae5-4472-9719-478dd1303d6e'),
-                    ('2018-10-18T20:39:25.337000Z', 'ad6d5170-d74b-408c-af6b-25a14315c9da'),
-                    ('2018-10-18T20:39:40.335000Z', 'af025a74-53f1-4972-b50d-53095b5ffac2'),
-                    ('2018-10-18T20:39:55.336000Z', 'e8395271-7c8e-4ec4-9598-495df43fe5fd'),
-                    ('2018-10-18T20:39:58.363000Z', '17222e3a-5757-45e9-9dfe-c4b6aa10f28a'),
-                    ('2018-10-18T20:39:58.363000Z', '211a8fbf-b190-4576-ac2f-2b1a91743abb'),
-                    ('2018-10-18T20:40:01.344000Z', '3c41b5b6-f480-4d47-8c5e-155e7c1adf54'),
-                    ('2018-10-18T20:40:13.334000Z', '2fb8a975-b50c-4528-b850-838a19e19a1e'),
-                    ('2018-10-18T20:40:54.699000Z', '281c2d08-9e43-47f9-b937-e733e3ba3322'),
-                    ('2018-10-18T20:40:55.940000Z', 'ae1d6fa7-964f-465a-8c78-565206827434'),
-                    ('2018-10-18T20:40:57.146000Z', 'f518a8cc-e1d9-4fc9-bc32-491dd8543902'),
-                    ('2018-10-18T20:45:01.366000Z', '022a217c-384d-4d9d-8631-6397b6838e3a'),
-                    ('2018-11-02T10:35:03.810000Z', '70d1af4a-82c8-478a-8960-e9028b3616ca'),
-                    ('2018-11-02T10:35:07.705000Z', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
-                    ('2018-12-04T16:22:46.380000Z', '12b25cbd-8cfa-4f0e-818f-d6ba3e823af4'),
-                    ('2018-12-04T16:22:46.388000Z', '65d3d936-ae9d-4a18-a8c7-73ce6132355e'),
-                    ('2019-02-14T18:31:45.892000Z', '7df5d656-43cb-49f9-b81d-86cca3c44a65'),
-                    ('2019-02-14T18:31:46.472000Z', 'f9a78d6a-7c80-4c45-bedf-4bc152dc172d'),
-                    ('2019-02-14T18:32:02.053000Z', 'acd7d986-73ab-4d0b-9ead-377f3a2d646d'),
-                    ('2019-02-14T19:19:33.461000Z', 'b9609367-7006-4055-8815-1bad881a1502'),
-                    ('2019-02-14T19:19:36.460000Z', '1ab612ca-2a5a-4443-8004-bb5f0f784c67'),
-                    ('2019-02-14T19:19:39.469000Z', 'bd1307b9-70b5-49e4-8e02-9d4ca0d64747'),
-                    ('2019-02-14T19:19:39.470000Z', '34c64244-d3ed-4841-84b7-aa4cbb9d794b'),
-                    ('2019-02-14T19:19:42.465000Z', '234b0359-3853-4df4-898f-5182f698d48b'),
-                    ('2019-02-14T19:19:42.465000Z', 'cf3453a3-68fb-4156-bc3e-0f08f7e6512c'),
-                    ('2019-02-14T19:19:45.468000Z', '71710439-3864-4fc6-bc48-ca2ac90f7ccf'),
-                    ('2019-02-14T19:19:45.468000Z', 'd95392c5-1958-4825-9076-2a9c130c53f3'),
-                    ('2019-02-14T19:19:48.464000Z', 'ebb2ec91-2cd0-4ec4-ba2b-5a6d6630bc5a'),
-                    ('2019-02-14T19:19:51.465000Z', '2ab5242e-f118-48e3-afe5-c2287fa2e2b1'),
-                    ('2019-02-14T19:19:54.466000Z', '6da39577-256d-43fd-97c4-a3bedaa54273'),
-                    ('2019-02-14T19:19:54.466000Z', '86a93e19-eb89-4c27-8b64-006f96bb2c83'),
-                    ('2019-02-14T19:19:57.464000Z', '0f858ddb-6d93-404e-95fd-0c200921dd40'),
-                    ('2019-10-09T15:52:46.609000Z', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
-                    ('2019-10-09T15:52:49.512000Z', 'fa17159e-52ec-4a88-80cf-a3be5e2e9988'),
-                ],
-                # files have no 'aggregate…Date' values
-            },
-        }
-        for entity_type, fields in test_cases.items():
-            for field, direction in product(fields, ['asc', 'desc']):
-                with self.subTest(entity_type=entity_type, field=field, direction=direction):
-                    expected = fields[field]
-                    if direction == 'asc':
-                        self.assertEqual(expected,
-                                         sorted(expected, key=lambda x: (x[0] is None, x[0])))
-                    params = self._params(size=50, sort=field, order=direction)
-                    url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = self._http_client.request('GET', str(url))
-                    raise_on_status(response)
-                    response_json = response.json()
-                    actual = [
-                        (dates[field], hit['entryId'])
-                        for hit in response_json['hits']
-                        for dates in hit['dates']
-                    ]
-                    expected = fields[field] if direction == 'asc' else fields[field][::-1]
-                    self.assertEqual(expected, actual)
+        for entity_type in self._metadata_plugin.exposed_indices:
+            for field, direction in product(self._date_fields(entity_type),
+                                            ['asc', 'desc']):
+                with self.subTest(entity_type=entity_type,
+                                  field=field,
+                                  direction=direction):
+                    dates = self._actual_dates(entity_type, field, order=direction)
+                    # Hits are ordered by the date, by the ID of the entity
+                    # among those that report the same date, and those that
+                    # report none come last
+                    self.assertEqual(dates,
+                                     sorted(dates,
+                                            key=lambda d: (d[0] is None, d[0], d[1]),
+                                            reverse=direction == 'desc'))
 
     def test_aggregate_date_filter(self):
         """
         Verify the search results can be filtered by the entity and aggregate dates.
         """
-        test_cases = {
-            'bundles': {
-                'submissionDate': [
-                    ('2018-10-03T14:41:37.044509Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:46:55.866661Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:46:55.866661Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                ],
-                'updateDate': [
-                    ('2018-10-03T14:41:37.044509Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:46:55.866661Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:46:55.866661Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-03T14:41:37.044509Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:46:55.866661Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:46:55.866661Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                ],
-                'aggregateSubmissionDate': [
-                    ('2018-10-01T14:22:24.370000Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-11T21:18:01.605000Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-11T21:18:01.605000Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                ],
-                'aggregateUpdateDate': [
-                    ('2018-10-01T20:13:06.669000Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:45:01.366000Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:45:01.366000Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                ],
-                'aggregateLastModifiedDate': [
-                    ('2018-10-01T20:13:06.669000Z', 'd0e17014-9a58-4763-9e66-59894efbdaa8'),
-                    ('2018-10-18T20:45:01.366000Z', '411cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                    ('2018-10-18T20:45:01.366000Z', '412cd8d5-5990-43cd-84cc-6c7796b8a76d'),
-                ]
-            },
-            'projects': {
-                'submissionDate': [
-                    ('2018-10-01T14:22:24.370000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:01.605000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:01.605000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                ],
-                'updateDate': [
-                    ('2018-10-01T14:34:10.121000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:06.651000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:06.651000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-01T14:34:10.121000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:06.651000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:06.651000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                ],
-                'aggregateSubmissionDate': [
-                    ('2018-10-01T14:22:24.370000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-11T21:18:01.605000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-11T21:18:01.605000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                ],
-                'aggregateUpdateDate': [
-                    ('2018-10-01T20:13:06.669000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-18T20:45:01.366000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-18T20:45:01.366000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                ],
-                'aggregateLastModifiedDate': [
-                    ('2018-10-01T20:13:06.669000Z', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-                    ('2018-10-18T20:45:01.366000Z', '2c4724a4-7252-409e-b008-ff5c127c7e89'),
-                    ('2018-10-18T20:45:01.366000Z', '2c5724a4-7252-409e-b008-ff5c127c7e89'),
-                ]
-            },
-            'samples': {
-                'submissionDate': [
-                    ('2018-10-01T14:22:25.143000Z', '79682426-b813-4f69-8c9c-2764ffac5dc1'),
-                    ('2018-10-11T21:18:02.654000Z', '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'),
-                    ('2018-10-11T21:18:02.696000Z', 'b7214641-1ac5-4f60-b795-cb33a7c25434'),
-                    ('2018-10-11T21:18:02.732000Z', '308eea51-d14b-4036-8cd1-cfd81d7532c3'),
-                    ('2018-10-11T21:18:02.785000Z', '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'),
-                ],
-                'updateDate': [
-                    ('2018-10-01T14:57:17.976000Z', '79682426-b813-4f69-8c9c-2764ffac5dc1'),
-                    ('2018-10-11T21:18:06.725000Z', '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'),
-                    ('2018-10-11T21:18:06.730000Z', '308eea51-d14b-4036-8cd1-cfd81d7532c3'),
-                    ('2018-10-11T21:18:12.763000Z', 'b7214641-1ac5-4f60-b795-cb33a7c25434'),
-                    ('2018-10-11T21:18:12.864000Z', '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'),
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-01T14:57:17.976000Z', '79682426-b813-4f69-8c9c-2764ffac5dc1'),
-                    ('2018-10-11T21:18:06.725000Z', '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'),
-                    ('2018-10-11T21:18:06.730000Z', '308eea51-d14b-4036-8cd1-cfd81d7532c3'),
-                    ('2018-10-11T21:18:12.763000Z', 'b7214641-1ac5-4f60-b795-cb33a7c25434'),
-                    ('2018-10-11T21:18:12.864000Z', '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'),
-                ],
-                # samples have no 'aggregate…Date' values
-            },
-            'files': {
-                'submissionDate': [
-                    ('2018-10-01T14:22:24.380000Z', '665b4341-9950-4e59-a401-e4a097256f1e'),
-                    ('2018-10-01T14:22:24.389000Z', '300ee490-edca-46b1-b23d-c9458ebb9c6e'),
-                    ('2018-10-01T14:22:24.511000Z', '042dce4a-003b-492b-9371-e1897f52d8d9'),
-                    ('2018-10-01T14:22:24.755000Z', '80036f72-7fde-46e9-821b-17dbbe0509bb'),
-                    ('2018-10-11T21:18:01.623000Z', '281c2d08-9e43-47f9-b937-e733e3ba3322'),
-                    ('2018-10-11T21:18:01.642000Z', 'ae1d6fa7-964f-465a-8c78-565206827434'),
-                    ('2018-10-11T21:18:01.654000Z', 'f518a8cc-e1d9-4fc9-bc32-491dd8543902'),
-                    ('2018-10-11T21:18:01.964000Z', '213381ea-6161-4159-853e-cfcae4968001'),
-                    ('2018-10-11T21:18:01.979000Z', '9ee3da9e-83ca-4c02-84d6-ac09702b12ba'),
-                    ('2018-10-11T21:18:01.990000Z', '330a08ca-ae8e-4f1f-aa03-970abcd27f39'),
-                    ('2018-10-18T20:32:25.801000Z', 'cf93f747-1392-4670-8eb3-3ac60a96855e'),
-                    ('2018-10-18T20:32:25.877000Z', '477c0b3e-4a06-4214-8f27-58199ba63528'),
-                    ('2018-10-18T20:32:25.951000Z', 'ad6d5170-d74b-408c-af6b-25a14315c9da'),
-                    ('2018-10-18T20:32:26.026000Z', '50be9b67-fae5-4472-9719-478dd1303d6e'),
-                    ('2018-10-18T20:32:26.097000Z', 'fd16b62e-e540-4f03-8ba0-07d0c204e3c8')
-                ],
-                'updateDate': [
-                    ('2018-10-01T15:40:51.754000Z', '80036f72-7fde-46e9-821b-17dbbe0509bb'),
-                    ('2018-10-01T15:42:33.208000Z', '042dce4a-003b-492b-9371-e1897f52d8d9'),
-                    ('2018-10-01T16:09:56.972000Z', '300ee490-edca-46b1-b23d-c9458ebb9c6e'),
-                    ('2018-10-01T16:09:57.110000Z', '665b4341-9950-4e59-a401-e4a097256f1e'),
-                    ('2018-10-18T20:32:16.894000Z', '213381ea-6161-4159-853e-cfcae4968001'),
-                    ('2018-10-18T20:32:18.864000Z', '9ee3da9e-83ca-4c02-84d6-ac09702b12ba'),
-                    ('2018-10-18T20:32:20.845000Z', '330a08ca-ae8e-4f1f-aa03-970abcd27f39'),
-                    ('2018-10-18T20:37:28.333000Z', 'fd16b62e-e540-4f03-8ba0-07d0c204e3c8'),
-                    ('2018-10-18T20:39:10.339000Z', '9b778e46-0c51-4260-8e3f-000ecc145f0a'),
-                    ('2018-10-18T20:39:13.335000Z', 'cf93f747-1392-4670-8eb3-3ac60a96855e'),
-                    ('2018-10-18T20:39:16.337000Z', '477c0b3e-4a06-4214-8f27-58199ba63528'),
-                    ('2018-10-18T20:39:22.340000Z', '50be9b67-fae5-4472-9719-478dd1303d6e'),
-                    ('2018-10-18T20:39:25.337000Z', 'ad6d5170-d74b-408c-af6b-25a14315c9da'),
-                    ('2018-10-18T20:39:40.335000Z', 'af025a74-53f1-4972-b50d-53095b5ffac2'),
-                    ('2018-10-18T20:39:55.336000Z', 'e8395271-7c8e-4ec4-9598-495df43fe5fd')
-                ],
-                'lastModifiedDate': [
-                    ('2018-10-01T15:40:51.754000Z', '80036f72-7fde-46e9-821b-17dbbe0509bb'),
-                    ('2018-10-01T15:42:33.208000Z', '042dce4a-003b-492b-9371-e1897f52d8d9'),
-                    ('2018-10-01T16:09:56.972000Z', '300ee490-edca-46b1-b23d-c9458ebb9c6e'),
-                    ('2018-10-01T16:09:57.110000Z', '665b4341-9950-4e59-a401-e4a097256f1e'),
-                    ('2018-10-18T20:32:16.894000Z', '213381ea-6161-4159-853e-cfcae4968001'),
-                    ('2018-10-18T20:32:18.864000Z', '9ee3da9e-83ca-4c02-84d6-ac09702b12ba'),
-                    ('2018-10-18T20:32:20.845000Z', '330a08ca-ae8e-4f1f-aa03-970abcd27f39'),
-                    ('2018-10-18T20:37:28.333000Z', 'fd16b62e-e540-4f03-8ba0-07d0c204e3c8'),
-                    ('2018-10-18T20:39:10.339000Z', '9b778e46-0c51-4260-8e3f-000ecc145f0a'),
-                    ('2018-10-18T20:39:13.335000Z', 'cf93f747-1392-4670-8eb3-3ac60a96855e'),
-                    ('2018-10-18T20:39:16.337000Z', '477c0b3e-4a06-4214-8f27-58199ba63528'),
-                    ('2018-10-18T20:39:22.340000Z', '50be9b67-fae5-4472-9719-478dd1303d6e'),
-                    ('2018-10-18T20:39:25.337000Z', 'ad6d5170-d74b-408c-af6b-25a14315c9da'),
-                    ('2018-10-18T20:39:40.335000Z', 'af025a74-53f1-4972-b50d-53095b5ffac2'),
-                    ('2018-10-18T20:39:55.336000Z', 'e8395271-7c8e-4ec4-9598-495df43fe5fd')
-                ],
-                # files have no 'aggregate…Date' values
-            },
-        }
-        for entity_type, fields in test_cases.items():
-            for field, expected in fields.items():
+        # The dates are formatted such that comparing them as strings compares
+        # them chronologically
+        lower, upper = '2018-10-01T00:00:00.000000Z', '2018-11-01T00:00:00.000000Z'
+        for entity_type in self._metadata_plugin.exposed_indices:
+            for field in self._date_fields(entity_type):
                 with self.subTest(entity_type=entity_type, field=field):
-                    filters = {
-                        field: {
-                            'within': [
-                                [
-                                    '2018-10-01T00:00:00.000000Z',
-                                    '2018-11-01T00:00:00.000000Z'
-                                ]
-                            ]
-                        }
-                    }
-                    params = self._params(filters=filters, size=15, sort=field, order='asc')
-                    url = self.base_url.set(path=('index', entity_type), args=params)
-                    response = self._http_client.request('GET', str(url))
-                    raise_on_status(response)
-                    response_json = response.json()
-                    actual = [
-                        (dates[field], hit['entryId'])
-                        for hit in response_json['hits']
-                        for dates in hit['dates']
+                    expected = [
+                        (date, entity_id)
+                        for date, entity_id in self._actual_dates(entity_type, field, order='asc')
+                        if date is not None and lower <= date <= upper
                     ]
+                    filters = {field: {'within': [[lower, upper]]}}
+                    actual = self._actual_dates(entity_type, field, order='asc', filters=filters)
                     self.assertEqual(expected, actual)
 
     def test_contributors_order(self):
@@ -2086,12 +1794,12 @@ class TestIndexResponse(IndexResponseTestCase):
 
         expected_entry_ids = [
             '308eea51-d14b-4036-8cd1-cfd81d7532c3',
+            '4a38f534-f81a-56df-825d-369973cf3906',
             '73f10dad-afc5-4d1d-a71c-4a8b6fff9172',
-            '79682426-b813-4f69-8c9c-2764ffac5dc1',
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual([None, '79682426-b813-4f69-8c9c-2764ffac5dc1'],
+        self.assertEqual([None, '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'],
                          json.loads(second_page_next['search_after']))
         self.assertEqual([None, '308eea51-d14b-4036-8cd1-cfd81d7532c3'],
                          json.loads(second_page_previous['search_before']))
@@ -2151,11 +1859,13 @@ class TestIndexResponse(IndexResponseTestCase):
                         'is': [title]
                     }
                 }
+                url = self.base_url.set(path='/index/files',
+                                        args=dict(filters=json.dumps(filters)))
                 expected_terms = {
                     'terms': [
                         {
                             'term': None,
-                            'count': 25
+                            'count': 44
                         },
                         {
                             'term': 'A title of a publication goes here.',
@@ -2171,11 +1881,9 @@ class TestIndexResponse(IndexResponseTestCase):
                             'count': 2
                         }
                     ],
-                    'total': 45,
+                    'total': 64,
                     'type': 'terms'
                 }
-                url = self.base_url.set(path='/index/files',
-                                        args=dict(filters=json.dumps(filters)))
                 response = self._http_client.request('GET', str(url))
                 self.assertEqual(200, response.status)
                 self.assertEqual(expected_terms,

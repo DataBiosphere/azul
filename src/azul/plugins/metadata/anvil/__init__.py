@@ -264,6 +264,7 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                             'file_md5sum',
                             'reference_assembly',
                             'file_name',
+                            'file_path',
                             'is_supplementary',
                             # Not in schema
                             'drs_uri',
@@ -297,6 +298,15 @@ class Plugin(MetadataPlugin[AnvilBundle]):
                                name_in_hit='file_size',
                                type=pass_thru_int)
     )
+
+    def download_path(self, outer_entity: JSON, inner_file: JSON) -> str:
+        contents = json_mapping(outer_entity['contents'])
+        dataset = one(json_element_mappings(contents['datasets']))
+        title = one(json_element_strings(dataset['title']))
+        # Every file has a path, either the one the submitter gave it, in
+        # version 6 of the schema, or one backfilled when its bundle was
+        # indexed
+        return '/'.join([title, json_str(inner_file['file_path'])])
 
     @property
     def root_entity_type(self) -> str:
@@ -428,10 +438,15 @@ class Plugin(MetadataPlugin[AnvilBundle]):
             {
                 'dst': json_str(json_mapping(r['to'])['table']),
                 'name': json_str(r['name']),
-                # Each link is between a foreign key and a primary key.
-                # Primary keys are unique within their own table, but
-                # multiple rows in other tables can reference them.
-                'multiplicity': 'MANY_TO_ONE',
+                # We can't use MANY_TO_ONE, even for foreign-to-primary-key
+                # relations, because we observed there to be primary key
+                # collisions between tables of the same name in different AnVIL
+                # datasets.
+                #
+                # FIXME: Revert to MANY_TO_ONE
+                #        https://github.com/DataBiosphere/azul/issues/8364
+                #
+                'multiplicity': 'MANY_TO_MANY',
             }
             for r in json_element_mappings(anvil_schema['relationships'])
             if json_mapping(r['from'])['table'] == replica_type

@@ -115,6 +115,7 @@ from indexer import (
     DCP1CannedBundleTestCase,
     DCP2CannedBundleTestCase,
     IndexerTestCase,
+    WithIndexesSetUpTestCase,
 )
 
 log = get_test_logger(__name__)
@@ -346,19 +347,8 @@ class TestDCP1Indexer(DCP1IndexerTestCase):
         self.assertEqual(expected, cm.exception.args[2]['error']['reason'])
 
 
-class TestDCP1IndexerWithIndexesSetUp(DCP1IndexerTestCase):
-    """
-    Conveniently sets up (tears down) indices before (after) each test.
-    """
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.index_service.create_indices(self.catalog)
-
-    def tearDown(self):
-        self._purge_indices()
-        super().tearDown()
-
+class TestDCP1IndexerWithIndexesSetUp(WithIndexesSetUpTestCase,
+                                      DCP1IndexerTestCase):
     translated_str_null = null_str.to_index(None)
     translated_int_null = null_int.to_index(None)
     translated_bool_null = null_bool.to_index(None)

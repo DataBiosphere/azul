@@ -108,6 +108,9 @@ from azul.plugins import (
     ManifestFormat,
     MetadataPlugin,
 )
+from azul.plugins.metadata.anvil import (
+    Plugin as AnvilPlugin,
+)
 from azul.plugins.metadata.hca import (
     FileTransformer,
 )
@@ -141,6 +144,7 @@ from azul.source import (
     SimpleSourceSpec,
 )
 from azul_test_case import (
+    AzulUnitTestCase,
     patch_config,
 )
 from indexer import (
@@ -685,23 +689,24 @@ class TestManifests(DCP1ManifestTestCase):
         response = self._get_manifest(ManifestFormat.curl, filters)
         self.assertEqual(200, response.status_code)
         base_url = str(self.base_url.set(path='/repository/files'))
+        download_dir = 'melanoma-infiltration-of-stromal-and-immune-cells--6qb17r'
         expected_body = [
             [
                 f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.221025Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_sequencing_protocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/SmartSeq2_sequencing_protocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59'
                 '?catalog=test&version=2018-09-14T12%3A33%3A46.866929Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/TissueDissociationProtocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/TissueDissociationProtocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
                 '?catalog=test&version=2018-09-14T12%3A33%3A47.012715Z"',
-                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_RTPCR_protocol.pdf"',
+                f'output="{download_dir}/{bundle_fqid.uuid}/SmartSeq2_RTPCR_protocol.pdf"',
                 ''
             ],
         ]
@@ -1155,7 +1160,7 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
     }
 
     dataset_title_filters: FiltersJSON = {
-        'datasets.title': {'is': ['ANVIL_CMG_UWASH_DS_BDIS']}
+        'datasets.title': {'is': ['ANVIL_Test']}
     }
 
     neutral_file_filters: FiltersJSON = {
@@ -1226,18 +1231,35 @@ class AnvilManifestTestCase(ManifestTestCase, AnvilCannedBundleTestCase):
         return pfb_schema, pfb_entities
 
 
+class TestAnvilDownloadPath(AzulUnitTestCase):
+
+    def test(self):
+        """
+        A file is downloaded to the path it carries, below a directory named
+        after its dataset.
+        """
+        outer_entity = {'contents': {'datasets': [{'title': ['ANVIL_Test']}]}}
+        inner_file = {'file_path': 'b1/reads-0123456789abcdef.bam'}
+        path = AnvilPlugin().download_path(outer_entity, inner_file)
+        self.assertEqual('ANVIL_Test/b1/reads-0123456789abcdef.bam', path)
+
+
 class TestAnvilManifests(AnvilManifestTestCase):
 
     def test_compact_manifest(self):
         response = self._get_manifest(ManifestFormat.compact, filters={})
         self.assertEqual(200, response.status_code)
         source_spec = str(self.source.ref.spec)
+        supplementary_path = (
+            'supplementary/CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+            '.recalibrated_variants.annotated.coding-4bf181ad18f36404.txt'
+        )
         expected = [
             (
                 'bundles.bundle_uuid',
-                'f4962f15-ecc7-a075-b263-ac70ab0239b2',
-                '826dea02-e274-affe-aabc-eb3db63ad068',
-                '826dea02-e274-affe-aabc-eb3db63ad068'
+                '8a41df4f-a0ec-a83f-8a15-362fc7fe6269',
+                'cf0fbe53-a7a9-a9e8-85a4-3db742afb603',
+                'cf0fbe53-a7a9-a9e8-85a4-3db742afb603'
             ),
             (
                 'bundles.bundle_version',
@@ -1259,9 +1281,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'datasets.document_id',
-                '2370f948-2783-4eb6-afea-e022897f4dcf',
-                '2370f948-2783-4eb6-afea-e022897f4dcf',
-                '2370f948-2783-4eb6-afea-e022897f4dcf'
+                '208441e2-cf28-584e-a0ac-7553c7118412',
+                '208441e2-cf28-584e-a0ac-7553c7118412',
+                '208441e2-cf28-584e-a0ac-7553c7118412'
             ),
             (
                 'datasets.source_datarepo_row_ids',
@@ -1307,9 +1329,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'datasets.title',
-                'ANVIL_CMG_UWASH_DS_BDIS',
-                'ANVIL_CMG_UWASH_DS_BDIS',
-                'ANVIL_CMG_UWASH_DS_BDIS'
+                'ANVIL_Test',
+                'ANVIL_Test',
+                'ANVIL_Test'
             ),
             (
                 'datasets.data_modality',
@@ -1326,8 +1348,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'donors.document_id',
                 '',
-                'bfd991f2-2797-4083-972a-da7c6d7f1b2e',
-                'bfd991f2-2797-4083-972a-da7c6d7f1b2e'
+                '71c9a86b-d96b-523b-939e-d03d7e68f94a',
+                '71c9a86b-d96b-523b-939e-d03d7e68f94a'
             ),
             (
                 'donors.source_datarepo_row_ids',
@@ -1368,8 +1390,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'diagnoses.document_id',
                 '',
-                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461',
-                '15d85d30-ad4a-4f50-87a8-a27f59dd1b5f || 939a4bd3-86ed-4a8a-81f4-fbe0ee673461'
+                '8c554d97-fffa-52d4-884d-b40b1aa5a7ff || cefd0ad2-e855-57c6-ae97-954032ef628c',
+                '8c554d97-fffa-52d4-884d-b40b1aa5a7ff || cefd0ad2-e855-57c6-ae97-954032ef628c'
             ),
             (
                 'diagnoses.source_datarepo_row_ids',
@@ -1428,8 +1450,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'biosamples.document_id',
                 '',
-                '826dea02-e274-4ffe-aabc-eb3db63ad068',
-                '826dea02-e274-4ffe-aabc-eb3db63ad068'
+                'cf0fbe53-a7a9-59e8-85a4-3db742afb603',
+                'cf0fbe53-a7a9-59e8-85a4-3db742afb603'
             ),
             (
                 'biosamples.source_datarepo_row_ids',
@@ -1482,8 +1504,8 @@ class TestAnvilManifests(AnvilManifestTestCase):
             (
                 'activities.document_id',
                 '',
-                '1509ef40-d1ba-440d-b298-16b7c173dcd4',
-                '816e364e-1193-4e5b-a91a-14e4b009157c'
+                'd23548da-8c3e-51b3-8766-28d02ce558cd',
+                '9af629c7-a4b2-520c-a03a-bdef5ee55d09'
             ),
             (
                 'activities.source_datarepo_row_ids',
@@ -1523,9 +1545,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.document_id',
-                '6b0f6c0f-5d80-4242-accb-840921351cd5',
-                '15b76f9c-6b46-433f-851d-34e89f1b9ba6',
-                '3b17377b-16b1-431c-9967-e5d01fc5923f'
+                '4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132',
+                'a76526dc-d42f-5b97-ab14-56eb3c9bdfec',
+                'dc53dde6-280c-501c-a95d-4157e13c66dc'
             ),
             (
                 'files.source_datarepo_row_ids',
@@ -1576,6 +1598,12 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 '307500.merged.matefixed.sorted.markeddups.recal.bam'
             ),
             (
+                'files.file_path',
+                supplementary_path,
+                'somedir/307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz',
+                'somedir/307500.merged.matefixed.sorted.markeddups.recal.bam'
+            ),
+            (
                 'files.is_supplementary',
                 'True',
                 'False',
@@ -1589,9 +1617,9 @@ class TestAnvilManifests(AnvilManifestTestCase):
             ),
             (
                 'files.azul_url',
-                self._file_url('6b0f6c0f-5d80-4242-accb-840921351cd5', self.version),
-                self._file_url('15b76f9c-6b46-433f-851d-34e89f1b9ba6', self.version),
-                self._file_url('3b17377b-16b1-431c-9967-e5d01fc5923f', self.version)
+                self._file_url('4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132', self.version),
+                self._file_url('a76526dc-d42f-5b97-ab14-56eb3c9bdfec', self.version),
+                self._file_url('dc53dde6-280c-501c-a95d-4157e13c66dc', self.version)
             ),
             (
                 'files.azul_mirror_uri',
@@ -1607,6 +1635,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
         file_size_2 = 213021639
         file_size_3 = 3306845592
         cases = [-1, file_size_1, file_size_2, file_size_3]
+        download_dir = 'ANVIL_Test'
         for i, mirror_limit in enumerate(cases, start=1):
             with self.subTest(mirror_limit=mirror_limit):
                 with self._patch_mirror_limit(self.catalog, mirror_limit):
@@ -1616,25 +1645,32 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 self.assertEqual(200, response.status_code)
                 base_url = str(self.base_url.set(path='/repository/files'))
                 expected_body = [
-                    *iif(file_size_2 <= mirror_limit, [[
-                        f'url="{base_url}/15b76f9c-6b46-433f-851d-34e89f1b9ba6' +
+                    # This file has no file_path, so a prefix of its digest sets
+                    # it apart, and it is supplementary, which puts it with
+                    # the other files belonging to the dataset as a whole
+                    *iif(file_size_1 <= mirror_limit, [[
+                        f'url="{base_url}/4f5bd3e4-a20e-5daa-9ce6-78f9e8f7e132' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
+                        f'output="{download_dir}/supplementary/' +
+                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15'
+                        '.recalibrated_variants.annotated.coding'
+                        '-4bf181ad18f36404.txt"',
+                        ''
+                    ]]),
+                    # This file has file_path, which is used as is
+                    *iif(file_size_2 <= mirror_limit, [[
+                        f'url="{base_url}/a76526dc-d42f-5b97-ab14-56eb3c9bdfec' +
+                        '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.g.vcf.gz"',
                         ''
                     ]]),
+                    # This file has file_path, which is used as is
                     *iif(file_size_3 <= mirror_limit, [[
-                        f'url="{base_url}/3b17377b-16b1-431c-9967-e5d01fc5923f' +
+                        f'url="{base_url}/dc53dde6-280c-501c-a95d-4157e13c66dc' +
                         '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="826dea02-e274-affe-aabc-eb3db63ad068/' +
+                        f'output="{download_dir}/somedir/' +
                         '307500.merged.matefixed.sorted.markeddups.recal.bam"',
-                        ''
-                    ]]),
-                    *iif(file_size_1 <= mirror_limit, [[
-                        f'url="{base_url}/6b0f6c0f-5d80-4242-accb-840921351cd5' +
-                        '?catalog=test&version=2022-06-01T00%3A00%3A00.000000Z"',
-                        'output="f4962f15-ecc7-a075-b263-ac70ab0239b2/' +
-                        'CCDG_13607_B01_GRM_WGS_2019-02-19_chr15.recalibrated_variants.annotated.coding.txt"',
                         ''
                     ]])
                 ]
