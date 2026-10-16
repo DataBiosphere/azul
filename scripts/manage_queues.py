@@ -20,15 +20,18 @@ def main(argv):
     sps.add_parser('list',
                    help='List SQS queues in current deployment')
 
+    dump_options = argparse.ArgumentParser(add_help=False)
+    dump_options.add_argument('--delete', '-D', action='store_true',
+                              help='Permanently remove queued messages after writing them to the '
+                                   'file. By default the messages will be returned to the queue')
+
     sp = sps.add_parser('dump',
+                        parents=[dump_options],
                         help='Dump contents of queue into designated file')
     sp.add_argument('queue', metavar='QUEUE_NAME',
                     help='Name of the queue to obtain messages from')
     sp.add_argument('path', metavar='FILE_PATH',
                     help='Path of file to write messages to')
-    sp.add_argument('--delete', '-D', action='store_true',
-                    help='Permanently remove queued messages after writing them to the file. '
-                         'By default the messages will be returned to the queue')
 
     sp = sps.add_parser('feed',
                         help='Feed messages from file back into queue')
@@ -68,12 +71,10 @@ def main(argv):
                         'The messages will be lost forever.')
 
     sp = sps.add_parser('dump_all',
+                        parents=[dump_options],
                         help='Dump all messages in all queues in the current deployment. '
                              'Each queue will be dumped into a separate JSONL file. '
                              'The name of that file is the name of the queue followed by ".jsonl"')
-    sp.add_argument('--delete', '-D', action='store_true',
-                    help='Permanently remove queued messages after writing them to the file. '
-                         'By default the messages will be returned to the queue')
 
     args = p.parse_args(argv)
 
