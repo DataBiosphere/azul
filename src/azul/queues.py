@@ -194,7 +194,7 @@ class Queues:
     def _dump(self, queue: Queue, path: str):
         log.info('Writing messages from queue %r to file %r', queue.url, path)
         messages = self._get_messages(queue)
-        self._dump_messages(messages, queue.url, path)
+        self._dump_messages(map(self._condense, messages), queue.url, path)
         log.info(f'Finished writing {path!r}')
         self._cleanup_messages(queue, messages)
 
@@ -257,10 +257,10 @@ class Queues:
             self._return_messages(message_batches, queue)
 
     def _dump_messages(self,
-                       messages: Iterable[Message],
+                       messages: Iterable[JSON],
                        queue_url: str,
                        path: str):
-        messages = [self._condense(message) for message in messages]
+        messages = list(messages)
         with write_file_atomically(path) as file:
             content = {
                 'queue': queue_url,
