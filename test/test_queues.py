@@ -146,15 +146,17 @@ class TestQueues(SqsTestCase):
         with tempfile.TemporaryDirectory() as dir_path:
             path = os.path.join(dir_path, 'dump.jsonl')
             # Neither flag leaves the operator with no decision made
-            with self.assertRaises(RuntimeError) as context:
+            with self.assertRaises(AssertionError) as context:
                 Queues().dump(queue_name, path)
-            self.assertIn('--safe', context.exception.args[0])
-            self.assertIn('--unsafe', context.exception.args[0])
-            self.assertEqual(3, context.exception.args[1])
+            message, num_messages = one(context.exception.args).args
+            self.assertIn('--safe', message)
+            self.assertIn('--unsafe', message)
+            self.assertEqual(3, num_messages)
             # Deleting what is likely an incomplete dump is refused as well
-            with self.assertRaises(RuntimeError) as context:
+            with self.assertRaises(AssertionError) as context:
                 Queues(delete=True, safe_dump=False).dump(queue_name, path)
-            self.assertIn('making --delete unsafe', context.exception.args[0])
+            self.assertIn('making --delete unsafe',
+                          one(context.exception.args).args[0])
             # Dumping without deleting is permitted, with a warning
             with self.assertLogs('azul.queues', level='WARNING') as logs:
                 Queues(safe_dump=False).dump(queue_name, path)
@@ -184,10 +186,10 @@ class TestQueues(SqsTestCase):
             # Notifications are not tallies, whichever queue of theirs is fed
             for other_name in [config.notifications_queue.name,
                                config.notifications_queue.to_fail.name]:
-                with self.assertRaises(RuntimeError) as context:
+                with self.assertRaises(AssertionError) as context:
                     Queues().feed(path, other_name)
                 self.assertEqual(('DocumentTally', 'IndexAction'),
-                                 context.exception.args[1:])
+                                 one(context.exception.args).args[1:])
             # The queue the messages came from carries them, as does its
             # counterpart that the retries of those messages end up in
             Queues().feed(path, config.tallies_queue.to_retry.name)
@@ -207,10 +209,10 @@ class TestQueues(SqsTestCase):
             with open(path, 'w') as file:
                 for line in [header, *dumped_messages]:
                     file.write(json.dumps(line) + '\n')
-            with self.assertRaises(RuntimeError) as context:
+            with self.assertRaises(AssertionError) as context:
                 Queues().feed(path, queue_name)
             self.assertEqual(('otherdeployment', config.deployment_stage),
-                             context.exception.args[1:])
+                             one(context.exception.args).args[1:])
             Queues(foreign_feed=True).feed(path, queue_name)
         queue.reload()
         self.assertEqual('1', queue.attributes['ApproximateNumberOfMessages'])
@@ -225,9 +227,9 @@ class TestQueues(SqsTestCase):
             self.assertEqual(2, len(dumped_messages))
             # Writing to the file again takes a decision
             self._send_messages(queue, 2)
-            with self.assertRaises(RuntimeError) as context:
+            with self.assertRaises(AssertionError) as context:
                 Queues(delete=True).dump(queue_name, path)
-            self.assertEqual((path,), context.exception.args[1:])
+            self.assertEqual((path,), one(context.exception.args).args[1:])
             # Appending keeps the messages that are in the file already
             Queues(delete=True, append=True).dump(queue_name, path)
             appended_header, appended_messages = self._read_dump(path)
@@ -239,9 +241,10 @@ class TestQueues(SqsTestCase):
             with open(path, 'w') as file:
                 file.write(json.dumps(other_header) + '\n')
             self._send_messages(queue, 1)
-            with self.assertRaises(RuntimeError) as context:
+            with self.assertRaises(AssertionError) as context:
                 Queues(delete=True, append=True).dump(queue_name, path)
-            self.assertEqual((path, other_header, header), context.exception.args[1:])
+            self.assertEqual((path, other_header, header),
+                             one(context.exception.args).args[1:])
             # Overwriting replaces whatever the file held
             Queues(delete=True, append=False).dump(queue_name, path)
             overwritten_header, overwritten_messages = self._read_dump(path)

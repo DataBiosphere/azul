@@ -58,6 +58,7 @@ from azul.lambdas import (
     LambdaFunctions,
 )
 from azul.lib import (
+    R,
     cached_property,
 )
 from azul.lib.attrs import (
@@ -272,19 +273,13 @@ class Queues:
                     'The work queues were empty before the dump, but messages arriving '
                     'afterwards could still have been snatched up by the lambdas'
                 )
-            elif self._safe_dump is None:
-                raise RuntimeError(
-                    'The work queues hold messages. Pass --safe to disable the lambdas '
-                    'during the dump, or --unsafe to dump anyway.',
-                    num_messages
-                )
-            elif self._delete:
-                raise RuntimeError(
-                    'The work queues hold messages, making --delete unsafe. '
-                    'Pass --safe instead of --unsafe.',
-                    num_messages
-                )
             else:
+                assert self._safe_dump is not None, R(
+                    'The work queues hold messages. Pass --safe to disable the lambdas '
+                    'during the dump, or --unsafe to dump anyway.', num_messages)
+                assert not self._delete, R(
+                    'The work queues hold messages, making --delete unsafe. '
+                    'Pass --safe instead of --unsafe.', num_messages)
                 yield
                 log.warning(
                     'The work queues held %i message(s) before the dump, and more have '
@@ -369,18 +364,13 @@ class Queues:
             path, progress_path)
         if not os.path.exists(path):
             append = False
-        elif self._append is True:
-            self._check_header(path, header)
-            append = True
-        elif self._append is False:
-            append = False
-        elif self._append is None:
-            raise RuntimeError(
-                'Destination file already exists. Use --append or --overwrite.',
-                path
-            )
         else:
-            assert False, self._append
+            assert self._append is not None, R(
+                'Destination file already exists. '
+                'Use --append or --overwrite.', path)
+            append = self._append
+            if append:
+                self._check_header(path, header)
         with open(path, 'a' if append else 'w') as file:
             if not append:
                 self._write_line(file, header)
@@ -389,11 +379,9 @@ class Queues:
     def _check_header(self, path: str, header: JSON):
         with open(path) as file:
             other_header = json.loads(file.readline())
-        if other_header != header:
-            raise RuntimeError(
-                'The destination file is for a different queue',
-                path, other_header, header
-            )
+        assert other_header == header, R(
+            'The destination file is for a different queue',
+            path, other_header, header)
 
     def _queue_name(self, queue: Queue) -> str:
         return queue.url.rsplit('/', 1)[-1]
@@ -506,8 +494,8 @@ class Queues:
                 for message in message_batch
             ]
             response = queue.change_message_visibility_batch(Entries=batch)
-            if len(response['Successful']) != len(batch):
-                raise RuntimeError(f'Failed to return message: {response!r}')
+            assert len(response['Successful']) == len(batch), R(
+                'Failed to return messages', response)
 
     def _delete_messages(self,
                          message_batches: Iterable[builtins.list[Message]],
@@ -520,8 +508,8 @@ class Queues:
                     for message in message_batch
                 ]
             )
-            if len(response['Successful']) != len(message_batch):
-                raise RuntimeError(f'Failed to delete messages: {response!r}')
+            assert len(response['Successful']) == len(message_batch), R(
+                'Failed to delete messages', response)
 
     def _condense(self, message: Message) -> JSON:
         """
@@ -619,7 +607,9 @@ class Queues:
         # Two minutes to safely accommodate SQS eventual consistency window of
         # one minute. For more info, read WARNING section on
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
-        assert maxlen * self.stabilization_poll_interval >= 2 * 60
+        assert maxlen * self.stabilization_poll_interval >= 2 * 60, R(
+            'Timeout too short to observe the queues for long enough',
+            timeout, self.stabilization_poll_interval)
 
         while True:
             # Determine queue lengths
@@ -651,8 +641,8 @@ class Queues:
             log.info('Waiting for %s queue(s) to stabilize ...', len(queues))
             time.sleep(self.stabilization_poll_interval)
 
-        if final_length != 0:
-            raise Exception('The queues have stalled', final_length)
+        assert final_length == 0, R(
+            'The queues have stalled', final_length)
         return final_length
 
     def feed(self, path: str, queue_name: str):
@@ -661,20 +651,16 @@ class Queues:
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
         message_type = self._message_type(queue)
-        if header['message_type'] != message_type:
-            raise RuntimeError(
-                'The type of message to be fed does not match the type of '
-                'message the target queue is expected to hold',
-                header['message_type'], message_type
-            )
+        assert header['message_type'] == message_type, R(
+            'The type of message to be fed does not match the type of message '
+            'the target queue is expected to hold',
+            header['message_type'], message_type)
         source_deployment = self._deployment(header['source_queue'])
         deployment = self._deployment(self._queue_name(queue))
-        if source_deployment != deployment and not self._foreign_feed:
-            raise RuntimeError(
-                'The messages to be fed were dumped from another deployment. '
-                'Pass --foreign to feed them anyway',
-                source_deployment, deployment
-            )
+        assert source_deployment == deployment or self._foreign_feed, R(
+            'The messages to be fed were dumped from another deployment. '
+            'Pass --foreign to feed them anyway',
+            source_deployment, deployment)
         progress_path = path + self.progress_suffix
         num_fed = self._read_progress(progress_path, queue)
         if num_fed > 0:
@@ -706,16 +692,13 @@ class Queues:
         else:
             with file:
                 progress = json.load(file)
-            if progress['queue'] == queue.url:
-                return progress['num_messages']
-            else:
-                raise RuntimeError(
-                    'A feed of this file into another queue was interrupted. '
-                    'Resume that feed by changing the target queue argument or '
-                    'remove the .progress file to feed into the current target '
-                    'queue from the beginning.',
-                    progress['queue'], queue.url
-                )
+            assert progress['queue'] == queue.url, R(
+                'A feed of this file into another queue was interrupted. '
+                'Resume that feed by changing the target queue argument or '
+                'remove the .progress file to feed into the current target '
+                'queue from the beginning.',
+                progress['queue'], queue.url)
+            return progress['num_messages']
 
     def _write_progress(self, path: str, queue: Queue, num_messages: int):
         with write_file_atomically(path) as file:
@@ -758,8 +741,9 @@ class Queues:
                     log.info('Moved %i messages', num_moved)
                     break
                 else:
-                    raise RuntimeError('Failed to move messages',
-                                       status, task.get('FailureReason'), num_moved)
+                    assert False, R(
+                        'Failed to move messages',
+                        status, task.get('FailureReason'), num_moved)
             time.sleep(self.redrive_poll_interval)
 
     def _latest_message_move_task(self,
@@ -887,7 +871,8 @@ class Queues:
                 try:
                     function = functions_by_queue[queue_name]
                 except KeyError:
-                    assert queue_name in config.fail_queue_names
+                    assert queue_name in config.fail_queue_names, R(
+                        'No lambda reads this queue', queue_name)
                 else:
                     if queue_name == config.notifications_queue.name:
                         # Prevent new notifications from being added
@@ -915,8 +900,7 @@ class Queues:
             if e:
                 errors.append(e)
                 log.error('Exception in worker thread', exc_info=e)
-        if errors:
-            raise RuntimeError(errors)
+        assert not errors, R('Exceptions in worker threads', errors)
 
 
 class Action(DiscriminatingPolymorphicSerializableAttrs,
