@@ -1935,7 +1935,9 @@ def env() -> Mapping[str, str | None]:
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit in [
                 ('hca', 'dcp60', dcp60_sources, None, int(1.5 * 1024 ** 3)),
-                ('lungmap', 'lm10', lm10_sources, -1, -1)
+                # FIXME: Decommission LungMAP
+                #        https://github.com/DataBiosphere/azul/issues/8412
+                # ('lungmap', 'lm10', lm10_sources, -1, -1)
             ]
             for suffix, is_it in [
                 ('', False),
