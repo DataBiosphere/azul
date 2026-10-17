@@ -225,6 +225,10 @@ completely, or ``--unsafe`` to accept a dump that is probably incomplete. The
 latter is refused in combination with ``--delete``, which would discard the
 messages the dump missed.
 
+A dump refuses to write to a file that already exists, so every repetition of
+this procedure needs either a file of its own or ``--overwrite`` to replace the
+dump of the previous repetition with the current one.
+
 A feed that is interrupted records how many messages it submitted in a file
 beside the dump, and skips those messages when it is run again. Remove that
 file to feed the dump from the beginning instead.

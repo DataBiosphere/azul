@@ -25,6 +25,16 @@ def main(argv):
                               help='Permanently remove queued messages after writing them to the '
                                    'file. By default the messages will be returned to the queue')
     group = dump_options.add_mutually_exclusive_group()
+    group.add_argument('--append', '-A', dest='append', action='store_true', default=None,
+                       help='Append the dumped messages to the file, which must hold a dump '
+                            'of the same queue. By default, the script refuses to dump a queue '
+                            'to a file that already exists.')
+    group.add_argument('--overwrite', '-O', dest='append', action='store_false', default=None,
+                       help='Replace the contents of the file with the dumped messages. By '
+                            'default, the script refuses to dump a queue to a file that '
+                            'already exists.')
+
+    group = dump_options.add_mutually_exclusive_group()
     group.add_argument('--safe', '-S', dest='safe_dump', action='store_true', default=None,
                        help='Disable the lambdas reading the work queues of the current '
                             'deployment for the duration of the dump. Those lambdas produce the '
@@ -116,7 +126,9 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command in ('dump', 'dump_all'):
-        queues = Queues(delete=args.delete, safe_dump=args.safe_dump)
+        queues = Queues(delete=args.delete,
+                        safe_dump=args.safe_dump,
+                        append=args.append)
         if args.command == 'dump':
             queues.dump(args.queue, args.path)
         elif args.command == 'dump_all':

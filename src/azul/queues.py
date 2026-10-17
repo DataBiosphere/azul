@@ -170,6 +170,12 @@ class Queues:
     #:
     _foreign_feed: bool = False
 
+    #: If True, append a dump to the destination file. If False, replace
+    #: the contents of that file. If None, refuse to write to a file that
+    #: already exists.
+    #:
+    _append: bool | None = None
+
     #: The number of messages to be queued in a single SQS SendMessageBatch
     #: action. Theoretically, larger batches are better but SQS currently limits
     #: the SendMessageBatch size to 10. This is also used to configure the
@@ -295,12 +301,11 @@ class Queues:
         # ends, or receiving them again would make the dump run forever
         messages: list[Message] = []
         num_messages, num_empty_receives = 0, 0
-        with open(path, 'w') as file:
-            header = {
-                'source_queue': self._queue_name(queue),
-                'message_type': self._message_type(queue)
-            }
-            self._write_line(file, header)
+        header = {
+            'source_queue': self._queue_name(queue),
+            'message_type': self._message_type(queue)
+        }
+        with self._open_for_dump(path, header) as file:
             while True:
                 message_batch = self._receive_messages(queue)
                 if message_batch:
@@ -354,6 +359,41 @@ class Queues:
         the given queue.
         """
         return self._message_types[self._queue_name(queue)]
+
+    @contextmanager
+    def _open_for_dump(self, path: str, header: JSON) -> Iterator[TextIO]:
+        progress_path = path + self.progress_suffix
+        assert not os.path.exists(progress_path), R(
+            'A feed of the file to dump to was interrupted. Resume that feed, '
+            'or remove the progress file to abandon it.',
+            path, progress_path)
+        if not os.path.exists(path):
+            append = False
+        elif self._append is True:
+            self._check_header(path, header)
+            append = True
+        elif self._append is False:
+            append = False
+        elif self._append is None:
+            raise RuntimeError(
+                'Destination file already exists. Use --append or --overwrite.',
+                path
+            )
+        else:
+            assert False, self._append
+        with open(path, 'a' if append else 'w') as file:
+            if not append:
+                self._write_line(file, header)
+            yield file
+
+    def _check_header(self, path: str, header: JSON):
+        with open(path) as file:
+            other_header = json.loads(file.readline())
+        if other_header != header:
+            raise RuntimeError(
+                'The destination file is for a different queue',
+                path, other_header, header
+            )
 
     def _queue_name(self, queue: Queue) -> str:
         return queue.url.rsplit('/', 1)[-1]

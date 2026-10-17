@@ -94,7 +94,7 @@ class TestQueues(SqsTestCase):
             self.assertEqual(str(num_messages),
                              queue.attributes['ApproximateNumberOfMessages'])
             # Deleting each batch as it is written unblocks the next one
-            Queues(delete=True).dump(queue_name, path)
+            Queues(delete=True, append=False).dump(queue_name, path)
             header, dumped_messages = self._read_dump(path)
             self.assertEqual(num_messages, len(dumped_messages))
             self.assertEqual([{'i': i} for i in range(num_messages)],
@@ -214,6 +214,56 @@ class TestQueues(SqsTestCase):
             Queues(foreign_feed=True).feed(path, queue_name)
         queue.reload()
         self.assertEqual('1', queue.attributes['ApproximateNumberOfMessages'])
+
+    def test_dump_to_an_existing_file(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 2)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            Queues(delete=True).dump(queue_name, path)
+            header, dumped_messages = self._read_dump(path)
+            self.assertEqual(2, len(dumped_messages))
+            # Writing to the file again takes a decision
+            self._send_messages(queue, 2)
+            with self.assertRaises(RuntimeError) as context:
+                Queues(delete=True).dump(queue_name, path)
+            self.assertEqual((path,), context.exception.args[1:])
+            # Appending keeps the messages that are in the file already
+            Queues(delete=True, append=True).dump(queue_name, path)
+            appended_header, appended_messages = self._read_dump(path)
+            self.assertEqual(header, appended_header)
+            self.assertEqual(4, len(appended_messages))
+            self.assertEqual(dumped_messages, appended_messages[:2])
+            # Appending to a dump of another queue is refused
+            other_header = header | {'source_queue': config.tallies_queue.name}
+            with open(path, 'w') as file:
+                file.write(json.dumps(other_header) + '\n')
+            self._send_messages(queue, 1)
+            with self.assertRaises(RuntimeError) as context:
+                Queues(delete=True, append=True).dump(queue_name, path)
+            self.assertEqual((path, other_header, header), context.exception.args[1:])
+            # Overwriting replaces whatever the file held
+            Queues(delete=True, append=False).dump(queue_name, path)
+            overwritten_header, overwritten_messages = self._read_dump(path)
+            self.assertEqual(header, overwritten_header)
+            self.assertEqual(1, len(overwritten_messages))
+
+    def test_dump_to_a_file_that_is_being_fed(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 1)
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            Queues(delete=True).dump(queue_name, path)
+            progress_path = path + Queues.progress_suffix
+            # as an interrupted feed of this dump would have left behind
+            with open(progress_path, 'w') as file:
+                json.dump({'queue': queue.url, 'num_messages': 1}, file)
+            self._send_messages(queue, 1)
+            for append in [None, True, False]:
+                with self.assertRaises(AssertionError) as context:
+                    Queues(delete=True, append=append).dump(queue_name, path)
+                self.assertEqual((path, progress_path),
+                                 one(context.exception.args).args[1:])
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()
