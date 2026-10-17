@@ -53,6 +53,8 @@ def main(argv):
     sp.add_argument('--delete', '-D', action='store_true',
                     help='Remove messages from the file after adding them to the specified queue. '
                          'By default the messages will remain in the file')
+    sp.add_argument('--foreign', '-F', action='store_true',
+                    help='Accept messages that were dumped from another deployment.')
 
     sp = sps.add_parser('redrive',
                         help='Move all messages from one queue to another. '
@@ -122,7 +124,7 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command == 'feed':
-        queues = Queues(delete=args.delete)
+        queues = Queues(delete=args.delete, foreign_feed=args.foreign)
         queues.feed(args.path, args.queue)
     else:
         p.print_usage()

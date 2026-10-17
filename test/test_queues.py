@@ -66,7 +66,10 @@ class TestQueues(SqsTestCase):
             queue.reload()
             self.assertEqual('0', queue.attributes['ApproximateNumberOfMessages'])
             envelope, dumped_messages = self._read_dump(path)
-            expected_envelope = {'queue': queue.url, 'message_type': 'DocumentTally'}
+            expected_envelope = {
+                'source_queue': queue_name,
+                'message_type': 'DocumentTally'
+            }
             self.assertEqual(expected_envelope, envelope)
             self.assertEqual([message.body for message in messages],
                              [message['Body'] for message in dumped_messages])
@@ -188,6 +191,29 @@ class TestQueues(SqsTestCase):
             # The queue the messages came from carries them, as does its
             # counterpart that the retries of those messages end up in
             Queues().feed(path, config.tallies_queue.to_retry.name)
+
+    def test_feed_into_another_deployment(self):
+        queue_name, queue = self._create_queue()
+        self._send_messages(queue, 1)
+        other_name = config.tallies_queue.to_fail.name.replace(config.deployment_stage,
+                                                               'otherdeployment')
+        with tempfile.TemporaryDirectory() as dir_path:
+            path = os.path.join(dir_path, 'dump.jsonl')
+            Queues(delete=True).dump(queue_name, path)
+            # The envelope names the queue the messages were dumped from, so a
+            # dump of another deployment is told apart from one of this one
+            envelope, dumped_messages = self._read_dump(path)
+            envelope['source_queue'] = other_name
+            with open(path, 'w') as file:
+                for line in [envelope, *dumped_messages]:
+                    file.write(json.dumps(line) + '\n')
+            with self.assertRaises(RuntimeError) as context:
+                Queues().feed(path, queue_name)
+            self.assertEqual(('otherdeployment', config.deployment_stage),
+                             context.exception.args[1:])
+            Queues(foreign_feed=True).feed(path, queue_name)
+        queue.reload()
+        self.assertEqual('1', queue.attributes['ApproximateNumberOfMessages'])
 
     def test_interrupted_feed(self):
         queue_name, queue = self._create_queue()

@@ -234,6 +234,10 @@ tallies cannot be fed into a queue of notifications or vice versa. Feeding the
 dump of a fail queue into the work queue it belongs to, as prescribed above,
 needs nothing of the sort.
 
+A feed also refuses a dump taken from another deployment, unless ``--foreign``
+says otherwise. Reproducing a failure of one deployment in another is what that
+flag is for.
+
 This may cause the previously failed messages to succeed. Repeat this procedure
 until the set of failed notifications stabilizes, i.e., the
 ``notifications_fail`` queue is empty or no previously failed notifications

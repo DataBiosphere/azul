@@ -165,6 +165,11 @@ class Queues:
     #:
     _safe_dump: bool | None = None
 
+    #: Whether to feed a dump into a deployment other than the one it was
+    #: taken from
+    #:
+    _foreign_feed: bool = False
+
     #: The number of messages to be queued in a single SQS SendMessageBatch
     #: action. Theoretically, larger batches are better but SQS currently limits
     #: the SendMessageBatch size to 10. This is also used to configure the
@@ -292,7 +297,7 @@ class Queues:
         num_messages, num_empty_receives = 0, 0
         with open(path, 'w') as file:
             envelope = {
-                'queue': queue.url,
+                'source_queue': self._queue_name(queue),
                 'message_type': self._message_type(queue)
             }
             self._write_line(file, envelope)
@@ -348,8 +353,14 @@ class Queues:
         The name of the class whose instances are the bodies of the messages in
         the given queue.
         """
-        queue_name = queue.url.rsplit('/', 1)[-1]
-        return self._message_types[queue_name]
+        return self._message_types[self._queue_name(queue)]
+
+    def _queue_name(self, queue: Queue) -> str:
+        return queue.url.rsplit('/', 1)[-1]
+
+    def _deployment(self, queue_name: str) -> str:
+        _, deployment, _ = config.unqualified_resource_name_and_suffix(queue_name)
+        return deployment
 
     @cached_property
     def _message_types(self) -> dict[str, str]:
@@ -615,6 +626,14 @@ class Queues:
                 'The type of message to be fed does not match the type of '
                 'message the target queue is expected to hold',
                 envelope['message_type'], message_type
+            )
+        source_deployment = self._deployment(envelope['source_queue'])
+        deployment = self._deployment(self._queue_name(queue))
+        if source_deployment != deployment and not self._foreign_feed:
+            raise RuntimeError(
+                'The messages to be fed were dumped from another deployment. '
+                'Pass --foreign to feed them anyway',
+                source_deployment, deployment
             )
         progress_path = path + self.progress_suffix
         num_fed = self._read_progress(progress_path, queue)
