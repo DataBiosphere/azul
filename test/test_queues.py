@@ -54,8 +54,8 @@ class TestQueues(SqsTestCase):
 
     def _read_dump(self, path: str):
         with open(path) as file:
-            envelope, *messages = (json.loads(line) for line in file)
-        return envelope, messages
+            header, *messages = (json.loads(line) for line in file)
+        return header, messages
 
     def test_round_trip(self):
         queue_name, queue = self._create_queue()
@@ -65,12 +65,12 @@ class TestQueues(SqsTestCase):
             Queues(delete=True).dump(queue_name, path)
             queue.reload()
             self.assertEqual('0', queue.attributes['ApproximateNumberOfMessages'])
-            envelope, dumped_messages = self._read_dump(path)
-            expected_envelope = {
+            header, dumped_messages = self._read_dump(path)
+            expected_header = {
                 'source_queue': queue_name,
                 'message_type': 'DocumentTally'
             }
-            self.assertEqual(expected_envelope, envelope)
+            self.assertEqual(expected_header, header)
             self.assertEqual([message.body for message in messages],
                              [message['Body'] for message in dumped_messages])
             Queues().feed(path, queue_name)
@@ -88,14 +88,14 @@ class TestQueues(SqsTestCase):
             # Messages held in flight block the rest of their group, so a dump
             # that returns them captures only as many as one receive yields
             Queues().dump(queue_name, path)
-            envelope, dumped_messages = self._read_dump(path)
+            header, dumped_messages = self._read_dump(path)
             self.assertEqual(Queues.batch_size, len(dumped_messages))
             queue.reload()
             self.assertEqual(str(num_messages),
                              queue.attributes['ApproximateNumberOfMessages'])
             # Deleting each batch as it is written unblocks the next one
             Queues(delete=True).dump(queue_name, path)
-            envelope, dumped_messages = self._read_dump(path)
+            header, dumped_messages = self._read_dump(path)
             self.assertEqual(num_messages, len(dumped_messages))
             self.assertEqual([{'i': i} for i in range(num_messages)],
                              [message['Body'] for message in dumped_messages])
@@ -131,7 +131,7 @@ class TestQueues(SqsTestCase):
             with patch.object(Queues, '_num_remaining_messages', return_value=7):
                 with self.assertLogs('azul.queues', level='WARNING') as logs:
                     Queues(delete=True).dump(queue_name, path)
-            envelope, dumped_messages = self._read_dump(path)
+            header, dumped_messages = self._read_dump(path)
         message = one(record.getMessage()
                       for record in logs.records
                       if 'still reports' in record.getMessage())
@@ -160,7 +160,7 @@ class TestQueues(SqsTestCase):
                 Queues(safe_dump=False).dump(queue_name, path)
             self.assertIn('probably incomplete',
                           ' '.join(record.getMessage() for record in logs.records))
-            envelope, dumped_messages = self._read_dump(path)
+            header, dumped_messages = self._read_dump(path)
             self.assertEqual(2, len(dumped_messages))
 
     def test_dump_of_idle_deployment(self):
@@ -172,7 +172,7 @@ class TestQueues(SqsTestCase):
                 Queues(delete=True).dump(queue_name, path)
             self.assertIn('snatched up by the lambdas',
                           ' '.join(record.getMessage() for record in logs.records))
-            envelope, dumped_messages = self._read_dump(path)
+            header, dumped_messages = self._read_dump(path)
             self.assertEqual(2, len(dumped_messages))
 
     def test_feed_of_incompatible_messages(self):
@@ -200,12 +200,12 @@ class TestQueues(SqsTestCase):
         with tempfile.TemporaryDirectory() as dir_path:
             path = os.path.join(dir_path, 'dump.jsonl')
             Queues(delete=True).dump(queue_name, path)
-            # The envelope names the queue the messages were dumped from, so a
+            # The header names the queue the messages were dumped from, so a
             # dump of another deployment is told apart from one of this one
-            envelope, dumped_messages = self._read_dump(path)
-            envelope['source_queue'] = other_name
+            header, dumped_messages = self._read_dump(path)
+            header['source_queue'] = other_name
             with open(path, 'w') as file:
-                for line in [envelope, *dumped_messages]:
+                for line in [header, *dumped_messages]:
                     file.write(json.dumps(line) + '\n')
             with self.assertRaises(RuntimeError) as context:
                 Queues().feed(path, queue_name)
@@ -222,7 +222,7 @@ class TestQueues(SqsTestCase):
         with tempfile.TemporaryDirectory() as dir_path:
             path = os.path.join(dir_path, 'dump.jsonl')
             Queues(delete=True).dump(queue_name, path)
-            envelope, dumped_messages = self._read_dump(path)
+            header, dumped_messages = self._read_dump(path)
             self.assertEqual(num_messages, len(dumped_messages))
 
             send_messages = type(queue).send_messages
@@ -243,7 +243,7 @@ class TestQueues(SqsTestCase):
             # sees, not a failure of the bookkeeping that follows it
             self.assertEqual(('simulated failure',), context.exception.args)
             # The dump is left as it was, and what was fed is recorded beside it
-            envelope, remaining_messages = self._read_dump(path)
+            header, remaining_messages = self._read_dump(path)
             self.assertEqual(dumped_messages, remaining_messages)
             with open(path + Queues.progress_suffix) as file:
                 self.assertEqual({'queue': queue.url,

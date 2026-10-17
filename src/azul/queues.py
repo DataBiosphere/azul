@@ -296,11 +296,11 @@ class Queues:
         messages: list[Message] = []
         num_messages, num_empty_receives = 0, 0
         with open(path, 'w') as file:
-            envelope = {
+            header = {
                 'source_queue': self._queue_name(queue),
                 'message_type': self._message_type(queue)
             }
-            self._write_line(file, envelope)
+            self._write_line(file, header)
             while True:
                 message_batch = self._receive_messages(queue)
                 if message_batch:
@@ -617,17 +617,17 @@ class Queues:
 
     def feed(self, path: str, queue_name: str):
         with open(path) as file:
-            envelope, *messages = (json.loads(line) for line in file)
+            header, *messages = (json.loads(line) for line in file)
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
         message_type = self._message_type(queue)
-        if envelope['message_type'] != message_type:
+        if header['message_type'] != message_type:
             raise RuntimeError(
                 'The type of message to be fed does not match the type of '
                 'message the target queue is expected to hold',
-                envelope['message_type'], message_type
+                header['message_type'], message_type
             )
-        source_deployment = self._deployment(envelope['source_queue'])
+        source_deployment = self._deployment(header['source_queue'])
         deployment = self._deployment(self._queue_name(queue))
         if source_deployment != deployment and not self._foreign_feed:
             raise RuntimeError(
