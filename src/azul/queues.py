@@ -646,33 +646,37 @@ class Queues:
         return final_length
 
     def feed(self, path: str, queue_name: str):
-        with open(path) as file:
-            header, *messages = (json.loads(line) for line in file)
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
-        message_type = self._message_type(queue)
-        assert header['message_type'] == message_type, R(
-            'The type of message to be fed does not match the type of message '
-            'the target queue is expected to hold',
-            header['message_type'], message_type)
-        source_deployment = self._deployment(header['source_queue'])
-        deployment = self._deployment(self._queue_name(queue))
-        assert source_deployment == deployment or self._foreign_feed, R(
-            'The messages to be fed were dumped from another deployment. '
-            'Pass --foreign to feed them anyway',
-            source_deployment, deployment)
         progress_path = path + self.progress_suffix
         num_fed = self._read_progress(progress_path, queue)
-        if num_fed > 0:
-            log.info('Skipping the %i message(s) of %r that were fed before',
-                     num_fed, path)
-        for message_batch in chunked(messages[num_fed:], self.batch_size):
-            entries = [self._reconstitute(message) for message in message_batch]
-            queue.send_messages(Entries=entries)
-            num_fed += len(message_batch)
-            self._write_progress(progress_path, queue, num_fed)
-        log.info('Wrote %i messages', len(messages))
-        assert num_fed == len(messages), (num_fed, len(messages))
+        with open(path) as file:
+            messages = (json.loads(line) for line in file)
+            header = next(messages)
+            message_type = self._message_type(queue)
+            assert header['message_type'] == message_type, R(
+                'The type of message to be fed does not match the type of message '
+                'the target queue is expected to hold',
+                header['message_type'], message_type)
+            source_deployment = self._deployment(header['source_queue'])
+            deployment = self._deployment(self._queue_name(queue))
+            assert source_deployment == deployment or self._foreign_feed, R(
+                'The messages to be fed were dumped from another deployment. '
+                'Pass --foreign to feed them anyway',
+                source_deployment, deployment)
+            if num_fed > 0:
+                log.info('Skipping the %i message(s) of %r that were fed before',
+                         num_fed, path)
+                num_skipped = sum(1 for _ in islice(messages, num_fed))
+                assert num_skipped == num_fed, (num_skipped, num_fed)
+            else:
+                num_skipped = 0
+            for batch in chunked(messages, self.batch_size):
+                entries = [self._reconstitute(message) for message in batch]
+                queue.send_messages(Entries=entries)
+                num_fed += len(batch)
+                self._write_progress(progress_path, queue, num_fed)
+        log.info('Wrote %i messages, %i overall', num_fed - num_skipped, num_fed)
         # Feeding an empty dump would have skipped writing a progress file
         if num_fed > 0:
             os.unlink(progress_path)
