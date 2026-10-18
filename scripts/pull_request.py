@@ -117,7 +117,6 @@ class Main:
 
     def main(self):
         self._check_working_copy()
-        log.info('Checking remote branch …')
         self._check_remote_branch()
         issue_numbers = self._issue_numbers
         log.info('Fetching issue %s …',
@@ -355,6 +354,7 @@ class Main:
             log.warning('Working copy has uncommitted changes')
 
     def _check_remote_branch(self) -> None:
+        log.info('Checking remote branch …')
         result = subprocess.run(
             ['git', 'ls-remote', '--heads', 'github', self._branch],
             capture_output=True, text=True, check=True
