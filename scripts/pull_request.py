@@ -579,16 +579,25 @@ class Main:
         assert n < 2, R('Multiple linked issues references found in body')
 
     def _reindex_labels(self) -> list[str]:
-        return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(reindex:\w+)`',
-                          self.body, flags=re.MULTILINE)
+        return re.findall(
+            r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(reindex:\w+)`',
+            self.body,
+            flags=re.MULTILINE
+        )
 
     def _mirror_labels(self) -> list[str]:
-        return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(mirror:\w+)`',
-                          self.body, flags=re.MULTILINE)
+        return re.findall(
+            r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(mirror:\w+)`',
+            self.body,
+            flags=re.MULTILINE
+        )
 
     def _deploy_labels(self) -> list[str]:
-        return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(deploy:\w+)`',
-                          self.body, flags=re.MULTILINE)
+        return re.findall(
+            r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(deploy:\w+)`',
+            self.body,
+            flags=re.MULTILINE
+        )
 
     def _check_task(self, task: str, checked: bool = True) -> None:
         mark = 'x' if checked else ' '
