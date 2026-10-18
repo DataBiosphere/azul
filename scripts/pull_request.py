@@ -184,14 +184,13 @@ class Main:
         if self._args.type != 'promotion':
             self._check_task(r'Added `u` tag to commit title.*', checked=checked)
         self._check_task(r'This PR is labeled `upgrade`.*', checked=checked)
-        if self._args.no_upgrade:
-            self._check_task(r'Ran `make docker_images\.json`.*')
-            self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
-
         if has_u_tag:
             self.labels_to_add.append('upgrade')
         else:
             self.labels_to_remove.append('upgrade')
+        if self._args.no_upgrade:
+            self._check_task(r'Ran `make docker_images\.json`.*')
+            self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
 
         if self._args.no_deploy:
             deploy_labels = self._deploy_labels()
