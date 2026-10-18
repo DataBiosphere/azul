@@ -50,16 +50,15 @@ from azul.logging import (
 
 log = logging.getLogger(__name__)
 
-_project_owner = 'DataBiosphere'
-_project_repos = ['azul', 'azul-private']
-_project_title = 'Azul'
-
-#: Matches the label that prefixes every checklist item in the PR templates
-#:
-_item_label = r'`[A-Z]\d\d` '
-
 
 class Main:
+    project_owner = 'DataBiosphere'
+    project_repos = ['azul', 'azul-private']
+    project_title = 'Azul'
+
+    #: Matches the label that prefixes every checklist item in the PR templates
+    #:
+    item_label = r'`[A-Z]\d\d` '
 
     @classmethod
     def parse_args(cls, argv: list[str]) -> Namespace:
@@ -117,8 +116,8 @@ class Main:
         self._body: str | None = None
         self.labels_to_add: list[str] = []
         self.labels_to_remove: list[str] = []
-        self.check_working_copy()
-        self.check_remote_branch()
+        self.verify_working_copy()
+        self.verify_remote_branch()
         self.verify_user()
 
     def main(self):
@@ -313,7 +312,7 @@ class Main:
     @cached_property
     def target_branch(self) -> str:
         m = re.search(
-            r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
+            r'^- \[[ x]] ' + self.item_label + r'Target branch is `(.+?)`$',
             self.template,
             flags=re.MULTILINE
         )
@@ -397,7 +396,7 @@ class Main:
         )
         return result.stdout.strip()
 
-    def check_working_copy(self) -> None:
+    def verify_working_copy(self) -> None:
         result = subprocess.run(
             ['git', 'status', '--porcelain'],
             capture_output=True, text=True, check=True
@@ -405,7 +404,7 @@ class Main:
         if result.stdout.strip():
             log.warning('Working copy has uncommitted changes')
 
-    def check_remote_branch(self) -> None:
+    def verify_remote_branch(self) -> None:
         log.info('Checking remote branch …')
         result = subprocess.run(
             ['git', 'ls-remote', '--heads', 'github', self.branch],
@@ -516,11 +515,11 @@ class Main:
                 }}
                 ''',
                 alias=repo.replace('-', '_'),
-                owner=_project_owner,
+                owner=self.project_owner,
                 repo=repo,
                 number=issue_number
             )
-            for repo in _project_repos
+            for repo in self.project_repos
         )
         result = subprocess.run(
             [
@@ -588,21 +587,21 @@ class Main:
 
     def reindex_labels(self) -> list[str]:
         return re.findall(
-            r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(reindex:\w+)`',
+            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(reindex:\w+)`',
             self.body,
             flags=re.MULTILINE
         )
 
     def mirror_labels(self) -> list[str]:
         return re.findall(
-            r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(mirror:\w+)`',
+            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(mirror:\w+)`',
             self.body,
             flags=re.MULTILINE
         )
 
     def deploy_labels(self) -> list[str]:
         return re.findall(
-            r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(deploy:\w+)`',
+            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(deploy:\w+)`',
             self.body,
             flags=re.MULTILINE
         )
@@ -610,7 +609,7 @@ class Main:
     def check_task(self, task: str, checked: bool = True) -> None:
         mark = 'x' if checked else ' '
         self.body, n = re.subn(
-            r'^- \[[ x]] (' + _item_label + task + ')$',
+            r'^- \[[ x]] (' + self.item_label + task + ')$',
             r'- [' + mark + r'] \1',
             self.body,
             flags=re.MULTILINE
@@ -701,7 +700,7 @@ class Main:
                     projectV2(number: {number}) {{ id }}
                 }}
             }}
-        ''', owner=_project_owner, number=self.project['number'])
+        ''', owner=self.project_owner, number=self.project['number'])
         result = subprocess.run(
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
@@ -713,7 +712,7 @@ class Main:
         result = subprocess.run(
             [
                 'gh', 'project', 'field-list', str(self.project['number']),
-                '--owner', _project_owner,
+                '--owner', self.project_owner,
                 '--format', 'json',
             ],
             capture_output=True, text=True, check=True
@@ -735,16 +734,16 @@ class Main:
         result = subprocess.run(
             [
                 'gh', 'project', 'list',
-                '--owner', _project_owner,
+                '--owner', self.project_owner,
                 '--format', 'json',
             ],
             capture_output=True, text=True, check=True
         )
         projects = json.loads(result.stdout)['projects']
         for project in projects:
-            if project['title'] == _project_title:
+            if project['title'] == self.project_title:
                 return project
-        assert False, R('Project not found', _project_title)
+        assert False, R('Project not found', self.project_title)
 
 
 if __name__ == '__main__':
