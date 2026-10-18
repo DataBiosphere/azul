@@ -54,6 +54,7 @@ _item_label = r'`[A-Z]\d\d` '
 
 
 class Main:
+    body: str
 
     def main(self, argv):
         parser = argparse.ArgumentParser(description=__doc__)
@@ -151,17 +152,17 @@ class Main:
         template = template_path.read_text()
 
         if existing_pr is None:
-            body = template
+            self.body = template
         else:
-            body = existing_pr['body']
+            self.body = existing_pr['body']
             expected_comment = template.split('-->', maxsplit=1)[0]
-            assert body.startswith(expected_comment), R(
+            assert self.body.startswith(expected_comment), R(
                 'Existing PR was created with a different template')
 
         # Normalize line endings from GitHub API responses
-        body = '\n'.join(body.splitlines())
+        self.body = '\n'.join(self.body.splitlines())
 
-        body = self._reference_issues_in_body(body, issue_refs)
+        self._reference_issues(issue_refs)
 
         m = re.search(r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
                       template, flags=re.MULTILINE)
@@ -169,32 +170,32 @@ class Main:
         target_branch = m.group(1)
         target_branch_task = r'Target branch is `' + re.escape(target_branch) + '`'
         if existing_pr is None:
-            body = self._check_task(body, target_branch_task)
+            self._check_task(target_branch_task)
         else:
             base = existing_pr['baseRefName']
             if base == target_branch:
-                body = self._check_task(body, target_branch_task)
+                self._check_task(target_branch_task)
             else:
                 log.warning('Target branch is %r, expected %r', base, target_branch)
-                body = self._check_task(body, target_branch_task, checked=False)
+                self._check_task(target_branch_task, checked=False)
 
         if args.no_partial:
             assert not self._has_commit_tag(target_branch, 'p'), R(
                 '--no-partial cannot be used when a commit is tagged `p`')
-            body = self._check_task(body, r'Added `p` tag to titles of partial commits.*')
-            body = self._check_task(body, r'This PR is labeled `partial`.*')
-            body = self._check_task(body, r'This PR partially resolves .*')
+            self._check_task(r'Added `p` tag to titles of partial commits.*')
+            self._check_task(r'This PR is labeled `partial`.*')
+            self._check_task(r'This PR partially resolves .*')
 
         has_u_tag = self._has_commit_tag(target_branch, 'u')
         assert not (has_u_tag and args.no_upgrade), R(
             '--no-upgrade cannot be used when a commit is tagged `u`')
         checked = has_u_tag or args.no_upgrade
         if args.type != 'promotion':
-            body = self._check_task(body, r'Added `u` tag to commit title.*', checked=checked)
-        body = self._check_task(body, r'This PR is labeled `upgrade`.*', checked=checked)
+            self._check_task(r'Added `u` tag to commit title.*', checked=checked)
+        self._check_task(r'This PR is labeled `upgrade`.*', checked=checked)
         if args.no_upgrade:
-            body = self._check_task(body, r'Ran `make docker_images\.json`.*')
-            body = self._check_task(body, r'Documented upgrading of deployments in UPGRADING\.rst.*')
+            self._check_task(r'Ran `make docker_images\.json`.*')
+            self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
 
         labels_to_add = []
         labels_to_remove = []
@@ -210,24 +211,24 @@ class Main:
             labels_to_remove.append('reqs')
 
         if args.no_deploy:
-            deploy_labels = self._deploy_labels(body)
+            deploy_labels = self._deploy_labels()
             for label in deploy_labels:
-                body = self._check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
             labels_to_remove.extend(deploy_labels)
 
         if args.no_reindex:
             assert not self._has_commit_tag(target_branch, 'r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
-            body = self._check_task(body, r'Added `r` tag to commit title.*')
-            reindex_labels = self._reindex_labels(body)
+            self._check_task(r'Added `r` tag to commit title.*')
+            reindex_labels = self._reindex_labels()
             for label in reindex_labels:
-                body = self._check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
             labels_to_remove.extend(reindex_labels)
 
         if args.no_mirror:
-            mirror_labels = self._mirror_labels(body)
+            mirror_labels = self._mirror_labels()
             for label in mirror_labels:
-                body = self._check_task(body, r'This PR is labeled `' + re.escape(label) + '`.*')
+                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
             labels_to_remove.extend(mirror_labels)
 
         if args.no_api:
@@ -235,26 +236,26 @@ class Main:
                 '--no-api cannot be used when a commit is tagged `a`')
             assert not self._has_commit_tag(target_branch, 'A'), R(
                 '--no-api cannot be used when a commit is tagged `A`')
-            body = self._check_task(body, r'This PR and its linked issues are labeled `API`.*')
-            body = self._check_task(body, r'Added `a` \(`A`\) tag to commit title.*')
-            body = self._check_task(body, r'Updated REST API version number in `app\.py`.*')
+            self._check_task(r'This PR and its linked issues are labeled `API`.*')
+            self._check_task(r'Added `a` \(`A`\) tag to commit title.*')
+            self._check_task(r'Updated REST API version number in `app\.py`.*')
 
         if args.no_hotfix:
             assert not self._has_commit_tag(target_branch, 'F'), R(
                 '--no-hotfix cannot be used when a commit is tagged `F`')
-            body = self._check_task(body, r'Added `F` tag to main commit title.*')
-            body = self._check_task(body, r'Reverted the temporary hotfixes for any linked issues.*')
+            self._check_task(r'Added `F` tag to main commit title.*')
+            self._check_task(r'Reverted the temporary hotfixes for any linked issues.*')
 
         if args.no_reqs:
             assert not self._has_commit_tag(target_branch, 'R'), R(
                 '--no-reqs cannot be used when a commit is tagged `R`')
-            body = self._check_task(body, r'Ran `make requirements_update`.*')
-            body = self._check_task(body, r'Added `R` tag to commit title.*')
-            body = self._check_task(body, r'This PR is labeled `reqs`.*')
+            self._check_task(r'Ran `make requirements_update`.*')
+            self._check_task(r'Added `R` tag to commit title.*')
+            self._check_task(r'This PR is labeled `reqs`.*')
 
-        body = self._check_task(body, 'PR is assigned to the author')
-        body = self._check_task(body, r'Status of PR is \*In progress\*')
-        body = self._check_task(body, 'Name of PR branch matches .*')
+        self._check_task('PR is assigned to the author')
+        self._check_task(r'Status of PR is \*In progress\*')
+        self._check_task('Name of PR branch matches .*')
 
         if args.type is None:
             handle = self._branch_handle(branch)
@@ -262,9 +263,9 @@ class Main:
             assert handle == self._github_user(), R(
                 'Branch name does not match GitHub user', handle)
 
-        body = self._check_task(body, 'PR is linked to .*')
-        body = self._check_task(body, r'Status of linked issues? is \*In progress\*')
-        body = self._check_task(body, 'PR description links to linked issues?')
+        self._check_task('PR is linked to .*')
+        self._check_task(r'Status of linked issues? is \*In progress\*')
+        self._check_task('PR description links to linked issues?')
 
         if existing_pr is None:
             log.info('Creating PR …')
@@ -272,7 +273,7 @@ class Main:
                 'gh', 'pr', 'create',
                 '--base', target_branch,
                 '--title', title,
-                '--body', body,
+                '--body', self.body,
                 '--assignee', '@me',
             ]
             if labels_to_add:
@@ -289,7 +290,7 @@ class Main:
             cmd = [
                 'gh', 'pr', 'edit', pr_url,
                 '--title', title,
-                '--body', body,
+                '--body', self.body,
                 '--add-assignee', '@me',
             ]
             if labels_to_add:
@@ -490,34 +491,32 @@ class Main:
             return None
         return json.loads(result.stdout)
 
-    def _reference_issues_in_body(self, body: str, issue_refs: list[str]) -> str:
-        body, n = re.subn(r'^(Linked issues?: *).*$',
-                          lambda m: m.group(1) + ', '.join(issue_refs),
-                          body, flags=re.MULTILINE)
+    def _reference_issues(self, issue_refs: list[str]) -> None:
+        self.body, n = re.subn(r'^(Linked issues?: *).*$',
+                               lambda m: m.group(1) + ', '.join(issue_refs),
+                               self.body, flags=re.MULTILINE)
         assert n > 0, R('Linked issues reference not found in body')
         assert n < 2, R('Multiple linked issues references found in body')
-        return body
 
-    def _reindex_labels(self, body: str) -> list[str]:
+    def _reindex_labels(self) -> list[str]:
         return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(reindex:\w+)`',
-                          body, flags=re.MULTILINE)
+                          self.body, flags=re.MULTILINE)
 
-    def _mirror_labels(self, body: str) -> list[str]:
+    def _mirror_labels(self) -> list[str]:
         return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(mirror:\w+)`',
-                          body, flags=re.MULTILINE)
+                          self.body, flags=re.MULTILINE)
 
-    def _deploy_labels(self, body: str) -> list[str]:
+    def _deploy_labels(self) -> list[str]:
         return re.findall(r'^- \[[ x]] ' + _item_label + r'This PR is labeled `(deploy:\w+)`',
-                          body, flags=re.MULTILINE)
+                          self.body, flags=re.MULTILINE)
 
-    def _check_task(self, body: str, task: str, checked: bool = True) -> str:
+    def _check_task(self, task: str, checked: bool = True) -> None:
         mark = 'x' if checked else ' '
-        body, n = re.subn(r'^- \[[ x]] (' + _item_label + task + ')$',
-                          r'- [' + mark + r'] \1',
-                          body, flags=re.MULTILINE)
+        self.body, n = re.subn(r'^- \[[ x]] (' + _item_label + task + ')$',
+                               r'- [' + mark + r'] \1',
+                               self.body, flags=re.MULTILINE)
         assert n > 0, R('Task item not found in template', task)
         assert n < 2, R('Multiple matching task items found', task)
-        return body
 
     def _branch_handle(self, branch: str) -> str:
         m = re.fullmatch(r'issues/([^/]+)/\d+-.*', branch)
