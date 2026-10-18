@@ -534,8 +534,11 @@ class Main:
 
     @cached_property
     def pr_title(self) -> str:
+        # The PR is assumed to resolve every one of the linked issues. The first
+        # of them determines the PR title.
+        issue = self.issues[0]
         if self.args.fix is None:
-            fix = self.issue.type == 'Defect'
+            fix = issue.type == 'Defect'
         else:
             fix = self.args.fix
         prefix = 'Fix: ' if fix else ''
@@ -545,13 +548,7 @@ class Main:
         else:
             suffix = ''
         issue_refs = ', '.join(self.issue_refs)
-        return f'{prefix}{self.issue.title}{suffix} ({issue_refs})'
-
-    @cached_property
-    def issue(self) -> IssueInfo:
-        # The PR is assumed to resolve every one of the linked issues. The first
-        # of them determines the PR title.
-        return self.issues[0]
+        return f'{prefix}{issue.title}{suffix} ({issue_refs})'
 
     @cached_property
     def issue_refs(self) -> list[str]:
