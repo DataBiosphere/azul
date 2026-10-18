@@ -121,7 +121,7 @@ class Main:
         self.verify_user()
 
     def main(self):
-        self.add_issue_references_to_body()
+        self.handle_issue_references_in_body()
         self.handle_target_branch()
         self.handle_partiality()
         self.handle_upgrades()
@@ -576,7 +576,7 @@ class Main:
             return None
         return json.loads(result.stdout)
 
-    def add_issue_references_to_body(self) -> None:
+    def handle_issue_references_in_body(self) -> None:
         self.body, n = re.subn(
             r'^(Linked issues?: *).*$',
             lambda m: m.group(1) + ', '.join(self.issue_refs),
