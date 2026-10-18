@@ -208,6 +208,7 @@ class Main:
         if self.labels_to_add:
             cmd.extend(['--label', ','.join(self.labels_to_add)])
         result = subprocess.run(cmd, capture_output=True, text=True)
+        # The output includes the PR URL, so we don't need to log it separately
         sys.stdout.write(result.stdout)
         sys.stderr.write(result.stderr)
         if result.returncode != 0:
