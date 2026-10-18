@@ -119,16 +119,6 @@ class Main:
         self._check_working_copy()
         log.info('Checking remote branch …')
         self._check_remote_branch()
-        if self._args.type is None:
-            template_path = _project_root / '.github' / 'pull_request_template.md'
-        elif self._args.type == 'upgrade':
-            template_path = _template_dir / 'upgrade.md'
-        elif self._args.type == 'promotion':
-            date, target = self._promotion_date_and_target
-            template_path = _template_dir / f'{target}-promotion.md'
-        else:
-            assert False, R('Unsupported template', self._args.type)
-
         if self._args.type == 'promotion':
             date, target = self._promotion_date_and_target
             title_suffix = f' {target}'
@@ -166,7 +156,7 @@ class Main:
 
         log.info('Checking for existing PR …')
         existing_pr = self._existing_pr()
-        template = template_path.read_text()
+        template = self._template_path.read_text()
 
         if existing_pr is None:
             self.body = template
@@ -324,6 +314,19 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    @cached_property
+    def _template_path(self) -> Path:
+        if self._args.type is None:
+            template_path = _project_root / '.github' / 'pull_request_template.md'
+        elif self._args.type == 'upgrade':
+            template_path = _template_dir / 'upgrade.md'
+        elif self._args.type == 'promotion':
+            date, target = self._promotion_date_and_target
+            template_path = _template_dir / f'{target}-promotion.md'
+        else:
+            assert False, R('Unsupported template', self._args.type)
+        return template_path
 
     @cached_property
     def _branch(self) -> str:
