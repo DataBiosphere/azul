@@ -64,6 +64,10 @@ class Main:
     labels_to_add: list[str] = attrs.field(factory=list)
     labels_to_remove: list[str] = attrs.field(factory=list)
 
+    def __attrs_post_init__(self):
+        self._check_working_copy()
+        self._check_remote_branch()
+
     @property
     def body(self) -> str:
         if self._body is None:
@@ -134,9 +138,6 @@ class Main:
         return args
 
     def main(self):
-        self._check_working_copy()
-        self._check_remote_branch()
-
         issue_numbers = self._issue_numbers
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
