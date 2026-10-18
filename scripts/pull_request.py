@@ -574,15 +574,15 @@ class Main:
             elif self.args.type == 'upgrade':
                 date = self.upgrade_date
                 log.info('Searching for upgrade issue …')
-                issue_numbers = [self.issue_number_by_title(
-                    f'Upgrade software dependencies {date}'
-                )]
+                issue_numbers = [
+                    self.issue_number_by_title(f'Upgrade software dependencies {date}')
+                ]
             else:
                 date, target = self.promotion_date_and_target
                 log.info('Searching for promotion issue …')
-                issue_numbers = [self.issue_number_by_title(
-                    f'Promotion {date}'
-                )]
+                issue_numbers = [
+                    self.issue_number_by_title(f'Promotion {date}')
+                ]
         return issue_numbers
 
     def issue_number_by_title(self, title: str) -> int:
