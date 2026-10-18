@@ -63,33 +63,6 @@ _item_label = r'`[A-Z]\d\d` '
 
 class Main:
 
-    def __init__(self, argv: list[str]):
-        self._args = self._parse_args(argv)
-        self._body: str | None = None
-        self.labels_to_add: list[str] = []
-        self.labels_to_remove: list[str] = []
-        self._check_working_copy()
-        self._check_remote_branch()
-        self._verify_user()
-
-    @property
-    def body(self) -> str:
-        if self._body is None:
-            if self._existing_pr is None:
-                self._body = self._template
-            else:
-                self._body = json_str(self._existing_pr['body'])
-                expected_comment = self._template.split('-->', maxsplit=1)[0]
-                assert self._body.startswith(expected_comment), R(
-                    'Existing PR was created with a different template')
-            # Normalize line endings from GitHub API responses
-            self._body = '\n'.join(self._body.splitlines())
-        return self._body
-
-    @body.setter
-    def body(self, body: str) -> None:
-        self._body = body
-
     @classmethod
     def _parse_args(cls, argv: list[str]) -> Namespace:
         parser = argparse.ArgumentParser(description=__doc__)
@@ -141,6 +114,15 @@ class Main:
                     parser.error(f'--no-{flag} cannot be used with --type')
         return args
 
+    def __init__(self, argv: list[str]):
+        self._args = self._parse_args(argv)
+        self._body: str | None = None
+        self.labels_to_add: list[str] = []
+        self.labels_to_remove: list[str] = []
+        self._check_working_copy()
+        self._check_remote_branch()
+        self._verify_user()
+
     def main(self):
         self._add_issue_references_to_body()
         self._handle_target_branch()
@@ -177,6 +159,24 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    @property
+    def body(self) -> str:
+        if self._body is None:
+            if self._existing_pr is None:
+                self._body = self._template
+            else:
+                self._body = json_str(self._existing_pr['body'])
+                expected_comment = self._template.split('-->', maxsplit=1)[0]
+                assert self._body.startswith(expected_comment), R(
+                    'Existing PR was created with a different template')
+            # Normalize line endings from GitHub API responses
+            self._body = '\n'.join(self._body.splitlines())
+        return self._body
+
+    @body.setter
+    def body(self, body: str) -> None:
+        self._body = body
 
     def _update_pr(self, pr_url: str) -> None:
         log.info('Updating PR …')
