@@ -61,14 +61,13 @@ _project_title = 'Azul'
 _item_label = r'`[A-Z]\d\d` '
 
 
-@attrs.define(slots=False)
 class Main:
-    argv: list[str]
-    _body: str | None = attrs.field(init=False, default=None)
-    labels_to_add: list[str] = attrs.field(init=False, factory=list)
-    labels_to_remove: list[str] = attrs.field(init=False, factory=list)
 
-    def __attrs_post_init__(self):
+    def __init__(self, argv: list[str]):
+        self._args = self._parse_args(argv)
+        self._body: str | None = None
+        self.labels_to_add: list[str] = []
+        self.labels_to_remove: list[str] = []
         self._check_working_copy()
         self._check_remote_branch()
         self._verify_user()
@@ -91,8 +90,8 @@ class Main:
     def body(self, body: str) -> None:
         self._body = body
 
-    @cached_property
-    def _args(self) -> Namespace:
+    @classmethod
+    def _parse_args(cls, argv: list[str]) -> Namespace:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--type', '-t',
                             default=None,
@@ -130,7 +129,7 @@ class Main:
         fix_group.add_argument('--no-fix',
                                action='store_false', dest='fix',
                                help='Do not prefix the PR title with "Fix: ".')
-        args = parser.parse_args(self.argv)
+        args = parser.parse_args(argv)
         if args.vanilla:
             for flag in section_flags:
                 setattr(args, f'no_{flag}', True)
