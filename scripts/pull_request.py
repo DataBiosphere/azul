@@ -140,84 +140,23 @@ class Main:
     def main(self):
         self._add_issue_references_to_body()
 
-        target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
-        if self._existing_pr is None:
-            self._check_task(target_branch_task)
-        else:
-            base = self._existing_pr['baseRefName']
-            if base == self._target_branch:
-                self._check_task(target_branch_task)
-            else:
-                log.warning('Target branch is %r, expected %r', base, self._target_branch)
-                self._check_task(target_branch_task, checked=False)
+        self._handle_target_branch()
 
-        if self._args.no_partial:
-            assert not self._has_commit_tag('p'), R(
-                '--no-partial cannot be used when a commit is tagged `p`')
-            self._check_task(r'Added `p` tag to titles of partial commits.*')
-            self._check_task(r'This PR is labeled `partial`.*')
-            self._check_task(r'This PR partially resolves .*')
-            self.labels_to_remove.append('partial')
+        self._handle_partiality()
 
-        has_u_tag = self._has_commit_tag('u')
-        assert not (has_u_tag and self._args.no_upgrade), R(
-            '--no-upgrade cannot be used when a commit is tagged `u`')
-        checked = has_u_tag or self._args.no_upgrade
-        if self._args.type != 'promotion':
-            self._check_task(r'Added `u` tag to commit title.*', checked=checked)
-        self._check_task(r'This PR is labeled `upgrade`.*', checked=checked)
-        if has_u_tag:
-            self.labels_to_add.append('upgrade')
-        else:
-            self.labels_to_remove.append('upgrade')
-        if self._args.no_upgrade:
-            self._check_task(r'Ran `make docker_images\.json`.*')
-            self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
+        self._handle_upgrades()
 
-        if self._args.no_deploy:
-            deploy_labels = self._deploy_labels()
-            for label in deploy_labels:
-                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
-            self.labels_to_remove.extend(deploy_labels)
+        self._handle_deploy()
 
-        if self._args.no_reindex:
-            assert not self._has_commit_tag('r'), R(
-                '--no-reindex cannot be used when a commit is tagged `r`')
-            self._check_task(r'Added `r` tag to commit title.*')
-            reindex_labels = self._reindex_labels()
-            for label in reindex_labels:
-                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
-            self.labels_to_remove.extend(reindex_labels)
+        self._handle_reindex()
 
-        if self._args.no_mirror:
-            mirror_labels = self._mirror_labels()
-            for label in mirror_labels:
-                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
-            self.labels_to_remove.extend(mirror_labels)
+        self._handle_mirror()
 
-        if self._args.no_api:
-            assert not self._has_commit_tag('a'), R(
-                '--no-api cannot be used when a commit is tagged `a`')
-            assert not self._has_commit_tag('A'), R(
-                '--no-api cannot be used when a commit is tagged `A`')
-            self._check_task(r'This PR and its linked issues are labeled `API`.*')
-            self._check_task(r'Added `a` \(`A`\) tag to commit title.*')
-            self._check_task(r'Updated REST API version number in `app\.py`.*')
-            self.labels_to_remove.append('API')
+        self._handle_api()
 
-        if self._args.no_hotfix:
-            assert not self._has_commit_tag('F'), R(
-                '--no-hotfix cannot be used when a commit is tagged `F`')
-            self._check_task(r'Added `F` tag to main commit title.*')
-            self._check_task(r'Reverted the temporary hotfixes for any linked issues.*')
+        self._handle_hotfix()
 
-        if self._args.no_reqs:
-            assert not self._has_commit_tag('R'), R(
-                '--no-reqs cannot be used when a commit is tagged `R`')
-            self._check_task(r'Ran `make requirements_update`.*')
-            self._check_task(r'Added `R` tag to commit title.*')
-            self._check_task(r'This PR is labeled `reqs`.*')
-            self.labels_to_remove.append('reqs')
+        self._handle_reqs()
 
         self._check_task('PR is assigned to the author')
         self._check_task(r'Status of PR is \*In progress\*')
@@ -275,6 +214,94 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    def _handle_reqs(self):
+        if self._args.no_reqs:
+            assert not self._has_commit_tag('R'), R(
+                '--no-reqs cannot be used when a commit is tagged `R`')
+            self._check_task(r'Ran `make requirements_update`.*')
+            self._check_task(r'Added `R` tag to commit title.*')
+            self._check_task(r'This PR is labeled `reqs`.*')
+            self.labels_to_remove.append('reqs')
+
+    def _handle_hotfix(self):
+        if self._args.no_hotfix:
+            assert not self._has_commit_tag('F'), R(
+                '--no-hotfix cannot be used when a commit is tagged `F`')
+            self._check_task(r'Added `F` tag to main commit title.*')
+            self._check_task(r'Reverted the temporary hotfixes for any linked issues.*')
+
+    def _handle_api(self):
+        if self._args.no_api:
+            assert not self._has_commit_tag('a'), R(
+                '--no-api cannot be used when a commit is tagged `a`')
+            assert not self._has_commit_tag('A'), R(
+                '--no-api cannot be used when a commit is tagged `A`')
+            self._check_task(r'This PR and its linked issues are labeled `API`.*')
+            self._check_task(r'Added `a` \(`A`\) tag to commit title.*')
+            self._check_task(r'Updated REST API version number in `app\.py`.*')
+            self.labels_to_remove.append('API')
+
+    def _handle_mirror(self):
+        if self._args.no_mirror:
+            mirror_labels = self._mirror_labels()
+            for label in mirror_labels:
+                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
+            self.labels_to_remove.extend(mirror_labels)
+
+    def _handle_reindex(self):
+        if self._args.no_reindex:
+            assert not self._has_commit_tag('r'), R(
+                '--no-reindex cannot be used when a commit is tagged `r`')
+            self._check_task(r'Added `r` tag to commit title.*')
+            reindex_labels = self._reindex_labels()
+            for label in reindex_labels:
+                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
+            self.labels_to_remove.extend(reindex_labels)
+
+    def _handle_deploy(self):
+        if self._args.no_deploy:
+            deploy_labels = self._deploy_labels()
+            for label in deploy_labels:
+                self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
+            self.labels_to_remove.extend(deploy_labels)
+
+    def _handle_upgrades(self):
+        has_u_tag = self._has_commit_tag('u')
+        assert not (has_u_tag and self._args.no_upgrade), R(
+            '--no-upgrade cannot be used when a commit is tagged `u`')
+        checked = has_u_tag or self._args.no_upgrade
+        if self._args.type != 'promotion':
+            self._check_task(r'Added `u` tag to commit title.*', checked=checked)
+        self._check_task(r'This PR is labeled `upgrade`.*', checked=checked)
+        if has_u_tag:
+            self.labels_to_add.append('upgrade')
+        else:
+            self.labels_to_remove.append('upgrade')
+        if self._args.no_upgrade:
+            self._check_task(r'Ran `make docker_images\.json`.*')
+            self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
+
+    def _handle_partiality(self):
+        if self._args.no_partial:
+            assert not self._has_commit_tag('p'), R(
+                '--no-partial cannot be used when a commit is tagged `p`')
+            self._check_task(r'Added `p` tag to titles of partial commits.*')
+            self._check_task(r'This PR is labeled `partial`.*')
+            self._check_task(r'This PR partially resolves .*')
+            self.labels_to_remove.append('partial')
+
+    def _handle_target_branch(self):
+        target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
+        if self._existing_pr is None:
+            self._check_task(target_branch_task)
+        else:
+            base = self._existing_pr['baseRefName']
+            if base == self._target_branch:
+                self._check_task(target_branch_task)
+            else:
+                log.warning('Target branch is %r, expected %r', base, self._target_branch)
+                self._check_task(target_branch_task, checked=False)
 
     @cached_property
     def _template(self) -> str:
