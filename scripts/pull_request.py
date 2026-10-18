@@ -139,23 +139,14 @@ class Main:
 
     def main(self):
         self._add_issue_references_to_body()
-
         self._handle_target_branch()
-
         self._handle_partiality()
-
         self._handle_upgrades()
-
         self._handle_deploy()
-
         self._handle_reindex()
-
         self._handle_mirror()
-
         self._handle_api()
-
         self._handle_hotfix()
-
         self._handle_reqs()
 
         self._check_task('PR is assigned to the author')
@@ -177,6 +168,7 @@ class Main:
         log.info('Setting PR status …')
         pr_node_id = self._node_id(pr_url)
         self._set_status(pr_node_id, 'In Progress')
+
         for issue in self._issues:
             issue_node_id = self._node_id(issue.url)
             log.info('Linking PR to issue %s …', issue.ref)
