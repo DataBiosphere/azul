@@ -507,6 +507,14 @@ class Main:
         self._pr_body = body
 
     @cached_property
+    def pr_branch(self) -> str:
+        result = subprocess.run(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+
+    @cached_property
     def pr_target_branch(self) -> str:
         m = re.search(
             r'^- \[[ x]] ' + self.item_label + r'Target branch is `(.+?)`$',
@@ -678,14 +686,6 @@ class Main:
         assert m is not None, R(
             'Cannot extract date and target from branch name', self.pr_branch)
         return m.group(1), m.group(2)
-
-    @cached_property
-    def pr_branch(self) -> str:
-        result = subprocess.run(
-            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-            capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
 
     def has_commit_tag(self, tag: str) -> bool:
         result = subprocess.run(
