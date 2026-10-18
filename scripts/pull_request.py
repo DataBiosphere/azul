@@ -312,8 +312,11 @@ class Main:
 
     @cached_property
     def target_branch(self) -> str:
-        m = re.search(r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
-                      self.template, flags=re.MULTILINE)
+        m = re.search(
+            r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
+            self.template,
+            flags=re.MULTILINE
+        )
         assert m is not None, R('Target branch task not found in template')
         return m.group(1)
 
@@ -575,9 +578,11 @@ class Main:
         return json.loads(result.stdout)
 
     def add_issue_references_to_body(self) -> None:
-        self.body, n = re.subn(r'^(Linked issues?: *).*$',
-                               lambda m: m.group(1) + ', '.join(self.issue_refs),
-                               self.body, flags=re.MULTILINE)
+        self.body, n = re.subn(
+            r'^(Linked issues?: *).*$',
+            lambda m: m.group(1) + ', '.join(self.issue_refs),
+            self.body, flags=re.MULTILINE
+        )
         assert n > 0, R('Linked issues reference not found in body')
         assert n < 2, R('Multiple linked issues references found in body')
 
@@ -604,9 +609,12 @@ class Main:
 
     def check_task(self, task: str, checked: bool = True) -> None:
         mark = 'x' if checked else ' '
-        self.body, n = re.subn(r'^- \[[ x]] (' + _item_label + task + ')$',
-                               r'- [' + mark + r'] \1',
-                               self.body, flags=re.MULTILINE)
+        self.body, n = re.subn(
+            r'^- \[[ x]] (' + _item_label + task + ')$',
+            r'- [' + mark + r'] \1',
+            self.body,
+            flags=re.MULTILINE
+        )
         assert n > 0, R('Task item not found in template', task)
         assert n < 2, R('Multiple matching task items found', task)
 
