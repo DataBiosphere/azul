@@ -118,6 +118,17 @@ class Main:
     def main(self):
         self._check_working_copy()
         self._check_remote_branch()
+
+        if self._existing_pr is None:
+            self.body = self._template
+        else:
+            self.body = self._existing_pr['body']
+            expected_comment = self._template.split('-->', maxsplit=1)[0]
+            assert self.body.startswith(expected_comment), R(
+                'Existing PR was created with a different template')
+        # Normalize line endings from GitHub API responses
+        self.body = '\n'.join(self.body.splitlines())
+
         issue_numbers = self._issue_numbers
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
@@ -131,17 +142,6 @@ class Main:
             fix = self._args.fix
         issue_refs = [issue.ref for issue in issues]
         title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
-
-        if self._existing_pr is None:
-            self.body = self._template
-        else:
-            self.body = self._existing_pr['body']
-            expected_comment = self._template.split('-->', maxsplit=1)[0]
-            assert self.body.startswith(expected_comment), R(
-                'Existing PR was created with a different template')
-
-        # Normalize line endings from GitHub API responses
-        self.body = '\n'.join(self.body.splitlines())
 
         self._reference_issues(issue_refs)
 
