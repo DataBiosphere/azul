@@ -59,11 +59,12 @@ _item_label = r'`[A-Z]\d\d` '
 
 @attrs.define(slots=False)
 class Main:
+    argv: list[str]
     body: str = attrs.field(init=False)
     labels_to_add: list[str] = attrs.field(factory=list)
     labels_to_remove: list[str] = attrs.field(factory=list)
 
-    def _parse_args(self, argv) -> Namespace:
+    def _parse_args(self) -> Namespace:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--type', '-t',
                             default=None,
@@ -101,7 +102,7 @@ class Main:
         fix_group.add_argument('--no-fix',
                                action='store_false', dest='fix',
                                help='Do not prefix the PR title with "Fix: ".')
-        args = parser.parse_args(argv)
+        args = parser.parse_args(self.argv)
         if args.vanilla:
             for flag in section_flags:
                 setattr(args, f'no_{flag}', True)
@@ -113,8 +114,8 @@ class Main:
                     parser.error(f'--no-{flag} cannot be used with --type')
         return args
 
-    def main(self, argv):
-        args = self._parse_args(argv)
+    def main(self):
+        args = self._parse_args()
         self._check_working_copy()
         log.info('Checking remote branch …')
         self._check_remote_branch(self._branch)
@@ -655,4 +656,4 @@ class Main:
 
 if __name__ == '__main__':
     configure_script_logging(log)
-    Main().main(sys.argv[1:])
+    Main(sys.argv[1:]).main()
