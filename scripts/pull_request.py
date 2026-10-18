@@ -138,18 +138,14 @@ class Main:
         return args
 
     def main(self):
-        issue_numbers = self._issue_numbers
-        log.info('Fetching issue %s …',
-                 join_grammatically([f'#{n}' for n in issue_numbers]))
-        issues = [self._issue_info(issue_number) for issue_number in issue_numbers]
         # The PR is assumed to resolve every one of the linked issues. The first
         # of them determines the PR title.
-        issue = issues[0]
+        issue = self._issues[0]
         if self._args.fix is None:
             fix = issue.type == 'Defect'
         else:
             fix = self._args.fix
-        issue_refs = [issue.ref for issue in issues]
+        issue_refs = [issue.ref for issue in self._issues]
         title = self._pr_title(issue_refs, issue.title, fix)
 
         self._reference_issues(issue_refs)
@@ -283,7 +279,7 @@ class Main:
         pr_node_id = self._node_id(pr_url)
         log.info('Setting PR status …')
         self._set_status(pr_node_id, 'In Progress')
-        for issue in issues:
+        for issue in self._issues:
             issue_node_id = self._node_id(issue.url)
             log.info('Linking PR to issue %s …', issue.ref)
             self._link_issue(issue_node_id, pr_node_id)
@@ -300,6 +296,13 @@ class Main:
                       self._template, flags=re.MULTILINE)
         assert m is not None, R('Target branch task not found in template')
         return m.group(1)
+
+    @cached_property
+    def _issues(self) -> list[_IssueInfo]:
+        issue_numbers = self._issue_numbers
+        log.info('Fetching issue %s …',
+                 join_grammatically([f'#{n}' for n in issue_numbers]))
+        return [self._issue_info(issue_number) for issue_number in issue_numbers]
 
     @cached_property
     def _issue_numbers(self) -> list[int]:
