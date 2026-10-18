@@ -175,6 +175,7 @@ class Main:
             self._check_task(r'Added `p` tag to titles of partial commits.*')
             self._check_task(r'This PR is labeled `partial`.*')
             self._check_task(r'This PR partially resolves .*')
+            self.labels_to_remove.append('partial')
 
         has_u_tag = self._has_commit_tag(target_branch, 'u')
         assert not (has_u_tag and self._args.no_upgrade), R(
@@ -191,12 +192,6 @@ class Main:
             self.labels_to_add.append('upgrade')
         else:
             self.labels_to_remove.append('upgrade')
-        if self._args.no_partial:
-            self.labels_to_remove.append('partial')
-        if self._args.no_api:
-            self.labels_to_remove.append('API')
-        if self._args.no_reqs:
-            self.labels_to_remove.append('reqs')
 
         if self._args.no_deploy:
             deploy_labels = self._deploy_labels()
@@ -227,6 +222,7 @@ class Main:
             self._check_task(r'This PR and its linked issues are labeled `API`.*')
             self._check_task(r'Added `a` \(`A`\) tag to commit title.*')
             self._check_task(r'Updated REST API version number in `app\.py`.*')
+            self.labels_to_remove.append('API')
 
         if self._args.no_hotfix:
             assert not self._has_commit_tag(target_branch, 'F'), R(
@@ -240,6 +236,7 @@ class Main:
             self._check_task(r'Ran `make requirements_update`.*')
             self._check_task(r'Added `R` tag to commit title.*')
             self._check_task(r'This PR is labeled `reqs`.*')
+            self.labels_to_remove.append('reqs')
 
         self._check_task('PR is assigned to the author')
         self._check_task(r'Status of PR is \*In progress\*')
