@@ -15,6 +15,9 @@ For the default type, the script guesses whether to prefix the PR title with
 guess with the --fix or --no-fix options.
 """
 import argparse
+from argparse import (
+    Namespace,
+)
 import json
 import logging
 from pathlib import (
@@ -53,12 +56,13 @@ _project_title = 'Azul'
 _item_label = r'`[A-Z]\d\d` '
 
 
+@attrs.define
 class Main:
-    body: str
-    labels_to_add: list[str]
-    labels_to_remove: list[str]
+    body: str = attrs.field(init=False)
+    labels_to_add: list[str] = attrs.field(factory=list)
+    labels_to_remove: list[str] = attrs.field(factory=list)
 
-    def main(self, argv):
+    def _parse_args(self, argv) -> Namespace:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--type', '-t',
                             default=None,
@@ -106,7 +110,10 @@ class Main:
             for flag in section_flags:
                 if getattr(args, f'no_{flag}'):
                     parser.error(f'--no-{flag} cannot be used with --type')
+        return args
 
+    def main(self, argv):
+        args = self._parse_args(argv)
         branch = self._current_branch()
         self._check_working_copy()
         log.info('Checking remote branch …')
@@ -199,8 +206,6 @@ class Main:
             self._check_task(r'Ran `make docker_images\.json`.*')
             self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
 
-        self.labels_to_add = []
-        self.labels_to_remove = []
         if has_u_tag:
             self.labels_to_add.append('upgrade')
         else:
