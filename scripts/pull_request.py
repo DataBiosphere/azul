@@ -138,15 +138,12 @@ class Main:
         return args
 
     def main(self):
-        # The PR is assumed to resolve every one of the linked issues. The first
-        # of them determines the PR title.
-        issue = self._issues[0]
         if self._args.fix is None:
-            fix = issue.type == 'Defect'
+            fix = self._issue.type == 'Defect'
         else:
             fix = self._args.fix
         issue_refs = [issue.ref for issue in self._issues]
-        title = self._pr_title(issue_refs, issue.title, fix)
+        title = self._pr_title(issue_refs, self._issue.title, fix)
 
         self._reference_issues(issue_refs)
 
@@ -303,6 +300,12 @@ class Main:
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
         return [self._issue_info(issue_number) for issue_number in issue_numbers]
+
+    @cached_property
+    def _issue(self) -> _IssueInfo:
+        # The PR is assumed to resolve every one of the linked issues. The first
+        # of them determines the PR title.
+        return self._issues[0]
 
     @cached_property
     def _issue_numbers(self) -> list[int]:
