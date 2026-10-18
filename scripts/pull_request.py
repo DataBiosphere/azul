@@ -518,23 +518,19 @@ class Main:
 
     @cached_property
     def template(self) -> str:
-        return self.template_path.read_text()
-
-    @cached_property
-    def template_path(self) -> Path:
         project_root = Path(__file__).resolve().parent.parent
         github_dir = project_root / '.github'
         template_dir = github_dir / 'PULL_REQUEST_TEMPLATE'
         if self.args.type is None:
-            template_path = github_dir / 'pull_request_template.md'
+            path = github_dir / 'pull_request_template.md'
         elif self.args.type == 'upgrade':
-            template_path = template_dir / 'upgrade.md'
+            path = template_dir / 'upgrade.md'
         elif self.args.type == 'promotion':
             date, target = self.promotion_date_and_target
-            template_path = template_dir / f'{target}-promotion.md'
+            path = template_dir / f'{target}-promotion.md'
         else:
             assert False, R('Unsupported template', self.args.type)
-        return template_path
+        return path.read_text()
 
     @cached_property
     def pr_title(self) -> str:
