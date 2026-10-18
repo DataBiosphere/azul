@@ -566,20 +566,30 @@ class Main:
         issue_numbers = self.args.issues
         if issue_numbers is None:
             if self.args.type is None:
-                issue_numbers = self.issue_numbers_from_branch_name
+                issue_numbers = self.standard_issue_numbers()
             elif self.args.type == 'upgrade':
-                date = self.upgrade_date
-                log.info('Searching for upgrade issue …')
-                issue_numbers = [
-                    self.issue_number_by_title(f'Upgrade software dependencies {date}')
-                ]
+                issue_numbers = [self.upgrade_issue_number()]
             else:
-                date, target = self.promotion_date_and_target
-                log.info('Searching for promotion issue …')
-                issue_numbers = [
-                    self.issue_number_by_title(f'Promotion {date}')
-                ]
+                issue_numbers = [self.promotion_issue_number()]
         return issue_numbers
+
+    def standard_issue_numbers(self) -> list[int]:
+        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self.branch)
+        assert m is not None, R(
+            'Cannot extract issue numbers from branch name', self.branch)
+        return [int(number) for number in m.group(1).split('-')]
+
+    def upgrade_issue_number(self) -> int:
+        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self.branch)
+        assert m is not None, R('Cannot extract date from branch name', self.branch)
+        date = m.group(1)
+        log.info('Searching for upgrade issue …')
+        return self.issue_number_by_title(f'Upgrade software dependencies {date}')
+
+    def promotion_issue_number(self) -> int:
+        date, target = self.promotion_date_and_target
+        log.info('Searching for promotion issue …')
+        return self.issue_number_by_title(f'Promotion {date}')
 
     def issue_number_by_title(self, title: str) -> int:
         result = subprocess.run(
@@ -668,19 +678,6 @@ class Main:
             type=issue_type['name'] if issue_type else '',
             url=issue['url']
         )
-
-    @cached_property
-    def issue_numbers_from_branch_name(self) -> list[int]:
-        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self.branch)
-        assert m is not None, R(
-            'Cannot extract issue numbers from branch name', self.branch)
-        return [int(number) for number in m.group(1).split('-')]
-
-    @cached_property
-    def upgrade_date(self) -> str:
-        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self.branch)
-        assert m is not None, R('Cannot extract date from branch name', self.branch)
-        return m.group(1)
 
     @cached_property
     def promotion_date_and_target(self) -> tuple[str, str]:
