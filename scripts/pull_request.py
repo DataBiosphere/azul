@@ -40,6 +40,10 @@ from azul.lib.strings import (
     format_and_dedent as fd,
     join_grammatically,
 )
+from azul.lib.types import (
+    JSON,
+    json_str,
+)
 from azul.logging import (
     configure_script_logging,
 )
@@ -74,7 +78,7 @@ class Main:
             if self._existing_pr is None:
                 self._body = self._template
             else:
-                self._body = self._existing_pr['body']
+                self._body = json_str(self._existing_pr['body'])
                 expected_comment = self._template.split('-->', maxsplit=1)[0]
                 assert self._body.startswith(expected_comment), R(
                     'Existing PR was created with a different template')
@@ -162,7 +166,7 @@ class Main:
         if self._existing_pr is None:
             pr_url = self._create_pr()
         else:
-            pr_url = self._existing_pr['url']
+            pr_url = json_str(self._existing_pr['url'])
             self._update_pr(pr_url)
 
         log.info('Setting PR status …')
@@ -561,7 +565,7 @@ class Main:
         return f'{prefix}{self._issue.title}{suffix} ({issue_refs})'
 
     @cached_property
-    def _existing_pr(self) -> dict | None:
+    def _existing_pr(self) -> JSON | None:
         log.info('Checking for existing PR …')
         result = subprocess.run(
             ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
