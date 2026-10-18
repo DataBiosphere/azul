@@ -71,6 +71,7 @@ class Main:
     def __attrs_post_init__(self):
         self._check_working_copy()
         self._check_remote_branch()
+        self._verify_user()
 
     @property
     def body(self) -> str:
@@ -156,8 +157,6 @@ class Main:
         self._check_task('PR is assigned to the author')
         self._check_task(r'Status of PR is \*In progress\*')
         self._check_task('Name of PR branch matches .*')
-
-        self._verify_user()
 
         self._check_task('PR is linked to .*')
         self._check_task(r'Status of linked issues? is \*In progress\*')
