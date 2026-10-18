@@ -55,6 +55,8 @@ _item_label = r'`[A-Z]\d\d` '
 
 class Main:
     body: str
+    labels_to_add: list[str]
+    labels_to_remove: list[str]
 
     def main(self, argv):
         parser = argparse.ArgumentParser(description=__doc__)
@@ -197,24 +199,24 @@ class Main:
             self._check_task(r'Ran `make docker_images\.json`.*')
             self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
 
-        labels_to_add = []
-        labels_to_remove = []
+        self.labels_to_add = []
+        self.labels_to_remove = []
         if has_u_tag:
-            labels_to_add.append('upgrade')
+            self.labels_to_add.append('upgrade')
         else:
-            labels_to_remove.append('upgrade')
+            self.labels_to_remove.append('upgrade')
         if args.no_partial:
-            labels_to_remove.append('partial')
+            self.labels_to_remove.append('partial')
         if args.no_api:
-            labels_to_remove.append('API')
+            self.labels_to_remove.append('API')
         if args.no_reqs:
-            labels_to_remove.append('reqs')
+            self.labels_to_remove.append('reqs')
 
         if args.no_deploy:
             deploy_labels = self._deploy_labels()
             for label in deploy_labels:
                 self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
-            labels_to_remove.extend(deploy_labels)
+            self.labels_to_remove.extend(deploy_labels)
 
         if args.no_reindex:
             assert not self._has_commit_tag(target_branch, 'r'), R(
@@ -223,13 +225,13 @@ class Main:
             reindex_labels = self._reindex_labels()
             for label in reindex_labels:
                 self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
-            labels_to_remove.extend(reindex_labels)
+            self.labels_to_remove.extend(reindex_labels)
 
         if args.no_mirror:
             mirror_labels = self._mirror_labels()
             for label in mirror_labels:
                 self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
-            labels_to_remove.extend(mirror_labels)
+            self.labels_to_remove.extend(mirror_labels)
 
         if args.no_api:
             assert not self._has_commit_tag(target_branch, 'a'), R(
@@ -276,8 +278,8 @@ class Main:
                 '--body', self.body,
                 '--assignee', '@me',
             ]
-            if labels_to_add:
-                cmd.extend(['--label', ','.join(labels_to_add)])
+            if self.labels_to_add:
+                cmd.extend(['--label', ','.join(self.labels_to_add)])
             result = subprocess.run(cmd, capture_output=True, text=True)
             sys.stdout.write(result.stdout)
             sys.stderr.write(result.stderr)
@@ -293,10 +295,10 @@ class Main:
                 '--body', self.body,
                 '--add-assignee', '@me',
             ]
-            if labels_to_add:
-                cmd.extend(['--add-label', ','.join(labels_to_add)])
-            if labels_to_remove:
-                cmd.extend(['--remove-label', ','.join(labels_to_remove)])
+            if self.labels_to_add:
+                cmd.extend(['--add-label', ','.join(self.labels_to_add)])
+            if self.labels_to_remove:
+                cmd.extend(['--remove-label', ','.join(self.labels_to_remove)])
             subprocess.run(cmd, capture_output=True, text=True, check=True)
             log.info('PR URL is %r', pr_url)
 
