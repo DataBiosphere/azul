@@ -119,31 +119,38 @@ class Main:
         self._check_working_copy()
         log.info('Checking remote branch …')
         self._check_remote_branch()
-        title_suffix = ''
-        issue_numbers = self._args.issues
         if self._args.type is None:
             template_path = _project_root / '.github' / 'pull_request_template.md'
-            if issue_numbers is None:
-                issue_numbers = self._issue_numbers
         elif self._args.type == 'upgrade':
             template_path = _template_dir / 'upgrade.md'
-            if issue_numbers is None:
+        elif self._args.type == 'promotion':
+            date, target = self._promotion_date_and_target
+            template_path = _template_dir / f'{target}-promotion.md'
+        else:
+            assert False, R('Unsupported template', self._args.type)
+
+        if self._args.type == 'promotion':
+            date, target = self._promotion_date_and_target
+            title_suffix = f' {target}'
+        else:
+            title_suffix = ''
+
+        issue_numbers = self._args.issues
+        if issue_numbers is None:
+            if self._args.type is None:
+                issue_numbers = self._issue_numbers
+            elif self._args.type == 'upgrade':
                 date = self._upgrade_date
                 log.info('Searching for upgrade issue …')
                 issue_numbers = [self._issue_number_by_title(
                     f'Upgrade software dependencies {date}'
                 )]
-        elif self._args.type == 'promotion':
-            date, target = self._promotion_date_and_target
-            template_path = _template_dir / f'{target}-promotion.md'
-            if issue_numbers is None:
+            else:
+                date, target = self._promotion_date_and_target
                 log.info('Searching for promotion issue …')
                 issue_numbers = [self._issue_number_by_title(
                     f'Promotion {date}'
                 )]
-            title_suffix = f' {target}'
-        else:
-            assert False, R('Unsupported template', self._args.type)
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
         issues = [self._issue_info(issue_number) for issue_number in issue_numbers]
