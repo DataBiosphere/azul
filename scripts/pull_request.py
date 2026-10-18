@@ -154,30 +154,26 @@ class Main:
 
         self._reference_issues(issue_refs)
 
-        m = re.search(r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
-                      self._template, flags=re.MULTILINE)
-        assert m is not None, R('Target branch task not found in template')
-        target_branch = m.group(1)
-        target_branch_task = r'Target branch is `' + re.escape(target_branch) + '`'
+        target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
         if self._existing_pr is None:
             self._check_task(target_branch_task)
         else:
             base = self._existing_pr['baseRefName']
-            if base == target_branch:
+            if base == self._target_branch:
                 self._check_task(target_branch_task)
             else:
-                log.warning('Target branch is %r, expected %r', base, target_branch)
+                log.warning('Target branch is %r, expected %r', base, self._target_branch)
                 self._check_task(target_branch_task, checked=False)
 
         if self._args.no_partial:
-            assert not self._has_commit_tag(target_branch, 'p'), R(
+            assert not self._has_commit_tag('p'), R(
                 '--no-partial cannot be used when a commit is tagged `p`')
             self._check_task(r'Added `p` tag to titles of partial commits.*')
             self._check_task(r'This PR is labeled `partial`.*')
             self._check_task(r'This PR partially resolves .*')
             self.labels_to_remove.append('partial')
 
-        has_u_tag = self._has_commit_tag(target_branch, 'u')
+        has_u_tag = self._has_commit_tag('u')
         assert not (has_u_tag and self._args.no_upgrade), R(
             '--no-upgrade cannot be used when a commit is tagged `u`')
         checked = has_u_tag or self._args.no_upgrade
@@ -199,7 +195,7 @@ class Main:
             self.labels_to_remove.extend(deploy_labels)
 
         if self._args.no_reindex:
-            assert not self._has_commit_tag(target_branch, 'r'), R(
+            assert not self._has_commit_tag('r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
             self._check_task(r'Added `r` tag to commit title.*')
             reindex_labels = self._reindex_labels()
@@ -214,9 +210,9 @@ class Main:
             self.labels_to_remove.extend(mirror_labels)
 
         if self._args.no_api:
-            assert not self._has_commit_tag(target_branch, 'a'), R(
+            assert not self._has_commit_tag('a'), R(
                 '--no-api cannot be used when a commit is tagged `a`')
-            assert not self._has_commit_tag(target_branch, 'A'), R(
+            assert not self._has_commit_tag('A'), R(
                 '--no-api cannot be used when a commit is tagged `A`')
             self._check_task(r'This PR and its linked issues are labeled `API`.*')
             self._check_task(r'Added `a` \(`A`\) tag to commit title.*')
@@ -224,13 +220,13 @@ class Main:
             self.labels_to_remove.append('API')
 
         if self._args.no_hotfix:
-            assert not self._has_commit_tag(target_branch, 'F'), R(
+            assert not self._has_commit_tag('F'), R(
                 '--no-hotfix cannot be used when a commit is tagged `F`')
             self._check_task(r'Added `F` tag to main commit title.*')
             self._check_task(r'Reverted the temporary hotfixes for any linked issues.*')
 
         if self._args.no_reqs:
-            assert not self._has_commit_tag(target_branch, 'R'), R(
+            assert not self._has_commit_tag('R'), R(
                 '--no-reqs cannot be used when a commit is tagged `R`')
             self._check_task(r'Ran `make requirements_update`.*')
             self._check_task(r'Added `R` tag to commit title.*')
@@ -255,7 +251,7 @@ class Main:
             log.info('Creating PR …')
             cmd = [
                 'gh', 'pr', 'create',
-                '--base', target_branch,
+                '--base', self._target_branch,
                 '--title', title,
                 '--body', self.body,
                 '--assignee', '@me',
@@ -297,6 +293,13 @@ class Main:
     @cached_property
     def _template(self) -> str:
         return self._template_path.read_text()
+
+    @cached_property
+    def _target_branch(self) -> str:
+        m = re.search(r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
+                      self._template, flags=re.MULTILINE)
+        assert m is not None, R('Target branch task not found in template')
+        return m.group(1)
 
     @cached_property
     def _issue_numbers(self) -> list[int]:
@@ -392,9 +395,9 @@ class Main:
         else:
             return set(m.group(1).split())
 
-    def _has_commit_tag(self, target_branch: str, tag: str) -> bool:
+    def _has_commit_tag(self, tag: str) -> bool:
         result = subprocess.run(
-            ['git', 'log', '--format=%s', f'{target_branch}..HEAD'],
+            ['git', 'log', '--format=%s', f'{self._target_branch}..HEAD'],
             capture_output=True, text=True, check=True
         )
         return any(
