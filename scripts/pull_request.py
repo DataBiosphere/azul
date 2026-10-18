@@ -113,12 +113,12 @@ class Main:
 
     def __init__(self, argv: list[str]):
         self.args = self.parse_args(argv)
-        self._body: str | None = None
+        self._pr_body: str | None = None
         self.labels_to_add: list[str] = []
         self.labels_to_remove: list[str] = []
         self.verify_working_copy()
         self.verify_remote_branch()
-        self.verify_user()
+        self.verify_github_user()
 
     def main(self):
         self.handle_issue_references_in_body()
@@ -148,14 +148,14 @@ class Main:
 
         log.info('Setting PR status …')
         pr_node_id = self.node_id(pr_url)
-        self.set_status(pr_node_id, 'In Progress')
+        self.set_project_status(pr_node_id, 'In Progress')
 
         for issue in self.issues:
             issue_node_id = self.node_id(issue.url)
             log.info('Linking PR to issue %s …', issue.ref)
             self.link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
-            self.set_status(issue_node_id, 'In Progress')
+            self.set_project_status(issue_node_id, 'In Progress')
 
     def verify_working_copy(self) -> None:
         result = subprocess.run(
@@ -194,7 +194,7 @@ class Main:
             else:
                 log.warning('Remote and local branch diverge. A force push is needed')
 
-    def verify_user(self):
+    def verify_github_user(self):
         if self.args.type is None:
             m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.branch)
             assert m is not None, R(
@@ -209,24 +209,24 @@ class Main:
                 'Branch name does not match GitHub user', handle)
 
     def handle_issue_references_in_body(self) -> None:
-        self.body, n = re.subn(
+        self.pr_body, n = re.subn(
             r'^(Linked issues?: *).*$',
             lambda m: m.group(1) + ', '.join(self.issue_refs),
-            self.body, flags=re.MULTILINE
+            self.pr_body, flags=re.MULTILINE
         )
         assert n > 0, R('Linked issues reference not found in body')
         assert n < 2, R('Multiple linked issues references found in body')
 
     def handle_target_branch(self):
-        item = r'Target branch is `' + re.escape(self.target_branch) + '`'
+        item = r'Target branch is `' + re.escape(self.pr_target_branch) + '`'
         if self.existing_pr is None:
             self.check_item(item)
         else:
             base = self.existing_pr['baseRefName']
-            if base == self.target_branch:
+            if base == self.pr_target_branch:
                 self.check_item(item)
             else:
-                log.warning('Target branch is %r, expected %r', base, self.target_branch)
+                log.warning('Target branch is %r, expected %r', base, self.pr_target_branch)
                 self.check_item(item, checked=False)
 
     def handle_partiality(self):
@@ -256,7 +256,7 @@ class Main:
 
     def handle_deploy(self):
         if self.args.no_deploy:
-            deploy_labels = self.labels('deploy')
+            deploy_labels = self.pr_labels('deploy')
             for label in deploy_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(deploy_labels)
@@ -266,14 +266,14 @@ class Main:
             assert not self.has_commit_tag('r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
             self.check_item(r'Added `r` tag to commit title.*')
-            reindex_labels = self.labels('reindex')
+            reindex_labels = self.pr_labels('reindex')
             for label in reindex_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(reindex_labels)
 
     def handle_mirror(self):
         if self.args.no_mirror:
-            mirror_labels = self.labels('mirror')
+            mirror_labels = self.pr_labels('mirror')
             for label in mirror_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(mirror_labels)
@@ -320,9 +320,9 @@ class Main:
         log.info('Creating PR …')
         cmd = [
             'gh', 'pr', 'create',
-            '--base', self.target_branch,
+            '--base', self.pr_target_branch,
             '--title', self.pr_title,
-            '--body', self.body,
+            '--body', self.pr_body,
             '--assignee', '@me',
         ]
         if self.labels_to_add:
@@ -341,7 +341,7 @@ class Main:
         cmd = [
             'gh', 'pr', 'edit', pr_url,
             '--title', self.pr_title,
-            '--body', self.body,
+            '--body', self.pr_body,
             '--add-assignee', '@me',
         ]
         if self.labels_to_add:
@@ -353,20 +353,20 @@ class Main:
 
     def check_item(self, item: str, checked: bool = True) -> None:
         mark = 'x' if checked else ' '
-        self.body, n = re.subn(
+        self.pr_body, n = re.subn(
             r'^- \[[ x]] (' + self.item_label + item + ')$',
             r'- [' + mark + r'] \1',
-            self.body,
+            self.pr_body,
             flags=re.MULTILINE
         )
         assert n > 0, R('Item not found in template', item)
         assert n < 2, R('Multiple matching items found', item)
 
-    def labels(self, prefix: str) -> list[str]:
+    def pr_labels(self, prefix: str) -> list[str]:
         item = r'This PR is labeled `(' + prefix + r':\w+)`'
         return re.findall(
             r'^- \[[ x]] ' + self.item_label + item,
-            self.body,
+            self.pr_body,
             flags=re.MULTILINE
         )
 
@@ -380,7 +380,7 @@ class Main:
         )
         return result.stdout.strip()
 
-    def set_status(self, node_id: str, status: str) -> None:
+    def set_project_status(self, node_id: str, status: str) -> None:
         query = fd('''
             mutation {{
                 addProjectV2ItemById(input: {{
@@ -396,7 +396,7 @@ class Main:
         result = json.loads(result.stdout)
         item_id = result['data']['addProjectV2ItemById']['item']['id']
 
-        option_id = self.status_option_id(status)
+        option_id = self.project_status_option_id(status)
 
         query = fd('''
             mutation {{
@@ -408,7 +408,7 @@ class Main:
                 }}) {{ projectV2Item {{ id }} }}
             }}
         ''', project_id=self.project_id, item_id=item_id,
-                   field_id=self.status_field['id'], option_id=option_id)
+                   field_id=self.project_status_field['id'], option_id=option_id)
         subprocess.run(
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
@@ -429,14 +429,14 @@ class Main:
         )
         return json.loads(result.stdout)['data']['organization']['projectV2']['id']
 
-    def status_option_id(self, status: str) -> str:
-        for option in self.status_field['options']:
+    def project_status_option_id(self, status: str) -> str:
+        for option in self.project_status_field['options']:
             if option['name'] == status:
                 return option['id']
         assert False, R('Status option not found', status)
 
     @cached_property
-    def status_field(self) -> dict:
+    def project_status_field(self) -> dict:
         result = subprocess.run(
             [
                 'gh', 'project', 'field-list', str(self.project['number']),
@@ -489,35 +489,35 @@ class Main:
         )
 
     @property
-    def body(self) -> str:
-        if self._body is None:
+    def pr_body(self) -> str:
+        if self._pr_body is None:
             if self.existing_pr is None:
-                self._body = self.template
+                self._pr_body = self.pr_template
             else:
-                self._body = json_str(self.existing_pr['body'])
-                expected_comment = self.template.split('-->', maxsplit=1)[0]
-                assert self._body.startswith(expected_comment), R(
+                self._pr_body = json_str(self.existing_pr['body'])
+                expected_comment = self.pr_template.split('-->', maxsplit=1)[0]
+                assert self._pr_body.startswith(expected_comment), R(
                     'Existing PR was created with a different template')
             # Normalize line endings from GitHub API responses
-            self._body = '\n'.join(self._body.splitlines())
-        return self._body
+            self._pr_body = '\n'.join(self._pr_body.splitlines())
+        return self._pr_body
 
-    @body.setter
-    def body(self, body: str) -> None:
-        self._body = body
+    @pr_body.setter
+    def pr_body(self, body: str) -> None:
+        self._pr_body = body
 
     @cached_property
-    def target_branch(self) -> str:
+    def pr_target_branch(self) -> str:
         m = re.search(
             r'^- \[[ x]] ' + self.item_label + r'Target branch is `(.+?)`$',
-            self.template,
+            self.pr_template,
             flags=re.MULTILINE
         )
         assert m is not None, R('Target branch item not found in template')
         return m.group(1)
 
     @cached_property
-    def template(self) -> str:
+    def pr_template(self) -> str:
         project_root = Path(__file__).resolve().parent.parent
         github_dir = project_root / '.github'
         template_dir = github_dir / 'PULL_REQUEST_TEMPLATE'
@@ -692,7 +692,7 @@ class Main:
 
     def has_commit_tag(self, tag: str) -> bool:
         result = subprocess.run(
-            ['git', 'log', '--format=%s', f'{self.target_branch}..HEAD'],
+            ['git', 'log', '--format=%s', f'{self.pr_target_branch}..HEAD'],
             capture_output=True, text=True, check=True
         )
         return any(
