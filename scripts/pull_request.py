@@ -174,8 +174,8 @@ class Main:
             pr_url = self._existing_pr['url']
             self._update_pr(pr_url)
 
-        pr_node_id = self._node_id(pr_url)
         log.info('Setting PR status …')
+        pr_node_id = self._node_id(pr_url)
         self._set_status(pr_node_id, 'In Progress')
         for issue in self._issues:
             issue_node_id = self._node_id(issue.url)
