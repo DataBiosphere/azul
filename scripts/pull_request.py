@@ -602,8 +602,6 @@ class Main:
         )
 
     def _set_status(self, node_id: str, status: str) -> None:
-        project_id = self._project_id()
-
         query = fd('''
             mutation {{
                 addProjectV2ItemById(input: {{
@@ -611,7 +609,7 @@ class Main:
                     contentId: "{node_id}"
                 }}) {{ item {{ id }} }}
             }}
-        ''', project_id=project_id, node_id=node_id)
+        ''', project_id=self._project_id, node_id=node_id)
         result = subprocess.run(
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
@@ -629,13 +627,14 @@ class Main:
                     value: {{singleSelectOptionId: "{option_id}"}}
                 }}) {{ projectV2Item {{ id }} }}
             }}
-        ''', project_id=project_id, item_id=item_id,
+        ''', project_id=self._project_id, item_id=item_id,
                    field_id=self._status_field['id'], option_id=option_id)
         subprocess.run(
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
         )
 
+    @cached_property
     def _project_id(self) -> str:
         query = fd('''
             {{
@@ -643,7 +642,7 @@ class Main:
                     projectV2(number: {number}) {{ id }}
                 }}
             }}
-        ''', owner=_project_owner, number=self._project()['number'])
+        ''', owner=_project_owner, number=self._project['number'])
         result = subprocess.run(
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
@@ -654,7 +653,7 @@ class Main:
     def _status_field(self) -> dict:
         result = subprocess.run(
             [
-                'gh', 'project', 'field-list', str(self._project()['number']),
+                'gh', 'project', 'field-list', str(self._project['number']),
                 '--owner', _project_owner,
                 '--format', 'json',
             ],
@@ -672,6 +671,7 @@ class Main:
                 return option['id']
         assert False, R('Status option not found', status)
 
+    @cached_property
     def _project(self) -> dict:
         result = subprocess.run(
             [
