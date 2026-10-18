@@ -132,13 +132,11 @@ class Main:
         issue_refs = [issue.ref for issue in issues]
         title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
 
-        template = self._template
-
         if self._existing_pr is None:
-            self.body = template
+            self.body = self._template
         else:
             self.body = self._existing_pr['body']
-            expected_comment = template.split('-->', maxsplit=1)[0]
+            expected_comment = self._template.split('-->', maxsplit=1)[0]
             assert self.body.startswith(expected_comment), R(
                 'Existing PR was created with a different template')
 
@@ -148,7 +146,7 @@ class Main:
         self._reference_issues(issue_refs)
 
         m = re.search(r'^- \[[ x]] ' + _item_label + r'Target branch is `(.+?)`$',
-                      template, flags=re.MULTILINE)
+                      self._template, flags=re.MULTILINE)
         assert m is not None, R('Target branch task not found in template')
         target_branch = m.group(1)
         target_branch_task = r'Target branch is `' + re.escape(target_branch) + '`'
