@@ -50,8 +50,6 @@ from azul.logging import (
 
 log = logging.getLogger(__name__)
 
-_project_root = Path(__file__).resolve().parent.parent
-_template_dir = _project_root / '.github' / 'PULL_REQUEST_TEMPLATE'
 _project_owner = 'DataBiosphere'
 _project_repos = ['azul', 'azul-private']
 _project_title = 'Azul'
@@ -374,13 +372,16 @@ class Main:
 
     @cached_property
     def template_path(self) -> Path:
+        project_root = Path(__file__).resolve().parent.parent
+        github_dir = project_root / '.github'
+        template_dir = github_dir / 'PULL_REQUEST_TEMPLATE'
         if self.args.type is None:
-            template_path = _project_root / '.github' / 'pull_request_template.md'
+            template_path = github_dir / 'pull_request_template.md'
         elif self.args.type == 'upgrade':
-            template_path = _template_dir / 'upgrade.md'
+            template_path = template_dir / 'upgrade.md'
         elif self.args.type == 'promotion':
             date, target = self.promotion_date_and_target
-            template_path = _template_dir / f'{target}-promotion.md'
+            template_path = template_dir / f'{target}-promotion.md'
         else:
             assert False, R('Unsupported template', self.args.type)
         return template_path
