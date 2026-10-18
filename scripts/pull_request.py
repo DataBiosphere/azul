@@ -138,7 +138,7 @@ class Main:
         return args
 
     def main(self):
-        self._reference_issues()
+        self._add_issue_references_to_body()
 
         target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
         if self._existing_pr is None:
@@ -541,7 +541,7 @@ class Main:
             return None
         return json.loads(result.stdout)
 
-    def _reference_issues(self) -> None:
+    def _add_issue_references_to_body(self) -> None:
         self.body, n = re.subn(r'^(Linked issues?: *).*$',
                                lambda m: m.group(1) + ', '.join(self._issue_refs),
                                self.body, flags=re.MULTILINE)
