@@ -542,26 +542,18 @@ class Main:
 
     @cached_property
     def pr_title(self) -> str:
-        prefix = 'Fix: ' if self.fix else ''
-        suffix = self.title_suffix
-        issue_refs = ', '.join(self.issue_refs)
-        return f'{prefix}{self.issue.title}{suffix} ({issue_refs})'
-
-    @cached_property
-    def fix(self) -> bool:
         if self.args.fix is None:
-            return self.issue.type == 'Defect'
+            fix = self.issue.type == 'Defect'
         else:
-            return self.args.fix
-
-    @cached_property
-    def title_suffix(self) -> str:
+            fix = self.args.fix
+        prefix = 'Fix: ' if fix else ''
         if self.args.type == 'promotion':
             date, target = self.promotion_date_and_target
-            title_suffix = f' {target}'
+            suffix = f' {target}'
         else:
-            title_suffix = ''
-        return title_suffix
+            suffix = ''
+        issue_refs = ', '.join(self.issue_refs)
+        return f'{prefix}{self.issue.title}{suffix} ({issue_refs})'
 
     @cached_property
     def issue(self) -> IssueInfo:
