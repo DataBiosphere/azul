@@ -138,9 +138,7 @@ class Main:
         return args
 
     def main(self):
-        title = self._pr_title(self._issue_refs, self._issue.title, self._fix)
-
-        self._reference_issues(self._issue_refs)
+        self._reference_issues()
 
         target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
         if self._existing_pr is None:
@@ -240,7 +238,7 @@ class Main:
             cmd = [
                 'gh', 'pr', 'create',
                 '--base', self._target_branch,
-                '--title', title,
+                '--title', self._pr_title,
                 '--body', self.body,
                 '--assignee', '@me',
             ]
@@ -257,7 +255,7 @@ class Main:
             log.info('Updating PR …')
             cmd = [
                 'gh', 'pr', 'edit', pr_url,
-                '--title', title,
+                '--title', self._pr_title,
                 '--body', self.body,
                 '--add-assignee', '@me',
             ]
@@ -525,14 +523,12 @@ class Main:
             url=issue['url']
         )
 
-    def _pr_title(self,
-                  issue_refs: list[str],
-                  issue_title: str,
-                  fix: bool
-                  ) -> str:
-        prefix = 'Fix: ' if fix else ''
+    @cached_property
+    def _pr_title(self) -> str:
+        prefix = 'Fix: ' if self._fix else ''
         suffix = self._title_suffix
-        return f'{prefix}{issue_title}{suffix} ({", ".join(issue_refs)})'
+        issue_refs = ', '.join(self._issue_refs)
+        return f'{prefix}{self._issue.title}{suffix} ({issue_refs})'
 
     @cached_property
     def _existing_pr(self) -> dict | None:
@@ -545,9 +541,9 @@ class Main:
             return None
         return json.loads(result.stdout)
 
-    def _reference_issues(self, issue_refs: list[str]) -> None:
+    def _reference_issues(self) -> None:
         self.body, n = re.subn(r'^(Linked issues?: *).*$',
-                               lambda m: m.group(1) + ', '.join(issue_refs),
+                               lambda m: m.group(1) + ', '.join(self._issue_refs),
                                self.body, flags=re.MULTILINE)
         assert n > 0, R('Linked issues reference not found in body')
         assert n < 2, R('Multiple linked issues references found in body')
