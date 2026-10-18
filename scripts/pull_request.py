@@ -133,7 +133,6 @@ class Main:
         issue_refs = [issue.ref for issue in issues]
         title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
 
-        log.info('Checking for existing PR …')
         template = self._template
 
         if self._existing_pr is None:
@@ -519,6 +518,7 @@ class Main:
 
     @cached_property
     def _existing_pr(self) -> dict | None:
+        log.info('Checking for existing PR …')
         result = subprocess.run(
             ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
             capture_output=True, text=True
