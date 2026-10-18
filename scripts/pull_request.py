@@ -61,8 +61,8 @@ _item_label = r'`[A-Z]\d\d` '
 class Main:
     argv: list[str]
     _body: str | None = attrs.field(init=False, default=None)
-    labels_to_add: list[str] = attrs.field(factory=list)
-    labels_to_remove: list[str] = attrs.field(factory=list)
+    labels_to_add: list[str] = attrs.field(init=False, factory=list)
+    labels_to_remove: list[str] = attrs.field(init=False, factory=list)
 
     def __attrs_post_init__(self):
         self._check_working_copy()
