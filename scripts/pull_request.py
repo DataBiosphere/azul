@@ -295,16 +295,16 @@ class Main:
             self.labels_to_remove.append('partial')
 
     def _handle_target_branch(self):
-        target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
+        task = r'Target branch is `' + re.escape(self._target_branch) + '`'
         if self._existing_pr is None:
-            self._check_task(target_branch_task)
+            self._check_task(task)
         else:
             base = self._existing_pr['baseRefName']
             if base == self._target_branch:
-                self._check_task(target_branch_task)
+                self._check_task(task)
             else:
                 log.warning('Target branch is %r, expected %r', base, self._target_branch)
-                self._check_task(target_branch_task, checked=False)
+                self._check_task(task, checked=False)
 
     @cached_property
     def _template(self) -> str:
