@@ -64,7 +64,8 @@ class Main:
     labels_to_add: list[str] = attrs.field(factory=list)
     labels_to_remove: list[str] = attrs.field(factory=list)
 
-    def _parse_args(self) -> Namespace:
+    @cached_property
+    def _args(self) -> Namespace:
         parser = argparse.ArgumentParser(description=__doc__)
         parser.add_argument('--type', '-t',
                             default=None,
@@ -115,17 +116,16 @@ class Main:
         return args
 
     def main(self):
-        args = self._parse_args()
         self._check_working_copy()
         log.info('Checking remote branch …')
         self._check_remote_branch(self._branch)
         title_suffix = ''
-        issue_numbers = args.issues
-        if args.type is None:
+        issue_numbers = self._args.issues
+        if self._args.type is None:
             template_path = _project_root / '.github' / 'pull_request_template.md'
             if issue_numbers is None:
                 issue_numbers = self._issue_numbers(self._branch)
-        elif args.type == 'upgrade':
+        elif self._args.type == 'upgrade':
             template_path = _template_dir / 'upgrade.md'
             if issue_numbers is None:
                 date = self._upgrade_date(self._branch)
@@ -133,7 +133,7 @@ class Main:
                 issue_numbers = [self._issue_number_by_title(
                     f'Upgrade software dependencies {date}'
                 )]
-        elif args.type == 'promotion':
+        elif self._args.type == 'promotion':
             date, target = self._promotion_date_and_target(self._branch)
             template_path = _template_dir / f'{target}-promotion.md'
             if issue_numbers is None:
@@ -143,17 +143,17 @@ class Main:
                 )]
             title_suffix = f' {target}'
         else:
-            assert False, R('Unsupported template', args.type)
+            assert False, R('Unsupported template', self._args.type)
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
         issues = [self._issue_info(issue_number) for issue_number in issue_numbers]
         # The PR is assumed to resolve every one of the linked issues. The first
         # of them determines the PR title.
         issue = issues[0]
-        if args.fix is None:
+        if self._args.fix is None:
             fix = issue.type == 'Defect'
         else:
-            fix = args.fix
+            fix = self._args.fix
         issue_refs = [issue.ref for issue in issues]
         title = self._pr_title(issue_refs, issue.title, fix, suffix=title_suffix)
 
@@ -189,7 +189,7 @@ class Main:
                 log.warning('Target branch is %r, expected %r', base, target_branch)
                 self._check_task(target_branch_task, checked=False)
 
-        if args.no_partial:
+        if self._args.no_partial:
             assert not self._has_commit_tag(target_branch, 'p'), R(
                 '--no-partial cannot be used when a commit is tagged `p`')
             self._check_task(r'Added `p` tag to titles of partial commits.*')
@@ -197,13 +197,13 @@ class Main:
             self._check_task(r'This PR partially resolves .*')
 
         has_u_tag = self._has_commit_tag(target_branch, 'u')
-        assert not (has_u_tag and args.no_upgrade), R(
+        assert not (has_u_tag and self._args.no_upgrade), R(
             '--no-upgrade cannot be used when a commit is tagged `u`')
-        checked = has_u_tag or args.no_upgrade
-        if args.type != 'promotion':
+        checked = has_u_tag or self._args.no_upgrade
+        if self._args.type != 'promotion':
             self._check_task(r'Added `u` tag to commit title.*', checked=checked)
         self._check_task(r'This PR is labeled `upgrade`.*', checked=checked)
-        if args.no_upgrade:
+        if self._args.no_upgrade:
             self._check_task(r'Ran `make docker_images\.json`.*')
             self._check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
 
@@ -211,20 +211,20 @@ class Main:
             self.labels_to_add.append('upgrade')
         else:
             self.labels_to_remove.append('upgrade')
-        if args.no_partial:
+        if self._args.no_partial:
             self.labels_to_remove.append('partial')
-        if args.no_api:
+        if self._args.no_api:
             self.labels_to_remove.append('API')
-        if args.no_reqs:
+        if self._args.no_reqs:
             self.labels_to_remove.append('reqs')
 
-        if args.no_deploy:
+        if self._args.no_deploy:
             deploy_labels = self._deploy_labels()
             for label in deploy_labels:
                 self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(deploy_labels)
 
-        if args.no_reindex:
+        if self._args.no_reindex:
             assert not self._has_commit_tag(target_branch, 'r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
             self._check_task(r'Added `r` tag to commit title.*')
@@ -233,13 +233,13 @@ class Main:
                 self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(reindex_labels)
 
-        if args.no_mirror:
+        if self._args.no_mirror:
             mirror_labels = self._mirror_labels()
             for label in mirror_labels:
                 self._check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(mirror_labels)
 
-        if args.no_api:
+        if self._args.no_api:
             assert not self._has_commit_tag(target_branch, 'a'), R(
                 '--no-api cannot be used when a commit is tagged `a`')
             assert not self._has_commit_tag(target_branch, 'A'), R(
@@ -248,13 +248,13 @@ class Main:
             self._check_task(r'Added `a` \(`A`\) tag to commit title.*')
             self._check_task(r'Updated REST API version number in `app\.py`.*')
 
-        if args.no_hotfix:
+        if self._args.no_hotfix:
             assert not self._has_commit_tag(target_branch, 'F'), R(
                 '--no-hotfix cannot be used when a commit is tagged `F`')
             self._check_task(r'Added `F` tag to main commit title.*')
             self._check_task(r'Reverted the temporary hotfixes for any linked issues.*')
 
-        if args.no_reqs:
+        if self._args.no_reqs:
             assert not self._has_commit_tag(target_branch, 'R'), R(
                 '--no-reqs cannot be used when a commit is tagged `R`')
             self._check_task(r'Ran `make requirements_update`.*')
@@ -265,7 +265,7 @@ class Main:
         self._check_task(r'Status of PR is \*In progress\*')
         self._check_task('Name of PR branch matches .*')
 
-        if args.type is None:
+        if self._args.type is None:
             handle = self._branch_handle(self._branch)
             log.info('Verifying GitHub user …')
             assert handle == self._github_user(), R(
