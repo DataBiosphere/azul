@@ -75,14 +75,14 @@ class Main:
                                  'If omitted, the issues are inferred from the name '
                                  'of the current branch.')
         section_flags = {
-            'partial': 'Remove partial label and check partiality tasks.',
-            'mirror': 'Remove mirror labels and check mirror tasks.',
-            'reindex': 'Remove reindex labels and check reindex tasks.',
-            'api': 'Remove API label and check API tasks.',
-            'upgrade': 'Remove upgrade label and check upgrade tasks.',
-            'deploy': 'Remove deploy labels and check deploy tasks.',
-            'hotfix': 'Check hotfix tasks.',
-            'reqs': 'Remove reqs label and check requirements tasks.',
+            'partial': 'Remove partial label and check partiality items.',
+            'mirror': 'Remove mirror labels and check mirror items.',
+            'reindex': 'Remove reindex labels and check reindex items.',
+            'api': 'Remove API label and check API items.',
+            'upgrade': 'Remove upgrade label and check upgrade items.',
+            'deploy': 'Remove deploy labels and check deploy items.',
+            'hotfix': 'Check hotfix items.',
+            'reqs': 'Remove reqs label and check requirements items.',
         }
         for flag, help_text in section_flags.items():
             parser.add_argument(f'--no-{flag}',
@@ -132,13 +132,13 @@ class Main:
         self.handle_hotfix()
         self.handle_reqs()
 
-        self.check_task('PR is assigned to the author')
-        self.check_task(r'Status of PR is \*In progress\*')
-        self.check_task('Name of PR branch matches .*')
+        self.check_item('PR is assigned to the author')
+        self.check_item(r'Status of PR is \*In progress\*')
+        self.check_item('Name of PR branch matches .*')
 
-        self.check_task('PR is linked to .*')
-        self.check_task(r'Status of linked issues? is \*In progress\*')
-        self.check_task('PR description links to linked issues?')
+        self.check_item('PR is linked to .*')
+        self.check_item(r'Status of linked issues? is \*In progress\*')
+        self.check_item('PR description links to linked issues?')
 
         if self.existing_pr is None:
             pr_url = self.create_pr()
@@ -221,17 +221,17 @@ class Main:
         if self.args.no_reqs:
             assert not self.has_commit_tag('R'), R(
                 '--no-reqs cannot be used when a commit is tagged `R`')
-            self.check_task(r'Ran `make requirements_update`.*')
-            self.check_task(r'Added `R` tag to commit title.*')
-            self.check_task(r'This PR is labeled `reqs`.*')
+            self.check_item(r'Ran `make requirements_update`.*')
+            self.check_item(r'Added `R` tag to commit title.*')
+            self.check_item(r'This PR is labeled `reqs`.*')
             self.labels_to_remove.append('reqs')
 
     def handle_hotfix(self):
         if self.args.no_hotfix:
             assert not self.has_commit_tag('F'), R(
                 '--no-hotfix cannot be used when a commit is tagged `F`')
-            self.check_task(r'Added `F` tag to main commit title.*')
-            self.check_task(r'Reverted the temporary hotfixes for any linked issues.*')
+            self.check_item(r'Added `F` tag to main commit title.*')
+            self.check_item(r'Reverted the temporary hotfixes for any linked issues.*')
 
     def handle_api(self):
         if self.args.no_api:
@@ -239,33 +239,33 @@ class Main:
                 '--no-api cannot be used when a commit is tagged `a`')
             assert not self.has_commit_tag('A'), R(
                 '--no-api cannot be used when a commit is tagged `A`')
-            self.check_task(r'This PR and its linked issues are labeled `API`.*')
-            self.check_task(r'Added `a` \(`A`\) tag to commit title.*')
-            self.check_task(r'Updated REST API version number in `app\.py`.*')
+            self.check_item(r'This PR and its linked issues are labeled `API`.*')
+            self.check_item(r'Added `a` \(`A`\) tag to commit title.*')
+            self.check_item(r'Updated REST API version number in `app\.py`.*')
             self.labels_to_remove.append('API')
 
     def handle_mirror(self):
         if self.args.no_mirror:
             mirror_labels = self.mirror_labels()
             for label in mirror_labels:
-                self.check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
+                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(mirror_labels)
 
     def handle_reindex(self):
         if self.args.no_reindex:
             assert not self.has_commit_tag('r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
-            self.check_task(r'Added `r` tag to commit title.*')
+            self.check_item(r'Added `r` tag to commit title.*')
             reindex_labels = self.reindex_labels()
             for label in reindex_labels:
-                self.check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
+                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(reindex_labels)
 
     def handle_deploy(self):
         if self.args.no_deploy:
             deploy_labels = self.deploy_labels()
             for label in deploy_labels:
-                self.check_task(r'This PR is labeled `' + re.escape(label) + '`.*')
+                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(deploy_labels)
 
     def handle_upgrades(self):
@@ -274,36 +274,36 @@ class Main:
             '--no-upgrade cannot be used when a commit is tagged `u`')
         checked = has_u_tag or self.args.no_upgrade
         if self.args.type != 'promotion':
-            self.check_task(r'Added `u` tag to commit title.*', checked=checked)
-        self.check_task(r'This PR is labeled `upgrade`.*', checked=checked)
+            self.check_item(r'Added `u` tag to commit title.*', checked=checked)
+        self.check_item(r'This PR is labeled `upgrade`.*', checked=checked)
         if has_u_tag:
             self.labels_to_add.append('upgrade')
         else:
             self.labels_to_remove.append('upgrade')
         if self.args.no_upgrade:
-            self.check_task(r'Ran `make docker_images\.json`.*')
-            self.check_task(r'Documented upgrading of deployments in UPGRADING\.rst.*')
+            self.check_item(r'Ran `make docker_images\.json`.*')
+            self.check_item(r'Documented upgrading of deployments in UPGRADING\.rst.*')
 
     def handle_partiality(self):
         if self.args.no_partial:
             assert not self.has_commit_tag('p'), R(
                 '--no-partial cannot be used when a commit is tagged `p`')
-            self.check_task(r'Added `p` tag to titles of partial commits.*')
-            self.check_task(r'This PR is labeled `partial`.*')
-            self.check_task(r'This PR partially resolves .*')
+            self.check_item(r'Added `p` tag to titles of partial commits.*')
+            self.check_item(r'This PR is labeled `partial`.*')
+            self.check_item(r'This PR partially resolves .*')
             self.labels_to_remove.append('partial')
 
     def handle_target_branch(self):
-        task = r'Target branch is `' + re.escape(self.target_branch) + '`'
+        item = r'Target branch is `' + re.escape(self.target_branch) + '`'
         if self.existing_pr is None:
-            self.check_task(task)
+            self.check_item(item)
         else:
             base = self.existing_pr['baseRefName']
             if base == self.target_branch:
-                self.check_task(task)
+                self.check_item(item)
             else:
                 log.warning('Target branch is %r, expected %r', base, self.target_branch)
-                self.check_task(task, checked=False)
+                self.check_item(item, checked=False)
 
     @cached_property
     def template(self) -> str:
@@ -316,7 +316,7 @@ class Main:
             self.template,
             flags=re.MULTILINE
         )
-        assert m is not None, R('Target branch task not found in template')
+        assert m is not None, R('Target branch item not found in template')
         return m.group(1)
 
     @cached_property
@@ -606,16 +606,16 @@ class Main:
             flags=re.MULTILINE
         )
 
-    def check_task(self, task: str, checked: bool = True) -> None:
+    def check_item(self, item: str, checked: bool = True) -> None:
         mark = 'x' if checked else ' '
         self.body, n = re.subn(
-            r'^- \[[ x]] (' + self.item_label + task + ')$',
+            r'^- \[[ x]] (' + self.item_label + item + ')$',
             r'- [' + mark + r'] \1',
             self.body,
             flags=re.MULTILINE
         )
-        assert n > 0, R('Task item not found in template', task)
-        assert n < 2, R('Multiple matching task items found', task)
+        assert n > 0, R('Item not found in template', item)
+        assert n < 2, R('Multiple matching items found', item)
 
     @cached_property
     def branch_handle(self) -> str:
