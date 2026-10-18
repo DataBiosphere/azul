@@ -119,22 +119,7 @@ class Main:
         self._check_working_copy()
         log.info('Checking remote branch …')
         self._check_remote_branch()
-        issue_numbers = self._args.issues
-        if issue_numbers is None:
-            if self._args.type is None:
-                issue_numbers = self._issue_numbers
-            elif self._args.type == 'upgrade':
-                date = self._upgrade_date
-                log.info('Searching for upgrade issue …')
-                issue_numbers = [self._issue_number_by_title(
-                    f'Upgrade software dependencies {date}'
-                )]
-            else:
-                date, target = self._promotion_date_and_target
-                log.info('Searching for promotion issue …')
-                issue_numbers = [self._issue_number_by_title(
-                    f'Promotion {date}'
-                )]
+        issue_numbers = self._issue_numbers
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
         issues = [self._issue_info(issue_number) for issue_number in issue_numbers]
@@ -310,6 +295,26 @@ class Main:
             self._set_status(issue_node_id, 'In Progress')
 
     @cached_property
+    def _issue_numbers(self) -> list[int]:
+        issue_numbers = self._args.issues
+        if issue_numbers is None:
+            if self._args.type is None:
+                issue_numbers = self._issue_numbers_from_branch_name
+            elif self._args.type == 'upgrade':
+                date = self._upgrade_date
+                log.info('Searching for upgrade issue …')
+                issue_numbers = [self._issue_number_by_title(
+                    f'Upgrade software dependencies {date}'
+                )]
+            else:
+                date, target = self._promotion_date_and_target
+                log.info('Searching for promotion issue …')
+                issue_numbers = [self._issue_number_by_title(
+                    f'Promotion {date}'
+                )]
+        return issue_numbers
+
+    @cached_property
     def _title_suffix(self) -> str:
         if self._args.type == 'promotion':
             date, target = self._promotion_date_and_target
@@ -393,7 +398,7 @@ class Main:
         )
 
     @cached_property
-    def _issue_numbers(self) -> list[int]:
+    def _issue_numbers_from_branch_name(self) -> list[int]:
         m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self._branch)
         assert m is not None, R(
             'Cannot extract issue numbers from branch name', self._branch)
