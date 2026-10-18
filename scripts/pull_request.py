@@ -169,22 +169,7 @@ class Main:
         self._check_task('PR description links to linked issues?')
 
         if self._existing_pr is None:
-            log.info('Creating PR …')
-            cmd = [
-                'gh', 'pr', 'create',
-                '--base', self._target_branch,
-                '--title', self._pr_title,
-                '--body', self.body,
-                '--assignee', '@me',
-            ]
-            if self.labels_to_add:
-                cmd.extend(['--label', ','.join(self.labels_to_add)])
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            sys.stdout.write(result.stdout)
-            sys.stderr.write(result.stderr)
-            if result.returncode != 0:
-                sys.exit(result.returncode)
-            pr_url = result.stdout.strip()
+            pr_url = self._create_pr()
         else:
             log.info('Updating PR …')
             pr_url = self._existing_pr['url']
@@ -210,6 +195,25 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    def _create_pr(self) -> str:
+        log.info('Creating PR …')
+        cmd = [
+            'gh', 'pr', 'create',
+            '--base', self._target_branch,
+            '--title', self._pr_title,
+            '--body', self.body,
+            '--assignee', '@me',
+        ]
+        if self.labels_to_add:
+            cmd.extend(['--label', ','.join(self.labels_to_add)])
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        sys.stdout.write(result.stdout)
+        sys.stderr.write(result.stderr)
+        if result.returncode != 0:
+            sys.exit(result.returncode)
+        pr_url = result.stdout.strip()
+        return pr_url
 
     def _verify_user(self):
         if self._args.type is None:
