@@ -150,7 +150,7 @@ class Main:
         else:
             fix = self._args.fix
         issue_refs = [issue.ref for issue in issues]
-        title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
+        title = self._pr_title(issue_refs, issue.title, fix)
 
         self._reference_issues(issue_refs)
 
@@ -513,10 +513,10 @@ class Main:
     def _pr_title(self,
                   issue_refs: list[str],
                   issue_title: str,
-                  fix: bool,
-                  suffix: str = ''
+                  fix: bool
                   ) -> str:
         prefix = 'Fix: ' if fix else ''
+        suffix = self._title_suffix
         return f'{prefix}{issue_title}{suffix} ({", ".join(issue_refs)})'
 
     @cached_property
