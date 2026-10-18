@@ -119,12 +119,6 @@ class Main:
         self._check_working_copy()
         log.info('Checking remote branch …')
         self._check_remote_branch()
-        if self._args.type == 'promotion':
-            date, target = self._promotion_date_and_target
-            title_suffix = f' {target}'
-        else:
-            title_suffix = ''
-
         issue_numbers = self._args.issues
         if issue_numbers is None:
             if self._args.type is None:
@@ -152,7 +146,7 @@ class Main:
         else:
             fix = self._args.fix
         issue_refs = [issue.ref for issue in issues]
-        title = self._pr_title(issue_refs, issue.title, fix, suffix=title_suffix)
+        title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
 
         log.info('Checking for existing PR …')
         existing_pr = self._existing_pr()
@@ -314,6 +308,15 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    @cached_property
+    def _title_suffix(self) -> str:
+        if self._args.type == 'promotion':
+            date, target = self._promotion_date_and_target
+            title_suffix = f' {target}'
+        else:
+            title_suffix = ''
+        return title_suffix
 
     @cached_property
     def _template_path(self) -> Path:
