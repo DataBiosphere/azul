@@ -652,7 +652,8 @@ class Main:
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
         )
-        item_id = json.loads(result.stdout)['data']['addProjectV2ItemById']['item']['id']
+        result = json.loads(result.stdout)
+        item_id = result['data']['addProjectV2ItemById']['item']['id']
 
         option_id = self._status_option_id(status)
 
