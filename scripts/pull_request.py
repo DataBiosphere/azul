@@ -34,6 +34,7 @@ from furl import (
 
 from azul.lib import (
     R,
+    cached_property,
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
@@ -56,7 +57,7 @@ _project_title = 'Azul'
 _item_label = r'`[A-Z]\d\d` '
 
 
-@attrs.define
+@attrs.define(slots=False)
 class Main:
     body: str = attrs.field(init=False)
     labels_to_add: list[str] = attrs.field(factory=list)
@@ -114,26 +115,25 @@ class Main:
 
     def main(self, argv):
         args = self._parse_args(argv)
-        branch = self._current_branch()
         self._check_working_copy()
         log.info('Checking remote branch …')
-        self._check_remote_branch(branch)
+        self._check_remote_branch(self._branch)
         title_suffix = ''
         issue_numbers = args.issues
         if args.type is None:
             template_path = _project_root / '.github' / 'pull_request_template.md'
             if issue_numbers is None:
-                issue_numbers = self._issue_numbers(branch)
+                issue_numbers = self._issue_numbers(self._branch)
         elif args.type == 'upgrade':
             template_path = _template_dir / 'upgrade.md'
             if issue_numbers is None:
-                date = self._upgrade_date(branch)
+                date = self._upgrade_date(self._branch)
                 log.info('Searching for upgrade issue …')
                 issue_numbers = [self._issue_number_by_title(
                     f'Upgrade software dependencies {date}'
                 )]
         elif args.type == 'promotion':
-            date, target = self._promotion_date_and_target(branch)
+            date, target = self._promotion_date_and_target(self._branch)
             template_path = _template_dir / f'{target}-promotion.md'
             if issue_numbers is None:
                 log.info('Searching for promotion issue …')
@@ -265,7 +265,7 @@ class Main:
         self._check_task('Name of PR branch matches .*')
 
         if args.type is None:
-            handle = self._branch_handle(branch)
+            handle = self._branch_handle(self._branch)
             log.info('Verifying GitHub user …')
             assert handle == self._github_user(), R(
                 'Branch name does not match GitHub user', handle)
@@ -317,7 +317,8 @@ class Main:
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
 
-    def _current_branch(self) -> str:
+    @cached_property
+    def _branch(self) -> str:
         result = subprocess.run(
             ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
             capture_output=True, text=True, check=True
