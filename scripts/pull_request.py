@@ -168,11 +168,11 @@ class Main:
     def verify_remote_branch(self) -> None:
         log.info('Checking remote branch …')
         result = subprocess.run(
-            ['git', 'ls-remote', '--heads', 'github', self.branch],
+            ['git', 'ls-remote', '--heads', 'github', self.pr_branch],
             capture_output=True, text=True, check=True
         )
         assert result.stdout.strip(), R(
-            'Branch does not exist on the github remote', self.branch)
+            'Branch does not exist on the github remote', self.pr_branch)
 
         remote_sha = result.stdout.split()[0]
         local_sha = subprocess.run(
@@ -182,7 +182,7 @@ class Main:
 
         if local_sha != remote_sha:
             subprocess.run(
-                ['git', 'fetch', 'github', self.branch],
+                ['git', 'fetch', 'github', self.pr_branch],
                 capture_output=True, text=True, check=True
             )
             result = subprocess.run(
@@ -196,9 +196,9 @@ class Main:
 
     def verify_github_user(self):
         if self.args.type is None:
-            m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.branch)
+            m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.pr_branch)
             assert m is not None, R(
-                'Cannot extract handle from branch name', self.branch)
+                'Cannot extract handle from branch name', self.pr_branch)
             handle = m.group(1)
             log.info('Verifying GitHub user …')
             result = subprocess.run(
@@ -567,14 +567,14 @@ class Main:
         return issue_numbers
 
     def standard_issue_numbers(self) -> list[int]:
-        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self.branch)
+        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self.pr_branch)
         assert m is not None, R(
-            'Cannot extract issue numbers from branch name', self.branch)
+            'Cannot extract issue numbers from branch name', self.pr_branch)
         return [int(number) for number in m.group(1).split('-')]
 
     def upgrade_issue_number(self) -> int:
-        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self.branch)
-        assert m is not None, R('Cannot extract date from branch name', self.branch)
+        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self.pr_branch)
+        assert m is not None, R('Cannot extract date from branch name', self.pr_branch)
         date = m.group(1)
         log.info('Searching for upgrade issue …')
         return self.issue_number_by_title(f'Upgrade software dependencies {date}')
@@ -674,13 +674,13 @@ class Main:
 
     @cached_property
     def promotion_date_and_target(self) -> tuple[str, str]:
-        m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', self.branch)
+        m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', self.pr_branch)
         assert m is not None, R(
-            'Cannot extract date and target from branch name', self.branch)
+            'Cannot extract date and target from branch name', self.pr_branch)
         return m.group(1), m.group(2)
 
     @cached_property
-    def branch(self) -> str:
+    def pr_branch(self) -> str:
         result = subprocess.run(
             ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
             capture_output=True, text=True, check=True
