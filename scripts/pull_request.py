@@ -184,17 +184,15 @@ def main(argv):
         body = _check_task(body, r'This PR partially resolves .*')
 
     has_u_tag = _has_commit_tag(target_branch, 'u')
+    assert not (has_u_tag and args.no_upgrade), R(
+        '--no-upgrade cannot be used when a commit is tagged `u`')
+    checked = has_u_tag or args.no_upgrade
     if args.type != 'promotion':
-        body = _check_task(body, r'Added `u` tag to commit title.*', checked=has_u_tag)
-    body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=has_u_tag)
-
+        body = _check_task(body, r'Added `u` tag to commit title.*', checked=checked)
+    body = _check_task(body, r'This PR is labeled `upgrade`.*', checked=checked)
     if args.no_upgrade:
-        assert not has_u_tag, R(
-            '--no-upgrade cannot be used when a commit is tagged `u`')
         body = _check_task(body, r'Ran `make docker_images\.json`.*')
         body = _check_task(body, r'Documented upgrading of deployments in UPGRADING\.rst.*')
-        body = _check_task(body, r'Added `u` tag to commit title.*')
-        body = _check_task(body, r'This PR is labeled `upgrade`.*')
 
     labels_to_add = []
     labels_to_remove = []
