@@ -162,11 +162,7 @@ class Main:
         self._check_task(r'Status of PR is \*In progress\*')
         self._check_task('Name of PR branch matches .*')
 
-        if self._args.type is None:
-            handle = self._branch_handle
-            log.info('Verifying GitHub user …')
-            assert handle == self._github_user(), R(
-                'Branch name does not match GitHub user', handle)
+        self._verify_user()
 
         self._check_task('PR is linked to .*')
         self._check_task(r'Status of linked issues? is \*In progress\*')
@@ -214,6 +210,13 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    def _verify_user(self):
+        if self._args.type is None:
+            handle = self._branch_handle
+            log.info('Verifying GitHub user …')
+            assert handle == self._github_user(), R(
+                'Branch name does not match GitHub user', handle)
 
     def _handle_reqs(self):
         if self._args.no_reqs:
