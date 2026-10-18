@@ -60,9 +60,27 @@ _item_label = r'`[A-Z]\d\d` '
 @attrs.define(slots=False)
 class Main:
     argv: list[str]
-    body: str = attrs.field(init=False)
+    _body: str | None = attrs.field(init=False, default=None)
     labels_to_add: list[str] = attrs.field(factory=list)
     labels_to_remove: list[str] = attrs.field(factory=list)
+
+    @property
+    def body(self) -> str:
+        if self._body is None:
+            if self._existing_pr is None:
+                self._body = self._template
+            else:
+                self._body = self._existing_pr['body']
+                expected_comment = self._template.split('-->', maxsplit=1)[0]
+                assert self._body.startswith(expected_comment), R(
+                    'Existing PR was created with a different template')
+            # Normalize line endings from GitHub API responses
+            self._body = '\n'.join(self._body.splitlines())
+        return self._body
+
+    @body.setter
+    def body(self, body: str) -> None:
+        self._body = body
 
     @cached_property
     def _args(self) -> Namespace:
@@ -118,16 +136,6 @@ class Main:
     def main(self):
         self._check_working_copy()
         self._check_remote_branch()
-
-        if self._existing_pr is None:
-            self.body = self._template
-        else:
-            self.body = self._existing_pr['body']
-            expected_comment = self._template.split('-->', maxsplit=1)[0]
-            assert self.body.startswith(expected_comment), R(
-                'Existing PR was created with a different template')
-        # Normalize line endings from GitHub API responses
-        self.body = '\n'.join(self.body.splitlines())
 
         issue_numbers = self._issue_numbers
         log.info('Fetching issue %s …',
