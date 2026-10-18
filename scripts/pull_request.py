@@ -124,17 +124,17 @@ class Main:
         if self._args.type is None:
             template_path = _project_root / '.github' / 'pull_request_template.md'
             if issue_numbers is None:
-                issue_numbers = self._issue_numbers()
+                issue_numbers = self._issue_numbers
         elif self._args.type == 'upgrade':
             template_path = _template_dir / 'upgrade.md'
             if issue_numbers is None:
-                date = self._upgrade_date()
+                date = self._upgrade_date
                 log.info('Searching for upgrade issue …')
                 issue_numbers = [self._issue_number_by_title(
                     f'Upgrade software dependencies {date}'
                 )]
         elif self._args.type == 'promotion':
-            date, target = self._promotion_date_and_target()
+            date, target = self._promotion_date_and_target
             template_path = _template_dir / f'{target}-promotion.md'
             if issue_numbers is None:
                 log.info('Searching for promotion issue …')
@@ -266,7 +266,7 @@ class Main:
         self._check_task('Name of PR branch matches .*')
 
         if self._args.type is None:
-            handle = self._branch_handle()
+            handle = self._branch_handle
             log.info('Verifying GitHub user …')
             assert handle == self._github_user(), R(
                 'Branch name does not match GitHub user', handle)
@@ -379,12 +379,14 @@ class Main:
             for title in result.stdout.splitlines()
         )
 
+    @cached_property
     def _issue_numbers(self) -> list[int]:
         m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self._branch)
         assert m is not None, R(
             'Cannot extract issue numbers from branch name', self._branch)
         return [int(number) for number in m.group(1).split('-')]
 
+    @cached_property
     def _upgrade_date(self) -> str:
         m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self._branch)
         assert m is not None, R('Cannot extract date from branch name', self._branch)
@@ -406,6 +408,7 @@ class Main:
                 return issue['number']
         assert False, R('Issue not found with title', title)
 
+    @cached_property
     def _promotion_date_and_target(self) -> tuple[str, str]:
         m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', self._branch)
         assert m is not None, R(
@@ -529,6 +532,7 @@ class Main:
         assert n > 0, R('Task item not found in template', task)
         assert n < 2, R('Multiple matching task items found', task)
 
+    @cached_property
     def _branch_handle(self) -> str:
         m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self._branch)
         assert m is not None, R('Cannot extract handle from branch name', self._branch)
