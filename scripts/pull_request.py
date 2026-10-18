@@ -196,23 +196,17 @@ class Main:
 
     def verify_user(self):
         if self.args.type is None:
-            handle = self.branch_handle
+            m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.branch)
+            assert m is not None, R(
+                'Cannot extract handle from branch name', self.branch)
+            handle = m.group(1)
             log.info('Verifying GitHub user …')
-            assert handle == self.github_user(), R(
+            result = subprocess.run(
+                ['gh', 'api', 'user', '--jq', '.login'],
+                capture_output=True, text=True, check=True
+            )
+            assert handle == result.stdout.strip(), R(
                 'Branch name does not match GitHub user', handle)
-
-    @cached_property
-    def branch_handle(self) -> str:
-        m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.branch)
-        assert m is not None, R('Cannot extract handle from branch name', self.branch)
-        return m.group(1)
-
-    def github_user(self) -> str:
-        result = subprocess.run(
-            ['gh', 'api', 'user', '--jq', '.login'],
-            capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
 
     def handle_issue_references_in_body(self) -> None:
         self.body, n = re.subn(
