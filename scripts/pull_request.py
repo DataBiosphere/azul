@@ -134,13 +134,12 @@ class Main:
         title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
 
         log.info('Checking for existing PR …')
-        existing_pr = self._existing_pr()
         template = self._template_path.read_text()
 
-        if existing_pr is None:
+        if self._existing_pr is None:
             self.body = template
         else:
-            self.body = existing_pr['body']
+            self.body = self._existing_pr['body']
             expected_comment = template.split('-->', maxsplit=1)[0]
             assert self.body.startswith(expected_comment), R(
                 'Existing PR was created with a different template')
@@ -155,10 +154,10 @@ class Main:
         assert m is not None, R('Target branch task not found in template')
         target_branch = m.group(1)
         target_branch_task = r'Target branch is `' + re.escape(target_branch) + '`'
-        if existing_pr is None:
+        if self._existing_pr is None:
             self._check_task(target_branch_task)
         else:
-            base = existing_pr['baseRefName']
+            base = self._existing_pr['baseRefName']
             if base == target_branch:
                 self._check_task(target_branch_task)
             else:
@@ -251,7 +250,7 @@ class Main:
         self._check_task(r'Status of linked issues? is \*In progress\*')
         self._check_task('PR description links to linked issues?')
 
-        if existing_pr is None:
+        if self._existing_pr is None:
             log.info('Creating PR …')
             cmd = [
                 'gh', 'pr', 'create',
@@ -269,7 +268,7 @@ class Main:
                 sys.exit(result.returncode)
             pr_url = result.stdout.strip()
         else:
-            pr_url = existing_pr['url']
+            pr_url = self._existing_pr['url']
             log.info('Updating PR …')
             cmd = [
                 'gh', 'pr', 'edit', pr_url,
@@ -514,6 +513,7 @@ class Main:
         prefix = 'Fix: ' if fix else ''
         return f'{prefix}{issue_title}{suffix} ({", ".join(issue_refs)})'
 
+    @cached_property
     def _existing_pr(self) -> dict | None:
         result = subprocess.run(
             ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
