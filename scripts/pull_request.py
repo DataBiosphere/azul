@@ -371,18 +371,14 @@ class Main:
         )
 
     def node_id(self, url: str) -> str:
-        item_type = self.gh_item_type(url)
+        path_kind = furl(url).path.segments[2]
+        item_type = {'pull': 'pr', 'issues': 'issue'}.get(path_kind)
+        assert item_type is not None, R('Cannot determine issue or PR from URL', url)
         result = subprocess.run(
             ['gh', item_type, 'view', url, '--json', 'id', '--jq', '.id'],
             capture_output=True, text=True, check=True
         )
         return result.stdout.strip()
-
-    def gh_item_type(self, url: str) -> str:
-        path_kind = furl(url).path.segments[2]
-        result = {'pull': 'pr', 'issues': 'issue'}.get(path_kind)
-        assert result is not None, R('Cannot determine issue or PR from URL', url)
-        return result
 
     def set_status(self, node_id: str, status: str) -> None:
         query = fd('''
