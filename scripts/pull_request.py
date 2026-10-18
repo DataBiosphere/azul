@@ -134,7 +134,7 @@ class Main:
         title = self._pr_title(issue_refs, issue.title, fix, suffix=self._title_suffix)
 
         log.info('Checking for existing PR …')
-        template = self._template_path.read_text()
+        template = self._template
 
         if self._existing_pr is None:
             self.body = template
@@ -292,6 +292,10 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    @cached_property
+    def _template(self) -> str:
+        return self._template_path.read_text()
 
     @cached_property
     def _issue_numbers(self) -> list[int]:
