@@ -138,12 +138,8 @@ class Main:
         return args
 
     def main(self):
-        if self._args.fix is None:
-            fix = self._issue.type == 'Defect'
-        else:
-            fix = self._args.fix
         issue_refs = [issue.ref for issue in self._issues]
-        title = self._pr_title(issue_refs, self._issue.title, fix)
+        title = self._pr_title(issue_refs, self._issue.title, self._fix)
 
         self._reference_issues(issue_refs)
 
@@ -300,6 +296,13 @@ class Main:
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
         return [self._issue_info(issue_number) for issue_number in issue_numbers]
+
+    @cached_property
+    def _fix(self) -> bool:
+        if self._args.fix is None:
+            return self._issue.type == 'Defect'
+        else:
+            return self._args.fix
 
     @cached_property
     def _issue(self) -> _IssueInfo:
