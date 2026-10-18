@@ -262,11 +262,7 @@ class Main:
 
     def handle_deploy(self):
         if self.args.no_deploy:
-            deploy_labels = re.findall(
-                r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(deploy:\w+)`',
-                self.body,
-                flags=re.MULTILINE
-            )
+            deploy_labels = self.labels('deploy')
             for label in deploy_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(deploy_labels)
@@ -276,22 +272,14 @@ class Main:
             assert not self.has_commit_tag('r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
             self.check_item(r'Added `r` tag to commit title.*')
-            reindex_labels = re.findall(
-                r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(reindex:\w+)`',
-                self.body,
-                flags=re.MULTILINE
-            )
+            reindex_labels = self.labels('reindex')
             for label in reindex_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(reindex_labels)
 
     def handle_mirror(self):
         if self.args.no_mirror:
-            mirror_labels = re.findall(
-                r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(mirror:\w+)`',
-                self.body,
-                flags=re.MULTILINE
-            )
+            mirror_labels = self.labels('mirror')
             for label in mirror_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(mirror_labels)
@@ -379,6 +367,14 @@ class Main:
         )
         assert n > 0, R('Item not found in template', item)
         assert n < 2, R('Multiple matching items found', item)
+
+    def labels(self, prefix: str) -> list[str]:
+        item = r'This PR is labeled `(' + prefix + r':\w+)`'
+        return re.findall(
+            r'^- \[[ x]] ' + self.item_label + item,
+            self.body,
+            flags=re.MULTILINE
+        )
 
     def node_id(self, url: str) -> str:
         item_type = self.gh_item_type(url)
