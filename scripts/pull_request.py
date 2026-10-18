@@ -118,23 +118,23 @@ class Main:
     def main(self):
         self._check_working_copy()
         log.info('Checking remote branch …')
-        self._check_remote_branch(self._branch)
+        self._check_remote_branch()
         title_suffix = ''
         issue_numbers = self._args.issues
         if self._args.type is None:
             template_path = _project_root / '.github' / 'pull_request_template.md'
             if issue_numbers is None:
-                issue_numbers = self._issue_numbers(self._branch)
+                issue_numbers = self._issue_numbers()
         elif self._args.type == 'upgrade':
             template_path = _template_dir / 'upgrade.md'
             if issue_numbers is None:
-                date = self._upgrade_date(self._branch)
+                date = self._upgrade_date()
                 log.info('Searching for upgrade issue …')
                 issue_numbers = [self._issue_number_by_title(
                     f'Upgrade software dependencies {date}'
                 )]
         elif self._args.type == 'promotion':
-            date, target = self._promotion_date_and_target(self._branch)
+            date, target = self._promotion_date_and_target()
             template_path = _template_dir / f'{target}-promotion.md'
             if issue_numbers is None:
                 log.info('Searching for promotion issue …')
@@ -266,7 +266,7 @@ class Main:
         self._check_task('Name of PR branch matches .*')
 
         if self._args.type is None:
-            handle = self._branch_handle(self._branch)
+            handle = self._branch_handle()
             log.info('Verifying GitHub user …')
             assert handle == self._github_user(), R(
                 'Branch name does not match GitHub user', handle)
@@ -334,13 +334,13 @@ class Main:
         if result.stdout.strip():
             log.warning('Working copy has uncommitted changes')
 
-    def _check_remote_branch(self, branch: str) -> None:
+    def _check_remote_branch(self) -> None:
         result = subprocess.run(
-            ['git', 'ls-remote', '--heads', 'github', branch],
+            ['git', 'ls-remote', '--heads', 'github', self._branch],
             capture_output=True, text=True, check=True
         )
         assert result.stdout.strip(), R(
-            'Branch does not exist on the github remote', branch)
+            'Branch does not exist on the github remote', self._branch)
 
         remote_sha = result.stdout.split()[0]
         local_sha = subprocess.run(
@@ -350,7 +350,7 @@ class Main:
 
         if local_sha != remote_sha:
             subprocess.run(
-                ['git', 'fetch', 'github', branch],
+                ['git', 'fetch', 'github', self._branch],
                 capture_output=True, text=True, check=True
             )
             result = subprocess.run(
@@ -379,14 +379,15 @@ class Main:
             for title in result.stdout.splitlines()
         )
 
-    def _issue_numbers(self, branch: str) -> list[int]:
-        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', branch)
-        assert m is not None, R('Cannot extract issue numbers from branch name', branch)
+    def _issue_numbers(self) -> list[int]:
+        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self._branch)
+        assert m is not None, R(
+            'Cannot extract issue numbers from branch name', self._branch)
         return [int(number) for number in m.group(1).split('-')]
 
-    def _upgrade_date(self, branch: str) -> str:
-        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', branch)
-        assert m is not None, R('Cannot extract date from branch name', branch)
+    def _upgrade_date(self) -> str:
+        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self._branch)
+        assert m is not None, R('Cannot extract date from branch name', self._branch)
         return m.group(1)
 
     def _issue_number_by_title(self, title: str) -> int:
@@ -405,9 +406,10 @@ class Main:
                 return issue['number']
         assert False, R('Issue not found with title', title)
 
-    def _promotion_date_and_target(self, branch: str) -> tuple[str, str]:
-        m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', branch)
-        assert m is not None, R('Cannot extract date and target from branch name', branch)
+    def _promotion_date_and_target(self) -> tuple[str, str]:
+        m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', self._branch)
+        assert m is not None, R(
+            'Cannot extract date and target from branch name', self._branch)
         return m.group(1), m.group(2)
 
     @attrs.frozen
@@ -527,9 +529,9 @@ class Main:
         assert n > 0, R('Task item not found in template', task)
         assert n < 2, R('Multiple matching task items found', task)
 
-    def _branch_handle(self, branch: str) -> str:
-        m = re.fullmatch(r'issues/([^/]+)/\d+-.*', branch)
-        assert m is not None, R('Cannot extract handle from branch name', branch)
+    def _branch_handle(self) -> str:
+        m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self._branch)
+        assert m is not None, R('Cannot extract handle from branch name', self._branch)
         return m.group(1)
 
     def _github_user(self) -> str:
