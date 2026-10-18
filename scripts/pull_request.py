@@ -157,245 +157,6 @@ class Main:
             log.info('Setting status of issue %s …', issue.ref)
             self.set_status(issue_node_id, 'In Progress')
 
-    @property
-    def body(self) -> str:
-        if self._body is None:
-            if self.existing_pr is None:
-                self._body = self.template
-            else:
-                self._body = json_str(self.existing_pr['body'])
-                expected_comment = self.template.split('-->', maxsplit=1)[0]
-                assert self._body.startswith(expected_comment), R(
-                    'Existing PR was created with a different template')
-            # Normalize line endings from GitHub API responses
-            self._body = '\n'.join(self._body.splitlines())
-        return self._body
-
-    @body.setter
-    def body(self, body: str) -> None:
-        self._body = body
-
-    def update_pr(self, pr_url: str) -> None:
-        log.info('Updating PR …')
-        cmd = [
-            'gh', 'pr', 'edit', pr_url,
-            '--title', self.pr_title,
-            '--body', self.body,
-            '--add-assignee', '@me',
-        ]
-        if self.labels_to_add:
-            cmd.extend(['--add-label', ','.join(self.labels_to_add)])
-        if self.labels_to_remove:
-            cmd.extend(['--remove-label', ','.join(self.labels_to_remove)])
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        log.info('PR URL is %r', pr_url)
-
-    def create_pr(self) -> str:
-        log.info('Creating PR …')
-        cmd = [
-            'gh', 'pr', 'create',
-            '--base', self.target_branch,
-            '--title', self.pr_title,
-            '--body', self.body,
-            '--assignee', '@me',
-        ]
-        if self.labels_to_add:
-            cmd.extend(['--label', ','.join(self.labels_to_add)])
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        # The output includes the PR URL, so we don't need to log it separately
-        sys.stdout.write(result.stdout)
-        sys.stderr.write(result.stderr)
-        if result.returncode != 0:
-            sys.exit(result.returncode)
-        pr_url = result.stdout.strip()
-        return pr_url
-
-    def verify_user(self):
-        if self.args.type is None:
-            handle = self.branch_handle
-            log.info('Verifying GitHub user …')
-            assert handle == self.github_user(), R(
-                'Branch name does not match GitHub user', handle)
-
-    def handle_reqs(self):
-        if self.args.no_reqs:
-            assert not self.has_commit_tag('R'), R(
-                '--no-reqs cannot be used when a commit is tagged `R`')
-            self.check_item(r'Ran `make requirements_update`.*')
-            self.check_item(r'Added `R` tag to commit title.*')
-            self.check_item(r'This PR is labeled `reqs`.*')
-            self.labels_to_remove.append('reqs')
-
-    def handle_hotfix(self):
-        if self.args.no_hotfix:
-            assert not self.has_commit_tag('F'), R(
-                '--no-hotfix cannot be used when a commit is tagged `F`')
-            self.check_item(r'Added `F` tag to main commit title.*')
-            self.check_item(r'Reverted the temporary hotfixes for any linked issues.*')
-
-    def handle_api(self):
-        if self.args.no_api:
-            assert not self.has_commit_tag('a'), R(
-                '--no-api cannot be used when a commit is tagged `a`')
-            assert not self.has_commit_tag('A'), R(
-                '--no-api cannot be used when a commit is tagged `A`')
-            self.check_item(r'This PR and its linked issues are labeled `API`.*')
-            self.check_item(r'Added `a` \(`A`\) tag to commit title.*')
-            self.check_item(r'Updated REST API version number in `app\.py`.*')
-            self.labels_to_remove.append('API')
-
-    def handle_mirror(self):
-        if self.args.no_mirror:
-            mirror_labels = self.mirror_labels()
-            for label in mirror_labels:
-                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
-            self.labels_to_remove.extend(mirror_labels)
-
-    def handle_reindex(self):
-        if self.args.no_reindex:
-            assert not self.has_commit_tag('r'), R(
-                '--no-reindex cannot be used when a commit is tagged `r`')
-            self.check_item(r'Added `r` tag to commit title.*')
-            reindex_labels = self.reindex_labels()
-            for label in reindex_labels:
-                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
-            self.labels_to_remove.extend(reindex_labels)
-
-    def handle_deploy(self):
-        if self.args.no_deploy:
-            deploy_labels = self.deploy_labels()
-            for label in deploy_labels:
-                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
-            self.labels_to_remove.extend(deploy_labels)
-
-    def handle_upgrades(self):
-        has_u_tag = self.has_commit_tag('u')
-        assert not (has_u_tag and self.args.no_upgrade), R(
-            '--no-upgrade cannot be used when a commit is tagged `u`')
-        checked = has_u_tag or self.args.no_upgrade
-        if self.args.type != 'promotion':
-            self.check_item(r'Added `u` tag to commit title.*', checked=checked)
-        self.check_item(r'This PR is labeled `upgrade`.*', checked=checked)
-        if has_u_tag:
-            self.labels_to_add.append('upgrade')
-        else:
-            self.labels_to_remove.append('upgrade')
-        if self.args.no_upgrade:
-            self.check_item(r'Ran `make docker_images\.json`.*')
-            self.check_item(r'Documented upgrading of deployments in UPGRADING\.rst.*')
-
-    def handle_partiality(self):
-        if self.args.no_partial:
-            assert not self.has_commit_tag('p'), R(
-                '--no-partial cannot be used when a commit is tagged `p`')
-            self.check_item(r'Added `p` tag to titles of partial commits.*')
-            self.check_item(r'This PR is labeled `partial`.*')
-            self.check_item(r'This PR partially resolves .*')
-            self.labels_to_remove.append('partial')
-
-    def handle_target_branch(self):
-        item = r'Target branch is `' + re.escape(self.target_branch) + '`'
-        if self.existing_pr is None:
-            self.check_item(item)
-        else:
-            base = self.existing_pr['baseRefName']
-            if base == self.target_branch:
-                self.check_item(item)
-            else:
-                log.warning('Target branch is %r, expected %r', base, self.target_branch)
-                self.check_item(item, checked=False)
-
-    @cached_property
-    def template(self) -> str:
-        return self.template_path.read_text()
-
-    @cached_property
-    def target_branch(self) -> str:
-        m = re.search(
-            r'^- \[[ x]] ' + self.item_label + r'Target branch is `(.+?)`$',
-            self.template,
-            flags=re.MULTILINE
-        )
-        assert m is not None, R('Target branch item not found in template')
-        return m.group(1)
-
-    @cached_property
-    def issues(self) -> list[IssueInfo]:
-        issue_numbers = self.issue_numbers
-        log.info('Fetching issue %s …',
-                 join_grammatically([f'#{n}' for n in issue_numbers]))
-        return [self.issue_info(issue_number) for issue_number in issue_numbers]
-
-    @cached_property
-    def issue_refs(self) -> list[str]:
-        return [issue.ref for issue in self.issues]
-
-    @cached_property
-    def fix(self) -> bool:
-        if self.args.fix is None:
-            return self.issue.type == 'Defect'
-        else:
-            return self.args.fix
-
-    @cached_property
-    def issue(self) -> IssueInfo:
-        # The PR is assumed to resolve every one of the linked issues. The first
-        # of them determines the PR title.
-        return self.issues[0]
-
-    @cached_property
-    def issue_numbers(self) -> list[int]:
-        issue_numbers = self.args.issues
-        if issue_numbers is None:
-            if self.args.type is None:
-                issue_numbers = self.issue_numbers_from_branch_name
-            elif self.args.type == 'upgrade':
-                date = self.upgrade_date
-                log.info('Searching for upgrade issue …')
-                issue_numbers = [self.issue_number_by_title(
-                    f'Upgrade software dependencies {date}'
-                )]
-            else:
-                date, target = self.promotion_date_and_target
-                log.info('Searching for promotion issue …')
-                issue_numbers = [self.issue_number_by_title(
-                    f'Promotion {date}'
-                )]
-        return issue_numbers
-
-    @cached_property
-    def title_suffix(self) -> str:
-        if self.args.type == 'promotion':
-            date, target = self.promotion_date_and_target
-            title_suffix = f' {target}'
-        else:
-            title_suffix = ''
-        return title_suffix
-
-    @cached_property
-    def template_path(self) -> Path:
-        project_root = Path(__file__).resolve().parent.parent
-        github_dir = project_root / '.github'
-        template_dir = github_dir / 'PULL_REQUEST_TEMPLATE'
-        if self.args.type is None:
-            template_path = github_dir / 'pull_request_template.md'
-        elif self.args.type == 'upgrade':
-            template_path = template_dir / 'upgrade.md'
-        elif self.args.type == 'promotion':
-            date, target = self.promotion_date_and_target
-            template_path = template_dir / f'{target}-promotion.md'
-        else:
-            assert False, R('Unsupported template', self.args.type)
-        return template_path
-
-    @cached_property
-    def branch(self) -> str:
-        result = subprocess.run(
-            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-            capture_output=True, text=True, check=True
-        )
-        return result.stdout.strip()
-
     def verify_working_copy(self) -> None:
         result = subprocess.run(
             ['git', 'status', '--porcelain'],
@@ -433,35 +194,423 @@ class Main:
             else:
                 log.warning('Remote and local branch diverge. A force push is needed')
 
-    def commit_title_tags(self, title: str) -> set[str]:
-        m = re.match(r'^\[([^]]*)]', title)
-        if m is None:
-            return set()
-        else:
-            return set(m.group(1).split())
+    def verify_user(self):
+        if self.args.type is None:
+            handle = self.branch_handle
+            log.info('Verifying GitHub user …')
+            assert handle == self.github_user(), R(
+                'Branch name does not match GitHub user', handle)
 
-    def has_commit_tag(self, tag: str) -> bool:
+    @cached_property
+    def branch_handle(self) -> str:
+        m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.branch)
+        assert m is not None, R('Cannot extract handle from branch name', self.branch)
+        return m.group(1)
+
+    def github_user(self) -> str:
         result = subprocess.run(
-            ['git', 'log', '--format=%s', f'{self.target_branch}..HEAD'],
+            ['gh', 'api', 'user', '--jq', '.login'],
             capture_output=True, text=True, check=True
         )
-        return any(
-            tag in self.commit_title_tags(title)
-            for title in result.stdout.splitlines()
+        return result.stdout.strip()
+
+    def handle_issue_references_in_body(self) -> None:
+        self.body, n = re.subn(
+            r'^(Linked issues?: *).*$',
+            lambda m: m.group(1) + ', '.join(self.issue_refs),
+            self.body, flags=re.MULTILINE
+        )
+        assert n > 0, R('Linked issues reference not found in body')
+        assert n < 2, R('Multiple linked issues references found in body')
+
+    def handle_target_branch(self):
+        item = r'Target branch is `' + re.escape(self.target_branch) + '`'
+        if self.existing_pr is None:
+            self.check_item(item)
+        else:
+            base = self.existing_pr['baseRefName']
+            if base == self.target_branch:
+                self.check_item(item)
+            else:
+                log.warning('Target branch is %r, expected %r', base, self.target_branch)
+                self.check_item(item, checked=False)
+
+    def handle_partiality(self):
+        if self.args.no_partial:
+            assert not self.has_commit_tag('p'), R(
+                '--no-partial cannot be used when a commit is tagged `p`')
+            self.check_item(r'Added `p` tag to titles of partial commits.*')
+            self.check_item(r'This PR is labeled `partial`.*')
+            self.check_item(r'This PR partially resolves .*')
+            self.labels_to_remove.append('partial')
+
+    def handle_upgrades(self):
+        has_u_tag = self.has_commit_tag('u')
+        assert not (has_u_tag and self.args.no_upgrade), R(
+            '--no-upgrade cannot be used when a commit is tagged `u`')
+        checked = has_u_tag or self.args.no_upgrade
+        if self.args.type != 'promotion':
+            self.check_item(r'Added `u` tag to commit title.*', checked=checked)
+        self.check_item(r'This PR is labeled `upgrade`.*', checked=checked)
+        if has_u_tag:
+            self.labels_to_add.append('upgrade')
+        else:
+            self.labels_to_remove.append('upgrade')
+        if self.args.no_upgrade:
+            self.check_item(r'Ran `make docker_images\.json`.*')
+            self.check_item(r'Documented upgrading of deployments in UPGRADING\.rst.*')
+
+    def handle_deploy(self):
+        if self.args.no_deploy:
+            deploy_labels = self.deploy_labels()
+            for label in deploy_labels:
+                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
+            self.labels_to_remove.extend(deploy_labels)
+
+    def deploy_labels(self) -> list[str]:
+        return re.findall(
+            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(deploy:\w+)`',
+            self.body,
+            flags=re.MULTILINE
+        )
+
+    def handle_reindex(self):
+        if self.args.no_reindex:
+            assert not self.has_commit_tag('r'), R(
+                '--no-reindex cannot be used when a commit is tagged `r`')
+            self.check_item(r'Added `r` tag to commit title.*')
+            reindex_labels = self.reindex_labels()
+            for label in reindex_labels:
+                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
+            self.labels_to_remove.extend(reindex_labels)
+
+    def reindex_labels(self) -> list[str]:
+        return re.findall(
+            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(reindex:\w+)`',
+            self.body,
+            flags=re.MULTILINE
+        )
+
+    def handle_mirror(self):
+        if self.args.no_mirror:
+            mirror_labels = self.mirror_labels()
+            for label in mirror_labels:
+                self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
+            self.labels_to_remove.extend(mirror_labels)
+
+    def mirror_labels(self) -> list[str]:
+        return re.findall(
+            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(mirror:\w+)`',
+            self.body,
+            flags=re.MULTILINE
+        )
+
+    def handle_api(self):
+        if self.args.no_api:
+            assert not self.has_commit_tag('a'), R(
+                '--no-api cannot be used when a commit is tagged `a`')
+            assert not self.has_commit_tag('A'), R(
+                '--no-api cannot be used when a commit is tagged `A`')
+            self.check_item(r'This PR and its linked issues are labeled `API`.*')
+            self.check_item(r'Added `a` \(`A`\) tag to commit title.*')
+            self.check_item(r'Updated REST API version number in `app\.py`.*')
+            self.labels_to_remove.append('API')
+
+    def handle_hotfix(self):
+        if self.args.no_hotfix:
+            assert not self.has_commit_tag('F'), R(
+                '--no-hotfix cannot be used when a commit is tagged `F`')
+            self.check_item(r'Added `F` tag to main commit title.*')
+            self.check_item(r'Reverted the temporary hotfixes for any linked issues.*')
+
+    def handle_reqs(self):
+        if self.args.no_reqs:
+            assert not self.has_commit_tag('R'), R(
+                '--no-reqs cannot be used when a commit is tagged `R`')
+            self.check_item(r'Ran `make requirements_update`.*')
+            self.check_item(r'Added `R` tag to commit title.*')
+            self.check_item(r'This PR is labeled `reqs`.*')
+            self.labels_to_remove.append('reqs')
+
+    @cached_property
+    def existing_pr(self) -> JSON | None:
+        log.info('Checking for existing PR …')
+        result = subprocess.run(
+            ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
+            capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            return None
+        return json.loads(result.stdout)
+
+    def create_pr(self) -> str:
+        log.info('Creating PR …')
+        cmd = [
+            'gh', 'pr', 'create',
+            '--base', self.target_branch,
+            '--title', self.pr_title,
+            '--body', self.body,
+            '--assignee', '@me',
+        ]
+        if self.labels_to_add:
+            cmd.extend(['--label', ','.join(self.labels_to_add)])
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        # The output includes the PR URL, so we don't need to log it separately
+        sys.stdout.write(result.stdout)
+        sys.stderr.write(result.stderr)
+        if result.returncode != 0:
+            sys.exit(result.returncode)
+        pr_url = result.stdout.strip()
+        return pr_url
+
+    def update_pr(self, pr_url: str) -> None:
+        log.info('Updating PR …')
+        cmd = [
+            'gh', 'pr', 'edit', pr_url,
+            '--title', self.pr_title,
+            '--body', self.body,
+            '--add-assignee', '@me',
+        ]
+        if self.labels_to_add:
+            cmd.extend(['--add-label', ','.join(self.labels_to_add)])
+        if self.labels_to_remove:
+            cmd.extend(['--remove-label', ','.join(self.labels_to_remove)])
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        log.info('PR URL is %r', pr_url)
+
+    def check_item(self, item: str, checked: bool = True) -> None:
+        mark = 'x' if checked else ' '
+        self.body, n = re.subn(
+            r'^- \[[ x]] (' + self.item_label + item + ')$',
+            r'- [' + mark + r'] \1',
+            self.body,
+            flags=re.MULTILINE
+        )
+        assert n > 0, R('Item not found in template', item)
+        assert n < 2, R('Multiple matching items found', item)
+
+    def node_id(self, url: str) -> str:
+        item_type = self.gh_item_type(url)
+        result = subprocess.run(
+            ['gh', item_type, 'view', url, '--json', 'id', '--jq', '.id'],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+
+    def gh_item_type(self, url: str) -> str:
+        path_kind = furl(url).path.segments[2]
+        result = {'pull': 'pr', 'issues': 'issue'}.get(path_kind)
+        assert result is not None, R('Cannot determine issue or PR from URL', url)
+        return result
+
+    def set_status(self, node_id: str, status: str) -> None:
+        query = fd('''
+            mutation {{
+                addProjectV2ItemById(input: {{
+                    projectId: "{project_id}",
+                    contentId: "{node_id}"
+                }}) {{ item {{ id }} }}
+            }}
+        ''', project_id=self.project_id, node_id=node_id)
+        result = subprocess.run(
+            ['gh', 'api', 'graphql', '-f', f'query={query}'],
+            capture_output=True, text=True, check=True
+        )
+        result = json.loads(result.stdout)
+        item_id = result['data']['addProjectV2ItemById']['item']['id']
+
+        option_id = self.status_option_id(status)
+
+        query = fd('''
+            mutation {{
+                updateProjectV2ItemFieldValue(input: {{
+                    projectId: "{project_id}",
+                    itemId: "{item_id}",
+                    fieldId: "{field_id}",
+                    value: {{singleSelectOptionId: "{option_id}"}}
+                }}) {{ projectV2Item {{ id }} }}
+            }}
+        ''', project_id=self.project_id, item_id=item_id,
+                   field_id=self.status_field['id'], option_id=option_id)
+        subprocess.run(
+            ['gh', 'api', 'graphql', '-f', f'query={query}'],
+            capture_output=True, text=True, check=True
         )
 
     @cached_property
-    def issue_numbers_from_branch_name(self) -> list[int]:
-        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self.branch)
-        assert m is not None, R(
-            'Cannot extract issue numbers from branch name', self.branch)
-        return [int(number) for number in m.group(1).split('-')]
+    def project_id(self) -> str:
+        query = fd('''
+            {{
+                organization(login: "{owner}") {{
+                    projectV2(number: {number}) {{ id }}
+                }}
+            }}
+        ''', owner=self.project_owner, number=self.project['number'])
+        result = subprocess.run(
+            ['gh', 'api', 'graphql', '-f', f'query={query}'],
+            capture_output=True, text=True, check=True
+        )
+        return json.loads(result.stdout)['data']['organization']['projectV2']['id']
+
+    def status_option_id(self, status: str) -> str:
+        for option in self.status_field['options']:
+            if option['name'] == status:
+                return option['id']
+        assert False, R('Status option not found', status)
 
     @cached_property
-    def upgrade_date(self) -> str:
-        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self.branch)
-        assert m is not None, R('Cannot extract date from branch name', self.branch)
+    def status_field(self) -> dict:
+        result = subprocess.run(
+            [
+                'gh', 'project', 'field-list', str(self.project['number']),
+                '--owner', self.project_owner,
+                '--format', 'json',
+            ],
+            capture_output=True, text=True, check=True
+        )
+        fields = json.loads(result.stdout)['fields']
+        for field in fields:
+            if field['name'] == 'Status':
+                return field
+        assert False, R('Status field not found in project')
+
+    @cached_property
+    def project(self) -> dict:
+        result = subprocess.run(
+            [
+                'gh', 'project', 'list',
+                '--owner', self.project_owner,
+                '--format', 'json',
+            ],
+            capture_output=True, text=True, check=True
+        )
+        projects = json.loads(result.stdout)['projects']
+        for project in projects:
+            if project['title'] == self.project_title:
+                return project
+        assert False, R('Project not found', self.project_title)
+
+    @cached_property
+    def issues(self) -> list[IssueInfo]:
+        issue_numbers = self.issue_numbers
+        log.info('Fetching issue %s …',
+                 join_grammatically([f'#{n}' for n in issue_numbers]))
+        return [self.issue_info(issue_number) for issue_number in issue_numbers]
+
+    def link_issue(self, issue_node_id: str, pr_node_id: str) -> None:
+        query = fd('''
+            mutation {{
+                addCloseIssueReferences(input: {{
+                    issueId: "{issue_id}",
+                    pullRequestIds: ["{pr_id}"]
+                }}) {{ issue {{ id }} }}
+            }}
+        ''', issue_id=issue_node_id, pr_id=pr_node_id)
+        subprocess.run(
+            ['gh', 'api', 'graphql', '-f', f'query={query}'],
+            capture_output=True, text=True, check=True
+        )
+
+    @property
+    def body(self) -> str:
+        if self._body is None:
+            if self.existing_pr is None:
+                self._body = self.template
+            else:
+                self._body = json_str(self.existing_pr['body'])
+                expected_comment = self.template.split('-->', maxsplit=1)[0]
+                assert self._body.startswith(expected_comment), R(
+                    'Existing PR was created with a different template')
+            # Normalize line endings from GitHub API responses
+            self._body = '\n'.join(self._body.splitlines())
+        return self._body
+
+    @body.setter
+    def body(self, body: str) -> None:
+        self._body = body
+
+    @cached_property
+    def target_branch(self) -> str:
+        m = re.search(
+            r'^- \[[ x]] ' + self.item_label + r'Target branch is `(.+?)`$',
+            self.template,
+            flags=re.MULTILINE
+        )
+        assert m is not None, R('Target branch item not found in template')
         return m.group(1)
+
+    @cached_property
+    def template(self) -> str:
+        return self.template_path.read_text()
+
+    @cached_property
+    def template_path(self) -> Path:
+        project_root = Path(__file__).resolve().parent.parent
+        github_dir = project_root / '.github'
+        template_dir = github_dir / 'PULL_REQUEST_TEMPLATE'
+        if self.args.type is None:
+            template_path = github_dir / 'pull_request_template.md'
+        elif self.args.type == 'upgrade':
+            template_path = template_dir / 'upgrade.md'
+        elif self.args.type == 'promotion':
+            date, target = self.promotion_date_and_target
+            template_path = template_dir / f'{target}-promotion.md'
+        else:
+            assert False, R('Unsupported template', self.args.type)
+        return template_path
+
+    @cached_property
+    def pr_title(self) -> str:
+        prefix = 'Fix: ' if self.fix else ''
+        suffix = self.title_suffix
+        issue_refs = ', '.join(self.issue_refs)
+        return f'{prefix}{self.issue.title}{suffix} ({issue_refs})'
+
+    @cached_property
+    def fix(self) -> bool:
+        if self.args.fix is None:
+            return self.issue.type == 'Defect'
+        else:
+            return self.args.fix
+
+    @cached_property
+    def title_suffix(self) -> str:
+        if self.args.type == 'promotion':
+            date, target = self.promotion_date_and_target
+            title_suffix = f' {target}'
+        else:
+            title_suffix = ''
+        return title_suffix
+
+    @cached_property
+    def issue(self) -> IssueInfo:
+        # The PR is assumed to resolve every one of the linked issues. The first
+        # of them determines the PR title.
+        return self.issues[0]
+
+    @cached_property
+    def issue_refs(self) -> list[str]:
+        return [issue.ref for issue in self.issues]
+
+    @cached_property
+    def issue_numbers(self) -> list[int]:
+        issue_numbers = self.args.issues
+        if issue_numbers is None:
+            if self.args.type is None:
+                issue_numbers = self.issue_numbers_from_branch_name
+            elif self.args.type == 'upgrade':
+                date = self.upgrade_date
+                log.info('Searching for upgrade issue …')
+                issue_numbers = [self.issue_number_by_title(
+                    f'Upgrade software dependencies {date}'
+                )]
+            else:
+                date, target = self.promotion_date_and_target
+                log.info('Searching for promotion issue …')
+                issue_numbers = [self.issue_number_by_title(
+                    f'Promotion {date}'
+                )]
+        return issue_numbers
 
     def issue_number_by_title(self, title: str) -> int:
         result = subprocess.run(
@@ -478,13 +627,6 @@ class Main:
             if issue['title'] == title:
                 return issue['number']
         assert False, R('Issue not found with title', title)
-
-    @cached_property
-    def promotion_date_and_target(self) -> tuple[str, str]:
-        m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', self.branch)
-        assert m is not None, R(
-            'Cannot extract date and target from branch name', self.branch)
-        return m.group(1), m.group(2)
 
     @attrs.frozen
     class IssueInfo:
@@ -559,191 +701,49 @@ class Main:
         )
 
     @cached_property
-    def pr_title(self) -> str:
-        prefix = 'Fix: ' if self.fix else ''
-        suffix = self.title_suffix
-        issue_refs = ', '.join(self.issue_refs)
-        return f'{prefix}{self.issue.title}{suffix} ({issue_refs})'
+    def issue_numbers_from_branch_name(self) -> list[int]:
+        m = re.fullmatch(r'issues/[^/]+/(\d+(?:-\d+)*)-.*', self.branch)
+        assert m is not None, R(
+            'Cannot extract issue numbers from branch name', self.branch)
+        return [int(number) for number in m.group(1).split('-')]
 
     @cached_property
-    def existing_pr(self) -> JSON | None:
-        log.info('Checking for existing PR …')
-        result = subprocess.run(
-            ['gh', 'pr', 'view', '--json', 'url,body,baseRefName'],
-            capture_output=True, text=True
-        )
-        if result.returncode != 0:
-            return None
-        return json.loads(result.stdout)
-
-    def handle_issue_references_in_body(self) -> None:
-        self.body, n = re.subn(
-            r'^(Linked issues?: *).*$',
-            lambda m: m.group(1) + ', '.join(self.issue_refs),
-            self.body, flags=re.MULTILINE
-        )
-        assert n > 0, R('Linked issues reference not found in body')
-        assert n < 2, R('Multiple linked issues references found in body')
-
-    def reindex_labels(self) -> list[str]:
-        return re.findall(
-            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(reindex:\w+)`',
-            self.body,
-            flags=re.MULTILINE
-        )
-
-    def mirror_labels(self) -> list[str]:
-        return re.findall(
-            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(mirror:\w+)`',
-            self.body,
-            flags=re.MULTILINE
-        )
-
-    def deploy_labels(self) -> list[str]:
-        return re.findall(
-            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(deploy:\w+)`',
-            self.body,
-            flags=re.MULTILINE
-        )
-
-    def check_item(self, item: str, checked: bool = True) -> None:
-        mark = 'x' if checked else ' '
-        self.body, n = re.subn(
-            r'^- \[[ x]] (' + self.item_label + item + ')$',
-            r'- [' + mark + r'] \1',
-            self.body,
-            flags=re.MULTILINE
-        )
-        assert n > 0, R('Item not found in template', item)
-        assert n < 2, R('Multiple matching items found', item)
-
-    @cached_property
-    def branch_handle(self) -> str:
-        m = re.fullmatch(r'issues/([^/]+)/\d+-.*', self.branch)
-        assert m is not None, R('Cannot extract handle from branch name', self.branch)
+    def upgrade_date(self) -> str:
+        m = re.fullmatch(r'upgrades/(\d{4}-\d{2}-\d{2})', self.branch)
+        assert m is not None, R('Cannot extract date from branch name', self.branch)
         return m.group(1)
 
-    def github_user(self) -> str:
+    @cached_property
+    def promotion_date_and_target(self) -> tuple[str, str]:
+        m = re.fullmatch(r'promotions/(\d{4}-\d{2}-\d{2})-(.*)', self.branch)
+        assert m is not None, R(
+            'Cannot extract date and target from branch name', self.branch)
+        return m.group(1), m.group(2)
+
+    @cached_property
+    def branch(self) -> str:
         result = subprocess.run(
-            ['gh', 'api', 'user', '--jq', '.login'],
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
             capture_output=True, text=True, check=True
         )
         return result.stdout.strip()
 
-    def gh_item_type(self, url: str) -> str:
-        path_kind = furl(url).path.segments[2]
-        result = {'pull': 'pr', 'issues': 'issue'}.get(path_kind)
-        assert result is not None, R('Cannot determine issue or PR from URL', url)
-        return result
-
-    def node_id(self, url: str) -> str:
-        item_type = self.gh_item_type(url)
+    def has_commit_tag(self, tag: str) -> bool:
         result = subprocess.run(
-            ['gh', item_type, 'view', url, '--json', 'id', '--jq', '.id'],
+            ['git', 'log', '--format=%s', f'{self.target_branch}..HEAD'],
             capture_output=True, text=True, check=True
         )
-        return result.stdout.strip()
-
-    def link_issue(self, issue_node_id: str, pr_node_id: str) -> None:
-        query = fd('''
-            mutation {{
-                addCloseIssueReferences(input: {{
-                    issueId: "{issue_id}",
-                    pullRequestIds: ["{pr_id}"]
-                }}) {{ issue {{ id }} }}
-            }}
-        ''', issue_id=issue_node_id, pr_id=pr_node_id)
-        subprocess.run(
-            ['gh', 'api', 'graphql', '-f', f'query={query}'],
-            capture_output=True, text=True, check=True
+        return any(
+            tag in self.commit_title_tags(title)
+            for title in result.stdout.splitlines()
         )
 
-    def set_status(self, node_id: str, status: str) -> None:
-        query = fd('''
-            mutation {{
-                addProjectV2ItemById(input: {{
-                    projectId: "{project_id}",
-                    contentId: "{node_id}"
-                }}) {{ item {{ id }} }}
-            }}
-        ''', project_id=self.project_id, node_id=node_id)
-        result = subprocess.run(
-            ['gh', 'api', 'graphql', '-f', f'query={query}'],
-            capture_output=True, text=True, check=True
-        )
-        result = json.loads(result.stdout)
-        item_id = result['data']['addProjectV2ItemById']['item']['id']
-
-        option_id = self.status_option_id(status)
-
-        query = fd('''
-            mutation {{
-                updateProjectV2ItemFieldValue(input: {{
-                    projectId: "{project_id}",
-                    itemId: "{item_id}",
-                    fieldId: "{field_id}",
-                    value: {{singleSelectOptionId: "{option_id}"}}
-                }}) {{ projectV2Item {{ id }} }}
-            }}
-        ''', project_id=self.project_id, item_id=item_id,
-                   field_id=self.status_field['id'], option_id=option_id)
-        subprocess.run(
-            ['gh', 'api', 'graphql', '-f', f'query={query}'],
-            capture_output=True, text=True, check=True
-        )
-
-    @cached_property
-    def project_id(self) -> str:
-        query = fd('''
-            {{
-                organization(login: "{owner}") {{
-                    projectV2(number: {number}) {{ id }}
-                }}
-            }}
-        ''', owner=self.project_owner, number=self.project['number'])
-        result = subprocess.run(
-            ['gh', 'api', 'graphql', '-f', f'query={query}'],
-            capture_output=True, text=True, check=True
-        )
-        return json.loads(result.stdout)['data']['organization']['projectV2']['id']
-
-    @cached_property
-    def status_field(self) -> dict:
-        result = subprocess.run(
-            [
-                'gh', 'project', 'field-list', str(self.project['number']),
-                '--owner', self.project_owner,
-                '--format', 'json',
-            ],
-            capture_output=True, text=True, check=True
-        )
-        fields = json.loads(result.stdout)['fields']
-        for field in fields:
-            if field['name'] == 'Status':
-                return field
-        assert False, R('Status field not found in project')
-
-    def status_option_id(self, status: str) -> str:
-        for option in self.status_field['options']:
-            if option['name'] == status:
-                return option['id']
-        assert False, R('Status option not found', status)
-
-    @cached_property
-    def project(self) -> dict:
-        result = subprocess.run(
-            [
-                'gh', 'project', 'list',
-                '--owner', self.project_owner,
-                '--format', 'json',
-            ],
-            capture_output=True, text=True, check=True
-        )
-        projects = json.loads(result.stdout)['projects']
-        for project in projects:
-            if project['title'] == self.project_title:
-                return project
-        assert False, R('Project not found', self.project_title)
+    def commit_title_tags(self, title: str) -> set[str]:
+        m = re.match(r'^\[([^]]*)]', title)
+        if m is None:
+            return set()
+        else:
+            return set(m.group(1).split())
 
 
 if __name__ == '__main__':
