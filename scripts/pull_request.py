@@ -171,20 +171,8 @@ class Main:
         if self._existing_pr is None:
             pr_url = self._create_pr()
         else:
-            log.info('Updating PR …')
             pr_url = self._existing_pr['url']
-            cmd = [
-                'gh', 'pr', 'edit', pr_url,
-                '--title', self._pr_title,
-                '--body', self.body,
-                '--add-assignee', '@me',
-            ]
-            if self.labels_to_add:
-                cmd.extend(['--add-label', ','.join(self.labels_to_add)])
-            if self.labels_to_remove:
-                cmd.extend(['--remove-label', ','.join(self.labels_to_remove)])
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
-            log.info('PR URL is %r', pr_url)
+            self._update_pr(pr_url)
 
         pr_node_id = self._node_id(pr_url)
         log.info('Setting PR status …')
@@ -195,6 +183,21 @@ class Main:
             self._link_issue(issue_node_id, pr_node_id)
             log.info('Setting status of issue %s …', issue.ref)
             self._set_status(issue_node_id, 'In Progress')
+
+    def _update_pr(self, pr_url: str) -> None:
+        log.info('Updating PR …')
+        cmd = [
+            'gh', 'pr', 'edit', pr_url,
+            '--title', self._pr_title,
+            '--body', self.body,
+            '--add-assignee', '@me',
+        ]
+        if self.labels_to_add:
+            cmd.extend(['--add-label', ','.join(self.labels_to_add)])
+        if self.labels_to_remove:
+            cmd.extend(['--remove-label', ','.join(self.labels_to_remove)])
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        log.info('PR URL is %r', pr_url)
 
     def _create_pr(self) -> str:
         log.info('Creating PR …')
