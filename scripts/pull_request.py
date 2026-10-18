@@ -74,6 +74,7 @@ def main(argv):
         'upgrade': 'Remove upgrade label and check upgrade tasks.',
         'deploy': 'Remove deploy labels and check deploy tasks.',
         'hotfix': 'Check hotfix tasks.',
+        'reqs': 'Remove reqs label and check requirements tasks.',
     }
     for flag, help_text in section_flags.items():
         parser.add_argument(f'--no-{flag}',
@@ -205,6 +206,8 @@ def main(argv):
         labels_to_remove.append('partial')
     if args.no_api:
         labels_to_remove.append('API')
+    if args.no_reqs:
+        labels_to_remove.append('reqs')
 
     if args.no_deploy:
         deploy_labels = _deploy_labels(body)
@@ -241,6 +244,13 @@ def main(argv):
             '--no-hotfix cannot be used when a commit is tagged `F`')
         body = _check_task(body, r'Added `F` tag to main commit title.*')
         body = _check_task(body, r'Reverted the temporary hotfixes for any linked issues.*')
+
+    if args.no_reqs:
+        assert not _has_commit_tag(target_branch, 'R'), R(
+            '--no-reqs cannot be used when a commit is tagged `R`')
+        body = _check_task(body, r'Ran `make requirements_update`.*')
+        body = _check_task(body, r'Added `R` tag to commit title.*')
+        body = _check_task(body, r'This PR is labeled `reqs`.*')
 
     body = _check_task(body, 'PR is assigned to the author')
     body = _check_task(body, r'Status of PR is \*In progress\*')
