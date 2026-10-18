@@ -138,10 +138,9 @@ class Main:
         return args
 
     def main(self):
-        issue_refs = [issue.ref for issue in self._issues]
-        title = self._pr_title(issue_refs, self._issue.title, self._fix)
+        title = self._pr_title(self._issue_refs, self._issue.title, self._fix)
 
-        self._reference_issues(issue_refs)
+        self._reference_issues(self._issue_refs)
 
         target_branch_task = r'Target branch is `' + re.escape(self._target_branch) + '`'
         if self._existing_pr is None:
@@ -296,6 +295,10 @@ class Main:
         log.info('Fetching issue %s …',
                  join_grammatically([f'#{n}' for n in issue_numbers]))
         return [self._issue_info(issue_number) for issue_number in issue_numbers]
+
+    @cached_property
+    def _issue_refs(self) -> list[str]:
+        return [issue.ref for issue in self._issues]
 
     @cached_property
     def _fix(self) -> bool:
