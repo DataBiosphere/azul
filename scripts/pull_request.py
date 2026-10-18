@@ -618,8 +618,7 @@ class Main:
         )
         item_id = json.loads(result.stdout)['data']['addProjectV2ItemById']['item']['id']
 
-        status_field = self._status_field()
-        option_id = self._status_option_id(status_field, status)
+        option_id = self._status_option_id(status)
 
         query = fd('''
             mutation {{
@@ -631,7 +630,7 @@ class Main:
                 }}) {{ projectV2Item {{ id }} }}
             }}
         ''', project_id=project_id, item_id=item_id,
-                   field_id=status_field['id'], option_id=option_id)
+                   field_id=self._status_field['id'], option_id=option_id)
         subprocess.run(
             ['gh', 'api', 'graphql', '-f', f'query={query}'],
             capture_output=True, text=True, check=True
@@ -651,6 +650,7 @@ class Main:
         )
         return json.loads(result.stdout)['data']['organization']['projectV2']['id']
 
+    @cached_property
     def _status_field(self) -> dict:
         result = subprocess.run(
             [
@@ -666,8 +666,8 @@ class Main:
                 return field
         assert False, R('Status field not found in project')
 
-    def _status_option_id(self, status_field: dict, status: str) -> str:
-        for option in status_field['options']:
+    def _status_option_id(self, status: str) -> str:
+        for option in self._status_field['options']:
             if option['name'] == status:
                 return option['id']
         assert False, R('Status option not found', status)
