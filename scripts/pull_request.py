@@ -186,8 +186,8 @@ class Main:
                 sys.exit(result.returncode)
             pr_url = result.stdout.strip()
         else:
-            pr_url = self._existing_pr['url']
             log.info('Updating PR …')
+            pr_url = self._existing_pr['url']
             cmd = [
                 'gh', 'pr', 'edit', pr_url,
                 '--title', self._pr_title,
