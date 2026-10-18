@@ -262,48 +262,39 @@ class Main:
 
     def handle_deploy(self):
         if self.args.no_deploy:
-            deploy_labels = self.deploy_labels()
+            deploy_labels = re.findall(
+                r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(deploy:\w+)`',
+                self.body,
+                flags=re.MULTILINE
+            )
             for label in deploy_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(deploy_labels)
-
-    def deploy_labels(self) -> list[str]:
-        return re.findall(
-            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(deploy:\w+)`',
-            self.body,
-            flags=re.MULTILINE
-        )
 
     def handle_reindex(self):
         if self.args.no_reindex:
             assert not self.has_commit_tag('r'), R(
                 '--no-reindex cannot be used when a commit is tagged `r`')
             self.check_item(r'Added `r` tag to commit title.*')
-            reindex_labels = self.reindex_labels()
+            reindex_labels = re.findall(
+                r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(reindex:\w+)`',
+                self.body,
+                flags=re.MULTILINE
+            )
             for label in reindex_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(reindex_labels)
 
-    def reindex_labels(self) -> list[str]:
-        return re.findall(
-            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(reindex:\w+)`',
-            self.body,
-            flags=re.MULTILINE
-        )
-
     def handle_mirror(self):
         if self.args.no_mirror:
-            mirror_labels = self.mirror_labels()
+            mirror_labels = re.findall(
+                r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(mirror:\w+)`',
+                self.body,
+                flags=re.MULTILINE
+            )
             for label in mirror_labels:
                 self.check_item(r'This PR is labeled `' + re.escape(label) + '`.*')
             self.labels_to_remove.extend(mirror_labels)
-
-    def mirror_labels(self) -> list[str]:
-        return re.findall(
-            r'^- \[[ x]] ' + self.item_label + r'This PR is labeled `(mirror:\w+)`',
-            self.body,
-            flags=re.MULTILINE
-        )
 
     def handle_api(self):
         if self.args.no_api:
