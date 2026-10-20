@@ -23,6 +23,17 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Four inaccessible LungMAP snapshots in dev (#8421)
+==================================================
+
+Everyone
+~~~~~~~~
+
+Drop the ``lungmap`` atlas from personal deployments colocated with ``dev``. Use
+the ``sandbox`` deployment's ``environment.py`` as a model. Remove the ``lm2``
+and ``lm2-it`` catalogs from your personal deployments.
+
+
 Claude Code monitors run without the environment the hook provides (#8323)
 ==========================================================================
 
