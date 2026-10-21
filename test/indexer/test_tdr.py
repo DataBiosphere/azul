@@ -460,6 +460,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
         self.assertEqual(test_bundle.metadata, emulated_bundle.metadata)
         self.assertEqual(test_bundle.links, emulated_bundle.links)
+        self.assertEqual(test_bundle.stitched, emulated_bundle.stitched)
 
 
 class TestTDRSourceList(AzulUnitTestCase):
