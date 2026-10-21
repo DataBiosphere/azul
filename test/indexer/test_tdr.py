@@ -433,6 +433,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
     def test_subgraph_stitching(self):
         downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
         upstream_uuids = [
+            'a5e0fc4d-b1e2-4827-9853-48918e488f9c',
             'b0c2c714-45ee-4759-a32b-8ccbbcf911d4',
             'bd4939c1-a078-43bd-8477-99ae59ceb555',
         ]
@@ -442,7 +443,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         assert len(bundle.stitched) > 0
         with self.assertLogs(plugin_log, level=logging.DEBUG) as cm:
             self._test_fetch_bundle(bundle, load_tables=True)
-        record = one(r for r in cm.records if 'Stitched 2 bundle(s): ' in r.message)
+        record = one(r for r in cm.records if 'Stitched 3 bundle(s): ' in r.message)
         for upstream_uuid in upstream_uuids:
             self.assertIn("uuid='" + upstream_uuid, record.message)
 

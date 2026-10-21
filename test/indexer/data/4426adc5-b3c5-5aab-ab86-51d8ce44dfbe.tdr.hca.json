@@ -26,6 +26,19 @@
             "content-type": "application/octet-stream",
             "indexed": false
         },
+        "sequence_file/448f32ab-6505-44a1-ba27-1e2ee012146f": {
+            "uuid": "caaef0b3-685d-4071-abd7-7a7592ccf1b1",
+            "name": "22167_8#272_1.fastq.gz",
+            "version": "2020-08-10T21:24:26.174274Z",
+            "drs_uri": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_cd4fd46d-79d9-461b-9f38-347930019613",
+            "size": 761919,
+            "sha256": "6a8d9a6b14043d69828b15e3711311bd4ed283e62ef7fc18205c8043eac9dc33",
+            "crc32c": "9f4a1c07",
+            "sha1": "a2dc257d81b97c05232c1b41adb85cc1cf0e54cf",
+            "s3_etag": "b1c2d3e4f5a6978877665544332211ff",
+            "content-type": "application/gzip",
+            "indexed": false
+        },
         "sequence_file/8f8b9587-237f-4995-9461-c96eac53d615": {
             "uuid": "f4132e3a-c468-4ca3-ad7b-b97b61054151",
             "name": "22167_7#271_2.fastq.gz",
@@ -365,6 +378,18 @@
                 "update_date": "2019-05-14T11:06:42.648Z"
             }
         },
+        "process/0d58cccc-8479-49a9-8598-71d2b28371b7": {
+            "process_core": {
+                "process_id": "proc_22167_8#272"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.0.0/process",
+            "provenance": {
+                "document_id": "0d58cccc-8479-49a9-8598-71d2b28371b7",
+                "submission_date": "2020-08-10T21:20:11.987Z",
+                "update_date": "2020-08-10T21:24:26.174Z"
+            }
+        },
         "process/33e31f6f-fe78-45bd-ae57-10d2d14253cf": {
             "process_core": {
                 "process_id": "process_id_4334"
@@ -523,6 +548,21 @@
                 "schema_minor_version": 1
             }
         },
+        "sequence_file/448f32ab-6505-44a1-ba27-1e2ee012146f": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "22167_8#272_1.fastq.gz",
+                "format": "fastq.gz"
+            },
+            "read_index": "read1",
+            "lane_index": 8,
+            "provenance": {
+                "document_id": "448f32ab-6505-44a1-ba27-1e2ee012146f",
+                "submission_date": "2020-08-10T21:20:11.987Z",
+                "update_date": "2020-08-10T21:24:26.174Z"
+            }
+        },
         "sequence_file/8f8b9587-237f-4995-9461-c96eac53d615": {
             "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",
             "schema_type": "file",
@@ -659,6 +699,10 @@
                     {
                         "input_id": "8f8b9587-237f-4995-9461-c96eac53d615",
                         "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "448f32ab-6505-44a1-ba27-1e2ee012146f",
+                        "input_type": "sequence_file"
                     }
                 ],
                 "link_type": "process_link",
@@ -674,6 +718,33 @@
                     {
                         "protocol_id": "099457a1-a453-54c6-aae5-b70dafa33bbd",
                         "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "0d58cccc-8479-49a9-8598-71d2b28371b7",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "448f32ab-6505-44a1-ba27-1e2ee012146f"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "5b503dcb-dca6-4e4f-988b-f7100c030dc5"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "eca2ab79-ad61-411f-815a-4f6d936d992b"
                     }
                 ]
             },
@@ -824,9 +895,11 @@
     },
     "stitched": [
         "01a1d04b-05d0-4904-b627-68b0dc02bc17",
+        "0d58cccc-8479-49a9-8598-71d2b28371b7",
         "201ae4d0-c7c6-4777-947f-18f5268884b6",
         "3211ef8f-a60c-4892-ae55-91d6752dcd75",
         "33e31f6f-fe78-45bd-ae57-10d2d14253cf",
+        "448f32ab-6505-44a1-ba27-1e2ee012146f",
         "5b503dcb-dca6-4e4f-988b-f7100c030dc5",
         "5d82b884-7db4-47fa-9ccd-03054065c509",
         "6f5ddf2c-382d-4c0a-a506-3a5286067c83",
