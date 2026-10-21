@@ -4,6 +4,9 @@ from abc import (
 from io import (
     BytesIO,
 )
+from itertools import (
+    permutations,
+)
 import json
 import logging
 from operator import (
@@ -446,6 +449,24 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         record = one(r for r in cm.records if 'Stitched 3 bundle(s): ' in r.message)
         for upstream_uuid in upstream_uuids:
             self.assertIn("uuid='" + upstream_uuid, record.message)
+
+    def test_merge_links(self):
+        """
+        Ensure that _merge_links is deterministic and insensitive to the order
+        in which _stitch_bundles emits the stitched bundles
+        """
+        downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
+        fqid = self.bundle_fqid(uuid=downstream_uuid,
+                                version='2020-08-10T21:24:26.174274Z')
+        expected_bundle = self._load_canned_bundle(fqid)
+        self._make_mock_tables(fqid.source)
+        entities, root_entities, links_jsons = self.plugin._stitch_bundles(expected_bundle)
+        root, *stitched = links_jsons
+        self.assertEqual(downstream_uuid, root['links_id'])
+        for permutation in permutations(stitched):
+            with self.subTest(stitched=[row['links_id'] for row in permutation]):
+                actual_links = self.plugin._merge_links([root, *permutation])
+                self.assertEqual(expected_bundle.links, actual_links)
 
     def _test_fetch_bundle(self,
                            test_bundle: TDRHCABundle,
