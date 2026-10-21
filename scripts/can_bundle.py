@@ -39,6 +39,7 @@ from azul.lib.types import (
     AnyJSON,
     AnyMutableJSON,
     json_dict,
+    json_mapping,
 )
 from azul.logging import (
     configure_script_logging,
@@ -150,6 +151,15 @@ def save_bundle(bundle: Bundle, output_dir: str) -> None:
     bundle_json = bundle.to_json()
     # We can bundles without the FQID so that we can mock it during tests
     bundle_json.pop('fqid')
+    # Plugins group these entries by entity type, in the iteration order of
+    # a set, which varies based on Python's hash seed.
+    for key in ('manifest', 'metadata'):
+        try:
+            entries = json_mapping(bundle_json[key])
+        except KeyError:
+            pass
+        else:
+            bundle_json[key] = dict(sorted(entries.items()))
     with write_file_atomically(path) as f:
         json.dump(bundle_json, f, indent=4)
     log.info('Successfully wrote %s', path)
