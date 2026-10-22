@@ -204,45 +204,52 @@ disabled.
 
 .. _this AWS support article: https://aws.amazon.com/premiumsupport/knowledge-center/opensearch-in-memory-shard-lock/
 
-The operator must check the status of the queues after every reindex for
-failures. Use ``python scripts/manage_queues.py`` to identify any failed
-messages. If failed messages are found, use ``python scripts/manage_queues.py``
-to
+After every reindex, the operator must check the queues, using ``python
+scripts/manage_queues.py list`` to ensure that the work and fail queues are
+empty. If there are failed messages, perform the following steps.
 
-- dump the failed notifications to JSON file(s), using ``--delete`` to
-  simultaneously clear the ``notifications_fail`` queue
+1) Use the same script to dump those messages, one JSONL file per fail queue,
+   using ``--delete`` to simultaneously remove them from the queue.
 
-- force-feed the failed notifications back into the ``notifications_retry``
-  queue. We feed directly into the retry queue, not the primary queue, to save
-  time if/when the messages fail again.
+2) Triage the failures and decide if a code change is required before attempting
+   to reprocess the failed messages again. Discuss the remedy with the system
+   administrator.
+
+3) Feed each of those files back into the corresponding work queue. Use the
+   retry queue only if it is evident that a majority of the messages need the
+   increased memory and the longer timeout of the retry lambda. When there are
+   failed tallies *and* failed notifications, feed the tallies first, as they
+   are downstream from notifications.
 
 This may cause the previously failed messages to succeed. Repeat this procedure
-until the set of failed notifications stabilizes, i.e., the
-``notifications_fail`` queue is empty or no previously failed notifications
-succeeded.
+until the set of failed messages stabilizes, i.e., the fail queues are empty or
+no previously failed message succeeded.
 
-Next, repeat the dump/delete/force-feed steps with the failed tallies, feeding
-them into ``tallies_retry`` queue (again, **NOT** the primary queue) until the
-set of failed tallies stabilizes.
+By default the script refuses to dump a queue while any work queue holds
+messages, because the lambdas reading work queues could produce more messages in
+the queue being dumped, risking an incomplete dump. After a reindex those queues
+are usually empty. If they are not, pass ``--safe`` to disable the lambdas for
+the duration of the dump. This is the only way to dump a busy deployment
+completely. Alternatively, you could use ``--unsafe`` to force a dump that is
+probably incomplete. Note that ``--unsafe`` is refused in combination with
+``--delete``, which would leave the messages split between a file that is
+known to be incomplete and the queue that still holds the rest.
 
-If at this point the fail queues are not empty, all remaining failures must be
-tracked in tickets:
+Dumping to a file that already exists is refused as well, so every repetition of
+this procedure needs either a new value for the destination file parameter or
+``--append``. You could also use ``--overwrite`` if you are sure the messages in
+the existing file can be discarded if, say, the file was created without
+``--delete``.
 
-- document the failures within the PR that added the changes
+When feeding a queue, the script records its progress in a ``.progress`` file
+alongside the input file, and skips those messages when it is run again, say,
+after an interruption. Remove that file to feed the dump from the beginning
+instead.
 
-- triage against expected failures from existing issues
-
-- create new issues for unexpected failures
-
-- link each failure you document to their respective issue
-
-- ping people on the Slack channel ``#dcp2`` about those issues, and finally
-
-- clear the fail queues so they are empty for the next reindexing
-
-For an example of how to document failures within a PR `click here`_.
-
-.. _click here: https://github.com/DataBiosphere/azul/pull/3050#issuecomment-840033931
+The script refuses to feed to a queue that is not compatible with the messages
+being fed. Tallies cannot be fed into a notifications queue or vice versa. It
+also refuses to feed a dump taken from another deployment, unless ``--foreign``
+is used to explicitly override that safety check.
 
 Reindexing a specific catalog or sources in GitLab
 """"""""""""""""""""""""""""""""""""""""""""""""""

@@ -112,6 +112,9 @@ if TYPE_CHECKING:
     from mypy_boto3_sns import (
         SNSClient,
     )
+    from mypy_boto3_sqs import (
+        SQSClient,
+    )
     from mypy_boto3_sqs.service_resource import (
         Queue,
         SQSServiceResource,
@@ -504,6 +507,7 @@ class AWS:
     @_cache
     def client(self,
                service_name: str,
+               *,
                region_name: str | None = None,
                azul_logging: bool = False):
         """
@@ -752,6 +756,10 @@ class AWS:
     def monitoring_topic_name(self):
         return config.qualified_resource_name('monitoring',
                                               stage=config.main_deployment_stage)
+
+    @property
+    def sqs(self) -> SQSClient:
+        return self.client('sqs', azul_logging=config.is_in_lambda)
 
     @property
     def sqs_resource(self) -> SQSServiceResource:
