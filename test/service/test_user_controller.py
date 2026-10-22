@@ -408,7 +408,7 @@ class TestUserController(DCP2TestCase,
                 auth = AccessTokenAuthentication(self._mock_access_token)
                 apat = self._service.mint_personal_access_token(auth)
                 response = self._get_token(apat.token)
-                self.assertEqual(400, response.status)
+                self.assertEqual(403, response.status)
 
     def test_token_unauthenticated(self):
         response = self._get_token()
@@ -432,7 +432,7 @@ class TestUserController(DCP2TestCase,
     def test_revoke_rejects_pat(self):
         apat = self._authorize_and_mint()
         response = self._revoke(apat.token)
-        self.assertEqual(400, response.status)
+        self.assertEqual(403, response.status)
 
     def test_revoke_unauthenticated(self):
         response = self._revoke()

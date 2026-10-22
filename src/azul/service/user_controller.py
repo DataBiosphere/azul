@@ -16,6 +16,7 @@ import urllib.parse
 
 from chalice.app import (
     BadRequestError,
+    ForbiddenError,
     Response,
     UnauthorizedError,
 )
@@ -195,6 +196,12 @@ class UserController(Controller):
                         'description': fd('''
                             No valid OAuth 2.0 access token was provided
                         ''')
+                    },
+                    '403': {
+                        'description': fd('''
+                            A personal access token was provided, which cannot
+                            be exchanged for another one
+                        ''')
                     }
                 }
             }
@@ -225,6 +232,12 @@ class UserController(Controller):
                     '401': {
                         'description': fd('''
                             No valid OAuth 2.0 access token was provided
+                        ''')
+                    },
+                    '403': {
+                        'description': fd('''
+                            A personal access token was provided, which cannot
+                            be used to revoke
                         ''')
                     }
                 }
@@ -327,7 +340,7 @@ class UserController(Controller):
     def _token(self) -> JSON:
         auth = self._authentication(self.current_request)
         if isinstance(auth, PersonalAccessTokenAuthentication):
-            raise BadRequestError('Cannot exchange a personal access token for another')
+            raise ForbiddenError('Cannot exchange a personal access token for another')
         elif isinstance(auth, AccessTokenAuthentication):
             with self._rejecting_unusable_token(auth):
                 apat_auth = self._service.mint_personal_access_token(auth)
@@ -338,7 +351,7 @@ class UserController(Controller):
     def _revoke(self) -> Response:
         auth = self._authentication(self.current_request)
         if isinstance(auth, PersonalAccessTokenAuthentication):
-            raise BadRequestError('Cannot revoke using a personal access token')
+            raise ForbiddenError('Cannot revoke using a personal access token')
         elif isinstance(auth, AccessTokenAuthentication):
             with self._rejecting_unusable_token(auth):
                 self._service.revoke_personal_access_tokens(auth)
