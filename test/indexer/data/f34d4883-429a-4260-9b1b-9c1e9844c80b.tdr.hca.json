@@ -15,671 +15,58 @@
         }
     },
     "metadata": {
-        "library_preparation_protocol/090eef67-013e-4c09-a507-d595ef50ac02": {
-            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
+        "analysis_file/be9b666c-9497-4c75-858c-978eabc37048": {
+            "describedBy": "https://schema.humancellatlas.org/type/file/6.4.0/analysis_file",
+            "schema_type": "file",
+            "file_core": {
+                "file_name": "GSE180878_Li_Brugge_10XscRNAseq_GeneCellMatrix_RNAcounts_human.csv.gz",
+                "format": "csv.gz",
+                "content_description": [
+                    {
+                        "text": "Raw gene expression matrix",
+                        "ontology": "data:3917",
+                        "ontology_label": "Count matrix"
+                    },
+                    {
+                        "text": "Gene list",
+                        "ontology": "data:1270",
+                        "ontology_label": "Feature table"
+                    }
+                ]
+            },
+            "provenance": {
+                "document_id": "be9b666c-9497-4c75-858c-978eabc37048",
+                "submission_date": "2022-07-26T00:16:47.748Z",
+                "update_date": "2022-07-27T20:39:39.423Z",
+                "schema_major_version": 6,
+                "schema_minor_version": 4
+            }
+        },
+        "analysis_protocol/3809d420-b97a-4194-9ec9-d2a6c1c00519": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/analysis/9.2.0/analysis_protocol",
             "schema_type": "protocol",
             "protocol_core": {
-                "protocol_id": "library_protocol_1",
-                "protocol_name": "10x 3' v2 library preparation",
-                "protocol_description": "A total of 7,000-8,000 viable cells per sample were loaded for single cell capturing and cDNA library generation using the 10X Chromium 3\u2019 library construction kit v2 following the manufacturer\u2019s instructions (including 3 washes to minimize ambient RNA)."
+                "protocol_id": "analysis_protocol_1",
+                "protocol_name": "Raw gene expression analysis",
+                "protocol_description": "Paired-end reads were processed and mapped to the GRCh38-3.0.0 human genome using Cell Ranger v3.0. Filtering eliminated genes detected in <20 cells, and discarded cells with (1) UMI counts < 1,000, (2) gene counts < 500 or > 8,000, and (3) mitochondrial gene ratio > 10%, resulting in the detection of 20,437 genes in 52,681 cells (see Table S5) across a total of 16 samples, with a median of approximately 3,000 cells from each sample. A median of 1,756 genes and 6,116 transcripts were captured per cell."
             },
-            "cell_barcode": {
-                "barcode_read": "Read 1",
-                "barcode_offset": 0,
-                "barcode_length": 16
+            "type": {
+                "text": "data transformation",
+                "ontology": "OBI:0200000",
+                "ontology_label": "data transformation"
             },
-            "input_nucleic_acid_molecule": {
-                "text": "polyA RNA",
-                "ontology": "OBI:0000869",
-                "ontology_label": "polyA RNA"
-            },
-            "nucleic_acid_source": "single cell",
-            "library_construction_method": {
-                "text": "10x 3' V2 sequencing",
-                "ontology": "EFO:0009899",
-                "ontology_label": "10x 3' v2"
-            },
-            "library_construction_kit": {
-                "manufacturer": "10X Genomics"
-            },
-            "end_bias": "3 prime tag",
-            "primer": "poly-dT",
-            "strand": "first",
-            "umi_barcode": {
-                "barcode_read": "Read 1",
-                "barcode_offset": 16,
-                "barcode_length": 10
+            "computational_method": "Cell Ranger v3.0",
+            "matrix": {
+                "derivation_process": [
+                    "quantification"
+                ]
             },
             "provenance": {
-                "document_id": "090eef67-013e-4c09-a507-d595ef50ac02",
-                "submission_date": "2022-07-26T00:16:46.551Z",
-                "update_date": "2022-07-27T20:39:39.178Z",
-                "schema_major_version": 6,
-                "schema_minor_version": 3
-            }
-        },
-        "specimen_from_organism/10dfef3f-6932-41bf-8ad2-b76c70e8cbb3": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422998",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (c. 5251C>T),25,Premenopausal,0,0,Black,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422998",
-                "insdc_sample_accession": "SRS9598105"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "10dfef3f-6932-41bf-8ad2-b76c70e8cbb3",
-                "submission_date": "2022-07-26T00:16:46.135Z",
-                "update_date": "2022-08-23T17:15:17.722Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/12574b13-e36d-43e8-95b4-083e8d23ac7b": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20423002",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,WT,36,Premenopausal,2,0,Black,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20423002",
-                "insdc_sample_accession": "SRS9598116"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "12574b13-e36d-43e8-95b4-083e8d23ac7b",
-                "submission_date": "2022-07-26T00:16:46.290Z",
-                "update_date": "2022-08-23T17:15:17.831Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/188469ce-7d7a-4054-8cf1-32a6ec8ec165": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422996",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (c.5266dupC (p.GLn1756Profs*74)),52,Surgical menopause,1,1,Jewish,Yes,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422996",
-                "insdc_sample_accession": "SRS9598107"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "188469ce-7d7a-4054-8cf1-32a6ec8ec165",
-                "submission_date": "2022-07-26T00:16:46.159Z",
-                "update_date": "2022-08-23T17:15:17.743Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/1c516819-d0f4-482d-8fcd-04d5e31552af": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422995",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (c.4035delA),53,Surgical menopause,2,1,White,Yes,Yes",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422995",
-                "insdc_sample_accession": "SRS9598108"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "1c516819-d0f4-482d-8fcd-04d5e31552af",
-                "submission_date": "2022-07-26T00:16:46.172Z",
-                "update_date": "2022-08-23T17:15:17.751Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/44d876d1-f4e3-426f-9027-144a492eb615": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20423001",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,WT,39,Premenopausal,n/a,n/a,Jewish,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20423001",
-                "insdc_sample_accession": "SRS9598118"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "44d876d1-f4e3-426f-9027-144a492eb615",
-                "submission_date": "2022-07-26T00:16:46.302Z",
-                "update_date": "2022-08-23T17:15:17.841Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/48a18b04-8b37-4db0-a88e-f756accc7a0e": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422997",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (del exons 21-24),35,Premenopausal,2,2,White,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422997",
-                "insdc_sample_accession": "SRS9598106"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "48a18b04-8b37-4db0-a88e-f756accc7a0e",
-                "submission_date": "2022-07-26T00:16:46.147Z",
-                "update_date": "2022-08-23T17:15:17.732Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/5352646c-fffb-46b0-a9ef-8508af699458": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20423003",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (n/a),n/a,n/a,n/a,n/a,n/a,n/a,n/a",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20423003",
-                "insdc_sample_accession": "SRS9598117"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "5352646c-fffb-46b0-a9ef-8508af699458",
-                "submission_date": "2022-07-26T00:16:46.277Z",
-                "update_date": "2022-08-23T17:15:17.822Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/67aee6a6-84fe-46cc-832d-44febe82a16a": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422993",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (n/a_,n/a,n/a,n/a,n/a,n/a,n/a,n/a",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422993",
-                "insdc_sample_accession": "SRS9598110"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "67aee6a6-84fe-46cc-832d-44febe82a16a",
-                "submission_date": "2022-07-26T00:16:46.203Z",
-                "update_date": "2022-08-23T17:15:17.770Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/706204f2-6d2a-44c6-a482-0a2b1a702e01": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20423004",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (p.Q2899*),65,Surgical menopause,0,0,White,Yes,Yes",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20423004",
-                "insdc_sample_accession": "SRS9598115"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "706204f2-6d2a-44c6-a482-0a2b1a702e01",
-                "submission_date": "2022-07-26T00:16:46.265Z",
-                "update_date": "2022-08-23T17:15:17.813Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/87ce69d7-c3f7-4d25-8218-f0d081695803": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422991",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.5796_5797delTA),39,Surgical menopause,1,1,White,Yes,Yes",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422991",
-                "insdc_sample_accession": "SRS9598112"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "87ce69d7-c3f7-4d25-8218-f0d081695803",
-                "submission_date": "2022-07-26T00:16:46.229Z",
-                "update_date": "2022-08-23T17:15:17.787Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/95d2f089-ec1a-496e-8399-84ab980c7a2e": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422990",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.715delA (p.Ser239Valfs*2)),50,Premenopausal,6,4,White,Yes,Yes",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422990",
-                "insdc_sample_accession": "SRS9598113"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "95d2f089-ec1a-496e-8399-84ab980c7a2e",
-                "submission_date": "2022-07-26T00:16:46.241Z",
-                "update_date": "2022-08-23T17:15:17.794Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/a0ed2c89-ddd9-4f38-a801-dcaf1f8809cb": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422992",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.8487+3A>G),33,Premenopausal,1,0,White,Yes,Yes",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422992",
-                "insdc_sample_accession": "SRS9598111"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "a0ed2c89-ddd9-4f38-a801-dcaf1f8809cb",
-                "submission_date": "2022-07-26T00:16:46.216Z",
-                "update_date": "2022-08-23T17:15:17.779Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/a252e8e8-c833-49c6-8daa-930bef8bd105": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422999",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,RAD51C,31,Premenopausal,4,1,Black,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422999",
-                "insdc_sample_accession": "SRS9598104"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "a252e8e8-c833-49c6-8daa-930bef8bd105",
-                "submission_date": "2022-07-26T00:16:46.123Z",
-                "update_date": "2022-08-23T17:15:17.714Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/ceb55be8-123a-47f5-864e-30b9081a86db": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20422994",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (IVS10-2A>T),55,Surgical menopause,4,2,White,Yes,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20422994",
-                "insdc_sample_accession": "SRS9598109"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "ceb55be8-123a-47f5-864e-30b9081a86db",
-                "submission_date": "2022-07-26T00:16:46.189Z",
-                "update_date": "2022-08-23T17:15:17.760Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/d8c6c2fa-51a4-4164-a7e5-ebcf565373dc": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20423005",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.8575delC (p.Gln2859Lysfs*4)),57,Surgical menopause,2,2,White,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20423005",
-                "insdc_sample_accession": "SRS9598114"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "d8c6c2fa-51a4-4164-a7e5-ebcf565373dc",
-                "submission_date": "2022-07-26T00:16:46.253Z",
-                "update_date": "2022-08-23T17:15:17.805Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
-            }
-        },
-        "specimen_from_organism/f371f5fd-bb50-433d-8c96-ac9ee2e9cad5": {
-            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
-            "schema_type": "biomaterial",
-            "biomaterial_core": {
-                "biomaterial_id": "SAMN20423000",
-                "biomaterial_name": "mammary tissue specimen",
-                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,WT,41,Premenopausal,1,1,White,No,No",
-                "ncbi_taxon_id": [
-                    9606
-                ],
-                "biosamples_accession": "SAMN20423000",
-                "insdc_sample_accession": "SRS9598103"
-            },
-            "genus_species": [
-                {
-                    "text": "Homo sapiens",
-                    "ontology_label": "Homo sapiens"
-                }
-            ],
-            "organ": {
-                "text": "breast",
-                "ontology": "UBERON:0000310",
-                "ontology_label": "breast"
-            },
-            "diseases": [
-                {
-                    "text": "normal",
-                    "ontology": "PATO:0000461",
-                    "ontology_label": "normal"
-                }
-            ],
-            "provenance": {
-                "document_id": "f371f5fd-bb50-433d-8c96-ac9ee2e9cad5",
-                "submission_date": "2022-07-26T00:16:46.111Z",
-                "update_date": "2022-08-23T17:15:17.705Z",
-                "schema_major_version": 10,
-                "schema_minor_version": 5
+                "document_id": "3809d420-b97a-4194-9ec9-d2a6c1c00519",
+                "submission_date": "2022-07-26T00:16:46.575Z",
+                "update_date": "2022-07-27T20:39:39.180Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
             }
         },
         "cell_suspension/194914ee-3e84-4df3-befd-963b9e7dd873": {
@@ -1130,513 +517,45 @@
                 "schema_minor_version": 3
             }
         },
-        "process/09575418-0164-43a8-bb8e-18572b62564b": {
-            "process_core": {
-                "process_id": "process_id_18"
+        "collection_protocol/f5bf4e91-b9a2-484a-9ec9-7f165e13dcd5": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "collection_protocol_1",
+                "protocol_name": "surgical resection",
+                "protocol_description": "Specimens were obtained from Brigham & Women\u2019s Hospital or Faulkner Hospital on the day of surgery, processed to single cells and analyzed by scRNA-seq on the same day"
             },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "method": {
+                "text": "surgical resection",
+                "ontology": "EFO:0009744",
+                "ontology_label": "surgical resection"
+            },
             "provenance": {
-                "document_id": "09575418-0164-43a8-bb8e-18572b62564b",
-                "submission_date": "2022-07-26T00:16:48.088Z",
-                "update_date": "2022-07-27T20:39:38.873Z",
+                "document_id": "f5bf4e91-b9a2-484a-9ec9-7f165e13dcd5",
+                "submission_date": "2022-07-26T00:16:46.515Z",
+                "update_date": "2022-07-27T20:39:39.171Z",
                 "schema_major_version": 9,
                 "schema_minor_version": 2
             }
         },
-        "process/0ec75821-a2cb-4ccb-b2d1-67535b78dc5b": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559755"
+        "dissociation_protocol/71df9d7e-c283-4379-9292-f497c56bb615": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+            "schema_type": "protocol",
+            "protocol_core": {
+                "protocol_id": "dissociation_protocol_1",
+                "protocol_name": "mechanical dissociation",
+                "protocol_description": "Cells were then pelleted by centrifugation, further dissociated by sequentially pipetting with 10, 5, and 1-ml pipette tips, and recentrifuged. The resulting cell pellet was used directly to establish organoid culture as previously described (Rosenbluth et al., 2020) or further dissociated into single cells for scRNA-seq or CyTOF analysis."
             },
-            "process_core": {
-                "process_id": "process_id_14"
+            "method": {
+                "text": "mechinical dissociation",
+                "ontology": "EFO:0009129",
+                "ontology_label": "mechinical dissociation"
             },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "provenance": {
-                "document_id": "0ec75821-a2cb-4ccb-b2d1-67535b78dc5b",
-                "submission_date": "2022-07-26T00:16:48.044Z",
-                "update_date": "2022-07-27T20:39:38.858Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/192fe4e2-0f4d-4f7c-a5d0-5edfb64cbc36": {
-            "process_core": {
-                "process_id": "process_id_31"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "192fe4e2-0f4d-4f7c-a5d0-5edfb64cbc36",
-                "submission_date": "2022-07-26T00:16:48.237Z",
-                "update_date": "2022-07-27T20:39:38.925Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/1a7db1e0-a366-4b48-9a42-57fb05913c5d": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559753"
-            },
-            "process_core": {
-                "process_id": "process_id_12"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "1a7db1e0-a366-4b48-9a42-57fb05913c5d",
-                "submission_date": "2022-07-26T00:16:48.021Z",
-                "update_date": "2022-07-27T20:39:38.848Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/1c2fea8d-91e8-4bf9-9fa4-fa942cee2caa": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559754"
-            },
-            "process_core": {
-                "process_id": "process_id_13"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "1c2fea8d-91e8-4bf9-9fa4-fa942cee2caa",
-                "submission_date": "2022-07-26T00:16:48.033Z",
-                "update_date": "2022-07-27T20:39:38.851Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/2fd62ea5-9f16-41a3-8c24-732b48654d35": {
-            "process_core": {
-                "process_id": "process_id_17"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "2fd62ea5-9f16-41a3-8c24-732b48654d35",
-                "submission_date": "2022-07-26T00:16:48.076Z",
-                "update_date": "2022-07-27T20:39:38.869Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/3d97381b-844a-4990-9923-b05e110c5f8a": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559752"
-            },
-            "process_core": {
-                "process_id": "process_id_11"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "3d97381b-844a-4990-9923-b05e110c5f8a",
-                "submission_date": "2022-07-26T00:16:48.009Z",
-                "update_date": "2022-07-27T20:39:38.845Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/4d5a4e0b-eed4-4e49-b5cb-aa3d6fe3efed": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559756"
-            },
-            "process_core": {
-                "process_id": "process_id_15"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "4d5a4e0b-eed4-4e49-b5cb-aa3d6fe3efed",
-                "submission_date": "2022-07-26T00:16:48.054Z",
-                "update_date": "2022-07-27T20:39:38.863Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/57654bf2-186c-44da-86d5-0a4a889b102b": {
-            "process_core": {
-                "process_id": "process_id_25"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "57654bf2-186c-44da-86d5-0a4a889b102b",
-                "submission_date": "2022-07-26T00:16:48.166Z",
-                "update_date": "2022-07-27T20:39:38.901Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/57742b3f-28ec-452d-a66e-c005ee7f8a48": {
-            "process_core": {
-                "process_id": "process_id_21"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "57742b3f-28ec-452d-a66e-c005ee7f8a48",
-                "submission_date": "2022-07-26T00:16:48.122Z",
-                "update_date": "2022-07-27T20:39:38.885Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/5cfe9348-3043-4cbb-9cfb-c16dff11eb8b": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559748"
-            },
-            "process_core": {
-                "process_id": "process_id_7"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "5cfe9348-3043-4cbb-9cfb-c16dff11eb8b",
-                "submission_date": "2022-07-26T00:16:47.845Z",
-                "update_date": "2022-07-27T20:39:38.831Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/65175117-d7a3-403f-a941-af4c262cd308": {
-            "process_core": {
-                "process_id": "process_id_28"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "65175117-d7a3-403f-a941-af4c262cd308",
-                "submission_date": "2022-07-26T00:16:48.201Z",
-                "update_date": "2022-07-27T20:39:38.913Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/6aa4a585-d4b2-4292-9d17-a7fd47df65a9": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559745"
-            },
-            "process_core": {
-                "process_id": "process_id_4"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "6aa4a585-d4b2-4292-9d17-a7fd47df65a9",
-                "submission_date": "2022-07-26T00:16:47.811Z",
-                "update_date": "2022-07-27T20:39:38.820Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/6cbd9212-2126-4e67-a6fa-bc40ef709978": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559746"
-            },
-            "process_core": {
-                "process_id": "process_id_5"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "6cbd9212-2126-4e67-a6fa-bc40ef709978",
-                "submission_date": "2022-07-26T00:16:47.823Z",
-                "update_date": "2022-07-27T20:39:38.824Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/74557ecd-1ea5-43fc-aaa0-56211e6e1351": {
-            "process_core": {
-                "process_id": "process_id_19"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "74557ecd-1ea5-43fc-aaa0-56211e6e1351",
-                "submission_date": "2022-07-26T00:16:48.099Z",
-                "update_date": "2022-07-27T20:39:38.877Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/74f78e4f-beb2-4857-bfe4-dbe6f7df5184": {
-            "process_core": {
-                "process_id": "process_id_22"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "74f78e4f-beb2-4857-bfe4-dbe6f7df5184",
-                "submission_date": "2022-07-26T00:16:48.134Z",
-                "update_date": "2022-07-27T20:39:38.889Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/7e616b4b-5e7f-4d72-a874-ce40690e4ebe": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559742"
-            },
-            "process_core": {
-                "process_id": "process_id_1"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "7e616b4b-5e7f-4d72-a874-ce40690e4ebe",
-                "submission_date": "2022-07-26T00:16:47.777Z",
-                "update_date": "2022-07-27T20:39:38.809Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/80813718-58b1-4a2c-9ac6-1192c45a7ccb": {
-            "process_core": {
-                "process_id": "process_id_30"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "80813718-58b1-4a2c-9ac6-1192c45a7ccb",
-                "submission_date": "2022-07-26T00:16:48.224Z",
-                "update_date": "2022-07-27T20:39:38.921Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/8708c2d3-fe7b-4ccd-890b-483a02a2c8f8": {
-            "process_core": {
-                "process_id": "process_id_32"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "8708c2d3-fe7b-4ccd-890b-483a02a2c8f8",
-                "submission_date": "2022-07-26T00:16:48.250Z",
-                "update_date": "2022-07-27T20:39:38.929Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/8868992d-d27c-48f1-809d-df4735211dbd": {
-            "process_core": {
-                "process_id": "process_id_27"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "8868992d-d27c-48f1-809d-df4735211dbd",
-                "submission_date": "2022-07-26T00:16:48.189Z",
-                "update_date": "2022-07-27T20:39:38.909Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/a0296012-dfb0-4b7a-b5e2-d3910ee9c6b6": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559757"
-            },
-            "process_core": {
-                "process_id": "process_id_16"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "a0296012-dfb0-4b7a-b5e2-d3910ee9c6b6",
-                "submission_date": "2022-07-26T00:16:48.065Z",
-                "update_date": "2022-07-27T20:39:38.866Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/a0ed34f1-774c-4302-a387-b4b9d3541688": {
-            "process_core": {
-                "process_id": "process_id_23"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "a0ed34f1-774c-4302-a387-b4b9d3541688",
-                "submission_date": "2022-07-26T00:16:48.144Z",
-                "update_date": "2022-07-27T20:39:38.893Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/a9c24c08-6cc1-4222-81ca-c920a344a4c5": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559750"
-            },
-            "process_core": {
-                "process_id": "process_id_9"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "a9c24c08-6cc1-4222-81ca-c920a344a4c5",
-                "submission_date": "2022-07-26T00:16:47.940Z",
-                "update_date": "2022-07-27T20:39:38.838Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/b240e7ce-e0fb-4602-bc07-1a1b282eacb3": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559749"
-            },
-            "process_core": {
-                "process_id": "process_id_8"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "b240e7ce-e0fb-4602-bc07-1a1b282eacb3",
-                "submission_date": "2022-07-26T00:16:47.860Z",
-                "update_date": "2022-07-27T20:39:38.834Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/b2b6a004-5c11-4711-b025-456127973d3a": {
-            "process_core": {
-                "process_id": "process_id_26"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "b2b6a004-5c11-4711-b025-456127973d3a",
-                "submission_date": "2022-07-26T00:16:48.178Z",
-                "update_date": "2022-07-27T20:39:38.905Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/b960bcc6-db67-4996-b75e-ef07b34b5108": {
-            "process_core": {
-                "process_id": "process_id_29"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "b960bcc6-db67-4996-b75e-ef07b34b5108",
-                "submission_date": "2022-07-26T00:16:48.212Z",
-                "update_date": "2022-07-27T20:39:38.917Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/bb9e93e0-ae58-43b7-8017-96c013ee2082": {
-            "process_core": {
-                "process_id": "process_id_20"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "bb9e93e0-ae58-43b7-8017-96c013ee2082",
-                "submission_date": "2022-07-26T00:16:48.111Z",
-                "update_date": "2022-07-27T20:39:38.881Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/bc8ef71a-de1d-4c19-b98f-b3cb7f0a7e0b": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559751"
-            },
-            "process_core": {
-                "process_id": "process_id_10"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "bc8ef71a-de1d-4c19-b98f-b3cb7f0a7e0b",
-                "submission_date": "2022-07-26T00:16:47.982Z",
-                "update_date": "2022-07-27T20:39:38.842Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/c11d4100-2323-4834-89e8-c4ece13671c0": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559744"
-            },
-            "process_core": {
-                "process_id": "process_id_3"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "c11d4100-2323-4834-89e8-c4ece13671c0",
-                "submission_date": "2022-07-26T00:16:47.799Z",
-                "update_date": "2022-07-27T20:39:38.816Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/d317b48f-f1a1-4759-a892-698d8a827615": {
-            "process_core": {
-                "process_id": "process_id_24"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "d317b48f-f1a1-4759-a892-698d8a827615",
-                "submission_date": "2022-07-26T00:16:48.155Z",
-                "update_date": "2022-07-27T20:39:38.897Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/d6c733af-c73d-479e-837d-4177d44f3189": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559743"
-            },
-            "process_core": {
-                "process_id": "process_id_2"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "d6c733af-c73d-479e-837d-4177d44f3189",
-                "submission_date": "2022-07-26T00:16:47.788Z",
-                "update_date": "2022-07-27T20:39:38.813Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/f34d4883-429a-4260-9b1b-9c1e9844c80b": {
-            "process_core": {
-                "process_id": "process_id_33"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "f34d4883-429a-4260-9b1b-9c1e9844c80b",
-                "submission_date": "2022-07-26T00:16:48.593Z",
-                "update_date": "2022-08-23T17:25:02.846Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
-            }
-        },
-        "process/f6917bfe-c01a-4644-a55a-52d177103b37": {
-            "insdc_experiment": {
-                "insdc_experiment_accession": "SRX11559747"
-            },
-            "process_core": {
-                "process_id": "process_id_6"
-            },
-            "schema_type": "process",
-            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
-            "provenance": {
-                "document_id": "f6917bfe-c01a-4644-a55a-52d177103b37",
-                "submission_date": "2022-07-26T00:16:47.834Z",
-                "update_date": "2022-07-27T20:39:38.827Z",
-                "schema_major_version": 9,
+                "document_id": "71df9d7e-c283-4379-9292-f497c56bb615",
+                "submission_date": "2022-07-26T00:16:46.527Z",
+                "update_date": "2022-07-27T20:39:39.175Z",
+                "schema_major_version": 6,
                 "schema_minor_version": 2
             }
         },
@@ -2521,79 +1440,579 @@
                 "schema_minor_version": 6
             }
         },
-        "collection_protocol/f5bf4e91-b9a2-484a-9ec9-7f165e13dcd5": {
-            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "enrichment_protocol/34455725-aa8e-4bf6-b6b6-763d3aa695e4": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
             "schema_type": "protocol",
             "protocol_core": {
-                "protocol_id": "collection_protocol_1",
-                "protocol_name": "surgical resection",
-                "protocol_description": "Specimens were obtained from Brigham & Women\u2019s Hospital or Faulkner Hospital on the day of surgery, processed to single cells and analyzed by scRNA-seq on the same day"
+                "protocol_id": "enrichment_protocol_1",
+                "protocol_name": "cell size selection",
+                "protocol_description": "For scRNA-seq, cells were treated for 5 minutes with TrypLE (Gibco 12605010), filtered through a 40 \u03bcm strainer, resuspended in PBS containing 0.04% BSA, counted manually under the microscope, and loaded onto the 10X Chromium platform immediately."
             },
             "method": {
-                "text": "surgical resection",
-                "ontology": "EFO:0009744",
-                "ontology_label": "surgical resection"
+                "text": "cell size selection",
+                "ontology": "EFO:0009337",
+                "ontology_label": "cell size selection"
             },
+            "maximum_size": 40,
             "provenance": {
-                "document_id": "f5bf4e91-b9a2-484a-9ec9-7f165e13dcd5",
-                "submission_date": "2022-07-26T00:16:46.515Z",
-                "update_date": "2022-07-27T20:39:39.171Z",
-                "schema_major_version": 9,
-                "schema_minor_version": 2
+                "document_id": "34455725-aa8e-4bf6-b6b6-763d3aa695e4",
+                "submission_date": "2022-07-26T00:16:46.540Z",
+                "update_date": "2022-07-27T20:39:39.177Z",
+                "schema_major_version": 3,
+                "schema_minor_version": 1
             }
         },
-        "analysis_protocol/3809d420-b97a-4194-9ec9-d2a6c1c00519": {
-            "describedBy": "https://schema.humancellatlas.org/type/protocol/analysis/9.2.0/analysis_protocol",
+        "library_preparation_protocol/090eef67-013e-4c09-a507-d595ef50ac02": {
+            "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
             "schema_type": "protocol",
             "protocol_core": {
-                "protocol_id": "analysis_protocol_1",
-                "protocol_name": "Raw gene expression analysis",
-                "protocol_description": "Paired-end reads were processed and mapped to the GRCh38-3.0.0 human genome using Cell Ranger v3.0. Filtering eliminated genes detected in <20 cells, and discarded cells with (1) UMI counts < 1,000, (2) gene counts < 500 or > 8,000, and (3) mitochondrial gene ratio > 10%, resulting in the detection of 20,437 genes in 52,681 cells (see Table S5) across a total of 16 samples, with a median of approximately 3,000 cells from each sample. A median of 1,756 genes and 6,116 transcripts were captured per cell."
+                "protocol_id": "library_protocol_1",
+                "protocol_name": "10x 3' v2 library preparation",
+                "protocol_description": "A total of 7,000-8,000 viable cells per sample were loaded for single cell capturing and cDNA library generation using the 10X Chromium 3\u2019 library construction kit v2 following the manufacturer\u2019s instructions (including 3 washes to minimize ambient RNA)."
             },
-            "type": {
-                "text": "data transformation",
-                "ontology": "OBI:0200000",
-                "ontology_label": "data transformation"
+            "cell_barcode": {
+                "barcode_read": "Read 1",
+                "barcode_offset": 0,
+                "barcode_length": 16
             },
-            "computational_method": "Cell Ranger v3.0",
-            "matrix": {
-                "derivation_process": [
-                    "quantification"
-                ]
+            "input_nucleic_acid_molecule": {
+                "text": "polyA RNA",
+                "ontology": "OBI:0000869",
+                "ontology_label": "polyA RNA"
+            },
+            "nucleic_acid_source": "single cell",
+            "library_construction_method": {
+                "text": "10x 3' V2 sequencing",
+                "ontology": "EFO:0009899",
+                "ontology_label": "10x 3' v2"
+            },
+            "library_construction_kit": {
+                "manufacturer": "10X Genomics"
+            },
+            "end_bias": "3 prime tag",
+            "primer": "poly-dT",
+            "strand": "first",
+            "umi_barcode": {
+                "barcode_read": "Read 1",
+                "barcode_offset": 16,
+                "barcode_length": 10
             },
             "provenance": {
-                "document_id": "3809d420-b97a-4194-9ec9-d2a6c1c00519",
-                "submission_date": "2022-07-26T00:16:46.575Z",
-                "update_date": "2022-07-27T20:39:39.180Z",
+                "document_id": "090eef67-013e-4c09-a507-d595ef50ac02",
+                "submission_date": "2022-07-26T00:16:46.551Z",
+                "update_date": "2022-07-27T20:39:39.178Z",
+                "schema_major_version": 6,
+                "schema_minor_version": 3
+            }
+        },
+        "process/09575418-0164-43a8-bb8e-18572b62564b": {
+            "process_core": {
+                "process_id": "process_id_18"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "09575418-0164-43a8-bb8e-18572b62564b",
+                "submission_date": "2022-07-26T00:16:48.088Z",
+                "update_date": "2022-07-27T20:39:38.873Z",
                 "schema_major_version": 9,
                 "schema_minor_version": 2
             }
         },
-        "analysis_file/be9b666c-9497-4c75-858c-978eabc37048": {
-            "describedBy": "https://schema.humancellatlas.org/type/file/6.4.0/analysis_file",
-            "schema_type": "file",
-            "file_core": {
-                "file_name": "GSE180878_Li_Brugge_10XscRNAseq_GeneCellMatrix_RNAcounts_human.csv.gz",
-                "format": "csv.gz",
-                "content_description": [
-                    {
-                        "text": "Raw gene expression matrix",
-                        "ontology": "data:3917",
-                        "ontology_label": "Count matrix"
-                    },
-                    {
-                        "text": "Gene list",
-                        "ontology": "data:1270",
-                        "ontology_label": "Feature table"
-                    }
-                ]
+        "process/0ec75821-a2cb-4ccb-b2d1-67535b78dc5b": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559755"
             },
+            "process_core": {
+                "process_id": "process_id_14"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
             "provenance": {
-                "document_id": "be9b666c-9497-4c75-858c-978eabc37048",
-                "submission_date": "2022-07-26T00:16:47.748Z",
-                "update_date": "2022-07-27T20:39:39.423Z",
-                "schema_major_version": 6,
-                "schema_minor_version": 4
+                "document_id": "0ec75821-a2cb-4ccb-b2d1-67535b78dc5b",
+                "submission_date": "2022-07-26T00:16:48.044Z",
+                "update_date": "2022-07-27T20:39:38.858Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/192fe4e2-0f4d-4f7c-a5d0-5edfb64cbc36": {
+            "process_core": {
+                "process_id": "process_id_31"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "192fe4e2-0f4d-4f7c-a5d0-5edfb64cbc36",
+                "submission_date": "2022-07-26T00:16:48.237Z",
+                "update_date": "2022-07-27T20:39:38.925Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/1a7db1e0-a366-4b48-9a42-57fb05913c5d": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559753"
+            },
+            "process_core": {
+                "process_id": "process_id_12"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "1a7db1e0-a366-4b48-9a42-57fb05913c5d",
+                "submission_date": "2022-07-26T00:16:48.021Z",
+                "update_date": "2022-07-27T20:39:38.848Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/1c2fea8d-91e8-4bf9-9fa4-fa942cee2caa": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559754"
+            },
+            "process_core": {
+                "process_id": "process_id_13"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "1c2fea8d-91e8-4bf9-9fa4-fa942cee2caa",
+                "submission_date": "2022-07-26T00:16:48.033Z",
+                "update_date": "2022-07-27T20:39:38.851Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/2fd62ea5-9f16-41a3-8c24-732b48654d35": {
+            "process_core": {
+                "process_id": "process_id_17"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "2fd62ea5-9f16-41a3-8c24-732b48654d35",
+                "submission_date": "2022-07-26T00:16:48.076Z",
+                "update_date": "2022-07-27T20:39:38.869Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/3d97381b-844a-4990-9923-b05e110c5f8a": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559752"
+            },
+            "process_core": {
+                "process_id": "process_id_11"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "3d97381b-844a-4990-9923-b05e110c5f8a",
+                "submission_date": "2022-07-26T00:16:48.009Z",
+                "update_date": "2022-07-27T20:39:38.845Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/4d5a4e0b-eed4-4e49-b5cb-aa3d6fe3efed": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559756"
+            },
+            "process_core": {
+                "process_id": "process_id_15"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "4d5a4e0b-eed4-4e49-b5cb-aa3d6fe3efed",
+                "submission_date": "2022-07-26T00:16:48.054Z",
+                "update_date": "2022-07-27T20:39:38.863Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/57654bf2-186c-44da-86d5-0a4a889b102b": {
+            "process_core": {
+                "process_id": "process_id_25"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "57654bf2-186c-44da-86d5-0a4a889b102b",
+                "submission_date": "2022-07-26T00:16:48.166Z",
+                "update_date": "2022-07-27T20:39:38.901Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/57742b3f-28ec-452d-a66e-c005ee7f8a48": {
+            "process_core": {
+                "process_id": "process_id_21"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "57742b3f-28ec-452d-a66e-c005ee7f8a48",
+                "submission_date": "2022-07-26T00:16:48.122Z",
+                "update_date": "2022-07-27T20:39:38.885Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/5cfe9348-3043-4cbb-9cfb-c16dff11eb8b": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559748"
+            },
+            "process_core": {
+                "process_id": "process_id_7"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "5cfe9348-3043-4cbb-9cfb-c16dff11eb8b",
+                "submission_date": "2022-07-26T00:16:47.845Z",
+                "update_date": "2022-07-27T20:39:38.831Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/65175117-d7a3-403f-a941-af4c262cd308": {
+            "process_core": {
+                "process_id": "process_id_28"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "65175117-d7a3-403f-a941-af4c262cd308",
+                "submission_date": "2022-07-26T00:16:48.201Z",
+                "update_date": "2022-07-27T20:39:38.913Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/6aa4a585-d4b2-4292-9d17-a7fd47df65a9": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559745"
+            },
+            "process_core": {
+                "process_id": "process_id_4"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "6aa4a585-d4b2-4292-9d17-a7fd47df65a9",
+                "submission_date": "2022-07-26T00:16:47.811Z",
+                "update_date": "2022-07-27T20:39:38.820Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/6cbd9212-2126-4e67-a6fa-bc40ef709978": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559746"
+            },
+            "process_core": {
+                "process_id": "process_id_5"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "6cbd9212-2126-4e67-a6fa-bc40ef709978",
+                "submission_date": "2022-07-26T00:16:47.823Z",
+                "update_date": "2022-07-27T20:39:38.824Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/74557ecd-1ea5-43fc-aaa0-56211e6e1351": {
+            "process_core": {
+                "process_id": "process_id_19"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "74557ecd-1ea5-43fc-aaa0-56211e6e1351",
+                "submission_date": "2022-07-26T00:16:48.099Z",
+                "update_date": "2022-07-27T20:39:38.877Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/74f78e4f-beb2-4857-bfe4-dbe6f7df5184": {
+            "process_core": {
+                "process_id": "process_id_22"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "74f78e4f-beb2-4857-bfe4-dbe6f7df5184",
+                "submission_date": "2022-07-26T00:16:48.134Z",
+                "update_date": "2022-07-27T20:39:38.889Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/7e616b4b-5e7f-4d72-a874-ce40690e4ebe": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559742"
+            },
+            "process_core": {
+                "process_id": "process_id_1"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "7e616b4b-5e7f-4d72-a874-ce40690e4ebe",
+                "submission_date": "2022-07-26T00:16:47.777Z",
+                "update_date": "2022-07-27T20:39:38.809Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/80813718-58b1-4a2c-9ac6-1192c45a7ccb": {
+            "process_core": {
+                "process_id": "process_id_30"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "80813718-58b1-4a2c-9ac6-1192c45a7ccb",
+                "submission_date": "2022-07-26T00:16:48.224Z",
+                "update_date": "2022-07-27T20:39:38.921Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/8708c2d3-fe7b-4ccd-890b-483a02a2c8f8": {
+            "process_core": {
+                "process_id": "process_id_32"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "8708c2d3-fe7b-4ccd-890b-483a02a2c8f8",
+                "submission_date": "2022-07-26T00:16:48.250Z",
+                "update_date": "2022-07-27T20:39:38.929Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/8868992d-d27c-48f1-809d-df4735211dbd": {
+            "process_core": {
+                "process_id": "process_id_27"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "8868992d-d27c-48f1-809d-df4735211dbd",
+                "submission_date": "2022-07-26T00:16:48.189Z",
+                "update_date": "2022-07-27T20:39:38.909Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/a0296012-dfb0-4b7a-b5e2-d3910ee9c6b6": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559757"
+            },
+            "process_core": {
+                "process_id": "process_id_16"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "a0296012-dfb0-4b7a-b5e2-d3910ee9c6b6",
+                "submission_date": "2022-07-26T00:16:48.065Z",
+                "update_date": "2022-07-27T20:39:38.866Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/a0ed34f1-774c-4302-a387-b4b9d3541688": {
+            "process_core": {
+                "process_id": "process_id_23"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "a0ed34f1-774c-4302-a387-b4b9d3541688",
+                "submission_date": "2022-07-26T00:16:48.144Z",
+                "update_date": "2022-07-27T20:39:38.893Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/a9c24c08-6cc1-4222-81ca-c920a344a4c5": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559750"
+            },
+            "process_core": {
+                "process_id": "process_id_9"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "a9c24c08-6cc1-4222-81ca-c920a344a4c5",
+                "submission_date": "2022-07-26T00:16:47.940Z",
+                "update_date": "2022-07-27T20:39:38.838Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/b240e7ce-e0fb-4602-bc07-1a1b282eacb3": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559749"
+            },
+            "process_core": {
+                "process_id": "process_id_8"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "b240e7ce-e0fb-4602-bc07-1a1b282eacb3",
+                "submission_date": "2022-07-26T00:16:47.860Z",
+                "update_date": "2022-07-27T20:39:38.834Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/b2b6a004-5c11-4711-b025-456127973d3a": {
+            "process_core": {
+                "process_id": "process_id_26"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "b2b6a004-5c11-4711-b025-456127973d3a",
+                "submission_date": "2022-07-26T00:16:48.178Z",
+                "update_date": "2022-07-27T20:39:38.905Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/b960bcc6-db67-4996-b75e-ef07b34b5108": {
+            "process_core": {
+                "process_id": "process_id_29"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "b960bcc6-db67-4996-b75e-ef07b34b5108",
+                "submission_date": "2022-07-26T00:16:48.212Z",
+                "update_date": "2022-07-27T20:39:38.917Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/bb9e93e0-ae58-43b7-8017-96c013ee2082": {
+            "process_core": {
+                "process_id": "process_id_20"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "bb9e93e0-ae58-43b7-8017-96c013ee2082",
+                "submission_date": "2022-07-26T00:16:48.111Z",
+                "update_date": "2022-07-27T20:39:38.881Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/bc8ef71a-de1d-4c19-b98f-b3cb7f0a7e0b": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559751"
+            },
+            "process_core": {
+                "process_id": "process_id_10"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "bc8ef71a-de1d-4c19-b98f-b3cb7f0a7e0b",
+                "submission_date": "2022-07-26T00:16:47.982Z",
+                "update_date": "2022-07-27T20:39:38.842Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/c11d4100-2323-4834-89e8-c4ece13671c0": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559744"
+            },
+            "process_core": {
+                "process_id": "process_id_3"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "c11d4100-2323-4834-89e8-c4ece13671c0",
+                "submission_date": "2022-07-26T00:16:47.799Z",
+                "update_date": "2022-07-27T20:39:38.816Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/d317b48f-f1a1-4759-a892-698d8a827615": {
+            "process_core": {
+                "process_id": "process_id_24"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "d317b48f-f1a1-4759-a892-698d8a827615",
+                "submission_date": "2022-07-26T00:16:48.155Z",
+                "update_date": "2022-07-27T20:39:38.897Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/d6c733af-c73d-479e-837d-4177d44f3189": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559743"
+            },
+            "process_core": {
+                "process_id": "process_id_2"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "d6c733af-c73d-479e-837d-4177d44f3189",
+                "submission_date": "2022-07-26T00:16:47.788Z",
+                "update_date": "2022-07-27T20:39:38.813Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/f34d4883-429a-4260-9b1b-9c1e9844c80b": {
+            "process_core": {
+                "process_id": "process_id_33"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "f34d4883-429a-4260-9b1b-9c1e9844c80b",
+                "submission_date": "2022-07-26T00:16:48.593Z",
+                "update_date": "2022-08-23T17:25:02.846Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
+            }
+        },
+        "process/f6917bfe-c01a-4644-a55a-52d177103b37": {
+            "insdc_experiment": {
+                "insdc_experiment_accession": "SRX11559747"
+            },
+            "process_core": {
+                "process_id": "process_id_6"
+            },
+            "schema_type": "process",
+            "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+            "provenance": {
+                "document_id": "f6917bfe-c01a-4644-a55a-52d177103b37",
+                "submission_date": "2022-07-26T00:16:47.834Z",
+                "update_date": "2022-07-27T20:39:38.827Z",
+                "schema_major_version": 9,
+                "schema_minor_version": 2
             }
         },
         "project/9b876d31-0739-4e96-9846-f76e6a427279": {
@@ -2847,49 +2266,6 @@
                 "schema_minor_version": 0
             }
         },
-        "enrichment_protocol/34455725-aa8e-4bf6-b6b6-763d3aa695e4": {
-            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
-            "schema_type": "protocol",
-            "protocol_core": {
-                "protocol_id": "enrichment_protocol_1",
-                "protocol_name": "cell size selection",
-                "protocol_description": "For scRNA-seq, cells were treated for 5 minutes with TrypLE (Gibco 12605010), filtered through a 40 \u03bcm strainer, resuspended in PBS containing 0.04% BSA, counted manually under the microscope, and loaded onto the 10X Chromium platform immediately."
-            },
-            "method": {
-                "text": "cell size selection",
-                "ontology": "EFO:0009337",
-                "ontology_label": "cell size selection"
-            },
-            "maximum_size": 40,
-            "provenance": {
-                "document_id": "34455725-aa8e-4bf6-b6b6-763d3aa695e4",
-                "submission_date": "2022-07-26T00:16:46.540Z",
-                "update_date": "2022-07-27T20:39:39.177Z",
-                "schema_major_version": 3,
-                "schema_minor_version": 1
-            }
-        },
-        "dissociation_protocol/71df9d7e-c283-4379-9292-f497c56bb615": {
-            "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
-            "schema_type": "protocol",
-            "protocol_core": {
-                "protocol_id": "dissociation_protocol_1",
-                "protocol_name": "mechanical dissociation",
-                "protocol_description": "Cells were then pelleted by centrifugation, further dissociated by sequentially pipetting with 10, 5, and 1-ml pipette tips, and recentrifuged. The resulting cell pellet was used directly to establish organoid culture as previously described (Rosenbluth et al., 2020) or further dissociated into single cells for scRNA-seq or CyTOF analysis."
-            },
-            "method": {
-                "text": "mechinical dissociation",
-                "ontology": "EFO:0009129",
-                "ontology_label": "mechinical dissociation"
-            },
-            "provenance": {
-                "document_id": "71df9d7e-c283-4379-9292-f497c56bb615",
-                "submission_date": "2022-07-26T00:16:46.527Z",
-                "update_date": "2022-07-27T20:39:39.175Z",
-                "schema_major_version": 6,
-                "schema_minor_version": 2
-            }
-        },
         "sequencing_protocol/71ab4e5a-9475-49e6-b061-09f8854ebd09": {
             "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
             "schema_type": "protocol",
@@ -2919,6 +2295,630 @@
                 "update_date": "2022-07-27T20:39:39.179Z",
                 "schema_major_version": 10,
                 "schema_minor_version": 1
+            }
+        },
+        "specimen_from_organism/10dfef3f-6932-41bf-8ad2-b76c70e8cbb3": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422998",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (c. 5251C>T),25,Premenopausal,0,0,Black,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422998",
+                "insdc_sample_accession": "SRS9598105"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "10dfef3f-6932-41bf-8ad2-b76c70e8cbb3",
+                "submission_date": "2022-07-26T00:16:46.135Z",
+                "update_date": "2022-08-23T17:15:17.722Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/12574b13-e36d-43e8-95b4-083e8d23ac7b": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20423002",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,WT,36,Premenopausal,2,0,Black,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20423002",
+                "insdc_sample_accession": "SRS9598116"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "12574b13-e36d-43e8-95b4-083e8d23ac7b",
+                "submission_date": "2022-07-26T00:16:46.290Z",
+                "update_date": "2022-08-23T17:15:17.831Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/188469ce-7d7a-4054-8cf1-32a6ec8ec165": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422996",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (c.5266dupC (p.GLn1756Profs*74)),52,Surgical menopause,1,1,Jewish,Yes,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422996",
+                "insdc_sample_accession": "SRS9598107"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "188469ce-7d7a-4054-8cf1-32a6ec8ec165",
+                "submission_date": "2022-07-26T00:16:46.159Z",
+                "update_date": "2022-08-23T17:15:17.743Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/1c516819-d0f4-482d-8fcd-04d5e31552af": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422995",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (c.4035delA),53,Surgical menopause,2,1,White,Yes,Yes",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422995",
+                "insdc_sample_accession": "SRS9598108"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "1c516819-d0f4-482d-8fcd-04d5e31552af",
+                "submission_date": "2022-07-26T00:16:46.172Z",
+                "update_date": "2022-08-23T17:15:17.751Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/44d876d1-f4e3-426f-9027-144a492eb615": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20423001",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,WT,39,Premenopausal,n/a,n/a,Jewish,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20423001",
+                "insdc_sample_accession": "SRS9598118"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "44d876d1-f4e3-426f-9027-144a492eb615",
+                "submission_date": "2022-07-26T00:16:46.302Z",
+                "update_date": "2022-08-23T17:15:17.841Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/48a18b04-8b37-4db0-a88e-f756accc7a0e": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422997",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (del exons 21-24),35,Premenopausal,2,2,White,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422997",
+                "insdc_sample_accession": "SRS9598106"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "48a18b04-8b37-4db0-a88e-f756accc7a0e",
+                "submission_date": "2022-07-26T00:16:46.147Z",
+                "update_date": "2022-08-23T17:15:17.732Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/5352646c-fffb-46b0-a9ef-8508af699458": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20423003",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (n/a),n/a,n/a,n/a,n/a,n/a,n/a,n/a",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20423003",
+                "insdc_sample_accession": "SRS9598117"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "5352646c-fffb-46b0-a9ef-8508af699458",
+                "submission_date": "2022-07-26T00:16:46.277Z",
+                "update_date": "2022-08-23T17:15:17.822Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/67aee6a6-84fe-46cc-832d-44febe82a16a": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422993",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (n/a_,n/a,n/a,n/a,n/a,n/a,n/a,n/a",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422993",
+                "insdc_sample_accession": "SRS9598110"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "67aee6a6-84fe-46cc-832d-44febe82a16a",
+                "submission_date": "2022-07-26T00:16:46.203Z",
+                "update_date": "2022-08-23T17:15:17.770Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/706204f2-6d2a-44c6-a482-0a2b1a702e01": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20423004",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (p.Q2899*),65,Surgical menopause,0,0,White,Yes,Yes",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20423004",
+                "insdc_sample_accession": "SRS9598115"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "706204f2-6d2a-44c6-a482-0a2b1a702e01",
+                "submission_date": "2022-07-26T00:16:46.265Z",
+                "update_date": "2022-08-23T17:15:17.813Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/87ce69d7-c3f7-4d25-8218-f0d081695803": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422991",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.5796_5797delTA),39,Surgical menopause,1,1,White,Yes,Yes",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422991",
+                "insdc_sample_accession": "SRS9598112"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "87ce69d7-c3f7-4d25-8218-f0d081695803",
+                "submission_date": "2022-07-26T00:16:46.229Z",
+                "update_date": "2022-08-23T17:15:17.787Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/95d2f089-ec1a-496e-8399-84ab980c7a2e": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422990",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.715delA (p.Ser239Valfs*2)),50,Premenopausal,6,4,White,Yes,Yes",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422990",
+                "insdc_sample_accession": "SRS9598113"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "95d2f089-ec1a-496e-8399-84ab980c7a2e",
+                "submission_date": "2022-07-26T00:16:46.241Z",
+                "update_date": "2022-08-23T17:15:17.794Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/a0ed2c89-ddd9-4f38-a801-dcaf1f8809cb": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422992",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.8487+3A>G),33,Premenopausal,1,0,White,Yes,Yes",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422992",
+                "insdc_sample_accession": "SRS9598111"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "a0ed2c89-ddd9-4f38-a801-dcaf1f8809cb",
+                "submission_date": "2022-07-26T00:16:46.216Z",
+                "update_date": "2022-08-23T17:15:17.779Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/a252e8e8-c833-49c6-8daa-930bef8bd105": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422999",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,RAD51C,31,Premenopausal,4,1,Black,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422999",
+                "insdc_sample_accession": "SRS9598104"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "a252e8e8-c833-49c6-8daa-930bef8bd105",
+                "submission_date": "2022-07-26T00:16:46.123Z",
+                "update_date": "2022-08-23T17:15:17.714Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/ceb55be8-123a-47f5-864e-30b9081a86db": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20422994",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA1 (IVS10-2A>T),55,Surgical menopause,4,2,White,Yes,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20422994",
+                "insdc_sample_accession": "SRS9598109"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "ceb55be8-123a-47f5-864e-30b9081a86db",
+                "submission_date": "2022-07-26T00:16:46.189Z",
+                "update_date": "2022-08-23T17:15:17.760Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/d8c6c2fa-51a4-4164-a7e5-ebcf565373dc": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20423005",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Prophylactic,BRCA2 (c.8575delC (p.Gln2859Lysfs*4)),57,Surgical menopause,2,2,White,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20423005",
+                "insdc_sample_accession": "SRS9598114"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "d8c6c2fa-51a4-4164-a7e5-ebcf565373dc",
+                "submission_date": "2022-07-26T00:16:46.253Z",
+                "update_date": "2022-08-23T17:15:17.805Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
+            }
+        },
+        "specimen_from_organism/f371f5fd-bb50-433d-8c96-ac9ee2e9cad5": {
+            "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.5.0/specimen_from_organism",
+            "schema_type": "biomaterial",
+            "biomaterial_core": {
+                "biomaterial_id": "SAMN20423000",
+                "biomaterial_name": "mammary tissue specimen",
+                "biomaterial_description": "mammary tissue,Mammary tissue,Reductive,WT,41,Premenopausal,1,1,White,No,No",
+                "ncbi_taxon_id": [
+                    9606
+                ],
+                "biosamples_accession": "SAMN20423000",
+                "insdc_sample_accession": "SRS9598103"
+            },
+            "genus_species": [
+                {
+                    "text": "Homo sapiens",
+                    "ontology_label": "Homo sapiens"
+                }
+            ],
+            "organ": {
+                "text": "breast",
+                "ontology": "UBERON:0000310",
+                "ontology_label": "breast"
+            },
+            "diseases": [
+                {
+                    "text": "normal",
+                    "ontology": "PATO:0000461",
+                    "ontology_label": "normal"
+                }
+            ],
+            "provenance": {
+                "document_id": "f371f5fd-bb50-433d-8c96-ac9ee2e9cad5",
+                "submission_date": "2022-07-26T00:16:46.111Z",
+                "update_date": "2022-08-23T17:15:17.705Z",
+                "schema_major_version": 10,
+                "schema_minor_version": 5
             }
         }
     },
