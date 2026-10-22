@@ -61,6 +61,9 @@ from chalice import (
     UnauthorizedError,
 )
 import chalice.cli
+from chalice.local import (
+    LocalDevServer,
+)
 import fastavro
 from furl import (
     furl,
@@ -2387,9 +2390,9 @@ class OpenAPIIntegrationTest(IntegrationTestCase):
 
 
 class AzulChaliceLocalIntegrationTest(IntegrationTestCase):
-    url = furl(scheme='http', host='127.0.0.1', port=8000)
-    server = None
-    server_thread = None
+    url: ClassVar[furl]
+    server: ClassVar[LocalDevServer]
+    server_thread: ClassVar[threading.Thread]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -2400,8 +2403,10 @@ class AzulChaliceLocalIntegrationTest(IntegrationTestCase):
         config = factory.create_config_obj()
         cls.server = factory.create_local_server(app_obj=app_module.app,
                                                  config=config,
-                                                 host=cls.url.host,
-                                                 port=cls.url.port)
+                                                 host='127.0.0.1',
+                                                 port=0)
+        host, port = cls.server.server.server_address
+        cls.url = furl(scheme='http', host=host, port=port)
         cls.server_thread = threading.Thread(target=cls.server.server.serve_forever)
         cls.server_thread.start()
 
