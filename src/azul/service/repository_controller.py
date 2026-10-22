@@ -82,6 +82,7 @@ log = logging.getLogger(__name__)
 
 
 class RepositoryController(ServiceController):
+    accepts_personal_access_token = True
 
     @cached_property
     def _repository_service(self) -> RepositoryService:

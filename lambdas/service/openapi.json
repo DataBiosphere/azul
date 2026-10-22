@@ -14043,6 +14043,9 @@
                     },
                     "401": {
                         "description": "\nNo valid OAuth 2.0 access token was provided\n"
+                    },
+                    "403": {
+                        "description": "\nA personal access token was provided, which cannot\nbe exchanged for another one\n"
                     }
                 },
                 "summary": "Obtain a personal access token",
@@ -14078,6 +14081,9 @@
                     },
                     "401": {
                         "description": "\nNo valid OAuth 2.0 access token was provided\n"
+                    },
+                    "403": {
+                        "description": "\nA personal access token was provided, which cannot\nbe used to revoke\n"
                     }
                 },
                 "summary": "Revoke all personal access tokens",
