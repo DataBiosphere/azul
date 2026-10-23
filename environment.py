@@ -262,7 +262,7 @@ def env() -> Mapping[str, str | None]:
         # redeployed, and that the executor image is built and pushed (see
         # terraform/gitlab/runner/Dockerfile for how).
         #
-        'azul_docker_version': '29.8.1',
+        'azul_docker_version': '29.9.1',
 
         # The version of Python used throughout the system. Do not modify this
         # variable directly. It is derived from `requires-python` in
@@ -283,7 +283,7 @@ def env() -> Mapping[str, str | None]:
         # terraform_checksums` and `make -C terraform update_schema`, and commit
         # the resulting changes.
         #
-        'azul_terraform_version': '1.16.4',
+        'azul_terraform_version': '1.16.6',
 
         # The version of the AWS CLI v2 used throughout the system.
         #
@@ -297,7 +297,7 @@ def env() -> Mapping[str, str | None]:
         # After modifying this variable, run `make environment.boot` and commit
         # the resulting changes.
         #
-        'azul_awscli_version': '2.37.7',
+        'azul_awscli_version': '2.38.2',
 
         # The version of the GitHub CLI used in the `github_schedule` GitLab CI
         # job to create GitHub issues from the templates.
@@ -356,7 +356,7 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/_/python',
             },
             'pycharm': {
-                'ref': 'docker.io/ucscgi/azul-pycharm:2025.3.6.1-89',
+                'ref': 'docker.io/ucscgi/azul-pycharm:2025.3.6.1-90',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-pycharm',
                 'is_custom': True
             },
@@ -366,7 +366,7 @@ def env() -> Mapping[str, str | None]:
                 'is_custom': False
             },
             'bigquery_emulator': {
-                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-71',
+                'ref': 'docker.io/ucscgi/azul-bigquery-emulator:0.4.4-72',
                 'url': 'https://hub.docker.com/repository/docker/ucscgi/azul-bigquery-emulator',
                 'is_custom': True
             },
@@ -377,11 +377,11 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/r/clamav/clamav'
             },
             'gitlab': {
-                'ref': 'docker.io/gitlab/gitlab-ce:19.4.1-ce.0',
+                'ref': 'docker.io/gitlab/gitlab-ce:19.5.1-ce.0',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-ce'
             },
             'gitlab_runner': {
-                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v19.4.1',
+                'ref': 'docker.io/gitlab/gitlab-runner:ubuntu-v19.5.1',
                 'url': 'https://hub.docker.com/r/gitlab/gitlab-runner'
             },
             'dind': {
