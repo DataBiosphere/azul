@@ -467,11 +467,18 @@ class Plugin(TDRPlugin[TDRHCABundle, TDRBundleFQID]):
     def _merge_links(self, links_jsons: MutableJSONs) -> MutableJSON:
         """
         Merge the links.json documents from multiple stitched bundles into a
-        single document.
+        single document, ensuring that the result does not depend on the order
+        of the stitched bundles.
+
+        :param links_jsons: The links entities of the root bundle, followed by
+                            those of the bundles stitched to it.
         """
         root, *stitched = links_jsons
         if stitched:
-            source_contents = [row['content'] for row in links_jsons]
+            # The stitched bundles are in the iteration order of a set, which
+            # varies between processes.
+            stitched.sort(key=itemgetter('links_id'))
+            source_contents = [row['content'] for row in [root, *stitched]]
             # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
             #        https://github.com/DataBiosphere/azul/issues/3215
             schema_type = 'links'
