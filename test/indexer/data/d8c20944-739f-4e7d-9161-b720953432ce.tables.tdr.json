@@ -1112,6 +1112,39 @@
                         "content_type": "application/gzip",
                         "size": 718443
                     }
+                },
+                {
+                    "sequence_file_id": "448f32ab-6505-44a1-ba27-1e2ee012146f",
+                    "version": "2020-08-10T21:24:26.174274Z",
+                    "content": {
+                        "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",
+                        "schema_type": "file",
+                        "file_core": {
+                            "file_name": "22167_8#272_1.fastq.gz",
+                            "format": "fastq.gz"
+                        },
+                        "read_index": "read1",
+                        "lane_index": 8,
+                        "provenance": {
+                            "document_id": "448f32ab-6505-44a1-ba27-1e2ee012146f",
+                            "submission_date": "2020-08-10T21:20:11.987Z",
+                            "update_date": "2020-08-10T21:24:26.174Z"
+                        }
+                    },
+                    "file_id": "drs://mock_tdr.lan/v1_d8c20944-739f-4e7d-9161-b720953432ce_cd4fd46d-79d9-461b-9f38-347930019613",
+                    "descriptor": {
+                        "describedBy": "https://schema.humancellatlas.org/system/2.1.0/file_descriptor",
+                        "schema_type": "file_descriptor",
+                        "crc32c": "9f4a1c07",
+                        "sha1": "a2dc257d81b97c05232c1b41adb85cc1cf0e54cf",
+                        "sha256": "6a8d9a6b14043d69828b15e3711311bd4ed283e62ef7fc18205c8043eac9dc33",
+                        "s3_etag": "b1c2d3e4f5a6978877665544332211ff",
+                        "file_name": "22167_8#272_1.fastq.gz",
+                        "file_version": "2020-08-10T21:24:26.174274Z",
+                        "file_id": "caaef0b3-685d-4071-abd7-7a7592ccf1b1",
+                        "content_type": "application/gzip",
+                        "size": 761919
+                    }
                 }
             ]
         },
@@ -1641,6 +1674,22 @@
                             "update_date": "2019-05-14T12:26:53.666Z"
                         }
                     }
+                },
+                {
+                    "process_id": "0d58cccc-8479-49a9-8598-71d2b28371b7",
+                    "version": "2020-08-10T21:24:26.174274Z",
+                    "content": {
+                        "process_core": {
+                            "process_id": "proc_22167_8#272"
+                        },
+                        "schema_type": "process",
+                        "describedBy": "https://schema.humancellatlas.org/type/process/9.0.0/process",
+                        "provenance": {
+                            "document_id": "0d58cccc-8479-49a9-8598-71d2b28371b7",
+                            "submission_date": "2020-08-10T21:20:11.987Z",
+                            "update_date": "2020-08-10T21:24:26.174Z"
+                        }
+                    }
                 }
             ]
         },
@@ -1658,6 +1707,10 @@
                                 "inputs": [
                                     {
                                         "input_id": "8f8b9587-237f-4995-9461-c96eac53d615",
+                                        "input_type": "sequence_file"
+                                    },
+                                    {
+                                        "input_id": "448f32ab-6505-44a1-ba27-1e2ee012146f",
                                         "input_type": "sequence_file"
                                     }
                                 ],
@@ -2040,6 +2093,45 @@
                                     {
                                         "file_type": "supplementary_file",
                                         "file_id": "c343a47d-683f-571d-99c4-1331841b4e63"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "project_id": "116965f3-f094-4769-9d28-ae675c1b569c"
+                },
+                {
+                    "links_id": "a5e0fc4d-b1e2-4827-9853-48918e488f9c",
+                    "version": "2020-08-10T21:24:26.174274Z",
+                    "content": {
+                        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+                        "schema_type": "links",
+                        "schema_version": "2.1.1",
+                        "links": [
+                            {
+                                "link_type": "process_link",
+                                "process_type": "process",
+                                "process_id": "0d58cccc-8479-49a9-8598-71d2b28371b7",
+                                "inputs": [
+                                    {
+                                        "input_type": "cell_suspension",
+                                        "input_id": "201ae4d0-c7c6-4777-947f-18f5268884b6"
+                                    }
+                                ],
+                                "outputs": [
+                                    {
+                                        "output_type": "sequence_file",
+                                        "output_id": "448f32ab-6505-44a1-ba27-1e2ee012146f"
+                                    }
+                                ],
+                                "protocols": [
+                                    {
+                                        "protocol_type": "library_preparation_protocol",
+                                        "protocol_id": "5b503dcb-dca6-4e4f-988b-f7100c030dc5"
+                                    },
+                                    {
+                                        "protocol_type": "sequencing_protocol",
+                                        "protocol_id": "eca2ab79-ad61-411f-815a-4f6d936d992b"
                                     }
                                 ]
                             }

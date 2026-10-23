@@ -4,6 +4,9 @@ from abc import (
 from io import (
     BytesIO,
 )
+from itertools import (
+    permutations,
+)
 import json
 import logging
 from operator import (
@@ -180,8 +183,6 @@ class TDRPluginTestCase(TDRTestCase,
         source = cls.source.ref.spec
         credentials_provider = MockCredentialsProvider(project_id=source.subdomain)
         tdr = MockTDRClient(credentials_provider=credentials_provider)
-        assert cls.netloc is not None
-        MockTDRClient.netloc = cls.netloc
         cls.addClassPatch(mock.patch.object(TDRPlugin, '_tdr', return_value=tdr))
 
     @cached_property
@@ -189,22 +190,31 @@ class TDRPluginTestCase(TDRTestCase,
         plugin_cls = self._plugin_cls()
         return plugin_cls(catalog=self.catalog)
 
-    netloc: tuple[str, int] | None = None
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        image = resolve_docker_image_for_launch('bigquery_emulator')
-        cls.netloc = cls._create_container(image=image,
-                                           container_port=9050,
-                                           command=[
-                                               '--log-level=debug',
-                                               '--port=9050',
-                                               '--project=' + cls.source.ref.spec.subdomain,
-                                               '--dataset=' + cls.source.ref.spec.name
-                                           ])
         cls._patch_tdr_client()
         cls._patch_timestamp_conversion()
+
+    def setUp(self):
+        super().setUp()
+        # Intuitively we would want to share a container between test methods
+        # and only drop the tables in between, but for some unknown reason
+        # dropping tables is slower than restarting the whole container.
+        source = self.source.ref.spec
+        image = resolve_docker_image_for_launch('bigquery_emulator')
+        MockTDRClient.netloc = self._create_container(image=image,
+                                                      container_port=9050,
+                                                      command=[
+                                                          '--log-level=debug',
+                                                          '--port=9050',
+                                                          '--project=' + source.subdomain,
+                                                          '--dataset=' + source.name
+                                                      ])
+
+    def tearDown(self):
+        self._kill_containers()
+        super().tearDown()
 
     @classmethod
     def _patch_timestamp_conversion(cls):
@@ -296,7 +306,6 @@ class TDRPluginTestCase(TDRTestCase,
         # noinspection PyTypeChecker
         table = bigquery.Table(table_name, schema)
         bq.create_table(table=table)
-        self.addCleanup(bq.delete_table, table)
         bq.insert_rows(table=table, selected_fields=schema, rows=map(dump_row, rows))
 
     def _bq_schema_from_row(self, row: BigQueryRow) -> list[bigquery.SchemaField]:
@@ -433,6 +442,7 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
     def test_subgraph_stitching(self):
         downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
         upstream_uuids = [
+            'a5e0fc4d-b1e2-4827-9853-48918e488f9c',
             'b0c2c714-45ee-4759-a32b-8ccbbcf911d4',
             'bd4939c1-a078-43bd-8477-99ae59ceb555',
         ]
@@ -442,9 +452,27 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
         assert len(bundle.stitched) > 0
         with self.assertLogs(plugin_log, level=logging.DEBUG) as cm:
             self._test_fetch_bundle(bundle, load_tables=True)
-        record = one(r for r in cm.records if 'Stitched 2 bundle(s): ' in r.message)
+        record = one(r for r in cm.records if 'Stitched 3 bundle(s): ' in r.message)
         for upstream_uuid in upstream_uuids:
             self.assertIn("uuid='" + upstream_uuid, record.message)
+
+    def test_merge_links(self):
+        """
+        Ensure that _merge_links is deterministic and insensitive to the order
+        in which _stitch_bundles emits the stitched bundles
+        """
+        downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
+        fqid = self.bundle_fqid(uuid=downstream_uuid,
+                                version='2020-08-10T21:24:26.174274Z')
+        expected_bundle = self._load_canned_bundle(fqid)
+        self._make_mock_tables(fqid.source)
+        entities, root_entities, links_jsons = self.plugin._stitch_bundles(expected_bundle)
+        root, *stitched = links_jsons
+        self.assertEqual(downstream_uuid, root['links_id'])
+        for permutation in permutations(stitched):
+            with self.subTest(stitched=[row['links_id'] for row in permutation]):
+                actual_links = self.plugin._merge_links([root, *permutation])
+                self.assertEqual(expected_bundle.links, actual_links)
 
     def _test_fetch_bundle(self,
                            test_bundle: TDRHCABundle,
@@ -456,10 +484,10 @@ class TestTDRHCAPlugin(DCP2CannedBundleTestCase,
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
         assert isinstance(emulated_bundle, TDRHCABundle)
-        # Manifest and metadata should both be sorted by entity UUID
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
         self.assertEqual(test_bundle.metadata, emulated_bundle.metadata)
         self.assertEqual(test_bundle.links, emulated_bundle.links)
+        self.assertEqual(test_bundle.stitched, emulated_bundle.stitched)
 
 
 class TestTDRSourceList(AzulUnitTestCase):
