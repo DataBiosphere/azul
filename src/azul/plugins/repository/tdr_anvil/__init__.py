@@ -631,6 +631,9 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         the result if they are non-empty and are used to produce batched bundle
         formats (i.e. replica and supplementary).
 
+        If the snapshot is huge, the non-schema tables are excluded, too. See
+        :py:meth:`_is_huge` for why.
+
         Because the partitions of a table do not contain exactly the same number
         of bundles, calculating the batch size statistics for the entire table
         at once produces a different result than performing the same calculation
@@ -663,7 +666,14 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # replica bundle, so a dedicated anvil_dataset batch would be redundant.
         table_names.discard(BundleType.no_bundle.table_name)
         if self._is_huge(source):
-            pass
+            non_schema_tables = {
+                table_name
+                for table_name in table_names
+                if self._pk_column(source.spec, table_name) is None
+            }
+            log.warning('Excluding replicas from %d non-schema table(s) in %s',
+                        len(non_schema_tables), source.spec)
+            table_names -= non_schema_tables
         table_names = sorted(filter(is_batched, table_names))
         batch_columns_by_table = {
             table_name: self._batch_column(source.spec, table_name)

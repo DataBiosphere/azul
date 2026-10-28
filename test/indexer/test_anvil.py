@@ -90,6 +90,7 @@ from azul.terra import (
 )
 from azul_test_case import (
     TDRTestCase,
+    patch_config,
 )
 from indexer import (
     AnvilCannedBundleTestCase,
@@ -244,6 +245,34 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
         with self.stacked_patches(self._duos_patches(tdr_response)):
             self.assertEqual({'anvil_biosample': 3, 'non_schema_orphan_table': 5},
                              self.plugin.tdr.row_counts(self.source.ref))
+
+    def test_huge_snapshot(self):
+        """
+        No replica bundles are listed for the tables that the AnVIL schema
+        doesn't describe, once a snapshot is huge.
+        """
+        source_ref = self.source.ref
+        self._make_mock_tables(source_ref)
+        self._mock_normal_duos()
+        plugin = self.plugin
+        row_count = plugin._non_schema_row_count(source_ref)
+        self.assertGreater(row_count, 0)
+        for threshold, is_huge in [(row_count, False), (row_count - 1, True)]:
+            with self.subTest(threshold=threshold):
+                with patch_config('anvil_huge_dataset_threshold', threshold):
+                    self.assertEqual(is_huge, plugin._is_huge(source_ref))
+                    bundle_fqids = plugin.list_bundles(source_ref, '')
+                    self.assertEqual(not is_huge,
+                                     self.replica_bundle() in bundle_fqids)
+                    # Bundles from the tables the schema does describe remain
+                    for bundle_fqid in [
+                        self.primary_bundle(),
+                        self.supplementary_bundle(),
+                        self.bundle_fqid(table_name='anvil_donor')
+                    ]:
+                        self.assertIn(bundle_fqid, bundle_fqids)
+                    self.assertEqual(len(bundle_fqids),
+                                     plugin.count_bundles(source_ref))
 
     def test_absent_duos_id(self):
         source_ref = self.source.ref
