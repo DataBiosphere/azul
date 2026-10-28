@@ -1543,6 +1543,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         self.assertEqual(expected_response, response)
 
 
+# FIXME: Remove this test
+#        https://github.com/DataBiosphere/azul/issues/8448
+#
 class TestAnvilResponseWithoutAugmentations(AnvilIndexerTestCase,
                                             WebServiceTestCase):
     """
