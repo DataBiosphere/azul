@@ -541,7 +541,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             FROM {backtick(self._full_table_name(source.spec, table_name))}
             WHERE STARTS_WITH(LOWER({pk_column}), {prefix!r})
         '''))['count']
-        sizes_by_table = self._batch_tables(source.spec, prefix)
+        sizes_by_table = self._batch_tables(source, prefix)
         batched_count = sum(batch_size for (_, batch_size) in sizes_by_table.values())
         return primary_count + batched_count
 
@@ -565,7 +565,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                                              table_name=table_name,
                                              primary_key=row[pk_column])
             bundles.append(bundle_fqid)
-        prefix_lengths_by_table = self._batch_tables(source.spec, prefix)
+        prefix_lengths_by_table = self._batch_tables(source, prefix)
         for table_name, (batch_prefix_length, _) in prefix_lengths_by_table.items():
             batch_prefixes = Prefix(common=prefix,
                                     partition=batch_prefix_length - len(prefix)).partition_prefixes()
@@ -619,7 +619,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         return bundle
 
     def _batch_tables(self,
-                      source: TDRSourceSpec,
+                      source: TDRSourceRef,
                       prefix: str,
                       ) -> dict[str, tuple[int, int]]:
         """
@@ -655,20 +655,22 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
         target_size = 256
         prefix_len = len(prefix)
-        table_names = self.tdr.list_tables(source)
+        table_names = self.tdr.list_tables(source.spec)
         # This table is present in all snapshots. It is large and contains no
         # useful metadata, so we skip indexing replicas from it.
         table_names.discard('datarepo_row_ids')
         # The dataset entity is already included as an orphan in every other
         # replica bundle, so a dedicated anvil_dataset batch would be redundant.
         table_names.discard(BundleType.no_bundle.table_name)
+        if self._is_huge(source):
+            pass
         table_names = sorted(filter(is_batched, table_names))
         batch_columns_by_table = {
-            table_name: self._batch_column(source, table_name)
+            table_name: self._batch_column(source.spec, table_name)
             for table_name in table_names
         }
         log.info('Calculating batch prefix lengths for partition %r of %d tables '
-                 'in source %s', prefix, len(table_names), source)
+                 'in source %s', prefix, len(table_names), source.spec)
         # The extraneous outer 'SELECT *' works around a bug in BigQuery emulator
         # FIXME: BigQuery Emulator rejects valid query
         #        https://github.com/DataBiosphere/azul/issues/6704
@@ -685,7 +687,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     SELECT
                         {repeat(f'LOWER(SUBSTR({batch_column}, {prefix_len} + {{i}}, 1)) AS p{{i}}')},
                         COUNT(*) AS num_rows
-                    FROM {backtick(self._full_table_name(source, table_name))}
+                    FROM {backtick(self._full_table_name(source.spec, table_name))}
                     WHERE STARTS_WITH(LOWER({batch_column}), {prefix!r})
                     GROUP BY ROLLUP ({repeat('p{i}')})
                 )
@@ -706,6 +708,28 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             return table_name, (prefix_length, num_batches)
 
         return dict(map(result, self._run_sql(query)))
+
+    def _is_huge(self, source: TDRSourceRef) -> bool:
+        """
+        Whether the given snapshot contains so many non-schema orphans that we
+        have to exclude them from the replica index. The only way to retrieve
+        such an orphan is a verbatim manifest of an entire dataset, which is
+        precisely what would currently fail for snapshots of this size, if we
+        were to include these replicas.
+        """
+        threshold = config.anvil_huge_dataset_threshold
+        return self._non_schema_row_count(source) > threshold
+
+    def _non_schema_row_count(self, source: TDRSourceRef) -> int:
+        """
+        The number of rows in the tables of the given snapshot that the AnVIL
+        schema doesn't describe.
+        """
+        return sum(
+            num_rows
+            for table_name, num_rows in self.tdr.row_counts(source).items()
+            if self._pk_column(source.spec, table_name) is None
+        )
 
     def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         assert not bundle_fqid.is_batched, bundle_fqid

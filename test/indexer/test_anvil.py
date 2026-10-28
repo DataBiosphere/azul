@@ -120,7 +120,11 @@ class DUOSTestCase(TDRTestCase, ABC):
     def normal_tdr_response(self) -> MutableJSON:
         return {
             'name': self.source.ref.spec.name,
-            'duosFirecloudGroup': {'duosId': 'DUOS-000000'}
+            'duosFirecloudGroup': {'duosId': 'DUOS-000000'},
+            'tables': [
+                {'name': name, 'rowCount': len(table['rows'])}
+                for name, table in self._canned_tables().items()
+            ]
         }
 
     @property
@@ -230,6 +234,16 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     self.assertEqual(canned_bundle.entities, bundle.entities)
                     self.assertEqual(canned_bundle.links, bundle.links)
                     self.assertEqual(canned_bundle.orphans, bundle.orphans)
+
+    def test_row_counts(self):
+        tables = [
+            {'name': 'anvil_biosample', 'rowCount': 3},
+            {'name': 'non_schema_orphan_table', 'rowCount': 5}
+        ]
+        tdr_response = self.normal_tdr_response | {'tables': tables}
+        with self.stacked_patches(self._duos_patches(tdr_response)):
+            self.assertEqual({'anvil_biosample': 3, 'non_schema_orphan_table': 5},
+                             self.plugin.tdr.row_counts(self.source.ref))
 
     def test_absent_duos_id(self):
         source_ref = self.source.ref
