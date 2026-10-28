@@ -158,7 +158,15 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _replica_contents(self, entity: EntityReference) -> JSON:
-        return ChainMap(self.bundle.entities, self.bundle.orphans)[entity]
+        contents = ChainMap(self.bundle.entities, self.bundle.orphans)[entity]
+        # A field whose name starts with an underscore is an augmentation of
+        # the entity by this plugin, not a part of the snapshot, so it is
+        # withheld from replicas and therefore from manifests
+        return {
+            field: value
+            for field, value in contents.items()
+            if not field.startswith('_')
+        }
 
     def _convert_entity_type(self, entity_type: str) -> str:
         assert entity_type == 'bundle' or entity_type.startswith('anvil_'), entity_type
@@ -520,6 +528,8 @@ class DatasetTransformer(SingletonTransformer):
         return {
             **cls._dataset_types(),
             'description': null_str,
+            '_tdr_non_schema_row_count': null_int,
+            '_tdr_non_schema_row_count_threshold': null_int,
         }
 
     @classmethod

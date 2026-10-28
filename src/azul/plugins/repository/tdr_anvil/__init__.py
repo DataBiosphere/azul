@@ -777,7 +777,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
             if entity_type == 'anvil_dataset':
                 for row in rows:
-                    self._augment_dataset_with_duos(row, source)
+                    self._augment_dataset(row, source)
             if entity_type == 'anvil_donor':
                 # We expect that the foreign key `part_of_dataset_id` is
                 # redundant for biosamples and donors. To simplify our queries,
@@ -852,8 +852,25 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         assert optional(str.lower, title) == expected_title.lower(), R(
             'Dataset title does not match the snapshot name', title, expected_title)
         ref = self._entity_ref(source.spec, table_name, row)
-        self._augment_dataset_with_duos(row, source)
+        self._augment_dataset(row, source)
         return ref, row
+
+    def _augment_dataset(self, row: MutableJSON, source: TDRSourceRef) -> None:
+        self._augment_dataset_with_duos(row, source)
+        self._augment_dataset_with_row_counts(row, source)
+
+    def _augment_dataset_with_row_counts(self,
+                                         row: MutableJSON,
+                                         source: TDRSourceRef
+                                         ) -> None:
+        """
+        Record the inputs to :py:meth:`_is_huge`, so that a user can tell for
+        each source whether non-schema replicas are missing from the index, and
+        therefore the corresponding dataset-wide verbatim manifest.
+        """
+        row['_tdr_non_schema_row_count'] = self._non_schema_row_count(source)
+        threshold = config.anvil_huge_dataset_threshold
+        row['_tdr_non_schema_row_count_threshold'] = threshold
 
     def _augment_dataset_with_duos(self,
                                    row: MutableJSON,

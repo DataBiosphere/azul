@@ -277,19 +277,14 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
     def test_absent_duos_id(self):
         source_ref = self.source.ref
         self._make_mock_tables(source_ref)
+        normal = self.normal_tdr_response
         cases = {
             'Absent duosFirecloudGroup':
-                {'name': self.source.ref.spec.name},
+                {k: v for k, v in normal.items() if k != 'duosFirecloudGroup'},
             'Empty duosFirecloudGroup':
-                {
-                    'name': self.source.ref.spec.name,
-                    'duosFirecloudGroup': {}
-                },
+                normal | {'duosFirecloudGroup': {}},
             'Null duosId':
-                {
-                    'name': self.source.ref.spec.name,
-                    'duosFirecloudGroup': {'duosId': None}
-                },
+                normal | {'duosFirecloudGroup': {'duosId': None}},
         }
         for sub_test, tdr_response in cases.items():
             with self.subTest(sub_test):
@@ -532,7 +527,24 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
             for ref in bundle.orphans
             if ref.entity_type == 'anvil_dataset'
         )
-        expected = bundle.orphans if config.enable_replicas else {}
+
+        def is_augmentation(field: str) -> bool:
+            return field.startswith('_')
+
+        if config.enable_replicas:
+            expected = dict(bundle.orphans)
+            dataset_ref = EntityReference(entity_type='anvil_dataset',
+                                          entity_id=dataset_entity_id)
+            dataset = expected[dataset_ref]
+            # The canned bundle carries the augmented fields, replicas don't
+            self.assertTrue(any(map(is_augmentation, dataset)))
+            expected[dataset_ref] = {
+                field: value
+                for field, value in dataset.items()
+                if not is_augmentation(field)
+            }
+        else:
+            expected = {}
         actual = {}
         hits = self._get_all_hits()
         for hit in hits:

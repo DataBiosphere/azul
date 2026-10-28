@@ -940,6 +940,10 @@
                         ],
                         "description": "Study description from DUOS",
                         "duos_id": "DUOS-000000",
+                        "_tdr_non_schema_row_count": 3,
+                        "_tdr_non_schema_row_count_": 3,
+                        "_tdr_non_schema_row_count_threshold": 2000000,
+                        "_tdr_non_schema_row_count_threshold_": 2000000,
                         "owner": [
                             "Debbie Nickerson"
                         ],
@@ -1138,6 +1142,10 @@
                         ],
                         "description": "Study description from DUOS",
                         "duos_id": "DUOS-000000",
+                        "_tdr_non_schema_row_count": 3,
+                        "_tdr_non_schema_row_count_": 3,
+                        "_tdr_non_schema_row_count_threshold": 2000000,
+                        "_tdr_non_schema_row_count_threshold_": 2000000,
                         "owner": [
                             "Debbie Nickerson"
                         ],

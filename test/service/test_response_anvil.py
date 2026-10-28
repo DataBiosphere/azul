@@ -1,3 +1,11 @@
+from unittest.mock import (
+    patch,
+)
+
+from more_itertools import (
+    one,
+)
+
 from azul.deployment import (
     aws,
 )
@@ -10,6 +18,9 @@ from azul.lib.types import (
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.plugins.metadata.anvil.indexer.transform import (
+    DatasetTransformer,
 )
 from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundleFQID,
@@ -795,7 +806,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                                 'data_modality': [None],
                                 'accessible': True,
                                 'description': 'Study description from DUOS',
-                                'duos_id': 'DUOS-000000'
+                                'duos_id': 'DUOS-000000',
+                                '_tdr_non_schema_row_count': 3,
+                                '_tdr_non_schema_row_count_threshold': 2000000
                             }
                         ],
                         'diagnoses': [
@@ -1528,3 +1541,47 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         raise_on_status(response)
         response = response.json()
         self.assertEqual(expected_response, response)
+
+
+class TestAnvilResponseWithoutAugmentations(AnvilIndexerTestCase,
+                                            WebServiceTestCase):
+    """
+    A dataset aggregate written before this plugin began augmenting dataset
+    entities lacks the augmented fields. The service must serve such an
+    aggregate as it finds it, so that a deployment need not be reindexed for
+    the augmentations to be introduced.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    @classmethod
+    def bundles(cls) -> list[TDRAnvilBundleFQID]:
+        return [cls.primary_bundle()]
+
+    @classmethod
+    def _index_canned_bundle(cls, bundle_fqid, *, delete=False):
+        types = {
+            field: field_type
+            for field, field_type in DatasetTransformer._detailed_dataset_types().items()
+            if not field.startswith('_')
+        }
+        with patch.object(DatasetTransformer,
+                          '_detailed_dataset_types',
+                          new=classmethod(lambda cls: types)):
+            return super()._index_canned_bundle(bundle_fqid, delete=delete)
+
+    def test(self):
+        url = str(self.base_url.set(path='/index/datasets'))
+        response = self._http_client.request('GET', url)
+        raise_on_status(response)
+        dataset = one(one(response.json()['hits'])['datasets'])
+        self.assertEqual('ANVIL_Test', dataset['title'])
+        self.assertEqual([], [f for f in dataset if f.startswith('_')])
