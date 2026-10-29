@@ -371,7 +371,7 @@ def env() -> Mapping[str, str | None]:
                 'is_custom': True
             },
             'opensearch': {
-                'ref': 'docker.io/opensearchproject/opensearch:2.19.6',
+                'ref': 'docker.io/opensearchproject/opensearch:2.19.7',
                 'url': 'https://hub.docker.com/r/opensearchproject/opensearch',
                 'is_custom': False
             },
@@ -408,7 +408,7 @@ def env() -> Mapping[str, str | None]:
                 'url': 'https://hub.docker.com/r/lmenezes/cerebro'
             },
             '_opensearch_dashboards': {
-                'ref': 'docker.io/opensearchproject/opensearch-dashboards:2.19.3',
+                'ref': 'docker.io/opensearchproject/opensearch-dashboards:2.19.7',
                 'url': 'https://hub.docker.com/r/opensearchproject/opensearch-dashboards'
             }
         }),
