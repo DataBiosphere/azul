@@ -3,6 +3,7 @@ from abc import (
     abstractmethod,
 )
 from collections.abc import (
+    Mapping,
     Sequence,
 )
 from enum import (
@@ -692,6 +693,17 @@ class TDRClient(SAMClient, DRSClient):
 
     def drs_object(self, drs_url: furl) -> DRSObject:
         return DRSObject(url=drs_url, http_client=self._http_client)
+
+    def row_counts(self, source: TDRSourceRef) -> Mapping[str, int]:
+        """
+        The number of rows in each table of the given snapshot, by table name,
+        as reported by TDR.
+        """
+        response = self._retrieve_source(source)
+        return {
+            json_str(table['name']): json_int(table['rowCount'])
+            for table in map(json_dict, json_list(response['tables']))
+        }
 
     def get_duos(self,
                  source: TDRSourceRef
