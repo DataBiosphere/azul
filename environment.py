@@ -322,7 +322,7 @@ def env() -> Mapping[str, str | None]:
         # After modifying this variable, run `make environment.boot` and
         # `make gh_checksums`, and commit the resulting changes.
         #
-        'azul_ghcli_version': '2.102.0',
+        'azul_ghcli_version': '2.103.3',
 
         # The version of uv used to create the virtual environment and to
         # install dependencies into it. Do not modify this variable directly. It
