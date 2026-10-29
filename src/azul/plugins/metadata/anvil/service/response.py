@@ -18,6 +18,9 @@ from azul.lib.json import (
     copy_any_json,
     copy_json,
 )
+from azul.lib.strings import (
+    format_and_dedent as fd,
+)
 from azul.lib.types import (
     AnyMutableJSON,
     JSON,
@@ -33,6 +36,9 @@ from azul.lib.types import (
     json_str,
     json_untyped_dict,
     optional,
+)
+from azul.openapi import (
+    schema,
 )
 from azul.plugins import (
     SpecialFields,
@@ -52,6 +58,52 @@ from azul.source import (
 
 
 class AnvilSummaryResponseStage(SummaryResponseStage):
+
+    @property
+    def response_schema(self) -> JSON:
+        def _groups_schema(group_key: str) -> JSON:
+            """
+            The schema of a summary field that counts entities grouped by one of
+            their properties. A group whose key is ``null`` counts the entities
+            that have no value for that property.
+            """
+            group_schema = schema.object(count=int, **{group_key: schema.nullable(str)})
+            return schema.array(group_schema)
+
+        return schema.object(
+            activityCount=int,
+            activityTypes=_groups_schema('type'),
+            biosampleCount=int,
+            datasetCount=int,
+            donorCount=int,
+            donorDiagnosisDiseases=_groups_schema('disease'),
+            donorDiagnosisPhenotypes=_groups_schema('phenotype'),
+            donorSpecies=_groups_schema('species'),
+            fileCount=int,
+            fileFormats=_groups_schema('format'),
+            totalFileSize=float
+        )
+
+    @property
+    def response_description(self) -> str:
+        return fd('''
+            Counts of the entities in the index, subject to the provided
+            filters.
+
+            `activityCount`, `biosampleCount`, `datasetCount`, `donorCount`
+            and `fileCount` count the entities of the respective type.
+            `totalFileSize` is the sum, in bytes, of the sizes of the counted
+            files.
+
+            The remaining properties group entities by one of their properties
+            and count the entities in each group. `activityTypes` groups
+            activities by type, `donorSpecies` groups donors by species,
+            `donorDiagnosisDiseases` and `donorDiagnosisPhenotypes` group
+            donors by the disease and the phenotype of their diagnoses, and
+            `fileFormats` groups files by format. A group whose key is `null`
+            counts the entities that have no value for the property being
+            grouped by.
+        ''')
 
     @property
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
