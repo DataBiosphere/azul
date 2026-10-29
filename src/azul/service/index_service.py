@@ -114,6 +114,24 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
 
     @property
     @abstractmethod
+    def response_schema(self) -> JSON:
+        """
+        The JSON schema of the response returned by :meth:`process_response`, to
+        be used in the OpenAPI spec of the summary endpoint.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def response_description(self) -> str:
+        """
+        A description of the response returned by :meth:`process_response`, to be
+        used in the OpenAPI spec of the summary endpoint.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
         raise NotImplementedError
 

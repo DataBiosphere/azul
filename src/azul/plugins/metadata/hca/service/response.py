@@ -25,6 +25,7 @@ from azul.lib import (
     cached_property,
 )
 from azul.lib.strings import (
+    format_and_dedent as fd,
     to_camel_case,
 )
 from azul.lib.types import (
@@ -43,6 +44,9 @@ from azul.lib.types import (
     json_str,
     json_untyped_dict,
     optional,
+)
+from azul.openapi import (
+    schema,
 )
 from azul.plugins import (
     SpecialFields,
@@ -159,6 +163,44 @@ T = TypeVar('T')
 
 
 class HCASummaryResponseStage(SummaryResponseStage):
+    _array_of_objects_schema = schema.array(schema.object(additionalProperties=True))
+
+    @property
+    def response_schema(self) -> JSON:
+        # FIXME: Add 'projects' to API documentation & schema
+        #        https://github.com/DataBiosphere/azul/issues/3917
+        return schema.object(
+            additionalProperties=True,
+            organTypes=schema.array(str),
+            totalFileSize=float,
+            fileTypeSummaries=self._array_of_objects_schema,
+            cellCountSummaries=self._array_of_objects_schema,
+            donorCount=int,
+            fileCount=int,
+            labCount=int,
+            projectCount=int,
+            speciesCount=int,
+            specimenCount=int
+        )
+
+    @property
+    def response_description(self) -> str:
+        return fd('''
+            Counts the total number and total size in bytes of assorted
+            entities, subject to the provided filters.
+
+            `fileTypeSummaries` provides the count and total size in
+            bytes of files grouped by their format, e.g. "fastq" or
+            "matrix." `fileCount` and `totalFileSize` compile these
+            figures across all file formats. Likewise,
+            `cellCountSummaries` counts cells and their associated
+            documents grouped by organ type, with `organTypes` listing
+            all referenced organs.
+
+            Total counts of unique entities are also provided for other
+            entity types such as projects and tissue donors. These
+            values are not grouped/aggregated.
+        ''')
 
     @property
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
