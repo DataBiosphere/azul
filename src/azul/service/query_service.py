@@ -105,12 +105,6 @@ nested_agg_name = 'myNested'
 untagged_agg_name = 'myUntagged'
 
 
-class IndexNotFoundError(Exception):
-
-    def __init__(self, missing_index: str):
-        super().__init__(f'Index `{missing_index}` was not found')
-
-
 class OpenSearchStage[R1, R2](metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
