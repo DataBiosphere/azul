@@ -92,24 +92,6 @@ class HCASummaryAggregationStage(HCAAggregationStage):
             request.aggs.metric('totalFileSize',
                                 'sum',
                                 field='contents.files.size_')
-        elif entity_type == 'cell_suspensions':
-            # Add a cell count aggregate per organ
-            request.aggs.bucket(
-                'cellCountSummaries',
-                'terms',
-                field='contents.cell_suspensions.organ.keyword',
-                size=config.terms_aggregation_size
-            ).bucket(
-                'cellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
-        elif entity_type == 'samples':
-            # Add an organ aggregate to the OpenSearch request
-            request.aggs.bucket('organTypes',
-                                'terms',
-                                field='contents.samples.effective_organ.keyword',
-                                size=config.terms_aggregation_size)
         elif entity_type == 'projects':
             # Add project cell count sum aggregates from the projects with and
             # without any cell suspension cell counts.
@@ -124,7 +106,7 @@ class HCASummaryAggregationStage(HCAAggregationStage):
                                 child_field='contents.cell_suspensions.total_estimated_cells_',
                                 child_bucket='cellSuspensionCellCount')
         else:
-            assert False, entity_type
+            assert entity_type == 'samples', entity_type
 
         threshold = config.precision_threshold
         for agg_name, cardinality in self._cardinality_aggregations.items():
@@ -142,7 +124,6 @@ class HCASummaryAggregationStage(HCAAggregationStage):
         return {
             'samples': {
                 'specimenCount': 'contents.specimens.document_id',
-                'speciesCount': 'contents.donors.genus_species',
                 'donorCount': 'contents.donors.document_id',
             },
             'projects': {

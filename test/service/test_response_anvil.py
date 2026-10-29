@@ -1488,12 +1488,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
     def test_summary(self):
         expected_response = {
             'activityCount': 2,
-            'activityTypes': [
-                {
-                    'count': 2,
-                    'type': 'Sequencing'
-                }
-            ],
             'biosampleCount': 1,
             'datasetCount': 1,
             'donorCount': 1,
@@ -1501,28 +1495,6 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 {
                     'count': 1,
                     'dataset': 'ANVIL_Test'
-                }
-            ],
-            'donorDiagnosisDiseases': [
-                {
-                    'count': 1,
-                    'disease': 'redacted-A61iJlLx'
-                },
-                {
-                    'count': 1,
-                    'disease': 'redacted-g50ublm/'
-                }
-            ],
-            'donorDiagnosisPhenotypes': [
-                {
-                    'count': 1,
-                    'phenotype': 'redacted-acSYHZUr'
-                }
-            ],
-            'donorSpecies': [
-                {
-                    'count': 1,
-                    'species': 'redacted-ACw+6ecI'
                 }
             ],
             'fileCount': 2,
