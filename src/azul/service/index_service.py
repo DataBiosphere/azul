@@ -133,6 +133,12 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
     @property
     @abstractmethod
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
+        """
+        The name of each aggregation this stage consumes, by the entity type of
+        the index that is authoritative for it. The response passed to
+        :meth:`process_response` is keyed the same way, so the same aggregation
+        may be taken from more than one index.
+        """
         raise NotImplementedError
 
     def prepare_request(self, request: Search) -> Search:
@@ -281,9 +287,11 @@ class IndexService(QueryService):
             aggs = dict(executor.map(summary, aggs_by_authority))
 
         aggs = {
-            agg_name: aggs[entity_type][agg_name]
+            entity_type: {
+                agg_name: aggs[entity_type][agg_name]
+                for agg_name in summary_fields
+            }
             for entity_type, summary_fields in aggs_by_authority.items()
-            for agg_name in summary_fields
         }
 
         response = response_stage.process_response(aggs)

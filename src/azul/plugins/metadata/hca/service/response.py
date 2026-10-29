@@ -255,7 +255,8 @@ class HCASummaryResponseStage(SummaryResponseStage):
         bools = [False, True]
         cell_counts = {
             child: {
-                (parent, present): agg_value(parent + 'CellCount',
+                (parent, present): agg_value('projects',
+                                             parent + 'CellCount',
                                              'buckets',
                                              'hasSome' if present else 'hasNone',
                                              child + 'CellCount',
@@ -285,19 +286,21 @@ class HCASummaryResponseStage(SummaryResponseStage):
             return optional(json_str, bucket['key'])
 
         return SummaryResponse(
-            projectCount=json_int(agg_value('project', 'doc_count')),
-            specimenCount=json_int(agg_value('specimenCount', 'value')),
-            speciesCount=json_int(agg_value('speciesCount', 'value')),
-            fileCount=json_int(agg_value('fileFormat', 'doc_count')),
-            totalFileSize=json_float(agg_value('totalFileSize', 'value')),
-            donorCount=json_int(agg_value('donorCount', 'value')),
-            labCount=json_int(agg_value('labCount', 'value')),
-            organTypes=agg_values(organ_type, 'organTypes', 'buckets'),
+            projectCount=json_int(agg_value('projects', 'project', 'doc_count')),
+            specimenCount=json_int(agg_value('samples', 'specimenCount', 'value')),
+            speciesCount=json_int(agg_value('samples', 'speciesCount', 'value')),
+            fileCount=json_int(agg_value('files', 'fileFormat', 'doc_count')),
+            totalFileSize=json_float(agg_value('files', 'totalFileSize', 'value')),
+            donorCount=json_int(agg_value('samples', 'donorCount', 'value')),
+            labCount=json_int(agg_value('projects', 'labCount', 'value')),
+            organTypes=agg_values(organ_type, 'samples', 'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(file_type_summary,
+                                         'files',
                                          'fileFormat',
                                          values_agg_name,
                                          'buckets'),
             cellCountSummaries=agg_values(organ_cell_count_summary,
+                                          'cell_suspensions',
                                           'cellCountSummaries',
                                           'buckets'),
             projects=[

@@ -12,6 +12,7 @@ from more_itertools import (
 )
 
 from azul.lib import (
+    R,
     cached_property,
 )
 from azul.lib.json import (
@@ -76,10 +77,12 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             biosampleCount=int,
             datasetCount=int,
             donorCount=int,
+            donorDatasets=_groups_schema('dataset'),
             donorDiagnosisDiseases=_groups_schema('disease'),
             donorDiagnosisPhenotypes=_groups_schema('phenotype'),
             donorSpecies=_groups_schema('species'),
             fileCount=int,
+            fileDatasets=_groups_schema('dataset'),
             fileFormats=_groups_schema('format'),
             totalFileSize=float
         )
@@ -103,6 +106,11 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             `fileFormats` groups files by format. A group whose key is `null`
             counts the entities that have no value for the property being
             grouped by.
+
+            `donorDatasets` and `fileDatasets` group donors and files by the
+            title of the dataset they belong to. Every donor and every file
+            belongs to exactly one dataset, so the counts in those two
+            properties add up to `donorCount` and `fileCount` respectively.
         ''')
 
     @property
@@ -120,22 +128,27 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             'donors': [
                 'donors.organism_type',
                 'diagnoses.disease',
-                'diagnoses.phenotype'
+                'diagnoses.phenotype',
+                'datasets.title'
             ],
             'files': [
                 'files.file_format',
-                'totalFileSize'
+                'totalFileSize',
+                'datasets.title'
             ]
         }
 
     def process_response(self, response: JSON) -> MutableJSON:
-        def doc_count(field: str) -> int:
-            return json_int(json_mapping(response[field])['doc_count'])
+        def agg(authority: str, field: str) -> JSON:
+            return json_mapping(json_mapping(response[authority])[field])
 
-        def bucket_count(field: str, bucket_key: str):
-            aggs = json_mapping(response[field])
-            agg = json_mapping(aggs[values_agg_name])
-            buckets = json_element_mappings(agg['buckets'])
+        def doc_count(authority: str, field: str) -> int:
+            return json_int(agg(authority, field)['doc_count'])
+
+        def bucket_count(authority: str, field: str, bucket_key: str):
+            aggs = agg(authority, field)
+            values = json_mapping(aggs[values_agg_name])
+            buckets = json_element_mappings(values['buckets'])
             return [
                 {
                     'count': bucket['doc_count'],
@@ -144,19 +157,32 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
                 for bucket in buckets
             ]
 
-        return {
-            'activityCount': doc_count('activities.activity_type'),
-            'activityTypes': bucket_count('activities.activity_type', 'type'),
-            'biosampleCount': doc_count('biosamples.anatomical_site'),
-            'datasetCount': doc_count('datasets.title'),
-            'donorCount': doc_count('donors.organism_type'),
-            'donorDiagnosisDiseases': bucket_count('diagnoses.disease', 'disease'),
-            'donorDiagnosisPhenotypes': bucket_count('diagnoses.phenotype', 'phenotype'),
-            'donorSpecies': bucket_count('donors.organism_type', 'species'),
-            'fileCount': doc_count('files.file_format'),
-            'fileFormats': bucket_count('files.file_format', 'format'),
-            'totalFileSize': json_float(json_mapping(response['totalFileSize'])['value']),
+        summary = {
+            'activityCount': doc_count('activities', 'activities.activity_type'),
+            'activityTypes': bucket_count('activities', 'activities.activity_type', 'type'),
+            'biosampleCount': doc_count('biosamples', 'biosamples.anatomical_site'),
+            'datasetCount': doc_count('datasets', 'datasets.title'),
+            'donorCount': doc_count('donors', 'donors.organism_type'),
+            'donorDatasets': bucket_count('donors', 'datasets.title', 'dataset'),
+            'donorDiagnosisDiseases': bucket_count('donors', 'diagnoses.disease', 'disease'),
+            'donorDiagnosisPhenotypes': bucket_count('donors', 'diagnoses.phenotype', 'phenotype'),
+            'donorSpecies': bucket_count('donors', 'donors.organism_type', 'species'),
+            'fileCount': doc_count('files', 'files.file_format'),
+            'fileDatasets': bucket_count('files', 'datasets.title', 'dataset'),
+            'fileFormats': bucket_count('files', 'files.file_format', 'format'),
+            'totalFileSize': json_float(agg('files', 'totalFileSize')['value']),
         }
+        self._validate_response(summary)
+        return summary
+
+    def _validate_response(self, summary: MutableJSON):
+        for entity_type in ['donor', 'file']:
+            total = json_int(summary[f'{entity_type}Count'])
+            buckets = json_element_mappings(summary[f'{entity_type}Datasets'])
+            subtotal = sum(json_int(bucket['count']) for bucket in buckets)
+            assert total == subtotal, R(
+                'Per-dataset counts do not add up to the total',
+                entity_type, total, subtotal)
 
 
 class AnvilSearchResponseStage(SearchResponseStage):

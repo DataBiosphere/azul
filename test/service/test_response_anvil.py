@@ -1498,6 +1498,12 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             'biosampleCount': 1,
             'datasetCount': 1,
             'donorCount': 1,
+            'donorDatasets': [
+                {
+                    'count': 1,
+                    'dataset': 'ANVIL_Test'
+                }
+            ],
             'donorDiagnosisDiseases': [
                 {
                     'count': 1,
@@ -1521,6 +1527,12 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 }
             ],
             'fileCount': 2,
+            'fileDatasets': [
+                {
+                    'count': 2,
+                    'dataset': 'ANVIL_Test'
+                }
+            ],
             'fileFormats': [
                 {
                     'count': 1,
