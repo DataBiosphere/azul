@@ -73,14 +73,10 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         return schema.object(
             activityCount=int,
-            activityTypes=_groups_schema('type'),
             biosampleCount=int,
             datasetCount=int,
             donorCount=int,
             donorDatasets=_groups_schema('dataset'),
-            donorDiagnosisDiseases=_groups_schema('disease'),
-            donorDiagnosisPhenotypes=_groups_schema('phenotype'),
-            donorSpecies=_groups_schema('species'),
             fileCount=int,
             fileDatasets=_groups_schema('dataset'),
             fileFormats=_groups_schema('format'),
@@ -99,13 +95,9 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             files.
 
             The remaining properties group entities by one of their properties
-            and count the entities in each group. `activityTypes` groups
-            activities by type, `donorSpecies` groups donors by species,
-            `donorDiagnosisDiseases` and `donorDiagnosisPhenotypes` group
-            donors by the disease and the phenotype of their diagnoses, and
-            `fileFormats` groups files by format. A group whose key is `null`
-            counts the entities that have no value for the property being
-            grouped by.
+            and count the entities in each group. `fileFormats` groups files
+            by format. A group whose key is `null` counts the entities that
+            have no value for the property being grouped by.
 
             `donorDatasets` and `fileDatasets` group donors and files by the
             title of the dataset they belong to. Every donor and every file
@@ -127,8 +119,6 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             ],
             'donors': [
                 'donors.organism_type',
-                'diagnoses.disease',
-                'diagnoses.phenotype',
                 'datasets.title'
             ],
             'files': [
@@ -159,14 +149,10 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         summary = {
             'activityCount': doc_count('activities', 'activities.activity_type'),
-            'activityTypes': bucket_count('activities', 'activities.activity_type', 'type'),
             'biosampleCount': doc_count('biosamples', 'biosamples.anatomical_site'),
             'datasetCount': doc_count('datasets', 'datasets.title'),
             'donorCount': doc_count('donors', 'donors.organism_type'),
             'donorDatasets': bucket_count('donors', 'datasets.title', 'dataset'),
-            'donorDiagnosisDiseases': bucket_count('donors', 'diagnoses.disease', 'disease'),
-            'donorDiagnosisPhenotypes': bucket_count('donors', 'diagnoses.phenotype', 'phenotype'),
-            'donorSpecies': bucket_count('donors', 'donors.organism_type', 'species'),
             'fileCount': doc_count('files', 'files.file_format'),
             'fileDatasets': bucket_count('files', 'datasets.title', 'dataset'),
             'fileFormats': bucket_count('files', 'files.file_format', 'format'),
