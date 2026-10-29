@@ -17,7 +17,6 @@ from more_itertools import (
     first,
     one,
 )
-import opensearchpy
 from opensearchpy import (
     Search,
 )
@@ -51,7 +50,6 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
-    IndexNotFoundError,
     OpenSearchStage,
     Pagination,
     PaginationStage,
@@ -258,10 +256,7 @@ class IndexService(QueryService):
 
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)
-        try:
-            response = request.execute(ignore_cache=True)
-        except opensearchpy.NotFoundError as e:
-            raise IndexNotFoundError(e.info['error']['index'])
+        response = request.execute(ignore_cache=True)
         response = chain.process_response(response)
         return response
 

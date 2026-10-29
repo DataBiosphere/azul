@@ -59,7 +59,6 @@ from azul.service.query_controller import (
     QueryController,
 )
 from azul.service.query_service import (
-    IndexNotFoundError,
     Pagination,
     SortKey,
 )
@@ -351,7 +350,7 @@ class IndexController(QueryController):
                                             pagination=pagination)
         except (BadArgumentException, InvalidUUIDError) as e:
             raise BadRequestError(e)
-        except (EntityNotFoundError, IndexNotFoundError) as e:
+        except EntityNotFoundError as e:
             raise NotFoundError(e)
         return '' if request.method == 'HEAD' else response
 
