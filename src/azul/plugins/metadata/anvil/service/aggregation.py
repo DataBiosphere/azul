@@ -14,6 +14,7 @@ from azul.lib.types import (
 )
 from azul.service.query_service import (
     AggregationStage,
+    SummaryAggregationStage,
 )
 
 
@@ -24,7 +25,7 @@ class AnvilAggregationStage(AggregationStage):
         return agg
 
 
-class AnvilSummaryAggregationStage(AnvilAggregationStage):
+class AnvilSummaryAggregationStage(SummaryAggregationStage, AnvilAggregationStage):
 
     def prepare_request(self, request: Search) -> Search:
         request = super().prepare_request(request)

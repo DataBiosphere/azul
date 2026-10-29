@@ -30,6 +30,7 @@ from azul.plugins import (
 )
 from azul.service.query_service import (
     AggregationStage,
+    SummaryAggregationStage,
     untagged_agg_name,
     values_agg_name,
 )
@@ -60,7 +61,7 @@ class HCAAggregationStage(AggregationStage):
         return agg
 
 
-class HCASummaryAggregationStage(HCAAggregationStage):
+class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):
 
     def prepare_request(self, request: Search) -> Search:
         request = super().prepare_request(request)

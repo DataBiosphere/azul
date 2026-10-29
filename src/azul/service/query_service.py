@@ -315,9 +315,16 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                                 filter_stage=filter_stage)
         return aggregation_stage.wrap(chain)
 
+    @property
+    def _facets(self) -> Sequence[str]:
+        """
+        The facets to aggregate over, every one of the plugin's by default.
+        """
+        return self.plugin.facets
+
     def prepare_request(self, request: Search) -> Search:
         field_mapping = self.plugin.field_mapping
-        for facet in self.plugin.facets:
+        for facet in self._facets:
             aggregate = self._prepare_aggregation(facet=facet,
                                                   facet_path=field_mapping[facet])
             request.aggs.bucket(facet, aggregate)
@@ -332,7 +339,11 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         else:
             self._flatten_nested_aggs(aggs)
             self._translate_response_aggs(aggs)
-            self._populate_accessible(aggs)
+            # The `accessible` facet is synthesized from the `source_id`
+            # facet, so a stage that doesn't aggregate the latter can't offer
+            # the former either.
+            if self.plugin.special_fields.source_id.name in self._facets:
+                self._populate_accessible(aggs)
         return response
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
@@ -521,6 +532,23 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
             for accessible, count in counts_by_accessibility.items()
         ]
         aggs[special_fields.accessible.name] = agg
+
+
+@attrs.frozen(kw_only=True)
+class SummaryAggregationStage(AggregationStage):
+    """
+    An aggregation stage for the /summary endpoint, which consumes only a subset
+    of the aggregations needed to populate the facets in an /index/{entity_type}
+    response. This class ensures that only aggregations actually consumed by the
+    summary endpoint will be requested from the cluster.
+    """
+
+    @property
+    def _facets(self) -> Sequence[str]:
+        plugin = self.plugin
+        response_stage = plugin.summary_response_stage()
+        consumed = set(response_stage.aggs_by_authority[self.entity_type])
+        return [facet for facet in super()._facets if facet in consumed]
 
 
 @attrs.frozen(kw_only=True)
