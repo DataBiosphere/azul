@@ -6,6 +6,7 @@ import logging
 from typing import (
     Any,
     Mapping,
+    Self,
 )
 
 import attr
@@ -357,7 +358,7 @@ class IndexController(QueryController):
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_field)
         filters = query_params.get('filters')
-        pagination = self._pagination(entity_type)
+        pagination = self._Pagination.from_request(self, entity_type)
         authentication = self._authentication(request)
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
         response = self._search(entity_type, filters, pagination, aggregate=True)
@@ -472,49 +473,52 @@ class IndexController(QueryController):
                 }
             return furl(url=self.controller.app.self_url, args=params)
 
-    def _pagination(self, entity_type: str) -> _Pagination:
-        default_sorting = self._metadata_plugin.exposed_indices[entity_type]
-        request = self.current_request
-        params = self._query_params(request)
-        try:
-            sb, sa = self._pagination_params(params)
-        except AssertionError as e:
-            if R.caused(e):
-                raise R.propagate(e, ChaliceViewError)
+        @classmethod
+        def from_request(cls, controller: IndexController, entity_type: str) -> Self:
+            default_sorting = controller._metadata_plugin.exposed_indices[entity_type]
+            request = controller.current_request
+            params = controller._query_params(request)
+            try:
+                sb, sa = cls._pagination_params(params)
+            except AssertionError as e:
+                if R.caused(e):
+                    raise R.propagate(e, ChaliceViewError)
+                else:
+                    raise
             else:
-                raise
-        else:
-            return self._Pagination(order=params.get('order', default_sorting.order),
-                                    size=int(params.get('size', '10')),
-                                    sort=params.get('sort', default_sorting.field_name),
-                                    search_before=sb,
-                                    search_after=sa,
-                                    controller=self)
+                return cls(order=params.get('order', default_sorting.order),
+                           size=int(params.get('size', '10')),
+                           sort=params.get('sort', default_sorting.field_name),
+                           search_before=sb,
+                           search_after=sa,
+                           controller=controller)
 
-    def _pagination_params(self,
-                           params: Mapping[str, str]
-                           ) -> tuple[SortKey, None] | tuple[None, SortKey] | tuple[None, None]:
-        sb, sa = params.get('search_before'), params.get('search_after')
-        if sb is None:
-            if sa is None:
-                return None, None
+        @classmethod
+        def _pagination_params(cls,
+                               params: Mapping[str, str]
+                               ) -> tuple[SortKey, None] | tuple[None, SortKey] | tuple[None, None]:
+            sb, sa = params.get('search_before'), params.get('search_after')
+            if sb is None:
+                if sa is None:
+                    return None, None
+                else:
+                    return None, cls._sort_key(sa)
             else:
-                return None, self._sort_key(sa)
-        else:
-            if sa is None:
-                return self._sort_key(sb), None
-            else:
-                assert False, R('Only one of search_after or search_before may be set')
+                if sa is None:
+                    return cls._sort_key(sb), None
+                else:
+                    assert False, R('Only one of search_after or search_before may be set')
 
-    def _sort_key(self, sort_key: str) -> SortKey:
-        sort_key = json.loads(sort_key)
-        assert isinstance(sort_key, list), R(
-            'Not a list', sort_key)
-        assert len(sort_key) == 2, R(
-            'Not a tuple with two elements', sort_key)
-        a, b = sort_key
-        assert check_type(PrimitiveJSON, a), R(
-            'First sort key element is not primitive JSON', sort_key)
-        assert isinstance(b, str), R(
-            'Second sort key element not a string', sort_key)
-        return a, b
+        @classmethod
+        def _sort_key(cls, sort_key: str) -> SortKey:
+            sort_key = json.loads(sort_key)
+            assert isinstance(sort_key, list), R(
+                'Not a list', sort_key)
+            assert len(sort_key) == 2, R(
+                'Not a tuple with two elements', sort_key)
+            a, b = sort_key
+            assert check_type(PrimitiveJSON, a), R(
+                'First sort key element is not primitive JSON', sort_key)
+            assert isinstance(b, str), R(
+                'Second sort key element not a string', sort_key)
+            return a, b
