@@ -1,10 +1,14 @@
+import base64
 from functools import (
     partial,
 )
+import hashlib
+import hmac
 import json
 import logging
 from typing import (
     Any,
+    ClassVar,
     Mapping,
     Self,
 )
@@ -12,13 +16,15 @@ from typing import (
 import attr
 from chalice.app import (
     BadRequestError,
-    ChaliceViewError,
     NotFoundError,
 )
 from furl import (
     furl,
 )
 
+from azul.deployment import (
+    aws,
+)
 from azul.filters import (
     Filters,
 )
@@ -71,6 +77,7 @@ from azul.service.query_controller import (
 from azul.service.query_service import (
     Pagination,
     SortKey,
+    sort_key_to_json,
 )
 
 log = logging.getLogger(__name__)
@@ -358,9 +365,9 @@ class IndexController(QueryController):
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_field)
         filters = query_params.get('filters')
-        pagination = self._Pagination.from_request(self, entity_type)
         authentication = self._authentication(request)
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
+        pagination = self._Pagination.from_request(self, entity_type, filters)
         response = self._search(entity_type, filters, pagination, aggregate=True)
         return '' if request.method == 'HEAD' else response
 
@@ -458,28 +465,48 @@ class IndexController(QueryController):
     class _Pagination(Pagination):
         controller: IndexController
 
+        #: The explicit filters of the request, in the normalized form
+        #: produced by :py:func:`azul.filters.parse_filters`
+        #:
+        filters: str
+
+        #: How much of the HMAC digest to keep in a signature. A forgery
+        #: means guessing a MAC for a chosen context, and the only way to
+        #: test a guess is to send a request, so the bound is on how many
+        #: requests an attacker can make, not on their compute. At 72 bits,
+        #: a one in a million chance of a single forgery takes on the order
+        #: of 10^16 requests. A multiple of three bytes encodes to base64
+        #: without wasting any bits.
+        #:
+        _signature_bytes: ClassVar[int] = 9
+
         @classmethod
-        def from_request(cls, controller: IndexController, entity_type: str) -> Self:
+        def from_request(cls,
+                         controller: IndexController,
+                         entity_type: str,
+                         filters: Filters
+                         ) -> Self:
             default_sorting = controller._metadata_plugin.exposed_indices[entity_type]
             request = controller.current_request
             params = controller._query_params(request)
+            # The sort key is verified against the instance it belongs to, so
+            # that instance must exist before the key is parsed
+            self = cls(order=params.get('order', default_sorting.order),
+                       size=int(params.get('size', '10')),
+                       sort=params.get('sort', default_sorting.field_name),
+                       controller=controller,
+                       filters=json.dumps(filters.explicit))
             try:
-                sb, sa = cls._pagination_params(params)
+                sb, sa = self._pagination_params(params)
             except AssertionError as e:
                 if R.caused(e):
-                    raise R.propagate(e, ChaliceViewError)
+                    raise R.propagate(e, BadRequestError)
                 else:
                     raise
             else:
-                return cls(order=params.get('order', default_sorting.order),
-                           size=int(params.get('size', '10')),
-                           sort=params.get('sort', default_sorting.field_name),
-                           search_before=sb,
-                           search_after=sa,
-                           controller=controller)
+                return self.with_sort_keys(search_before=sb, search_after=sa)
 
-        @classmethod
-        def _pagination_params(cls,
+        def _pagination_params(self,
                                params: Mapping[str, str]
                                ) -> tuple[SortKey, None] | tuple[None, SortKey] | tuple[None, None]:
             sb, sa = params.get('search_before'), params.get('search_after')
@@ -487,36 +514,73 @@ class IndexController(QueryController):
                 if sa is None:
                     return None, None
                 else:
-                    return None, cls._sort_key(sa)
+                    return None, self._sort_key(sa, previous=False)
             else:
                 if sa is None:
-                    return cls._sort_key(sb), None
+                    return self._sort_key(sb, previous=True), None
                 else:
                     assert False, R('Only one of search_after or search_before may be set')
 
-        @classmethod
-        def _sort_key(cls, sort_key: str) -> SortKey:
+        def _sort_key(self, sort_key: str, *, previous: bool) -> SortKey:
             sort_key = json.loads(sort_key)
             assert isinstance(sort_key, list), R(
                 'Not a list', sort_key)
-            assert len(sort_key) == 2, R(
-                'Not a tuple with two elements', sort_key)
-            a, b = sort_key
+            assert len(sort_key) == 3, R(
+                'Not a tuple with three elements', sort_key)
+            a, b, signature = sort_key
             assert check_type(PrimitiveJSON, a), R(
                 'First sort key element is not primitive JSON', sort_key)
             assert isinstance(b, str), R(
                 'Second sort key element not a string', sort_key)
+            assert isinstance(signature, str), R(
+                'Third sort key element not a string', sort_key)
+            expected = self._sign(previous=previous, sort_key=(a, b))
+            assert hmac.compare_digest(signature, expected), R(
+                'Sort key signature does not match the other request parameters')
             return a, b
 
-        def link(self, *, previous: bool, **params: str) -> furl | None:
-            search_key = self.search_before if previous else self.search_after
-            if search_key is None:
+        def _sign(self, *, previous: bool, sort_key: SortKey) -> str:
+            """
+            Return a signature tying the given sort key to the request
+            parameters that determine the result set into which that sort key
+            points. A client that sends the key back with any of those
+            parameters altered can be detected, and the request rejected, before
+            it is translated into a query.
+            """
+            app = self.controller.app
+            key, key_id = aws.get_hmac_key_and_id()
+            # The page size is absent from the signature because changing it
+            # can neither skip nor duplicate hits.
+            context = [
+                str(app.self_url.path),
+                app.catalog,
+                self.filters,
+                self.sort,
+                self.order,
+                previous,
+                sort_key_to_json(sort_key)
+            ]
+            payload = json.dumps(context, separators=(',', ':'))
+            digest = hmac.new(key, payload.encode(), hashlib.sha256).digest()
+            digest = digest[:self._signature_bytes]
+            return base64.urlsafe_b64encode(digest).decode().rstrip('=')
+
+        def link(self, *, previous: bool) -> furl | None:
+            sort_key = self.search_before if previous else self.search_after
+            if sort_key is None:
                 return None
             else:
                 before_or_after = 'before' if previous else 'after'
+                # The signature travels inside the sort keys as opposed to being
+                # a separate parameter, because clients are known to reverse
+                # engineer the paging links, discarding every other parameter
+                # (DataBiosphere/data-browser#5014).
+                signature = self._sign(previous=previous, sort_key=sort_key)
+                signed_key = [*sort_key, signature]
                 params = {
-                    **params,
-                    f'search_{before_or_after}': json.dumps(search_key),
+                    'catalog': self.controller.app.catalog,
+                    'filters': self.filters,
+                    f'search_{before_or_after}': json.dumps(signed_key),
                     'sort': self.sort,
                     'order': self.order,
                     'size': str(self.size)

@@ -1784,7 +1784,7 @@ class TestIndexResponse(IndexResponseTestCase):
         self.assertIsNotNone(response_json['pagination']['next'])
         self.assertIsNone(response_json['pagination']['previous'])
         self.assertEqual([None, '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
-                         json.loads(first_page_next['search_after']))
+                         json.loads(first_page_next['search_after'])[:2])
 
         response = self._http_client.request('GET', response_json['pagination']['next'])
         raise_on_status(response)
@@ -1800,9 +1800,9 @@ class TestIndexResponse(IndexResponseTestCase):
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
         self.assertEqual([None, '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'],
-                         json.loads(second_page_next['search_after']))
+                         json.loads(second_page_next['search_after'])[:2])
         self.assertEqual([None, '308eea51-d14b-4036-8cd1-cfd81d7532c3'],
-                         json.loads(second_page_previous['search_before']))
+                         json.loads(second_page_previous['search_before'])[:2])
 
     def test_bad_search_after_search_before(self):
         """
@@ -1890,6 +1890,98 @@ class TestIndexResponse(IndexResponseTestCase):
             'Message': f'No {"projects"!r} entity with UUID {absent!r} was found'
         }
         self.assertEqual(expected, response.json())
+
+    def test_signed_search_after_search_before(self):
+        """
+        Test that a sort key is only accepted together with the other request
+        parameters it was issued with
+        """
+        query_params = self._params(size=1, sort='entryId', order='asc')
+        url = self.base_url.set(path='/index/projects', args=query_params)
+        # Get page 1 …
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        response_json = response.json()
+        first_project = one(response_json['hits'])['entryId']
+        # … and page 2, so that both links are present
+        response = self._http_client.request('GET', response_json['pagination']['next'])
+        raise_on_status(response)
+        response_json = response.json()
+        test_cases = {
+            'search_before': response_json['pagination']['previous'],
+            'search_after': response_json['pagination']['next']
+        }
+        for pagination_key, good_url in test_cases.items():
+            with self.subTest(pagination_key=pagination_key):
+                # The unmodified link works …
+                response = self._http_client.request('GET', good_url)
+                raise_on_status(response)
+                sort_key = json.loads(furl(good_url).args[pagination_key])
+                self.assertEqual(3, len(sort_key))
+                signature = sort_key[-1]
+                self.assertIsInstance(signature, str)
+                expected_error = ('{"Code":"BadRequestError","Message":"Sort key '
+                                  'signature does not match the other request '
+                                  'parameters"}')
+
+                def modified(**args) -> str:
+                    url = furl(good_url)
+                    url.args.update(args)
+                    return str(url)
+
+                # … but altering a signed parameter does not. Restricting the
+                # result set to one project is what a client racing against a
+                # change of filters does.
+                bad_urls = {
+                    'filters': modified(filters=json.dumps({'projectId': {'is': [first_project]}})),
+                    'sort': modified(sort='projectTitle'),
+                    'order': modified(order='desc'),
+                    # The sort key itself is signed, too
+                    pagination_key: modified(**{pagination_key: json.dumps([
+                        'tampered', sort_key[1], signature
+                    ])})
+                }
+                for param, bad_url in bad_urls.items():
+                    with self.subTest(param=param):
+                        response = self._http_client.request('GET', bad_url)
+                        self.assertEqual(400, response.status)
+                        self.assertEqual(expected_error, response.data.decode())
+
+                # `size` is not signed, since changing it can neither skip nor
+                # duplicate hits
+                response = self._http_client.request('GET', modified(size='2'))
+                raise_on_status(response)
+
+    def test_unsigned_search_after_search_before(self):
+        """
+        Test that a sort key composed by the client, without a signature, is
+        rejected instead of being honored or causing a 500
+        """
+        test_cases = {
+            # The flavors of invalid sort key reported in #8025 …
+            '0': 'Not a list',
+            'null': 'Not a list',
+            '"nonsense"': 'Not a list',
+            '[]': 'Not a tuple with three elements',
+            '["A"]': 'Not a tuple with three elements',
+            # … and the form that was valid before sort keys were signed
+            '["A", "b"]': 'Not a tuple with three elements',
+            '[{}, "b", "sig"]': 'First sort key element is not primitive JSON',
+            '["a", 1, "sig"]': 'Second sort key element not a string',
+            '["a", "b", 1]': 'Third sort key element not a string'
+        }
+        for pagination_key in ('search_after', 'search_before'):
+            for sort_key, error in test_cases.items():
+                with self.subTest(pagination_key=pagination_key, sort_key=sort_key):
+                    params = self._params(size=1, **{pagination_key: sort_key})
+                    url = self.base_url.set(path='/index/projects', args=params)
+                    response = self._http_client.request('GET', str(url))
+                    self.assertEqual(400, response.status)
+                    expected = json.dumps({
+                        'Code': 'BadRequestError',
+                        'Message': str((error, json.loads(sort_key)))
+                    }, separators=(',', ':'))
+                    self.assertEqual(expected, response.data.decode())
 
     def test_filter_by_publication_title(self):
         cases = [
