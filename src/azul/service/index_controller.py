@@ -458,21 +458,6 @@ class IndexController(QueryController):
     class _Pagination(Pagination):
         controller: IndexController
 
-        def link(self, *, previous: bool, **params: str) -> furl | None:
-            search_key = self.search_before if previous else self.search_after
-            if search_key is None:
-                return None
-            else:
-                before_or_after = 'before' if previous else 'after'
-                params = {
-                    **params,
-                    f'search_{before_or_after}': json.dumps(search_key),
-                    'sort': self.sort,
-                    'order': self.order,
-                    'size': str(self.size)
-                }
-            return furl(url=self.controller.app.self_url, args=params)
-
         @classmethod
         def from_request(cls, controller: IndexController, entity_type: str) -> Self:
             default_sorting = controller._metadata_plugin.exposed_indices[entity_type]
@@ -522,3 +507,18 @@ class IndexController(QueryController):
             assert isinstance(b, str), R(
                 'Second sort key element not a string', sort_key)
             return a, b
+
+        def link(self, *, previous: bool, **params: str) -> furl | None:
+            search_key = self.search_before if previous else self.search_after
+            if search_key is None:
+                return None
+            else:
+                before_or_after = 'before' if previous else 'after'
+                params = {
+                    **params,
+                    f'search_{before_or_after}': json.dumps(search_key),
+                    'sort': self.sort,
+                    'order': self.order,
+                    'size': str(self.size)
+                }
+            return furl(url=self.controller.app.self_url, args=params)
