@@ -25,6 +25,7 @@ from azul.lib import (
     cached_property,
 )
 from azul.lib.strings import (
+    format_and_dedent as fd,
     to_camel_case,
 )
 from azul.lib.types import (
@@ -43,6 +44,9 @@ from azul.lib.types import (
     json_str,
     json_untyped_dict,
     optional,
+)
+from azul.openapi import (
+    schema,
 )
 from azul.plugins import (
     SpecialFields,
@@ -106,12 +110,6 @@ class FileTypeSummaryForHit(FileTypeSummaryBase):
     contentDescription: Sequence[str | None]
 
 
-class OrganCellCountSummary(JSONTypedDict):
-    organType: Sequence[str | None]
-    countOfDocsWithOrganType: int
-    totalCellCountByOrgan: float
-
-
 class Hit(JSONTypedDict):
     protocols: JSONs
     entryId: str
@@ -144,14 +142,11 @@ class SearchResponse(JSONTypedDict):
 class SummaryResponse(JSONTypedDict):
     projectCount: int
     specimenCount: int
-    speciesCount: int
     fileCount: int
     totalFileSize: float
     donorCount: int
     labCount: int
-    organTypes: list[str | None]
     fileTypeSummaries: list[FileTypeSummary]
-    cellCountSummaries: list[OrganCellCountSummary]
     projects: JSONs
 
 
@@ -159,6 +154,38 @@ T = TypeVar('T')
 
 
 class HCASummaryResponseStage(SummaryResponseStage):
+    _array_of_objects_schema = schema.array(schema.object(additionalProperties=True))
+
+    @property
+    def response_schema(self) -> JSON:
+        # FIXME: Add 'projects' to API documentation & schema
+        #        https://github.com/DataBiosphere/azul/issues/3917
+        return schema.object(
+            additionalProperties=True,
+            totalFileSize=float,
+            fileTypeSummaries=self._array_of_objects_schema,
+            donorCount=int,
+            fileCount=int,
+            labCount=int,
+            projectCount=int,
+            specimenCount=int
+        )
+
+    @property
+    def response_description(self) -> str:
+        return fd('''
+            Counts the total number and total size in bytes of assorted
+            entities, subject to the provided filters.
+
+            `fileTypeSummaries` provides the count and total size in
+            bytes of files grouped by their format, e.g. "fastq" or
+            "matrix." `fileCount` and `totalFileSize` compile these
+            figures across all file formats.
+
+            Total counts of unique entities are also provided for other
+            entity types such as projects and tissue donors. These
+            values are not grouped/aggregated.
+        ''')
 
     @property
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
@@ -168,19 +195,14 @@ class HCASummaryResponseStage(SummaryResponseStage):
                 'fileFormat',
             ],
             'samples': [
-                'organTypes',
                 'donorCount',
-                'specimenCount',
-                'speciesCount'
+                'specimenCount'
             ],
             'projects': [
                 'project',
                 'labCount',
                 'cellSuspensionCellCount',
                 'projectCellCount',
-            ],
-            'cell_suspensions': [
-                'cellCountSummaries',
             ]
         }
 
@@ -213,7 +235,8 @@ class HCASummaryResponseStage(SummaryResponseStage):
         bools = [False, True]
         cell_counts = {
             child: {
-                (parent, present): agg_value(parent + 'CellCount',
+                (parent, present): agg_value('projects',
+                                             parent + 'CellCount',
                                              'buckets',
                                              'hasSome' if present else 'hasNone',
                                              child + 'CellCount',
@@ -232,32 +255,18 @@ class HCASummaryResponseStage(SummaryResponseStage):
                 format=json_str(bucket['key'])
             )
 
-        def organ_cell_count_summary(bucket: JSON) -> OrganCellCountSummary:
-            return OrganCellCountSummary(
-                organType=[optional(json_str, bucket['key'])],
-                countOfDocsWithOrganType=json_int(bucket['doc_count']),
-                totalCellCountByOrgan=json_float(json_mapping(bucket['cellCount'])['value'])
-            )
-
-        def organ_type(bucket: JSON) -> str | None:
-            return optional(json_str, bucket['key'])
-
         return SummaryResponse(
-            projectCount=json_int(agg_value('project', 'doc_count')),
-            specimenCount=json_int(agg_value('specimenCount', 'value')),
-            speciesCount=json_int(agg_value('speciesCount', 'value')),
-            fileCount=json_int(agg_value('fileFormat', 'doc_count')),
-            totalFileSize=json_float(agg_value('totalFileSize', 'value')),
-            donorCount=json_int(agg_value('donorCount', 'value')),
-            labCount=json_int(agg_value('labCount', 'value')),
-            organTypes=agg_values(organ_type, 'organTypes', 'buckets'),
+            projectCount=json_int(agg_value('projects', 'project', 'doc_count')),
+            specimenCount=json_int(agg_value('samples', 'specimenCount', 'value')),
+            fileCount=json_int(agg_value('files', 'fileFormat', 'doc_count')),
+            totalFileSize=json_float(agg_value('files', 'totalFileSize', 'value')),
+            donorCount=json_int(agg_value('samples', 'donorCount', 'value')),
+            labCount=json_int(agg_value('projects', 'labCount', 'value')),
             fileTypeSummaries=agg_values(file_type_summary,
+                                         'files',
                                          'fileFormat',
                                          values_agg_name,
                                          'buckets'),
-            cellCountSummaries=agg_values(organ_cell_count_summary,
-                                          'cellCountSummaries',
-                                          'buckets'),
             projects=[
                 {
                     'projects': {

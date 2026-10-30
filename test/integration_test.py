@@ -615,6 +615,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 self._test_curl_manifest(catalog.name, mirrored_file)
             self._test_drs(catalog.name)
             self._test_repository_files(catalog.name)
+            self._test_summary(catalog.name)
             self._test_managed_access(catalog=catalog.name,
                                       public_source=catalog.public_source,
                                       ma_source=catalog.ma_source)
@@ -1598,6 +1599,25 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             num_replicas += 1
         log.info('Manifest contains %d replicas', num_replicas)
         self.assertGreater(num_replicas, 0)
+
+    def _test_summary(self, catalog: CatalogName):
+        if config.is_anvil_enabled(catalog):
+            with self.subTest('summary', catalog=catalog):
+                url = config.service_endpoint.set(path='/index/summary',
+                                                  args=dict(catalog=catalog))
+                summary = self._get_url_json(GET, url)
+                dataset_count = summary['datasetCount']
+                for entity_type in ['donor', 'file']:
+                    groups = summary[entity_type + 'Datasets']
+                    datasets = {group['dataset'] for group in groups}
+                    # A group per dataset, and every entity in exactly one of
+                    # them, so the groups add up to the total
+                    self.assertEqual(len(datasets), len(groups), groups)
+                    self.assertEqual(summary[entity_type + 'Count'],
+                                     sum(group['count'] for group in groups),
+                                     groups)
+                    # A dataset without entities of this type has no group
+                    self.assertGreaterEqual(dataset_count, len(datasets), groups)
 
     def _test_repository_files(self, catalog: CatalogName):
         with self.subTest('repository_files', catalog=catalog):

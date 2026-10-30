@@ -53,12 +53,12 @@ from azul.service.controller import (
 from azul.service.index_service import (
     EntityNotFoundError,
     IndexService,
+    SummaryResponseStage,
 )
 from azul.service.query_controller import (
     QueryController,
 )
 from azul.service.query_service import (
-    IndexNotFoundError,
     Pagination,
     SortKey,
 )
@@ -244,6 +244,10 @@ class IndexController(QueryController):
             }
         }
 
+    @cached_property
+    def _summary_response_stage(self) -> SummaryResponseStage:
+        return self._metadata_plugin.summary_response_stage()
+
     @property
     def _summary_spec(self):
         return {
@@ -293,39 +297,8 @@ class IndexController(QueryController):
                 'summary': 'Statistics on the data present across all entities.',
                 'responses': {
                     '200': {
-                        # FIXME: Add 'projects' to API documentation & schema
-                        #        https://github.com/DataBiosphere/azul/issues/3917
-                        'description': fd('''
-                            Counts the total number and total size in bytes of assorted
-                            entities, subject to the provided filters.
-
-                            `fileTypeSummaries` provides the count and total size in
-                            bytes of files grouped by their format, e.g. "fastq" or
-                            "matrix." `fileCount` and `totalFileSize` compile these
-                            figures across all file formats. Likewise,
-                            `cellCountSummaries` counts cells and their associated
-                            documents grouped by organ type, with `organTypes` listing
-                            all referenced organs.
-
-                            Total counts of unique entities are also provided for other
-                            entity types such as projects and tissue donors. These
-                            values are not grouped/aggregated.
-                        '''),
-                        **responses.json_content(
-                            schema.object(
-                                additionalProperties=True,
-                                organTypes=schema.array(str),
-                                totalFileSize=float,
-                                fileTypeSummaries=self._array_of_objects_schema,
-                                cellCountSummaries=self._array_of_objects_schema,
-                                donorCount=int,
-                                fileCount=int,
-                                labCount=int,
-                                projectCount=int,
-                                speciesCount=int,
-                                specimenCount=int
-                            )
-                        )
+                        'description': self._summary_response_stage.response_description,
+                        **responses.json_content(self._summary_response_stage.response_schema)
                     }
                 },
                 **self._summary_spec
@@ -377,7 +350,7 @@ class IndexController(QueryController):
                                             pagination=pagination)
         except (BadArgumentException, InvalidUUIDError) as e:
             raise BadRequestError(e)
-        except (EntityNotFoundError, IndexNotFoundError) as e:
+        except EntityNotFoundError as e:
             raise NotFoundError(e)
         return '' if request.method == 'HEAD' else response
 

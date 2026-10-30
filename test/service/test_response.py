@@ -2275,14 +2275,21 @@ class TestSchemaTestDataCannedBundle(IndexResponseTestCase):
         # Bundle: 7a330531, Cell Suspension: 119c4135 (40k) -> 6ff38054 (20k)
         # Bundle: d7b8cbff, Cell Suspension: 119c4135 (40k) -> af3549f4 (20k)
         # Bundle: 4da04038, Cell Suspension: d9eaaffe (20k)
-        expected_summary_cell_counts = [
+        expected_projects = [
             {
-                'organType': ['blood'],
-                'countOfDocsWithOrganType': 4,
-                'totalCellCountByOrgan': 20000.0 * 3
+                'projects': {'estimatedCellCount': 0.0},
+                'cellSuspensions': {'totalCells': None}
+            },
+            {
+                'projects': {'estimatedCellCount': None},
+                'cellSuspensions': {'totalCells': 0.0}
+            },
+            {
+                'projects': {'estimatedCellCount': 10000.0},
+                'cellSuspensions': {'totalCells': 20000.0 * 3}
             }
         ]
-        self.assertEqual(expected_summary_cell_counts, summary['cellCountSummaries'])
+        self.assertElasticEqual(expected_projects, summary['projects'])
 
     def test_protocols(self):
         """
@@ -3170,12 +3177,10 @@ class TestResponseFields(IndexResponseTestCase):
         summary = response.json()
         self.assertEqual(1 + 1 + 1 + 1, summary['projectCount'])
         self.assertEqual(1 + 1 + 3 + 1, summary['specimenCount'])
-        self.assertEqual(2, summary['speciesCount'])
         self.assertEqual(227 + 1 + 1 + 2, summary['fileCount'])
         self.assertEqual(838022993.0, summary['totalFileSize'])
         self.assertEqual(1 + 1 + 3 + 1, summary['donorCount'])
         self.assertEqual(15, summary['labCount'])
-        self.assertEqual({'brain', 'eye', 'mouth mucosa'}, set(summary['organTypes']))
         expected_file_counts = {
             'tiff': 221,
             'json': 6,
@@ -3188,27 +3193,6 @@ class TestResponseFields(IndexResponseTestCase):
             for s in summary['fileTypeSummaries']
         }
         self.assertEqual(expected_file_counts, actual_file_counts)
-        expected_cell_count_summaries = [
-            {
-                'organType': ['eye'],
-                'countOfDocsWithOrganType': 5,
-                'totalCellCountByOrgan': 44000.0
-            },
-            {
-                # Note that 'brain' from the imaging bundle is not represented here
-                # since these values are tallied from the cell suspensions and the
-                # imaging bundle does not have any cell suspensions.
-                'organType': ['brain'],
-                'countOfDocsWithOrganType': 1,
-                'totalCellCountByOrgan': 1.0
-            },
-            {
-                'organType': ['mouth mucosa'],
-                'countOfDocsWithOrganType': 1,
-                'totalCellCountByOrgan': 0.0
-            }
-        ]
-        self.assertEqual(expected_cell_count_summaries, summary['cellCountSummaries'])
         expected_projects = [
             {
                 'projects': {'estimatedCellCount': 3589.0},
