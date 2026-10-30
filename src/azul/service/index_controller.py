@@ -455,7 +455,7 @@ class IndexController(QueryController):
 
     @attr.s(kw_only=True, auto_attribs=True, frozen=True)
     class _Pagination(Pagination):
-        self_url: furl
+        controller: IndexController
 
         def link(self, *, previous: bool, **params: str) -> furl | None:
             search_key = self.search_before if previous else self.search_after
@@ -470,7 +470,7 @@ class IndexController(QueryController):
                     'order': self.order,
                     'size': str(self.size)
                 }
-            return furl(url=self.self_url, args=params)
+            return furl(url=self.controller.app.self_url, args=params)
 
     def _pagination(self, entity_type: str) -> _Pagination:
         default_sorting = self._metadata_plugin.exposed_indices[entity_type]
@@ -489,7 +489,7 @@ class IndexController(QueryController):
                                     sort=params.get('sort', default_sorting.field_name),
                                     search_before=sb,
                                     search_after=sa,
-                                    self_url=self.app.self_url)
+                                    controller=self)
 
     def _pagination_params(self,
                            params: Mapping[str, str]
