@@ -575,6 +575,10 @@ class IndexController(QueryController):
                 # a separate parameter, because clients are known to reverse
                 # engineer the paging links, discarding every other parameter
                 # (DataBiosphere/data-browser#5014).
+                #
+                # FIXME: Make the signature a separate request parameter
+                #        https://github.com/DataBiosphere/azul/issues/8458
+                #
                 signature = self._sign(previous=previous, sort_key=sort_key)
                 signed_key = [*sort_key, signature]
                 params = {
