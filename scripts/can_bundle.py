@@ -166,17 +166,18 @@ def save_bundle(bundle: Bundle, output_dir: str) -> None:
 
 
 redacted_entity_types = {
-    'biosample',
-    'diagnosis',
-    'donor'
+    'anvil_biosample',
+    'anvil_diagnosis',
+    'anvil_donor'
 }
 
 
 def redact_bundle(bundle: Bundle, key: bytes) -> None:
     if isinstance(bundle, AnvilBundle):
-        for entity_ref, entity_metadata in bundle.entities.items():
-            if entity_ref.entity_type in redacted_entity_types:
-                bundle.entities[entity_ref] = json_dict(redact_json(entity_metadata, key))
+        for entities in (bundle.entities, bundle.orphans):
+            for entity_ref, entity_metadata in entities.items():
+                if entity_ref.entity_type in redacted_entity_types:
+                    entities[entity_ref] = json_dict(redact_json(entity_metadata, key))
     else:
         raise RuntimeError('HCA bundles do not support redaction', type(bundle))
 

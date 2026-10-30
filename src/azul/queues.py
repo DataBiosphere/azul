@@ -4,6 +4,7 @@ from collections import (
 )
 from collections.abc import (
     Iterable,
+    Iterator,
     Mapping,
 )
 from concurrent.futures import (
@@ -11,11 +12,13 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
+from contextlib import (
+    contextmanager,
+)
 from datetime import (
     datetime,
 )
 from itertools import (
-    chain,
     islice,
 )
 import json
@@ -26,8 +29,10 @@ from math import (
 import os
 import time
 from typing import (
+    ClassVar,
     Self,
     TYPE_CHECKING,
+    TextIO,
     cast,
 )
 import uuid
@@ -40,6 +45,7 @@ import more_itertools
 from more_itertools import (
     chunked,
     one,
+    only,
 )
 
 from azul import (
@@ -52,6 +58,7 @@ from azul.lambdas import (
     LambdaFunctions,
 )
 from azul.lib import (
+    R,
     cached_property,
 )
 from azul.lib.attrs import (
@@ -76,12 +83,16 @@ from azul.modules import (
 log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from mypy_boto3_sqs.literals import (
+        QueueAttributeNameType,
+    )
     from mypy_boto3_sqs.service_resource import (
         Message,
         Queue,
     )
     from mypy_boto3_sqs.type_defs import (
         ChangeMessageVisibilityBatchRequestEntryTypeDef,
+        ListMessageMoveTasksResultEntryTypeDef,
         SendMessageBatchRequestEntryTypeDef,
         SendMessageRequestQueueSendMessageTypeDef,
     )
@@ -142,7 +153,30 @@ class SQSFifoMessage(SQSMessage):
                    dedup_id=json_str(attributes['MessageDeduplicationId']))
 
 
+@attrs.frozen(kw_only=True, slots=False)
 class Queues:
+    #: Whether to remove the messages from the queue they are dumped from, and
+    #: from the file they are fed from
+    #:
+    _delete: bool = False
+
+    #: If True, disable the queue worker lambdas for the duration of a dump.
+    #: If False, leave them enabled even if the queues hold messages. If None,
+    #: force a decision unless the work queues are empty.
+    #:
+    _safe_dump: bool | None = None
+
+    #: Whether to feed a dump into a deployment other than the one it was
+    #: taken from
+    #:
+    _foreign_feed: bool = False
+
+    #: If True, append a dump to the destination file. If False, replace
+    #: the contents of that file. If None, refuse to write to a file that
+    #: already exists.
+    #:
+    _append: bool | None = None
+
     #: The number of messages to be queued in a single SQS SendMessageBatch
     #: action. Theoretically, larger batches are better but SQS currently limits
     #: the SendMessageBatch size to 10. This is also used to configure the
@@ -152,9 +186,52 @@ class Queues:
     #:
     batch_size = 10
 
-    def __init__(self, delete: bool = False, json_body: bool = True):
-        self._delete = delete
-        self._json_body = json_body
+    #: The number of seconds to wait between consecutive polls of the progress
+    #: of a message move task. Such a task may run for up to 36 hours.
+    #:
+    redrive_poll_interval = 10
+
+    #: The number of seconds to wait between consecutive polls of the queue
+    #: lengths in :meth:`wait_to_stabilize`. That method derives the length of
+    #: its observation window from this interval, and asserts that the window
+    #: covers the SQS consistency delay, so this value can't be raised freely.
+    #:
+    stabilization_poll_interval = 10
+
+    #: The number of seconds a receive waits for messages to arrive. Any value
+    #: above zero selects long polling, which queries all SQS hosts instead of
+    #: a sample of them and therefore eliminates the empty responses a short
+    #: poll can return while messages remain. The documented maximum is used
+    #: because AWS notes that lower values make such responses more likely.
+    #:
+    receive_wait_time = 20
+
+    #: The number of consecutive empty receives after which a queue is
+    #: considered drained even though it still reports messages. Each of those
+    #: receives long-polls every SQS host, but the reported counts are
+    #: approximate, and a queue whose producers are still running may never
+    #: report zero. AWS prescribes observing the counts instead of trusting a
+    #: single empty receive, but their procedure also assumes that the
+    #: producers of the queue have been stopped.
+    #:
+    #: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/confirm-queue-is-empty.html
+    #:
+    max_empty_receives = 3
+
+    #: The names of the queue attributes counting the messages that are
+    #: available, in flight and delayed, respectively. All three are
+    #: approximate.
+    #:
+    #: Appended to the path of a dump to name the file tracking how much of
+    #: that dump a feed has submitted
+    #:
+    progress_suffix = '.progress'
+
+    message_count_attributes: ClassVar[tuple[QueueAttributeNameType, ...]] = (
+        'ApproximateNumberOfMessages',
+        'ApproximateNumberOfMessagesNotVisible',
+        'ApproximateNumberOfMessagesDelayed'
+    )
 
     def list(self):
         log.info('Listing queues')
@@ -171,25 +248,185 @@ class Queues:
 
     def dump(self, queue_name: str, path: str):
         queue = aws.sqs_queue(queue_name)
-        self._dump(queue, path)
+        with self._managed_lambdas():
+            self._dump(queue, path)
 
     def dump_all(self):
-        for queue_name, queue in self.all_queues().items():
-            self._dump(queue, queue_name + '.json')
+        with self._managed_lambdas():
+            for queue_name, queue in self.all_queues().items():
+                self._dump(queue, queue_name + '.jsonl')
+
+    @contextmanager
+    def _managed_lambdas(self) -> Iterator[None]:
+        queues = self.get_queues(config.work_queue_names)
+        if self._safe_dump is True:
+            self.manage_lambdas(queues, enable=False)
+            try:
+                yield
+            finally:
+                self.manage_lambdas(queues, enable=True)
+        else:
+            num_messages, _ = self.get_queue_lengths(queues)
+            if num_messages == 0:
+                yield
+                log.warning(
+                    'The work queues were empty before the dump, but messages arriving '
+                    'afterwards could still have been snatched up by the lambdas'
+                )
+            else:
+                assert self._safe_dump is not None, R(
+                    'The work queues hold messages. Pass --safe to disable the lambdas '
+                    'during the dump, or --unsafe to dump anyway.', num_messages)
+                assert not self._delete, R(
+                    'The work queues hold messages, making --delete unsafe. '
+                    'Pass --safe instead of --unsafe.', num_messages)
+                yield
+                log.warning(
+                    'The work queues held %i message(s) before the dump, and more have '
+                    'likely arrived during the dump, so the dump is probably incomplete',
+                    num_messages
+                )
 
     def _dump(self, queue: Queue, path: str):
         log.info('Writing messages from queue %r to file %r', queue.url, path)
-        messages = self._get_messages(queue)
-        self._dump_messages(messages, queue.url, path)
+        if self._is_fifo(queue) and not self._delete:
+            log.warning('Without --delete, only the messages at the head of '
+                        'each group will be dumped from FIFO queue %r', queue.url)
+        # Messages that are not deleted must be held in flight until the dump
+        # ends, or receiving them again would make the dump run forever
+        messages: list[Message] = []
+        num_messages, num_empty_receives = 0, 0
+        header = {
+            'source_queue': self._queue_name(queue),
+            'message_type': self._message_type(queue)
+        }
+        with self._open_for_dump(path, header) as file:
+            while True:
+                message_batch = self._receive_messages(queue)
+                if message_batch:
+                    num_empty_receives = 0
+                    for message in message_batch:
+                        self._write_line(file, self._condense(message))
+                    file.flush()
+                    os.fsync(file.fileno())
+                    num_messages += len(message_batch)
+                    if self._delete:
+                        self._delete_messages([message_batch], queue)
+                    else:
+                        messages.extend(message_batch)
+                else:
+                    num_empty_receives += 1
+                    num_remaining = self._num_remaining_messages(queue, len(messages))
+                    if num_remaining == 0:
+                        break
+                    elif num_empty_receives < self.max_empty_receives:
+                        log.info('Queue %r reports %i message(s) left after an '
+                                 'empty receive, polling it again',
+                                 queue.url, num_remaining)
+                    else:
+                        log.warning('Queue %r still reports %i message(s) after '
+                                    '%i empty receives, dumping it no further',
+                                    queue.url, num_remaining, num_empty_receives)
+                        break
+        log.info('Wrote %i messages', num_messages)
         log.info(f'Finished writing {path!r}')
-        self._cleanup_messages(queue, messages)
+        if not self._delete:
+            self._cleanup_messages(queue, messages)
+
+    def _num_remaining_messages(self, queue: Queue, num_in_flight: int) -> int:
+        """
+        The number of messages the given queue reports, other than the given
+        number of messages this dump itself holds in flight. The counts are
+        approximate, so the result is, too.
+        """
+        queue.reload()
+        return max(0, sum(self._message_counts(queue)) - num_in_flight)
+
+    def _message_counts(self, queue: Queue) -> builtins.list[int]:
+        return [
+            int(queue.attributes[name])
+            for name in self.message_count_attributes
+        ]
+
+    def _message_type(self, queue: Queue) -> str:
+        """
+        The name of the class whose instances are the bodies of the messages in
+        the given queue.
+        """
+        return self._message_types[self._queue_name(queue)]
+
+    @contextmanager
+    def _open_for_dump(self, path: str, header: JSON) -> Iterator[TextIO]:
+        progress_path = path + self.progress_suffix
+        assert not os.path.exists(progress_path), R(
+            'A feed of the file to dump to was interrupted. Resume that feed, '
+            'or remove the progress file to abandon it.',
+            path, progress_path)
+        if not os.path.exists(path):
+            append = False
+        else:
+            assert self._append is not None, R(
+                'Destination file already exists. '
+                'Use --append or --overwrite.', path)
+            append = self._append
+            if append:
+                self._check_header(path, header)
+        with open(path, 'a' if append else 'w') as file:
+            if not append:
+                self._write_line(file, header)
+            yield file
+
+    def _check_header(self, path: str, header: JSON):
+        with open(path) as file:
+            other_header = json.loads(file.readline())
+        assert other_header == header, R(
+            'The destination file is for a different queue',
+            path, other_header, header)
+
+    def _queue_name(self, queue: Queue) -> str:
+        return queue.url.rsplit('/', 1)[-1]
+
+    def _deployment(self, queue_name: str) -> str:
+        _, deployment, _ = config.unqualified_resource_name_and_suffix(queue_name)
+        return deployment
+
+    @cached_property
+    def _message_types(self) -> dict[str, str]:
+        # These modules import this one, so they can only be imported from here
+        from azul.indexer.index_queue_service import (
+            DocumentTally,
+            IndexAction,
+        )
+        from azul.indexer.mirror_service import (
+            MirrorAction,
+        )
+        return {
+            queue.derive(retry=retry, fail=fail).name: message_type.__name__
+            for queue, message_type in [
+                (config.notifications_queue, IndexAction),
+                (config.tallies_queue, DocumentTally),
+                (config.mirror_queue, MirrorAction)
+            ]
+            for retry, fail in [
+                (False, False),
+                (True, False),
+                (False, True)
+            ]
+        }
+
+    def _is_fifo(self, queue: Queue) -> bool:
+        return queue.attributes.get('FifoQueue') == 'true'
+
+    def _receive_messages(self, queue: Queue) -> builtins.list[Message]:
+        return queue.receive_messages(AttributeNames=['All'],
+                                      MaxNumberOfMessages=self.batch_size,
+                                      VisibilityTimeout=300,
+                                      WaitTimeSeconds=self.receive_wait_time)
 
     def _get_messages(self, queue: Queue) -> builtins.list[Message]:
         messages: list[Message] = []
         while True:
-            message_batch = queue.receive_messages(AttributeNames=['All'],
-                                                   MaxNumberOfMessages=10,
-                                                   VisibilityTimeout=300)
+            message_batch = self._receive_messages(queue)
             if not message_batch:  # Nothing left in queue
                 return messages
             else:
@@ -242,18 +479,9 @@ class Queues:
             log.info('Returning messages to queue %r', queue.url)
             self._return_messages(message_batches, queue)
 
-    def _dump_messages(self,
-                       messages: Iterable[Message],
-                       queue_url: str,
-                       path: str):
-        messages = [self._condense(message) for message in messages]
-        with write_file_atomically(path) as file:
-            content = {
-                'queue': queue_url,
-                'messages': messages
-            }
-            json.dump(content, file, indent=4)
-        log.info('Wrote %i messages', len(messages))
+    def _write_line(self, file: TextIO, content: JSON):
+        json.dump(content, file)
+        file.write('\n')
 
     def _return_messages(self,
                          message_batches: Iterable[Iterable[Message]],
@@ -266,8 +494,8 @@ class Queues:
                 for message in message_batch
             ]
             response = queue.change_message_visibility_batch(Entries=batch)
-            if len(response['Successful']) != len(batch):
-                raise RuntimeError(f'Failed to return message: {response!r}')
+            assert len(response['Successful']) == len(batch), R(
+                'Failed to return messages', response)
 
     def _delete_messages(self,
                          message_batches: Iterable[builtins.list[Message]],
@@ -280,8 +508,8 @@ class Queues:
                     for message in message_batch
                 ]
             )
-            if len(response['Successful']) != len(message_batch):
-                raise RuntimeError(f'Failed to delete messages: {response!r}')
+            assert len(response['Successful']) == len(message_batch), R(
+                'Failed to delete messages', response)
 
     def _condense(self, message: Message) -> JSON:
         """
@@ -293,7 +521,7 @@ class Queues:
             'MessageId': message.message_id,
             'ReceiptHandle': message.receipt_handle,
             'MD5OfBody': message.md5_of_body,
-            'Body': json.loads(message.body) if self._json_body else message.body,
+            'Body': json.loads(message.body),
             'Attributes': json_mapping(attributes),
             '_Attributes': {
                 k: datetime.fromtimestamp(int(json_str(attributes[k])) / 1000).astimezone().isoformat()
@@ -307,13 +535,10 @@ class Queues:
 
         The inverse of _condense().
         """
-        body = message['Body']
-        if not isinstance(body, str):
-            body = json.dumps(body)
         attributes = json_mapping(message['Attributes'])
         result: SendMessageBatchRequestEntryTypeDef = {
             'Id': json_str(message['MessageId']),
-            'MessageBody': body,
+            'MessageBody': json.dumps(message['Body']),
         }
         for key in ('MessageGroupId', 'MessageDeduplicationId'):
             try:
@@ -346,11 +571,7 @@ class Queues:
         total, lengths = 0, {}
         for queue_name, queue in queues.items():
             queue.reload()
-            message_counts = [
-                int(queue.attributes['ApproximateNumberOfMessages']),
-                int(queue.attributes['ApproximateNumberOfMessagesNotVisible']),
-                int(queue.attributes['ApproximateNumberOfMessagesDelayed']),
-            ]
+            message_counts = self._message_counts(queue)
             length = sum(message_counts)
             log.debug('Queue %s has %i message(s) (%i available, %i in flight and %i delayed).',
                       queue_name, length, *message_counts)
@@ -380,14 +601,15 @@ class Queues:
         :return: The total final length of the stabilized queues. The only
                  observable is zero; otherwise, an exception is raised.
         """
-        sleep_time = 10
         queues = self.get_queues(queue_names)
-        maxlen = ceil(timeout / sleep_time)
+        maxlen = ceil(timeout / self.stabilization_poll_interval)
         total_lengths: deque[int] = deque(maxlen=maxlen)
         # Two minutes to safely accommodate SQS eventual consistency window of
         # one minute. For more info, read WARNING section on
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
-        assert maxlen * sleep_time >= 2 * 60
+        assert maxlen * self.stabilization_poll_interval >= 2 * 60, R(
+            'Timeout too short to observe the queues for long enough',
+            timeout, self.stabilization_poll_interval)
 
         while True:
             # Determine queue lengths
@@ -398,7 +620,7 @@ class Queues:
             log.info('Message count history (most recent first) is %r.',
                      list(reversed(total_lengths)))
 
-            min_num_zeros = 60 // sleep_time
+            min_num_zeros = 60 // self.stabilization_poll_interval
             assert min_num_zeros <= maxlen, min_num_zeros
             num_total_lengths = len(total_lengths)
             if num_total_lengths >= min_num_zeros:
@@ -417,54 +639,124 @@ class Queues:
                         break
 
             log.info('Waiting for %s queue(s) to stabilize ...', len(queues))
-            time.sleep(sleep_time)
+            time.sleep(self.stabilization_poll_interval)
 
-        if final_length != 0:
-            raise Exception('The queues have stalled', final_length)
+        assert final_length == 0, R(
+            'The queues have stalled', final_length)
         return final_length
 
-    def feed(self, path: str, queue_name: str, force: bool = False):
-        with open(path) as file:
-            content = json.load(file)
-            orig_queue = content['queue']
-            messages = content['messages']
+    def feed(self, path: str, queue_name: str):
         queue = aws.sqs_queue(queue_name)
         log.info('Writing messages from file %r to queue %r', path, queue.url)
-        if orig_queue != queue.url:
-            if force:
-                log.warning('Messages originating from queue %r are being fed into queue %r',
-                            orig_queue, queue.url)
+        progress_path = path + self.progress_suffix
+        num_fed = self._read_progress(progress_path, queue)
+        with open(path) as file:
+            messages = (json.loads(line) for line in file)
+            header = next(messages)
+            message_type = self._message_type(queue)
+            assert header['message_type'] == message_type, R(
+                'The type of message to be fed does not match the type of message '
+                'the target queue is expected to hold',
+                header['message_type'], message_type)
+            source_deployment = self._deployment(header['source_queue'])
+            deployment = self._deployment(self._queue_name(queue))
+            assert source_deployment == deployment or self._foreign_feed, R(
+                'The messages to be fed were dumped from another deployment. '
+                'Pass --foreign to feed them anyway',
+                source_deployment, deployment)
+            if num_fed > 0:
+                log.info('Skipping the %i message(s) of %r that were fed before',
+                         num_fed, path)
+                num_skipped = sum(1 for _ in islice(messages, num_fed))
+                assert num_skipped == num_fed, (num_skipped, num_fed)
             else:
-                raise RuntimeError(f'Cannot feed messages originating from {orig_queue!r} to {queue.url!r}. '
-                                   f'Use --force to override.')
-        message_batches = list(more_itertools.chunked(messages, self.batch_size))
-
-        def _cleanup():
-            if self._delete:
-                remaining_messages = list(chain.from_iterable(message_batches))
-                if len(remaining_messages) < len(messages):
-                    self._dump_messages(messages, orig_queue, path)
-                else:
-                    assert len(remaining_messages) == len(messages)
-                    log.info('No messages were submitted, not touching local file %r', path)
-
-        while message_batches:
-            message_batch = message_batches[0]
-            entries = [self._reconstitute(message) for message in message_batch]
-            try:
+                num_skipped = 0
+            for batch in chunked(messages, self.batch_size):
+                entries = [self._reconstitute(message) for message in batch]
                 queue.send_messages(Entries=entries)
-            except BaseException:
-                assert message_batches
-                _cleanup()
-                raise
-            message_batches.pop(0)
-
+                num_fed += len(batch)
+                self._write_progress(progress_path, queue, num_fed)
+        log.info('Wrote %i messages, %i overall', num_fed - num_skipped, num_fed)
+        # Feeding an empty dump would have skipped writing a progress file
+        if num_fed > 0:
+            os.unlink(progress_path)
         if self._delete:
-            if message_batches:
-                _cleanup()
+            log.info('All messages were submitted, removing local file %r', path)
+            os.unlink(path)
+
+    def _read_progress(self, path: str, queue: Queue) -> int:
+        """
+        The number of messages at the beginning of a dump that an earlier,
+        interrupted feed of it into the given queue already submitted.
+        """
+        try:
+            file = open(path)
+        except FileNotFoundError:
+            return 0
+        else:
+            with file:
+                progress = json.load(file)
+            assert progress['queue'] == queue.url, R(
+                'A feed of this file into another queue was interrupted. '
+                'Resume that feed by changing the target queue argument or '
+                'remove the .progress file to feed into the current target '
+                'queue from the beginning.',
+                progress['queue'], queue.url)
+            return progress['num_messages']
+
+    def _write_progress(self, path: str, queue: Queue, num_messages: int):
+        with write_file_atomically(path) as file:
+            json.dump({'queue': queue.url, 'num_messages': num_messages}, file)
+
+    def redrive(self, source_queue_name: str, destination_queue_name: str):
+        """
+        Move all messages from one queue to another, using the SQS redrive
+        facility, and wait for the move to complete. Unlike :meth:`dump` and
+        :meth:`feed`, this does not receive the messages, so it is not subject
+        to the limitations of receiving from a FIFO queue.
+
+        SQS only moves messages out of a queue that is configured as the
+        dead-letter queue of another queue, and only into a queue of the same
+        type, i.e., either both queues are FIFO or neither is.
+        """
+        source = aws.sqs_queue(source_queue_name)
+        destination = aws.sqs_queue(destination_queue_name)
+        source_arn = source.attributes['QueueArn']
+        # SQS only reports the handle of a task while that task is running, so
+        # the task started below can only be told apart from the tasks that
+        # preceded it by when it was started.
+        task = self._latest_message_move_task(source_arn)
+        previously_started = None if task is None else task['StartedTimestamp']
+        log.info('Moving messages from queue %r to queue %r',
+                 source.url, destination.url)
+        aws.sqs.start_message_move_task(SourceArn=source_arn,
+                                        DestinationArn=destination.attributes['QueueArn'])
+        while True:
+            task = self._latest_message_move_task(source_arn)
+            if task is None or task['StartedTimestamp'] == previously_started:
+                log.info('Waiting for the move to start ...')
             else:
-                log.info('All messages were submitted, removing local file %r', path)
-                os.unlink(path)
+                num_moved = task.get('ApproximateNumberOfMessagesMoved', 0)
+                status = task['Status']
+                if status == 'RUNNING':
+                    log.info('Moved %i of %i messages',
+                             num_moved, task.get('ApproximateNumberOfMessagesToMove', 0))
+                elif status == 'COMPLETED':
+                    log.info('Moved %i messages', num_moved)
+                    break
+                else:
+                    assert False, R(
+                        'Failed to move messages',
+                        status, task.get('FailureReason'), num_moved)
+            time.sleep(self.redrive_poll_interval)
+
+    def _latest_message_move_task(self,
+                                  source_arn: str
+                                  ) -> ListMessageMoveTasksResultEntryTypeDef | None:
+        response = aws.sqs.list_message_move_tasks(SourceArn=source_arn, MaxResults=1)
+        # SQS omits the key entirely if no task was ever started on the queue,
+        # even though the Boto3 type stub declares it to be present
+        return only(response.get('Results', []))
 
     def purge(self, queue_name: str):
         queues = self.get_queues([queue_name])
@@ -507,11 +799,7 @@ class Queues:
 
     def _wait_for_queue_empty(self, queue: Queue):
         while True:
-            num_messages = (
-                int(queue.attributes['ApproximateNumberOfMessages']) +
-                int(queue.attributes['ApproximateNumberOfMessagesDelayed']) +
-                int(queue.attributes['ApproximateNumberOfMessages'])
-            )
+            num_messages = sum(self._message_counts(queue))
             if num_messages == 0:
                 break
             log.info('Queue %r still has %i messages', queue.url, num_messages)
@@ -587,7 +875,8 @@ class Queues:
                 try:
                     function = functions_by_queue[queue_name]
                 except KeyError:
-                    assert queue_name in config.fail_queue_names
+                    assert queue_name in config.fail_queue_names, R(
+                        'No lambda reads this queue', queue_name)
                 else:
                     if queue_name == config.notifications_queue.name:
                         # Prevent new notifications from being added
@@ -615,8 +904,7 @@ class Queues:
             if e:
                 errors.append(e)
                 log.error('Exception in worker thread', exc_info=e)
-        if errors:
-            raise RuntimeError(errors)
+        assert not errors, R('Exceptions in worker threads', errors)
 
 
 class Action(DiscriminatingPolymorphicSerializableAttrs,

@@ -25,6 +25,8 @@
             "version": "2022-06-01T00:00:00.000000Z"
         },
         "anvil_dataset/208441e2-cf28-584e-a0ac-7553c7118412": {
+            "_tdr_non_schema_row_count": 3,
+            "_tdr_non_schema_row_count_threshold": 2000000,
             "consent_group": [
                 "DS-BDIS"
             ],

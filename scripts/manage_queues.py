@@ -20,17 +20,39 @@ def main(argv):
     sps.add_parser('list',
                    help='List SQS queues in current deployment')
 
+    dump_options = argparse.ArgumentParser(add_help=False)
+    dump_options.add_argument('--delete', '-D', action='store_true',
+                              help='Permanently remove queued messages after writing them to the '
+                                   'file. By default the messages will be returned to the queue')
+    group = dump_options.add_mutually_exclusive_group()
+    group.add_argument('--append', '-A', dest='append', action='store_true', default=None,
+                       help='Append the dumped messages to the file, which must hold a dump '
+                            'of the same queue. By default, the script refuses to dump a queue '
+                            'to a file that already exists.')
+    group.add_argument('--overwrite', '-O', dest='append', action='store_false', default=None,
+                       help='Replace the contents of the file with the dumped messages. By '
+                            'default, the script refuses to dump a queue to a file that '
+                            'already exists.')
+
+    group = dump_options.add_mutually_exclusive_group()
+    group.add_argument('--safe', '-S', dest='safe_dump', action='store_true', default=None,
+                       help='Disable the lambdas reading the work queues of the current '
+                            'deployment for the duration of the dump. Those lambdas produce the '
+                            'messages in every queue, so only while they are disabled is a dump '
+                            'of a busy deployment complete.')
+    group.add_argument('--unsafe', '-U', dest='safe_dump', action='store_false', default=None,
+                       help='Dump even though the work queues hold messages, accepting that the '
+                            'dump will likely miss the messages arriving while it runs. Refused '
+                            'in combination with --delete, which would irreversibly split the '
+                            'messages between the incomplete dump and the queue.')
+
     sp = sps.add_parser('dump',
+                        parents=[dump_options],
                         help='Dump contents of queue into designated file')
     sp.add_argument('queue', metavar='QUEUE_NAME',
                     help='Name of the queue to obtain messages from')
     sp.add_argument('path', metavar='FILE_PATH',
                     help='Path of file to write messages to')
-    sp.add_argument('--delete', '-D', action='store_true',
-                    help='Remove messages from the queue after writing them to the specified file. '
-                         'By default the messages will be returned to the queue')
-    sp.add_argument('--no-json-body', '-J', dest='json_body', action='store_false',
-                    help='Do not deserialize JSON in queue message body.')
 
     sp = sps.add_parser('feed',
                         help='Feed messages from file back into queue')
@@ -38,11 +60,20 @@ def main(argv):
                     help='Path of file to read messages from')
     sp.add_argument('queue', metavar='QUEUE_NAME',
                     help='Name of the queue to feed messages into')
-    sp.add_argument('--force', '-F', action='store_true',
-                    help='Force feeding messages to a queue they did not originate from.')
     sp.add_argument('--delete', '-D', action='store_true',
                     help='Remove messages from the file after adding them to the specified queue. '
                          'By default the messages will remain in the file')
+    sp.add_argument('--foreign', '-F', action='store_true',
+                    help='Accept messages that were dumped from another deployment.')
+
+    sp = sps.add_parser('redrive',
+                        help='Move all messages from one queue to another. '
+                             'The source queue must be configured as the dead-letter queue of '
+                             'another queue, and both queues must be either FIFO or standard.')
+    sp.add_argument('source_queue', metavar='SOURCE_QUEUE_NAME',
+                    help='Name of the queue to move messages from')
+    sp.add_argument('destination_queue', metavar='DESTINATION_QUEUE_NAME',
+                    help='Name of the queue to move messages to')
 
     sp = sps.add_parser('purge',
                         help='Purge all messages in a queue')
@@ -63,18 +94,21 @@ def main(argv):
                         'The messages will be lost forever.')
 
     sp = sps.add_parser('dump_all',
+                        parents=[dump_options],
                         help='Dump all messages in all queues in the current deployment. '
-                             'Each queue will be dumped into a separate JSON file. '
-                             'The name of the JSON file is the name of the queue followed by ".json"')
-    sp.add_argument('--delete', '-D', action='store_true',
-                    help='Remove messages from each queue after writing them to the its file. '
-                         'By default the messages will be returned to the queue')
-    sp.add_argument('--no-json-body', '-J', dest='json_body', action='store_false',
-                    help='Do not deserialize JSON in queue message body.')
+                             'Each queue will be dumped into a separate JSONL file. '
+                             'The name of that file is the name of the queue followed by ".jsonl"')
 
     args = p.parse_args(argv)
 
-    commands = ('list', 'purge', 'purge_all', 'purge_indexer', 'purge_mirror')
+    commands = (
+        'list',
+        'purge',
+        'purge_all',
+        'purge_indexer',
+        'purge_mirror',
+        'redrive'
+    )
     if args.command in commands:
         queues = Queues()
         if args.command == 'list':
@@ -87,10 +121,14 @@ def main(argv):
             queues.purge_indexer()
         elif args.command == 'purge_mirror':
             queues.purge_mirror()
+        elif args.command == 'redrive':
+            queues.redrive(args.source_queue, args.destination_queue)
         else:
             assert False, args.command
     elif args.command in ('dump', 'dump_all'):
-        queues = Queues(delete=args.delete, json_body=args.json_body)
+        queues = Queues(delete=args.delete,
+                        safe_dump=args.safe_dump,
+                        append=args.append)
         if args.command == 'dump':
             queues.dump(args.queue, args.path)
         elif args.command == 'dump_all':
@@ -98,8 +136,8 @@ def main(argv):
         else:
             assert False, args.command
     elif args.command == 'feed':
-        queues = Queues(delete=args.delete)
-        queues.feed(args.path, args.queue, force=args.force)
+        queues = Queues(delete=args.delete, foreign_feed=args.foreign)
+        queues.feed(args.path, args.queue)
     else:
         p.print_usage()
 

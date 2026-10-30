@@ -165,7 +165,7 @@ class IndexQueueService:
             assert prefix is not None, source_ref
 
             def message(partition_prefix: str) -> SQSMessage:
-                log.info('Remotely reindexing prefix %r of source_ref %r into catalog %r',
+                log.info('Remotely reindexing prefix %r of source %r into catalog %r',
                          partition_prefix, str(source_ref.spec), catalog)
                 return self.index_partition_message(catalog, source_ref, partition_prefix)
 
