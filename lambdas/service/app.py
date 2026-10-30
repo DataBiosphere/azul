@@ -1,7 +1,6 @@
 import logging.config
 
 from chalice import (
-    BadRequestError,
     UnauthorizedError,
 )
 
@@ -60,7 +59,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '21.4',
+        'version': '21.5',
         'description': fd(f'''
             # Overview
 
@@ -266,15 +265,15 @@ class ServiceApp(HealthApp):
             try:
                 auth_type, auth_token = header.split()
             except ValueError:
-                raise UnauthorizedError(header)
+                raise UnauthorizedError('Malformed Authorization header')
             else:
                 if auth_type.lower() == 'bearer':
                     if not is_redactable(auth_token):
-                        raise BadRequestError('Unexpected token syntax')
+                        raise UnauthorizedError('Unexpected token syntax')
                     else:
                         return BearerTokenAuthentication.for_token(auth_token)
                 else:
-                    raise UnauthorizedError(header)
+                    raise UnauthorizedError('Unsupported authorization scheme')
 
 
 app = ServiceApp()

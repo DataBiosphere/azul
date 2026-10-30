@@ -60,11 +60,7 @@ generic with minimal need for project-specific behavior.
 
 - [Terraform](#212-terraform), to manage deployments
 
-- [AWS CLI v2], for programmatic invocations to AWS services. Since v2 is not
-  available on PyPI, it must be installed separately. Install the version pinned
-  by Azul defined in a variable called `azul_awscli_version` in
-  [environment.py]. Follow the [AWS instructions for installing past
-  releases][AWS CLI v2].
+- [AWS CLI v2](#213-aws-cli-v2), for command line interactions with AWS services
 
 - Optionally, the [GitHub CLI]. You should install
   the version set at `azul_ghcli_version` in [environment.py],
@@ -182,6 +178,45 @@ long-term use without the cache.
 
 [install terraform]: https://developer.hashicorp.com/terraform/downloads
 [plugin cache]: https://developer.hashicorp.com/terraform/cli/config/config-file#provider-plugin-cache
+
+
+### 2.1.3 AWS CLI v2
+
+Azul requires a specific version of the AWS CLI v2, which is defined in a
+variable called `azul_awscli_version` in [environment.py]. Since v2 is not
+available on PyPI, it must be installed separately. Follow the official [AWS
+instructions for installing past releases][AWS CLI v2].
+
+The official instructions install the CLI system-wide, and each installation
+replaces the previously installed version. That is inconvenient because the
+pinned version is updated routinely, as part of the biweekly upgrade, and the
+stable deployments typically trail the lower ones by a week or two. Operators
+therefore have to switch back and forth between versions of the CLI as they
+switch between working copies.
+
+[awsclienv] avoids that but it currently only supports macOS. It installs any
+number of versions of the AWS CLI v2 side by side, underneath your home
+directory, allowing you to switch between them via the `AWSCLIENV_VERSION`
+environment variable. Install it as described in the [Installation
+section][awsclienv install] of the `awsclienv` README. Then add
+
+```python
+'AWSCLIENV_VERSION': '{azul_awscli_version}',
+```
+
+to your `environment.local.py` file at the root of the working copy. Run
+`. environment` or `_refresh`. Then run
+
+```
+awsclienv install
+```
+
+Verify with `make check_awscli` that Azul is happy. If that target fails at any
+point in the future, re-run `awsclienv install` to install the version required
+by Azul.
+
+[awsclienv]: https://github.com/hannes-ucsc/awsclienv
+[awsclienv install]: https://github.com/hannes-ucsc/awsclienv#installation
 
 
 ## 2.2 Runtime Prerequisites (Infrastructure)

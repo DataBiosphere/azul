@@ -792,6 +792,10 @@ class Config:
         return int(self.environ['AZUL_REPLICA_CONFLICT_LIMIT'])
 
     @property
+    def anvil_huge_dataset_threshold(self) -> int:
+        return int(self.environ['AZUL_ANVIL_HUGE_DATASET_THRESHOLD'])
+
+    @property
     def allow_overflow(self) -> bool:
         return self._boolean(self.environ['AZUL_ALLOW_OVERFLOW'])
 

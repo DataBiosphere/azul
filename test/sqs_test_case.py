@@ -5,6 +5,9 @@ from random import (
     Random,
 )
 import sys
+from unittest.mock import (
+    patch,
+)
 import uuid
 
 from chalice.app import (
@@ -38,6 +41,12 @@ log = logging.getLogger(__name__)
 
 
 class SqsTestCase(AzulUnitTestCase):
+
+    def setUp(self) -> None:
+        super().setUp()
+        # Long polling would make every receive from an empty queue, and there
+        # is one at the end of every drain, wait for the full duration
+        self.addPatch(patch.object(Queues, 'receive_wait_time', 0))
 
     def _create_mock_queues(self, queue_names: list[str] | None = None) -> None:
         if queue_names is not None:

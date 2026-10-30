@@ -129,6 +129,8 @@
             "version": "2022-06-01T00:00:00.000000Z"
         },
         "anvil_dataset/57c19f3f-17cd-5b67-adf6-27ca9820394d": {
+            "_tdr_non_schema_row_count": 3,
+            "_tdr_non_schema_row_count_threshold": 2000000,
             "consent_group": [
                 "NRES"
             ],

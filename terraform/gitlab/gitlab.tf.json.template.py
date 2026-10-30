@@ -287,17 +287,17 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see "Updating the AMI
 # for GitLab instances" section in OPERATOR.rst.
 #
-# CIS Amazon Linux 2023 Benchmark - Level 1 - v09 -prod-fvm47vekg24oc
+# CIS Amazon Linux 2023 Benchmark - Level 1 - v10 -prod-fvm47vekg24oc
 #
 ami_id = {
-    'us-east-1': 'ami-03351926ac71b0fba'
+    'us-east-1': 'ami-0fccf34b5d6049266'
 }
 
 # For instructions on finding the latest Amazon Linux 2023 release, see
 # "Updating software packages via release version upgrade in AL2023 instances"
 # section in OPERATOR.rst.
 #
-AL2023_release = '2023.12.20260928'
+AL2023_release = '2023.12.20261016'
 
 # Cloud-init's cc_mounts module does not support the UUID=<uuid> device
 # specification format. We use the /dev/disk/by-uuid/<uuid> symlink as a
