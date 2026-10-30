@@ -609,11 +609,11 @@ class Pagination:
     search_before: SortKey | None = None
     search_after: SortKey | None = None
 
-    def advance(self,
-                *,
-                search_before: SortKey | None,
-                search_after: SortKey | None
-                ) -> Self:
+    def with_sort_keys(self,
+                       *,
+                       search_before: SortKey | None,
+                       search_after: SortKey | None
+                       ) -> Self:
         return attrs.evolve(self,
                             search_before=search_before,
                             search_after=search_after)
@@ -772,8 +772,8 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
                 search_before = None
             search_after = tuple(hits[0]['sort'])
 
-        pagination = self.pagination.advance(search_before=search_before,
-                                             search_after=search_after)
+        pagination = self.pagination.with_sort_keys(search_before=search_before,
+                                                    search_after=search_after)
 
         def page_link(*, previous):
             url = pagination.link(previous=previous,
