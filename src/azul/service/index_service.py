@@ -166,7 +166,7 @@ class IndexService(QueryService):
         """
         if item_id is not None:
             validate_uuid(item_id)
-            filters = filters.update({'entryId': {'is': [item_id]}})
+            filters = filters.update_explicit({'entryId': {'is': [item_id]}})
 
         response = self._search(catalog=catalog,
                                 filters=filters,
@@ -353,7 +353,7 @@ class IndexService(QueryService):
         """
         plugin = self.metadata_plugin(catalog)
         file_uuid_field = plugin.special_fields.file_uuid
-        filters = filters.update({
+        filters = filters.update_explicit({
             file_uuid_field.name: {'is': [file_uuid]},
             **(
                 {'fileVersion': {'is': [file_version]}}

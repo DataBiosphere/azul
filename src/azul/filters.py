@@ -578,7 +578,7 @@ class Filters:
             'source_ids': sorted(self.source_ids)
         }
 
-    def update(self, filters: FiltersJSON) -> Self:
+    def update_explicit(self, filters: FiltersJSON) -> Self:
         return attr.evolve(self, explicit={**self.explicit, **filters})
 
     def reify(self,
