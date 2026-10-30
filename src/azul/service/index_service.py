@@ -207,14 +207,22 @@ class IndexService(QueryService):
         response = request.execute(ignore_cache=True)
         response = chain.process_response(response)
 
+        self._synthesize_accessible(catalog, entity_type, filters, response)
+
+        return response
+
+    def _synthesize_accessible(self,
+                               catalog: CatalogName,
+                               entity_type: str,
+                               filters: Filters,
+                               response: MutableJSON
+                               ) -> None:
         special_fields = self.metadata_plugin(catalog).special_fields
         for hit in response['hits']:
             entity = one(hit[entity_type])
             source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
             accessible = source_id in filters.source_ids
             entity[special_fields.accessible.name_in_hit] = accessible
-
-        return response
 
     def summary(self,
                 catalog: CatalogName,
