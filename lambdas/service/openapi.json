@@ -1019,156 +1019,6 @@
                 ]
             }
         },
-        "/index/{entity_type}/{entity_id}": {
-            "get": {
-                "responses": {
-                    "400": {
-                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
-                    },
-                    "429": {
-                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
-                    },
-                    "500": {
-                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "502": {
-                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "503": {
-                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
-                    },
-                    "504": {
-                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "200": {
-                        "description": "\nThis response describes a single entity. To search the index\nfor multiple entities, see the [corresponding search\nendpoint](#operations-Index-get_index__entity_type_).\n\nThe properties that are common to all entity types are\nlisted in the schema below; however, additional properties\nmay be present for certain entity types. With the exception\nof the entity's unique identifier, all properties are\narrays, even in cases where only one value is present.\n\nThe structures of the objects within these arrays are not\nperfectly consistent, since they may represent either\nsingleton entities or aggregations depending on context.\n\nFor example, any biomaterial that yields a cell suspension\nwhich yields a sequence file will be considered a \"sample\".\nTherefore, the `samples` field is polymorphic, and each\nsample may be either a specimen, an organoid, or a cell line\n(the field `sampleEntityType` can be used to discriminate\nbetween these cases).\n",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "protocols": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "entryId": {
-                                            "type": "string"
-                                        },
-                                        "sources": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "samples": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "specimens": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "cellLines": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "donorOrganisms": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "organoids": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "cellSuspensions": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "protocols",
-                                        "entryId",
-                                        "sources",
-                                        "samples",
-                                        "specimens",
-                                        "cellLines",
-                                        "donorOrganisms",
-                                        "organoids",
-                                        "cellSuspensions"
-                                    ],
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Detailed information on a particular entity.",
-                "tags": [
-                    "Index"
-                ],
-                "parameters": [
-                    {
-                        "name": "catalog",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "dcp2"
-                            ],
-                            "default": "dcp2"
-                        },
-                        "description": "The name of the catalog to query."
-                    },
-                    {
-                        "name": "entity_type",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "The type of the desired entity"
-                    },
-                    {
-                        "name": "entity_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "The UUID of the desired entity"
-                    }
-                ]
-            }
-        },
         "/index/{entity_type}": {
             "head": {
                 "responses": {
@@ -6753,6 +6603,159 @@
                         },
                         "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
                         "deprecated": true
+                    }
+                ]
+            }
+        },
+        "/index/{entity_type}/{entity_id}": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nThis response describes a single entity. To search the index\nfor multiple entities, see the [corresponding search\nendpoint](#operations-Index-get_index__entity_type_).\n\nThe properties that are common to all entity types are\nlisted in the schema below; however, additional properties\nmay be present for certain entity types. With the exception\nof the entity's unique identifier, all properties are\narrays, even in cases where only one value is present.\n\nThe structures of the objects within these arrays are not\nperfectly consistent, since they may represent either\nsingleton entities or aggregations depending on context.\n\nFor example, any biomaterial that yields a cell suspension\nwhich yields a sequence file will be considered a \"sample\".\nTherefore, the `samples` field is polymorphic, and each\nsample may be either a specimen, an organoid, or a cell line\n(the field `sampleEntityType` can be used to discriminate\nbetween these cases).\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "protocols": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "entryId": {
+                                            "type": "string"
+                                        },
+                                        "sources": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "samples": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "specimens": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "cellLines": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "donorOrganisms": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "organoids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "cellSuspensions": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "protocols",
+                                        "entryId",
+                                        "sources",
+                                        "samples",
+                                        "specimens",
+                                        "cellLines",
+                                        "donorOrganisms",
+                                        "organoids",
+                                        "cellSuspensions"
+                                    ],
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "\nNo entity of the given type has the given UUID, in the\ngiven catalog and among the sources the request is\nauthorized to access.\n"
+                    }
+                },
+                "summary": "Detailed information on a particular entity.",
+                "tags": [
+                    "Index"
+                ],
+                "parameters": [
+                    {
+                        "name": "catalog",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "dcp2"
+                            ],
+                            "default": "dcp2"
+                        },
+                        "description": "The name of the catalog to query."
+                    },
+                    {
+                        "name": "entity_type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The type of the desired entity"
+                    },
+                    {
+                        "name": "entity_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The UUID of the desired entity"
                     }
                 ]
             }

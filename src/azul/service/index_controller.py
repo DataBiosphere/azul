@@ -18,6 +18,9 @@ from furl import (
     furl,
 )
 
+from azul.filters import (
+    Filters,
+)
 from azul.indexer.document import (
     EntityType,
 )
@@ -33,16 +36,23 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     JSON,
+    MutableJSON,
     PrimitiveJSON,
     check_type,
+    json_dict,
+    json_list,
 )
 from azul.lib.uuids import (
     InvalidUUIDError,
+    validate_uuid,
 )
 from azul.openapi import (
     params,
     responses,
     schema,
+)
+from azul.plugins import (
+    Sorting,
 )
 from azul.service import (
     BadArgumentException,
@@ -51,7 +61,6 @@ from azul.service.controller import (
     validate_params,
 )
 from azul.service.index_service import (
-    EntityNotFoundError,
     IndexService,
     SummaryResponseStage,
 )
@@ -126,6 +135,13 @@ class IndexController(QueryController):
                         between these cases).
                     '''),
                     **responses.json_content(self._hit_schema)
+                },
+                '404': {
+                    'description': fd('''
+                        No entity of the given type has the given UUID, in the
+                        given catalog and among the sources the request is
+                        authorized to access.
+                    ''')
                 }
             }
         }
@@ -280,14 +296,17 @@ class IndexController(QueryController):
             },
             cors=True
         )
+        def get_head_post_index_entity_type(entity_type: str) -> str | JSON:
+            return self.search(entity_type)
+
         @self.app.route(
             '/index/{entity_type}/{entity_id}',
             methods=['GET'],
             spec=self._search_entity_spec(),
             cors=True
         )
-        def get_head_post_index_entity(entity_type: str, entity_id: str | None = None) -> str | JSON:
-            return self.search(entity_type, entity_id)
+        def get_index_entity_type_and_id(entity_type: str, entity_id: str) -> JSON:
+            return self.retrieve(entity_type, entity_id)
 
         @self.app.route(
             '/index/summary',
@@ -317,7 +336,7 @@ class IndexController(QueryController):
 
         return locals()
 
-    def search(self, entity_type: str, entity_id: str | None = None) -> str | JSON:
+    def search(self, entity_type: str) -> str | JSON:
         request = self.current_request
         query_params = self._hoist_parameters(request)
         # Validate `catalog` first since `_validate_entity_type` requires a
@@ -341,18 +360,58 @@ class IndexController(QueryController):
         pagination = self._pagination(entity_type)
         authentication = self._authentication(request)
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
+        response = self._search(entity_type, filters, pagination, aggregate=True)
+        return '' if request.method == 'HEAD' else response
+
+    def retrieve(self, entity_type: str, entity_id: str) -> JSON:
+        """
+        Return the one entity of the given type with the given ID. Unlike
+        :py:meth:`search`, this endpoint takes no query parameters other than
+        `catalog`, so that the entity returned is determined by the path alone.
+        """
+        request = self.current_request
+        query_params = self._query_params(request)
+        # `_validate_entity_type` requires a valid catalog to load the plugin
+        validate_params(query_params, catalog=self._validate_catalog)
+        self._validate_entity_type(entity_type)
+        try:
+            validate_uuid(entity_id)
+        except InvalidUUIDError as e:
+            raise BadRequestError(e)
+        sort = Sorting(field_name='entryId')
+        pagination = Pagination(sort=sort.field_name, order=sort.order, size=1)
+        authentication = self._authentication(request)
+        filters = self._prepare_filters(self.app.catalog, authentication, None)
+        filters = filters.set_explicit({'entryId': {'is': [entity_id]}})
+        response = self._search(entity_type, filters, pagination, aggregate=False)
+        hits = json_list(response['hits'])
+        match hits:
+            case []:
+                raise NotFoundError(
+                    f'No {entity_type!r} entity with UUID {entity_id!r} was found'
+                )
+            case [hit]:
+                return json_dict(hit)
+            case _:
+                assert False, len(hits)
+
+    def _search(self,
+                entity_type: str,
+                filters: Filters,
+                pagination: Pagination,
+                *,
+                aggregate: bool
+                ) -> MutableJSON:
         try:
             response = self._service.search(catalog=self.app.catalog,
                                             entity_type=entity_type,
                                             file_url_func=self._file_url,
-                                            item_id=entity_id,
+                                            aggregate=aggregate,
                                             filters=filters,
                                             pagination=pagination)
-        except (BadArgumentException, InvalidUUIDError) as e:
+        except BadArgumentException as e:
             raise BadRequestError(e)
-        except EntityNotFoundError as e:
-            raise NotFoundError(e)
-        return '' if request.method == 'HEAD' else response
+        return response
 
     def summary(self):
         request = self.current_request

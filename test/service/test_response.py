@@ -1837,6 +1837,60 @@ class TestIndexResponse(IndexResponseTestCase):
                 self.assertEqual(400, response.status)
                 self.assertEqual(expected_text, response.data.decode())
 
+    def test_entity_endpoint_rejects_query_params(self):
+        """
+        Test that the endpoint for an individual entity only accepts `catalog`,
+        the one query parameter documented for it
+        """
+        project_id = '250aef61-a15b-4d97-b8b4-54bb997c1d7d'
+        path = 'index', 'projects', project_id
+
+        url = self.base_url.set(path=path, args=dict(catalog=self.catalog))
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        self.assertEqual(project_id, one(response.json()['projects'])['projectId'])
+
+        rejected = {
+            'filters': json.dumps({'organ': {'is': ['brain']}}),
+            'size': '1',
+            'sort': 'entryId',
+            'order': 'asc',
+            'search_after': '["a", "b"]',
+            'search_after_uid': 'x',
+            'search_before': '["a", "b"]',
+            'search_before_uid': 'x',
+            'nonsense': '1'
+        }
+        for param, value in rejected.items():
+            with self.subTest(param=param):
+                args = {'catalog': self.catalog, param: value}
+                url = self.base_url.set(path=path, args=args)
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(400, response.status)
+                expected = {
+                    'Code': 'BadRequestError',
+                    'Message': f'Unknown query parameter `{param}`'
+                }
+                self.assertEqual(expected, response.json())
+
+    def test_entity_endpoint_entity_id(self):
+        """
+        Test the responses to a malformed and an absent entity ID
+        """
+        url = self.base_url.set(path=('index', 'projects', 'not-a-uuid'))
+        response = self._http_client.request('GET', str(url))
+        self.assertEqual(400, response.status)
+
+        absent = '8f1c4e8b-9b1a-4a1e-8a0e-1d4e8f1c4e8b'
+        url = self.base_url.set(path=('index', 'projects', absent))
+        response = self._http_client.request('GET', str(url))
+        self.assertEqual(404, response.status)
+        expected = {
+            'Code': 'NotFoundError',
+            'Message': f'No {"projects"!r} entity with UUID {absent!r} was found'
+        }
+        self.assertEqual(expected, response.json())
+
     def test_filter_by_publication_title(self):
         cases = [
             (

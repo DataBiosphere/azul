@@ -581,6 +581,10 @@ class Filters:
     def update_explicit(self, filters: FiltersJSON) -> Self:
         return attr.evolve(self, explicit={**self.explicit, **filters})
 
+    def set_explicit(self, filters: FiltersJSON) -> Self:
+        assert len(self.explicit) == 0, self
+        return attr.evolve(self, explicit=filters)
+
     def reify(self,
               plugin: MetadataPlugin,
               *,
