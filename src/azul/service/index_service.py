@@ -164,50 +164,6 @@ class IndexService(QueryService):
         :return: the hits on that page, the pagination of the result set and,
                  if `aggregate` is set, the facets
         """
-        response = self._search(catalog=catalog,
-                                filters=filters,
-                                pagination=pagination,
-                                aggregate=aggregate,
-                                entity_type=entity_type,
-                                file_url_func=file_url_func)
-
-        special_fields = self.metadata_plugin(catalog).special_fields
-        for hit in response['hits']:
-            entity = one(hit[entity_type])
-            source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
-            accessible = source_id in filters.source_ids
-            entity[special_fields.accessible.name_in_hit] = accessible
-
-        return response
-
-    def _search(self,
-                *,
-                catalog: CatalogName,
-                entity_type: str,
-                aggregate: bool,
-                filters: Filters,
-                pagination: Pagination,
-                file_url_func: FileUrlFunc
-                ) -> MutableJSON:
-        """
-        This function does the whole transformation process. It takes the path
-        of the config file, the filters, and pagination, if any. Excluding
-        filters will do a match_all request. Excluding pagination will exclude
-        pagination from the output.
-
-        :param catalog: The name of the catalog to query
-
-        :param entity_type: the string referring to the entity type used to get
-                            the OpenSearch index to search
-
-        :param aggregate: Whether to perform the aggregation stage or not.
-
-        :param filters: Filter parameter from the API to be used in the query.
-
-        :param pagination: Pagination to be used for the API
-
-        :return: Returns the transformed request
-        """
         plugin = self.metadata_plugin(catalog)
         field_mapping = plugin.field_mapping
 
@@ -250,6 +206,14 @@ class IndexService(QueryService):
         request = chain.prepare_request(request)
         response = request.execute(ignore_cache=True)
         response = chain.process_response(response)
+
+        special_fields = self.metadata_plugin(catalog).special_fields
+        for hit in response['hits']:
+            entity = one(hit[entity_type])
+            source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
+            accessible = source_id in filters.source_ids
+            entity[special_fields.accessible.name_in_hit] = accessible
+
         return response
 
     def summary(self,
