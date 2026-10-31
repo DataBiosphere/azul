@@ -241,13 +241,13 @@ class IndexController(QueryController):
                     description=fd('''
                         Use the `next` and `previous` properties of the
                         `pagination` response element to navigate between pages.
+                        A value for this parameter is only accepted verbatim
+                        from one of those links.
                     '''),
                     deprecated=True)
                 for param in [
                     'search_before',
-                    'search_before_uid',
-                    'search_after',
-                    'search_after_uid'
+                    'search_after'
                 ]
             ]
         ]
@@ -359,9 +359,7 @@ class IndexController(QueryController):
                         filters=self._validate_filters,
                         order=self._validate_order,
                         search_after=partial(self._validate_json_param, 'search_after'),
-                        search_after_uid=str,
                         search_before=partial(self._validate_json_param, 'search_before'),
-                        search_before_uid=str,
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_field)
         filters = query_params.get('filters')

@@ -367,12 +367,18 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
 
     def test_bad_query_params(self):
 
+        # Until 2022, the `_uid` parameters supplied the second element of a
+        # sort key. The whole key then moved into `search_after` and
+        # `search_before`, leaving them accepted but ignored until they were
+        # completely removed in 2026, which is why they are now unknown like
+        # any other name.
+        params = 'some_nonexistent_filter', 'search_after_uid', 'search_before_uid'
         for entity_type in ('files', 'bundles', 'samples'):
-            url = self.base_url.set(path=('index', entity_type))
-            with self.subTest(entity_type=entity_type):
-                url.args = dict(catalog=self.catalog,
-                                some_nonexistent_filter=1)
-                self.assertBadRequest(url, 'Unknown query parameter `some_nonexistent_filter`')
+            for param in params:
+                with self.subTest(entity_type=entity_type, param=param):
+                    url = self.base_url.set(path=('index', entity_type))
+                    url.args = {'catalog': self.catalog, param: 1}
+                    self.assertBadRequest(url, f'Unknown query parameter `{param}`')
 
     def test_bad_catalog_param(self):
         for path in (*('/index/' + e for e in ('summary', 'files')),

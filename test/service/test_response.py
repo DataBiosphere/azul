@@ -349,8 +349,16 @@ class TestIndexResponse(IndexResponseTestCase):
                                       catalog=self.catalog,
                                       file_url_func=self.file_url_func)
 
+    #: The sort key of the `next` link in the second of the `paginations`
+    #: below. Both that fixture and the response `test_response_stage_files`
+    #: expects from it derive from this value, so the two cannot drift apart.
+    #:
+    _search_after = 'cbb998ce-ddaf-34fa-e163-d14b399c6b34'
+
     @property
     def paginations(self):
+        next_link = self.base_url.set(path='/index/files',
+                                      args=dict(size=5, search_after=self._search_after))
         return [
             ResponsePagination(count=2,
                                order='desc',
@@ -367,10 +375,7 @@ class TestIndexResponse(IndexResponseTestCase):
                                sort='entryId',
                                total=2,
                                previous=None,
-                               next=str(self.base_url.set(path='/index/files',
-                                                          args=dict(size=5,
-                                                                    search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                                    search_after_uid='meta%2332'))))
+                               next=str(next_link))
         ]
 
     def test_response_stage_files(self):
@@ -530,8 +535,7 @@ class TestIndexResponse(IndexResponseTestCase):
                     'pages': 1,
                     'next': str(self.base_url.set(path='/index/files',
                                                   args=dict(size=5,
-                                                            search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                            search_after_uid='meta%2332'))),
+                                                            search_after=self._search_after))),
                     'previous': None,
                     'size': 5,
                     'sort': 'entryId',

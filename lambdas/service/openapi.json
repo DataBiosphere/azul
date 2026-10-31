@@ -2773,17 +2773,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_before_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     },
                     {
@@ -2793,17 +2783,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_after_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     }
                 ]
@@ -4672,17 +4652,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_before_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     },
                     {
@@ -4692,17 +4662,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_after_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     }
                 ]
@@ -6571,17 +6531,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_before_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     },
                     {
@@ -6591,17 +6541,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_after_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     }
                 ]
