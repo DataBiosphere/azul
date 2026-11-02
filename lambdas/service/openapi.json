@@ -2072,28 +2072,6 @@
                                                 {
                                                     "type": "object",
                                                     "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
                                                         "within": {
                                                             "type": "array",
                                                             "items": {
@@ -3987,28 +3965,6 @@
                                                 {
                                                     "type": "object",
                                                     "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
                                                         "within": {
                                                             "type": "array",
                                                             "items": {
@@ -5899,28 +5855,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -7861,28 +7795,6 @@
                                                 {
                                                     "type": "object",
                                                     "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
                                                         "within": {
                                                             "type": "array",
                                                             "items": {
@@ -9579,28 +9491,6 @@
                                                 {
                                                     "type": "object",
                                                     "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
                                                         "within": {
                                                             "type": "array",
                                                             "items": {
@@ -11273,28 +11163,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -13075,28 +12943,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {

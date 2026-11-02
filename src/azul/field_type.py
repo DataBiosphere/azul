@@ -521,7 +521,10 @@ class ClosedRange[N: PrimitiveJSON, X: IndexForm](FieldType[Range[N], IndexRange
 
     @property
     def supported_filter_operators(self) -> tuple[str, ...]:
-        return 'is', 'within', 'contains', 'intersects'
+        # Note the absence of `is`. The index represents a range as a range
+        # field, which answers questions about how two ranges relate, not
+        # whether they are equal.
+        return 'within', 'contains', 'intersects'
 
     def api_filter_value_schema(self, operator: str, mode: Mode) -> JSON:
         if operator == 'contains':

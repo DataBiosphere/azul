@@ -388,6 +388,11 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                 schema_error + '9223372036854775807 is greater than the '
                                'maximum of 9223372036854774783 '
                                'at path $.fileSize.within[0][1]'
+            ),
+            (
+                '{"organismAgeRange":{"is":[[0, 1]]}}',
+                schema_error + "{'is': [[0, 1]]} is not valid under any of "
+                               "the given schemas at path $.organismAgeRange"
             )
         ]
         for filters, message in cases:
