@@ -334,6 +334,13 @@ class NullableNumber[U: bool | int | float](NullableScalar[U, JSONNumber]):
     def es_type(self) -> str | None:
         return self._es_type
 
+    def _api_schema(self, mode: Mode) -> JSON:
+        # The index holds a 64-bit integer or a double, and `null_value` is
+        # reserved for `None`, so the largest value a field can hold is one
+        # below that reserved value
+        minimum = -sys.maxsize - 1 if self.native_type is int else -sys.float_info.max
+        return schema.range(minimum, self.null_value - 1, self.native_type)
+
     def to_index(self, value: U | None) -> JSONNumber:
         if value is None:
             return self.null_value
@@ -398,6 +405,11 @@ class NullableBool(NullableNumber[bool]):
 
     def __init__(self):
         super().__init__(bool, 'boolean')
+
+    def _api_schema(self, mode: Mode) -> JSON:
+        # Booleans are not numbers in the API representation, and their index
+        # representations, 0 and 1, are well within the bounds on numbers
+        return schema.make(self.native_type)
 
     @property
     def supported_filter_operators(self) -> tuple[str, ...]:

@@ -370,6 +370,24 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                 schema_error + "'2026-01-01' does not match "
                                f"{datetime_pattern!r} "
                                "at path $.submissionDate.is[0]"
+            ),
+            (
+                '{"donorCount":{"is":[9223372036854775807]}}',
+                schema_error + '9223372036854775807 is greater than the '
+                               'maximum of 9223372036854774783 '
+                               'at path $.donorCount.is[0]'
+            ),
+            (
+                '{"donorCount":{"is":[-9223372036854775809]}}',
+                schema_error + '-9223372036854775809 is less than the '
+                               'minimum of -9223372036854775808 '
+                               'at path $.donorCount.is[0]'
+            ),
+            (
+                '{"fileSize":{"within":[[0, 9223372036854775807]]}}',
+                schema_error + '9223372036854775807 is greater than the '
+                               'maximum of 9223372036854774783 '
+                               'at path $.fileSize.within[0][1]'
             )
         ]
         for filters, message in cases:

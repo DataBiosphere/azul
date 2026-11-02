@@ -1322,6 +1322,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1341,7 +1343,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1451,6 +1455,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1470,7 +1476,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1529,6 +1537,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1548,7 +1558,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1657,6 +1669,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1676,7 +1690,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1898,6 +1914,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1917,7 +1935,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -2225,6 +2245,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -2244,7 +2266,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3213,6 +3237,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3232,7 +3258,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3342,6 +3370,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3361,7 +3391,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3420,6 +3452,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3439,7 +3473,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3548,6 +3584,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3567,7 +3605,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3789,6 +3829,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3808,7 +3850,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -4116,6 +4160,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -4135,7 +4181,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5104,6 +5152,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5123,7 +5173,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5233,6 +5285,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5252,7 +5306,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5311,6 +5367,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5330,7 +5388,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5439,6 +5499,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5458,7 +5520,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5680,6 +5744,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5699,7 +5765,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6007,6 +6075,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6026,7 +6096,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7039,6 +7111,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7058,7 +7132,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7168,6 +7244,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7187,7 +7265,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7246,6 +7326,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7265,7 +7347,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7374,6 +7458,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7393,7 +7479,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7615,6 +7703,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7634,7 +7724,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7942,6 +8034,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7961,7 +8055,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8733,6 +8829,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8752,7 +8850,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8862,6 +8962,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8881,7 +8983,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8940,6 +9044,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8959,7 +9065,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9068,6 +9176,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9087,7 +9197,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9309,6 +9421,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9328,7 +9442,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9636,6 +9752,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9655,7 +9773,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10406,6 +10526,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10425,7 +10547,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10535,6 +10659,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10554,7 +10680,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10613,6 +10741,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10632,7 +10762,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10741,6 +10873,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10760,7 +10894,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10982,6 +11118,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11001,7 +11139,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -11309,6 +11449,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11328,7 +11470,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12184,6 +12328,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12203,7 +12349,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12313,6 +12461,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12332,7 +12482,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12391,6 +12543,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12410,7 +12564,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12519,6 +12675,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12538,7 +12696,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12760,6 +12920,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12779,7 +12941,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -13087,6 +13251,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -13106,7 +13272,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
