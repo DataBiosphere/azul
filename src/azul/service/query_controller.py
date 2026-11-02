@@ -203,12 +203,16 @@ class QueryController(ServiceController, metaclass=ABCMeta):
         filters = self._validate_json_param('filters', filters)
 
         validator = self._filter_schema_validator(self.app.catalog)
-        try:
-            validator.validate(filters)
-        except jsonschema.exceptions.ValidationError as e:
+        # A field that supports more than one operator has a `oneOf` schema,
+        # and the first error against such a schema merely states that none of
+        # the alternatives matched. `best_match` descends into the alternative
+        # that came closest, naming the offending value instead.
+        errors = validator.iter_errors(filters)
+        error = jsonschema.exceptions.best_match(errors)
+        if error is not None:
             raise BRE(f'The value of the `filters` parameter is '
-                      f'invalid against the schema: {e.message} '
-                      f'at path {e.json_path}')
+                      f'invalid against the schema: {error.message} '
+                      f'at path {error.json_path}')
 
     @cache
     def _filter_schema_validator(self,

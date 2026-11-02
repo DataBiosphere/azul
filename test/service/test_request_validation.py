@@ -335,14 +335,13 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
             ),
             (
                 '{"organismAge":{"is":[{"value": "1"}]}}',
-                schema_error + "{'value': '1'} is not valid under any of the given schemas "
+                schema_error + "'unit' is a required property "
                                "at path $.organismAge.is[0]"
             ),
             (
                 '{"organismAge":{"is":[{"value": "1", "unit": "year", "foo": "year"}]}}',
-                schema_error + "{'value': '1', 'unit': 'year', 'foo': 'year'} "
-                               "is not valid under any of the given schemas "
-                               "at path $.organismAge.is[0]"
+                schema_error + "Additional properties are not allowed "
+                               "('foo' was unexpected) at path $.organismAge.is[0]"
             ),
             (
                 '{"organismAge":{"is":[{"value": "1", "unit": "year"}, {}]}}',
