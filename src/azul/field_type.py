@@ -32,6 +32,7 @@ from azul.lib import (
     cached_property,
 )
 from azul.lib.time import (
+    dcp2_datetime_pattern,
     format_dcp2_datetime,
     parse_dcp2_datetime,
 )
@@ -276,8 +277,11 @@ class Nullable[N, X: IndexForm](FieldType[N | None, X], metaclass=ABCMeta):
         super().__init__(native_type | None, translated_from)
 
     def api_schema(self, mode: Mode) -> JSON:
-        return schema.nullable(schema.make(self.native_type),
+        return schema.nullable(self._api_schema(mode),
                                for_openapi=mode is Mode.openapi)
+
+    def _api_schema(self, mode: Mode) -> JSON:
+        return schema.make(self.native_type)
 
 
 class NullableScalar[N, X: IndexForm](Nullable[N, X], metaclass=ABCMeta):
@@ -285,7 +289,7 @@ class NullableScalar[N, X: IndexForm](Nullable[N, X], metaclass=ABCMeta):
     def api_filter_value_schema(self, operator: str, mode: Mode) -> JSON:
         if operator == 'within':
             # The LHS operand of a range operator can't be null
-            api_type = schema.make(self.native_type)
+            api_type = self._api_schema(mode)
             return self._api_range_schema(api_type, mode)
         else:
             return super().api_filter_value_schema(operator, mode)
@@ -406,6 +410,9 @@ null_bool = NullableBool()
 class NullableDateTime(NullableScalar[str, str]):
     es_type = 'date'
     null = format_dcp2_datetime(datetime(9999, 1, 1, tzinfo=timezone.utc))
+
+    def _api_schema(self, mode: Mode) -> JSON:
+        return schema.pattern(f'^{dcp2_datetime_pattern}$')
 
     def to_index(self, value: str | None) -> str:
         if value is None:

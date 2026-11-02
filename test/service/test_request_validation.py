@@ -5,6 +5,9 @@ from furl import (
 )
 import urllib3
 
+from azul.lib.time import (
+    dcp2_datetime_pattern,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -254,6 +257,7 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
     def test_bad_filters(self):
         url = self.base_url.set(path='/index/files', args=dict(catalog=self.catalog))
         schema_error = "The value of the `filters` parameter is invalid against the schema: "
+        datetime_pattern = f'^{dcp2_datetime_pattern}$'
         cases = [
             (
                 '"',
@@ -347,6 +351,25 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                 '{"organismAge":{"is":[{"value": "1", "unit": "year"}, {}]}}',
                 schema_error + "{} is not valid under any of the given schemas "
                                "at path $.organismAge.is[1]"
+            ),
+            (
+                '{"submissionDate":{"within":[["2026-01-01", "2026-08-08"]]}}',
+                schema_error + "'2026-01-01' does not match "
+                               f"{datetime_pattern!r} "
+                               "at path $.submissionDate.within[0][0]"
+            ),
+            (
+                '{"submissionDate":{"within":[["2026-01-01T00:00:00Z",'
+                ' "2026-08-08T00:00:00.000000Z"]]}}',
+                schema_error + "'2026-01-01T00:00:00Z' does not match "
+                               f"{datetime_pattern!r} "
+                               "at path $.submissionDate.within[0][0]"
+            ),
+            (
+                '{"submissionDate":{"is":["2026-01-01"]}}',
+                schema_error + "'2026-01-01' does not match "
+                               f"{datetime_pattern!r} "
+                               "at path $.submissionDate.is[0]"
             )
         ]
         for filters, message in cases:
