@@ -3397,6 +3397,49 @@ class TestResponseFields(IndexResponseTestCase):
                 summary = response.json()
                 self.assertElasticEqual(expected_projects, summary['projects'])
 
+    def test_filter_by_assay_type(self):
+
+        def assay_types_by_project(values: list[str | None] | None) -> dict[str, set[str]]:
+            params = dict(catalog=self.catalog, size=50)
+            if values is not None:
+                params['filters'] = json.dumps({'assayType': {'is': values}})
+            url = self.base_url.set(path='/index/projects', args=params)
+            response = self._http_client.request('GET', str(url))
+            raise_on_status(response)
+            response = response.json()
+            self.assertIsNone(response['pagination']['next'])
+            return {
+                hit['entryId']: {
+                    assay_type
+                    for protocol in hit['protocols']
+                    for assay_type in protocol.get('assayType', [])
+                }
+                for hit in response['hits']
+            }
+
+        projects = assay_types_by_project(None)
+        imaging_projects = {
+            project_id: assay_types
+            for project_id, assay_types in projects.items()
+            if assay_types
+        }
+        # Only bundle 94f2ba52 contains an imaging protocol
+        self.assertEqual(['in situ sequencing'], list(map(one, imaging_projects.values())))
+        other_projects = {
+            project_id: assay_types
+            for project_id, assay_types in projects.items()
+            if not assay_types
+        }
+        self.assertGreater(len(other_projects), 0)
+        for values, expected in [
+            (['in situ sequencing'], imaging_projects),
+            ([None], other_projects),
+            (['in situ sequencing', None], projects),
+            (['flow cytometry'], {})
+        ]:
+            with self.subTest(values=values):
+                self.assertEqual(expected, assay_types_by_project(values))
+
     def test_summary_filter_none(self):
         for use_filter, labCount in [(False, 15), (True, 1)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):

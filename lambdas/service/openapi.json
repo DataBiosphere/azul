@@ -1236,7 +1236,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -3129,7 +3130,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -5022,7 +5024,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -6959,7 +6962,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -8655,7 +8659,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -10330,7 +10335,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -12110,7 +12116,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }

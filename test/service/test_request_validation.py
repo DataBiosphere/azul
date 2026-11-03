@@ -316,8 +316,9 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                 schema_error + "'is' is a required property at path $.projectTitle"
             ),
             (
-                '{"assayType":{"is":["flow cytometry"]}}',
-                schema_error + "'flow cytometry' is not of type 'object' at path $.assayType.is[0]"
+                '{"assayType":{"is":[{"foo": "bar", "baz": null}]}}',
+                schema_error + "{'foo': 'bar', 'baz': None} is not of type 'null', 'string' "
+                               "at path $.assayType.is[0]"
             ),
             (
                 '{"organismAge":{"is":[]}}',
