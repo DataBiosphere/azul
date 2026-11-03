@@ -1542,6 +1542,22 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
                 }
                 self.assertEqual(expected_response, response.json())
 
+    def test_sort_by_age(self):
+        for field in [
+            'biosamples.donor_age_at_collection',
+            'diagnoses.diagnosis_age',
+            'diagnoses.onset_age'
+        ]:
+            with self.subTest(field=field):
+                url = self.base_url.set(path='/index/datasets', args=dict(sort=field))
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(400, response.status)
+                expected_response = {
+                    'Code': 'BadRequestError',
+                    'Message': f'Sorting by field `{field}` is not supported'
+                }
+                self.assertEqual(expected_response, response.json())
+
     def _assertResponse(self, url: str, expected_response: JSON):
         response = self._http_client.request('GET', url)
         raise_on_status(response)

@@ -214,6 +214,12 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                          f"None is not of type '{expected_type}' at path $.{field.name}.is[0]")
                 self.assertBadRequest(url, error)
 
+    def test_unsortable_sort_field(self):
+        for field in ['organismAgeRange', 'accessions', 'tissueAtlas']:
+            with self.subTest(field=field):
+                url = self.base_url.set(path='/index/samples', args=dict(sort=field))
+                self.assertBadRequest(url, f'Sorting by field `{field}` is not supported')
+
     def test_unmapped_sort_field(self):
         # No document in the index contains an imaging protocol, so the index
         # has no mapping for this field

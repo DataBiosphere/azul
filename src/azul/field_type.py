@@ -99,6 +99,8 @@ class Mode(Enum):
 
 class FieldType[N, X: IndexForm](metaclass=ABCMeta):
     shadowed: ClassVar[bool] = False
+    #: Whether hits can be sorted by fields of this type
+    sortable: ClassVar[bool] = True
     es_sort_mode: ClassVar[str] = 'min'
     allow_sorting_by_empty_lists: ClassVar[bool] = True
 
@@ -222,6 +224,8 @@ class PassThrough[T: AnyJSON](FieldType[T, T]):
 
 
 class PassThroughJSON(PassThrough[JSON]):
+    # A sort targets a field's keyword representation, which an object lacks
+    sortable = False
 
     def __init__(self):
         # FIXME: change the es_type for JSON to `nested`
@@ -458,6 +462,9 @@ null_datetime: NullableDateTime = NullableDateTime(str, str)
 
 class Nested(FieldType[JSON, JSON]):
     allow_sorting_by_empty_lists = False
+    # FIXME: Can't sort on fields of nested type
+    #        https://github.com/DataBiosphere/azul/issues/2621
+    sortable = False
     es_type = 'nested'
     properties: Mapping[str, FieldType]
 
@@ -511,6 +518,9 @@ class Nested(FieldType[JSON, JSON]):
 
 
 class ClosedRange[N: PrimitiveJSON, X: IndexForm](FieldType[Range[N], IndexRange[X]]):
+    # FIXME: Can't sort on range fields
+    #        https://github.com/DataBiosphere/azul/issues/2621
+    sortable = False
 
     def __init__(self, ends_type: FieldType[N, X]):
         super().__init__(reify(Range[N]), reify(JSON))

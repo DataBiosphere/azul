@@ -82,6 +82,12 @@ class QueryController(ServiceController, metaclass=ABCMeta):
 
     @property
     @cache_per_catalog
+    def _sort_fields(self) -> Sequence[str]:
+        types = self._service.mapped_field_types(self.app.catalog)
+        return tuple(field for field in self._organic_fields if types[field].sortable)
+
+    @property
+    @cache_per_catalog
     def _filter_fields(self) -> Sequence[str]:
         types = self._service.mapped_field_types(self.app.catalog)
         return tuple(
@@ -201,10 +207,12 @@ class QueryController(ServiceController, metaclass=ABCMeta):
         except json.decoder.JSONDecodeError:
             raise BRE(f'The {name!r} parameter is not valid JSON')
 
-    def _validate_field(self, field: str, *, include_synthetic: bool = False):
-        fields = self._fields if include_synthetic else self._organic_fields
-        if field not in fields:
-            raise BRE(f'Unknown field `{field}`')
+    def _validate_sort_field(self, field: str):
+        if field not in self._sort_fields:
+            if field in self._organic_fields:
+                raise BRE(f'Sorting by field `{field}` is not supported')
+            else:
+                raise BRE(f'Unknown field `{field}`')
 
     def _validate_filters(self, filters):
         filters = self._validate_json_param('filters', filters)

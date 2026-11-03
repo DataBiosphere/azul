@@ -2698,7 +2698,6 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "accessions",
                                 "aggregateLastModifiedDate",
                                 "aggregateSubmissionDate",
                                 "aggregateUpdateDate",
@@ -2740,7 +2739,6 @@
                                 "organ",
                                 "organPart",
                                 "organismAge",
-                                "organismAgeRange",
                                 "pairedEnd",
                                 "preservationMethod",
                                 "project",
@@ -2761,7 +2759,6 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
-                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -4592,7 +4589,6 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "accessions",
                                 "aggregateLastModifiedDate",
                                 "aggregateSubmissionDate",
                                 "aggregateUpdateDate",
@@ -4634,7 +4630,6 @@
                                 "organ",
                                 "organPart",
                                 "organismAge",
-                                "organismAgeRange",
                                 "pairedEnd",
                                 "preservationMethod",
                                 "project",
@@ -4655,7 +4650,6 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
-                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -6486,7 +6480,6 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "accessions",
                                 "aggregateLastModifiedDate",
                                 "aggregateSubmissionDate",
                                 "aggregateUpdateDate",
@@ -6528,7 +6521,6 @@
                                 "organ",
                                 "organPart",
                                 "organismAge",
-                                "organismAgeRange",
                                 "pairedEnd",
                                 "preservationMethod",
                                 "project",
@@ -6549,7 +6541,6 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
-                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]

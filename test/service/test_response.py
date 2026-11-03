@@ -3636,18 +3636,14 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
     def test_sorted_responses(self):
         # FIXME: Can't sort on fields of nested type
         #        https://github.com/DataBiosphere/azul/issues/2621
-        sortable_fields = {
-            field
-            for field in self.field_mapping
-            if field not in {'organismAgeRange', 'accessions', 'tissueAtlas'}
-        }
-
-        for entity_type, field in product(self.entity_types(), sortable_fields):
+        unsortable_fields = {'organismAgeRange', 'accessions', 'tissueAtlas'}
+        for entity_type, field in product(self.entity_types(), self.field_mapping):
             with self.subTest(entity=entity_type, field=field):
                 url = self.base_url.set(path=('index', entity_type),
                                         args=dict(sort=field))
                 response = self._http_client.request('GET', str(url))
-                self.assertEqual(200, response.status)
+                expected_status = 400 if field in unsortable_fields else 200
+                self.assertEqual(expected_status, response.status)
 
 
 class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):

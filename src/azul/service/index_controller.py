@@ -220,7 +220,7 @@ class IndexController(QueryController):
             ),
             params.query(
                 'sort',
-                schema.optional(schema.enum(*self._organic_fields)),
+                schema.optional(schema.enum(*self._sort_fields)),
                 description=fd('''
                     The field to sort the hits by. The default value depends on the
                     entity type.
@@ -361,7 +361,7 @@ class IndexController(QueryController):
                         search_after=partial(self._validate_json_param, 'search_after'),
                         search_before=partial(self._validate_json_param, 'search_before'),
                         size=partial(self._validate_size, entity_type),
-                        sort=self._validate_field)
+                        sort=self._validate_sort_field)
         filters = query_params.get('filters')
         authentication = self._authentication(request)
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
