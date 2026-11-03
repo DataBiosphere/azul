@@ -214,6 +214,12 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                          f"None is not of type '{expected_type}' at path $.{field.name}.is[0]")
                 self.assertBadRequest(url, error)
 
+    def test_unmapped_sort_field(self):
+        # No document in the index contains an imaging protocol, so the index
+        # has no mapping for this field
+        url = self.base_url.set(path='/index/samples', args=dict(sort='assayType'))
+        self.assertResponseStatus(url, 200)
+
     def test_bad_sort_field_of_file(self):
         params = {
             'size': 15,

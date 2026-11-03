@@ -334,7 +334,7 @@ class Frequencies(FieldType[NullableFrequenciesForm, FrequenciesForm]):
     >>> f.from_index('~null') is None
     True
     """
-    es_type = None
+    es_type = 'keyword'
     allow_sorting_by_empty_lists = False
 
     def __init__(self):

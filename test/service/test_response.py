@@ -3639,7 +3639,7 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
         sortable_fields = {
             field
             for field in self.field_mapping
-            if field not in {'assayType', 'organismAgeRange', 'accessions', 'tissueAtlas'}
+            if field not in {'organismAgeRange', 'accessions', 'tissueAtlas'}
         }
 
         for entity_type, field in product(self.entity_types(), sortable_fields):
