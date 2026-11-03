@@ -377,7 +377,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _file(self, file: EntityReference) -> MutableJSON:
         return self._entity(file, self._file_types())
 
-    def _only_dataset(self) -> EntityReference:
+    @property
+    def _only_dataset_ref(self) -> EntityReference:
         try:
             return one(self._entities_by_type['anvil_dataset'])
         except ValueError:
@@ -431,7 +432,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, self._entities_by_type['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, self._entities_by_type['anvil_diagnosis']),
             donors=self._entities(self._donor, self._entities_by_type['anvil_donor']),
             files=self._entities(self._file, self._entities_by_type['anvil_file'])
@@ -459,7 +460,7 @@ class ActivityTransformer(BaseTransformer):
         contents = dict(
             activities=[self._activity(entity)],
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=self._entities(self._donor, linked['anvil_donor']),
             files=self._entities(self._file, linked['anvil_file'])
@@ -481,7 +482,7 @@ class BiosampleTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=[self._biosample(entity)],
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=self._entities(self._donor, linked['anvil_donor']),
             files=self._entities(self._file, linked['anvil_file']),
@@ -511,7 +512,7 @@ class BundleTransformer(SingletonTransformer):
             # redundant with those emitted by the file transformer, but these
             # will be consolidated by the index service before they are written
             # to OpenSearch.
-            dataset = self._only_dataset()
+            dataset = self._only_dataset_ref
             for entity in chain(self.bundle.orphans, self.bundle.entities):
                 if partition.contains(UUID(entity.entity_id)):
                     yield self._replica(entity, file_hub=None, root_hub=dataset.entity_id)
@@ -543,7 +544,7 @@ class DatasetTransformer(SingletonTransformer):
         return self._entity(dataset, self._detailed_dataset_types())
 
     def _singleton(self) -> EntityReference:
-        return self._only_dataset()
+        return self._only_dataset_ref
 
 
 class DonorTransformer(BaseTransformer):
@@ -560,7 +561,7 @@ class DonorTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=[self._donor(entity)],
             files=self._entities(self._file, linked['anvil_file']),
@@ -584,14 +585,14 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
-        dataset = self._only_dataset()
+        dataset = self._only_dataset_ref
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=self._entities(self._donor, linked['anvil_donor']),
             files=[self._file(entity)],
