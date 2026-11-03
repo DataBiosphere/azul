@@ -78,6 +78,7 @@ from azul.lib.types import (
     MutableJSONs,
     json_bool,
     json_element_mappings,
+    json_element_strings,
     json_sequence_of_optional_strings,
     json_sorted,
     json_str,
@@ -377,12 +378,23 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _file(self, file: EntityReference) -> MutableJSON:
         return self._entity(file, self._file_types())
 
+    def _non_verbatim_tables(self) -> Set[str]:
+        """
+        See :meth:`azul.plugins.repository.tdr_anvil.Plugin._non_verbatim_tables`
+        """
+        contents = self._only_dataset[1]
+        return set(json_element_strings(contents['_non_verbatim_tables']))
+
+    @cached_property
+    def _only_dataset(self) -> tuple[EntityReference, MutableJSON]:
+        # In replica bundles, the dataset is stored as an orphan
+        entities = ChainMap(self.bundle.entities, self.bundle.orphans)
+        ref = one(e for e in entities if e.entity_type == 'anvil_dataset')
+        return ref, entities[ref]
+
     @property
     def _only_dataset_ref(self) -> EntityReference:
-        try:
-            return one(self._entities_by_type['anvil_dataset'])
-        except ValueError:
-            return one(o for o in self.bundle.orphans if o.entity_type == 'anvil_dataset')
+        return self._only_dataset[0]
 
     @cached_property
     def _activity_polymorphic_types(self) -> Set[str]:
@@ -511,10 +523,16 @@ class BundleTransformer(SingletonTransformer):
             # don't include any files. Some of the replicas we emit here will be
             # redundant with those emitted by the file transformer, but these
             # will be consolidated by the index service before they are written
-            # to OpenSearch.
+            # to OpenSearch. Entities from an excluded table are skipped here,
+            # so that only those of them that are linked to a file end up in
+            # the index, via the replicas the file transformer emits.
             dataset = self._only_dataset_ref
+            non_verbatim = self._non_verbatim_tables()
             for entity in chain(self.bundle.orphans, self.bundle.entities):
-                if partition.contains(UUID(entity.entity_id)):
+                if (
+                    partition.contains(UUID(entity.entity_id))
+                    and entity.entity_type not in non_verbatim
+                ):
                     yield self._replica(entity, file_hub=None, root_hub=dataset.entity_id)
 
 
@@ -529,8 +547,7 @@ class DatasetTransformer(SingletonTransformer):
         return {
             **cls._dataset_types(),
             'description': null_str,
-            '_tdr_non_schema_row_count': null_int,
-            '_tdr_non_schema_row_count_threshold': null_int,
+            '_non_verbatim_tables': [null_str],
         }
 
     @classmethod
