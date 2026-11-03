@@ -250,14 +250,24 @@ class BundleType(Enum):
     the snapshot. This class enumerates the tables that require special
     strategies for listing and fetching their bundles.
 
-    An orphan is defined as an AnVIL entity that does not appear in any of
-    Azul's `/index/{entity_type}`. Bundles *can* contain orphans, but they will
-    only ever manifest as replicas in our index. A *local orphan* is an entity
-    in a bundle that is not referenced anywhere in that bundle's links. Local
-    orphans may or may not be true/global orphans (because they may still be
-    references in *other* bundles' links), but all global orphans are always
-    local orphans. Bundles only contain local orphans from the table that
-    matches the bundle's `table_name` attribute.
+    An *orphan* is an entity that takes part in no relationship this plugin is
+    aware of. Neither a foreign key column that the plugin traverses, nor a link
+    that it synthesizes for special entities without such keys (supplementary
+    files), connects the entity to another one, leaving it an isolated node in
+    the graph those relationships form. There are two types of graphs: the
+    dataset-wide graph and the per-bundle graphs derived from it. The type of
+    graph defines the scope of an orphan. A *bundle orphan* is isolated within
+    one bundle, taking part in none of that bundle's links; a *dataset orphan*
+    is isolated within the entire dataset. A bundle orphan may or may not be a
+    dataset orphan: another bundle may connect it to something, but every
+    dataset orphan is a bundle orphan in every bundle that contains it.
+
+    Azul builds its index documents out of connected entities, so an orphan
+    has no document to appear in and manifests only as a replica. A dataset
+    orphan is therefore absent from everything Azul serves from
+    `/index/{entity_type}`, whether as a hit or as an inner entity. Bundles
+    only contain bundle orphans from the table that matches the bundle's
+    `table_name` attribute.
     """
 
     #: The BigQuery table associated with this bundle type. If this is None for
@@ -282,7 +292,7 @@ class BundleType(Enum):
     #: to a different bundle entity type would require re-implementing much of
     #: the Plugin code. Primary bundles consist of at least one biosample (the
     #: bundle entity), exactly one dataset entity, and zero or more other
-    #: entities of assorted types. Primary bundles never contain local orphans
+    #: entities of assorted types. Primary bundles never contain bundle orphans
     #: because they are bijective to rows in the biosample table.
     #:
     primary = ('anvil_biosample', False)
@@ -294,15 +304,15 @@ class BundleType(Enum):
     #: between the supplementary files and the dataset. Without these links, the
     #: relationship between these files and their parent dataset would not be
     #: properly represented in the service response. Supplementary files
-    #: therefore are never local or global orphans.
+    #: therefore are never bundle or dataset orphans.
     #:
     #: Normal (non-supplementary) files are not linked to the dataset and thus
-    #: are local orphans within these bundles. This is because these files may
-    #: also appear in primary bundles. If they do, then those bundles will
-    #: contribute them to the index alongside all of their linked entities. If
-    #: they don't, then they are global orphans. In either case, it would be
-    #: pointless for a supplementary bundle to emit contributions for them,
-    #: hence we treat them as orphans.
+    #: are bundle orphans there. This is because these files may also appear
+    #: in primary bundles. If they do, then those bundles will contribute them
+    #: to the index alongside all of their linked entities. If they don't,
+    #: then they are dataset orphans. In either case, it would be pointless
+    #: for a supplementary bundle to emit contributions for them, hence we
+    #: treat them as orphans.
     #:
     supplementary = ('anvil_file', True)
 
@@ -316,7 +326,7 @@ class BundleType(Enum):
     #: consist of a batch of rows from an arbitrary BigQuery table, which may or
     #: may not be described by the AnVIL schema, and the snapshot's dataset
     #: entity. Replica bundles contain no links and thus all of their entities
-    #: are local orphans.
+    #: are bundle orphans.
     #:
     replica = (None, True)
 
