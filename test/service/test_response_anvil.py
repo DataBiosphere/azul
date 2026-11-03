@@ -1,3 +1,4 @@
+import json
 from unittest.mock import (
     patch,
 )
@@ -1518,6 +1519,28 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         }
         url = str(self.base_url.set(path='/index/summary'))
         self._assertResponse(url, expected_response)
+
+    def test_filter_by_age(self):
+        # FIXME: Support range operators on AnVIL age fields
+        #        https://github.com/DataBiosphere/azul/issues/8442
+        for field in [
+            'biosamples.donor_age_at_collection',
+            'diagnoses.diagnosis_age',
+            'diagnoses.onset_age'
+        ]:
+            filters = {field: {'is': [{'gte': 1, 'lte': None}]}}
+            with self.subTest(field=field):
+                url = self.base_url.set(path='/index/datasets',
+                                        args=dict(filters=json.dumps(filters)))
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(400, response.status)
+                expected_response = {
+                    'Code': 'BadRequestError',
+                    'Message': 'The value of the `filters` parameter is invalid '
+                               'against the schema: Additional properties are not '
+                               f'allowed ({field!r} was unexpected) at path $'
+                }
+                self.assertEqual(expected_response, response.json())
 
     def _assertResponse(self, url: str, expected_response: JSON):
         response = self._http_client.request('GET', url)

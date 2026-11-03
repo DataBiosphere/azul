@@ -221,9 +221,22 @@ class PassThrough[T: AnyJSON](FieldType[T, T]):
         return value
 
 
-# FIXME: change the es_type for JSON to `nested`
-#        https://github.com/DataBiosphere/azul/issues/2621
-pass_thru_json: PassThrough[JSON] = PassThrough(JSON, es_type=None)
+class PassThroughJSON(PassThrough[JSON]):
+
+    def __init__(self):
+        # FIXME: change the es_type for JSON to `nested`
+        #        https://github.com/DataBiosphere/azul/issues/2621
+        super().__init__(JSON, es_type=None)
+
+    @property
+    def supported_filter_operators(self) -> tuple[str, ...]:
+        # The index represents an object as an object, or as a range if a
+        # dynamic template says so, but never as the keyword that the `is`
+        # operator compares against
+        return ()
+
+
+pass_thru_json: PassThroughJSON = PassThroughJSON()
 
 
 class NumericPassThrough[T: JSONNumber](PassThrough[T]):

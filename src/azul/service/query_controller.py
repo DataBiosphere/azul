@@ -83,6 +83,15 @@ class QueryController(ServiceController, metaclass=ABCMeta):
     def _synthetic_fields(self) -> Sequence[str]:
         return tuple(f.name for f in self._metadata_plugin.special_fields.synthetics)
 
+    @property
+    def _filter_fields(self) -> Sequence[str]:
+        types = self._service.mapped_field_types(self.app.catalog)
+        return tuple(
+            field
+            for field in self._fields
+            if types[field].supported_filter_operators
+        )
+
     def _hoist_parameters(self, request: Request) -> MultiDict:
         query_params = self._query_params(request)
         if request.method in ('POST', 'PUT'):
@@ -154,7 +163,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
                 "unit": "year"}]}}`. Both keys are required. `{"organismAge": {"is":
                 [null]}}` selects entities that have no organism age.''' + f'''
 
-                Supported field names are: {', '.join(self._fields)}
+                Supported field names are: {', '.join(self._filter_fields)}
             ''')
         )
 
@@ -184,7 +193,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
                                       additionalProperties=False,
                                       properties={
                                           field: _filter_schema(types[field])
-                                          for field in self._fields
+                                          for field in self._filter_fields
                                       })
         return filter_schema
 
