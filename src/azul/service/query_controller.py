@@ -19,14 +19,11 @@ from more_itertools import (
     one,
 )
 
-from azul import (
-    CatalogName,
+from azul.chalice import (
+    cache_per_catalog,
 )
 from azul.field_type import (
     Mode,
-)
-from azul.lib import (
-    cache,
 )
 from azul.lib.collections import (
     OrderedSet,
@@ -84,6 +81,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
         return tuple(f.name for f in self._metadata_plugin.special_fields.synthetics)
 
     @property
+    @cache_per_catalog
     def _filter_fields(self) -> Sequence[str]:
         types = self._service.mapped_field_types(self.app.catalog)
         return tuple(
@@ -126,7 +124,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
 
     @property
     def _filters_param_spec(self):
-        filter_schema = self._filter_schema(self.app.catalog, Mode.openapi)
+        filter_schema = self._filter_schema(Mode.openapi)
         return params.query(
             'filters',
             schema.optional(application_json(filter_schema)),
@@ -167,9 +165,9 @@ class QueryController(ServiceController, metaclass=ABCMeta):
             ''')
         )
 
-    @cache
-    def _filter_schema(self, catalog: CatalogName, mode: Mode) -> JSON:
-        types = self._service.mapped_field_types(catalog)
+    @cache_per_catalog
+    def _filter_schema(self, mode: Mode) -> JSON:
+        types = self._service.mapped_field_types(self.app.catalog)
 
         def _filter_schema(field_type):
             operators = field_type.supported_filter_operators
@@ -211,7 +209,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
     def _validate_filters(self, filters):
         filters = self._validate_json_param('filters', filters)
 
-        validator = self._filter_schema_validator(self.app.catalog)
+        validator = self._filter_schema_validator()
         # A field that supports more than one operator has a `oneOf` schema,
         # and the first error against such a schema merely states that none of
         # the alternatives matched. `best_match` descends into the alternative
@@ -223,9 +221,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
                       f'invalid against the schema: {error.message} '
                       f'at path {error.json_path}')
 
-    @cache
-    def _filter_schema_validator(self,
-                                 catalog: CatalogName
-                                 ) -> jsonschema.protocols.Validator:
-        schema = self._filter_schema(catalog, Mode.jsonschema)
+    @cache_per_catalog
+    def _filter_schema_validator(self) -> jsonschema.protocols.Validator:
+        schema = self._filter_schema(Mode.jsonschema)
         return jsonschema.validators.validator_for(schema)(schema)
