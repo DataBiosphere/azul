@@ -184,7 +184,7 @@ class SnapshotName:
 
     def __str__(self) -> str:
         """
-        The inverse of :py:meth:`parse`.
+        The inverse of :meth:`parse`.
 
         >>> name = 'ANVIL_CMG_UWash_GRU_20240301_ANV5_202403040330'
         >>> name == str(SnapshotName.parse(name))
@@ -250,14 +250,24 @@ class BundleType(Enum):
     the snapshot. This class enumerates the tables that require special
     strategies for listing and fetching their bundles.
 
-    An orphan is defined as an AnVIL entity that does not appear in any of
-    Azul's `/index/{entity_type}`. Bundles *can* contain orphans, but they will
-    only ever manifest as replicas in our index. A *local orphan* is an entity
-    in a bundle that is not referenced anywhere in that bundle's links. Local
-    orphans may or may not be true/global orphans (because they may still be
-    references in *other* bundles' links), but all global orphans are always
-    local orphans. Bundles only contain local orphans from the table that
-    matches the bundle's `table_name` attribute.
+    An *orphan* is an entity that takes part in no relationship this plugin is
+    aware of. Neither a foreign key column that the plugin traverses, nor a link
+    that it synthesizes for special entities without such keys (supplementary
+    files), connects the entity to another one, leaving it an isolated node in
+    the graph those relationships form. There are two types of graphs: the
+    dataset-wide graph and the per-bundle graphs derived from it. The type of
+    graph defines the scope of an orphan. A *bundle orphan* is isolated within
+    one bundle, taking part in none of that bundle's links; a *dataset orphan*
+    is isolated within the entire dataset. A bundle orphan may or may not be a
+    dataset orphan: another bundle may connect it to something, but every
+    dataset orphan is a bundle orphan in every bundle that contains it.
+
+    Azul builds its index documents out of connected entities, so an orphan
+    has no document to appear in and manifests only as a replica. A dataset
+    orphan is therefore absent from everything Azul serves from
+    `/index/{entity_type}`, whether as a hit or as an inner entity. Bundles
+    only contain bundle orphans from the table that matches the bundle's
+    `table_name` attribute.
     """
 
     #: The BigQuery table associated with this bundle type. If this is None for
@@ -282,7 +292,7 @@ class BundleType(Enum):
     #: to a different bundle entity type would require re-implementing much of
     #: the Plugin code. Primary bundles consist of at least one biosample (the
     #: bundle entity), exactly one dataset entity, and zero or more other
-    #: entities of assorted types. Primary bundles never contain local orphans
+    #: entities of assorted types. Primary bundles never contain bundle orphans
     #: because they are bijective to rows in the biosample table.
     #:
     primary = ('anvil_biosample', False)
@@ -294,21 +304,22 @@ class BundleType(Enum):
     #: between the supplementary files and the dataset. Without these links, the
     #: relationship between these files and their parent dataset would not be
     #: properly represented in the service response. Supplementary files
-    #: therefore are never local or global orphans.
+    #: therefore are never bundle or dataset orphans.
     #:
     #: Normal (non-supplementary) files are not linked to the dataset and thus
-    #: are local orphans within these bundles. This is because these files may
-    #: also appear in primary bundles. If they do, then those bundles will
-    #: contribute them to the index alongside all of their linked entities. If
-    #: they don't, then they are global orphans. In either case, it would be
-    #: pointless for a supplementary bundle to emit contributions for them,
-    #: hence we treat them as orphans.
+    #: are bundle orphans there. This is because these files may also appear
+    #: in primary bundles. If they do, then those bundles will contribute them
+    #: to the index alongside all of their linked entities. If they don't,
+    #: then they are dataset orphans. In either case, it would be pointless
+    #: for a supplementary bundle to emit contributions for them, hence we
+    #: treat them as orphans.
     #:
     supplementary = ('anvil_file', True)
 
     #: A placeholder entry to indicate that we don't create any bundles for the
     #: rows of the anvil_dataset table. Instead, the dataset entity is added
-    #: explicitly to each primary and replica bundle.
+    #: explicitly to every other bundle: as an entity to primary and
+    #: supplementary bundles, and as an orphan to replica bundles.
     #:
     no_bundle = ('anvil_dataset', False)
 
@@ -316,7 +327,7 @@ class BundleType(Enum):
     #: consist of a batch of rows from an arbitrary BigQuery table, which may or
     #: may not be described by the AnVIL schema, and the snapshot's dataset
     #: entity. Replica bundles contain no links and thus all of their entities
-    #: are local orphans.
+    #: are bundle orphans.
     #:
     replica = (None, True)
 
@@ -631,8 +642,8 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         the result if they are non-empty and are used to produce batched bundle
         formats (i.e. replica and supplementary).
 
-        If the snapshot is huge, the non-schema tables are excluded, too. See
-        :py:meth:`_is_huge` for why.
+        The tables that :meth:`_non_verbatim_tables` returns are left out of
+        the result. See that method for why.
 
         Because the partitions of a table do not contain exactly the same number
         of bundles, calculating the batch size statistics for the entire table
@@ -659,21 +670,13 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         target_size = 256
         prefix_len = len(prefix)
         table_names = self.tdr.list_tables(source.spec)
-        # This table is present in all snapshots. It is large and contains no
-        # useful metadata, so we skip indexing replicas from it.
-        table_names.discard('datarepo_row_ids')
+        non_verbatim = self._non_verbatim_tables(source)
+        log.info('Excluding replicas from table(s) %r in %s',
+                 non_verbatim, source.spec)
+        table_names -= set(non_verbatim)
         # The dataset entity is already included as an orphan in every other
         # replica bundle, so a dedicated anvil_dataset batch would be redundant.
         table_names.discard(BundleType.no_bundle.table_name)
-        if self._is_huge(source):
-            non_schema_tables = {
-                table_name
-                for table_name in table_names
-                if self._pk_column(source.spec, table_name) is None
-            }
-            log.warning('Excluding replicas from %d non-schema table(s) in %s',
-                        len(non_schema_tables), source.spec)
-            table_names -= non_schema_tables
         table_names = sorted(filter(is_batched, table_names))
         batch_columns_by_table = {
             table_name: self._batch_column(source.spec, table_name)
@@ -719,27 +722,35 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
         return dict(map(result, self._run_sql(query)))
 
-    def _is_huge(self, source: TDRSourceRef) -> bool:
+    def _non_verbatim_tables(self, source: TDRSourceRef) -> list[str]:
         """
-        Whether the given snapshot contains so many non-schema orphans that we
-        have to exclude them from the replica index. The only way to retrieve
-        such an orphan is a verbatim manifest of an entire dataset, which is
-        precisely what would currently fail for snapshots of this size, if we
-        were to include these replicas.
-        """
-        threshold = config.anvil_huge_dataset_threshold
-        return self._non_schema_row_count(source) > threshold
+        The names of the tables in the given snapshot for which no replica
+        bundles are emitted. The replicas of the rows from these tables won't
+        be included in the replica index unless they describe a file (normal or
+        supplementary) or are included in a primary bundle and linked to a file.
 
-    def _non_schema_row_count(self, source: TDRSourceRef) -> int:
+        The only way to retrieve the replica of a row that's not a file or isn't
+        linked to a file is a verbatim manifest of an entire dataset. In some
+        datasets (eMERGE, for example) these tables are very large, causing such
+        manifests to fail if they included all replicas from these tables.
         """
-        The number of rows in the tables of the given snapshot that the AnVIL
-        schema doesn't describe.
-        """
-        return sum(
-            num_rows
+        threshold = config.anvil_huge_table_threshold
+        # The `file_inventory` table duplicates `anvil_file`, except for a few
+        # columns of marginal value, so it is excluded whatever its size.
+        tables = {
+            table_name
             for table_name, num_rows in self.tdr.row_counts(source).items()
-            if self._pk_column(source.spec, table_name) is None
-        )
+            if num_rows > threshold or table_name == 'file_inventory'
+        }
+        # TDR reports no row count for `datarepo_row_ids`, the only table in a
+        # snapshot that isn't a view. That table is present in every snapshot,
+        # it is large and it contains no useful metadata.
+        tables.add('datarepo_row_ids')
+        # The anvil_file table is used to create supplementary bundles, so
+        # without it there would be no supplementary files. It has to be
+        # included unconditionally.
+        tables.discard(BundleType.supplementary.table_name)
+        return sorted(tables)
 
     def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
         assert not bundle_fqid.is_batched, bundle_fqid
@@ -857,20 +868,19 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
 
     def _augment_dataset(self, row: MutableJSON, source: TDRSourceRef) -> None:
         self._augment_dataset_with_duos(row, source)
-        self._augment_dataset_with_row_counts(row, source)
+        self._augment_dataset_with_non_verbatim_tables(row, source)
 
-    def _augment_dataset_with_row_counts(self,
-                                         row: MutableJSON,
-                                         source: TDRSourceRef
-                                         ) -> None:
+    def _augment_dataset_with_non_verbatim_tables(self,
+                                                  row: MutableJSON,
+                                                  source: TDRSourceRef
+                                                  ) -> None:
         """
-        Record the inputs to :py:meth:`_is_huge`, so that a user can tell for
-        each source whether non-schema replicas are missing from the index, and
-        therefore the corresponding dataset-wide verbatim manifest.
+        Record the outcome of :meth:`_non_verbatim_tables`, so that a user
+        can tell which replicas are missing from the index, and therefore
+        from the dataset-wide verbatim manifest, and so that the metadata
+        plugin can withhold the replicas of the rows of those tables.
         """
-        row['_tdr_non_schema_row_count'] = self._non_schema_row_count(source)
-        threshold = config.anvil_huge_dataset_threshold
-        row['_tdr_non_schema_row_count_threshold'] = threshold
+        row['_non_verbatim_tables'] = self._non_verbatim_tables(source)
 
     def _augment_dataset_with_duos(self,
                                    row: MutableJSON,
