@@ -1285,12 +1285,23 @@ def emit(t: T, target_branch: str):
                 }
             ]),
             *iif(target_branch == 'develop' and t is not T.backport, [
+                *[
+                    {
+                        'type': 'cli',
+                        'content': (
+                            f'There is a promotion PR to `{d}` that includes these changes'
+                        ),
+                        'alt': 'or this PR carries none of the labels ' +
+                               join_grammatically(list(map(bq, t.labels_to_promote_from_this_pr(target_branch))),
+                                                  last_joiner=' or ')
+                    } for d in t.downstream_deployments(target_branch)
+                ],
                 {
                     'type': 'cli',
                     'content': (
-                        'Propagated the ' +
+                        'Propagated the labels ' +
                         join_grammatically(list(map(bq, t.labels_to_promote_from_this_pr(target_branch)))) +
-                        ' labels to any open promotion PRs'
+                        ' to any open promotion PRs'
                     ),
                     'alt': 'or this PR carries none of these labels, or is not included in an open promotion PR'
                 },
