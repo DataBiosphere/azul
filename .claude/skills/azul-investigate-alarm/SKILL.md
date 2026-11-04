@@ -1,22 +1,34 @@
 ---
-description: Investigate 5xx alarms from CloudWatch API Gateway logs
+description: Investigate alarms from CloudWatch logs
 ---
 
-# 5xx Alarm Investigation
+# Alarm Investigation
 
 The user will typically start by giving you a CloudWatch Logs query already
-preset for the time frame in question. Each query result represents an incident.
-The goal is to classify the incidents into categories based on similarity, and
-for each category identify if there is a pre-existing GitHub issue, in which
-case a comment recording the incidents needs to be made, or if a new issue needs
-to be created.
+preset for the time frame in question. Alternatively, they may just specify
+which alarm tripped and when, in which case you need to come up with the query
+yourself.
+
+Possible alarms include 5xx responses from the service or indexer REST APIs,
+AccessDenied responses in CloudTrail events, elevated numbers of requests
+blocked by the web application firewall (WAF) or Lambda invocation errors for
+any of the Lambda functions that make up the application. The type of alarm is
+associated with a CloudWatch log group or metric that tripped the alarm. Azul's
+Terraform config defines that association.
+
+Each query result represents an incident. The goal of this skill is to classify
+the incidents into categories based on similarity, and for each category, to
+identify if there is a pre-existing GitHub issue. If there is, a comment
+recording the incidents needs to be made, otherwise a new issue needs to be
+created.
 
 These incidents will have triggered CloudWatch alarms. When these alarms trip, a
-notification is sent to a Google Group, starting a conversation there. The user needs to triage these alarms which is
-why they are asking you to do this. Multiple incidents occurring in quick
-succession may have been grouped into a single alarm trip. The user will know
-how many alarms occurred during the timeframe in question. There should be at
-least as many incidents.
+notification is sent to a Google Group, starting a conversation there. The user
+needs to triage these alarms which is why they are asking you to do this.
+Multiple incidents occurring in quick succession may have been grouped into a
+single alarm trip. The user will know how many alarms occurred during the
+timeframe in question. There should be at least as many incidents.
+
 
 ## Step 1: Run the query
 
@@ -46,7 +58,9 @@ association table. Once approved, move to the next step.
 ## Step 5: Report the incidents on the existing issues
 
 Post a short comment to each issue, reporting the recurrence. Keep the comment
-short.
+short. In the comment, redact IP addresses, personal identifiers and
+credentials. Use `<details>`  and `<summary>` tags to disclose auxiliary
+evidence.
 
 ## Step 6: Create new issues for unmatched categories
 
@@ -64,4 +78,6 @@ each category. Each entry should consist of lines of the form "name: value". For
 each category, include a title, the dates and times (local timezone) of the
 incidents in that category and links to the issues or issue comments you
 created. The dates and times will allow other users to correlate each alarm with
-the category should they want to.
+the category should they want to. For the triage summary, there is no need to
+redact IP addresses, personal identifiers and credentials, as the summary can
+only be seen by authorized members of the team.
