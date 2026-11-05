@@ -6,9 +6,6 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
-from concurrent.futures import (
-    ThreadPoolExecutor,
-)
 import json
 import logging
 
@@ -17,8 +14,8 @@ from more_itertools import (
     first,
     one,
 )
-import opensearchpy
 from opensearchpy import (
+    MultiSearch,
     Search,
 )
 from opensearchpy.helpers.response import (
@@ -51,7 +48,6 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
-    IndexNotFoundError,
     OpenSearchStage,
     Pagination,
     PaginationStage,
@@ -114,7 +110,31 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
 
     @property
     @abstractmethod
+    def response_schema(self) -> JSON:
+        """
+        The JSON schema of the response returned by :meth:`process_response`, to
+        be used in the OpenAPI spec of the summary endpoint.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def response_description(self) -> str:
+        """
+        A description of the response returned by :meth:`process_response`, to be
+        used in the OpenAPI spec of the summary endpoint.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
+        """
+        The name of each aggregation this stage consumes, by the entity type of
+        the index that is authoritative for it. The response passed to
+        :meth:`process_response` is keyed the same way, so the same aggregation
+        may be taken from more than one index.
+        """
         raise NotImplementedError
 
     def prepare_request(self, request: Search) -> Search:
@@ -234,10 +254,7 @@ class IndexService(QueryService):
 
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)
-        try:
-            response = request.execute(ignore_cache=True)
-        except opensearchpy.NotFoundError as e:
-            raise IndexNotFoundError(e.info['error']['index'])
+        response = request.execute(ignore_cache=True)
         response = chain.process_response(response)
         return response
 
@@ -245,27 +262,25 @@ class IndexService(QueryService):
                 catalog: CatalogName,
                 filters: Filters
                 ) -> MutableJSON:
-        # FIXME: Due to the fact that we run multiple requests in parallel each
-        #        in a separate chain, and the resulting need to multiplex the
-        #        responses, the response stage is not part of any chain.
+        # FIXME: Due to the fact that we run one chain per authority, and the
+        #        resulting need to multiplex the responses, the response stage
+        #        is not part of any chain.
         #        https://github.com/DataBiosphere/azul/issues/4128
         plugin = self.metadata_plugin(catalog)
         response_stage = plugin.summary_response_stage()
 
         aggs_by_authority = response_stage.aggs_by_authority
 
-        def summary(entity_type):
-            return entity_type, self._summary(catalog=catalog,
-                                              entity_type=entity_type,
-                                              filters=filters)
-
-        with ThreadPoolExecutor(max_workers=len(aggs_by_authority)) as executor:
-            aggs = dict(executor.map(summary, aggs_by_authority))
+        aggs = self._summary(catalog=catalog,
+                             entity_types=list(aggs_by_authority),
+                             filters=filters)
 
         aggs = {
-            agg_name: aggs[entity_type][agg_name]
+            entity_type: {
+                agg_name: aggs[entity_type][agg_name]
+                for agg_name in summary_fields
+            }
             for entity_type, summary_fields in aggs_by_authority.items()
-            for agg_name in summary_fields
         }
 
         response = response_stage.process_response(aggs)
@@ -274,28 +289,43 @@ class IndexService(QueryService):
     def _summary(self,
                  *,
                  catalog: CatalogName,
-                 entity_type: str,
+                 entity_types: Sequence[str],
                  filters: Filters
-                 ) -> MutableJSON:
+                 ) -> Mapping[str, MutableJSON]:
+        """
+        Aggregate the index of each of the given entity types, in one request,
+        and return the aggregations of each index, by entity type. One chain
+        per entity type prepares its own search and processes the response to
+        it; the searches merely travel together.
+        """
         plugin = self.metadata_plugin(catalog)
-        chain = self.create_chain(catalog=catalog,
-                                  entity_type=entity_type,
-                                  filters=filters,
-                                  post_filter=False,
-                                  document_slice=None)
-        chain = ToDictStage(service=self,
-                            catalog=catalog,
-                            entity_type=entity_type).wrap(chain)
-        chain = plugin.summary_aggregation_stage.create_and_wrap(chain)
-        request = chain.prepare_request(self.create_request(catalog, entity_type))
-
-        response = request.execute(ignore_cache=True)
-        assert len(response.hits) == 0
+        chains = {}
+        request = MultiSearch(using=self._opensearch)
+        for entity_type in entity_types:
+            chain = self.create_chain(catalog=catalog,
+                                      entity_type=entity_type,
+                                      filters=filters,
+                                      post_filter=False,
+                                      document_slice=None)
+            chain = ToDictStage(service=self,
+                                catalog=catalog,
+                                entity_type=entity_type).wrap(chain)
+            chain = plugin.summary_aggregation_stage.create_and_wrap(chain)
+            chains[entity_type] = chain
+            request = request.add(
+                chain.prepare_request(self.create_request(catalog, entity_type)))
 
         if config.debug == 2 and log.isEnabledFor(logging.DEBUG):
             log.debug('OpenSearch request: %s', json.dumps(request.to_dict(), indent=4))
 
-        result = chain.process_response(response)
+        responses = request.execute(ignore_cache=True)
+
+        result = {}
+        for (entity_type, chain), response in zip(chains.items(),
+                                                  responses,
+                                                  strict=True):
+            assert len(response.hits) == 0, entity_type
+            result[entity_type] = chain.process_response(response)
 
         return result
 
