@@ -32,6 +32,9 @@ from azul.plugins import (
 from azul.service.catalog_controller import (
     CatalogController,
 )
+from azul.service.contract_controller import (
+    ContractController,
+)
 from azul.service.drs_controller import (
     DRSController,
 )
@@ -59,7 +62,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '24.0',
+        'version': '24.1',
         'description': fd(f'''
             # Overview
 
@@ -187,6 +190,13 @@ spec = {
             ''')
         },
         {
+            'name': 'Contracts',
+            'description': fd('''
+                Contracts a user can accept, such as the one governing
+                registered access to a catalog
+            ''')
+        },
+        {
             'name': 'Auxiliary',
             'description': fd('''
                 Describes various aspects of the Azul service
@@ -251,6 +261,10 @@ class ServiceApp(HealthApp):
     def user_controller(self) -> UserController:
         return UserController(app=self)
 
+    @cached_property
+    def contract_controller(self) -> ContractController:
+        return ContractController(app=self)
+
     def __init__(self):
         super().__init__(app_name=config.service_name,
                          globals=globals(),
@@ -292,3 +306,5 @@ globals().update(app.repository_controller.handlers())
 globals().update(app.drs_controller.handlers())
 
 globals().update(app.user_controller.handlers())
+
+globals().update(app.contract_controller.handlers())

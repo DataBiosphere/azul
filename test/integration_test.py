@@ -1,3 +1,4 @@
+import base64
 from collections import (
     defaultdict,
 )
@@ -14,6 +15,7 @@ from contextlib import (
 )
 import csv
 import gzip
+import hashlib
 from http.server import (
     BaseHTTPRequestHandler,
     HTTPServer,
@@ -2373,6 +2375,52 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             services_by_prefix.setdefault(state.service._mirror_prefix, state.service)
         for service in services_by_prefix.values():
             service.delete_it_files()
+
+    def test_contracts(self):
+        contracts = self._contract_versions()
+        # Every contract named by a metadata plugin must have made it into the
+        # deployed Lambda function, along with the files of all its versions
+        expected = {
+                       self.metadata_plugin(catalog).registered_access_contract
+                       for catalog in config.catalogs
+                   } - {None}
+        self.assertIsSubset(expected, contracts.keys())
+        for name, contract in contracts.items():
+            with self.subTest(contract=name):
+                versions = {v['version']: v for v in contract['versions']}
+                self.assertIn(contract['current'], versions)
+                for version in versions.values():
+                    response = self._get_url(GET, furl(version['url']))
+                    self.assertEqual(200, response.status)
+                    self.assertEqual('text/markdown; charset=utf-8',
+                                     response.headers['Content-Type'])
+                    digest = hashlib.sha256(response.data).digest()
+                    self.assertEqual(version['sha256'], digest.hex())
+                    b64_digest = base64.b64encode(digest).decode()
+                    self.assertEqual(f'sha-256=:{b64_digest}:',
+                                     response.headers['Content-Digest'])
+                    self.assertEqual(f'"{version["version"]}-{digest.hex()}"',
+                                     response.headers['ETag'])
+                url = furl(url=config.service_endpoint, path=f'/contracts/{name}/current')
+                response = self._get_url(GET, url)
+                self.assertEqual(302, response.status)
+                current = versions[contract['current']]
+                self.assertEqual(current['url'], response.headers['Location'])
+                # The response to the redirect identifies the current version
+                response = self._get_url(GET, furl(response.headers['Location']))
+                self.assertEqual(f'"{current["version"]}-{current["sha256"]}"',
+                                 response.headers['ETag'])
+
+    def _contract_versions(self) -> dict[str, JSON]:
+        """
+        Maps the name of each contract to its listing of versions
+        """
+        url = furl(url=config.service_endpoint, path='/contracts')
+        contracts = self._get_url_json(GET, url)['contracts']
+        return {
+            name: self._get_url_json(GET, furl(versions_url))['contracts'][name]
+            for name, versions_url in contracts.items()
+        }
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
