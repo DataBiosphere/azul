@@ -338,24 +338,29 @@ class UserController(Controller):
                 raise
 
     def _token(self) -> JSON:
-        auth = self._authentication(self.current_request)
-        if isinstance(auth, PersonalAccessTokenAuthentication):
-            raise ForbiddenError('Cannot exchange a personal access token for another')
-        elif isinstance(auth, AccessTokenAuthentication):
-            with self._rejecting_unusable_token(auth):
-                apat_auth = self._service.mint_personal_access_token(auth)
-            return {'token': apat_auth.token}
-        else:
-            raise UnauthorizedError('Valid access token required')
+        auth = self._access_token('Cannot exchange a personal access token for another')
+        with self._rejecting_unusable_token(auth):
+            apat_auth = self._service.mint_personal_access_token(auth)
+        return {'token': apat_auth.token}
 
     def _revoke(self) -> Response:
+        auth = self._access_token('Cannot revoke using a personal access token')
+        with self._rejecting_unusable_token(auth):
+            self._service.revoke_personal_access_tokens(auth)
+        return Response(status_code=204, body='')
+
+    def _access_token(self, message: str) -> AccessTokenAuthentication:
+        """
+        Return the access token the current request is authenticated with.
+
+        :param message: The message of the error to raise if the request is
+                          authenticated with a personal access token
+        """
         auth = self._authentication(self.current_request)
         if isinstance(auth, PersonalAccessTokenAuthentication):
-            raise ForbiddenError('Cannot revoke using a personal access token')
+            raise ForbiddenError(message)
         elif isinstance(auth, AccessTokenAuthentication):
-            with self._rejecting_unusable_token(auth):
-                self._service.revoke_personal_access_tokens(auth)
-            return Response(status_code=204, body='')
+            return auth
         else:
             raise UnauthorizedError('Valid access token required')
 
