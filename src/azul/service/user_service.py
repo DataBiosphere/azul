@@ -1,3 +1,10 @@
+from collections.abc import (
+    Mapping,
+)
+from datetime import (
+    datetime,
+    timezone,
+)
 import json
 import logging
 from time import (
@@ -63,6 +70,9 @@ from azul.lib.strings import (
     assert_redactable,
     format_and_dedent as fd,
 )
+from azul.lib.time import (
+    format_dcp2_datetime,
+)
 from azul.lib.types import (
     FlatJSON,
     JSON,
@@ -91,6 +101,19 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
+class ContractAcceptance(JSONTypedDict):
+    #: The version of the contract the user accepted
+    version: int
+    #: The SHA-256 digest of the text of that version, in hexadecimal
+    sha256: str
+
+
+class AcceptedContract(ContractAcceptance):
+    #: When the user accepted the contract, as formatted by
+    #: :func:`format_dcp2_datetime`
+    time: str
+
+
 class User(JSONTypedDict):
     #: The issuer of the user's identity. Together with `sub`, it forms the key
     #: of the item representing the user, rather than an attribute of its own.
@@ -113,6 +136,17 @@ class User(JSONTypedDict):
     min_jti: NotRequired[int]
     #: The jti to assign to the APAT requested next
     max_jti: NotRequired[int]
+    #: The contracts the user accepted, by name
+    accepted_contracts: NotRequired[dict[str, AcceptedContract]]
+
+
+def format_authorized_until(user: User) -> str:
+    """
+    When the given user's authorization lapses, as formatted by
+    :func:`format_dcp2_datetime`. This is when the user's refresh token
+    expires. The user's acceptance of contracts lapses along with it.
+    """
+    return format_dcp2_datetime(datetime.fromtimestamp(user['expiration'], timezone.utc))
 
 
 class UnknownUserException(Exception):
@@ -274,6 +308,117 @@ class UserService:
         else:
             return self._load_user(self._google_issuer, token_info['sub'])
 
+    def get_user(self, at_auth: AccessTokenAuthentication) -> User:
+        """
+        Return the stored information about the user identified by the given
+        access token.
+        """
+        return self._verify_access_token(at_auth)
+
+    def update_accepted_contracts(self,
+                                  at_auth: AccessTokenAuthentication,
+                                  accepted_contracts: Mapping[str, ContractAcceptance | None] | None
+                                  ) -> User:
+        """
+        Record that the user identified by the given access token accepted, or
+        retracted the acceptance of, the given contracts, and return the updated
+        information about that user.
+
+        :param at_auth: The access token of the user
+
+        :param accepted_contracts: Maps the name of each contract to the version
+                                   the user accepted and its SHA-256 digest, or
+                                   to None if the user retracts the acceptance
+                                   of that contract. Contracts absent from this
+                                   mapping are left alone. None retracts the
+                                   acceptance of every contract.
+        """
+        user = self._verify_access_token(at_auth)
+        if accepted_contracts is None:
+            user = self._update_user(user,
+                                     'REMOVE accepted_contracts',
+                                     names={},
+                                     values={})
+            log.info('User %r from %r retracted the acceptance of all contracts',
+                     user['sub'], user['iss'])
+        elif accepted_contracts:
+            # An attribute nested in a map can't be set or removed unless the
+            # map exists
+            self._update_user(user,
+                              'SET accepted_contracts = if_not_exists(accepted_contracts, :empty)',
+                              names={},
+                              values={':empty': {'M': {}}})
+            now = format_dcp2_datetime(datetime.now(timezone.utc))
+            names: dict[str, str] = {}
+            values: dict[str, AttributeValueTypeDef] = {}
+            assignments, removals = [], []
+            for i, (name, acceptance) in enumerate(accepted_contracts.items()):
+                names[f'#c{i}'] = name
+                path = f'accepted_contracts.#c{i}'
+                if acceptance is None:
+                    removals.append(path)
+                else:
+                    assignments.append(f'{path} = :c{i}')
+                    values[f':c{i}'] = {
+                        'M': {
+                            'version': {'N': str(acceptance['version'])},
+                            'sha256': {'S': acceptance['sha256']},
+                            'time': {'S': now}
+                        }
+                    }
+            expression = ' '.join(
+                f'{action} {", ".join(paths)}'
+                for action, paths in [('SET', assignments), ('REMOVE', removals)]
+                if paths
+            )
+            user = self._update_user(user, expression, names=names, values=values)
+            # These messages are the audit trail of the acceptance of contracts,
+            # so they are only logged once the update succeeded
+            authorized_until = format_authorized_until(user)
+            for name, acceptance in accepted_contracts.items():
+                if acceptance is None:
+                    log.info('User %r from %r retracted the acceptance of contract %r',
+                             user['sub'], user['iss'], name)
+                else:
+                    accepted = user['accepted_contracts'][name]
+                    log.info('User %r from %r accepted version %r with SHA-256 %r '
+                             'of contract %r at %r, authorized until %r',
+                             user['sub'], user['iss'],
+                             accepted['version'], accepted['sha256'], name,
+                             accepted['time'], authorized_until)
+        return user
+
+    def _update_user(self,
+                     user: User,
+                     expression: str,
+                     *,
+                     names: Mapping[str, str],
+                     values: Mapping[str, AttributeValueTypeDef]
+                     ) -> User:
+        """
+        Apply the given update expression to the stored item representing the
+        given user, and return the updated user.
+        """
+        request: UpdateItemInputTypeDef = dict(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': self._identity(user)}},
+            UpdateExpression=expression,
+            # Without the condition, the update would create a partial item for
+            # a user whose item expired after it was loaded
+            ConditionExpression='attribute_exists(#key)',
+            ExpressionAttributeNames={'#key': self.key_attribute, **names},
+            ReturnValues='ALL_NEW'
+        )
+        # DynamoDB rejects an empty mapping of values
+        if values:
+            request['ExpressionAttributeValues'] = values
+        try:
+            response = self._dynamodb.update_item(**request)
+        except self._dynamodb.exceptions.ConditionalCheckFailedException:
+            raise UnknownUserException(user['iss'], user['sub'])
+        else:
+            return self._user_from_item(response['Attributes'])
+
     def mint_personal_access_token(self,
                                    at_auth: AccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
@@ -398,20 +543,33 @@ class UserService:
             log.warning('No user %r from %r', sub, iss)
             raise UnknownUserException(iss, sub)
         else:
-            user = User(
-                iss=iss,
-                sub=sub,
-                access_token=item['access_token']['S'],
-                refresh_token=item['refresh_token']['S'],
-                email=item['email']['S'],
-                email_verified=item['email_verified']['BOOL'],
-                access_token_expiration=int(item['access_token_expiration']['N']),
-                expiration=int(item[self.ttl_attribute]['N']),
-                min_jti=int(item['min_jti']['N']),
-                max_jti=int(item['max_jti']['N'])
-            )
+            user = self._user_from_item(item)
             log.info('Retrieved user %r', redact_json(json_untyped_dict(user)))
             return user
+
+    def _user_from_item(self, item: Mapping[str, AttributeValueTypeDef]) -> User:
+        iss, sub = self._decode_identity(item[self.key_attribute]['S'])
+        accepted_contracts = item.get('accepted_contracts', {'M': {}})['M']
+        return User(
+            iss=iss,
+            sub=sub,
+            access_token=item['access_token']['S'],
+            refresh_token=item['refresh_token']['S'],
+            email=item['email']['S'],
+            email_verified=item['email_verified']['BOOL'],
+            access_token_expiration=int(item['access_token_expiration']['N']),
+            expiration=int(item[self.ttl_attribute]['N']),
+            min_jti=int(item['min_jti']['N']),
+            max_jti=int(item['max_jti']['N']),
+            accepted_contracts={
+                name: AcceptedContract(
+                    version=int(contract['M']['version']['N']),
+                    sha256=contract['M']['sha256']['S'],
+                    time=contract['M']['time']['S']
+                )
+                for name, contract in accepted_contracts.items()
+            }
+        )
 
     def _next_jti(self, user: User) -> int:
         response = self._dynamodb.update_item(

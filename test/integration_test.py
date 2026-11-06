@@ -14,6 +14,10 @@ from contextlib import (
     contextmanager,
 )
 import csv
+from datetime import (
+    datetime,
+    timezone,
+)
 import gzip
 import hashlib
 from http.server import (
@@ -163,6 +167,9 @@ from azul.lib.json_freeze import (
 from azul.lib.strings import (
     redact,
 )
+from azul.lib.time import (
+    parse_dcp2_datetime,
+)
 from azul.lib.types import (
     JSON,
     JSONs,
@@ -253,6 +260,7 @@ GET = 'GET'
 HEAD = 'HEAD'
 PUT = 'PUT'
 POST = 'POST'
+PATCH = 'PATCH'
 
 
 class IntegrationTestCase(AzulTestCase, HasCachedHttpClient):
@@ -2421,6 +2429,87 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             name: self._get_url_json(GET, furl(versions_url))['contracts'][name]
             for name, versions_url in contracts.items()
         }
+
+    def test_user(self):
+        with self.subTest('unauthenticated'):
+            for method, body in [(GET, None), (PATCH, {'accepted_contracts': {}})]:
+                response = self._user_request_unchecked(method, body)
+                self.assertEqual(401, response.status)
+        if 'unattended' in config.it_flags:
+            log.warning('Will skip testing the user endpoints with an access '
+                        'token since the IT is running unattended')
+        else:
+            with self.subTest('authenticated'), self._user_credentials:
+                self._test_user()
+
+    def _test_user(self):
+        user = self._user_request(GET)
+        self.assertEqual({'email', 'authorized_until', 'accepted_contracts'},
+                         user.keys())
+        now = datetime.now(timezone.utc)
+        self.assertGreater(parse_dcp2_datetime(user['authorized_until']), now)
+        contracts = self._contract_versions()
+        name = self.random.choice(sorted(contracts))
+        log.info('Testing the acceptance of contract %r', name)
+        contract = contracts[name]
+        current = one(
+            version
+            for version in contract['versions']
+            if version['version'] == contract['current']
+        )
+        acceptance = {'version': current['version'], 'sha256': current['sha256']}
+        # Accepting a contract alters the user's state in the deployment. The
+        # IT user is the person running the IT, so their prior acceptance, or
+        # lack thereof, is restored afterwards. The time of a prior acceptance
+        # can't be restored, only its version.
+        accepted_contracts = user['accepted_contracts']
+        original = (
+            {
+                'version': accepted_contracts[name]['version'],
+                'sha256': accepted_contracts[name]['sha256']
+            }
+            if name in accepted_contracts else
+            None
+        )
+        try:
+            wrong_acceptance = {**acceptance, 'sha256': '0' * 64}
+            body = {'accepted_contracts': {name: wrong_acceptance}}
+            response = self._user_request_unchecked(PATCH, body)
+            self.assertEqual(400, response.status)
+            body = {'accepted_contracts': {name: acceptance}}
+            user = self._user_request(PATCH, body)
+            accepted = user['accepted_contracts'][name]
+            self.assertEqual(acceptance, {
+                k: v for k, v in accepted.items() if k != 'time'
+            })
+            parse_dcp2_datetime(accepted['time'])
+            self.assertEqual(user, self._user_request(GET))
+            body = {'accepted_contracts': {name: None}}
+            user = self._user_request(PATCH, body)
+            self.assertNotIn(name, user['accepted_contracts'])
+            self.assertEqual(user, self._user_request(GET))
+        finally:
+            self._user_request(PATCH, {'accepted_contracts': {name: original}})
+
+    def _user_request(self, method: str, body: JSON | None = None) -> JSON:
+        response = self._user_request_unchecked(method, body)
+        self._assertResponseStatus(response, 200)
+        return json.loads(response.data)
+
+    def _user_request_unchecked(self,
+                                method: str,
+                                body: JSON | None = None
+                                ) -> urllib3.HTTPResponse:
+        url = str(furl(url=config.service_endpoint, path='/user'))
+        if body is None:
+            response = self._http.request(method, url)
+        else:
+            response = self._http.request(method,
+                                          url,
+                                          body=json.dumps(body).encode(),
+                                          headers={'Content-Type': 'application/json'})
+        assert isinstance(response, urllib3.HTTPResponse)
+        return response
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
