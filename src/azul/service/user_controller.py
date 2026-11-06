@@ -110,7 +110,8 @@ class UserController(Controller):
                 self._form_content_type
             ],
             spec={
-                'summary': 'Obtain an OAuth 2.0 access token in exchange for an authorization code',
+                'summary': 'Obtain an OAuth 2.0 access token '
+                           'in exchange for an authorization code',
                 'description': fd('''
                     Invoke this endpoint as part of the authorization code flow
                     from a single-page app.
