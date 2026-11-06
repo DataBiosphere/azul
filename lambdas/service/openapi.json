@@ -14361,7 +14361,7 @@
                 },
                 "summary": "Used for logging into the the Swagger UI",
                 "tags": [
-                    "User"
+                    "Auxiliary"
                 ]
             }
         },

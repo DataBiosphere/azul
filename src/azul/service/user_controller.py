@@ -369,7 +369,7 @@ class UserController(Controller):
             cors=True,
             spec={
                 'summary': 'Used for logging into the the Swagger UI',
-                'tags': ['User'],
+                'tags': ['Auxiliary'],
                 'responses': {
                     '200': {
                         'description': 'The response body is an HTML page'

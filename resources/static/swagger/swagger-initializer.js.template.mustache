@@ -16,6 +16,17 @@ window.onload = function() {
     }
   }
 
+  // Sort the operations in the Auxiliary section by path, leaving those in the
+  // other sections in the order they were declared in
+  const operationsSorter = function(a, b) {
+    const isAuxiliary = (op) => op.getIn(['operation', 'tags'], []).includes('Auxiliary');
+    if (isAuxiliary(a) && isAuxiliary(b)) {
+      return a.get('path').localeCompare(b.get('path'));
+    } else {
+      return 0;
+    }
+  }
+
   window.ui = SwaggerUIBundle({
     url: {{{OPENAPI_SPEC}}},
     dom_id: '#swagger-ui',
@@ -27,6 +38,7 @@ window.onload = function() {
       SwaggerUIBundle.plugins.DownloadUrl,
       DisableTryItOutPlugin
     ],
+    operationsSorter: operationsSorter,
     oauth2RedirectUrl: {{{OAUTH2_REDIRECT_URL}}}
   });
 
