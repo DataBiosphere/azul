@@ -48,13 +48,13 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
-    OpenSearchStage,
+    IndexStage,
     Pagination,
     PaginationStage,
     QueryService,
     ResponseTriple,
+    Stage,
     ToDictStage,
-    _OpenSearchStage,
 )
 from azul.source import (
     SourceRef,
@@ -64,7 +64,7 @@ log = logging.getLogger(__name__)
 
 
 @attrs.frozen(auto_attribs=True, kw_only=True)
-class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
+class SearchResponseStage(IndexStage[ResponseTriple, MutableJSON],
                           metaclass=ABCMeta):
     service: IndexService
     file_url_func: FileUrlFunc
@@ -99,7 +99,7 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
         return mirror_service.mirror_uri(source, file_cls, file)
 
 
-class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
+class SummaryResponseStage(Stage[JSON, MutableJSON],
                            metaclass=ABCMeta):
 
     @property

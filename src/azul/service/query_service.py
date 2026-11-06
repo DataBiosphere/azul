@@ -114,7 +114,7 @@ nested_agg_name = 'myNested'
 untagged_agg_name = 'myUntagged'
 
 
-class OpenSearchStage[R1, R2](metaclass=ABCMeta):
+class Stage[R1, R2](metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
     to process the response to that request. If an implementation modifies the
@@ -140,16 +140,16 @@ class OpenSearchStage[R1, R2](metaclass=ABCMeta):
 
 
 @attrs.frozen(kw_only=True)
-class OpenSearchChain[R0, R1, R2](OpenSearchStage[R0, R2]):
+class Chain[R0, R1, R2](Stage[R0, R2]):
     """
     The result of wrapping a stage or chain in another stage.
     """
 
-    inner: OpenSearchStage[R0, R1]
-    outer: OpenSearchStage[R1, R2]
+    inner: Stage[R0, R1]
+    outer: Stage[R1, R2]
 
     def __attrs_post_init__(self):
-        assert not isinstance(self.outer, OpenSearchChain), R(
+        assert not isinstance(self.outer, Chain), R(
             'Outer stage must not be a chain', type(self.outer))
 
     def prepare_request(self, request: Search) -> Search:
@@ -162,18 +162,18 @@ class OpenSearchChain[R0, R1, R2](OpenSearchStage[R0, R2]):
         response2: R2 = self.outer.process_response(response1)
         return response2
 
-    def stages(self) -> Iterable[OpenSearchStage]:
+    def stages(self) -> Iterable[Stage]:
         yield self.outer
-        if isinstance(self.inner, OpenSearchChain):
+        if isinstance(self.inner, Chain):
             yield from self.inner.stages()
         else:
             yield self.inner
 
 
 @attrs.frozen(kw_only=True)
-class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
+class IndexStage[R1, R2](Stage[R1, R2], metaclass=ABCMeta):
     """
-    A base implementation of a stage.
+    A stage for requests against a particular index.
     """
     service: DocumentService
     catalog: CatalogName
@@ -183,15 +183,15 @@ class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
     def plugin(self) -> MetadataPlugin:
         return self.service.metadata_plugin(self.catalog)
 
-    def wrap[R0](self, other: OpenSearchStage[R0, R1]) -> OpenSearchChain[R0, R1, R2]:
-        return OpenSearchChain(inner=other, outer=self)
+    def wrap[R0](self, other: Stage[R0, R1]) -> Chain[R0, R1, R2]:
+        return Chain(inner=other, outer=self)
 
 
 TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[IndexForm]]]
 
 
 @attrs.frozen(kw_only=True)
-class FilterStage(_OpenSearchStage[Response, Response]):
+class FilterStage(IndexStage[Response, Response]):
     """
     Converts the given filters to an OpenSearch query and adds that query as
     either a `query` or `post_filter` property to the request.
@@ -298,7 +298,7 @@ class FilterStage(_OpenSearchStage[Response, Response]):
 
 
 @attrs.frozen(kw_only=True)
-class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
+class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
     """
     Cooperate with the given filter stage to augment the request with an
     `aggregation` property containing an aggregation for each of the facet
@@ -309,8 +309,8 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
     @classmethod
     def create_and_wrap[R0](cls,
-                            chain: OpenSearchChain[R0, Any, MutableJSON]
-                            ) -> OpenSearchChain[R0, MutableJSON, MutableJSON]:
+                            chain: Chain[R0, Any, MutableJSON]
+                            ) -> Chain[R0, MutableJSON, MutableJSON]:
         """
         Creates and adds an aggregation stage to the specified chain. The chain
         must contain a filter stage.
@@ -568,7 +568,7 @@ class SummaryAggregationStage(AggregationStage):
 
 
 @attrs.frozen(kw_only=True)
-class SlicingStage(_OpenSearchStage[Response, Response]):
+class SlicingStage(IndexStage[Response, Response]):
     """
     Augments the request with a document slice (known as a *source filter* in
     OpenSearch land) to restrict the set of properties in each hit in the
@@ -597,7 +597,7 @@ class SlicingStage(_OpenSearchStage[Response, Response]):
 #        https://github.com/DataBiosphere/azul/issues/4111
 
 @attrs.frozen(kw_only=True)
-class ToDictStage(_OpenSearchStage[Response, MutableJSON]):
+class ToDictStage(IndexStage[Response, MutableJSON]):
 
     def prepare_request(self, request: Search) -> Search:
         return request
@@ -666,7 +666,7 @@ ResponseTriple = tuple[JSONs, ResponsePagination, JSON]
 
 
 @attrs.frozen(kw_only=True)
-class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
+class PaginationStage(IndexStage[JSON, ResponseTriple]):
     """
     Handles the pagination of search results
     """
@@ -823,7 +823,7 @@ class QueryService(DocumentService):
                      filters: Filters,
                      post_filter: bool,
                      document_slice: DocumentSlice | None
-                     ) -> OpenSearchChain[Response, Any, Response]:
+                     ) -> Chain[Response, Any, Response]:
         """
         Create a chain for a basic OpenSearch `search` request for documents
         matching the given filter, optionally restricting the set of properties
