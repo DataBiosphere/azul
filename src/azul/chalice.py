@@ -8,7 +8,9 @@ from enum import (
     Enum,
 )
 from functools import (
+    cache,
     partial,
+    wraps,
 )
 import json
 import logging
@@ -19,6 +21,7 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Concatenate,
     Iterator,
     Literal,
     Mapping,
@@ -1015,3 +1018,57 @@ class Controller:
         content_type, options = parse_header(header_name, content_type)
         charset = options.get('charset', 'utf8')
         return content_type, charset
+
+
+def cache_per_catalog[C: Controller, **P, R](f: Callable[Concatenate[C, P], R]
+                                             ) -> Callable[Concatenate[C, P], R]:
+    """
+    Same as :func:`functools.cache`, but for a method of a controller, with the
+    catalog of the current request as an additional, implicit part of the cache
+    key. The method can therefore derive its return value from that catalog
+    without taking it as an argument. As with :func:`functools.cache`, the
+    arguments must be hashable.
+
+    >>> from itertools import count
+    >>> from types import SimpleNamespace
+
+    A cached method that returns the current catalog, its argument and the
+    number of prior invocations:
+
+    >>> i = count()
+    >>> class C:
+    ...     app = SimpleNamespace(catalog='a')
+    ...     @cache_per_catalog
+    ...     def f(self, n):
+    ...         return self.app.catalog, n, next(i)
+
+    >>> c = C()
+    >>> list(map(c.f, [0, 1, 0, 1]))
+    [('a', 0, 0), ('a', 1, 1), ('a', 0, 0), ('a', 1, 1)]
+
+    A different catalog gets its own set of return values …
+
+    >>> c.app.catalog = 'b'
+    >>> list(map(c.f, [0, 1]))
+    [('b', 0, 2), ('b', 1, 3)]
+
+    … leaving those cached for the first one intact:
+
+    >>> c.app.catalog = 'a'
+    >>> c.f(0)
+    ('a', 0, 0)
+    """
+
+    @cache
+    def caller(self: C, catalog_: str, *args: P.args, **kwargs: P.kwargs) -> R:
+        return f(self, *args, **kwargs)
+
+    @wraps(f)
+    def wrapper(self: C, *args: P.args, **kwargs: P.kwargs) -> R:
+        # The cache requires every argument to be hashable, a constraint that
+        # can't be placed on a ParamSpec. An unhashable argument makes the
+        # cache raise a TypeError before the method is invoked, just as it
+        # would if the method were decorated with functools.cache directly.
+        return caller(self, self.app.catalog, *args, **kwargs)  # type: ignore[arg-type]
+
+    return wrapper

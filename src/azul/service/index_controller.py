@@ -1,23 +1,33 @@
+import base64
 from functools import (
     partial,
 )
+import hashlib
+import hmac
 import json
 import logging
 from typing import (
     Any,
+    ClassVar,
     Mapping,
+    Self,
 )
 
 import attr
 from chalice.app import (
     BadRequestError,
-    ChaliceViewError,
     NotFoundError,
 )
 from furl import (
     furl,
 )
 
+from azul.deployment import (
+    aws,
+)
+from azul.filters import (
+    Filters,
+)
 from azul.indexer.document import (
     EntityType,
 )
@@ -33,16 +43,23 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     JSON,
+    MutableJSON,
     PrimitiveJSON,
     check_type,
+    json_dict,
+    json_list,
 )
 from azul.lib.uuids import (
     InvalidUUIDError,
+    validate_uuid,
 )
 from azul.openapi import (
     params,
     responses,
     schema,
+)
+from azul.plugins import (
+    Sorting,
 )
 from azul.service import (
     BadArgumentException,
@@ -51,7 +68,6 @@ from azul.service.controller import (
     validate_params,
 )
 from azul.service.index_service import (
-    EntityNotFoundError,
     IndexService,
     SummaryResponseStage,
 )
@@ -61,6 +77,7 @@ from azul.service.query_controller import (
 from azul.service.query_service import (
     Pagination,
     SortKey,
+    sort_key_to_json,
 )
 
 log = logging.getLogger(__name__)
@@ -126,6 +143,13 @@ class IndexController(QueryController):
                         between these cases).
                     '''),
                     **responses.json_content(self._hit_schema)
+                },
+                '404': {
+                    'description': fd('''
+                        No entity of the given type has the given UUID, in the
+                        given catalog and among the sources the request is
+                        authorized to access.
+                    ''')
                 }
             }
         }
@@ -196,7 +220,7 @@ class IndexController(QueryController):
             ),
             params.query(
                 'sort',
-                schema.optional(schema.enum(*self._organic_fields)),
+                schema.optional(schema.enum(*self._sort_fields)),
                 description=fd('''
                     The field to sort the hits by. The default value depends on the
                     entity type.
@@ -217,13 +241,13 @@ class IndexController(QueryController):
                     description=fd('''
                         Use the `next` and `previous` properties of the
                         `pagination` response element to navigate between pages.
+                        A value for this parameter is only accepted verbatim
+                        from one of those links.
                     '''),
                     deprecated=True)
                 for param in [
                     'search_before',
-                    'search_before_uid',
-                    'search_after',
-                    'search_after_uid'
+                    'search_after'
                 ]
             ]
         ]
@@ -280,14 +304,17 @@ class IndexController(QueryController):
             },
             cors=True
         )
+        def get_head_post_index_entity_type(entity_type: str) -> str | JSON:
+            return self.search(entity_type)
+
         @self.app.route(
             '/index/{entity_type}/{entity_id}',
             methods=['GET'],
             spec=self._search_entity_spec(),
             cors=True
         )
-        def get_head_post_index_entity(entity_type: str, entity_id: str | None = None) -> str | JSON:
-            return self.search(entity_type, entity_id)
+        def get_index_entity_type_and_id(entity_type: str, entity_id: str) -> JSON:
+            return self.retrieve(entity_type, entity_id)
 
         @self.app.route(
             '/index/summary',
@@ -317,7 +344,7 @@ class IndexController(QueryController):
 
         return locals()
 
-    def search(self, entity_type: str, entity_id: str | None = None) -> str | JSON:
+    def search(self, entity_type: str) -> str | JSON:
         request = self.current_request
         query_params = self._hoist_parameters(request)
         # Validate `catalog` first since `_validate_entity_type` requires a
@@ -332,27 +359,65 @@ class IndexController(QueryController):
                         filters=self._validate_filters,
                         order=self._validate_order,
                         search_after=partial(self._validate_json_param, 'search_after'),
-                        search_after_uid=str,
                         search_before=partial(self._validate_json_param, 'search_before'),
-                        search_before_uid=str,
                         size=partial(self._validate_size, entity_type),
-                        sort=self._validate_field)
+                        sort=self._validate_sort_field)
         filters = query_params.get('filters')
-        pagination = self._pagination(entity_type)
         authentication = self._authentication(request)
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
+        pagination = self._Pagination.from_request(self, entity_type, filters)
+        response = self._search(entity_type, filters, pagination, aggregate=True)
+        return '' if request.method == 'HEAD' else response
+
+    def retrieve(self, entity_type: str, entity_id: str) -> JSON:
+        """
+        Return the one entity of the given type with the given ID. Unlike
+        :py:meth:`search`, this endpoint takes no query parameters other than
+        `catalog`, so that the entity returned is determined by the path alone.
+        """
+        request = self.current_request
+        query_params = self._query_params(request)
+        # `_validate_entity_type` requires a valid catalog to load the plugin
+        validate_params(query_params, catalog=self._validate_catalog)
+        self._validate_entity_type(entity_type)
+        try:
+            validate_uuid(entity_id)
+        except InvalidUUIDError as e:
+            raise BadRequestError(e)
+        sort = Sorting(field_name='entryId')
+        pagination = Pagination(sort=sort.field_name, order=sort.order, size=1)
+        authentication = self._authentication(request)
+        filters = self._prepare_filters(self.app.catalog, authentication, None)
+        filters = filters.set_explicit({'entryId': {'is': [entity_id]}})
+        response = self._search(entity_type, filters, pagination, aggregate=False)
+        hits = json_list(response['hits'])
+        match hits:
+            case []:
+                raise NotFoundError(
+                    f'No {entity_type!r} entity with UUID {entity_id!r} was found'
+                )
+            case [hit]:
+                return json_dict(hit)
+            case _:
+                assert False, len(hits)
+
+    def _search(self,
+                entity_type: str,
+                filters: Filters,
+                pagination: Pagination,
+                *,
+                aggregate: bool
+                ) -> MutableJSON:
         try:
             response = self._service.search(catalog=self.app.catalog,
                                             entity_type=entity_type,
                                             file_url_func=self._file_url,
-                                            item_id=entity_id,
+                                            aggregate=aggregate,
                                             filters=filters,
                                             pagination=pagination)
-        except (BadArgumentException, InvalidUUIDError) as e:
+        except BadArgumentException as e:
             raise BadRequestError(e)
-        except EntityNotFoundError as e:
-            raise NotFoundError(e)
-        return '' if request.method == 'HEAD' else response
+        return response
 
     def summary(self):
         request = self.current_request
@@ -396,66 +461,130 @@ class IndexController(QueryController):
 
     @attr.s(kw_only=True, auto_attribs=True, frozen=True)
     class _Pagination(Pagination):
-        self_url: furl
+        controller: IndexController
 
-        def link(self, *, previous: bool, **params: str) -> furl | None:
-            search_key = self.search_before if previous else self.search_after
-            if search_key is None:
+        #: The explicit filters of the request, in the normalized form
+        #: produced by :py:func:`azul.filters.parse_filters`
+        #:
+        filters: str
+
+        #: How much of the HMAC digest to keep in a signature. A forgery
+        #: means guessing a MAC for a chosen context, and the only way to
+        #: test a guess is to send a request, so the bound is on how many
+        #: requests an attacker can make, not on their compute. At 72 bits,
+        #: a one in a million chance of a single forgery takes on the order
+        #: of 10^16 requests. A multiple of three bytes encodes to base64
+        #: without wasting any bits.
+        #:
+        _signature_bytes: ClassVar[int] = 9
+
+        @classmethod
+        def from_request(cls,
+                         controller: IndexController,
+                         entity_type: str,
+                         filters: Filters
+                         ) -> Self:
+            default_sorting = controller._metadata_plugin.exposed_indices[entity_type]
+            request = controller.current_request
+            params = controller._query_params(request)
+            # The sort key is verified against the instance it belongs to, so
+            # that instance must exist before the key is parsed
+            self = cls(order=params.get('order', default_sorting.order),
+                       size=int(params.get('size', '10')),
+                       sort=params.get('sort', default_sorting.field_name),
+                       controller=controller,
+                       filters=json.dumps(filters.explicit))
+            try:
+                sb, sa = self._pagination_params(params)
+            except AssertionError as e:
+                if R.caused(e):
+                    raise R.propagate(e, BadRequestError)
+                else:
+                    raise
+            else:
+                return self.with_sort_keys(search_before=sb, search_after=sa)
+
+        def _pagination_params(self,
+                               params: Mapping[str, str]
+                               ) -> tuple[SortKey, None] | tuple[None, SortKey] | tuple[None, None]:
+            sb, sa = params.get('search_before'), params.get('search_after')
+            if sb is None:
+                if sa is None:
+                    return None, None
+                else:
+                    return None, self._sort_key(sa, previous=False)
+            else:
+                if sa is None:
+                    return self._sort_key(sb, previous=True), None
+                else:
+                    assert False, R('Only one of search_after or search_before may be set')
+
+        def _sort_key(self, sort_key: str, *, previous: bool) -> SortKey:
+            sort_key = json.loads(sort_key)
+            assert isinstance(sort_key, list), R(
+                'Not a list', sort_key)
+            assert len(sort_key) == 3, R(
+                'Not a tuple with three elements', sort_key)
+            a, b, signature = sort_key
+            assert check_type(PrimitiveJSON, a), R(
+                'First sort key element is not primitive JSON', sort_key)
+            assert isinstance(b, str), R(
+                'Second sort key element not a string', sort_key)
+            assert isinstance(signature, str), R(
+                'Third sort key element not a string', sort_key)
+            expected = self._sign(previous=previous, sort_key=(a, b))
+            assert hmac.compare_digest(signature, expected), R(
+                'Sort key signature does not match the other request parameters')
+            return a, b
+
+        def _sign(self, *, previous: bool, sort_key: SortKey) -> str:
+            """
+            Return a signature tying the given sort key to the request
+            parameters that determine the result set into which that sort key
+            points. A client that sends the key back with any of those
+            parameters altered can be detected, and the request rejected, before
+            it is translated into a query.
+            """
+            app = self.controller.app
+            key, key_id = aws.get_hmac_key_and_id()
+            # The page size is absent from the signature because changing it
+            # can neither skip nor duplicate hits.
+            context = [
+                str(app.self_url.path),
+                app.catalog,
+                self.filters,
+                self.sort,
+                self.order,
+                previous,
+                sort_key_to_json(sort_key)
+            ]
+            payload = json.dumps(context, separators=(',', ':'))
+            digest = hmac.new(key, payload.encode(), hashlib.sha256).digest()
+            digest = digest[:self._signature_bytes]
+            return base64.urlsafe_b64encode(digest).decode().rstrip('=')
+
+        def link(self, *, previous: bool) -> furl | None:
+            sort_key = self.search_before if previous else self.search_after
+            if sort_key is None:
                 return None
             else:
                 before_or_after = 'before' if previous else 'after'
+                # The signature travels inside the sort keys as opposed to being
+                # a separate parameter, because clients are known to reverse
+                # engineer the paging links, discarding every other parameter
+                # (DataBiosphere/data-browser#5014).
+                #
+                # FIXME: Make the signature a separate request parameter
+                #        https://github.com/DataBiosphere/azul/issues/8458
+                #
+                signature = self._sign(previous=previous, sort_key=sort_key)
+                signed_key = [*sort_key, signature]
                 params = {
-                    **params,
-                    f'search_{before_or_after}': json.dumps(search_key),
+                    'catalog': self.controller.app.catalog,
+                    'filters': self.filters,
+                    f'search_{before_or_after}': json.dumps(signed_key),
                     'sort': self.sort,
                     'order': self.order,
                     'size': str(self.size)
                 }
-            return furl(url=self.self_url, args=params)
-
-    def _pagination(self, entity_type: str) -> _Pagination:
-        default_sorting = self._metadata_plugin.exposed_indices[entity_type]
-        request = self.current_request
-        params = self._query_params(request)
-        try:
-            sb, sa = self._pagination_params(params)
-        except AssertionError as e:
-            if R.caused(e):
-                raise R.propagate(e, ChaliceViewError)
-            else:
-                raise
-        else:
-            return self._Pagination(order=params.get('order', default_sorting.order),
-                                    size=int(params.get('size', '10')),
-                                    sort=params.get('sort', default_sorting.field_name),
-                                    search_before=sb,
-                                    search_after=sa,
-                                    self_url=self.app.self_url)
-
-    def _pagination_params(self,
-                           params: Mapping[str, str]
-                           ) -> tuple[SortKey, None] | tuple[None, SortKey] | tuple[None, None]:
-        sb, sa = params.get('search_before'), params.get('search_after')
-        if sb is None:
-            if sa is None:
-                return None, None
-            else:
-                return None, self._sort_key(sa)
-        else:
-            if sa is None:
-                return self._sort_key(sb), None
-            else:
-                assert False, R('Only one of search_after or search_before may be set')
-
-    def _sort_key(self, sort_key: str) -> SortKey:
-        sort_key = json.loads(sort_key)
-        assert isinstance(sort_key, list), R(
-            'Not a list', sort_key)
-        assert len(sort_key) == 2, R(
-            'Not a tuple with two elements', sort_key)
-        a, b = sort_key
-        assert check_type(PrimitiveJSON, a), R(
-            'First sort key element is not primitive JSON', sort_key)
-        assert isinstance(b, str), R(
-            'Second sort key element not a string', sort_key)
-        return a, b
+            return furl(url=self.controller.app.self_url, args=params)

@@ -36,9 +36,6 @@ from azul.lib.types import (
     JSON,
     MutableJSON,
 )
-from azul.lib.uuids import (
-    validate_uuid,
-)
 from azul.plugins import (
     File,
     dotted,
@@ -61,12 +58,6 @@ from azul.source import (
 )
 
 log = logging.getLogger(__name__)
-
-
-class EntityNotFoundError(Exception):
-
-    def __init__(self, entity_type: str, entity_id: str):
-        super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
 
 
 @attrs.frozen(auto_attribs=True, kw_only=True)
@@ -148,71 +139,30 @@ class IndexService(QueryService):
                catalog: CatalogName,
                entity_type: str,
                file_url_func: FileUrlFunc,
-               item_id: str | None,
+               aggregate: bool,
                filters: Filters,
                pagination: Pagination
                ) -> MutableJSON:
         """
-        Returns data for a particular entity type of single item.
-        :param catalog: The name of the catalog to query
-        :param entity_type: Which index to search (i.e. 'projects', 'specimens', etc.)
-        :param pagination: A dictionary with pagination information as return from `_get_pagination()`
-        :param filters: parsed JSON filters from the request
-        :param item_id: If item_id is specified, only a single item is searched for
-        :param file_url_func: A function that is used only when getting a *list* of files data.
-        It creates the files URL based on info from the request. It should have the type
-        signature `(uuid: str, **params) -> str`
-        :return: The OpenSearch JSON response
-        """
-        if item_id is not None:
-            validate_uuid(item_id)
-            filters = filters.update({'entryId': {'is': [item_id]}})
+        Search the index of the given entity type for entities matching the
+        given filters, and return one page of the hits.
 
-        response = self._search(catalog=catalog,
-                                filters=filters,
-                                pagination=pagination,
-                                aggregate=item_id is None,
-                                entity_type=entity_type,
-                                file_url_func=file_url_func)
+        :param catalog: the name of the catalog to search
 
-        special_fields = self.metadata_plugin(catalog).special_fields
-        for hit in response['hits']:
-            entity = one(hit[entity_type])
-            source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
-            accessible = source_id in filters.source_ids
-            entity[special_fields.accessible.name_in_hit] = accessible
+        :param entity_type: which index to search, e.g. 'projects' or 'files'
 
-        if item_id is not None:
-            response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
-        return response
+        :param file_url_func: used to construct the URL of a data file in a hit
 
-    def _search(self,
-                *,
-                catalog: CatalogName,
-                entity_type: str,
-                aggregate: bool,
-                filters: Filters,
-                pagination: Pagination,
-                file_url_func: FileUrlFunc
-                ) -> MutableJSON:
-        """
-        This function does the whole transformation process. It takes the path
-        of the config file, the filters, and pagination, if any. Excluding
-        filters will do a match_all request. Excluding pagination will exclude
-        pagination from the output.
+        :param aggregate: whether to tabulate the facets of all matching
+                          entities, not just those on the returned page
 
-        :param catalog: The name of the catalog to query
+        :param filters: the filters that matching entities must satisfy
 
-        :param entity_type: the string referring to the entity type used to get
-                            the OpenSearch index to search
+        :param pagination: which page of the hits to return, and how to sort
+                           them
 
-        :param aggregate: Whether to perform the aggregation stage or not.
-
-        :param filters: Filter parameter from the API to be used in the query.
-
-        :param pagination: Pagination to be used for the API
-
-        :return: Returns the transformed request
+        :return: the hits on that page, the pagination of the result set and,
+                 if `aggregate` is set, the facets
         """
         plugin = self.metadata_plugin(catalog)
         field_mapping = plugin.field_mapping
@@ -256,7 +206,23 @@ class IndexService(QueryService):
         request = chain.prepare_request(request)
         response = request.execute(ignore_cache=True)
         response = chain.process_response(response)
+
+        self._synthesize_accessible(catalog, entity_type, filters, response)
+
         return response
+
+    def _synthesize_accessible(self,
+                               catalog: CatalogName,
+                               entity_type: str,
+                               filters: Filters,
+                               response: MutableJSON
+                               ) -> None:
+        special_fields = self.metadata_plugin(catalog).special_fields
+        for hit in response['hits']:
+            entity = one(hit[entity_type])
+            source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
+            accessible = source_id in filters.source_ids
+            entity[special_fields.accessible.name_in_hit] = accessible
 
     def summary(self,
                 catalog: CatalogName,
@@ -353,7 +319,7 @@ class IndexService(QueryService):
         """
         plugin = self.metadata_plugin(catalog)
         file_uuid_field = plugin.special_fields.file_uuid
-        filters = filters.update({
+        filters = filters.set_explicit({
             file_uuid_field.name: {'is': [file_uuid]},
             **(
                 {'fileVersion': {'is': [file_version]}}

@@ -13,7 +13,6 @@ from collections.abc import (
 from functools import (
     partial,
 )
-import json
 import logging
 from typing import (
     Any,
@@ -609,24 +608,22 @@ class Pagination:
     search_before: SortKey | None = None
     search_after: SortKey | None = None
 
-    def advance(self,
-                *,
-                search_before: SortKey | None,
-                search_after: SortKey | None
-                ) -> Self:
+    def with_sort_keys(self,
+                       *,
+                       search_before: SortKey | None,
+                       search_after: SortKey | None
+                       ) -> Self:
         return attrs.evolve(self,
                             search_before=search_before,
                             search_after=search_after)
 
-    def link(self, *, previous: bool, **params: str) -> furl | None:
+    def link(self, *, previous: bool) -> furl | None:
         """
         Return the URL of the next or previous page in this pagination or None
         if there is no such page.
 
         :param previous: True, for a link to the previous page, False for a link
                          to the next one.
-
-        :param params: Additional query parameters to embed in the URL
         """
         return None
 
@@ -772,13 +769,11 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
                 search_before = None
             search_after = tuple(hits[0]['sort'])
 
-        pagination = self.pagination.advance(search_before=search_before,
-                                             search_after=search_after)
+        pagination = self.pagination.with_sort_keys(search_before=search_before,
+                                                    search_after=search_after)
 
         def page_link(*, previous):
-            url = pagination.link(previous=previous,
-                                  catalog=self.catalog,
-                                  filters=json.dumps(self.filters.explicit))
+            url = pagination.link(previous=previous)
             return None if url is None else str(url)
 
         return ResponsePagination(count=count,

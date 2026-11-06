@@ -349,8 +349,16 @@ class TestIndexResponse(IndexResponseTestCase):
                                       catalog=self.catalog,
                                       file_url_func=self.file_url_func)
 
+    #: The sort key of the `next` link in the second of the `paginations`
+    #: below. Both that fixture and the response `test_response_stage_files`
+    #: expects from it derive from this value, so the two cannot drift apart.
+    #:
+    _search_after = 'cbb998ce-ddaf-34fa-e163-d14b399c6b34'
+
     @property
     def paginations(self):
+        next_link = self.base_url.set(path='/index/files',
+                                      args=dict(size=5, search_after=self._search_after))
         return [
             ResponsePagination(count=2,
                                order='desc',
@@ -367,10 +375,7 @@ class TestIndexResponse(IndexResponseTestCase):
                                sort='entryId',
                                total=2,
                                previous=None,
-                               next=str(self.base_url.set(path='/index/files',
-                                                          args=dict(size=5,
-                                                                    search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                                    search_after_uid='meta%2332'))))
+                               next=str(next_link))
         ]
 
     def test_response_stage_files(self):
@@ -530,8 +535,7 @@ class TestIndexResponse(IndexResponseTestCase):
                     'pages': 1,
                     'next': str(self.base_url.set(path='/index/files',
                                                   args=dict(size=5,
-                                                            search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                            search_after_uid='meta%2332'))),
+                                                            search_after=self._search_after))),
                     'previous': None,
                     'size': 5,
                     'sort': 'entryId',
@@ -1784,7 +1788,7 @@ class TestIndexResponse(IndexResponseTestCase):
         self.assertIsNotNone(response_json['pagination']['next'])
         self.assertIsNone(response_json['pagination']['previous'])
         self.assertEqual([None, '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
-                         json.loads(first_page_next['search_after']))
+                         json.loads(first_page_next['search_after'])[:2])
 
         response = self._http_client.request('GET', response_json['pagination']['next'])
         raise_on_status(response)
@@ -1800,9 +1804,9 @@ class TestIndexResponse(IndexResponseTestCase):
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
         self.assertEqual([None, '73f10dad-afc5-4d1d-a71c-4a8b6fff9172'],
-                         json.loads(second_page_next['search_after']))
+                         json.loads(second_page_next['search_after'])[:2])
         self.assertEqual([None, '308eea51-d14b-4036-8cd1-cfd81d7532c3'],
-                         json.loads(second_page_previous['search_before']))
+                         json.loads(second_page_previous['search_before'])[:2])
 
     def test_bad_search_after_search_before(self):
         """
@@ -1836,6 +1840,152 @@ class TestIndexResponse(IndexResponseTestCase):
                 expected_text = f'{{"Code":"BadRequestError","Message":"{error_msg}"}}'
                 self.assertEqual(400, response.status)
                 self.assertEqual(expected_text, response.data.decode())
+
+    def test_entity_endpoint_rejects_query_params(self):
+        """
+        Test that the endpoint for an individual entity only accepts `catalog`,
+        the one query parameter documented for it
+        """
+        project_id = '250aef61-a15b-4d97-b8b4-54bb997c1d7d'
+        path = 'index', 'projects', project_id
+
+        url = self.base_url.set(path=path, args=dict(catalog=self.catalog))
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        self.assertEqual(project_id, one(response.json()['projects'])['projectId'])
+
+        rejected = {
+            'filters': json.dumps({'organ': {'is': ['brain']}}),
+            'size': '1',
+            'sort': 'entryId',
+            'order': 'asc',
+            'search_after': '["a", "b"]',
+            'search_after_uid': 'x',
+            'search_before': '["a", "b"]',
+            'search_before_uid': 'x',
+            'nonsense': '1'
+        }
+        for param, value in rejected.items():
+            with self.subTest(param=param):
+                args = {'catalog': self.catalog, param: value}
+                url = self.base_url.set(path=path, args=args)
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(400, response.status)
+                expected = {
+                    'Code': 'BadRequestError',
+                    'Message': f'Unknown query parameter `{param}`'
+                }
+                self.assertEqual(expected, response.json())
+
+    def test_entity_endpoint_entity_id(self):
+        """
+        Test the responses to a malformed and an absent entity ID
+        """
+        url = self.base_url.set(path=('index', 'projects', 'not-a-uuid'))
+        response = self._http_client.request('GET', str(url))
+        self.assertEqual(400, response.status)
+
+        absent = '8f1c4e8b-9b1a-4a1e-8a0e-1d4e8f1c4e8b'
+        url = self.base_url.set(path=('index', 'projects', absent))
+        response = self._http_client.request('GET', str(url))
+        self.assertEqual(404, response.status)
+        expected = {
+            'Code': 'NotFoundError',
+            'Message': f'No {"projects"!r} entity with UUID {absent!r} was found'
+        }
+        self.assertEqual(expected, response.json())
+
+    def test_signed_search_after_search_before(self):
+        """
+        Test that a sort key is only accepted together with the other request
+        parameters it was issued with
+        """
+        query_params = self._params(size=1, sort='entryId', order='asc')
+        url = self.base_url.set(path='/index/projects', args=query_params)
+        # Get page 1 …
+        response = self._http_client.request('GET', str(url))
+        raise_on_status(response)
+        response_json = response.json()
+        first_project = one(response_json['hits'])['entryId']
+        # … and page 2, so that both links are present
+        response = self._http_client.request('GET', response_json['pagination']['next'])
+        raise_on_status(response)
+        response_json = response.json()
+        test_cases = {
+            'search_before': response_json['pagination']['previous'],
+            'search_after': response_json['pagination']['next']
+        }
+        for pagination_key, good_url in test_cases.items():
+            with self.subTest(pagination_key=pagination_key):
+                # The unmodified link works …
+                response = self._http_client.request('GET', good_url)
+                raise_on_status(response)
+                sort_key = json.loads(furl(good_url).args[pagination_key])
+                self.assertEqual(3, len(sort_key))
+                signature = sort_key[-1]
+                self.assertIsInstance(signature, str)
+                expected_error = ('{"Code":"BadRequestError","Message":"Sort key '
+                                  'signature does not match the other request '
+                                  'parameters"}')
+
+                def modified(**args) -> str:
+                    url = furl(good_url)
+                    url.args.update(args)
+                    return str(url)
+
+                # … but altering a signed parameter does not. Restricting the
+                # result set to one project is what a client racing against a
+                # change of filters does.
+                bad_urls = {
+                    'filters': modified(filters=json.dumps({'projectId': {'is': [first_project]}})),
+                    'sort': modified(sort='projectTitle'),
+                    'order': modified(order='desc'),
+                    # The sort key itself is signed, too
+                    pagination_key: modified(**{pagination_key: json.dumps([
+                        'tampered', sort_key[1], signature
+                    ])})
+                }
+                for param, bad_url in bad_urls.items():
+                    with self.subTest(param=param):
+                        response = self._http_client.request('GET', bad_url)
+                        self.assertEqual(400, response.status)
+                        self.assertEqual(expected_error, response.data.decode())
+
+                # `size` is not signed, since changing it can neither skip nor
+                # duplicate hits
+                response = self._http_client.request('GET', modified(size='2'))
+                raise_on_status(response)
+
+    def test_unsigned_search_after_search_before(self):
+        """
+        Test that a sort key composed by the client, without a signature, is
+        rejected instead of being honored or causing a 500
+        """
+        test_cases = {
+            # The flavors of invalid sort key reported in #8025 …
+            '0': 'Not a list',
+            'null': 'Not a list',
+            '"nonsense"': 'Not a list',
+            '[]': 'Not a tuple with three elements',
+            '["A"]': 'Not a tuple with three elements',
+            # … and the form that was valid before sort keys were signed
+            '["A", "b"]': 'Not a tuple with three elements',
+            '[{}, "b", "sig"]': 'First sort key element is not primitive JSON',
+            '["a", 1, "sig"]': 'Second sort key element not a string',
+            '["a", "b", 1]': 'Third sort key element not a string'
+        }
+        for pagination_key in ('search_after', 'search_before'):
+            for sort_key, error in test_cases.items():
+                with self.subTest(pagination_key=pagination_key, sort_key=sort_key):
+                    params = self._params(size=1, **{pagination_key: sort_key})
+                    url = self.base_url.set(path='/index/projects', args=params)
+                    response = self._http_client.request('GET', str(url))
+                    self.assertEqual(400, response.status)
+                    expected = json.dumps({
+                        'Code': 'BadRequestError',
+                        'Message': str((error, json.loads(sort_key)))
+                    }, separators=(',', ':'))
+                    self.assertEqual(expected, response.data.decode())
 
     def test_filter_by_publication_title(self):
         cases = [
@@ -3247,6 +3397,49 @@ class TestResponseFields(IndexResponseTestCase):
                 summary = response.json()
                 self.assertElasticEqual(expected_projects, summary['projects'])
 
+    def test_filter_by_assay_type(self):
+
+        def assay_types_by_project(values: list[str | None] | None) -> dict[str, set[str]]:
+            params = dict(catalog=self.catalog, size=50)
+            if values is not None:
+                params['filters'] = json.dumps({'assayType': {'is': values}})
+            url = self.base_url.set(path='/index/projects', args=params)
+            response = self._http_client.request('GET', str(url))
+            raise_on_status(response)
+            response = response.json()
+            self.assertIsNone(response['pagination']['next'])
+            return {
+                hit['entryId']: {
+                    assay_type
+                    for protocol in hit['protocols']
+                    for assay_type in protocol.get('assayType', [])
+                }
+                for hit in response['hits']
+            }
+
+        projects = assay_types_by_project(None)
+        imaging_projects = {
+            project_id: assay_types
+            for project_id, assay_types in projects.items()
+            if assay_types
+        }
+        # Only bundle 94f2ba52 contains an imaging protocol
+        self.assertEqual(['in situ sequencing'], list(map(one, imaging_projects.values())))
+        other_projects = {
+            project_id: assay_types
+            for project_id, assay_types in projects.items()
+            if not assay_types
+        }
+        self.assertGreater(len(other_projects), 0)
+        for values, expected in [
+            (['in situ sequencing'], imaging_projects),
+            ([None], other_projects),
+            (['in situ sequencing', None], projects),
+            (['flow cytometry'], {})
+        ]:
+            with self.subTest(values=values):
+                self.assertEqual(expected, assay_types_by_project(values))
+
     def test_summary_filter_none(self):
         for use_filter, labCount in [(False, 15), (True, 1)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
@@ -3443,18 +3636,14 @@ class TestUnpopulatedIndexResponse(IndexResponseTestCase):
     def test_sorted_responses(self):
         # FIXME: Can't sort on fields of nested type
         #        https://github.com/DataBiosphere/azul/issues/2621
-        sortable_fields = {
-            field
-            for field in self.field_mapping
-            if field not in {'assayType', 'organismAgeRange', 'accessions', 'tissueAtlas'}
-        }
-
-        for entity_type, field in product(self.entity_types(), sortable_fields):
+        unsortable_fields = {'organismAgeRange', 'accessions', 'tissueAtlas'}
+        for entity_type, field in product(self.entity_types(), self.field_mapping):
             with self.subTest(entity=entity_type, field=field):
                 url = self.base_url.set(path=('index', entity_type),
                                         args=dict(sort=field))
                 response = self._http_client.request('GET', str(url))
-                self.assertEqual(200, response.status)
+                expected_status = 400 if field in unsortable_fields else 200
+                self.assertEqual(expected_status, response.status)
 
 
 class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):

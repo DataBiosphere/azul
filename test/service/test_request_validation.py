@@ -5,6 +5,9 @@ from furl import (
 )
 import urllib3
 
+from azul.lib.time import (
+    dcp2_datetime_pattern,
+)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -211,6 +214,18 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                          f"None is not of type '{expected_type}' at path $.{field.name}.is[0]")
                 self.assertBadRequest(url, error)
 
+    def test_unsortable_sort_field(self):
+        for field in ['organismAgeRange', 'accessions', 'tissueAtlas']:
+            with self.subTest(field=field):
+                url = self.base_url.set(path='/index/samples', args=dict(sort=field))
+                self.assertBadRequest(url, f'Sorting by field `{field}` is not supported')
+
+    def test_unmapped_sort_field(self):
+        # No document in the index contains an imaging protocol, so the index
+        # has no mapping for this field
+        url = self.base_url.set(path='/index/samples', args=dict(sort='assayType'))
+        self.assertResponseStatus(url, 200)
+
     def test_bad_sort_field_of_file(self):
         params = {
             'size': 15,
@@ -254,6 +269,7 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
     def test_bad_filters(self):
         url = self.base_url.set(path='/index/files', args=dict(catalog=self.catalog))
         schema_error = "The value of the `filters` parameter is invalid against the schema: "
+        datetime_pattern = f'^{dcp2_datetime_pattern}$'
         cases = [
             (
                 '"',
@@ -312,8 +328,9 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
                 schema_error + "'is' is a required property at path $.projectTitle"
             ),
             (
-                '{"assayType":{"is":["flow cytometry"]}}',
-                schema_error + "'flow cytometry' is not of type 'object' at path $.assayType.is[0]"
+                '{"assayType":{"is":[{"foo": "bar", "baz": null}]}}',
+                schema_error + "{'foo': 'bar', 'baz': None} is not of type 'null', 'string' "
+                               "at path $.assayType.is[0]"
             ),
             (
                 '{"organismAge":{"is":[]}}',
@@ -335,19 +352,60 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
             ),
             (
                 '{"organismAge":{"is":[{"value": "1"}]}}',
-                schema_error + "{'value': '1'} is not valid under any of the given schemas "
+                schema_error + "'unit' is a required property "
                                "at path $.organismAge.is[0]"
             ),
             (
                 '{"organismAge":{"is":[{"value": "1", "unit": "year", "foo": "year"}]}}',
-                schema_error + "{'value': '1', 'unit': 'year', 'foo': 'year'} "
-                               "is not valid under any of the given schemas "
-                               "at path $.organismAge.is[0]"
+                schema_error + "Additional properties are not allowed "
+                               "('foo' was unexpected) at path $.organismAge.is[0]"
             ),
             (
                 '{"organismAge":{"is":[{"value": "1", "unit": "year"}, {}]}}',
                 schema_error + "{} is not valid under any of the given schemas "
                                "at path $.organismAge.is[1]"
+            ),
+            (
+                '{"submissionDate":{"within":[["2026-01-01", "2026-08-08"]]}}',
+                schema_error + "'2026-01-01' does not match "
+                               f"{datetime_pattern!r} "
+                               "at path $.submissionDate.within[0][0]"
+            ),
+            (
+                '{"submissionDate":{"within":[["2026-01-01T00:00:00Z",'
+                ' "2026-08-08T00:00:00.000000Z"]]}}',
+                schema_error + "'2026-01-01T00:00:00Z' does not match "
+                               f"{datetime_pattern!r} "
+                               "at path $.submissionDate.within[0][0]"
+            ),
+            (
+                '{"submissionDate":{"is":["2026-01-01"]}}',
+                schema_error + "'2026-01-01' does not match "
+                               f"{datetime_pattern!r} "
+                               "at path $.submissionDate.is[0]"
+            ),
+            (
+                '{"donorCount":{"is":[9223372036854775807]}}',
+                schema_error + '9223372036854775807 is greater than the '
+                               'maximum of 9223372036854774783 '
+                               'at path $.donorCount.is[0]'
+            ),
+            (
+                '{"donorCount":{"is":[-9223372036854775809]}}',
+                schema_error + '-9223372036854775809 is less than the '
+                               'minimum of -9223372036854775808 '
+                               'at path $.donorCount.is[0]'
+            ),
+            (
+                '{"fileSize":{"within":[[0, 9223372036854775807]]}}',
+                schema_error + '9223372036854775807 is greater than the '
+                               'maximum of 9223372036854774783 '
+                               'at path $.fileSize.within[0][1]'
+            ),
+            (
+                '{"organismAgeRange":{"is":[[0, 1]]}}',
+                schema_error + "{'is': [[0, 1]]} is not valid under any of "
+                               "the given schemas at path $.organismAgeRange"
             )
         ]
         for filters, message in cases:
@@ -367,12 +425,18 @@ class RequestParameterValidationTest(DCP1CannedBundleTestCase,
 
     def test_bad_query_params(self):
 
+        # Until 2022, the `_uid` parameters supplied the second element of a
+        # sort key. The whole key then moved into `search_after` and
+        # `search_before`, leaving them accepted but ignored until they were
+        # completely removed in 2026, which is why they are now unknown like
+        # any other name.
+        params = 'some_nonexistent_filter', 'search_after_uid', 'search_before_uid'
         for entity_type in ('files', 'bundles', 'samples'):
-            url = self.base_url.set(path=('index', entity_type))
-            with self.subTest(entity_type=entity_type):
-                url.args = dict(catalog=self.catalog,
-                                some_nonexistent_filter=1)
-                self.assertBadRequest(url, 'Unknown query parameter `some_nonexistent_filter`')
+            for param in params:
+                with self.subTest(entity_type=entity_type, param=param):
+                    url = self.base_url.set(path=('index', entity_type))
+                    url.args = {'catalog': self.catalog, param: 1}
+                    self.assertBadRequest(url, f'Unknown query parameter `{param}`')
 
     def test_bad_catalog_param(self):
         for path in (*('/index/' + e for e in ('summary', 'files')),
