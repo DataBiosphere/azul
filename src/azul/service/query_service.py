@@ -75,6 +75,15 @@ from azul.lib.types import (
     JSONs,
     MutableJSON,
     PrimitiveJSON,
+    json_dict,
+    json_element_dicts,
+    json_element_strings,
+    json_int,
+    json_item_dicts,
+    json_list,
+    json_list_of_dicts,
+    json_mapping,
+    json_sequence_of_mappings,
     json_str,
 )
 from azul.opensearch import (
@@ -331,7 +340,7 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
     def process_response(self, response: MutableJSON) -> MutableJSON:
         try:
-            aggs = response['aggregations']
+            aggs = json_dict(response['aggregations'])
         except KeyError:
             pass
         else:
@@ -452,9 +461,9 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         Hoist the contents of each facet's nested aggregation bucket into its
         parent, so downstream response parsing is oblivious to nesting.
         """
-        for facet, agg in aggs.items():
+        for facet, agg in json_item_dicts(aggs):
             try:
-                nested_agg = agg.pop(nested_agg_name)
+                nested_agg = json_dict(agg.pop(nested_agg_name))
             except KeyError:
                 pass
             else:
@@ -463,8 +472,9 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 # nested document populating all the `multi_terms` fields, since
                 # a nested document missing any of them is omitted from the
                 # buckets but still counted by the `nested` aggregation.
-                doc_count = sum(bucket['doc_count']
-                                for bucket in nested_agg[values_agg_name]['buckets'])
+                values_agg = json_dict(nested_agg[values_agg_name])
+                doc_count = sum(json_int(bucket['doc_count'])
+                                for bucket in json_element_dicts(values_agg['buckets']))
                 assert nested_agg['doc_count'] == doc_count, R(
                     'Nested value buckets do not account for the nested total',
                     facet, nested_agg['doc_count'], doc_count)
@@ -472,7 +482,8 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 # The `nested` aggregation only counts documents that have the
                 # field, so its doc_count omits those tallied by `filter`
                 # aggregation we use to count the missing fields.
-                agg['doc_count'] += agg[untagged_agg_name]['doc_count']
+                untagged_agg = json_dict(agg[untagged_agg_name])
+                agg['doc_count'] = json_int(agg['doc_count']) + json_int(untagged_agg['doc_count'])
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """
@@ -494,23 +505,29 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                     # (e.g. ['contents', 'projects', 'document_id']). There will
                     # be only one FieldPath in the case of a Terms aggregation,
                     # and multiple in the case of a MultiTerms aggregation.
-                    paths = v['meta']['paths']
+                    paths = json_list(json_dict(v['meta'])['paths'])
                 except KeyError:
                     pass
                 else:
+                    # Only `terms` and `multi_terms` aggregations carry `paths`
+                    # in their `meta` (see `_annotate_aggs_for_translation`),
+                    # and only those have a list of buckets
+                    buckets = json_list_of_dicts(buckets)
                     for i, path in enumerate(paths):
-                        field_type = self.service.field_type(self.catalog, tuple(path))
+                        path = tuple(json_element_strings(path))
+                        field_type = self.service.field_type(self.catalog, path)
                         for bucket in buckets:
-                            if isinstance(bucket['key'], list):
+                            key = bucket['key']
+                            if isinstance(key, list):
                                 # The bucket is from a MultiTerms aggregation
-                                bucket['key'][i] = field_type.from_index(bucket['key'][i])
+                                key[i] = field_type.from_index(key[i])
                             else:
                                 # The bucket is from a Terms aggregation
                                 bucket['key'] = field_type.from_index(bucket['key'])
                     for bucket in buckets:
                         translate(k, bucket)
 
-        for k, v in aggs.items():
+        for k, v in json_item_dicts(aggs):
             translate(k, v)
 
     def _populate_accessible(self, aggs: MutableJSON) -> None:
@@ -520,12 +537,13 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         source_ids = self.filter_stage.filters.source_ids
         plugin = self.service.metadata_plugin(self.catalog)
         special_fields = plugin.special_fields
-        agg = aggs.pop(special_fields.source_id.name)
+        agg = json_dict(aggs.pop(special_fields.source_id.name))
+        values_agg = json_dict(agg[values_agg_name])
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
-        for bucket in agg[values_agg_name]['buckets']:
+        for bucket in json_element_dicts(values_agg['buckets']):
             accessible = bucket['key'] in source_ids
-            counts_by_accessibility[accessible] += bucket['doc_count']
-        agg[values_agg_name]['buckets'] = [
+            counts_by_accessibility[accessible] += json_int(bucket['doc_count'])
+        values_agg['buckets'] = [
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]
@@ -725,7 +743,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         hits = self._extract_hits(response)
         hits = self._translate_hits(hits)
         pagination = self._process_pagination(response)
-        aggregations = response.get('aggregations', {})
+        aggregations = json_mapping(response.get('aggregations', {}))
         return hits, pagination, aggregations
 
     def _extract_hits(self, response):
@@ -741,26 +759,27 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         return hits
 
     def _process_pagination(self, response: JSON) -> ResponsePagination:
-        total = response['hits']['total']
+        response_hits = json_mapping(response['hits'])
+        total = json_mapping(response_hits['total'])
         # FIXME: Handle other relations
         #        https://github.com/DataBiosphere/azul/issues/3770
         assert total['relation'] == 'eq'
-        pages = -(-total['value'] // self.pagination.size)
+        pages = -(-json_int(total['value']) // self.pagination.size)
 
         # ... else use search_after/search_before pagination
-        hits: JSONs = response['hits']['hits']
+        hits = json_sequence_of_mappings(response_hits['hits'])
         count = len(hits)
         if self.pagination.search_before is None:
             # hits are normal sorted
             if count > self.pagination.size:
                 # There is an extra hit, indicating a next page.
                 count -= 1
-                search_after = tuple(hits[count - 1]['sort'])
+                search_after = sort_key_from_json(hits[count - 1]['sort'])
             else:
                 # No next page
                 search_after = None
             if self.pagination.search_after is not None:
-                search_before = tuple(hits[0]['sort'])
+                search_before = sort_key_from_json(hits[0]['sort'])
             else:
                 search_before = None
         else:
@@ -768,11 +787,11 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
             if count > self.pagination.size:
                 # There is an extra hit, indicating a previous page.
                 count -= 1
-                search_before = tuple(hits[count - 1]['sort'])
+                search_before = sort_key_from_json(hits[count - 1]['sort'])
             else:
                 # No previous page
                 search_before = None
-            search_after = tuple(hits[0]['sort'])
+            search_after = sort_key_from_json(hits[0]['sort'])
 
         pagination = self.pagination.with_sort_keys(search_before=search_before,
                                                     search_after=search_after)
@@ -782,7 +801,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
             return None if url is None else str(url)
 
         return ResponsePagination(count=count,
-                                  total=total['value'],
+                                  total=json_int(total['value']),
                                   size=pagination.size,
                                   next=page_link(previous=False),
                                   previous=page_link(previous=True),

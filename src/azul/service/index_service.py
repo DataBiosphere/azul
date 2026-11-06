@@ -35,6 +35,9 @@ from azul.indexer.mirror_service import (
 from azul.lib.types import (
     JSON,
     MutableJSON,
+    json_element_dicts,
+    json_element_mappings,
+    json_mapping,
 )
 from azul.plugins import (
     File,
@@ -218,9 +221,9 @@ class IndexService(QueryService):
                                response: MutableJSON
                                ) -> None:
         special_fields = self.metadata_plugin(catalog).special_fields
-        for hit in response['hits']:
-            entity = one(hit[entity_type])
-            source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
+        for hit in json_element_dicts(response['hits']):
+            entity = one(json_element_dicts(hit[entity_type]))
+            source_id = one(json_element_dicts(hit['sources']))[special_fields.source_id.name_in_hit]
             accessible = source_id in filters.source_ids
             entity[special_fields.accessible.name_in_hit] = accessible
 
@@ -356,8 +359,8 @@ class IndexService(QueryService):
             assert file_version is None, len(hits)
 
         hit = first(hits)
-        source = SourceRef.from_json(one(hit['sources']))
-        file = one(hit['contents']['files'])
+        source: SourceRef = SourceRef.from_json(one(json_element_mappings(hit['sources'])))
+        file = one(json_element_mappings(json_mapping(hit['contents'])['files']))
         file = plugin.file_class.from_index(file, source=source)
         if file_version is not None:
             assert file_version == file.version
