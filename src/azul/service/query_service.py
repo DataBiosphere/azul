@@ -114,7 +114,24 @@ nested_agg_name = 'myNested'
 untagged_agg_name = 'myUntagged'
 
 
-class Stage[S1, S2](metaclass=ABCMeta):
+class ResponseStage[S1, S2](metaclass=ABCMeta):
+    """
+    A stage in a chain of responsibility that only processes the response to
+    an OpenSearch request, leaving the preparation of the request to the stages
+    it wraps.
+    """
+
+    @abstractmethod
+    def process_response(self, response: S1) -> S2:
+        """
+        Handle the given response and return the result of the processing.
+        If an implementation modifies the argument in place it must return the
+        argument.
+        """
+        raise NotImplementedError
+
+
+class Stage[S1, S2](ResponseStage[S1, S2], metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
     to process the response to that request. If an implementation modifies the
@@ -126,15 +143,6 @@ class Stage[S1, S2](metaclass=ABCMeta):
         """
         Modify the given request and return the argument or convert the given
         request and return the result of the conversion.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def process_response(self, response: S1) -> S2:
-        """
-        Handle the given response and return the result of the processing.
-        If an implementation modifies the argument in place it must return the
-        argument.
         """
         raise NotImplementedError
 
@@ -171,9 +179,28 @@ class Chain[S0, S1, S2](Stage[S0, S2]):
 
 
 @attrs.frozen(kw_only=True)
-class IndexStage[S1, S2](Stage[S1, S2], metaclass=ABCMeta):
+class ResponseChain[S0, S1, S2](Stage[S0, S2]):
     """
-    A stage for requests against a particular index.
+    The result of wrapping a stage or chain in a stage that only processes the
+    response.
+    """
+
+    inner: Stage[S0, S1]
+    outer: ResponseStage[S1, S2]
+
+    def prepare_request(self, request: Search) -> Search:
+        return self.inner.prepare_request(request)
+
+    def process_response(self, response0: S0) -> S2:
+        response1: S1 = self.inner.process_response(response0)
+        response2: S2 = self.outer.process_response(response1)
+        return response2
+
+
+@attrs.frozen(kw_only=True)
+class _UsesIndex:
+    """
+    A mixin for classes that target a specific index.
     """
     service: DocumentService
     catalog: CatalogName
@@ -182,6 +209,24 @@ class IndexStage[S1, S2](Stage[S1, S2], metaclass=ABCMeta):
     @cached_property
     def plugin(self) -> MetadataPlugin:
         return self.service.metadata_plugin(self.catalog)
+
+
+@attrs.frozen(kw_only=True)
+class IndexResponseStage[S1, S2](_UsesIndex, ResponseStage[S1, S2], metaclass=ABCMeta):
+    """
+    A stage that only processes the response to a request against a particular
+    index.
+    """
+
+    def wrap[S0](self, other: Stage[S0, S1]) -> ResponseChain[S0, S1, S2]:
+        return ResponseChain(inner=other, outer=self)
+
+
+@attrs.frozen(kw_only=True)
+class IndexStage[S1, S2](_UsesIndex, Stage[S1, S2], metaclass=ABCMeta):
+    """
+    A stage for requests against a particular index.
+    """
 
     def wrap[S0](self, other: Stage[S0, S1]) -> Chain[S0, S1, S2]:
         return Chain(inner=other, outer=self)

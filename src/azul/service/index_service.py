@@ -16,7 +16,6 @@ from more_itertools import (
 )
 from opensearchpy import (
     MultiSearch,
-    Search,
 )
 from opensearchpy.helpers.response import (
     Hit,
@@ -48,12 +47,12 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
-    IndexStage,
+    IndexResponseStage,
     Pagination,
     PaginationStage,
     QueryService,
+    ResponseStage,
     ResponseTriple,
-    Stage,
     ToDictStage,
 )
 from azul.source import (
@@ -64,13 +63,10 @@ log = logging.getLogger(__name__)
 
 
 @attrs.frozen(auto_attribs=True, kw_only=True)
-class SearchResponseStage(IndexStage[ResponseTriple, MutableJSON],
+class SearchResponseStage(IndexResponseStage[ResponseTriple, MutableJSON],
                           metaclass=ABCMeta):
     service: IndexService
     file_url_func: FileUrlFunc
-
-    def prepare_request(self, request: Search) -> Search:
-        return request
 
     def _file_url(self, *, uuid: str, version: str, drs_uri: str | None) -> str | None:
         # FIXME: Redundant implementations of file URLs and mirror URIs
@@ -99,7 +95,7 @@ class SearchResponseStage(IndexStage[ResponseTriple, MutableJSON],
         return mirror_service.mirror_uri(source, file_cls, file)
 
 
-class SummaryResponseStage(Stage[JSON, MutableJSON],
+class SummaryResponseStage(ResponseStage[JSON, MutableJSON],
                            metaclass=ABCMeta):
 
     @property
@@ -130,9 +126,6 @@ class SummaryResponseStage(Stage[JSON, MutableJSON],
         may be taken from more than one index.
         """
         raise NotImplementedError
-
-    def prepare_request(self, request: Search) -> Search:
-        return request
 
 
 class IndexService(QueryService):
