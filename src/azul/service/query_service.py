@@ -49,6 +49,7 @@ from azul import (
     config,
 )
 from azul.field_type import (
+    IndexForm,
     Nested,
 )
 from azul.filters import (
@@ -57,6 +58,7 @@ from azul.filters import (
 )
 from azul.indexer.document import (
     DocumentType,
+    FieldPath,
     IndexName,
 )
 from azul.indexer.document_service import (
@@ -81,7 +83,6 @@ from azul.opensearch import (
 from azul.plugins import (
     DocumentSlice,
     DottedFieldPath,
-    FieldPath,
     MetadataPlugin,
     dotted,
     undotted,
@@ -177,7 +178,7 @@ class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
         return OpenSearchChain(inner=other, outer=self)
 
 
-TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[PrimitiveJSON]]]
+TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[IndexForm]]]
 
 
 @attrs.frozen(kw_only=True)
@@ -229,12 +230,14 @@ class FilterStage(_OpenSearchStage[Response, Response]):
         for field, filter in filters.items():
             field = field_mapping[field]
             operator, values = one(filter.items())
+            # mypy widens the values of a union of TypedDicts to `object`
+            assert isinstance(values, list), values
             field_type = self.service.field_type(catalog, field)
             values = field_type.filter(operator, values)
             translated_filters[field] = {operator: list(values)}
         return translated_filters
 
-    def prepare_query(self, skip_field_paths: tuple[FieldPath] = ()) -> Query:
+    def prepare_query(self, skip_field_paths: tuple[FieldPath, ...] = ()) -> Query:
         """
         Converts the given filters into an OpenSearch DSL Query object.
         """
@@ -249,6 +252,7 @@ class FilterStage(_OpenSearchStage[Response, Response]):
                     if isinstance(field_type, Nested):
                         nested_queries = []
                         for value in values:
+                            assert isinstance(value, Mapping), value
                             term_queries = []
                             for nested_field, nested_value in value.items():
                                 nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
@@ -272,7 +276,8 @@ class FilterStage(_OpenSearchStage[Response, Response]):
                     filter_list.append(query)
                 elif operator in ('contains', 'within', 'intersects'):
                     for value in values:
-                        value = value | {'relation': operator}
+                        assert isinstance(value, Mapping), value
+                        value = {'gte': value['gte'], 'lte': value['lte'], 'relation': operator}
                         filter_list.append(Q('range', **{dotted(field_path): value}))
                 else:
                     assert False
@@ -295,7 +300,7 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
     @classmethod
     def create_and_wrap[R0](cls,
-                            chain: OpenSearchChain[R0, MutableJSON, MutableJSON]
+                            chain: OpenSearchChain[R0, Any, MutableJSON]
                             ) -> OpenSearchChain[R0, MutableJSON, MutableJSON]:
         """
         Creates and adds an aggregation stage to the specified chain. The chain
@@ -588,9 +593,9 @@ type SortKey = tuple[PrimitiveJSON, str] | tuple[PrimitiveJSON]
 
 def sort_key_from_json(s: AnyJSON) -> SortKey:
     match s:
-        case [a, b]:
+        case [str() | int() | float() | bool() | None as a, b]:
             return (a, json_str(b))
-        case [a]:
+        case [str() | int() | float() | bool() | None as a]:
             return (a,)
         case _:
             assert False, s
@@ -735,7 +740,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         hits = list(map(f, hits))
         return hits
 
-    def _process_pagination(self, response: JSON) -> MutableJSON:
+    def _process_pagination(self, response: JSON) -> ResponsePagination:
         total = response['hits']['total']
         # FIXME: Handle other relations
         #        https://github.com/DataBiosphere/azul/issues/3770
