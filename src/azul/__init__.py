@@ -792,8 +792,8 @@ class Config:
         return int(self.environ['AZUL_REPLICA_CONFLICT_LIMIT'])
 
     @property
-    def anvil_huge_dataset_threshold(self) -> int:
-        return int(self.environ['AZUL_ANVIL_HUGE_DATASET_THRESHOLD'])
+    def anvil_huge_table_threshold(self) -> int:
+        return int(self.environ['AZUL_ANVIL_HUGE_TABLE_THRESHOLD'])
 
     @property
     def allow_overflow(self) -> bool:

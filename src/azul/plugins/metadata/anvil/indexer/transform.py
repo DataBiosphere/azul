@@ -78,6 +78,7 @@ from azul.lib.types import (
     MutableJSONs,
     json_bool,
     json_element_mappings,
+    json_element_strings,
     json_sequence_of_optional_strings,
     json_sorted,
     json_str,
@@ -377,11 +378,23 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _file(self, file: EntityReference) -> MutableJSON:
         return self._entity(file, self._file_types())
 
-    def _only_dataset(self) -> EntityReference:
-        try:
-            return one(self._entities_by_type['anvil_dataset'])
-        except ValueError:
-            return one(o for o in self.bundle.orphans if o.entity_type == 'anvil_dataset')
+    def _non_verbatim_tables(self) -> Set[str]:
+        """
+        See :meth:`azul.plugins.repository.tdr_anvil.Plugin._non_verbatim_tables`
+        """
+        contents = self._only_dataset[1]
+        return set(json_element_strings(contents['_non_verbatim_tables']))
+
+    @cached_property
+    def _only_dataset(self) -> tuple[EntityReference, MutableJSON]:
+        # In replica bundles, the dataset is stored as an orphan
+        entities = ChainMap(self.bundle.entities, self.bundle.orphans)
+        ref = one(e for e in entities if e.entity_type == 'anvil_dataset')
+        return ref, entities[ref]
+
+    @property
+    def _only_dataset_ref(self) -> EntityReference:
+        return self._only_dataset[0]
 
     @cached_property
     def _activity_polymorphic_types(self) -> Set[str]:
@@ -431,7 +444,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, self._entities_by_type['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, self._entities_by_type['anvil_diagnosis']),
             donors=self._entities(self._donor, self._entities_by_type['anvil_donor']),
             files=self._entities(self._file, self._entities_by_type['anvil_file'])
@@ -459,7 +472,7 @@ class ActivityTransformer(BaseTransformer):
         contents = dict(
             activities=[self._activity(entity)],
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=self._entities(self._donor, linked['anvil_donor']),
             files=self._entities(self._file, linked['anvil_file'])
@@ -481,7 +494,7 @@ class BiosampleTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=[self._biosample(entity)],
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=self._entities(self._donor, linked['anvil_donor']),
             files=self._entities(self._file, linked['anvil_file']),
@@ -510,10 +523,16 @@ class BundleTransformer(SingletonTransformer):
             # don't include any files. Some of the replicas we emit here will be
             # redundant with those emitted by the file transformer, but these
             # will be consolidated by the index service before they are written
-            # to OpenSearch.
-            dataset = self._only_dataset()
+            # to OpenSearch. Entities from an excluded table are skipped here,
+            # so that only those of them that are linked to a file end up in
+            # the index, via the replicas the file transformer emits.
+            dataset = self._only_dataset_ref
+            non_verbatim = self._non_verbatim_tables()
             for entity in chain(self.bundle.orphans, self.bundle.entities):
-                if partition.contains(UUID(entity.entity_id)):
+                if (
+                    partition.contains(UUID(entity.entity_id))
+                    and entity.entity_type not in non_verbatim
+                ):
                     yield self._replica(entity, file_hub=None, root_hub=dataset.entity_id)
 
 
@@ -528,22 +547,34 @@ class DatasetTransformer(SingletonTransformer):
         return {
             **cls._dataset_types(),
             'description': null_str,
-            '_tdr_non_schema_row_count': null_int,
-            '_tdr_non_schema_row_count_threshold': null_int,
+            '_non_verbatim_tables': [null_str],
         }
 
     @classmethod
     def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'datasets': cls._detailed_dataset_types(),
+            'datasets': {
+                **cls._detailed_dataset_types(),
+                # FIXME: Remove the backwards compatibility
+                #        https://github.com/DataBiosphere/azul/issues/8448
+                #
+                # Only declared, so that documents carrying these fields can be
+                # translated. They must not be declared in the field types that
+                # drive `_entity`, which demands a value for every field it is
+                # given, and would therefore reject bundles, none of which
+                # carry these fields anymore.
+                #
+                '_tdr_non_schema_row_count': null_int,
+                '_tdr_non_schema_row_count_threshold': null_int
+            },
         }
 
     def _dataset(self, dataset: EntityReference) -> MutableJSON:
         return self._entity(dataset, self._detailed_dataset_types())
 
     def _singleton(self) -> EntityReference:
-        return self._only_dataset()
+        return self._only_dataset_ref
 
 
 class DonorTransformer(BaseTransformer):
@@ -560,7 +591,7 @@ class DonorTransformer(BaseTransformer):
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=[self._donor(entity)],
             files=self._entities(self._file, linked['anvil_file']),
@@ -584,14 +615,14 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
         linked = self._linked_entities(entity)
-        dataset = self._only_dataset()
+        dataset = self._only_dataset_ref
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
                 for activity_type in self._activity_polymorphic_types
             )),
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset())],
+            datasets=[self._dataset(self._only_dataset_ref)],
             diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
             donors=self._entities(self._donor, linked['anvil_donor']),
             files=[self._file(entity)],

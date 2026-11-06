@@ -199,15 +199,23 @@ def env() -> Mapping[str, str | None]:
         # replica documents.
         'AZUL_REPLICA_CONFLICT_LIMIT': '10',
 
-        # An AnVIL snapshot is considered "huge" if the sum of the row count of
-        # every non-schema table in the snapshot crosses this threshold. If it
-        # does, the indexer will skip these tables entirely, omitting from the
-        # replica index what would normally be non-schema orphans. This is done
-        # to avoid wasting OpenSearch cluster resources on replica storage for
-        # datasets Azul can't currently emit verbatim manifests for, manifests
-        # that Terra would be unable to import either.
+        # A table in an AnVIL snapshot is considered "huge" if its row count
+        # crosses this threshold. The indexer excludes replicas of the rows in
+        # such a table, except for rows linked to a file. This avoids wasting
+        # OpenSearch cluster resources on replica storage for datasets Azul
+        # can't currently emit verbatim manifests for, manifests that Terra
+        # would be unable to import either.
         #
-        'AZUL_ANVIL_HUGE_DATASET_THRESHOLD': '2000000',
+        # The `anvil_file` table is exempt from this threshold: its rows will
+        # always be included, no matter the table's size. This is because
+        # supplementary bundles are derived from that table, and because a
+        # file's replica is always linked to that file.
+        #
+        # The `file_inventory` and `datarepo_row_ids` tables on the other hand
+        # will always be *excluded*. The former duplicates `anvil_file` while
+        # the latter carries no useful metadata.
+        #
+        'AZUL_ANVIL_HUGE_TABLE_THRESHOLD': '315000',
 
         # The name of the current deployment. This variable controls the name of
         # all cloud resources and is the main vehicle for isolating cloud

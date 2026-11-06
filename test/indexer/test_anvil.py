@@ -43,6 +43,7 @@ from azul.indexer.cache_service import (
 from azul.indexer.document import (
     CataloguedEntityReference,
     Contribution,
+    Document,
     DocumentType,
     EntityReference,
 )
@@ -65,6 +66,7 @@ from azul.plugins.metadata.anvil.indexer import (
     transform,
 )
 from azul.plugins.metadata.anvil.indexer.transform import (
+    DatasetTransformer,
     FileTransformer,
 )
 from azul.plugins.metadata.anvil.schema import (
@@ -246,25 +248,101 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             self.assertEqual({'anvil_biosample': 3, 'non_schema_orphan_table': 5},
                              self.plugin.tdr.row_counts(self.source.ref))
 
-    def test_huge_snapshot(self):
+    def test_non_verbatim_tables(self):
+        tables = [
+            {'name': 'anvil_biosample', 'rowCount': 3},
+            # Exempt from the threshold, however huge
+            {'name': 'anvil_file', 'rowCount': 1000},
+            # Excluded regardless of the threshold
+            {'name': 'file_inventory', 'rowCount': 1},
+            {'name': 'non_schema_orphan_table', 'rowCount': 1000}
+        ]
+        tdr_response = self.normal_tdr_response | {'tables': tables}
+        with self.stacked_patches(self._duos_patches(tdr_response)):
+            with patch_config('anvil_huge_table_threshold', 999):
+                self.assertEqual(['datarepo_row_ids',
+                                  'file_inventory',
+                                  'non_schema_orphan_table'],
+                                 self.plugin._non_verbatim_tables(self.source.ref))
+
+    # FIXME: Remove this test
+    #        https://github.com/DataBiosphere/azul/issues/8448
+
+    def test_legacy_dataset_fields(self):
         """
-        No replica bundles are listed for the tables that the AnVIL schema
-        doesn't describe, once a snapshot is huge.
+        A dataset document indexed before `_non_verbatim_tables` replaced the
+        two row count fields still carries them. Translating such a document
+        must not fail, because `Document.translate_fields` iterates the keys
+        of the document, not the declared field types.
+        """
+        document = {
+            'datasets': [
+                {
+                    '_tdr_non_schema_row_count': 1,
+                    '_tdr_non_schema_row_count_threshold': 2
+                }
+            ]
+        }
+        field_types = DatasetTransformer.field_types()
+        translated = Document.translate_fields(document,
+                                               field_types,
+                                               forward=False)
+        self.assertEqual(document, translated)
+
+    # FIXME: Remove this test
+    #        https://github.com/DataBiosphere/azul/issues/8448
+
+    def test_legacy_dataset_fields_are_not_contributed(self):
+        """
+        Bundles don't carry the two row count fields anymore, so transforming
+        one must not fail, and the resulting contribution must not carry them
+        either. Unlike `Document.translate_fields`, `_entity` iterates the
+        declared field types, and demands a value for each of them.
+        """
+        bundle = self._load_canned_bundle(self.primary_bundle())
+        contributions, _ = self.index_service.transform(self.catalog,
+                                                        bundle,
+                                                        delete=False)
+        contents = one(
+            one(contribution.contents['datasets'])
+            for contribution in contributions
+            if contribution.entity.entity_type == 'datasets'
+        )
+        self.assertNotIn('_tdr_non_schema_row_count', contents)
+        self.assertNotIn('_tdr_non_schema_row_count_threshold', contents)
+
+    def test_huge_table(self):
+        """
+        No replica bundles are listed for huge tables, except for the anvil_file
+        table, for which replicas are always included, regardless of its size.
         """
         source_ref = self.source.ref
         self._make_mock_tables(source_ref)
         self._mock_normal_duos()
         plugin = self.plugin
-        row_count = plugin._non_schema_row_count(source_ref)
-        self.assertGreater(row_count, 0)
-        for threshold, is_huge in [(row_count, False), (row_count - 1, True)]:
+        row_counts = plugin.tdr.row_counts(source_ref)
+        non_schema_table = self.replica_bundle().table_name
+        num_non_schema_rows = row_counts[non_schema_table]
+        file_table = self.supplementary_bundle().table_name
+        num_file_rows = row_counts[file_table]
+        # The exemption is only exercised if the file table is huge, too, at
+        # the lower of the two thresholds below. This is not asserting something
+        # about the code under test. It is asserting that the test fixture is
+        # suitable for this test.
+        self.assertGreaterEqual(num_file_rows, num_non_schema_rows)
+        for threshold, is_huge in [
+            (num_non_schema_rows, False),
+            (num_non_schema_rows - 1, True)
+        ]:
             with self.subTest(threshold=threshold):
-                with patch_config('anvil_huge_dataset_threshold', threshold):
-                    self.assertEqual(is_huge, plugin._is_huge(source_ref))
-                    bundle_fqids = plugin.list_bundles(source_ref, '')
-                    self.assertEqual(not is_huge,
-                                     self.replica_bundle() in bundle_fqids)
-                    # Bundles from the tables the schema does describe remain
+                with patch_config('anvil_huge_table_threshold', threshold):
+                    expected = ['datarepo_row_ids']
+                    if is_huge:
+                        expected = sorted([*expected, non_schema_table])
+                    self.assertEqual(expected, plugin._non_verbatim_tables(source_ref))
+                    bundle_fqids = plugin.list_bundles(source_ref, prefix='')
+                    self.assertEqual(is_huge, self.replica_bundle() not in bundle_fqids)
+                    # Bundles from the tables that aren't huge remain
                     for bundle_fqid in [
                         self.primary_bundle(),
                         self.supplementary_bundle(),
@@ -555,6 +633,94 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
             ref = EntityReference(entity_type=source['replica_type'],
                                   entity_id=source['entity_id'])
             actual[ref] = source['contents']
+        self.assertEqual(expected, actual)
+
+    def _replicas(self) -> list[tuple[str, int]]:
+        """
+        The replicas currently in the index, one tuple per replica, sorted.
+        Each tuple gives the name of the table that the replicated row came
+        from, and the number of hubs the replica has.
+        """
+        return sorted(
+            (hit['_source']['replica_type'], len(hit['_source']['hub_ids']))
+            for hit in self._get_all_hits()
+            if self._parse_index_name(hit)[1] is DocumentType.replica
+        )
+
+    def _fileless_bundle(self) -> TDRAnvilBundle:
+        """
+        The canned primary bundle, stripped of its files and of the activities
+        that produced them, as the primary bundle of a biosample without files
+        would look. None of the remaining entities is linked to a file, so the
+        bundle transformer is the only source of their replicas.
+        """
+        bundle = self._load_canned_bundle(self.primary_bundle())
+        assert isinstance(bundle, TDRAnvilBundle)
+        bundle.links = {
+            link
+            for link in bundle.links
+            if not any(ref.entity_type == 'anvil_file'
+                       for ref in link.all_entities)
+        }
+        linked = set()
+        for link in bundle.links:
+            linked.update(link.all_entities)
+        for ref in list(bundle.entities):
+            if ref not in linked:
+                del bundle.entities[ref]
+        return bundle
+
+    def test_excluded_table(self):
+        """
+        The replica of a row of an excluded table is withheld if no file links
+        to that row, the bundle transformer being the only transformer that
+        would otherwise have emitted it.
+        """
+        bundle = self._fileless_bundle()
+        excluded_table = 'anvil_diagnosis'
+        refs_by_type = defaultdict(list)
+        for ref in bundle.entities:
+            refs_by_type[ref.entity_type].append(ref)
+        self.assertEqual(2, len(refs_by_type[excluded_table]))
+        dataset_ref = one(refs_by_type['anvil_dataset'])
+        bundle.entities[dataset_ref]['_non_verbatim_tables'] = [excluded_table]
+        self._index_bundle(bundle)
+        if config.enable_replicas:
+            # Both diagnoses are withheld, and the dataset is the only hub of
+            # the replicas that are left
+            expected = [
+                ('anvil_biosample', 1),
+                ('anvil_dataset', 1),
+                ('anvil_donor', 1)
+            ]
+        else:
+            expected = []
+        self.assertEqual(expected, self._replicas())
+
+    def test_excluded_table_linked_to_file(self):
+        """
+        A row of an excluded table that is linked to a file keeps its replica,
+        and that replica keeps all of its hubs, including the dataset's. The
+        file transformer emits it, independently of the bundle transformer, and
+        hubs it on the dataset as well as on the file.
+        """
+        bundle = self._load_canned_bundle(self.primary_bundle())
+        assert isinstance(bundle, TDRAnvilBundle)
+        excluded_table = 'anvil_diagnosis'
+        dataset_ref = one(
+            ref
+            for ref in bundle.entities
+            if ref.entity_type == 'anvil_dataset'
+        )
+        bundle.entities[dataset_ref]['_non_verbatim_tables'] = [excluded_table]
+        self._index_bundle(bundle)
+        if config.enable_replicas:
+            # Each diagnosis is linked to both of the bundle's files, and the
+            # dataset is the third hub
+            expected = [(excluded_table, 3), (excluded_table, 3)]
+        else:
+            expected = []
+        actual = [r for r in self._replicas() if r[0] == excluded_table]
         self.assertEqual(expected, actual)
 
 

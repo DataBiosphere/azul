@@ -244,9 +244,11 @@ Note that after requesting changes, the PR must be assigned to only the author.
 
 ### Operator
 
-- [ ] `V01` Propagated the `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod`, `reindex:prod`, `mirror:partial`, `mirror:anvilprod` and `mirror:prod` labels to any open promotion PRs <sub>or this PR carries none of these labels, or is not included in an open promotion PR</sub>
-- [ ] `V02` Propagated any specific instructions related to those labels, from the description of this PR to that of any open promotion PRs <sub>or this PR carries none of those labels, or is not included in an open promotion PR</sub>
-- [ ] `V03` PR is assigned to no one
+- [ ] `V01` There is a promotion PR to `anvilprod` that includes these changes <sub>or this PR carries none of the labels `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod`, `reindex:prod`, `mirror:partial`, `mirror:anvilprod` or `mirror:prod`</sub>
+- [ ] `V02` There is a promotion PR to `prod` that includes these changes <sub>or this PR carries none of the labels `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod`, `reindex:prod`, `mirror:partial`, `mirror:anvilprod` or `mirror:prod`</sub>
+- [ ] `V03` Propagated the labels `upgrade`, `API`, `deploy:shared`, `deploy:gitlab`, `deploy:runner`, `reindex:partial`, `reindex:anvilprod`, `reindex:prod`, `mirror:partial`, `mirror:anvilprod` and `mirror:prod` to any open promotion PRs <sub>or this PR carries none of these labels, or is not included in an open promotion PR</sub>
+- [ ] `V04` Propagated any specific instructions related to those labels, from the description of this PR to that of any open promotion PRs <sub>or this PR carries none of those labels, or is not included in an open promotion PR</sub>
+- [ ] `V05` PR is assigned to no one
 
 
 ## Shorthand for review comments
