@@ -206,7 +206,7 @@ class HCASummaryResponseStage(SummaryResponseStage):
             ]
         }
 
-    def process_response(self, response: JSON) -> MutableJSON:
+    def process_response(self, response: JSON, /) -> MutableJSON:
         response = self.make_response(response)
         self._validate_response(response)
         return json_untyped_dict(response)
@@ -290,7 +290,7 @@ class HCASummaryResponseStage(SummaryResponseStage):
 
 class HCASearchResponseStage(SearchResponseStage):
 
-    def process_response(self, response: ResponseTriple) -> MutableJSON:
+    def process_response(self, response: ResponseTriple, /) -> MutableJSON:
         hits, pagination, aggs = response
         response = SearchResponse(pagination=pagination,
                                   termFacets=self.make_facets(aggs),

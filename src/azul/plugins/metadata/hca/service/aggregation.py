@@ -72,7 +72,7 @@ class HCASearchAggregationStage(SearchAggregationStage, HCAAggregationStage):
 
 class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         request = super().prepare_request(request)
         entity_type = self.entity_type
 
@@ -141,7 +141,7 @@ class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):
             }
         }.get(self.entity_type, {})
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
         response = super().process_response(response)
         result = json_dict(response['aggregations'])
         threshold = config.precision_threshold

@@ -136,7 +136,7 @@ class ShardPinningStage[S1](IndexStage[S1, S1]):
     Routes a request to a copy of each shard that depends only on the request.
     """
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         # Each copy of a shard has its own request cache. Routing every
         # occurrence of the request to the same copy means that only the first
         # one misses the cache, and that only that copy's cache holds an entry
@@ -144,7 +144,7 @@ class ShardPinningStage[S1](IndexStage[S1, S1]):
         preference = json_hash(request.to_dict()).hexdigest()
         return request.params(preference=preference)
 
-    def process_response(self, response: S1) -> S1:
+    def process_response(self, response: S1, /) -> S1:
         return response
 
 
@@ -155,10 +155,10 @@ class RequestCacheBypassStage[S1](IndexStage[S1, S1]):
     the response to it.
     """
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         return request.params(request_cache=False)
 
-    def process_response(self, response: S1) -> S1:
+    def process_response(self, response: S1, /) -> S1:
         return response
 
 

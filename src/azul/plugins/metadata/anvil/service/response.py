@@ -128,7 +128,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             ]
         }
 
-    def process_response(self, response: JSON) -> MutableJSON:
+    def process_response(self, response: JSON, /) -> MutableJSON:
         def agg(authority: str, field: str) -> JSON:
             return json_mapping(json_mapping(response[authority])[field])
 
@@ -173,7 +173,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
 class AnvilSearchResponseStage(SearchResponseStage):
 
-    def process_response(self, response: ResponseTriple) -> MutableJSON:
+    def process_response(self, response: ResponseTriple, /) -> MutableJSON:
         hits, pagination, aggs = response
         return dict(
             pagination=json_untyped_dict(pagination),

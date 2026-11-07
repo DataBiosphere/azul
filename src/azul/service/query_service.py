@@ -125,7 +125,7 @@ class ResponseStage[S1, S2](metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def process_response(self, response: S1) -> S2:
+    def process_response(self, response: S1, /) -> S2:
         """
         Handle the given response and return the result of the processing.
         If an implementation modifies the argument in place it must return the
@@ -143,7 +143,7 @@ class Stage[S1, S2, Q1 = Search, Q2 = Search](ResponseStage[S1, S2], metaclass=A
     """
 
     @abstractmethod
-    def prepare_request(self, request: Q1) -> Q2:
+    def prepare_request(self, request: Q1, /) -> Q2:
         """
         Modify the given request and return the argument or convert the given
         request and return the result of the conversion.
@@ -164,12 +164,12 @@ class Chain[S0, S1, S2, Q0 = Search, Q1 = Search, Q2 = Search](Stage[S0, S2, Q0,
         assert not isinstance(self.outer, Chain), R(
             'Outer stage must not be a chain', type(self.outer))
 
-    def prepare_request(self, request0: Q0) -> Q2:
+    def prepare_request(self, request0: Q0, /) -> Q2:
         request1: Q1 = self.inner.prepare_request(request0)
         request2: Q2 = self.outer.prepare_request(request1)
         return request2
 
-    def process_response(self, response0: S0) -> S2:
+    def process_response(self, response0: S0, /) -> S2:
         response1: S1 = self.inner.process_response(response0)
         response2: S2 = self.outer.process_response(response1)
         return response2
@@ -186,10 +186,10 @@ class ResponseChain[S0, S1, S2, Q0 = Search, Q1 = Search](Stage[S0, S2, Q0, Q1])
     inner: Stage[S0, S1, Q0, Q1]
     outer: ResponseStage[S1, S2]
 
-    def prepare_request(self, request: Q0) -> Q1:
+    def prepare_request(self, request: Q0, /) -> Q1:
         return self.inner.prepare_request(request)
 
-    def process_response(self, response0: S0) -> S2:
+    def process_response(self, response0: S0, /) -> S2:
         response1: S1 = self.inner.process_response(response0)
         response2: S2 = self.outer.process_response(response1)
         return response2
@@ -207,7 +207,7 @@ class MultiSearchStage[S1, S2, S3](Stage[Sequence[Response], S3, Search, MultiSe
     first: Stage[Response, S1]
     second: Stage[Response, S2]
 
-    def prepare_request(self, request: Search) -> MultiSearch:
+    def prepare_request(self, request: Search, /) -> MultiSearch:
         first, second = self._split(request)
         first = self.first.prepare_request(first)
         second = self.second.prepare_request(second)
@@ -221,7 +221,7 @@ class MultiSearchStage[S1, S2, S3](Stage[Sequence[Response], S3, Search, MultiSe
         """
         return copy(request), copy(request)
 
-    def process_response(self, response: Sequence[Response]) -> S3:
+    def process_response(self, response: Sequence[Response], /) -> S3:
         first, second = response
         return self._merge(self.first.process_response(first),
                            self.second.process_response(second))
@@ -407,10 +407,10 @@ class FilterStage(_FilterBuilder, IndexStage[Response, Response]):
     Adds a query for the given filters as the `query` property of the request.
     """
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         return request.query(self.prepare_query())
 
-    def process_response(self, response: Response) -> Response:
+    def process_response(self, response: Response, /) -> Response:
         return response
 
 
@@ -430,7 +430,7 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
         """
         return self.plugin.facets
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         field_mapping = self.plugin.field_mapping
         for facet in self._facets:
             aggregate = self._prepare_aggregation(facet=facet,
@@ -439,7 +439,7 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
         self._annotate_aggs_for_translation(request)
         return request
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
         try:
             aggs = json_dict(response['aggregations'])
         except KeyError:
@@ -640,12 +640,12 @@ class SearchAggregationStage(_FilterBuilder, AggregationStage):
     must not apply the filters in any other way.
     """
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         if self.hoisted_field_paths:
             request = request.query(self.prepare_hoisted_query())
         return super().prepare_request(request)
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
         response = super().process_response(response)
         # The `accessible` facet is synthesized from the `source_id` facet, so
         # a stage that doesn't aggregate the latter can't offer the former
@@ -705,13 +705,13 @@ class SlicingStage(IndexStage[Response, Response]):
     """
     document_slice: DocumentSlice | None
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         document_slice = self._prepared_slice()
         if document_slice is not None:
             request = request.source(**document_slice)
         return request
 
-    def process_response(self, response: Response) -> Response:
+    def process_response(self, response: Response, /) -> Response:
         return response
 
     def _prepared_slice(self) -> DocumentSlice | None:
@@ -727,10 +727,10 @@ class SlicingStage(IndexStage[Response, Response]):
 @attrs.frozen(kw_only=True)
 class ToDictStage(IndexStage[Response, MutableJSON]):
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         return request
 
-    def process_response(self, response: Response) -> MutableJSON:
+    def process_response(self, response: Response, /) -> MutableJSON:
         return response.to_dict()
 
 
@@ -806,7 +806,7 @@ class PaginationStage(IndexStage[JSON, ResponseTriple]):
 
     filters: Filters
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         sort_order = self.pagination.order
         sort_field = self.plugin.field_mapping[self.pagination.sort]
         field_type = self.service.field_type(self.catalog, sort_field)
@@ -862,7 +862,7 @@ class PaginationStage(IndexStage[JSON, ResponseTriple]):
 
         return request
 
-    def process_response(self, response: JSON) -> ResponseTriple:
+    def process_response(self, response: JSON, /) -> ResponseTriple:
         """
         Returns hits and pagination as dict
         """
