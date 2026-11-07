@@ -135,15 +135,16 @@ class ResponseStage[S1, S2](metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class Stage[S1, S2](ResponseStage[S1, S2], metaclass=ABCMeta):
+class Stage[S1, S2, Q1 = Search, Q2 = Search](ResponseStage[S1, S2], metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
     to process the response to that request. If an implementation modifies the
-    argument in place, it must return the argument.
+    argument in place, it must return the argument. Most stages prepare a
+    search, but some turn one type of request into another.
     """
 
     @abstractmethod
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Q1) -> Q2:
         """
         Modify the given request and return the argument or convert the given
         request and return the result of the conversion.
@@ -152,29 +153,29 @@ class Stage[S1, S2](ResponseStage[S1, S2], metaclass=ABCMeta):
 
 
 @attrs.frozen(kw_only=True)
-class Chain[S0, S1, S2](Stage[S0, S2]):
+class Chain[S0, S1, S2, Q0 = Search, Q1 = Search, Q2 = Search](Stage[S0, S2, Q0, Q2]):
     """
     The result of wrapping a stage or chain in another stage.
     """
 
-    inner: Stage[S0, S1]
-    outer: Stage[S1, S2]
+    inner: Stage[S0, S1, Q0, Q1]
+    outer: Stage[S1, S2, Q1, Q2]
 
     def __attrs_post_init__(self):
         assert not isinstance(self.outer, Chain), R(
             'Outer stage must not be a chain', type(self.outer))
 
-    def prepare_request(self, request: Search) -> Search:
-        request = self.inner.prepare_request(request)
-        request = self.outer.prepare_request(request)
-        return request
+    def prepare_request(self, request0: Q0) -> Q2:
+        request1: Q1 = self.inner.prepare_request(request0)
+        request2: Q2 = self.outer.prepare_request(request1)
+        return request2
 
     def process_response(self, response0: S0) -> S2:
         response1: S1 = self.inner.process_response(response0)
         response2: S2 = self.outer.process_response(response1)
         return response2
 
-    def stages(self) -> Iterable[Stage]:
+    def stages(self) -> Iterable[Stage[Any, Any, Any, Any]]:
         yield self.outer
         if isinstance(self.inner, Chain):
             yield from self.inner.stages()
@@ -183,16 +184,17 @@ class Chain[S0, S1, S2](Stage[S0, S2]):
 
 
 @attrs.frozen(kw_only=True)
-class ResponseChain[S0, S1, S2](Stage[S0, S2]):
+class ResponseChain[S0, S1, S2, Q0 = Search, Q1 = Search](Stage[S0, S2, Q0, Q1]):
     """
     The result of wrapping a stage or chain in a stage that only processes the
-    response.
+    response. Such a stage can wrap a chain regardless of the type of request
+    the chain prepares.
     """
 
-    inner: Stage[S0, S1]
+    inner: Stage[S0, S1, Q0, Q1]
     outer: ResponseStage[S1, S2]
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Q0) -> Q1:
         return self.inner.prepare_request(request)
 
     def process_response(self, response0: S0) -> S2:
@@ -202,13 +204,12 @@ class ResponseChain[S0, S1, S2](Stage[S0, S2]):
 
 
 @attrs.frozen(kw_only=True)
-class MultiSearchStage[S1, S2, S3](Stage[Sequence[Response], S3],
+class MultiSearchStage[S1, S2, S3](Stage[Sequence[Response], S3, Search, MultiSearch],
                                    metaclass=ABCMeta):
     """
     Combines the searches prepared by two chains into one multi-search request
     and merges what the two chains make of the responses to their respective
-    search. Unlike other stages, this one turns a search into a multi-search,
-    so a stage wrapping it must leave the request alone.
+    search.
     """
     service: QueryService
     first: Stage[Response, S1]
@@ -259,7 +260,9 @@ class IndexResponseStage[S1, S2](_UsesIndex, ResponseStage[S1, S2], metaclass=AB
     index.
     """
 
-    def wrap[S0](self, other: Stage[S0, S1]) -> ResponseChain[S0, S1, S2]:
+    def wrap[S0, Q0, Q1](self,
+                         other: Stage[S0, S1, Q0, Q1]
+                         ) -> ResponseChain[S0, S1, S2, Q0, Q1]:
         return ResponseChain(inner=other, outer=self)
 
 

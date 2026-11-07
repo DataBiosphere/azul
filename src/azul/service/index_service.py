@@ -8,6 +8,9 @@ from collections.abc import (
 )
 import json
 import logging
+from typing import (
+    Union,
+)
 
 import attrs
 from more_itertools import (
@@ -239,19 +242,26 @@ class IndexService(QueryService):
                                 peek_ahead=True,
                                 filters=filters).wrap(chain)
 
-        if aggregate:
-            chain = self._aggregating_stage(chain, catalog, entity_type, filters)
-
         response_stage_cls = plugin.search_response_stage
-        chain = response_stage_cls(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   file_url_func=file_url_func).wrap(chain)
+        response_stage = response_stage_cls(service=self,
+                                            catalog=catalog,
+                                            entity_type=entity_type,
+                                            file_url_func=file_url_func)
+
+        full_chain: Union[
+            Stage[Response, MutableJSON, Search, Search],
+            Stage[Sequence[Response], MutableJSON, Search, MultiSearch]
+        ]
+        if aggregate:
+            stage = self._aggregating_stage(chain, catalog, entity_type, filters)
+            full_chain = response_stage.wrap(stage)
+        else:
+            full_chain = response_stage.wrap(chain)
 
         request = self.create_request(catalog, entity_type)
-        request = chain.prepare_request(request)
+        request = full_chain.prepare_request(request)
         response = request.execute(ignore_cache=True)
-        response = chain.process_response(response)
+        response = full_chain.process_response(response)
 
         self._synthesize_accessible(catalog, entity_type, filters, response)
 
