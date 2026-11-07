@@ -306,15 +306,15 @@ class FilterStage(IndexStage[Response, Response]):
         return self._translate_filters(filters_json)
 
     @property
-    @abstractmethod
     def _limit_access(self) -> bool:
         """
         Whether to enforce the managed access controls during filter
         reification, provided that the service allows such conditional
         enforcement of access. If it doesn't, the return value should be
-        ignored, and access must be enforced unconditionally.
+        ignored, and access must be enforced unconditionally. Access is
+        enforced for every entity type except the root entity type.
         """
-        raise NotImplementedError
+        return self.entity_type != self.plugin.root_entity_type
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
@@ -920,14 +920,11 @@ class QueryService(DocumentService):
         matching the given filter, optionally restricting the set of properties
         returned for each matching document.
         """
-        plugin = self.metadata_plugin(catalog)
-
-        # noinspection PyArgumentList
-        chain = plugin.filter_stage(service=self,
-                                    catalog=catalog,
-                                    entity_type=entity_type,
-                                    filters=filters,
-                                    post_filter=post_filter)
+        chain = FilterStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type,
+                            filters=filters,
+                            post_filter=post_filter)
         chain = SlicingStage(service=self,
                              catalog=catalog,
                              entity_type=entity_type,

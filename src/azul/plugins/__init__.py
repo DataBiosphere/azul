@@ -106,7 +106,6 @@ if TYPE_CHECKING:
     )
     from azul.service.query_service import (
         AggregationStage,
-        FilterStage,
     )
 
 #: Field names are used to reference fields in requests to the service, e.g.,
@@ -682,11 +681,6 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
     @property
     @abstractmethod
     def aggregation_stage(self) -> type[AggregationStage]:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def filter_stage(self) -> type[FilterStage]:
         raise NotImplementedError
 
     @property

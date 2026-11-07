@@ -85,9 +85,6 @@ from azul.plugins.metadata.hca.service.aggregation import (
     HCAAggregationStage,
     HCASummaryAggregationStage,
 )
-from azul.plugins.metadata.hca.service.filter import (
-    HCAFilterStage,
-)
 from azul.plugins.metadata.hca.service.response import (
     HCASearchResponseStage,
     HCASummaryResponseStage,
@@ -526,10 +523,6 @@ class Plugin(MetadataPlugin[HCABundle]):
     @property
     def aggregation_stage(self) -> type[HCAAggregationStage]:
         return HCAAggregationStage
-
-    @property
-    def filter_stage(self) -> type[HCAFilterStage]:
-        return HCAFilterStage
 
     @property
     def file_class(self) -> type[File]:

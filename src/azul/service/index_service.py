@@ -59,6 +59,7 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
+    FilterStage,
     IndexResponseStage,
     IndexStage,
     MultiSearchStage,
@@ -298,12 +299,11 @@ class IndexService(QueryService):
         # the aggregation stage applies the filters to each aggregation, and
         # since the request yields no hits, the filters needn't be applied to
         # anything else.
-        # noinspection PyArgumentList
-        filter_stage = plugin.filter_stage(service=self,
-                                           catalog=catalog,
-                                           entity_type=entity_type,
-                                           filters=filters,
-                                           post_filter=True)
+        filter_stage = FilterStage(service=self,
+                                   catalog=catalog,
+                                   entity_type=entity_type,
+                                   filters=filters,
+                                   post_filter=True)
         aggregation_chain = ToDictStage(service=self,
                                         catalog=catalog,
                                         entity_type=entity_type)
