@@ -10,6 +10,9 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
+from copy import (
+    copy,
+)
 from functools import (
     partial,
 )
@@ -28,6 +31,7 @@ from more_itertools import (
 )
 from opensearchpy import (
     A,
+    MultiSearch,
     OpenSearch,
     Q,
     Search,
@@ -198,6 +202,43 @@ class ResponseChain[S0, S1, S2](Stage[S0, S2]):
 
 
 @attrs.frozen(kw_only=True)
+class MultiSearchStage[S1, S2, S3](Stage[Sequence[Response], S3],
+                                   metaclass=ABCMeta):
+    """
+    Combines the searches prepared by two chains into one multi-search request
+    and merges what the two chains make of the responses to their respective
+    search. Unlike other stages, this one turns a search into a multi-search,
+    so a stage wrapping it must leave the request alone.
+    """
+    service: QueryService
+    first: Stage[Response, S1]
+    second: Stage[Response, S2]
+
+    def prepare_request(self, request: Search) -> MultiSearch:
+        first, second = self._split(request)
+        first = self.first.prepare_request(first)
+        second = self.second.prepare_request(second)
+        return MultiSearch(using=self.service._opensearch).add(first).add(second)
+
+    def _split(self, request: Search) -> tuple[Search, Search]:
+        """
+        Return the requests for the first and the second chain to prepare,
+        respectively. Some stages modify the request in place, so the two
+        must be distinct copies of the given request.
+        """
+        return copy(request), copy(request)
+
+    def process_response(self, response: Sequence[Response]) -> S3:
+        first, second = response
+        return self._merge(self.first.process_response(first),
+                           self.second.process_response(second))
+
+    @abstractmethod
+    def _merge(self, first: S1, second: S2) -> S3:
+        raise NotImplementedError
+
+
+@attrs.frozen(kw_only=True)
 class _UsesIndex:
     """
     A mixin for classes that target a specific index.
@@ -348,7 +389,9 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
     Cooperate with the given filter stage to augment the request with an
     `aggregation` property containing an aggregation for each of the facet
     fields configured in the current metadata plugin. If this aggregation stage
-    is to be part of a chain, the chain should include the given filter stage.
+    is to be part of a chain, the chain should include the given filter stage,
+    unless that stage uses a `post_filter` and the request is for aggregations
+    only.
     """
     filter_stage: FilterStage
 

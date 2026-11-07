@@ -1808,6 +1808,40 @@ class TestIndexResponse(IndexResponseTestCase):
         self.assertEqual([None, '308eea51-d14b-4036-8cd1-cfd81d7532c3'],
                          json.loads(second_page_previous['search_before'])[:2])
 
+    def test_aggregations_request_cache(self):
+        """
+        The pages of a search share the aggregations, so all but the first page
+        should take them from the shard request cache.
+        """
+        index_name = str(IndexName.create(catalog=self.catalog,
+                                          qualifier='samples',
+                                          doc_type=DocumentType.aggregate))
+        self.opensearch.indices.clear_cache(index=index_name, request=True)
+
+        def cache_stats() -> Counter[str]:
+            stats = self.opensearch.indices.stats(index=index_name,
+                                                  metric='request_cache')
+            stats = stats['indices'][index_name]['total']['request_cache']
+            return Counter(hits=stats['hit_count'], misses=stats['miss_count'])
+
+        def get(url: str) -> JSON:
+            response = self._http_client.request('GET', url)
+            raise_on_status(response)
+            return response.json()
+
+        params = self._params(size=3)
+        url = self.base_url.set(path='/index/samples', args=params)
+        stats = cache_stats()
+        first_page = get(str(url))
+        self.assertEqual(Counter(misses=1), cache_stats() - stats)
+
+        stats = cache_stats()
+        second_page = get(first_page['pagination']['next'])
+        self.assertEqual(Counter(hits=1), cache_stats() - stats)
+
+        self.assertNotEqual(first_page['hits'], second_page['hits'])
+        self.assertEqual(first_page['termFacets'], second_page['termFacets'])
+
     def test_bad_search_after_search_before(self):
         """
         Test that invalid JSON for search_after or search_before raise a 400

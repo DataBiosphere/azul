@@ -16,9 +16,11 @@ from more_itertools import (
 )
 from opensearchpy import (
     MultiSearch,
+    Search,
 )
 from opensearchpy.helpers.response import (
     Hit,
+    Response,
 )
 
 from azul import (
@@ -31,9 +33,16 @@ from azul.filters import (
 from azul.indexer.mirror_service import (
     MirrorService,
 )
+from azul.lib import (
+    R,
+)
+from azul.lib.json import (
+    json_hash,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
+    json_dict,
     json_element_dicts,
     json_element_mappings,
     json_mapping,
@@ -48,11 +57,14 @@ from azul.service import (
 )
 from azul.service.query_service import (
     IndexResponseStage,
+    IndexStage,
+    MultiSearchStage,
     Pagination,
     PaginationStage,
     QueryService,
     ResponseStage,
     ResponseTriple,
+    Stage,
     ToDictStage,
 )
 from azul.source import (
@@ -93,6 +105,44 @@ class SearchResponseStage(IndexResponseStage[ResponseTriple, MutableJSON],
         file_cls = self.plugin.file_class
         mirror_service = MirrorService.for_catalog(self.catalog)
         return mirror_service.mirror_uri(source, file_cls, file)
+
+
+@attrs.frozen(kw_only=True)
+class AggregatingMultiSearchStage(MultiSearchStage[ResponseTriple, MutableJSON, ResponseTriple]):
+    """
+    Merges the aggregations from the response to one search into the page of
+    hits from the response to another.
+    """
+
+    def _split(self, request: Search) -> tuple[Search, Search]:
+        hits_request, aggregations_request = super()._split(request)
+        # The shard request cache only caches requests that don't return any
+        # hits
+        return hits_request, aggregations_request.extra(size=0)
+
+    def _merge(self, first: ResponseTriple, second: MutableJSON) -> ResponseTriple:
+        hits, pagination, aggregations = first
+        assert aggregations == {}, R(
+            'The search for hits must not aggregate', aggregations.keys())
+        return hits, pagination, json_dict(second['aggregations'])
+
+
+@attrs.frozen(kw_only=True)
+class ShardPinningStage[S1](IndexStage[S1, S1]):
+    """
+    Routes a request to a copy of each shard that depends only on the request.
+    """
+
+    def prepare_request(self, request: Search) -> Search:
+        # Each copy of a shard has its own request cache. Routing every
+        # occurrence of the request to the same copy means that only the first
+        # one misses the cache, and that only that copy's cache holds an entry
+        # for the request.
+        preference = json_hash(request.to_dict()).hexdigest()
+        return request.params(preference=preference)
+
+    def process_response(self, response: S1) -> S1:
+        return response
 
 
 class SummaryResponseStage(ResponseStage[JSON, MutableJSON],
@@ -175,15 +225,12 @@ class IndexService(QueryService):
         chain = self.create_chain(catalog=catalog,
                                   entity_type=entity_type,
                                   filters=filters,
-                                  post_filter=True,
+                                  post_filter=False,
                                   document_slice=None)
 
         chain = ToDictStage(service=self,
                             catalog=catalog,
                             entity_type=entity_type).wrap(chain)
-
-        if aggregate:
-            chain = plugin.aggregation_stage.create_and_wrap(chain)
 
         chain = PaginationStage(service=self,
                                 catalog=catalog,
@@ -191,6 +238,9 @@ class IndexService(QueryService):
                                 pagination=pagination,
                                 peek_ahead=True,
                                 filters=filters).wrap(chain)
+
+        if aggregate:
+            chain = self._aggregating_stage(chain, catalog, entity_type, filters)
 
         response_stage_cls = plugin.search_response_stage
         chain = response_stage_cls(service=self,
@@ -206,6 +256,42 @@ class IndexService(QueryService):
         self._synthesize_accessible(catalog, entity_type, filters, response)
 
         return response
+
+    def _aggregating_stage(self,
+                           chain: Stage[Response, ResponseTriple],
+                           catalog: CatalogName,
+                           entity_type: str,
+                           filters: Filters
+                           ) -> AggregatingMultiSearchStage:
+        """
+        Combine the given chain for a page of hits with a chain for a separate
+        request that tabulates the facets of all entities matching the given
+        filters, so that the facets can be served from the shard request cache.
+        """
+        plugin = self.metadata_plugin(catalog)
+        # The filter stage is not part of the chain. With `post_filter` set,
+        # the aggregation stage applies the filters to each aggregation, and
+        # since the request yields no hits, the filters needn't be applied to
+        # anything else.
+        # noinspection PyArgumentList
+        filter_stage = plugin.filter_stage(service=self,
+                                           catalog=catalog,
+                                           entity_type=entity_type,
+                                           filters=filters,
+                                           post_filter=True)
+        aggregation_chain = ToDictStage(service=self,
+                                        catalog=catalog,
+                                        entity_type=entity_type)
+        aggregation_chain = plugin.aggregation_stage(service=self,
+                                                     catalog=catalog,
+                                                     entity_type=entity_type,
+                                                     filter_stage=filter_stage).wrap(aggregation_chain)
+        aggregation_chain = ShardPinningStage[MutableJSON](service=self,
+                                                           catalog=catalog,
+                                                           entity_type=entity_type).wrap(aggregation_chain)
+        return AggregatingMultiSearchStage(service=self,
+                                           first=chain,
+                                           second=aggregation_chain)
 
     def _synthesize_accessible(self,
                                catalog: CatalogName,
