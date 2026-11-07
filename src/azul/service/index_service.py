@@ -59,7 +59,6 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
-    FilterStage,
     IndexResponseStage,
     IndexStage,
     MultiSearchStage,
@@ -243,7 +242,6 @@ class IndexService(QueryService):
         chain = self.create_chain(catalog=catalog,
                                   entity_type=entity_type,
                                   filters=filters,
-                                  post_filter=False,
                                   document_slice=None)
 
         chain = ToDictStage(service=self,
@@ -283,7 +281,7 @@ class IndexService(QueryService):
         return response
 
     def _aggregating_stage(self,
-                           chain: Stage[Response, ResponseTriple],
+                           search_chain: Stage[Response, ResponseTriple],
                            catalog: CatalogName,
                            entity_type: str,
                            filters: Filters
@@ -295,22 +293,13 @@ class IndexService(QueryService):
         unless the entities are of the root entity type.
         """
         plugin = self.metadata_plugin(catalog)
-        # The filter stage is not part of the chain. With `post_filter` set,
-        # the aggregation stage applies the filters to each aggregation, and
-        # since the request yields no hits, the filters needn't be applied to
-        # anything else.
-        filter_stage = FilterStage(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   filters=filters,
-                                   post_filter=True)
         aggregation_chain = ToDictStage(service=self,
                                         catalog=catalog,
                                         entity_type=entity_type)
-        aggregation_chain = plugin.aggregation_stage(service=self,
-                                                     catalog=catalog,
-                                                     entity_type=entity_type,
-                                                     filter_stage=filter_stage).wrap(aggregation_chain)
+        aggregation_chain = plugin.search_aggregation_stage(service=self,
+                                                            catalog=catalog,
+                                                            entity_type=entity_type,
+                                                            filters=filters).wrap(aggregation_chain)
         caching_stage_cls: type[IndexStage[MutableJSON, MutableJSON]]
         if entity_type == plugin.root_entity_type:
             # The index of root entities is small, so their aggregations are
@@ -325,7 +314,7 @@ class IndexService(QueryService):
                                           entity_type=entity_type)
         aggregation_chain = caching_stage.wrap(aggregation_chain)
         return AggregatingMultiSearchStage(service=self,
-                                           first=chain,
+                                           first=search_chain,
                                            second=aggregation_chain)
 
     def _synthesize_accessible(self,
@@ -388,12 +377,13 @@ class IndexService(QueryService):
             chain = self.create_chain(catalog=catalog,
                                       entity_type=entity_type,
                                       filters=filters,
-                                      post_filter=False,
                                       document_slice=None)
             chain = ToDictStage(service=self,
                                 catalog=catalog,
                                 entity_type=entity_type).wrap(chain)
-            chain = plugin.summary_aggregation_stage.create_and_wrap(chain)
+            chain = plugin.summary_aggregation_stage(service=self,
+                                                     catalog=catalog,
+                                                     entity_type=entity_type).wrap(chain)
             chains[entity_type] = chain
             request = request.add(
                 chain.prepare_request(self.create_request(catalog, entity_type)))
@@ -452,7 +442,6 @@ class IndexService(QueryService):
         chain = self.create_chain(catalog=catalog,
                                   entity_type=entity_type,
                                   filters=filters,
-                                  post_filter=False,
                                   document_slice=None)
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)

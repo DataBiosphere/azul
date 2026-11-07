@@ -6,7 +6,6 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
-    Iterable,
     Mapping,
     Sequence,
 )
@@ -175,13 +174,6 @@ class Chain[S0, S1, S2, Q0 = Search, Q1 = Search, Q2 = Search](Stage[S0, S2, Q0,
         response2: S2 = self.outer.process_response(response1)
         return response2
 
-    def stages(self) -> Iterable[Stage[Any, Any, Any, Any]]:
-        yield self.outer
-        if isinstance(self.inner, Chain):
-            yield from self.inner.stages()
-        else:
-            yield self.inner
-
 
 @attrs.frozen(kw_only=True)
 class ResponseChain[S0, S1, S2, Q0 = Search, Q1 = Search](Stage[S0, S2, Q0, Q1]):
@@ -280,24 +272,11 @@ TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[IndexForm]]]
 
 
 @attrs.frozen(kw_only=True)
-class FilterStage(IndexStage[Response, Response]):
+class _FilterBuilder(_UsesIndex):
     """
-    Converts the given filters to an OpenSearch query and adds that query as
-    either a `query` or `post_filter` property to the request.
+    Converts the given filters to OpenSearch queries.
     """
     filters: Filters
-    post_filter: bool
-
-    def prepare_request(self, request: Search) -> Search:
-        query = self.prepare_query()
-        if self.post_filter:
-            request = request.post_filter(query)
-        else:
-            request = request.query(query)
-        return request
-
-    def process_response(self, response: Response) -> Response:
-        return response
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
@@ -387,31 +366,26 @@ class FilterStage(IndexStage[Response, Response]):
 
 
 @attrs.frozen(kw_only=True)
+class FilterStage(_FilterBuilder, IndexStage[Response, Response]):
+    """
+    Adds a query for the given filters as the `query` property of the request.
+    """
+
+    def prepare_request(self, request: Search) -> Search:
+        return request.query(self.prepare_query())
+
+    def process_response(self, response: Response) -> Response:
+        return response
+
+
+@attrs.frozen(kw_only=True)
 class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
     """
-    Cooperate with the given filter stage to augment the request with an
-    `aggregation` property containing an aggregation for each of the facet
-    fields configured in the current metadata plugin. If this aggregation stage
-    is to be part of a chain, the chain should include the given filter stage,
-    unless that stage uses a `post_filter` and the request is for aggregations
-    only.
+    Augments the request with an `aggregation` property containing an
+    aggregation for each of the facet fields configured in the current metadata
+    plugin. By itself, this stage doesn't filter the entities the aggregations
+    count, but subclasses can, by overriding :meth:`_facet_filter`.
     """
-    filter_stage: FilterStage
-
-    @classmethod
-    def create_and_wrap[S0](cls,
-                            chain: Chain[S0, Any, MutableJSON]
-                            ) -> Chain[S0, MutableJSON, MutableJSON]:
-        """
-        Creates and adds an aggregation stage to the specified chain. The chain
-        must contain a filter stage.
-        """
-        filter_stage = one(s for s in chain.stages() if isinstance(s, FilterStage))
-        aggregation_stage = cls(service=filter_stage.service,
-                                catalog=filter_stage.catalog,
-                                entity_type=filter_stage.entity_type,
-                                filter_stage=filter_stage)
-        return aggregation_stage.wrap(chain)
 
     @property
     def _facets(self) -> Sequence[str]:
@@ -437,26 +411,13 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
         else:
             self._flatten_nested_aggs(aggs)
             self._translate_response_aggs(aggs)
-            # The `accessible` facet is synthesized from the `source_id`
-            # facet, so a stage that doesn't aggregate the latter can't offer
-            # the former either.
-            if self.plugin.special_fields.source_id.name in self._facets:
-                self._populate_accessible(aggs)
         return response
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         """
         Creates an aggregation to be used in an OpenSearch search request.
         """
-        if self.filter_stage.post_filter:
-            # Create a filter agg using a query that represents all filters
-            # except for the current facet.
-            query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
-        else:
-            # The top-level query in FilterStage already applies every
-            # filter, so filtering again here would be redundant.
-            query = Q('match_all')
-        agg = A('filter', query)
+        agg = A('filter', self._facet_filter(facet_path))
 
         field_type = self.service.field_type(self.catalog, facet_path)
         if isinstance(field_type, Nested):
@@ -510,6 +471,18 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
                        size=config.terms_aggregation_size)
             agg.bucket(untagged_agg_name, 'missing', field=dotted_facet_path)
         return agg
+
+    def _facet_filter(self, facet_path: FieldPath) -> Query:
+        """
+        A query selecting the entities to be counted by the aggregation for the
+        facet of the field with the given path.
+        """
+        # The aggregation for a facet is a `filter` aggregation, even if its
+        # filter matches every entity. The aggregations of the facet's values
+        # are attached to it, and its `doc_count` is the number of entities the
+        # facet covers, which the response stages report as the facet's total
+        # or, for the summary, as a count of entities.
+        return Q('match_all')
 
     def _annotate_aggs_for_translation(self, request: Search):
         """
@@ -621,11 +594,32 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
         for k, v in json_item_dicts(aggs):
             translate(k, v)
 
+
+@attrs.frozen(kw_only=True)
+class SearchAggregationStage(_FilterBuilder, AggregationStage):
+    """
+    An aggregation stage whose aggregations each apply the given filters, except
+    the one for their own facet. The request must not apply the filters in any
+    other way.
+    """
+
+    def process_response(self, response: MutableJSON) -> MutableJSON:
+        response = super().process_response(response)
+        # The `accessible` facet is synthesized from the `source_id` facet, so
+        # a stage that doesn't aggregate the latter can't offer the former
+        # either.
+        if self.plugin.special_fields.source_id.name in self._facets:
+            self._populate_accessible(json_dict(response['aggregations']))
+        return response
+
+    def _facet_filter(self, facet_path: FieldPath) -> Query:
+        return self.prepare_query(skip_field_paths=(facet_path,))
+
     def _populate_accessible(self, aggs: MutableJSON) -> None:
         # Because the value of the `accessible` field depends on the provided
         # authentication, we have to synthesize the field and its corresponding
         # facet from the `sourceId` field.
-        source_ids = self.filter_stage.filters.source_ids
+        source_ids = self.filters.source_ids
         plugin = self.service.metadata_plugin(self.catalog)
         special_fields = plugin.special_fields
         agg = json_dict(aggs.pop(special_fields.source_id.name))
@@ -912,7 +906,6 @@ class QueryService(DocumentService):
                      catalog: CatalogName,
                      entity_type: str,
                      filters: Filters,
-                     post_filter: bool,
                      document_slice: DocumentSlice | None
                      ) -> Chain[Response, Any, Response]:
         """
@@ -923,8 +916,7 @@ class QueryService(DocumentService):
         chain = FilterStage(service=self,
                             catalog=catalog,
                             entity_type=entity_type,
-                            filters=filters,
-                            post_filter=post_filter)
+                            filters=filters)
         chain = SlicingStage(service=self,
                              catalog=catalog,
                              entity_type=entity_type,

@@ -30,6 +30,7 @@ from azul.plugins import (
 )
 from azul.service.query_service import (
     AggregationStage,
+    SearchAggregationStage,
     SummaryAggregationStage,
     untagged_agg_name,
     values_agg_name,
@@ -37,6 +38,10 @@ from azul.service.query_service import (
 
 
 class HCAAggregationStage(AggregationStage):
+    """
+    Adds the aggregations specific to HCA to the aggregation stages for searches
+    and for the summary.
+    """
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         agg = super()._prepare_aggregation(facet=facet, facet_path=facet_path)
@@ -59,6 +64,10 @@ class HCAAggregationStage(AggregationStage):
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
 
         return agg
+
+
+class HCASearchAggregationStage(SearchAggregationStage, HCAAggregationStage):
+    pass
 
 
 class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):

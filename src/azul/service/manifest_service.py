@@ -1052,7 +1052,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         pipeline = self.service.create_chain(catalog=self.catalog,
                                              entity_type=self.entity_type,
                                              filters=self.filters,
-                                             post_filter=False,
                                              document_slice=document_slice)
         return pipeline
 

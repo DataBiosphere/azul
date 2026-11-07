@@ -82,7 +82,7 @@ from azul.plugins.metadata.hca.indexer.transform import (
     SampleTransformer,
 )
 from azul.plugins.metadata.hca.service.aggregation import (
-    HCAAggregationStage,
+    HCASearchAggregationStage,
     HCASummaryAggregationStage,
 )
 from azul.plugins.metadata.hca.service.response import (
@@ -521,8 +521,8 @@ class Plugin(MetadataPlugin[HCABundle]):
         return HCASummaryAggregationStage
 
     @property
-    def aggregation_stage(self) -> type[HCAAggregationStage]:
-        return HCAAggregationStage
+    def search_aggregation_stage(self) -> type[HCASearchAggregationStage]:
+        return HCASearchAggregationStage
 
     @property
     def file_class(self) -> type[File]:

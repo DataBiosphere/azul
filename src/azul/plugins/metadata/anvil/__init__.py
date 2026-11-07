@@ -84,12 +84,14 @@ from azul.plugins.metadata.anvil.schema import (
     anvil_schemas,
 )
 from azul.plugins.metadata.anvil.service.aggregation import (
-    AnvilAggregationStage,
     AnvilSummaryAggregationStage,
 )
 from azul.plugins.metadata.anvil.service.response import (
     AnvilSearchResponseStage,
     AnvilSummaryResponseStage,
+)
+from azul.service.query_service import (
+    SearchAggregationStage,
 )
 from azul.source import (
     SourceRef,
@@ -547,8 +549,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return AnvilSummaryAggregationStage
 
     @property
-    def aggregation_stage(self) -> type[AnvilAggregationStage]:
-        return AnvilAggregationStage
+    def search_aggregation_stage(self) -> type[SearchAggregationStage]:
+        return SearchAggregationStage
 
     @property
     def file_class(self) -> type[File]:

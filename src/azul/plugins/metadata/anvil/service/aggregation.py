@@ -1,31 +1,17 @@
 from opensearchpy import (
     Search,
 )
-from opensearchpy.helpers.aggs import (
-    Agg,
-)
 
-from azul.indexer.document import (
-    FieldPath,
-)
 from azul.lib.types import (
     MutableJSON,
     json_dict,
 )
 from azul.service.query_service import (
-    AggregationStage,
     SummaryAggregationStage,
 )
 
 
-class AnvilAggregationStage(AggregationStage):
-
-    def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
-        agg = super()._prepare_aggregation(facet=facet, facet_path=facet_path)
-        return agg
-
-
-class AnvilSummaryAggregationStage(SummaryAggregationStage, AnvilAggregationStage):
+class AnvilSummaryAggregationStage(SummaryAggregationStage):
 
     def prepare_request(self, request: Search) -> Search:
         request = super().prepare_request(request)
