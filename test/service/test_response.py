@@ -2097,20 +2097,27 @@ class TestIndexResponse(IndexResponseTestCase):
         }
 
         def _test(entity_type: str, expect_empty: bool, expect_accessible: bool):
-            accessible_field = self._metadata_plugin.special_fields.accessible.name_in_hit
+            accessible = self._metadata_plugin.special_fields.accessible
             with self.subTest(entity_type=entity_type,
                               expect_accessible=expect_accessible):
                 url = str(self.base_url.set(path=('index', entity_type)))
                 response = self._http_client.request('GET', url)
                 self.assertEqual(200, response.status)
-                hits = response.json()['hits']
+                response_json = response.json()
+                hits = response_json['hits']
                 if expect_empty:
                     self.assertEqual([], hits)
                 else:
                     self.assertGreater(len(hits), 0)
                     for hit in hits:
                         entity = one(hit[entity_type])
-                        self.assertEqual(expect_accessible, entity[accessible_field])
+                        self.assertEqual(expect_accessible, entity[accessible.name_in_hit])
+                # Where access is enforced, the facet counts only the entities
+                # that can be filtered for, those in accessible sources.
+                facet = response_json['termFacets'][accessible.name]
+                terms = {term['term'] for term in facet['terms']}
+                expected_terms = set() if expect_empty else {str(expect_accessible).lower()}
+                self.assertEqual(expected_terms, terms)
 
         for entity_type in filtered_entity_types:
             _test(entity_type, expect_empty=False, expect_accessible=True)

@@ -336,11 +336,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         """
         expected_output = {
             'filter': {
-                'bool': {
-                    'must': [
-                        self.sources_filter
-                    ]
-                }
+                'bool': {}
             },
             'aggs': {
                 'myTerms': {
@@ -397,3 +393,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
+        # With access enforced, the source filter is applied once, in the
+        # top-level query, rather than in each aggregation
+        expected_query = {'bool': {'must': [self.sources_filter]}}
+        self.assertEqual(expected_query, request.to_dict()['query'])

@@ -280,9 +280,15 @@ class _FilterBuilder(_UsesIndex):
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        limit_access = self.service.always_limit_access or self._limit_access
-        filters_json = self.filters.reify(self.plugin, limit_access=limit_access)
+        filters_json = self.filters.reify(self.plugin, limit_access=self.limit_access)
         return self._translate_filters(filters_json)
+
+    @property
+    def limit_access(self) -> bool:
+        """
+        Whether the managed access controls are enforced
+        """
+        return self.service.always_limit_access or self._limit_access
 
     @property
     def _limit_access(self) -> bool:
@@ -313,6 +319,36 @@ class _FilterBuilder(_UsesIndex):
             values = field_type.filter(operator, values)
             translated_filters[field] = {operator: list(values)}
         return translated_filters
+
+    @property
+    def hoisted_field_paths(self) -> tuple[FieldPath, ...]:
+        """
+        The paths of the fields whose filters apply to every facet, including
+        the facet for the field itself. Instead of being repeated in each
+        aggregation, these filters can be applied once, in the top-level query
+        of a request for aggregations.
+        """
+        if self.limit_access:
+            # With access enforced, the only entities that can be filtered for
+            # are those in accessible sources, so there is no point in counting
+            # entities in other sources, not even in the facet for sources.
+            source_id = self.plugin.special_fields.source_id.name
+            return (self.plugin.field_mapping[source_id],)
+        else:
+            return ()
+
+    def prepare_hoisted_query(self) -> Query:
+        """
+        Converts the filters on the fields in :py:attr:`hoisted_field_paths`
+        into an OpenSearch DSL Query object.
+        """
+        hoisted_field_paths = self.hoisted_field_paths
+        skip_field_paths = tuple(
+            field_path
+            for field_path in self.prepared_filters
+            if field_path not in hoisted_field_paths
+        )
+        return self.prepare_query(skip_field_paths=skip_field_paths)
 
     def prepare_query(self, skip_field_paths: tuple[FieldPath, ...] = ()) -> Query:
         """
@@ -599,9 +635,15 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
 class SearchAggregationStage(_FilterBuilder, AggregationStage):
     """
     An aggregation stage whose aggregations each apply the given filters, except
-    the one for their own facet. The request must not apply the filters in any
-    other way.
+    the one for their own facet. The filters that apply to every facet alike are
+    applied once instead, in the top-level query of the request. The request
+    must not apply the filters in any other way.
     """
+
+    def prepare_request(self, request: Search) -> Search:
+        if self.hoisted_field_paths:
+            request = request.query(self.prepare_hoisted_query())
+        return super().prepare_request(request)
 
     def process_response(self, response: MutableJSON) -> MutableJSON:
         response = super().process_response(response)
@@ -613,7 +655,8 @@ class SearchAggregationStage(_FilterBuilder, AggregationStage):
         return response
 
     def _facet_filter(self, facet_path: FieldPath) -> Query:
-        return self.prepare_query(skip_field_paths=(facet_path,))
+        skip_field_paths = (facet_path, *self.hoisted_field_paths)
+        return self.prepare_query(skip_field_paths=skip_field_paths)
 
     def _populate_accessible(self, aggs: MutableJSON) -> None:
         # Because the value of the `accessible` field depends on the provided
