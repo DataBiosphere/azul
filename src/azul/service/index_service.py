@@ -148,6 +148,20 @@ class ShardPinningStage[S1](IndexStage[S1, S1]):
         return response
 
 
+@attrs.frozen(kw_only=True)
+class RequestCacheBypassStage[S1](IndexStage[S1, S1]):
+    """
+    Prevents the shard request cache from serving a request, or from storing
+    the response to it.
+    """
+
+    def prepare_request(self, request: Search) -> Search:
+        return request.params(request_cache=False)
+
+    def process_response(self, response: S1) -> S1:
+        return response
+
+
 class SummaryResponseStage(ResponseStage[JSON, MutableJSON],
                            metaclass=ABCMeta):
 
@@ -276,7 +290,8 @@ class IndexService(QueryService):
         """
         Combine the given chain for a page of hits with a chain for a separate
         request that tabulates the facets of all entities matching the given
-        filters, so that the facets can be served from the shard request cache.
+        filters, so that the facets can be served from the shard request cache,
+        unless the entities are of the root entity type.
         """
         plugin = self.metadata_plugin(catalog)
         # The filter stage is not part of the chain. With `post_filter` set,
@@ -296,9 +311,19 @@ class IndexService(QueryService):
                                                      catalog=catalog,
                                                      entity_type=entity_type,
                                                      filter_stage=filter_stage).wrap(aggregation_chain)
-        aggregation_chain = ShardPinningStage[MutableJSON](service=self,
-                                                           catalog=catalog,
-                                                           entity_type=entity_type).wrap(aggregation_chain)
+        caching_stage_cls: type[IndexStage[MutableJSON, MutableJSON]]
+        if entity_type == plugin.root_entity_type:
+            # The index of root entities is small, so their aggregations are
+            # cheap to compute. Caching them would gain little, while the large
+            # cache entries could displace those of the expensive aggregations
+            # over the other indices.
+            caching_stage_cls = RequestCacheBypassStage[MutableJSON]
+        else:
+            caching_stage_cls = ShardPinningStage[MutableJSON]
+        caching_stage = caching_stage_cls(service=self,
+                                          catalog=catalog,
+                                          entity_type=entity_type)
+        aggregation_chain = caching_stage.wrap(aggregation_chain)
         return AggregatingMultiSearchStage(service=self,
                                            first=chain,
                                            second=aggregation_chain)

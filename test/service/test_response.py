@@ -1811,36 +1811,46 @@ class TestIndexResponse(IndexResponseTestCase):
     def test_aggregations_request_cache(self):
         """
         The pages of a search share the aggregations, so all but the first page
-        should take them from the shard request cache.
+        should take them from the shard request cache. The aggregations over the
+        root entities are exempt from caching.
         """
-        index_name = str(IndexName.create(catalog=self.catalog,
-                                          qualifier='samples',
-                                          doc_type=DocumentType.aggregate))
-        self.opensearch.indices.clear_cache(index=index_name, request=True)
-
-        def cache_stats() -> Counter[str]:
-            stats = self.opensearch.indices.stats(index=index_name,
-                                                  metric='request_cache')
-            stats = stats['indices'][index_name]['total']['request_cache']
-            return Counter(hits=stats['hit_count'], misses=stats['miss_count'])
 
         def get(url: str) -> JSON:
             response = self._http_client.request('GET', url)
             raise_on_status(response)
             return response.json()
 
-        params = self._params(size=3)
-        url = self.base_url.set(path='/index/samples', args=params)
-        stats = cache_stats()
-        first_page = get(str(url))
-        self.assertEqual(Counter(misses=1), cache_stats() - stats)
+        root_entity_type = self._metadata_plugin.root_entity_type
+        for entity_type in ['samples', root_entity_type]:
+            with self.subTest(entity_type=entity_type):
+                index_name = str(IndexName.create(catalog=self.catalog,
+                                                  qualifier=entity_type,
+                                                  doc_type=DocumentType.aggregate))
+                self.opensearch.indices.clear_cache(index=index_name, request=True)
 
-        stats = cache_stats()
-        second_page = get(first_page['pagination']['next'])
-        self.assertEqual(Counter(hits=1), cache_stats() - stats)
+                def cache_stats() -> Counter[str]:
+                    stats = self.opensearch.indices.stats(index=index_name,
+                                                          metric='request_cache')
+                    stats = stats['indices'][index_name]['total']['request_cache']
+                    return Counter(hits=stats['hit_count'], misses=stats['miss_count'])
 
-        self.assertNotEqual(first_page['hits'], second_page['hits'])
-        self.assertEqual(first_page['termFacets'], second_page['termFacets'])
+                if entity_type == root_entity_type:
+                    expected_stats = Counter(), Counter()
+                else:
+                    expected_stats = Counter(misses=1), Counter(hits=1)
+
+                params = self._params(size=1)
+                url = self.base_url.set(path=('index', entity_type), args=params)
+                stats = cache_stats()
+                first_page = get(str(url))
+                self.assertEqual(expected_stats[0], cache_stats() - stats)
+
+                stats = cache_stats()
+                second_page = get(first_page['pagination']['next'])
+                self.assertEqual(expected_stats[1], cache_stats() - stats)
+
+                self.assertNotEqual(first_page['hits'], second_page['hits'])
+                self.assertEqual(first_page['termFacets'], second_page['termFacets'])
 
     def test_bad_search_after_search_before(self):
         """
