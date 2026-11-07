@@ -114,7 +114,7 @@ nested_agg_name = 'myNested'
 untagged_agg_name = 'myUntagged'
 
 
-class Stage[R1, R2](metaclass=ABCMeta):
+class Stage[S1, S2](metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
     to process the response to that request. If an implementation modifies the
@@ -130,7 +130,7 @@ class Stage[R1, R2](metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def process_response(self, response: R1) -> R2:
+    def process_response(self, response: S1) -> S2:
         """
         Handle the given response and return the result of the processing.
         If an implementation modifies the argument in place it must return the
@@ -140,13 +140,13 @@ class Stage[R1, R2](metaclass=ABCMeta):
 
 
 @attrs.frozen(kw_only=True)
-class Chain[R0, R1, R2](Stage[R0, R2]):
+class Chain[S0, S1, S2](Stage[S0, S2]):
     """
     The result of wrapping a stage or chain in another stage.
     """
 
-    inner: Stage[R0, R1]
-    outer: Stage[R1, R2]
+    inner: Stage[S0, S1]
+    outer: Stage[S1, S2]
 
     def __attrs_post_init__(self):
         assert not isinstance(self.outer, Chain), R(
@@ -157,9 +157,9 @@ class Chain[R0, R1, R2](Stage[R0, R2]):
         request = self.outer.prepare_request(request)
         return request
 
-    def process_response(self, response0: R0) -> R2:
-        response1: R1 = self.inner.process_response(response0)
-        response2: R2 = self.outer.process_response(response1)
+    def process_response(self, response0: S0) -> S2:
+        response1: S1 = self.inner.process_response(response0)
+        response2: S2 = self.outer.process_response(response1)
         return response2
 
     def stages(self) -> Iterable[Stage]:
@@ -171,7 +171,7 @@ class Chain[R0, R1, R2](Stage[R0, R2]):
 
 
 @attrs.frozen(kw_only=True)
-class IndexStage[R1, R2](Stage[R1, R2], metaclass=ABCMeta):
+class IndexStage[S1, S2](Stage[S1, S2], metaclass=ABCMeta):
     """
     A stage for requests against a particular index.
     """
@@ -183,7 +183,7 @@ class IndexStage[R1, R2](Stage[R1, R2], metaclass=ABCMeta):
     def plugin(self) -> MetadataPlugin:
         return self.service.metadata_plugin(self.catalog)
 
-    def wrap[R0](self, other: Stage[R0, R1]) -> Chain[R0, R1, R2]:
+    def wrap[S0](self, other: Stage[S0, S1]) -> Chain[S0, S1, S2]:
         return Chain(inner=other, outer=self)
 
 
@@ -308,9 +308,9 @@ class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
     filter_stage: FilterStage
 
     @classmethod
-    def create_and_wrap[R0](cls,
-                            chain: Chain[R0, Any, MutableJSON]
-                            ) -> Chain[R0, MutableJSON, MutableJSON]:
+    def create_and_wrap[S0](cls,
+                            chain: Chain[S0, Any, MutableJSON]
+                            ) -> Chain[S0, MutableJSON, MutableJSON]:
         """
         Creates and adds an aggregation stage to the specified chain. The chain
         must contain a filter stage.
