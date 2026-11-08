@@ -470,7 +470,9 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             for catalog in config.integration_test_catalogs
             if config.is_tdr_enabled(catalog)
         }
-        managed_access_sources = {catalog: set() for catalog in config.catalogs}
+        managed_access_sources: dict[CatalogName, set[TDRSourceRef]] = {
+            catalog: set() for catalog in config.catalogs
+        }
         for catalog, sources in configured_sources.items():
             for spec, _ in sources.items():
                 source_id = one(
@@ -2558,7 +2560,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 class AzulClientIntegrationTest(IntegrationTestCase):
 
     def test_azul_client_error_handling(self):
-        invalid_notification = {}
+        invalid_notification: JSON = {}
         notifications = [invalid_notification]
         with self.assertRaises(AzulClientNotificationError) as cm:
             self.azul_client.index(catalog=first(config.integration_test_catalogs),
