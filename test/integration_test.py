@@ -448,7 +448,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 service_account=config.ServiceAccount.unregistered
             )
         )
-        email = tdr.credentials.service_account_email
+        email = tdr.service_account_credentials.service_account_email
         self.assertFalse(tdr.is_registered(),
                          f'The "unregistered" service account ({email!r}) has '
                          f'been registered')
@@ -573,14 +573,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         catalogs: list[Catalog] = []
         for catalog in config.integration_test_catalogs.values():
             if index:
-                public_source = self._select_source(
+                public_source = not_none(self._select_source(
                     catalog.name,
                     public=True,
                     # If test_mirroring is run for the catalog, ensure that the
                     # source is not flagged as no_mirror so that we can test
                     # downloading a mirrored file
                     mirror=mirror and self._mirror_service(catalog.name).may_mirror()
-                ).ref
+                )).ref
                 ma_source = self._select_source(catalog.name, public=False)
                 ma_source = None if ma_source is None else ma_source.ref
                 sources = alist(public_source, ma_source)
@@ -1290,7 +1290,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # is duplicated in README.md as well.
         redirect_url = furl('http://localhost:8088')
         auth_url = furl(url='https://accounts.google.com/o/oauth2/v2/auth',
-                        args=dict(client_id=config.google_oauth2_client_id,
+                        args=dict(client_id=not_none(config.google_oauth2_client_id),
                                   redirect_uri=str(redirect_url),
                                   response_type='code',
                                   scope='openid email',
@@ -1318,7 +1318,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             def log_message(self, format, *args):
                 log.info(format, *args)
 
-        address = (redirect_url.host, redirect_url.port)
+        address = (not_none(redirect_url.host), not_none(redirect_url.port))
         server = HTTPServer(address, Handler)
         log.info('Opening web browser for OAuth2 authorization: %s', auth_url)
         webbrowser.open(str(auth_url))
@@ -1581,7 +1581,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
-        self.assertIn(uuid_column_name, reader.fieldnames)
+        self.assertIn(uuid_column_name, not_none(reader.fieldnames))
         bundle_uuids = rows[0][uuid_column_name].split(ManifestGenerator.padded_joiner)
         self.assertGreater(len(bundle_uuids), 0)
         for bundle_uuid in bundle_uuids:
@@ -1784,7 +1784,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             source = plugin.partition_source_for_indexing(catalog, source)
             # Some partitions may be empty, but we include them anyway to
             # ensure test coverage for handling multiple partitions per source
-            for prefix in source.prefix.partition_prefixes():
+            for prefix in not_none(source.prefix).partition_prefixes():
                 partition = repository_service.list_bundles(catalog, source, prefix)
                 bundle_fqids.update(partition)
                 message = queue_service.index_partition_message(catalog, source, prefix)
@@ -2061,7 +2061,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         hit_source_ids = {fqid.source.id for fqid in bundle_fqids}
         self.assertEqual({ma_source.id}, hit_source_ids)
 
-        return unfiltered_hits
+        return not_none(unfiltered_hits)
 
     def _test_managed_access_repository_files(self,
                                               catalog: CatalogName,
@@ -2363,7 +2363,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     ])
                     actual_url = self._test_file_download(source.spec, file_response)
                     self.assertIsNotNone(actual_url)
-                    actual_url.set(args=None)
+                    not_none(actual_url).set(args=None)
                     self.assertEqual(expected_url, actual_url)
 
             with self.subTest('validate_info_schemas'):
@@ -2700,7 +2700,7 @@ class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
                     self._test_catalog(catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        source = self._select_source(catalog).ref
+        source = not_none(self._select_source(catalog)).ref
         # The plugin will raise an exception if the source lacks a prefix
         source = source.with_prefix(Prefix.of_everything)
         bundle_fqids = self.azul_client.repository_service.list_bundles(catalog, source, prefix='')
