@@ -101,6 +101,7 @@ from urllib3 import (
 
 from azul import (
     CatalogName,
+    Config,
     config,
 )
 from azul.auth import (
@@ -2652,7 +2653,7 @@ class AzulChaliceLocalIntegrationTest(IntegrationTestCase):
 
 class CanBundleScriptIntegrationTest(SourceSelectingIntegrationTest):
 
-    def _test_catalog(self, catalog: config.Catalog):
+    def _test_catalog(self, catalog: Config.Catalog):
         fqid = self.bundle_fqid(catalog.name)
         log.info('Canning bundle %r from catalog %r', fqid, catalog.name)
         with tempfile.TemporaryDirectory() as d:
