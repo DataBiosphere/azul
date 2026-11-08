@@ -30,9 +30,6 @@ from io import (
 )
 import itertools
 import json
-from operator import (
-    is_not_none,
-)
 import os
 from pathlib import (
     PurePath,
@@ -2317,10 +2314,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     states[catalog.name] = self.MirrorState(service=service)
         with self.subTest('mirroring'):
             for catalog, state in states.items():
-                state.sources = list(filter(is_not_none, (
-                    self._select_source(catalog, public=public, mirror=True)
-                    for public in [True, False]
-                )))
+                state.sources = alist(
+                    self._select_source(catalog, public=True, mirror=True),
+                    self._select_source(catalog, public=False, mirror=True)
+                )
 
             self._assert_queues_empty([config.mirror_queue.name,
                                        config.mirror_queue.to_fail.name])
