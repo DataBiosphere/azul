@@ -993,11 +993,10 @@ These steps are performed once per deployment (multiple times per project).
 
    - `http://localhost:8088` (this is used during the integration test)
 
-   - If you'd like to be able to sign into a locally running Swagger UI for your
-     deployment, add `http://127.0.0.1:8000/swagger/oauth2-redirect.html` to the
-     *Authorized redirect URIs* of your deployment's OAuth 2.0 client. After
-     that, you will be able to use the *Authorize* button on the Swagger UI
-     launched by `make -C lambdas/service local`.
+   - For a personal deployment:
+     `http://localhost:8000/swagger/oauth2-redirect.html` (this is used by the
+     *Authorize* button on the Swagger UI of the `service` app running locally,
+     see [4.1](#41-running-indexer-or-service-locally))
 
 7. Click *Create*
 
@@ -1348,7 +1347,8 @@ See sections [2](#2-getting-started) and [3](#3-deployment) on how to do that.
    make local
    ```
 
-4. You can now hit the app under `http://127.0.0.1:8000/`
+4. You can now hit the app under `http://localhost:8000/`. Use `localhost`, not
+   `127.0.0.1`, or signing in via the Swagger UI will fail.
 
 PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
