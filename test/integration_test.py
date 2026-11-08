@@ -739,9 +739,9 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     assignments: list[tuple[EntityType, furl]] = []
                     for entity_type in entity_types:
                         url = config.service_endpoint.set(path=('index', entity_type),
-                                                          query_params=dict(catalog=catalog,
-                                                                            size='1',
-                                                                            filters=json.dumps({})))
+                                                          args=dict(catalog=catalog,
+                                                                    size='1',
+                                                                    filters=json.dumps({})))
                         for _ in range(num_threads_per_endpoint):
                             assignments.append((entity_type, url))
                     self.random.shuffle(assignments)
@@ -1919,7 +1919,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                       size=str(size),
                       filters=json.dumps(filters if filters else {}))
         url = config.service_endpoint.set(path=('index', entity_type),
-                                          query_params=params)
+                                          args=params)
         while True:
             body = self._get_url_json(GET, url)
             entities.extend(json_element_mappings(body['hits']))
@@ -2149,7 +2149,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             if len(json_sequence(file['sources'])) == 1
         ))
         filters = {special_fields.source_id.name: {'is': [public_source.id]}}
-        params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
+        params = {'size': '1', 'catalog': catalog, 'filters': json.dumps(filters)}
         files_url = furl(url=endpoint, path='index/files', args=params)
         response = self._get_url_json(GET, files_url)
         hit = one(json_element_mappings(response['hits']))
