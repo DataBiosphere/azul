@@ -71,6 +71,9 @@ from chalice.local import (
     LocalDevServer,
 )
 import fastavro
+from fastavro.types import (
+    AvroMessage,
+)
 from furl import (
     furl,
 )
@@ -173,10 +176,16 @@ from azul.lib.time import (
 from azul.lib.types import (
     JSON,
     JSONs,
-    MutableJSON,
-    MutableJSONs,
+    json_bool,
+    json_dict,
+    json_element_dicts,
+    json_element_mappings,
+    json_element_strings,
     json_int,
-    json_list_of_dicts,
+    json_list,
+    json_mapping,
+    json_sequence,
+    json_sequence_of_mappings,
     json_str,
     not_none,
     optional,
@@ -254,6 +263,12 @@ class ReadableFileObject(Protocol):
     def read(self, amount: int) -> bytes: ...
 
     def seek(self, amount: int) -> Any: ...
+
+
+def avro_record(message: AvroMessage) -> dict[str, Any]:
+    assert isinstance(message, dict), type(message)
+    assert all(isinstance(k, str) for k in message.keys()), message.keys()
+    return message
 
 
 GET = 'GET'
@@ -1074,8 +1089,9 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         must match exactly one file entity.
         """
         hit = one(self._get_entities(catalog, 'files', filters=filters))
-        title = one(one(hit['datasets'])['title'])
-        file_path = one(hit['files'])['file_path']
+        dataset = one(json_element_mappings(hit['datasets']))
+        title = one(json_element_strings(dataset['title']))
+        file_path = json_str(one(json_element_mappings(hit['files']))['file_path'])
         return CurlManifestGenerator._sanitize_path('/'.join([title, file_path]))
 
     def _get_one_mirrorable_file(self,
@@ -1092,8 +1108,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             outer_file, inner_file = self._get_one_file(catalog, max_size=max_size)
         # Order matters here because sha256 is present in the file response for
         # AnVIL, but is always set to the empty string
-        file_digest = lookup(inner_file, 'file_md5sum', 'sha256')
-        source = one(outer_file['sources'])
+        file_digest = json_str(lookup(inner_file, 'file_md5sum', 'sha256'))
+        source = one(json_element_mappings(outer_file['sources']))
         # In principle, we could use the entire digest here, but Prefix only
         # allows up to 8 chars because it can be used with UUIDs
         prefix = Prefix(common=file_digest[:8], partition=0)
@@ -1120,11 +1136,12 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 s2 = 'of any size'
             else:
                 s2 = f'up to {max_size} bytes in size'
-                filters.update({
+                filters = {
+                    **filters,
                     file_size_facet: {
                         'within': [[1, max_size]],
                     }
-                })
+                }
             log.info('Looking for %s files %s', s1, s2)
             response = self._check_endpoint(method=GET,
                                             path='/index/files',
@@ -1158,7 +1175,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             assert False, inner_file
 
     def _source_spec(self, catalog: CatalogName, entity: JSON) -> SourceSpec:
-        source = self._source_from_response(catalog, one(entity['sources']))
+        source = one(json_element_mappings(entity['sources']))
+        source = self._source_from_response(catalog, source)
         return source.spec
 
     def _file_size_facet(self, catalog: CatalogName) -> str:
@@ -1482,7 +1500,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # The schema is also an Avro object, specifically a Avro record which
         # FastAVRO exposes to us as a JSON object, i.e., a `dict` with string
         # keys
-        record_schema: MutableJSON = reader.writer_schema
+        record_schema = json_dict(reader.writer_schema)
         # Each object in a PFB is also of type 'record'
         self.assertEqual('record', record_schema['type'])
         # PFB calls the records *entities*. Unfortunately, the PFB standard is
@@ -1494,13 +1512,20 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # the same value in the `name` field are expected to contain entities of
         # the same shape. Here we extract the declaration of the `object` field
         # from the schema:
-        object_field = one(f for f in record_schema['fields'] if f['name'] == 'object')
+        object_field = one(
+            f
+            for f in json_element_dicts(record_schema['fields'])
+            if f['name'] == 'object'
+        )
         # The different shapes, i.e., entity types are defined as members of a
         # union type, which manifests in Avro simply as an array of schemas.
         # Here we extract each union member and index it into a dictionary for
         # easy access by name.
-        entity_types = {e['name']: e for e in object_field['type']}
-        self.assertEqual(len(entity_types), len(object_field['type']))
+        entity_types = {
+            json_str(e['name']): e
+            for e in json_element_dicts(object_field['type'])
+        }
+        self.assertEqual(len(entity_types), len(json_list(object_field['type'])))
         # The `id` field is a string uniquely identifying an entity among all
         # entities of the same shape, i.e., with the same value in the `name`
         # field of the containing record. The `relations` field holds references
@@ -1508,12 +1533,12 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # containing the `name` and `id` of the referenced entity.
         record_fqids = set()
         relations = set()
-        for record in reader:
+        for record in map(avro_record, reader):
             # Every record must follow the schema. Since each record's `object`
             # field contains an entity, the schema check therefore extends to
             # the various entity types.
             fastavro.validate(record, record_schema)
-            object = cast(MutableJSON, record['object'])
+            object = json_dict(record['object'])
             record_id, record_name = record['id'], record['name']
             record_fqids.add((record_name, record_id))
             if len(record_fqids) == 1:
@@ -1522,17 +1547,17 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 # expressing additional constraints on the `relations` field.
                 self.assertEqual('Metadata', record_name)
                 self.assertIsNone(record_id)
-                nodes = cast(MutableJSONs, object['nodes'])
+                nodes = json_element_dicts(object['nodes'])
                 for node in nodes:
-                    for link in node['links']:
+                    for link in json_element_dicts(node['links']):
                         self.assertIn(link['dst'], entity_types)
             # The following is redundant given the schema validation above but
             # we'll leave it in for illustration.
-            fields = entity_types[record_name]['fields']
+            fields = json_element_dicts(entity_types[record_name]['fields'])
             fields_present = set(object.keys())
             fields_expected = set(f['name'] for f in fields)
             self.assertEqual(fields_present, fields_expected)
-            for relation in cast(MutableJSONs, record['relations']):
+            for relation in json_element_dicts(record['relations']):
                 relations.add((
                     json_str(relation['dst_name']),
                     json_str(relation['dst_id'])
@@ -1592,8 +1617,9 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         Assert that every file is downloaded into a directory named after the
         dataset it belongs to, and to a name below that directory.
         """
+        sanitize = CurlManifestGenerator._sanitize_path
         expected_dataset_directories = {
-            CurlManifestGenerator._sanitize_path(one(hit['datasets'])['title'])
+            sanitize(json_str(one(json_element_mappings(hit['datasets']))['title']))
             for hit in self._get_entities(catalog, self._project_type(catalog))
         }
         for path in paths:
@@ -1616,15 +1642,15 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 url = config.service_endpoint.set(path='/index/summary',
                                                   args=dict(catalog=catalog))
                 summary = self._get_url_json(GET, url)
-                dataset_count = summary['datasetCount']
+                dataset_count = json_int(summary['datasetCount'])
                 for entity_type in ['donor', 'file']:
-                    groups = summary[entity_type + 'Datasets']
-                    datasets = {group['dataset'] for group in groups}
+                    groups = json_sequence_of_mappings(summary[entity_type + 'Datasets'])
+                    datasets = {json_str(group['dataset']) for group in groups}
                     # A group per dataset, and every entity in exactly one of
                     # them, so the groups add up to the total
                     self.assertEqual(len(datasets), len(groups), groups)
                     self.assertEqual(summary[entity_type + 'Count'],
-                                     sum(group['count'] for group in groups),
+                                     sum(json_int(group['count']) for group in groups),
                                      groups)
                     # A dataset without entities of this type has no group
                     self.assertGreaterEqual(dataset_count, len(datasets), groups)
@@ -1642,7 +1668,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 self.assertEqual('lungmap', config.catalogs[catalog].atlas, inner_file)
 
     def _test_file_download(self, source: SourceSpec, file: JSON) -> mutable_furl | None:
-        file_url = furl(file['azul_url'])
+        file_url = furl(json_str(file['azul_url']))
         # FIXME: Use _check_endpoint() instead
         #        https://github.com/DataBiosphere/azul/issues/7373
         self.assertEqual(file_url.path.segments[0], 'repository')
@@ -1690,7 +1716,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # the `format` metadata field. Note that this method preserves multipart
         # extensions and includes the leading '.', so the extension of
         # "foo.fastq.gz" is ".fastq.gz" instead of "gz"
-        file_name = lookup(file, 'file_name', 'name')
+        file_name = json_str(lookup(file, 'file_name', 'name'))
         suffixes = PurePath(file_name).suffixes
         return ''.join(suffixes).lower()
 
@@ -1702,7 +1728,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             with gzip.open(content) as buf:
                 self._validate_fastq_content(buf)
         else:
-            file_size = lookup(file, 'file_size', 'size')
+            file_size = json_int(lookup(file, 'file_size', 'size'))
             self.assertEqual(1 if file_size > 0 else 0, len(content.read(1)))
 
     def _validate_file_response(self,
@@ -1791,11 +1817,12 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         bundle_uuid_field = special_fields.bundle_uuid.name_in_hit
         bundle_version_field = special_fields.bundle_version.name_in_hit
         for hit in hits:
-            source, bundle = one(hit['sources']), one(hit['bundles'])
+            source = one(json_element_mappings(hit['sources']))
+            bundle = one(json_element_mappings(hit['bundles']))
             source = self._source_from_response(catalog, source)
             bundle_fqid = SourcedBundleFQID(
-                uuid=bundle[bundle_uuid_field],
-                version=bundle[bundle_version_field],
+                uuid=json_str(bundle[bundle_uuid_field]),
+                version=json_str(bundle[bundle_version_field]),
                 source=source
             )
             indexed_fqids.add(bundle_fqid)
@@ -1860,7 +1887,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         entity_type = 'files'
         with self.subTest('single_entity', entity_type=entity_type, catalog=catalog):
             outer_file, inner_file = self._get_one_file(catalog)
-            entity_id = outer_file['entryId']
+            entity_id = json_str(outer_file['entryId'])
             url = config.service_endpoint.set(path=('index', entity_type, entity_id),
                                               args=dict(catalog=catalog))
             hit = self._get_url_json(GET, url)
@@ -1884,8 +1911,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                       catalog: CatalogName,
                       entity_type: EntityType,
                       filters: JSON | None = None
-                      ) -> MutableJSONs:
-        entities = []
+                      ) -> JSONs:
+        entities: list[JSON] = []
         indices = self.metadata_plugin(catalog).exposed_indices
         size = min(100, indices[entity_type].max_page_size)
         params = dict(catalog=catalog,
@@ -1895,13 +1922,12 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                           query_params=params)
         while True:
             body = self._get_url_json(GET, url)
-            hits = body['hits']
-            entities.extend(hits)
-            url = body['pagination']['next']
-            if url is None:
+            entities.extend(json_element_mappings(body['hits']))
+            next_url = json_mapping(body['pagination'])['next']
+            if next_url is None:
                 return entities
             else:
-                url = furl(url)
+                url = furl(json_str(next_url))
 
     def _assert_indices_exist(self, catalog: CatalogName):
         """
@@ -1953,7 +1979,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
         def list_source_ids() -> set[str]:
             response = self._get_url_json(GET, url)
-            return {source['sourceId'] for source in cast(JSONs, response['sources'])}
+            return {
+                json_str(source['sourceId'])
+                for source in json_element_mappings(response['sources'])
+            }
 
         with self._service_account_credentials:
             self.assertIsSubset({public_source.id, ma_source.id}, list_source_ids())
@@ -2000,9 +2029,11 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 if accessible is None:
                     unfiltered_hits = hits
                 for hit in hits:
-                    source_id = one(hit['sources'])[source_id_field]
+                    source = one(json_element_mappings(hit['sources']))
+                    source_id = json_str(source[source_id_field])
                     source_accessible = {public_source.id: True, ma_source.id: False}[source_id]
-                    hit_accessible = one(hit[project_type])[accessible_field]
+                    project = one(json_element_mappings(hit[project_type]))
+                    hit_accessible = json_bool(project[accessible_field])
                     self.assertEqual(source_accessible, hit_accessible, hit['entryId'])
                     if accessible is not None:
                         self.assertEqual(accessible, hit_accessible)
@@ -2047,7 +2078,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     'is': [ma_source.id]
                 }
             })
-        inner_files = [one(json_list_of_dicts(file['files'])) for file in files]
+        inner_files = [one(json_element_mappings(file['files'])) for file in files]
         mirror_service = self._mirror_service(catalog)
         for file in inner_files:
             mirror_uri = optional(json_str, file['azul_mirror_uri'])
@@ -2084,7 +2115,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         summary_url = config.service_endpoint.set(path='/index/summary', args=params)
 
         def _get_summary_file_count() -> int:
-            return self._get_url_json(GET, summary_url)['fileCount']
+            return json_int(self._get_url_json(GET, summary_url)['fileCount'])
 
         public_summary_file_count = _get_summary_file_count()
         with self._service_account_credentials:
@@ -2108,20 +2139,21 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
         def bundle_uuids(hit: JSON) -> set[str]:
             return {
-                bundle[special_fields.bundle_uuid.name_in_hit]
-                for bundle in hit['bundles']
+                json_str(bundle[special_fields.bundle_uuid.name_in_hit])
+                for bundle in json_element_mappings(hit['bundles'])
             }
 
         managed_access_bundles = set.union(*(
             bundle_uuids(file)
             for file in files
-            if len(file['sources']) == 1
+            if len(json_sequence(file['sources'])) == 1
         ))
         filters = {special_fields.source_id.name: {'is': [public_source.id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         files_url = furl(url=endpoint, path='index/files', args=params)
         response = self._get_url_json(GET, files_url)
-        public_bundle = self.random.choice(sorted(bundle_uuids(one(response['hits']))))
+        hit = one(json_element_mappings(response['hits']))
+        public_bundle = self.random.choice(sorted(bundle_uuids(hit)))
         self.assertNotIn(public_bundle, managed_access_bundles)
         all_bundles = {public_bundle, *managed_access_bundles}
 
@@ -2161,14 +2193,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         def read_verbatim_jsonl_manifest(manifest: IO) -> set[JSON]:
             manifest_lines = manifest.readlines()
             manifest_content = {
-                freeze(json.loads(replica))
+                json_mapping(freeze(json.loads(replica)))
                 for replica in manifest_lines
             }
             self.assertEqual(len(manifest_lines), len(manifest_content))
             return manifest_content
 
         def read_verbatim_pfb_manifest(manifest: IO) -> set[tuple[str, ...]]:
-            entities = list(fastavro.reader(manifest))
+            entities = list(map(avro_record, fastavro.reader(manifest)))
             is_anvil = config.is_anvil_enabled(catalog)
             manifest_content = {
                 # We can't assert the full contents of each entity because the
@@ -2229,7 +2261,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         if ManifestFormat.curl in metadata_plugin.manifest_formats:
             # Create a single-file curl manifest and verify that the OAuth2
             # token is present on the command line
-            managed_access_file = one(self.random.choice(files)['files'])
+            outer_file = self.random.choice(files)
+            managed_access_file = one(json_element_mappings(outer_file['files']))
             managed_access_file_id = lookup(managed_access_file, 'document_id', 'uuid')
             filters = {metadata_plugin.special_fields.file_uuid.name: {'is': [managed_access_file_id]}}
             manifest_url.set(args=dict(catalog=catalog,
@@ -2338,7 +2371,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                     states[catalog].service.info(file)
                     for file, (catalog, source, file_response) in indexed_files.items()
                 ]
-                schema_url = info_objects[0]['$schema']
+                schema_url = json_str(info_objects[0]['$schema'])
                 self.assertTrue(schema_url.endswith(f'/v{MirrorService.info_schema_version}.json'))
                 schema_response = self._get_url_json('GET', furl(schema_url))
                 self.assertEqual(schema_url, schema_response['$id'])
@@ -2395,10 +2428,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         self.assertIsSubset(expected, contracts.keys())
         for name, contract in contracts.items():
             with self.subTest(contract=name):
-                versions = {v['version']: v for v in contract['versions']}
-                self.assertIn(contract['current'], versions)
+                versions = {
+                    json_int(version['version']): version
+                    for version in json_element_mappings(contract['versions'])
+                }
+                current = json_int(contract['current'])
+                self.assertIn(current, versions)
                 for version in versions.values():
-                    response = self._get_url(GET, furl(version['url']))
+                    response = self._get_url(GET, furl(json_str(version['url'])))
                     self.assertEqual(200, response.status)
                     self.assertEqual('text/markdown; charset=utf-8',
                                      response.headers['Content-Type'])
@@ -2412,11 +2449,11 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 url = furl(url=config.service_endpoint, path=f'/contracts/{name}/current')
                 response = self._get_url(GET, url)
                 self.assertEqual(302, response.status)
-                current = versions[contract['current']]
-                self.assertEqual(current['url'], response.headers['Location'])
+                self.assertEqual(versions[current]['url'],
+                                 response.headers['Location'])
                 # The response to the redirect identifies the current version
                 response = self._get_url(GET, furl(response.headers['Location']))
-                self.assertEqual(f'"{current["version"]}-{current["sha256"]}"',
+                self.assertEqual(f'"{current}-{versions[current]["sha256"]}"',
                                  response.headers['ETag'])
 
     def _contract_versions(self) -> dict[str, JSON]:
@@ -2424,15 +2461,21 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         Maps the name of each contract to its listing of versions
         """
         url = furl(url=config.service_endpoint, path='/contracts')
-        contracts = self._get_url_json(GET, url)['contracts']
-        return {
-            name: self._get_url_json(GET, furl(versions_url))['contracts'][name]
-            for name, versions_url in contracts.items()
-        }
+        contracts = json_mapping(self._get_url_json(GET, url)['contracts'])
+        versions = {}
+        for name, versions_url in contracts.items():
+            response = self._get_url_json(GET, furl(json_str(versions_url)))
+            listing = json_mapping(response['contracts'])[name]
+            versions[name] = json_mapping(listing)
+        return versions
 
     def test_user(self):
         with self.subTest('unauthenticated'):
-            for method, body in [(GET, None), (PATCH, {'accepted_contracts': {}})]:
+            requests: list[tuple[str, JSON | None]] = [
+                (GET, None),
+                (PATCH, {'accepted_contracts': {}})
+            ]
+            for method, body in requests:
                 response = self._user_request_unchecked(method, body)
                 self.assertEqual(401, response.status)
         if 'unattended' in config.it_flags:
@@ -2447,14 +2490,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         self.assertEqual({'email', 'authorized_until', 'accepted_contracts'},
                          user.keys())
         now = datetime.now(timezone.utc)
-        self.assertGreater(parse_dcp2_datetime(user['authorized_until']), now)
+        self.assertGreater(parse_dcp2_datetime(json_str(user['authorized_until'])), now)
         contracts = self._contract_versions()
         name = self.random.choice(sorted(contracts))
         log.info('Testing the acceptance of contract %r', name)
         contract = contracts[name]
         current = one(
             version
-            for version in contract['versions']
+            for version in json_element_mappings(contract['versions'])
             if version['version'] == contract['current']
         )
         acceptance = {'version': current['version'], 'sha256': current['sha256']}
@@ -2462,15 +2505,13 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # IT user is the person running the IT, so their prior acceptance, or
         # lack thereof, is restored afterwards. The time of a prior acceptance
         # can't be restored, only its version.
-        accepted_contracts = user['accepted_contracts']
-        original = (
-            {
-                'version': accepted_contracts[name]['version'],
-                'sha256': accepted_contracts[name]['sha256']
-            }
-            if name in accepted_contracts else
-            None
-        )
+        accepted_contracts = json_mapping(user['accepted_contracts'])
+        original: JSON | None
+        if name in accepted_contracts:
+            accepted = json_mapping(accepted_contracts[name])
+            original = {'version': accepted['version'], 'sha256': accepted['sha256']}
+        else:
+            original = None
         try:
             wrong_acceptance = {**acceptance, 'sha256': '0' * 64}
             body = {'accepted_contracts': {name: wrong_acceptance}}
@@ -2478,15 +2519,15 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertEqual(400, response.status)
             body = {'accepted_contracts': {name: acceptance}}
             user = self._user_request(PATCH, body)
-            accepted = user['accepted_contracts'][name]
+            accepted = json_mapping(json_mapping(user['accepted_contracts'])[name])
             self.assertEqual(acceptance, {
                 k: v for k, v in accepted.items() if k != 'time'
             })
-            parse_dcp2_datetime(accepted['time'])
+            parse_dcp2_datetime(json_str(accepted['time']))
             self.assertEqual(user, self._user_request(GET))
             body = {'accepted_contracts': {name: None}}
             user = self._user_request(PATCH, body)
-            self.assertNotIn(name, user['accepted_contracts'])
+            self.assertNotIn(name, json_mapping(user['accepted_contracts']))
             self.assertEqual(user, self._user_request(GET))
         finally:
             self._user_request(PATCH, {'accepted_contracts': {name: original}})
