@@ -1668,7 +1668,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 self.assertEqual('lungmap', config.catalogs[catalog].atlas, inner_file)
 
     def _test_file_download(self, source: SourceSpec, file: JSON) -> mutable_furl | None:
-        file_url = furl(json_str(file['azul_url']))
+        file_url = mutable_furl(json_str(file['azul_url']))
         # FIXME: Use _check_endpoint() instead
         #        https://github.com/DataBiosphere/azul/issues/7373
         self.assertEqual(file_url.path.segments[0], 'repository')
@@ -1687,7 +1687,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertEqual(200, response.status)
             response = json.loads(response.data)
             self.assertEqual(302, response['Status'])
-            final_file_url = furl(response['Location'])
+            final_file_url = mutable_furl(response['Location'])
             response = self._get_url(GET, final_file_url, stream=True)
             self._validate_file_response(response, source, file)
             return final_file_url
@@ -2265,9 +2265,11 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             managed_access_file = one(json_element_mappings(outer_file['files']))
             managed_access_file_id = lookup(managed_access_file, 'document_id', 'uuid')
             filters = {metadata_plugin.special_fields.file_uuid.name: {'is': [managed_access_file_id]}}
-            manifest_url.set(args=dict(catalog=catalog,
-                                       filters=json.dumps(filters),
-                                       format='curl'))
+            manifest_url = furl(url=endpoint,
+                                path='/manifest/files',
+                                args=dict(catalog=catalog,
+                                          filters=json.dumps(filters),
+                                          format='curl'))
             method = PUT
             while True:
                 with self._service_account_credentials:
