@@ -476,6 +476,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         }
         for catalog, sources in configured_sources.items():
             for spec, _ in sources.items():
+                assert isinstance(spec, TDRSourceSpec), spec
                 source_id = one(
                     id
                     for id, snapshot in all_sources.items()
@@ -1475,7 +1476,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         if config.is_anvil_enabled(catalog):
             self._check_download_paths(rows)
 
-    def _check_download_paths(self, rows: list[Mapping[str, str]]) -> None:
+    def _check_download_paths(self, rows: Sequence[Mapping[str, str]]) -> None:
         """
         Assert that no two files whose contents differ are downloaded to the
         same path. Two files that are identical may share a path, since
@@ -1579,7 +1580,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
     def __check_csv_manifest(self,
                              file: IO[bytes],
                              uuid_column_name: str
-                             ) -> list[Mapping[str, str]]:
+                             ) -> Sequence[Mapping[str, str]]:
         reader = self._read_csv_manifest(file)
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')
@@ -2247,10 +2248,11 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 'filters': json.dumps({special_fields.bundle_uuid.name: {'is': list(bundles)}})
             })
             content = BytesIO(self._get_url_content(PUT, manifest_url))
-            return {
+            readers: dict[ManifestFormat, Callable[[IO], set]] = {
                 ManifestFormat.verbatim_jsonl: read_verbatim_jsonl_manifest,
                 ManifestFormat.verbatim_pfb: read_verbatim_pfb_manifest
-            }[format](content)
+            }
+            return readers[format](content)
 
         for format in ManifestFormat.verbatim_jsonl, ManifestFormat.verbatim_pfb:
             if format in metadata_plugin.manifest_formats:
@@ -2857,11 +2859,10 @@ class BearerTokenHttpClient(HttpClientDecorator):
         super().__init__(inner)
         self._token = token
 
-    def urlopen(self, method, url, body=None, headers=None, **kwargs):
-        if headers is None:
-            headers = {}
-        headers = {**headers, 'Authorization': f'Bearer {self._token}'}
-        return super().urlopen(method, url, body=body, headers=headers, **kwargs)
+    def urlopen(self, method, url, *args, **kwargs) -> urllib3.BaseHTTPResponse:
+        headers = kwargs.get('headers') or {}
+        kwargs['headers'] = {**headers, 'Authorization': f'Bearer {self._token}'}
+        return super().urlopen(method, url, *args, **kwargs)
 
 
 class IntegrationTestRateLimitExemption:
