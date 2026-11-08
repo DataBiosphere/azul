@@ -63,7 +63,7 @@ import uuid
 import webbrowser
 
 import attrs
-from chalice import (
+from chalice.app import (
     UnauthorizedError,
 )
 import chalice.cli
@@ -206,6 +206,7 @@ from azul.opensearch import (
 )
 from azul.plugins import (
     File,
+    ManifestFormat,
     MetadataPlugin,
     RepositoryPlugin,
 )
@@ -228,7 +229,6 @@ from azul.service.manifest_controller import (
 )
 from azul.service.manifest_service import (
     CurlManifestGenerator,
-    ManifestFormat,
     ManifestGenerator,
 )
 from azul.source import (
