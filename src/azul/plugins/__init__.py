@@ -611,6 +611,16 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
 
     @property
     @abstractmethod
+    def registered_access_contract(self) -> str | None:
+        """
+        The name of the contract a user accepts to obtain registered access to
+        catalogs using this plugin, or None if those catalogs don't offer
+        registered access.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def manifest_config(self) -> ManifestConfig:
         raise NotImplementedError
 

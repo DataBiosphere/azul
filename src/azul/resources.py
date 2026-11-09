@@ -51,6 +51,21 @@ def open_resource(*path: str,
 
     :param binary: True to load a binary resource
     """
+    resource_file = _resource_path(*path, package_root=package_root)
+    return open(resource_file, mode='rb' if binary else 'r')
+
+
+def list_resources(*path: str, package_root: str | None = None) -> list[str]:
+    """
+    Return the names of the entries in the resource directory at the given
+    path, in arbitrary order. See :func:`open_resource` for a description of
+    the arguments, except that the last positional argument is the name of a
+    directory.
+    """
+    return os.listdir(_resource_path(*path, package_root=package_root))
+
+
+def _resource_path(*path: str, package_root: str | None) -> str:
     assert len(path) > 0, R('Must pass at least the file name of the resource')
     if package_root is None:
         module_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,8 +79,7 @@ def open_resource(*path: str,
     # vendor directory is gone. During `chalice local` or in a running
     # LocalAppTestCase, the vendor directory still exists.
     resource_dir = vendor_dir if os.path.exists(vendor_dir) else package_root
-    resource_file = os.path.join(resource_dir, 'resources', *path)
-    return open(resource_file, mode='rb' if binary else 'r')
+    return os.path.join(resource_dir, 'resources', *path)
 
 
 class NotInLambdaContextException(RuntimeError):

@@ -49,7 +49,7 @@ sources: check_aws vendor/resources/sources.json
 
 .PHONY: local
 local: check_python config
-	chalice local
+	chalice local --host localhost
 
 .PHONY: clean
 clean: git_clean_recursive

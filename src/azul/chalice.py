@@ -594,9 +594,16 @@ class AzulChaliceApp(Chalice):
             raise NotFoundError(path)
 
     def load_resource(self, *path: str) -> str:
-        package_root = os.path.dirname(self.app_module_path)
-        with open_resource(*path, package_root=package_root) as f:
+        with open_resource(*path, package_root=self.package_root) as f:
             return f.read()
+
+    @property
+    def package_root(self) -> str:
+        """
+        The directory containing the app module, for passing to the functions
+        in :mod:`azul.resources`
+        """
+        return os.path.dirname(self.app_module_path)
 
     @property
     def catalog(self) -> str:

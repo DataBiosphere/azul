@@ -2,7 +2,7 @@
     "openapi": "3.0.1",
     "info": {
         "title": "azul-service-dev",
-        "version": "24.0",
+        "version": "24.2",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n\n\n## Contact us\n\nFor technical support please file an issue at\n[GitHub](https://github.com/DataBiosphere/azul/issues) or email\n`azul-group@ucsc.edu`. To report a security concern or misconduct please email\n`azul-group@ucsc.edu`.\n"
     },
     "tags": [
@@ -21,6 +21,10 @@
         {
             "name": "User",
             "description": "\nAuthentication and authorization\n"
+        },
+        {
+            "name": "Contracts",
+            "description": "\nContracts a user can accept, such as the one governing\nregistered access to a catalog\n"
         },
         {
             "name": "Auxiliary",
@@ -14111,6 +14115,225 @@
                 ]
             }
         },
+        "/user": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "Information about the user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "email": {
+                                            "type": "string",
+                                            "description": "The email address of the user"
+                                        },
+                                        "authorized_until": {
+                                            "type": "string",
+                                            "description": "\nWhen, in UTC, the user's authorization of this application\nlapses. The user's acceptance of every contract in\n`accepted_contracts` lapses at the same time. Authorizing this\napplication again extends both.\n"
+                                        },
+                                        "accepted_contracts": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "version": {
+                                                        "type": "integer",
+                                                        "format": "int64",
+                                                        "description": "\nThe version of the contract the user accepted\n"
+                                                    },
+                                                    "sha256": {
+                                                        "type": "string",
+                                                        "pattern": "^[0-9a-f]{64}$",
+                                                        "description": "\nThe SHA-256 digest of the text of that version\n"
+                                                    },
+                                                    "time": {
+                                                        "type": "string",
+                                                        "description": "\nWhen the user accepted the contract, in UTC\n"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "version",
+                                                    "sha256",
+                                                    "time"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "description": "\nThe contracts the user accepted, by name. Contracts the\nuser did not accept are absent.\n"
+                                        }
+                                    },
+                                    "required": [
+                                        "email",
+                                        "authorized_until",
+                                        "accepted_contracts"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\nNo valid OAuth 2.0 access token was provided, or the user\nhas not completed the authorization code flow\n"
+                    },
+                    "403": {
+                        "description": "\nA personal access token was provided, which cannot be used\nfor this endpoint\n"
+                    }
+                },
+                "summary": "Retrieve information about the user, such as which contracts they accepted",
+                "description": "\nRetrieve information about the authenticated user,\nincluding the contracts they accepted. The user must\nprovide a valid OAuth 2.0 access token in the\n`Authorization` header as a Bearer token, and must have\npreviously completed the authorization code flow.\n",
+                "tags": [
+                    "User"
+                ]
+            },
+            "patch": {
+                "responses": {
+                    "400": {
+                        "description": "\nThe request body is invalid, it names a contract\nor version of a contract that does not exist, or\nthe SHA-256 digest does not match the version\n"
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nThe user was updated. The response body is the same\nas that of a subsequent `GET` request.\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "email": {
+                                            "type": "string",
+                                            "description": "The email address of the user"
+                                        },
+                                        "authorized_until": {
+                                            "type": "string",
+                                            "description": "\nWhen, in UTC, the user's authorization of this application\nlapses. The user's acceptance of every contract in\n`accepted_contracts` lapses at the same time. Authorizing this\napplication again extends both.\n"
+                                        },
+                                        "accepted_contracts": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "version": {
+                                                        "type": "integer",
+                                                        "format": "int64",
+                                                        "description": "\nThe version of the contract the user accepted\n"
+                                                    },
+                                                    "sha256": {
+                                                        "type": "string",
+                                                        "pattern": "^[0-9a-f]{64}$",
+                                                        "description": "\nThe SHA-256 digest of the text of that version\n"
+                                                    },
+                                                    "time": {
+                                                        "type": "string",
+                                                        "description": "\nWhen the user accepted the contract, in UTC\n"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "version",
+                                                    "sha256",
+                                                    "time"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            "description": "\nThe contracts the user accepted, by name. Contracts the\nuser did not accept are absent.\n"
+                                        }
+                                    },
+                                    "required": [
+                                        "email",
+                                        "authorized_until",
+                                        "accepted_contracts"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "\nNo valid OAuth 2.0 access token was provided, or the user\nhas not completed the authorization code flow\n"
+                    },
+                    "403": {
+                        "description": "\nA personal access token was provided, which cannot be used\nfor this endpoint\n"
+                    }
+                },
+                "summary": "Update information about the user, such as the contracts they accepted",
+                "description": "\nAccept contracts on behalf of the authenticated user, or\nretract their acceptance. The user must provide a valid\nOAuth 2.0 access token in the `Authorization` header as a\nBearer token, and must have previously completed the\nauthorization code flow.\n",
+                "tags": [
+                    "User"
+                ],
+                "requestBody": {
+                    "description": "\nThe attributes of the user to update. Currently, only\nthe `accepted_contracts` attribute can be updated.\n",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "accepted_contracts": {
+                                        "type": "object",
+                                        "properties": {},
+                                        "additionalProperties": {
+                                            "type": "object",
+                                            "properties": {
+                                                "version": {
+                                                    "type": "integer",
+                                                    "format": "int64"
+                                                },
+                                                "sha256": {
+                                                    "type": "string",
+                                                    "pattern": "^[0-9a-f]{64}$"
+                                                }
+                                            },
+                                            "required": [
+                                                "version",
+                                                "sha256"
+                                            ],
+                                            "additionalProperties": false,
+                                            "nullable": true
+                                        },
+                                        "nullable": true,
+                                        "description": "\nMaps the name of each contract to the\nversion of it the user accepts, or to\n`null` to retract the acceptance of that\ncontract. The version must be accompanied\nby the SHA-256 digest of its text, as listed\nby the `GET /contracts/{name}` endpoint.\nContracts not mentioned are left alone.\n`null` instead of a mapping retracts the\nacceptance of every contract. The time of\nacceptance is recorded by the server.\n"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/swagger/oauth2-redirect.html": {
             "get": {
                 "responses": {
@@ -14138,7 +14361,245 @@
                 },
                 "summary": "Used for logging into the the Swagger UI",
                 "tags": [
-                    "User"
+                    "Auxiliary"
+                ]
+            }
+        },
+        "/contracts": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nMaps the name of each contract to the URL of the\nlisting of its versions\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "contracts": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "contracts"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "summary": "List the contracts a user can accept",
+                "tags": [
+                    "Contracts"
+                ]
+            }
+        },
+        "/contracts/{name}": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nAll versions of the contract, each with the SHA-256\ndigest of its text and the URL from which to\nretrieve it, and which one of them is current\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "contracts": {
+                                            "type": "object",
+                                            "properties": {},
+                                            "additionalProperties": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "versions": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "version": {
+                                                                    "type": "integer",
+                                                                    "format": "int64"
+                                                                },
+                                                                "sha256": {
+                                                                    "type": "string",
+                                                                    "pattern": "^[0-9a-f]{64}$"
+                                                                },
+                                                                "url": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "version",
+                                                                "sha256",
+                                                                "url"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    },
+                                                    "current": {
+                                                        "type": "integer",
+                                                        "format": "int64"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "versions",
+                                                    "current"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "contracts"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "There is no contract with the specified name"
+                    }
+                },
+                "summary": "List the versions of a contract",
+                "tags": [
+                    "Contracts"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "anvil_registered_access"
+                    }
+                ]
+            }
+        },
+        "/contracts/{name}/{version}": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid version"
+                    },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nThe text of the contract, in Markdown\n",
+                        "headers": {
+                            "Content-Digest": {
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "^sha-256=:[A-Za-z0-9+/]{43}=:$"
+                                },
+                                "description": "\nThe SHA-256 digest of the text of the\ncontract, as specified by [RFC 9530][1],\nwith `sha-256` as the algorithm key. As\nrequired by that RFC, the digest is\nencoded in Base64, not in hexadecimal like\nthe digests in the response from the\n`GET /contracts/{name}` endpoint.\n\n[1]: https://www.rfc-editor.org/rfc/rfc9530\n"
+                            },
+                            "ETag": {
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "^\"[1-9][0-9]*-[0-9a-f]{64}\"$"
+                                },
+                                "description": "\nThe number of the version of the contract\nand the hexadecimal SHA-256 digest of its\ntext, as listed by the\n`GET /contracts/{name}` endpoint, joined\nby a hyphen and enclosed in double quotes\nas required by [RFC 9110][1]. When this\nendpoint is reached by following the\nredirect for the\n`current` version,\nthis header identifies the current version\nwithout the need to parse the URL the\nredirect pointed to.\n\n[1]: https://www.rfc-editor.org/rfc/rfc9110#field.etag\n"
+                            }
+                        },
+                        "content": {
+                            "text/markdown": {}
+                        }
+                    },
+                    "302": {
+                        "description": "\nThe `current` version was\nrequested. Retrieve the version the `Location`\nheader points to.\n",
+                        "headers": {
+                            "Location": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "description": "\nThe URL of the current version of the contract\n"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "There is no contract with the specified name and version"
+                    }
+                },
+                "summary": "Retrieve a version of a contract",
+                "tags": [
+                    "Contracts"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "anvil_registered_access"
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^(current|[1-9][0-9]*)$"
+                        },
+                        "example": "current",
+                        "description": "\nThe number of the version to retrieve,\nor `current` for the\ncurrent version\n"
+                    }
                 ]
             }
         }
