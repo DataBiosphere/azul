@@ -88,7 +88,13 @@ class Link[REF: (EntityReference, KeyReference)](SerializableAttrs):
         return self.inputs | self.outputs | aset(self.activity)
 
     def __lt__(self, other: Self) -> bool:
-        return min(self.inputs) < min(other.inputs)
+        # A primary bundle may contain an activity none of whose inputs are in
+        # the bundle, so the inputs of a link may be empty. Such links sort
+        # first.
+        if self.inputs and other.inputs:
+            return min(self.inputs) < min(other.inputs)
+        else:
+            return bool(other.inputs)
 
 
 class EntityLink(Link[EntityReference]):

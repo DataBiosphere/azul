@@ -57,6 +57,7 @@ from azul.lib.types import (
     JSON,
     MutableJSON,
     json_str,
+    not_none,
 )
 from azul.logging import (
     configure_test_logging,
@@ -534,12 +535,6 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             row['file_path'] = None
         self._assert_duplicate_files(tables, [])
 
-    def _canned_tables(self) -> MutableJSON:
-        canned_file = self._load_canned_file_version(uuid=self.source.ref.id,
-                                                     version=None,
-                                                     extension='tables.tdr')
-        return canned_file['tables']
-
     def _assert_duplicate_files(self,
                                 tables: MutableJSON,
                                 expected: list[str]
@@ -791,30 +786,44 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                           f'supplementary/writes-{self.digest}.bam'},
                          self._paths(bundle))
 
-    def _add_biosample(self,
-                       bundle: TDRAnvilBundle,
-                       biosample_id: str
-                       ) -> EntityReference:
+    def _add_biosample(self, bundle: TDRAnvilBundle, biosample_id: str) -> None:
         """
-        Link every file in the given bundle to an additional biosample with
-        the given ID, besides the one the bundle is rooted at, and return a
-        reference to that biosample.
+        Record every activity in the given bundle that used the biosample the
+        bundle is rooted at as having used an additional biosample with the
+        given ID, too. Like every primary bundle, the given one doesn't contain
+        the additional biosample, only the activities listing it.
         """
-        root = one(e
-                   for e in bundle.entities
-                   if e.entity_type == 'anvil_biosample')
+        for entity, metadata in bundle.entities.items():
+            if entity.entity_type.endswith('activity'):
+                used = metadata.get('used_biosample_id', [])
+                if self.biosample in used:
+                    metadata['used_biosample_id'] = [*used, biosample_id]
+
+    def _reroot(self, bundle: TDRAnvilBundle, biosample_id: str) -> None:
+        """
+        Turn the given bundle into the primary bundle of the biosample with the
+        given ID, by replacing the biosample the bundle is rooted at. This also
+        changes the UUID of the bundle.
+        """
+        root = not_none(bundle.bundle_entity)
         clone = EntityReference(entity_type=root.entity_type,
                                 entity_id=_entity_id(self.source.ref.spec,
                                                      root.entity_type,
                                                      biosample_id))
-        bundle.entities[clone] = {**bundle.entities[root],
-                                  'biosample_id': biosample_id}
+        bundle.entities[clone] = {
+            **bundle.entities.pop(root),
+            'biosample_id': biosample_id
+        }
+
+        def swap(entities: frozenset[EntityReference]) -> frozenset[EntityReference]:
+            return frozenset(clone if entity == root else entity for entity in entities)
+
         bundle.links = {
-            attrs.evolve(link, inputs=link.inputs | {clone})
-            if root in link.inputs else link
+            attrs.evolve(link, inputs=swap(link.inputs), outputs=swap(link.outputs))
             for link in bundle.links
         }
-        return clone
+        bundle.fqid = attrs.evolve(bundle.fqid, primary_key=biosample_id, uuid=None)
+        assert clone == bundle.bundle_entity, (clone, bundle.bundle_entity)
 
     def test_many_biosamples(self):
         """
@@ -837,12 +846,9 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         """
         other = '00000000-0000-0000-0000-000000000000'
         bundle = self._bundle('reads.bam', 'reads.bam')
-        clone = self._add_biosample(bundle, other)
-        self.assertNotEqual(clone, bundle.bundle_entity)
+        self._add_biosample(bundle, other)
         self.assertEqual({f'{other}/reads.bam'}, self._paths(bundle))
-        # Root the bundle at the other biosample, which also changes its UUID
-        bundle.fqid = attrs.evolve(bundle.fqid, primary_key=other, uuid=None)
-        self.assertEqual(clone, bundle.bundle_entity)
+        self._reroot(bundle, other)
         self.assertEqual({f'{other}/reads-{self.digest}.bam'},
                          self._paths(bundle))
 
@@ -858,9 +864,8 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         for primary_key in [self.biosample, other]:
             bundle = self._bundle('reads.bam', 'reads.bam')
             self._add_biosample(bundle, other)
-            bundle.fqid = attrs.evolve(bundle.fqid,
-                                       primary_key=primary_key,
-                                       uuid=None)
+            if primary_key != self.biosample:
+                self._reroot(bundle, primary_key)
             documents = service.transform(self.catalog, bundle, delete=False)
             assert isinstance(documents, tuple), documents
             for contribution in documents[0]:
@@ -997,3 +1002,108 @@ class TestAnvilSharedFile(WithIndexesSetUpTestCase, AnvilIndexerTestCase):
             for entity_id, path in self.expected_paths.items()
         }
         self.assertEqual(expected, actual)
+
+
+class TestAnvilHubActivity(AnvilCannedBundleTestCase,
+                           TDRPluginTestCase[tdr_anvil.Plugin],
+                           DUOSTestCase):
+    """
+    Primary bundles of biosamples used by activities that also use other
+    biosamples. The canned tables were taken from the MOHD snapshot, in which
+    a few such activities each use hundreds of biosamples and generate
+    hundreds of files. The tables were stripped down to three biosamples, two
+    of these activities and one ordinary activity, and the files generated by
+    them, and the primary keys of the biosamples were redacted. The files
+    were stripped of their paths, so that the paths are backfilled.
+    """
+
+    source = Source(
+        config=SourceConfig(mirror=False),
+        ref=TDRSourceRef(
+            id='79591509-9db1-4b16-812e-db31c5caf086',
+            spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_anvil_project:'
+                                     'ANVIL_MOHD_GRU_R1_20261022_ANV6_202610221648'),
+            prefix=Prefix.parse('/0')
+        )
+    )
+
+    #: The primary keys of the three biosamples
+    #:
+    b1, b2, b3 = 'redacted-HpXd+HV6', 'redacted-rwNXeRFA', 'redacted-2UlCEj3r'
+
+    #: The primary keys of the files generated by an activity that used
+    #: biosamples b1 and b2
+    #:
+    lipidomics = {
+        '72d53b08-c3b6-3efa-80e5-2b826beadedd',
+        '2b2b78c6-a08b-3c96-b0d7-7a787266b5a2'
+    }
+
+    #: The primary keys of the files generated by an activity that used
+    #: biosamples b2 and b3
+    #:
+    exposomics = {
+        '16edd765-7b1b-36c4-89a8-a07da45ad020',
+        '3d1c29ef-df0a-341c-94c3-616212b243a2'
+    }
+
+    #: The primary key of the file generated by an activity that used only
+    #: biosample b1
+    #:
+    metabolomics = {
+        'b8d15a39-99c7-3101-bd25-8f9042070457'
+    }
+
+    @classmethod
+    def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
+        return tdr_anvil.Plugin
+
+    def _keys(self, bundle: TDRAnvilBundle, entity_type: str) -> set[str]:
+        pk_column = entity_type.removeprefix('anvil_') + '_id'
+        return {
+            json_str(metadata[pk_column])
+            for entity, metadata in bundle.entities.items()
+            if entity.entity_type == entity_type
+        }
+
+    def test_bundles(self):
+        """
+        A primary bundle contains every file derived from its biosample, and
+        every activity those files were generated by, but none of the other
+        biosamples used by those activities. Each of these files is placed in
+        the directory of the lowest of the biosamples its activity used, no
+        matter which bundle the file is taken from.
+        """
+        self._mock_normal_duos()
+        self._make_mock_tables(self.source.ref)
+        files = {
+            self.b1: self.lipidomics | self.metabolomics,
+            self.b2: self.lipidomics | self.exposomics,
+            self.b3: self.exposomics
+        }
+        directories = {
+            **dict.fromkeys(self.lipidomics, min(self.b1, self.b2)),
+            **dict.fromkeys(self.exposomics, min(self.b2, self.b3)),
+            **dict.fromkeys(self.metabolomics, self.b1)
+        }
+        for biosample, expected_files in files.items():
+            with self.subTest(biosample=biosample):
+                bundle = self.plugin.fetch_bundle(self.bundle_fqid(primary_key=biosample))
+                assert isinstance(bundle, TDRAnvilBundle)
+                self.assertEqual({biosample}, self._keys(bundle, 'anvil_biosample'))
+                self.assertEqual(expected_files, self._keys(bundle, 'anvil_file'))
+                for link in bundle.links:
+                    if link.activity is not None:
+                        self.assertEqual({bundle.bundle_entity}, link.inputs)
+                transformer = FileTransformer(bundle=bundle, deleted=False)
+                paths = {
+                    json_str(file['file_id']): file['file_path']
+                    for doc in transformer.transform(BundlePartition.root)
+                    if isinstance(doc, Contribution)
+                    for file in [one(doc.contents['files'])]
+                }
+                expected_paths = {
+                    file_id: f'{directories[file_id]}/{file_id}'
+                    for file_id in expected_files
+                }
+                self.assertEqual(expected_paths, paths)

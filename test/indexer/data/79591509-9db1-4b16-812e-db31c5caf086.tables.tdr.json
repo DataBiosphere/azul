@@ -1,0 +1,757 @@
+{
+    "tables": {
+        "anvil_activity": {
+            "rows": [
+                {
+                    "datarepo_row_id": "22fb7994-3227-4195-a618-73f5b45c792a",
+                    "activity_id": "0b042249-7e36-38f6-627d-86aad2a65c05",
+                    "activity_type": "Unknown",
+                    "used_file_id": [],
+                    "generated_file_id": [
+                        "b8d15a39-99c7-3101-bd25-8f9042070457"
+                    ],
+                    "used_biosample_id": [
+                        "redacted-HpXd+HV6"
+                    ],
+                    "source_datarepo_row_ids": []
+                },
+                {
+                    "datarepo_row_id": "3ad7fbc8-e07c-4ba8-9bcb-a82c9b91844a",
+                    "activity_id": "cb20566b-ca5f-00b2-f709-0584d4f4ff08",
+                    "activity_type": "Harmonization",
+                    "used_file_id": [],
+                    "generated_file_id": [
+                        "16edd765-7b1b-36c4-89a8-a07da45ad020",
+                        "3d1c29ef-df0a-341c-94c3-616212b243a2"
+                    ],
+                    "used_biosample_id": [
+                        "redacted-2UlCEj3r",
+                        "redacted-rwNXeRFA"
+                    ],
+                    "source_datarepo_row_ids": []
+                },
+                {
+                    "datarepo_row_id": "463f798f-3b5f-4722-b3f2-4f6a8b1030e9",
+                    "activity_id": "dfacd756-b684-466e-9b45-35763cdc6102",
+                    "activity_type": "Harmonization",
+                    "used_file_id": [],
+                    "generated_file_id": [
+                        "72d53b08-c3b6-3efa-80e5-2b826beadedd",
+                        "2b2b78c6-a08b-3c96-b0d7-7a787266b5a2"
+                    ],
+                    "used_biosample_id": [
+                        "redacted-HpXd+HV6",
+                        "redacted-rwNXeRFA"
+                    ],
+                    "source_datarepo_row_ids": []
+                }
+            ],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "activity_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "activity_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "used_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "generated_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "used_biosample_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_alignmentactivity": {
+            "rows": [],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "alignmentactivity_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "activity_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "data_modality",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "generated_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "used_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "reference_assembly",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_assayactivity": {
+            "rows": [],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "assayactivity_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "activity_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "antibody_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "assay_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "data_modality",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "generated_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "used_biosample_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_biosample": {
+            "rows": [
+                {
+                    "datarepo_row_id": "083a9415-d196-431f-a215-e48c70256da2",
+                    "biosample_id": "redacted-HpXd+HV6",
+                    "anatomical_site": null,
+                    "apriori_cell_type": [],
+                    "biosample_type": null,
+                    "disease": null,
+                    "donor_age_at_collection_unit": null,
+                    "donor_age_at_collection_lower_bound": null,
+                    "donor_age_at_collection_upper_bound": null,
+                    "donor_id": [],
+                    "part_of_dataset_id": [
+                        "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5"
+                    ],
+                    "source_datarepo_row_ids": []
+                },
+                {
+                    "datarepo_row_id": "f30fad06-363d-46d8-8282-6ab97cf45699",
+                    "biosample_id": "redacted-2UlCEj3r",
+                    "anatomical_site": null,
+                    "apriori_cell_type": [],
+                    "biosample_type": null,
+                    "disease": null,
+                    "donor_age_at_collection_unit": null,
+                    "donor_age_at_collection_lower_bound": null,
+                    "donor_age_at_collection_upper_bound": null,
+                    "donor_id": [],
+                    "part_of_dataset_id": [
+                        "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5"
+                    ],
+                    "source_datarepo_row_ids": []
+                },
+                {
+                    "datarepo_row_id": "1147b549-8e31-4d45-a0de-7e60d3729d22",
+                    "biosample_id": "redacted-rwNXeRFA",
+                    "anatomical_site": null,
+                    "apriori_cell_type": [],
+                    "biosample_type": null,
+                    "disease": null,
+                    "donor_age_at_collection_unit": null,
+                    "donor_age_at_collection_lower_bound": null,
+                    "donor_age_at_collection_upper_bound": null,
+                    "donor_id": [],
+                    "part_of_dataset_id": [
+                        "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5"
+                    ],
+                    "source_datarepo_row_ids": []
+                }
+            ],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "biosample_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "anatomical_site",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "apriori_cell_type",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "biosample_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "disease",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "donor_age_at_collection_unit",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "donor_age_at_collection_lower_bound",
+                        "field_type": "FLOAT",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "donor_age_at_collection_upper_bound",
+                        "field_type": "FLOAT",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "donor_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "part_of_dataset_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_dataset": {
+            "rows": [
+                {
+                    "datarepo_row_id": "0191aaaf-83c5-4411-8692-36925b18f967",
+                    "dataset_id": "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5",
+                    "consent_group": [
+                        "GRU"
+                    ],
+                    "data_use_permission": [
+                        "GRU"
+                    ],
+                    "owner": [],
+                    "principal_investigator": [],
+                    "registered_identifier": [
+                        "phs003765"
+                    ],
+                    "title": "AnVIL_MOHD_GRU_R1",
+                    "data_modality": [],
+                    "source_datarepo_row_ids": []
+                }
+            ],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "dataset_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "consent_group",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "data_use_permission",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "owner",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "principal_investigator",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "registered_identifier",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "title",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "data_modality",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_diagnosis": {
+            "rows": [],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "diagnosis_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "donor_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "disease",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "diagnosis_age_unit",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "diagnosis_age_lower_bound",
+                        "field_type": "FLOAT",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "diagnosis_age_upper_bound",
+                        "field_type": "FLOAT",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "onset_age_unit",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "onset_age_lower_bound",
+                        "field_type": "FLOAT",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "onset_age_upper_bound",
+                        "field_type": "FLOAT",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "phenotype",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "phenopacket",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_donor": {
+            "rows": [],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "donor_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "organism_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "part_of_dataset_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "phenotypic_sex",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "reported_ethnicity",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "genetic_ancestry",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_file": {
+            "rows": [
+                {
+                    "datarepo_row_id": "2a3a7d9b-d013-4ffb-8944-5ec5fabd7b10",
+                    "file_id": "16edd765-7b1b-36c4-89a8-a07da45ad020",
+                    "data_modality": [
+                        "exposomics"
+                    ],
+                    "file_format": null,
+                    "file_size": 535,
+                    "file_md5sum": "oVwzI6xITG8gZwgFVq+OYA==",
+                    "reference_assembly": [],
+                    "file_name": "16edd765-7b1b-36c4-89a8-a07da45ad020",
+                    "file_path": null,
+                    "file_ref": "drs://drs.anv0:v2_16edd765-7b1b-36c4-89a8-a07da45ad020",
+                    "is_supplementary": false,
+                    "source_datarepo_row_ids": [
+                        "file:0632dd68-2722-493f-ab1e-44474fd8fb3e",
+                        "dataset:042f4aa4-4160-4896-b7d9-84f3aaf4fcd8"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "21da0392-e088-422f-9299-6a844372a9d1",
+                    "file_id": "2b2b78c6-a08b-3c96-b0d7-7a787266b5a2",
+                    "data_modality": [
+                        "lipidomics"
+                    ],
+                    "file_format": null,
+                    "file_size": 20078,
+                    "file_md5sum": "WYwHgD2NJ0ZOXzYRq5WEww==",
+                    "reference_assembly": [],
+                    "file_name": "2b2b78c6-a08b-3c96-b0d7-7a787266b5a2",
+                    "file_path": null,
+                    "file_ref": "drs://drs.anv0:v2_2b2b78c6-a08b-3c96-b0d7-7a787266b5a2",
+                    "is_supplementary": false,
+                    "source_datarepo_row_ids": [
+                        "file:1170a9c4-b5b5-416a-8f95-da14d23122c8",
+                        "dataset:8c2d8109-5876-4c68-bcba-594db78c98e3"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "ec6b11a3-7d0c-4fd0-bb76-0dc743b18412",
+                    "file_id": "3d1c29ef-df0a-341c-94c3-616212b243a2",
+                    "data_modality": [
+                        "exposomics"
+                    ],
+                    "file_format": null,
+                    "file_size": 539,
+                    "file_md5sum": "zy8U8JWIKl29B8mZODimVA==",
+                    "reference_assembly": [],
+                    "file_name": "3d1c29ef-df0a-341c-94c3-616212b243a2",
+                    "file_path": null,
+                    "file_ref": "drs://drs.anv0:v2_3d1c29ef-df0a-341c-94c3-616212b243a2",
+                    "is_supplementary": false,
+                    "source_datarepo_row_ids": [
+                        "file:f759cf49-dc97-4f53-a1f2-e1a6f501c81d",
+                        "dataset:a648fe7b-e32d-43ae-83f2-a8203450dfbb"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "6d56096d-c372-4e4b-bd1d-0b95c5cb9bc8",
+                    "file_id": "72d53b08-c3b6-3efa-80e5-2b826beadedd",
+                    "data_modality": [
+                        "lipidomics"
+                    ],
+                    "file_format": null,
+                    "file_size": 20068,
+                    "file_md5sum": "MJ/fim6U4f4UV0iHaV9+Jg==",
+                    "reference_assembly": [],
+                    "file_name": "72d53b08-c3b6-3efa-80e5-2b826beadedd",
+                    "file_path": null,
+                    "file_ref": "drs://drs.anv0:v2_72d53b08-c3b6-3efa-80e5-2b826beadedd",
+                    "is_supplementary": false,
+                    "source_datarepo_row_ids": [
+                        "file:2b5b14cb-ab52-447d-9093-5ec9440c2304",
+                        "dataset:80a14c82-cacc-4cd6-9124-e672810c218d"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "985ee96d-b67c-4d38-b685-4d225cdda681",
+                    "file_id": "b8d15a39-99c7-3101-bd25-8f9042070457",
+                    "data_modality": [
+                        "metabolomics"
+                    ],
+                    "file_format": null,
+                    "file_size": 30007604,
+                    "file_md5sum": "MNob53L/Lln8aM4Pnw/2Dg==",
+                    "reference_assembly": [],
+                    "file_name": "b8d15a39-99c7-3101-bd25-8f9042070457",
+                    "file_path": null,
+                    "file_ref": "drs://drs.anv0:v2_b8d15a39-99c7-3101-bd25-8f9042070457",
+                    "is_supplementary": false,
+                    "source_datarepo_row_ids": [
+                        "file:187c95a2-be55-4b6a-8a2f-57cf2cf8f816",
+                        "dataset:e25e82c1-633f-4d07-ae2f-2f2848fc36af"
+                    ]
+                }
+            ],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "file_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "data_modality",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "file_format",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "file_size",
+                        "field_type": "INTEGER",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "file_md5sum",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "reference_assembly",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "file_name",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "file_path",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "file_ref",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "is_supplementary",
+                        "field_type": "BOOLEAN",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_sequencingactivity": {
+            "rows": [],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "sequencingactivity_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "activity_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "assay_type",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "data_modality",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "generated_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "used_biosample_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        },
+        "anvil_variantcallingactivity": {
+            "rows": [],
+            "schema": {
+                "columns": [
+                    {
+                        "name": "datarepo_row_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "variantcallingactivity_id",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "activity_type",
+                        "field_type": "STRING",
+                        "mode": "NULLABLE"
+                    },
+                    {
+                        "name": "used_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "generated_file_id",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "reference_assembly",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "data_modality",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    },
+                    {
+                        "name": "source_datarepo_row_ids",
+                        "field_type": "STRING",
+                        "mode": "REPEATED"
+                    }
+                ]
+            }
+        }
+    }
+}

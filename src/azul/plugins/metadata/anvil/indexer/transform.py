@@ -676,9 +676,11 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         # would be incomplete. If a file is derived from multiple biosamples, we
         # pick the one with the lowest primary key. Note that every primary
         # bundle contains the complete set of files derived from its root
-        # biosample, and the complete set of biosamples these files are derived
-        # from. This is why our pick is consistent for every file, even if the
-        # file is also part of other bundles.
+        # biosample, and the complete set of activities that generate these
+        # files. A primary bundle doesn't contain the other biosamples used by
+        # these activities, but the activities list the primary keys of all
+        # biosamples they used. This is why our pick is consistent for every
+        # file, even if the file is also part of other bundles.
         #
         groups = defaultdict(list)
         for file in self._entities_by_type['anvil_file']:
@@ -687,10 +689,14 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 if json_bool(metadata['is_supplementary']):
                     dir = self._supplementary_dir
                 else:
-                    biosamples = self._linked_entities(file)['anvil_biosample']
+                    ancestors = self._linked_entities(file).ancestors
                     biosample_ids = (
-                        json_str(self.bundle.entities[biosample]['biosample_id'])
-                        for biosample in biosamples
+                        biosample_id
+                        for activity_type in self._activity_polymorphic_types
+                        for activity in ancestors[activity_type]
+                        for biosample_id in json_element_strings(
+                            self.bundle.entities[activity].get('used_biosample_id', [])
+                        )
                     )
                     # FIXME: Remove the default
                     #        https://github.com/DataBiosphere/azul/issues/8386

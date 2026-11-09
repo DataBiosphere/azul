@@ -283,14 +283,27 @@ class BundleType(Enum):
 
     #: Primary bundles are defined by a biosample entity, termed the *bundle
     #: entity*. Each primary bundle includes all of the bundle entity's
-    #: descendants and all of those entities' ancestors. Descendants and
-    #: ancestors are discovered by iteratively following foreign keys.
+    #: descendants and most of those entities' ancestors. The ancestors
+    #: obviously include the biosample that defines the bundle, but other
+    #: ancestor biosamples are excluded, as is the ancestry of those excluded
+    #: biosamples.
+    #:
+    #: Descendants and ancestors are discovered by iteratively following foreign
+    #: keys. It is safe to only include one biosample in each bundle. The other,
+    #: excluded biosamples each define their own bundle, which then includes the
+    #: descendants the two biosamples have in common, so the aggregate of every
+    #: entity still reflects all of its ancestors. The exclusion of other
+    #: biosamples is needed to accommodate activities that use many biosamples
+    #: and generate many files, such as those in MOHD, which would otherwise
+    #: make the total size of the contributions cubic in the size of such an
+    #: activity.
+    #:
     #: Biosamples were chosen to act as the bundle entities for primary bundles
     #: based on a desirable balance between the size and number of the resulting
     #: bundles as well as the degree of overlap between them. The implementation
     #: of the graph traversal is tightly coupled to this choice, and switching
     #: to a different bundle entity type would require re-implementing much of
-    #: the Plugin code. Primary bundles consist of at least one biosample (the
+    #: the Plugin code. Primary bundles consist of exactly one biosample (the
     #: bundle entity), exactly one dataset entity, and zero or more other
     #: entities of assorted types. Primary bundles never contain bundle orphans
     #: because they are bijective to rows in the biosample table.
@@ -1015,8 +1028,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       f.file_id AS generated_file_id,
                       'anvil_alignmentactivity' AS activity_table,
                       ama.alignmentactivity_id AS activity_id,
-                      ama.used_file_id AS uses_file_id,
-                      [] AS uses_biosample_id,
+                      ama.used_file_id AS uses_file_id
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_alignmentactivity'))} AS ama
                     ON f.file_id IN UNNEST(ama.generated_file_id)
@@ -1024,8 +1036,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       f.file_id,
                       'anvil_assayactivity',
                       aya.assayactivity_id,
-                      [],
-                      aya.used_biosample_id,
+                      []
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_assayactivity'))} AS aya
                     ON f.file_id IN UNNEST(aya.generated_file_id)
@@ -1033,8 +1044,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       f.file_id,
                       'anvil_sequencingactivity',
                       sqa.sequencingactivity_id,
-                      [],
-                      sqa.used_biosample_id,
+                      []
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_sequencingactivity'))} AS sqa
                     ON f.file_id IN UNNEST(sqa.generated_file_id)
@@ -1042,8 +1052,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     f.file_id,
                     'anvil_variantcallingactivity',
                     vca.variantcallingactivity_id,
-                    vca.used_file_id,
-                    []
+                    vca.used_file_id
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_variantcallingactivity'))} AS vca
                     ON f.file_id IN UNNEST(vca.generated_file_id)
@@ -1051,8 +1060,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     f.file_id,
                     'anvil_activity',
                     a.activity_id,
-                    a.used_file_id,
-                    a.used_biosample_id,
+                    a.used_file_id
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_activity'))} AS a
                     ON f.file_id IN UNNEST(a.generated_file_id)
@@ -1063,18 +1071,19 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                                           key=row['activity_id']),
                     # The generated link is not a complete representation of the
                     # upstream activity because it does not include generated files
-                    # that are not ancestors of the downstream file
+                    # that are not ancestors of the downstream file …
                     outputs=singleton(
                         KeyReference(entity_type='anvil_file',
-                                     key=row['generated_file_id'])),
+                                     key=row['generated_file_id'])
+                    ),
+                    # … nor does it include the biosamples used by the activity.
+                    # The bundle entity is linked to the activities using it
+                    # by the downstream pass, and any other biosample is
+                    # excluded from the bundle. See BundleType.primary.
                     inputs=frozenset(
-                        KeyReference(entity_type=entity_type,
+                        KeyReference(entity_type='anvil_file',
                                      key=key)
-                        for entity_type, column in [
-                            ('anvil_file', 'uses_file_id'),
-                            ('anvil_biosample', 'uses_biosample_id')
-                        ]
-                        for key in row[column]
+                        for key in row['uses_file_id']
                     )
                 )
                 for row in rows
@@ -1096,10 +1105,12 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 KeyLink(
                     inputs=singleton(
                         KeyReference(key=row['diagnosis_id'],
-                                     entity_type='anvil_diagnosis')),
+                                     entity_type='anvil_diagnosis')
+                    ),
                     outputs=singleton(
                         KeyReference(key=row['donor_id'],
-                                     entity_type='anvil_donor')),
+                                     entity_type='anvil_donor')
+                    ),
                     activity=None)
                 for row in rows
             }
