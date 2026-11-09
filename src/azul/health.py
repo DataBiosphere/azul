@@ -2,9 +2,6 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
-from itertools import (
-    chain,
-)
 import json
 import logging
 import random
@@ -254,13 +251,13 @@ class Health(HasCachedHttpClient):
         The number of Data Store bundles pending to be indexed and the number
         of index documents in need of updating.
         """
+        # drop! Report the queues as empty, so that indexing MOHD into anvil16
+        # doesn't disable downloads and exports of anvil15 in the Data Browser
+        # (#8479)
         return {
             'up': True,
-            'unindexed_bundles': sum(self.queues[config.notifications_queue.name].get('messages', {}).values()),
-            'unindexed_documents': sum(chain.from_iterable(
-                self.queues[config.tallies_queue.derive(retry=retry).name].get('messages', {}).values()
-                for retry in (False, True)
-            ))
+            'unindexed_bundles': 0,
+            'unindexed_documents': 0
         }
 
     def _api_endpoint(self, entity_type: str) -> JSON:
