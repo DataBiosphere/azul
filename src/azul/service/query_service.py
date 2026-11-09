@@ -13,7 +13,6 @@ from collections.abc import (
 from functools import (
     partial,
 )
-import json
 import logging
 from typing import (
     Any,
@@ -103,12 +102,6 @@ nested_agg_name = 'myNested'
 #: The name of the bucket counting documents with no value for the facet.
 #:
 untagged_agg_name = 'myUntagged'
-
-
-class IndexNotFoundError(Exception):
-
-    def __init__(self, missing_index: str):
-        super().__init__(f'Index `{missing_index}` was not found')
 
 
 class OpenSearchStage[R1, R2](metaclass=ABCMeta):
@@ -315,9 +308,16 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                                 filter_stage=filter_stage)
         return aggregation_stage.wrap(chain)
 
+    @property
+    def _facets(self) -> Sequence[str]:
+        """
+        The facets to aggregate over, every one of the plugin's by default.
+        """
+        return self.plugin.facets
+
     def prepare_request(self, request: Search) -> Search:
         field_mapping = self.plugin.field_mapping
-        for facet in self.plugin.facets:
+        for facet in self._facets:
             aggregate = self._prepare_aggregation(facet=facet,
                                                   facet_path=field_mapping[facet])
             request.aggs.bucket(facet, aggregate)
@@ -332,7 +332,11 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         else:
             self._flatten_nested_aggs(aggs)
             self._translate_response_aggs(aggs)
-            self._populate_accessible(aggs)
+            # The `accessible` facet is synthesized from the `source_id`
+            # facet, so a stage that doesn't aggregate the latter can't offer
+            # the former either.
+            if self.plugin.special_fields.source_id.name in self._facets:
+                self._populate_accessible(aggs)
         return response
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
@@ -524,6 +528,23 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
 
 
 @attrs.frozen(kw_only=True)
+class SummaryAggregationStage(AggregationStage):
+    """
+    An aggregation stage for the /summary endpoint, which consumes only a subset
+    of the aggregations needed to populate the facets in an /index/{entity_type}
+    response. This class ensures that only aggregations actually consumed by the
+    summary endpoint will be requested from the cluster.
+    """
+
+    @property
+    def _facets(self) -> Sequence[str]:
+        plugin = self.plugin
+        response_stage = plugin.summary_response_stage()
+        consumed = set(response_stage.aggs_by_authority[self.entity_type])
+        return [facet for facet in super()._facets if facet in consumed]
+
+
+@attrs.frozen(kw_only=True)
 class SlicingStage(_OpenSearchStage[Response, Response]):
     """
     Augments the request with a document slice (known as a *source filter* in
@@ -587,24 +608,22 @@ class Pagination:
     search_before: SortKey | None = None
     search_after: SortKey | None = None
 
-    def advance(self,
-                *,
-                search_before: SortKey | None,
-                search_after: SortKey | None
-                ) -> Self:
+    def with_sort_keys(self,
+                       *,
+                       search_before: SortKey | None,
+                       search_after: SortKey | None
+                       ) -> Self:
         return attrs.evolve(self,
                             search_before=search_before,
                             search_after=search_after)
 
-    def link(self, *, previous: bool, **params: str) -> furl | None:
+    def link(self, *, previous: bool) -> furl | None:
         """
         Return the URL of the next or previous page in this pagination or None
         if there is no such page.
 
         :param previous: True, for a link to the previous page, False for a link
                          to the next one.
-
-        :param params: Additional query parameters to embed in the URL
         """
         return None
 
@@ -750,13 +769,11 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
                 search_before = None
             search_after = tuple(hits[0]['sort'])
 
-        pagination = self.pagination.advance(search_before=search_before,
-                                             search_after=search_after)
+        pagination = self.pagination.with_sort_keys(search_before=search_before,
+                                                    search_after=search_after)
 
         def page_link(*, previous):
-            url = pagination.link(previous=previous,
-                                  catalog=self.catalog,
-                                  filters=json.dumps(self.filters.explicit))
+            url = pagination.link(previous=previous)
             return None if url is None else str(url)
 
         return ResponsePagination(count=count,

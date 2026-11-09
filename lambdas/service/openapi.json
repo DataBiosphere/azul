@@ -2,7 +2,7 @@
     "openapi": "3.0.1",
     "info": {
         "title": "azul-service-dev",
-        "version": "22.0",
+        "version": "24.0",
         "description": "\n# Overview\n\nAzul is a REST web service for querying metadata associated with\nboth experimental and analysis data from a data repository. In order\nto deliver response times that make it suitable for interactive use\ncases, the set of metadata properties that it exposes for sorting,\nfiltering, and aggregation is limited. Azul provides a uniform view\nof the metadata over a range of diverse schemas, effectively\nshielding clients from changes in the schemas as they occur over\ntime. It does so, however, at the expense of detail in the set of\nmetadata properties it exposes and in the accuracy with which it\naggregates them.\n\nAzul denormalizes and aggregates metadata into several different\nindices for selected entity types. Metadata entities can be queried\nusing the [Index](#operations-tag-Index) endpoints.\n\nA set of indices forms a catalog. There is a default catalog called\n`dcp2` which will be used unless a\ndifferent catalog name is specified using the `catalog` query\nparameter. Metadata from different catalogs is completely\nindependent: a response obtained by querying one catalog does not\nnecessarily correlate to a response obtained by querying another\none. Two catalogs can contain metadata from the same sources or\ndifferent sources. It is only guaranteed that the body of a\nresponse by any given endpoint adheres to one schema,\nindependently of which catalog was specified in the request.\n\nAzul provides the ability to download data and metadata via the\n[Manifests](#operations-tag-Manifests) endpoints. The\n`curl` format manifests can be used to\ndownload data files. Other formats provide various views of the\nmetadata. Manifests can be generated for a selection of files using\nfilters. These filters are interchangeable with the filters used by\nthe [Index](#operations-tag-Index) endpoints.\n\nAzul also provides a [summary](#operations-Index-get_index_summary)\nview of indexed data.\n\n## Data model\n\nAny index, when queried, returns a JSON array of hits. Each hit\nrepresents a metadata entity. Nested in each hit is a summary of the\nproperties of entities associated with the hit. An entity is\nassociated either by a direct edge in the original metadata graph,\nor indirectly as a series of edges. The nested properties are\ngrouped by the type of the associated entity. The properties of all\ndata files associated with a particular sample, for example, are\nlisted under `hits[*].files` in a `/index/samples` response. It is\nimportant to note that while each _hit_ represents a discrete\nentity, the properties nested within that hit are the result of an\naggregation over potentially many associated entities.\n\nTo illustrate this, consider a data file that is part of two\nprojects (a project is a group of related experiments, typically by\none laboratory, institution or consortium). Querying the `files`\nindex for this file yields a hit looking something like:\n\n```\n{\n    \"projects\": [\n        {\n            \"projectTitle\": \"Project One\"\n            \"laboratory\": ...,\n            ...\n        },\n        {\n            \"projectTitle\": \"Project Two\"\n            \"laboratory\": ...,\n            ...\n        }\n    ],\n    \"files\": [\n        {\n            \"format\": \"pdf\",\n            \"name\": \"Team description.pdf\",\n            ...\n        }\n    ]\n}\n```\n\nThis example hit contains two kinds of nested entities (a hit in an\nactual Azul response will contain more): There are the two projects\nentities, and the file itself. These nested entities contain\nselected metadata properties extracted in a consistent way. This\nmakes filtering and sorting simple.\n\nAlso notice that there is only one file. When querying a particular\nindex, the corresponding entity will always be a singleton like\nthis.\n\n\n## Contact us\n\nFor technical support please file an issue at\n[GitHub](https://github.com/DataBiosphere/azul/issues) or email\n`azul-group@ucsc.edu`. To report a security concern or misconduct please email\n`azul-group@ucsc.edu`.\n"
     },
     "tags": [
@@ -1019,156 +1019,6 @@
                 ]
             }
         },
-        "/index/{entity_type}/{entity_id}": {
-            "get": {
-                "responses": {
-                    "400": {
-                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
-                    },
-                    "429": {
-                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
-                    },
-                    "500": {
-                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "502": {
-                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "503": {
-                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
-                    },
-                    "504": {
-                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
-                    },
-                    "200": {
-                        "description": "\nThis response describes a single entity. To search the index\nfor multiple entities, see the [corresponding search\nendpoint](#operations-Index-get_index__entity_type_).\n\nThe properties that are common to all entity types are\nlisted in the schema below; however, additional properties\nmay be present for certain entity types. With the exception\nof the entity's unique identifier, all properties are\narrays, even in cases where only one value is present.\n\nThe structures of the objects within these arrays are not\nperfectly consistent, since they may represent either\nsingleton entities or aggregations depending on context.\n\nFor example, any biomaterial that yields a cell suspension\nwhich yields a sequence file will be considered a \"sample\".\nTherefore, the `samples` field is polymorphic, and each\nsample may be either a specimen, an organoid, or a cell line\n(the field `sampleEntityType` can be used to discriminate\nbetween these cases).\n",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "protocols": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "entryId": {
-                                            "type": "string"
-                                        },
-                                        "sources": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "samples": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "specimens": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "cellLines": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "donorOrganisms": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "organoids": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "cellSuspensions": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "protocols",
-                                        "entryId",
-                                        "sources",
-                                        "samples",
-                                        "specimens",
-                                        "cellLines",
-                                        "donorOrganisms",
-                                        "organoids",
-                                        "cellSuspensions"
-                                    ],
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    }
-                },
-                "summary": "Detailed information on a particular entity.",
-                "tags": [
-                    "Index"
-                ],
-                "parameters": [
-                    {
-                        "name": "catalog",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "dcp2"
-                            ],
-                            "default": "dcp2"
-                        },
-                        "description": "The name of the catalog to query."
-                    },
-                    {
-                        "name": "entity_type",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "The type of the desired entity"
-                    },
-                    {
-                        "name": "entity_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "The UUID of the desired entity"
-                    }
-                ]
-            }
-        },
         "/index/{entity_type}": {
             "head": {
                 "responses": {
@@ -1257,6 +1107,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1275,7 +1126,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1299,6 +1151,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1317,7 +1170,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1341,6 +1195,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1359,7 +1214,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1380,7 +1236,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -1466,6 +1323,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1485,7 +1344,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1595,6 +1456,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1614,7 +1477,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1673,6 +1538,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1692,7 +1559,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1801,6 +1670,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1820,7 +1691,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -1980,6 +1853,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -1998,7 +1872,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -2040,6 +1915,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -2059,7 +1936,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -2191,28 +2070,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -2367,6 +2224,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -2386,7 +2245,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -2646,6 +2507,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -2664,7 +2526,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -2715,6 +2578,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -2733,7 +2597,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -2833,7 +2698,6 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "accessions",
                                 "aggregateLastModifiedDate",
                                 "aggregateSubmissionDate",
                                 "aggregateUpdateDate",
@@ -2875,7 +2739,6 @@
                                 "organ",
                                 "organPart",
                                 "organismAge",
-                                "organismAgeRange",
                                 "pairedEnd",
                                 "preservationMethod",
                                 "project",
@@ -2896,7 +2759,6 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
-                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -2923,17 +2785,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_before_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     },
                     {
@@ -2943,17 +2795,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_after_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     }
                 ]
@@ -3156,6 +2998,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3174,7 +3017,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3198,6 +3042,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3216,7 +3061,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3240,6 +3086,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3258,7 +3105,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3279,7 +3127,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -3365,6 +3214,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3384,7 +3235,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3494,6 +3347,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3513,7 +3368,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3572,6 +3429,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3591,7 +3450,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3700,6 +3561,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3719,7 +3582,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3879,6 +3744,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3897,7 +3763,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -3939,6 +3806,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -3958,7 +3827,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -4090,28 +3961,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -4266,6 +4115,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -4285,7 +4136,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -4545,6 +4398,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -4563,7 +4417,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -4614,6 +4469,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -4632,7 +4488,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -4732,7 +4589,6 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "accessions",
                                 "aggregateLastModifiedDate",
                                 "aggregateSubmissionDate",
                                 "aggregateUpdateDate",
@@ -4774,7 +4630,6 @@
                                 "organ",
                                 "organPart",
                                 "organismAge",
-                                "organismAgeRange",
                                 "pairedEnd",
                                 "preservationMethod",
                                 "project",
@@ -4795,7 +4650,6 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
-                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -4822,17 +4676,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_before_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     },
                     {
@@ -4842,17 +4686,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_after_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     }
                 ]
@@ -5055,6 +4889,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5073,7 +4908,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5097,6 +4933,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5115,7 +4952,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5139,6 +4977,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5157,7 +4996,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5178,7 +5018,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -5264,6 +5105,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5283,7 +5126,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5393,6 +5238,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5412,7 +5259,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5471,6 +5320,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5490,7 +5341,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5599,6 +5452,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5618,7 +5473,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5778,6 +5635,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5796,7 +5654,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5838,6 +5697,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -5857,7 +5718,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -5989,28 +5852,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -6165,6 +6006,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6184,7 +6027,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6444,6 +6289,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6462,7 +6308,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6513,6 +6360,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6531,7 +6379,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6631,7 +6480,6 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "accessions",
                                 "aggregateLastModifiedDate",
                                 "aggregateSubmissionDate",
                                 "aggregateUpdateDate",
@@ -6673,7 +6521,6 @@
                                 "organ",
                                 "organPart",
                                 "organismAge",
-                                "organismAgeRange",
                                 "pairedEnd",
                                 "preservationMethod",
                                 "project",
@@ -6694,7 +6541,6 @@
                                 "specimenOrgan",
                                 "specimenOrganPart",
                                 "submissionDate",
-                                "tissueAtlas",
                                 "updateDate",
                                 "workflow"
                             ]
@@ -6721,17 +6567,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
-                    },
-                    {
-                        "name": "search_before_uid",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
                     },
                     {
@@ -6741,18 +6577,161 @@
                         "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
+                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\nA value for this parameter is only accepted verbatim\nfrom one of those links.\n",
                         "deprecated": true
+                    }
+                ]
+            }
+        },
+        "/index/{entity_type}/{entity_id}": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
                     },
+                    "429": {
+                        "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "500": {
+                        "description": "Internal application error. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "502": {
+                        "description": "Bad gateway. The frontend server received an invalid response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "503": {
+                        "description": "Service unavailable. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
+                    },
+                    "504": {
+                        "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
+                    },
+                    "200": {
+                        "description": "\nThis response describes a single entity. To search the index\nfor multiple entities, see the [corresponding search\nendpoint](#operations-Index-get_index__entity_type_).\n\nThe properties that are common to all entity types are\nlisted in the schema below; however, additional properties\nmay be present for certain entity types. With the exception\nof the entity's unique identifier, all properties are\narrays, even in cases where only one value is present.\n\nThe structures of the objects within these arrays are not\nperfectly consistent, since they may represent either\nsingleton entities or aggregations depending on context.\n\nFor example, any biomaterial that yields a cell suspension\nwhich yields a sequence file will be considered a \"sample\".\nTherefore, the `samples` field is polymorphic, and each\nsample may be either a specimen, an organoid, or a cell line\n(the field `sampleEntityType` can be used to discriminate\nbetween these cases).\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "protocols": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "entryId": {
+                                            "type": "string"
+                                        },
+                                        "sources": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "samples": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "specimens": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "cellLines": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "donorOrganisms": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        },
+                                        "organoids": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "cellSuspensions": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {},
+                                                "additionalProperties": true
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "protocols",
+                                        "entryId",
+                                        "sources",
+                                        "samples",
+                                        "specimens",
+                                        "cellLines",
+                                        "donorOrganisms",
+                                        "organoids",
+                                        "cellSuspensions"
+                                    ],
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "\nNo entity of the given type has the given UUID, in the\ngiven catalog and among the sources the request is\nauthorized to access.\n"
+                    }
+                },
+                "summary": "Detailed information on a particular entity.",
+                "tags": [
+                    "Index"
+                ],
+                "parameters": [
                     {
-                        "name": "search_after_uid",
+                        "name": "catalog",
                         "in": "query",
                         "required": false,
                         "schema": {
+                            "type": "string",
+                            "enum": [
+                                "dcp2"
+                            ],
+                            "default": "dcp2"
+                        },
+                        "description": "The name of the catalog to query."
+                    },
+                    {
+                        "name": "entity_type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
                             "type": "string"
                         },
-                        "description": "\nUse the `next` and `previous` properties of the\n`pagination` response element to navigate between pages.\n",
-                        "deprecated": true
+                        "description": "The type of the desired entity"
+                    },
+                    {
+                        "name": "entity_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The UUID of the desired entity"
                     }
                 ]
             }
@@ -6845,6 +6824,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6863,7 +6843,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6887,6 +6868,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6905,7 +6887,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6929,6 +6912,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -6947,7 +6931,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -6968,7 +6953,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -7054,6 +7040,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7073,7 +7061,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7183,6 +7173,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7202,7 +7194,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7261,6 +7255,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7280,7 +7276,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7389,6 +7387,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7408,7 +7408,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7568,6 +7570,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7586,7 +7589,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7628,6 +7632,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7647,7 +7653,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -7779,28 +7787,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -7955,6 +7941,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -7974,7 +7962,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8234,6 +8224,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8252,7 +8243,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8303,6 +8295,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8321,7 +8314,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8410,31 +8404,17 @@
                         "description": "Gateway timeout. The frontend server did not receive a timely response from the backend server. \nIt is unlikely that a retry will be successful until the problem is\nresolved by an operator.\n"
                     },
                     "200": {
-                        "description": "\nCounts the total number and total size in bytes of assorted\nentities, subject to the provided filters.\n\n`fileTypeSummaries` provides the count and total size in\nbytes of files grouped by their format, e.g. \"fastq\" or\n\"matrix.\" `fileCount` and `totalFileSize` compile these\nfigures across all file formats. Likewise,\n`cellCountSummaries` counts cells and their associated\ndocuments grouped by organ type, with `organTypes` listing\nall referenced organs.\n\nTotal counts of unique entities are also provided for other\nentity types such as projects and tissue donors. These\nvalues are not grouped/aggregated.\n",
+                        "description": "\nCounts the total number and total size in bytes of assorted\nentities, subject to the provided filters.\n\n`fileTypeSummaries` provides the count and total size in\nbytes of files grouped by their format, e.g. \"fastq\" or\n\"matrix.\" `fileCount` and `totalFileSize` compile these\nfigures across all file formats.\n\nTotal counts of unique entities are also provided for other\nentity types such as projects and tissue donors. These\nvalues are not grouped/aggregated.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "organTypes": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
                                         "totalFileSize": {
                                             "type": "number",
                                             "format": "double"
                                         },
                                         "fileTypeSummaries": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {},
-                                                "additionalProperties": true
-                                            }
-                                        },
-                                        "cellCountSummaries": {
                                             "type": "array",
                                             "items": {
                                                 "type": "object",
@@ -8458,25 +8438,18 @@
                                             "type": "integer",
                                             "format": "int64"
                                         },
-                                        "speciesCount": {
-                                            "type": "integer",
-                                            "format": "int64"
-                                        },
                                         "specimenCount": {
                                             "type": "integer",
                                             "format": "int64"
                                         }
                                     },
                                     "required": [
-                                        "organTypes",
                                         "totalFileSize",
                                         "fileTypeSummaries",
-                                        "cellCountSummaries",
                                         "donorCount",
                                         "fileCount",
                                         "labCount",
                                         "projectCount",
-                                        "speciesCount",
                                         "specimenCount"
                                     ],
                                     "additionalProperties": true
@@ -8548,6 +8521,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8566,7 +8540,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8590,6 +8565,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8608,7 +8584,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8632,6 +8609,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8650,7 +8628,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8671,7 +8650,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -8757,6 +8737,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8776,7 +8758,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8886,6 +8870,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8905,7 +8891,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -8964,6 +8952,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -8983,7 +8973,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9092,6 +9084,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9111,7 +9105,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9271,6 +9267,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9289,7 +9286,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9331,6 +9329,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9350,7 +9350,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9482,28 +9484,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -9658,6 +9638,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9677,7 +9659,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -9937,6 +9921,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -9955,7 +9940,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10006,6 +9992,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10024,7 +10011,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10209,6 +10197,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10227,7 +10216,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10251,6 +10241,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10269,7 +10260,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10293,6 +10285,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10311,7 +10304,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10332,7 +10326,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -10418,6 +10413,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10437,7 +10434,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10547,6 +10546,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10566,7 +10567,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10625,6 +10628,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10644,7 +10649,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10753,6 +10760,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10772,7 +10781,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10932,6 +10943,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -10950,7 +10962,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -10992,6 +11005,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11011,7 +11026,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -11143,28 +11160,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -11319,6 +11314,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11338,7 +11335,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -11598,6 +11597,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11616,7 +11616,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -11667,6 +11668,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11685,7 +11687,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -11975,6 +11978,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -11993,7 +11997,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12017,6 +12022,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12035,7 +12041,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12059,6 +12066,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12077,7 +12085,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12098,7 +12107,8 @@
                                                 "is": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "object"
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "minItems": 1
                                                 }
@@ -12184,6 +12194,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12203,7 +12215,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12313,6 +12327,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12332,7 +12348,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12391,6 +12409,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12410,7 +12430,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12519,6 +12541,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12538,7 +12562,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12698,6 +12724,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12716,7 +12743,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12758,6 +12786,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -12777,7 +12807,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -12909,28 +12941,6 @@
                                         },
                                         "organismAgeRange": {
                                             "oneOf": [
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "is": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "type": "array",
-                                                                "items": {
-                                                                    "type": "number",
-                                                                    "format": "double"
-                                                                },
-                                                                "minItems": 2,
-                                                                "maxItems": 2
-                                                            },
-                                                            "minItems": 1
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "is"
-                                                    ],
-                                                    "additionalProperties": false
-                                                },
                                                 {
                                                     "type": "object",
                                                     "properties": {
@@ -13085,6 +13095,8 @@
                                                             "items": {
                                                                 "type": "integer",
                                                                 "format": "int64",
+                                                                "minimum": -9223372036854775808,
+                                                                "maximum": 9223372036854774783,
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -13104,7 +13116,9 @@
                                                                 "type": "array",
                                                                 "items": {
                                                                     "type": "integer",
-                                                                    "format": "int64"
+                                                                    "format": "int64",
+                                                                    "minimum": -9223372036854775808,
+                                                                    "maximum": 9223372036854774783
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -13364,6 +13378,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -13382,7 +13397,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2
@@ -13433,6 +13449,7 @@
                                                             "type": "array",
                                                             "items": {
                                                                 "type": "string",
+                                                                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$",
                                                                 "nullable": true
                                                             },
                                                             "minItems": 1
@@ -13451,7 +13468,8 @@
                                                             "items": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "type": "string"
+                                                                    "type": "string",
+                                                                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$"
                                                                 },
                                                                 "minItems": 2,
                                                                 "maxItems": 2

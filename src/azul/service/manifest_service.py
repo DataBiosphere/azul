@@ -2165,7 +2165,7 @@ class JSONLVerbatimManifestGenerator(PagedManifestGenerator,
         partition_filter: FiltersJSON = {self.source_id_field.name: {'is': [source_id]}}
         original_filters = self.filters
         try:
-            self.filters = original_filters.update(partition_filter)
+            self.filters = original_filters.update_explicit(partition_filter)
             replicas = self._list_replicas()
             for replica in replicas:
                 entry = {

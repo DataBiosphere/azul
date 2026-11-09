@@ -1204,6 +1204,17 @@
                             }
                         },
                         {
+                            "name": "assay_type",
+                            "namespace": "imaging_protocols",
+                            "type": {
+                                "items": [
+                                    "null",
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
                             "name": "protocol_name",
                             "namespace": "imaging_protocols",
                             "type": {

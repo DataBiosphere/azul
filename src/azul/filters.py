@@ -578,8 +578,12 @@ class Filters:
             'source_ids': sorted(self.source_ids)
         }
 
-    def update(self, filters: FiltersJSON) -> Self:
+    def update_explicit(self, filters: FiltersJSON) -> Self:
         return attr.evolve(self, explicit={**self.explicit, **filters})
+
+    def set_explicit(self, filters: FiltersJSON) -> Self:
+        assert len(self.explicit) == 0, self
+        return attr.evolve(self, explicit=filters)
 
     def reify(self,
               plugin: MetadataPlugin,
