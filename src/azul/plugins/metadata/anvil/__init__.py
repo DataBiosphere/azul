@@ -313,6 +313,10 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return 'datasets'
 
     @property
+    def registered_access_contract(self) -> str | None:
+        return 'anvil_registered_access'
+
+    @property
     def facets(self) -> Sequence[str]:
         return [
             *super().facets,

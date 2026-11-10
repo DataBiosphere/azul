@@ -23,6 +23,27 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Update Terraform to 1.17.1 (#8452)
+==================================
+
+Everyone
+~~~~~~~~
+
+Install Terraform version 1.17.1.
+
+
+``make local`` doesn't support authentication (#8478)
+=====================================================
+
+Everyone
+--------
+
+Add ``http://localhost:8000/swagger/oauth2-redirect.html`` to the *Authorized
+redirect URIs* of the OAuth 2.0 client of each of your personal deployments.
+If you previously added ``http://127.0.0.1:8000/swagger/oauth2-redirect.html``,
+remove it. ``make local`` now serves the app under ``http://localhost:8000/``.
+
+
 Four inaccessible LungMAP snapshots in dev (#8421)
 ==================================================
 

@@ -361,6 +361,10 @@ class Plugin(MetadataPlugin[HCABundle]):
         return 'projects'
 
     @property
+    def registered_access_contract(self) -> str | None:
+        return None
+
+    @property
     def facets(self) -> Sequence[str]:
         return [
             *super().facets,

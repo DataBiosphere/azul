@@ -159,6 +159,8 @@ class TestHttp(AzulUnitTestCase):
                                     client.request(method='GET', url=url, retries=retry, headers=headers)
 
                 self.assertEqual(requests, num_actual_requests)
+                # The clients must not modify the headers passed to them
+                self.assertEqual({'Authorization': 'secret, should not be logged'}, headers)
 
                 prefix, url = 'INFO:test_http:', re.escape(url)
                 accept_encoding = AcceptEncodingClient.accept_encoding_header()
