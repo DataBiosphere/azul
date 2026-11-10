@@ -17,9 +17,14 @@ import logging
 from pprint import (
     PrettyPrinter,
 )
+import time
 import uuid
 
 import attrs
+from opensearchpy import (
+    ConnectionTimeout,
+    OpenSearch,
+)
 import requests
 from urllib3 import (
     BaseHTTPResponse,
@@ -55,6 +60,10 @@ from azul.lib import (
 from azul.lib.types import (
     JSON,
     JSONs,
+    json_int,
+    json_mapping,
+    json_sequence,
+    json_str,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -287,17 +296,61 @@ class AzulClient(SignatureHelper, HasCachedHttpClient):
         }
         log.info('Deindexing sources %r from catalog %r', sources, catalog)
         log.debug('Using query: %r', query)
-        response = opensearch.delete_by_query(index=indices, body=query, slices='auto')
-        if len(response['failures']) > 0:
-            if response['version_conflicts'] > 0:
+        # For a large source, both the deletion and the force merge take longer
+        # than the client timeout, so they are run asynchronously, and waited on
+        # in a polling loop
+        response = opensearch.delete_by_query(index=indices,
+                                              body=query,
+                                              slices='auto',
+                                              wait_for_completion=False)
+        response = self._wait_for_completion(opensearch, response)
+        if len(json_sequence(response['failures'])) > 0:
+            if json_int(response['version_conflicts']) > 0:
                 log.error('Version conflicts encountered. Do not deindex while '
                           'indexing is occurring. The index may now be in an '
                           'inconsistent state.')
             raise RuntimeError('Failures during deletion', response['failures'])
         log.info('Purging deleted documents from catalog %r', catalog)
-        response = opensearch.indices.forcemerge(index=indices, only_expunge_deletes=True)
-        if response['_shards']['failed'] > 0:
+        response = opensearch.indices.forcemerge(index=indices,
+                                                 only_expunge_deletes=True,
+                                                 wait_for_completion=False)
+        response = self._wait_for_completion(opensearch, response)
+        if json_int(json_mapping(response['_shards'])['failed']) > 0:
             raise RuntimeError('Failures during force merge', response)
+
+    def _wait_for_completion(self, opensearch: OpenSearch, response: JSON) -> JSON:
+        """
+        Wait for the completion of the task started by an OpenSearch request
+        made with `wait_for_completion=False`, given that request's response,
+        and return the response the request would have returned otherwise.
+        """
+        task_id = json_str(response['task'])
+        log.info('Waiting for task %r to complete', task_id)
+        task = self._get_task(opensearch, task_id)
+        while not task['completed']:
+            log.info('Task %r is running with status %r',
+                     task_id, json_mapping(task['task']).get('status'))
+            time.sleep(10)
+            task = self._get_task(opensearch, task_id)
+        assert 'error' not in task, R(
+            'Task failed', task_id, task['error'])
+        log.info('Task %r completed with response %r', task_id, task['response'])
+        return json_mapping(task['response'])
+
+    def _get_task(self, opensearch: OpenSearch, task_id: str) -> JSON:
+        """
+        Get the given task, retrying requests that time out. A cluster that is
+        busy with the task can take longer than the client timeout to respond
+        while the task itself carries on.
+        """
+        task = None
+        while task is None:
+            try:
+                task = opensearch.tasks.get(task_id=task_id)
+            except ConnectionTimeout:
+                log.warning('Timed out getting task %r, retrying', task_id)
+                time.sleep(10)
+        return json_mapping(task)
 
     def reset_indexer(self,
                       catalogs: Iterable[CatalogName],
