@@ -1763,6 +1763,11 @@ def env() -> Mapping[str, str | None]:
             }
         ),
 
+        # Contribute the bundles of the MOHD snapshot whole, the largest of
+        # which has 3,743 entities.
+        #
+        'AZUL_MAX_BUNDLE_PARTITION_SIZE': '4096',
+
         'AZUL_DEBUG': '1',
 
         'AZUL_BILLING': 'anvil',
