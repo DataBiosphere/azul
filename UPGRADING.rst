@@ -23,6 +23,15 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Update Terraform to 1.17.1 (#8452)
+==================================
+
+Everyone
+~~~~~~~~
+
+Install Terraform version 1.17.1.
+
+
 ``make local`` doesn't support authentication (#8478)
 =====================================================
 
