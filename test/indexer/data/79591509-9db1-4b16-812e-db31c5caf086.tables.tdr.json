@@ -3,7 +3,7 @@
         "anvil_activity": {
             "rows": [
                 {
-                    "datarepo_row_id": "22fb7994-3227-4195-a618-73f5b45c792a",
+                    "datarepo_row_id": "b1bcdc05-e88b-416c-93b9-3223da3f6769",
                     "activity_id": "0b042249-7e36-38f6-627d-86aad2a65c05",
                     "activity_type": "Unknown",
                     "used_file_id": [],
@@ -11,27 +11,27 @@
                         "b8d15a39-99c7-3101-bd25-8f9042070457"
                     ],
                     "used_biosample_id": [
-                        "redacted-HpXd+HV6"
+                        "79860a38-62eb-4e8f-f665-9a300f5a101c"
                     ],
                     "source_datarepo_row_ids": []
                 },
                 {
-                    "datarepo_row_id": "3ad7fbc8-e07c-4ba8-9bcb-a82c9b91844a",
+                    "datarepo_row_id": "3d7854ac-e518-485b-9c1c-f7291d5e3008",
                     "activity_id": "cb20566b-ca5f-00b2-f709-0584d4f4ff08",
                     "activity_type": "Harmonization",
                     "used_file_id": [],
                     "generated_file_id": [
-                        "16edd765-7b1b-36c4-89a8-a07da45ad020",
-                        "3d1c29ef-df0a-341c-94c3-616212b243a2"
+                        "3d1c29ef-df0a-341c-94c3-616212b243a2",
+                        "16edd765-7b1b-36c4-89a8-a07da45ad020"
                     ],
                     "used_biosample_id": [
-                        "redacted-2UlCEj3r",
-                        "redacted-rwNXeRFA"
+                        "190882fa-0d8a-0685-3edd-6ce187dc5e2d",
+                        "013f5f65-8f4d-3997-ac45-fa4245110a2e"
                     ],
                     "source_datarepo_row_ids": []
                 },
                 {
-                    "datarepo_row_id": "463f798f-3b5f-4722-b3f2-4f6a8b1030e9",
+                    "datarepo_row_id": "85f5458a-a691-4c21-8b50-e2366a46d1bd",
                     "activity_id": "dfacd756-b684-466e-9b45-35763cdc6102",
                     "activity_type": "Harmonization",
                     "used_file_id": [],
@@ -40,8 +40,8 @@
                         "2b2b78c6-a08b-3c96-b0d7-7a787266b5a2"
                     ],
                     "used_biosample_id": [
-                        "redacted-HpXd+HV6",
-                        "redacted-rwNXeRFA"
+                        "79860a38-62eb-4e8f-f665-9a300f5a101c",
+                        "190882fa-0d8a-0685-3edd-6ce187dc5e2d"
                     ],
                     "source_datarepo_row_ids": []
                 }
@@ -188,27 +188,32 @@
         "anvil_biosample": {
             "rows": [
                 {
-                    "datarepo_row_id": "083a9415-d196-431f-a215-e48c70256da2",
-                    "biosample_id": "redacted-HpXd+HV6",
+                    "datarepo_row_id": "287a876c-f39f-45cf-ab3a-f93e7eb851a4",
+                    "biosample_id": "013f5f65-8f4d-3997-ac45-fa4245110a2e",
                     "anatomical_site": null,
                     "apriori_cell_type": [],
-                    "biosample_type": null,
+                    "biosample_type": "redacted-2ly3WKMf",
                     "disease": null,
-                    "donor_age_at_collection_unit": null,
-                    "donor_age_at_collection_lower_bound": null,
-                    "donor_age_at_collection_upper_bound": null,
-                    "donor_id": [],
+                    "donor_age_at_collection_unit": "redacted-VQfRq0iS",
+                    "donor_age_at_collection_lower_bound": 42205354968515551,
+                    "donor_age_at_collection_upper_bound": 42205354968515551,
+                    "donor_id": [
+                        "a0d9136c-3e47-0e28-f44c-f2ad57665625"
+                    ],
                     "part_of_dataset_id": [
                         "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5"
                     ],
-                    "source_datarepo_row_ids": []
+                    "source_datarepo_row_ids": [
+                        "sample:1aa2166f-94ff-4a43-95a0-461f0416cf30",
+                        "participant:b116a6f5-66c1-48f8-8221-0d52d3d6d3dc"
+                    ]
                 },
                 {
-                    "datarepo_row_id": "f30fad06-363d-46d8-8282-6ab97cf45699",
-                    "biosample_id": "redacted-2UlCEj3r",
+                    "datarepo_row_id": "c3c189d4-e877-44de-9085-bf2fe3925379",
+                    "biosample_id": "190882fa-0d8a-0685-3edd-6ce187dc5e2d",
                     "anatomical_site": null,
                     "apriori_cell_type": [],
-                    "biosample_type": null,
+                    "biosample_type": "redacted-2ly3WKMf",
                     "disease": null,
                     "donor_age_at_collection_unit": null,
                     "donor_age_at_collection_lower_bound": null,
@@ -217,23 +222,30 @@
                     "part_of_dataset_id": [
                         "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5"
                     ],
-                    "source_datarepo_row_ids": []
+                    "source_datarepo_row_ids": [
+                        "sample:b5727e30-6401-4fae-bba0-cf2889c6c57c"
+                    ]
                 },
                 {
-                    "datarepo_row_id": "1147b549-8e31-4d45-a0de-7e60d3729d22",
-                    "biosample_id": "redacted-rwNXeRFA",
+                    "datarepo_row_id": "d579ac12-a1e0-400f-84d3-566e25000391",
+                    "biosample_id": "79860a38-62eb-4e8f-f665-9a300f5a101c",
                     "anatomical_site": null,
                     "apriori_cell_type": [],
-                    "biosample_type": null,
+                    "biosample_type": "redacted-2ly3WKMf",
                     "disease": null,
-                    "donor_age_at_collection_unit": null,
-                    "donor_age_at_collection_lower_bound": null,
-                    "donor_age_at_collection_upper_bound": null,
-                    "donor_id": [],
+                    "donor_age_at_collection_unit": "redacted-VQfRq0iS",
+                    "donor_age_at_collection_lower_bound": 42191238291481128,
+                    "donor_age_at_collection_upper_bound": 42191238291481128,
+                    "donor_id": [
+                        "f0ee8357-a1d4-3082-ba6f-f8e21ea9b227"
+                    ],
                     "part_of_dataset_id": [
                         "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5"
                     ],
-                    "source_datarepo_row_ids": []
+                    "source_datarepo_row_ids": [
+                        "sample:9e8e11de-aeb5-441c-8af0-c2c17dae5d97",
+                        "participant:b34eb7c1-0b23-428b-bbdb-9a6b27a79970"
+                    ]
                 }
             ],
             "schema": {
@@ -304,7 +316,7 @@
         "anvil_dataset": {
             "rows": [
                 {
-                    "datarepo_row_id": "0191aaaf-83c5-4411-8692-36925b18f967",
+                    "datarepo_row_id": "82c61a3c-525e-44d9-ace1-33f628f91326",
                     "dataset_id": "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5",
                     "consent_group": [
                         "GRU"
@@ -378,7 +390,46 @@
             }
         },
         "anvil_diagnosis": {
-            "rows": [],
+            "rows": [
+                {
+                    "datarepo_row_id": "fb6d0938-9968-4de3-8190-408faac888d0",
+                    "diagnosis_id": "8683a755-efb6-988e-18b0-ada5d3ab4042",
+                    "donor_id": "f0ee8357-a1d4-3082-ba6f-f8e21ea9b227",
+                    "disease": [
+                        "redacted-SuOGGECH"
+                    ],
+                    "diagnosis_age_unit": null,
+                    "diagnosis_age_lower_bound": null,
+                    "diagnosis_age_upper_bound": null,
+                    "onset_age_unit": null,
+                    "onset_age_lower_bound": null,
+                    "onset_age_upper_bound": null,
+                    "phenotype": [],
+                    "phenopacket": [],
+                    "source_datarepo_row_ids": [
+                        "participant:b34eb7c1-0b23-428b-bbdb-9a6b27a79970"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "fc2ed866-49e3-465b-b26b-d97fb09112a0",
+                    "diagnosis_id": "8782991d-db7b-9020-f46e-fe55c6ee8881",
+                    "donor_id": "a0d9136c-3e47-0e28-f44c-f2ad57665625",
+                    "disease": [
+                        "redacted-VeguRRbc"
+                    ],
+                    "diagnosis_age_unit": null,
+                    "diagnosis_age_lower_bound": null,
+                    "diagnosis_age_upper_bound": null,
+                    "onset_age_unit": null,
+                    "onset_age_lower_bound": null,
+                    "onset_age_upper_bound": null,
+                    "phenotype": [],
+                    "phenopacket": [],
+                    "source_datarepo_row_ids": [
+                        "participant:b116a6f5-66c1-48f8-8221-0d52d3d6d3dc"
+                    ]
+                }
+            ],
             "schema": {
                 "columns": [
                     {
@@ -450,7 +501,32 @@
             }
         },
         "anvil_donor": {
-            "rows": [],
+            "rows": [
+                {
+                    "datarepo_row_id": "fb4c0714-8bb0-4f68-8d41-86d35bb0e21c",
+                    "donor_id": "a0d9136c-3e47-0e28-f44c-f2ad57665625",
+                    "organism_type": "redacted-C+tm0pvN",
+                    "part_of_dataset_id": "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5",
+                    "phenotypic_sex": "redacted-8UKaeq/H",
+                    "reported_ethnicity": [],
+                    "genetic_ancestry": [],
+                    "source_datarepo_row_ids": [
+                        "participant:b116a6f5-66c1-48f8-8221-0d52d3d6d3dc"
+                    ]
+                },
+                {
+                    "datarepo_row_id": "f565688e-95d9-43a3-8f44-fb3c8470772b",
+                    "donor_id": "f0ee8357-a1d4-3082-ba6f-f8e21ea9b227",
+                    "organism_type": "redacted-C+tm0pvN",
+                    "part_of_dataset_id": "285ef8b6-a8eb-3ff6-7bfa-83c0f39f3df5",
+                    "phenotypic_sex": "redacted-8uPYRs/0",
+                    "reported_ethnicity": [],
+                    "genetic_ancestry": [],
+                    "source_datarepo_row_ids": [
+                        "participant:b34eb7c1-0b23-428b-bbdb-9a6b27a79970"
+                    ]
+                }
+            ],
             "schema": {
                 "columns": [
                     {
@@ -499,16 +575,16 @@
         "anvil_file": {
             "rows": [
                 {
-                    "datarepo_row_id": "2a3a7d9b-d013-4ffb-8944-5ec5fabd7b10",
+                    "datarepo_row_id": "0467401b-83d9-47a8-aa9a-e541ab54c0f3",
                     "file_id": "16edd765-7b1b-36c4-89a8-a07da45ad020",
                     "data_modality": [
                         "exposomics"
                     ],
-                    "file_format": null,
+                    "file_format": ".tsv",
                     "file_size": 535,
                     "file_md5sum": "oVwzI6xITG8gZwgFVq+OYA==",
                     "reference_assembly": [],
-                    "file_name": "16edd765-7b1b-36c4-89a8-a07da45ad020",
+                    "file_name": "MOHD_EE100716_pfas-concentrations_v0.tsv",
                     "file_path": null,
                     "file_ref": "drs://drs.anv0:v2_16edd765-7b1b-36c4-89a8-a07da45ad020",
                     "is_supplementary": false,
@@ -518,16 +594,16 @@
                     ]
                 },
                 {
-                    "datarepo_row_id": "21da0392-e088-422f-9299-6a844372a9d1",
+                    "datarepo_row_id": "60c7853f-8ac6-4966-97a4-5bd2b91e3ea5",
                     "file_id": "2b2b78c6-a08b-3c96-b0d7-7a787266b5a2",
                     "data_modality": [
                         "lipidomics"
                     ],
-                    "file_format": null,
+                    "file_format": ".tsv",
                     "file_size": 20078,
                     "file_md5sum": "WYwHgD2NJ0ZOXzYRq5WEww==",
                     "reference_assembly": [],
-                    "file_name": "2b2b78c6-a08b-3c96-b0d7-7a787266b5a2",
+                    "file_name": "MOHD_EL101183_quant_v0.tsv",
                     "file_path": null,
                     "file_ref": "drs://drs.anv0:v2_2b2b78c6-a08b-3c96-b0d7-7a787266b5a2",
                     "is_supplementary": false,
@@ -537,16 +613,16 @@
                     ]
                 },
                 {
-                    "datarepo_row_id": "ec6b11a3-7d0c-4fd0-bb76-0dc743b18412",
+                    "datarepo_row_id": "6e353d89-fa2d-4e52-9ba4-9a5f79ffb648",
                     "file_id": "3d1c29ef-df0a-341c-94c3-616212b243a2",
                     "data_modality": [
                         "exposomics"
                     ],
-                    "file_format": null,
+                    "file_format": ".tsv",
                     "file_size": 539,
                     "file_md5sum": "zy8U8JWIKl29B8mZODimVA==",
                     "reference_assembly": [],
-                    "file_name": "3d1c29ef-df0a-341c-94c3-616212b243a2",
+                    "file_name": "MOHD_EE100733_pfas-concentrations_v0.tsv",
                     "file_path": null,
                     "file_ref": "drs://drs.anv0:v2_3d1c29ef-df0a-341c-94c3-616212b243a2",
                     "is_supplementary": false,
@@ -556,16 +632,16 @@
                     ]
                 },
                 {
-                    "datarepo_row_id": "6d56096d-c372-4e4b-bd1d-0b95c5cb9bc8",
+                    "datarepo_row_id": "481e24be-c2dc-48ec-8c10-5afbada1161c",
                     "file_id": "72d53b08-c3b6-3efa-80e5-2b826beadedd",
                     "data_modality": [
                         "lipidomics"
                     ],
-                    "file_format": null,
+                    "file_format": ".tsv",
                     "file_size": 20068,
                     "file_md5sum": "MJ/fim6U4f4UV0iHaV9+Jg==",
                     "reference_assembly": [],
-                    "file_name": "72d53b08-c3b6-3efa-80e5-2b826beadedd",
+                    "file_name": "MOHD_EL100939_quant_v0.tsv",
                     "file_path": null,
                     "file_ref": "drs://drs.anv0:v2_72d53b08-c3b6-3efa-80e5-2b826beadedd",
                     "is_supplementary": false,
@@ -575,16 +651,16 @@
                     ]
                 },
                 {
-                    "datarepo_row_id": "985ee96d-b67c-4d38-b685-4d225cdda681",
+                    "datarepo_row_id": "518d1ca3-890c-405b-b3f3-f23200a10238",
                     "file_id": "b8d15a39-99c7-3101-bd25-8f9042070457",
                     "data_modality": [
                         "metabolomics"
                     ],
-                    "file_format": null,
+                    "file_format": "Other",
                     "file_size": 30007604,
                     "file_md5sum": "MNob53L/Lln8aM4Pnw/2Dg==",
                     "reference_assembly": [],
-                    "file_name": "b8d15a39-99c7-3101-bd25-8f9042070457",
+                    "file_name": "MOHD_EM100032_positive.mzML.gz",
                     "file_path": null,
                     "file_ref": "drs://drs.anv0:v2_b8d15a39-99c7-3101-bd25-8f9042070457",
                     "is_supplementary": false,
