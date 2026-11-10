@@ -81,7 +81,8 @@ parser.add_argument('--index',
                     default=False,
                     action='store_true',
                     help='Index all matching metadata in the configured repository. '
-                         'Implies --create when combined with --delete.')
+                         'Implies --create when combined with --delete. '
+                         'Implies --slots unless --no-slots is given.')
 parser.add_argument('--deindex',
                     default=False,
                     action='store_true',
@@ -107,9 +108,15 @@ parser.add_argument('--verbose',
                     default=False,
                     action='store_true',
                     help='Enable verbose logging')
+parser.add_argument('--slots',
+                    dest='manage_slots',
+                    default=None,
+                    action='store_true',
+                    help='Reserve BigQuery slots if any of the matching sources '
+                         'are in a TDR catalog. Implied by --index.')
 parser.add_argument('--no-slots',
                     dest='manage_slots',
-                    default=True,
+                    default=None,
                     action='store_false',
                     help='Suppress management of BigQuery slot commitments.')
 
@@ -157,19 +164,21 @@ def main(argv: list[str]):
                        delete_indices=delete,
                        create_indices=args.create or args.index and delete)
 
+    manage_slots = args.index if args.manage_slots is None else args.manage_slots
+    if manage_slots:
+        if any(
+            sources and isinstance(azul.repository_plugin(catalog), TDRPlugin)
+            for catalog, sources in sources_by_catalog.items()
+        ):
+            BigQueryReservation().activate()
+        else:
+            log.info('No matching sources in TDR catalogs, not reserving slots')
+
     if args.index:
         log.info('Queuing notifications for reindexing ...')
-        reservation = None
         num_notifications = 0
         for catalog, sources in sources_by_catalog.items():
             if sources:
-                if (
-                    args.manage_slots
-                    and reservation is None
-                    and isinstance(azul.repository_plugin(catalog), TDRPlugin)
-                ):
-                    reservation = BigQueryReservation()
-                    reservation.activate()
                 if args.local:
                     num_notifications += azul.local_reindex(catalog, args.prefix)
                 else:
