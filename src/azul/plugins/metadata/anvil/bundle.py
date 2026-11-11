@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections import (
-    defaultdict,
-)
 from collections.abc import (
     Set,
 )
@@ -93,6 +90,8 @@ class EntityLink(SerializableAttrs):
 
 
 type EntityRefsByType = Mapping[EntityType, Set[EntityReference]]
+
+type MutableEntityRefsByType = dict[EntityType, set[EntityReference]]
 
 type GraphEdges = dict[EntityReference, set[EntityReference]]
 
@@ -204,15 +203,16 @@ class EntityGraph:
     def _closure(self,
                  node: EntityReference,
                  edges: GraphEdges,
-                 closure: defaultdict[EntityType, set[EntityReference]] | None = None
-                 ) -> defaultdict[EntityType, set[EntityReference]]:
-        closure = defaultdict(set) if closure is None else closure
+                 closure: MutableEntityRefsByType | None = None
+                 ) -> MutableEntityRefsByType:
+        closure = {} if closure is None else closure
         visited, pending = {node}, [node]
         while pending:
             for relative in edges.get(pending.pop(), frozenset()):
                 if relative not in visited:
                     visited.add(relative)
-                    closure[relative.entity_type].add(relative)
+                    relatives = closure.setdefault(relative.entity_type, set())
+                    relatives.add(relative)
                     pending.append(relative)
         return closure
 

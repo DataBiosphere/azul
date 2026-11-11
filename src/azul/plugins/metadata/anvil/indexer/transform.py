@@ -85,6 +85,8 @@ from azul.lib.types import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
+    EntityRefsByType,
+    MutableEntityRefsByType,
     snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
@@ -190,7 +192,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         )
 
     @cached_property
-    def _entities_by_type(self) -> dict[EntityType, set[EntityReference]]:
+    def _entities_by_type(self) -> MutableEntityRefsByType:
         entries = defaultdict(set)
         for e in self.bundle.entities:
             entries[e.entity_type].add(e)
@@ -333,6 +335,35 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             for entity in sorted(entities, key=attrgetter('entity_id'))
         ]
 
+    def _contribution_contents(self,
+                               entity: EntityReference,
+                               linked: EntityRefsByType
+                               ) -> dict[EntityType, MutableJSONs]:
+        """
+        The contents of the contribution for the given entity: the entity
+        itself, the only dataset and, for every other type of contribution, the
+        given linked entities of that type
+        """
+        factories: dict[EntityType, Callable[[EntityReference], MutableJSON]] = {
+            'activities': self._activity,
+            'biosamples': self._biosample,
+            'datasets': self._dataset,
+            'diagnoses': self._diagnosis,
+            'donors': self._donor,
+            'files': self._file
+        }
+        entities: MutableEntityRefsByType = {
+            entity_type: set() for entity_type in factories
+        }
+        for table, refs in linked.items():
+            entities[self._convert_entity_type(table)] |= refs
+        entities['datasets'] = {self._only_dataset_ref}
+        entities[self.entity_type()] = {entity}
+        return {
+            entity_type: self._entities(factory, entities[entity_type])
+            for entity_type, factory in factories.items()
+        }
+
     def _activity(self, activity: EntityReference) -> MutableJSON:
         metadata = self.bundle.entities[activity]
         field_types = self._activity_types()
@@ -465,14 +496,7 @@ class ActivityTransformer(BaseTransformer):
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         linked = self.bundle.links.lineage(entity)
-        contents = dict(
-            activities=[self._activity(entity)],
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=self._entities(self._file, linked['anvil_file'])
-        )
+        contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
 
@@ -484,17 +508,7 @@ class BiosampleTransformer(BaseTransformer):
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         linked = self.bundle.links.lineage(entity)
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=[self._biosample(entity)],
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=self._entities(self._file, linked['anvil_file']),
-        )
+        contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
 
@@ -581,17 +595,7 @@ class DonorTransformer(BaseTransformer):
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
         linked = self.bundle.links.lineage(entity)
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=[self._donor(entity)],
-            files=self._entities(self._file, linked['anvil_file']),
-        )
+        contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
 
@@ -612,17 +616,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                    ) -> Iterable[Contribution | Replica]:
         linked = self.bundle.links.lineage(entity)
         dataset = self._only_dataset_ref
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=[self._file(entity)],
-        )
+        contents = self._contribution_contents(entity, linked)
         file_id = entity.entity_id
         yield self._contribution(contents, file_id)
         if config.enable_replicas:
@@ -688,8 +682,9 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                     ancestors = self.bundle.links.ancestors(file)
                     biosample_ids = (
                         biosample_id
-                        for activity_type in self._activity_polymorphic_types
-                        for activity in ancestors[activity_type]
+                        for table, entities in ancestors.items()
+                        if self._convert_entity_type(table) == 'activities'
+                        for activity in entities
                         for biosample_id in json_element_strings(
                             self.bundle.entities[activity].get('used_biosample_id', [])
                         )
