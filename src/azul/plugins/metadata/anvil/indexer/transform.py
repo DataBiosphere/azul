@@ -173,11 +173,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _convert_entity_type(self, entity_type: str) -> str:
         assert entity_type == 'bundle' or entity_type.startswith('anvil_'), entity_type
         if entity_type == 'anvil_diagnosis':
-            # Irregular plural form
             return 'diagnoses'
-        elif entity_type.endswith('activity'):
-            # Polymorphic. Could be `anvil_sequencingactivity`,
-            # `anvil_assayactivity`, `anvil_activity`, etc
+        elif entity_type in self._activity_polymorphic_types:
             return 'activities'
         else:
             return pluralize(entity_type.removeprefix('anvil_'))
@@ -465,17 +462,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                self._entities_by_type[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, self._entities_by_type['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, self._entities_by_type['anvil_diagnosis']),
-            donors=self._entities(self._donor, self._entities_by_type['anvil_donor']),
-            files=self._entities(self._file, self._entities_by_type['anvil_file'])
-        )
+        contents = self._contribution_contents(entity, self._entities_by_type)
         yield self._contribution(contents, entity.entity_id)
 
     def _list_entities(self) -> Iterable[EntityReference]:
