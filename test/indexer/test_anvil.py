@@ -54,14 +54,20 @@ from azul.lib import (
     R,
 )
 from azul.lib.types import (
+    AnyJSON,
     JSON,
     MutableJSON,
+    json_element_mappings,
     json_str,
     not_none,
 )
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.plugins.metadata.anvil.bundle import (
+    EntityGraph,
+    EntityLink,
 )
 from azul.plugins.metadata.anvil.indexer import (
     transform,
@@ -238,6 +244,23 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     self.assertEqual(canned_bundle.entities, bundle.entities)
                     self.assertEqual(canned_bundle.links, bundle.links)
                     self.assertEqual(canned_bundle.orphans, bundle.orphans)
+
+    def test_links_round_trip(self):
+        """
+        The links of a canned bundle survive deserialization followed by
+        serialization, up to their order.
+        """
+
+        def canonical(links: AnyJSON) -> list[str]:
+            return sorted(json.dumps(link, sort_keys=True) for link in json_element_mappings(links))
+
+        for bundle_fqid in [self.primary_bundle(), self.supplementary_bundle(), self.replica_bundle()]:
+            with self.subTest(bundle_fqid=bundle_fqid):
+                bundle_json = self._load_canned_file(bundle_fqid, TDRAnvilBundle.canning_qualifier())
+                assert isinstance(bundle_json, dict), bundle_json
+                bundle = self._load_canned_bundle(bundle_fqid)
+                self.assertEqual(canonical(bundle_json['links']),
+                                 canonical(bundle.to_json()['links']))
 
     def test_row_counts(self):
         tables = [
@@ -564,7 +587,7 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
                                       entity_id='208441e2-cf28-584e-a0ac-7553c7118412')
         bundle_fqid = self.primary_bundle()
         bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
-        bundle.links.clear()
+        bundle.links = EntityGraph()
         bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
         self._index_bundle(bundle, delete=False)
 
@@ -651,14 +674,15 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
         """
         bundle = self._load_canned_bundle(self.primary_bundle())
         assert isinstance(bundle, TDRAnvilBundle)
-        bundle.links = {
+        links = [
             link
-            for link in bundle.links
+            for link in bundle.links.to_links(EntityLink)
             if not any(ref.entity_type == 'anvil_file'
                        for ref in link.all_entities)
-        }
+        ]
+        bundle.links = EntityGraph.from_links(links)
         linked = set()
-        for link in bundle.links:
+        for link in links:
             linked.update(link.all_entities)
         for ref in list(bundle.entities):
             if ref not in linked:
@@ -814,14 +838,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
             **bundle.entities.pop(root),
             'biosample_id': biosample_id
         }
-
-        def swap(entities: frozenset[EntityReference]) -> frozenset[EntityReference]:
-            return frozenset(clone if entity == root else entity for entity in entities)
-
-        bundle.links = {
-            attrs.evolve(link, inputs=swap(link.inputs), outputs=swap(link.outputs))
-            for link in bundle.links
-        }
+        bundle.links = bundle.links.map(lambda entity: clone if entity == root else entity)
         bundle.fqid = attrs.evolve(bundle.fqid, primary_key=biosample_id, uuid=None)
         assert clone == bundle.bundle_entity, (clone, bundle.bundle_entity)
 
@@ -888,7 +905,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         it shares its name or not, no bundle being able to tell (#8386).
         """
         bundle = self._bundle('reads.bam', 'writes.bam')
-        bundle.links = set()
+        bundle.links = EntityGraph()
         self.assertEqual({f'detached/reads-{self.digest}.bam',
                           f'detached/writes-{self.digest}.bam'},
                          self._paths(bundle))
@@ -1099,7 +1116,7 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
                 assert isinstance(bundle, TDRAnvilBundle)
                 self.assertEqual({biosample}, self._keys(bundle, 'anvil_biosample'))
                 self.assertEqual(expected_files, self._keys(bundle, 'anvil_file'))
-                for link in bundle.links:
+                for link in bundle.links.to_links(EntityLink):
                     if link.activity is not None:
                         self.assertEqual({bundle.bundle_entity}, link.inputs)
                 transformer = FileTransformer(bundle=bundle, deleted=False)

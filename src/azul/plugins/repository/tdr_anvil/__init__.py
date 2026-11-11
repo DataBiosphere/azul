@@ -1,6 +1,5 @@
 ﻿from collections import (
     Counter,
-    defaultdict,
 )
 from collections.abc import (
     Set,
@@ -77,8 +76,10 @@ from azul.plugins.metadata.anvil import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
+    EntityGraph,
     EntityLink,
     Key,
+    KeyGraph,
     KeyLink,
     KeyReference,
     snapshot_without_md5s,
@@ -481,23 +482,6 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                     'File lacks MD5 digest', entity, self.fqid)
         target[entity] = metadata
 
-    def add_links(self, links: Iterable[EntityLink]):
-        self.links.update(links)
-        # Merge links that share the same (non-null) activity
-        groups_by_activity: dict[EntityReference, set[EntityLink]] = defaultdict(set)
-        for link in self.links:
-            if link.activity is not None:
-                groups_by_activity[link.activity].add(link)
-        for activity, group in groups_by_activity.items():
-            if len(group) > 1:
-                self.links -= group
-                merged_link = EntityLink(
-                    inputs=frozenset.union(*[link.inputs for link in group]),
-                    activity=activity,
-                    outputs=frozenset.union(*[link.outputs for link in group])
-                )
-                self.links.add(merged_link)
-
     def reject_duplicate_file_paths(self) -> None:
         """
         Reject the files in this bundle that a download could not tell apart,
@@ -771,28 +755,26 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         bundle_entity = KeyReference(key=not_none(bundle_fqid.primary_key),
                                      entity_type=bundle_fqid.table_name)
 
-        keys: MutableKeys = {bundle_entity}
-        links: KeyLinks = set()
+        graph = KeyGraph()
+        graph.add_node(bundle_entity)
 
         for method in [self._follow_downstream, self._follow_upstream]:
             method: Callable[[TDRSourceSpec, KeysByType], KeyLinks]
-            n = len(keys)
-            frontier: Keys = keys
+            n = len(graph.nodes)
+            frontier: Keys = set(graph.nodes)
             while frontier:
-                new_links = method(source.spec, self._consolidate_by_type(frontier))
-                links.update(new_links)
-                frontier = frozenset().union(*(link.all_entities for link in new_links)) - keys
-                keys.update(frontier)
+                links = method(source.spec, self._consolidate_by_type(frontier))
+                frontier = graph.add_links(links)
             log.debug('Found %r linked entities via method %s',
-                      len(keys) - n, method.__name__)
+                      len(graph.nodes) - n, method.__name__)
 
-        keys_by_type: KeysByType = self._consolidate_by_type(keys)
+        keys_by_type: KeysByType = self._consolidate_by_type(graph.nodes)
         if log.isEnabledFor(logging.DEBUG):
             arg = keys_by_type
         else:
             arg = {entity_type: len(keys) for entity_type, keys in keys_by_type.items()}
         log.info('Found %i entities linked to bundle %r: %r',
-                 len(keys), bundle_fqid.uuid, arg)
+                 len(graph.nodes), bundle_fqid.uuid, arg)
 
         result = TDRAnvilBundle(fqid=bundle_fqid)
         entities_by_key: dict[KeyReference, EntityReference] = {}
@@ -823,7 +805,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 entity = self._entity_ref(source.spec, entity_type, row)
                 entities_by_key[key] = entity
                 result.add_entity(entity, fixed_version, row)
-        result.add_links(link.to_entity_link(entities_by_key) for link in links)
+        result.links = graph.map(entities_by_key.__getitem__)
         return result
 
     def _supplementary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
@@ -845,7 +827,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # would be harmless in production, but would complicate the bundle
         # canning integration test.
         if linked_file_refs:
-            result.add_links([
+            result.links = EntityGraph.from_links([
                 EntityLink(inputs=singleton(dataset_ref),
                            outputs=frozenset(linked_file_refs))
             ])

@@ -198,7 +198,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return entries
 
     def _linked_entities(self, entity: EntityReference) -> LinkedEntities:
-        return LinkedEntities.from_links(entity, self.bundle.links)
+        return LinkedEntities(origin=entity, graph=self.bundle.links)
 
     @classmethod
     def _entity_types(cls) -> FieldTypes:
@@ -693,7 +693,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                     biosample_ids = (
                         biosample_id
                         for activity_type in self._activity_polymorphic_types
-                        for activity in ancestors[activity_type]
+                        for activity in ancestors.get(activity_type, ())
                         for biosample_id in json_element_strings(
                             self.bundle.entities[activity].get('used_biosample_id', [])
                         )
