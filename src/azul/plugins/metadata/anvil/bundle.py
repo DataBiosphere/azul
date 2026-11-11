@@ -59,16 +59,9 @@ snapshot_without_md5s = 'ANVIL_1000G_2019_Dev_20230609_ANV5_202306121732'
 #: A type alias for the values of a table's primary key column, which the AnVIL
 #: schema declares to be a string. This type alias distinguishes such a key from
 #: an entity ID, which is derived from it. A key is only unique within a single
-#: table, so `KeyReference` should be used when mixing keys from different
-#: entity types.
+#: table.
 #:
 type Key = str
-
-
-@attrs.frozen(kw_only=True, order=True)
-class KeyReference(SerializableAttrs):
-    key: Key
-    entity_type: EntityType
 
 
 def ref_set_field():
@@ -81,13 +74,13 @@ def ref_set_field():
 
 @total_ordering
 @attrs.frozen(kw_only=True, order=False)
-class Link[REF: (EntityReference, KeyReference)](SerializableAttrs):
-    inputs: frozenset[REF] = ref_set_field()
-    activity: REF | None = None
-    outputs: frozenset[REF] = ref_set_field()
+class EntityLink(SerializableAttrs):
+    inputs: frozenset[EntityReference] = ref_set_field()
+    activity: EntityReference | None = None
+    outputs: frozenset[EntityReference] = ref_set_field()
 
     @property
-    def all_entities(self) -> frozenset[REF]:
+    def all_entities(self) -> frozenset[EntityReference]:
         return self.inputs | self.outputs | aset(self.activity)
 
     def __lt__(self, other: Self) -> bool:
@@ -100,20 +93,17 @@ class Link[REF: (EntityReference, KeyReference)](SerializableAttrs):
             return bool(other.inputs)
 
 
-class EntityLink(Link[EntityReference]):
-    pass
+type EntityRefsByType = Mapping[EntityType, Set[EntityReference]]
+
+type GraphEdges = dict[EntityReference, set[EntityReference]]
 
 
-class KeyLink(Link[KeyReference]):
-    pass
-
-
-def is_activity(entity: EntityReference | KeyReference) -> bool:
+def is_activity(entity: EntityReference) -> bool:
     return entity.entity_type.endswith('activity')
 
 
 @attrs.define(kw_only=True)
-class LinkGraph[REF: (EntityReference, KeyReference)]:
+class EntityGraph:
     """
     The links between the entities in a bundle, as a directed graph. The graph
     has an edge from every input of a link to the link's activity, and from
@@ -122,20 +112,20 @@ class LinkGraph[REF: (EntityReference, KeyReference)]:
     outputs. Every entity in a link is a node of the graph, and so is every
     entity added explicitly, even if it has no edges.
     """
-    parents: dict[REF, set[REF]] = attrs.field(factory=dict)
-    children: dict[REF, set[REF]] = attrs.field(factory=dict)
+    parents: GraphEdges = attrs.field(factory=dict)
+    children: GraphEdges = attrs.field(factory=dict)
 
     @classmethod
-    def from_links(cls, links: Iterable[Link[REF]]) -> Self:
+    def from_links(cls, links: Iterable[EntityLink]) -> Self:
         self = cls()
         self.add_links(links)
         return self
 
     @property
-    def nodes(self) -> Set[REF]:
+    def nodes(self) -> Set[EntityReference]:
         return self.parents.keys()
 
-    def add_node(self, node: REF) -> bool:
+    def add_node(self, node: EntityReference) -> bool:
         """
         Add the given node to this graph, unless it is already in it. Returns
         True if it wasn't.
@@ -146,7 +136,7 @@ class LinkGraph[REF: (EntityReference, KeyReference)]:
             self.children[node] = set()
         return is_new
 
-    def add_links(self, links: Iterable[Link[REF]]) -> set[REF]:
+    def add_links(self, links: Iterable[EntityLink]) -> set[EntityReference]:
         """
         Add the given links to this graph and return the nodes that weren't in
         it before.
@@ -166,53 +156,51 @@ class LinkGraph[REF: (EntityReference, KeyReference)]:
                 self.children[parent].add(child)
         return new_nodes
 
-    def map[T: (EntityReference, KeyReference)](self, f: Callable[[REF], T]) -> LinkGraph[T]:
+    def map(self, f: Callable[[EntityReference], EntityReference]) -> Self:
         """
         A copy of this graph with every node replaced by the result of the
         given function for that node.
         """
 
-        def map_edges(edges: dict[REF, set[REF]]) -> dict[T, set[T]]:
+        def map_edges(edges: GraphEdges) -> GraphEdges:
             return {f(node): set(map(f, relatives)) for node, relatives in edges.items()}
 
-        return LinkGraph(parents=map_edges(self.parents),
-                         children=map_edges(self.children))
+        return type(self)(parents=map_edges(self.parents),
+                          children=map_edges(self.children))
 
-    def to_links(self, link_cls: type[Link[REF]]) -> Iterator[Link[REF]]:
+    def to_links(self) -> Iterator[EntityLink]:
         """
-        The links this graph was built from, one per activity, as instances of
-        the given class. The edges that don't involve an activity are grouped
-        into one link per input, which may group them differently than the
-        original links did. Only a subclass of Link that binds its type
-        variable, like EntityLink, can be serialized.
+        The links this graph was built from, one per activity. The edges that
+        don't involve an activity are grouped into one link per input, which
+        may group them differently than the original links did.
         """
         for node, children in self.children.items():
             if is_activity(node):
-                yield link_cls(inputs=frozenset(self.parents[node]),
-                               activity=node,
-                               outputs=frozenset(children))
+                yield EntityLink(inputs=frozenset(self.parents[node]),
+                                 activity=node,
+                                 outputs=frozenset(children))
             else:
                 outputs = frozenset(filterfalse(is_activity, children))
                 if outputs:
-                    yield link_cls(inputs=singleton(node), outputs=outputs)
+                    yield EntityLink(inputs=singleton(node), outputs=outputs)
 
-    def ancestors(self, node: REF) -> Mapping[EntityType, Set[REF]]:
+    def ancestors(self, node: EntityReference) -> EntityRefsByType:
         """
         The nodes upstream of the given node, by entity type
         """
         return self._closure(node, self.parents)
 
-    def descendants(self, node: REF) -> Mapping[EntityType, Set[REF]]:
+    def descendants(self, node: EntityReference) -> EntityRefsByType:
         """
         The nodes downstream of the given node, by entity type
         """
         return self._closure(node, self.children)
 
     def _closure(self,
-                 node: REF,
-                 relatives: Mapping[REF, Set[REF]]
-                 ) -> Mapping[EntityType, Set[REF]]:
-        closure: dict[EntityType, set[REF]] = defaultdict(set)
+                 node: EntityReference,
+                 relatives: Mapping[EntityReference, Set[EntityReference]]
+                 ) -> EntityRefsByType:
+        closure: dict[EntityType, set[EntityReference]] = defaultdict(set)
         visited, pending = {node}, [node]
         while pending:
             for relative in relatives.get(pending.pop(), frozenset()):
@@ -221,13 +209,6 @@ class LinkGraph[REF: (EntityReference, KeyReference)]:
                     closure[relative.entity_type].add(relative)
                     pending.append(relative)
         return closure
-
-
-KeyGraph = LinkGraph[KeyReference]
-
-EntityGraph = LinkGraph[EntityReference]
-
-EntityRefsByType = Mapping[EntityType, Set[EntityReference]]
 
 
 @attrs.frozen(kw_only=True)
@@ -266,7 +247,7 @@ class AnvilBundle[BUNDLE_FQID: SourcedBundleFQID](Bundle[BUNDLE_FQID],
         attrs.field(factory=EntityGraph),
         from_json=lambda x: EntityGraph.from_links(map(EntityLink.from_json,
                                                        json_element_mappings(x))),
-        to_json=lambda x: [v.to_json() for v in sorted(x.to_links(EntityLink))]
+        to_json=lambda x: [v.to_json() for v in sorted(x.to_links())]
     )
     orphans: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
 

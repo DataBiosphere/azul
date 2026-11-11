@@ -67,7 +67,6 @@ from azul.logging import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     EntityGraph,
-    EntityLink,
 )
 from azul.plugins.metadata.anvil.indexer import (
     transform,
@@ -676,7 +675,7 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
         assert isinstance(bundle, TDRAnvilBundle)
         links = [
             link
-            for link in bundle.links.to_links(EntityLink)
+            for link in bundle.links.to_links()
             if not any(ref.entity_type == 'anvil_file'
                        for ref in link.all_entities)
         ]
@@ -1116,7 +1115,7 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
                 assert isinstance(bundle, TDRAnvilBundle)
                 self.assertEqual({biosample}, self._keys(bundle, 'anvil_biosample'))
                 self.assertEqual(expected_files, self._keys(bundle, 'anvil_file'))
-                for link in bundle.links.to_links(EntityLink):
+                for link in bundle.links.to_links():
                     if link.activity is not None:
                         self.assertEqual({bundle.bundle_entity}, link.inputs)
                 transformer = FileTransformer(bundle=bundle, deleted=False)
