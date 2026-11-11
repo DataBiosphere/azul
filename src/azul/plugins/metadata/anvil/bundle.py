@@ -156,7 +156,7 @@ class LinkedEntities(Iterable[EntityReference]):
         for link in follow:
             for relative in [link.activity, *getattr(link, to)]:
                 if relative is not None:
-                    if relative != entity_ref and relative.entity_id not in entities[relative.entity_type]:
+                    if relative != entity_ref and relative not in entities[relative.entity_type]:
                         entities[relative.entity_type].add(relative)
                         cls._search(relative, links, entities, from_=from_, to=to)
         return entities
