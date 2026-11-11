@@ -85,7 +85,6 @@ from azul.lib.types import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
-    LinkedEntities,
     snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
@@ -196,9 +195,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         for e in self.bundle.entities:
             entries[e.entity_type].add(e)
         return entries
-
-    def _linked_entities(self, entity: EntityReference) -> LinkedEntities:
-        return LinkedEntities(origin=entity, graph=self.bundle.links)
 
     @classmethod
     def _entity_types(cls) -> FieldTypes:
@@ -468,7 +464,7 @@ class ActivityTransformer(BaseTransformer):
         return 'activities'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self._linked_entities(entity)
+        linked = self.bundle.links.lineage(entity)
         contents = dict(
             activities=[self._activity(entity)],
             biosamples=self._entities(self._biosample, linked['anvil_biosample']),
@@ -487,7 +483,7 @@ class BiosampleTransformer(BaseTransformer):
         return 'biosamples'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self._linked_entities(entity)
+        linked = self.bundle.links.lineage(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -584,7 +580,7 @@ class DonorTransformer(BaseTransformer):
         return 'donors'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self._linked_entities(entity)
+        linked = self.bundle.links.lineage(entity)
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
                 linked[activity_type]
@@ -614,7 +610,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
     def _transform(self,
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
-        linked = self._linked_entities(entity)
+        linked = self.bundle.links.lineage(entity)
         dataset = self._only_dataset_ref
         contents = dict(
             activities=self._entities(self._activity, chain.from_iterable(
@@ -632,7 +628,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         if config.enable_replicas:
             dataset_id = dataset.entity_id
             yield self._replica(entity, file_hub=file_id, root_hub=dataset_id)
-            for linked_entity in linked:
+            for linked_entity in chain.from_iterable(linked.values()):
                 yield self._replica(
                     linked_entity,
                     file_hub=None if linked_entity.entity_type in self.hot_entity_types() else file_id,
@@ -689,11 +685,11 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 if json_bool(metadata['is_supplementary']):
                     dir = self._supplementary_dir
                 else:
-                    ancestors = self._linked_entities(file).ancestors
+                    ancestors = self.bundle.links.ancestors(file)
                     biosample_ids = (
                         biosample_id
                         for activity_type in self._activity_polymorphic_types
-                        for activity in ancestors.get(activity_type, ())
+                        for activity in ancestors[activity_type]
                         for biosample_id in json_element_strings(
                             self.bundle.entities[activity].get('used_biosample_id', [])
                         )

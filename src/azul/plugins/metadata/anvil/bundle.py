@@ -9,7 +9,6 @@ from collections.abc import (
     Set,
 )
 from functools import (
-    cached_property,
     total_ordering,
 )
 from itertools import (
@@ -196,43 +195,26 @@ class EntityGraph:
         """
         return self._closure(node, self.children)
 
+    def lineage(self, node: EntityReference) -> EntityRefsByType:
+        """
+        The nodes upstream or downstream of the given node, by entity type
+        """
+        return self._closure(node, self.children, self._closure(node, self.parents))
+
     def _closure(self,
                  node: EntityReference,
-                 relatives: Mapping[EntityReference, Set[EntityReference]]
-                 ) -> EntityRefsByType:
-        closure: dict[EntityType, set[EntityReference]] = defaultdict(set)
+                 edges: GraphEdges,
+                 closure: defaultdict[EntityType, set[EntityReference]] | None = None
+                 ) -> defaultdict[EntityType, set[EntityReference]]:
+        closure = defaultdict(set) if closure is None else closure
         visited, pending = {node}, [node]
         while pending:
-            for relative in relatives.get(pending.pop(), frozenset()):
+            for relative in edges.get(pending.pop(), frozenset()):
                 if relative not in visited:
                     visited.add(relative)
                     closure[relative.entity_type].add(relative)
                     pending.append(relative)
         return closure
-
-
-@attrs.frozen(kw_only=True)
-class LinkedEntities(Iterable[EntityReference]):
-    origin: EntityReference
-    graph: EntityGraph
-
-    @cached_property
-    def ancestors(self) -> EntityRefsByType:
-        return self.graph.ancestors(self.origin)
-
-    @cached_property
-    def descendants(self) -> EntityRefsByType:
-        return self.graph.descendants(self.origin)
-
-    def __getitem__(self, item: EntityType) -> Set[EntityReference]:
-        empty: frozenset[EntityReference] = frozenset()
-        return self.ancestors.get(item, empty) | self.descendants.get(item, empty)
-
-    def __iter__(self) -> Iterator[EntityReference]:
-        for entities in self.ancestors.values():
-            yield from entities
-        for entities in self.descendants.values():
-            yield from entities
 
 
 @attrs.define(kw_only=True)
