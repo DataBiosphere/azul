@@ -234,19 +234,18 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         try:
             result = cache[entity]
         except KeyError:
-            ancestors = self.bundle.graph.ancestors(entity)
-            activities = (
-                activity
-                for activity in chain([entity], *ancestors.values())
-                if self._convert_entity_type(activity.entity_type) == 'activities'
-            )
-            result = frozenset(
-                biosample_id
-                for activity in activities
-                for biosample_id in json_element_strings(
-                    self.bundle.entities[activity].get('used_biosample_id', [])
-                )
-            )
+            # Most entities in a bundle have the same upstream biosamples, so
+            # an entity reuses the set of its parent wherever possible, instead
+            # of building an equal one
+            parents = self.bundle.graph.parents.get(entity, set())
+            upstream = {self._upstream_biosample_ids(parent) for parent in parents}
+            if entity.entity_type in self._activity_polymorphic_types:
+                used = self.bundle.entities[entity].get('used_biosample_id', [])
+                upstream.add(frozenset(json_element_strings(used)))
+            # The empty set of a parent such as the root biosample adds nothing
+            # to the union, but would prevent the reuse of the only other set
+            upstream.discard(frozenset())
+            result = one(upstream) if len(upstream) == 1 else frozenset().union(*upstream)
             cache[entity] = result
         return result
 
