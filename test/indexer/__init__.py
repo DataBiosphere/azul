@@ -344,9 +344,13 @@ class IndexerTestCase(CatalogTestCase,
 
         for hit in hits:
             qualifier, doc_type = self._parse_index_name(hit)
+            source = hit['_source']
+            # An AnVIL contribution lacks any inner entities if other bundles
+            # own all of them, and then has no lists to verify
+            is_empty = doc_type is DocumentType.contribution and not any(source['contents'].values())
             # Replicas may contain (intentionally) unsorted metadata
-            if doc_type is not DocumentType.replica:
-                self._verify_sorted_lists(hit['_source'])
+            if doc_type is not DocumentType.replica and not is_empty:
+                self._verify_sorted_lists(source)
         return hits
 
     def _parse_index_name(self, hit) -> tuple[str, DocumentType]:

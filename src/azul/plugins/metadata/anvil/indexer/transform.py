@@ -195,6 +195,131 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             entries[e.entity_type].add(e)
         return entries
 
+    @cached_property
+    def _root_biosample_id(self) -> str | None:
+        """
+        The primary key of the biosample the bundle is rooted at, or None if the
+        bundle isn't a primary bundle.
+        """
+        entity = self.bundle.bundle_entity
+        if entity is None or entity.entity_type != 'anvil_biosample':
+            return None
+        else:
+            return json_str(self.bundle.entities[entity]['biosample_id'])
+
+    @cached_property
+    def __upstream_biosample_ids_by_entity(self) -> dict[EntityReference, frozenset[str]]:
+        return {}
+
+    def _upstream_biosample_ids(self, entity: EntityReference) -> frozenset[str]:
+        """
+        The primary keys of the biosamples used by the given entity, if it is an
+        activity, or by any activity upstream of it. A primary bundle contains
+        at most one of these biosamples, the one it is rooted at, but it does
+        contain every activity upstream of its entities, and an activity
+        lists the primary keys of all biosamples it used.
+
+        For an entity in a primary bundle, the result includes the biosample
+        the bundle is rooted at only if the entity is derived from that
+        biosample. There are two kinds of entities in a primary bundle that
+        aren't: The first are the root biosample itself, its donors, their
+        diagnoses and the dataset. No activity is upstream of them, so the
+        result is empty. The second are entities that the bundle contains only
+        because they are upstream of an activity derived from the root, such
+        as a file that such an activity used, and the activity that generated
+        that file. The result for them consists of the biosamples, if any, that
+        they are derived from, and the root isn't one of them.
+        """
+        cache = self.__upstream_biosample_ids_by_entity
+        try:
+            result = cache[entity]
+        except KeyError:
+            ancestors = self.bundle.graph.ancestors(entity)
+            activities = (
+                activity
+                for activity in chain([entity], *ancestors.values())
+                if self._convert_entity_type(activity.entity_type) == 'activities'
+            )
+            result = frozenset(
+                biosample_id
+                for activity in activities
+                for biosample_id in json_element_strings(
+                    self.bundle.entities[activity].get('used_biosample_id', [])
+                )
+            )
+            cache[entity] = result
+        return result
+
+    def _owns(self, inner: EntityReference, outer: EntityReference) -> bool:
+        """
+        Whether the bundle handled by this transformer should contribute the
+        given inner entity to the given outer entity.
+
+        For any given pair of entities I and O, primary bundle B *owns* (I, O)
+        if B's contribution to O should include I. Also, let roots(E) denote the
+        set of biosamples whose primary bundles contain entity E. For B to own
+        (I, O), two things must hold:
+
+        - B contains O, so B's biosample is in roots(O)
+
+        - B contains I, so B's biosample is in roots(I)
+
+        Every primary bundle B whose biosample is in roots(I) ∩ roots(O) is able
+        to contribute I to O, and more than one of them doing so is redundant.
+        To arbitrate which of these primary bundles actually owns (I, O), this
+        method picks the bundle whose biosample has the lowest primary key among
+        those in roots(I) ∩ roots(O). Transformers for different bundles can't
+        coordinate with each other, but each can predict the owner from its
+        bundle's content, and their predictions agree except in the cases
+        described below.
+
+        Every bundle that isn't a primary bundle owns every pair.
+
+        Note that the biosample with the lowest primary key is also the one that
+        :meth:`FileTransformer._backfilled_file_paths` names the directory of a
+        file after, so the copy of a file that survives is the one with the
+        authoritative path.
+
+        Note that certain pairs (I, O) can be owned by more than one primary
+        bundle:
+
+        1) (dataset, dataset) is owned by every primary bundle. This is because
+           roots(dataset) is the set of every biosample in the dataset, which is
+           not known from just the current bundle's content.
+
+        2) (dataset, E) and (E, dataset) are owned by the primary bundle whose
+           biosample has the lowest primary key among the biosamples upstream of
+           E or, if E isn't derived from any biosample, by every primary bundle
+           containing E.
+
+        3) For every other pair (I, O) in which I, O or both lack an upstream
+           biosample, the pair is owned by every primary bundle containing I and
+           O. Examples are every donor or diagnosis, or any file that isn't
+           derived from a biosample.
+
+        A bundle approximates roots(E) as the biosample it is rooted at,
+        together with the biosamples upstream of E. The approximation may miss a
+        biosample, such as that of a bundle containing a file only because an
+        activity downstream of the file used the bundle's biosample. Such a miss
+        can only lead to false positives, i.e. the unnecessary inclusion of an
+        inner entity in the contribution to an outer entity, but is otherwise
+        harmless. False negatives occur only if the biosample with the lowest
+        primary key among those upstream of I and O is missing from the
+        snapshot. In that case, the current bundle will omit I from the
+        contribution to O, yielding to another bundle that doesn't exist.
+        """
+        upstream = [
+            self._upstream_biosample_ids(entity)
+            for entity in (inner, outer)
+            if entity != self._only_dataset_ref
+        ]
+        candidates = frozenset.intersection(*upstream) if upstream else frozenset()
+        if candidates:
+            root = self._root_biosample_id
+            return root is None or root <= min(candidates)
+        else:
+            return True
+
     @classmethod
     def _entity_types(cls) -> FieldTypes:
         return {
@@ -326,10 +451,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _entities(self,
                   factory: Callable[[EntityReference], MutableJSON],
                   entities: Iterable[EntityReference],
+                  *,
+                  outer: EntityReference
                   ) -> MutableJSONs:
         return [
             factory(entity)
             for entity in sorted(entities, key=attrgetter('entity_id'))
+            if self._owns(entity, outer)
         ]
 
     def _contribution_contents(self,
@@ -357,7 +485,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         entities['datasets'] = {self._only_dataset_ref}
         entities[self.entity_type()] = {entity}
         return {
-            entity_type: self._entities(factory, entities[entity_type])
+            entity_type: self._entities(factory, entities[entity_type], outer=entity)
             for entity_type, factory in factories.items()
         }
 
@@ -639,14 +767,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         decided based on just this bundle, as is the case with detached and
         supplementary files, it will be deduplicated defensively.
         """
-        # Determine the root biosample. Only a primary bundle has one.
-        #
-        entity = self.bundle.bundle_entity
-        if entity is None or entity.entity_type != 'anvil_biosample':
-            root_biosample_dir = None
-        else:
-            root_biosample = self.bundle.entities[entity]
-            root_biosample_dir = json_str(root_biosample['biosample_id'])
+        root_biosample_dir = self._root_biosample_id
 
         # Group all files in the bundle by intermediate directory and file name.
         # If we grouped only the files in the current partition, the groups
@@ -666,16 +787,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 if json_bool(metadata['is_supplementary']):
                     dir = self._supplementary_dir
                 else:
-                    ancestors = self.bundle.graph.ancestors(file)
-                    biosample_ids = (
-                        biosample_id
-                        for table, entities in ancestors.items()
-                        if self._convert_entity_type(table) == 'activities'
-                        for activity in entities
-                        for biosample_id in json_element_strings(
-                            self.bundle.entities[activity].get('used_biosample_id', [])
-                        )
-                    )
+                    biosample_ids = self._upstream_biosample_ids(file)
                     # FIXME: Remove the default
                     #        https://github.com/DataBiosphere/azul/issues/8386
                     dir = min(biosample_ids, default=self._detached_dir)

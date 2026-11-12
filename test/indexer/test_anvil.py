@@ -2,6 +2,7 @@ from abc import (
     ABC,
 )
 from collections import (
+    Counter,
     defaultdict,
 )
 import json
@@ -33,9 +34,6 @@ from urllib3 import (
 
 from azul import (
     config,
-)
-from azul.indexer import (
-    BundlePartition,
 )
 from azul.indexer.cache_service import (
     UrlCacheService,
@@ -772,11 +770,14 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         return bundle
 
     def _paths(self, bundle: TDRAnvilBundle) -> set[str]:
+        # Not every contribution to a file includes the file itself, so the
+        # paths are taken from the copies of the files the bundle would
+        # contribute, whether it does or not
         transformer = FileTransformer(bundle=bundle, deleted=False)
         return {
-            json_str(one(doc.contents['files'])['file_path'])
-            for doc in transformer.transform(BundlePartition.root)
-            if isinstance(doc, Contribution)
+            json_str(transformer._file(file)['file_path'])
+            for file in bundle.entities
+            if file.entity_type == 'anvil_file'
         }
 
     def test_shared_name(self):
@@ -1121,12 +1122,84 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
                 transformer = FileTransformer(bundle=bundle, deleted=False)
                 paths = {
                     json_str(file['file_id']): file['file_path']
-                    for doc in transformer.transform(BundlePartition.root)
-                    if isinstance(doc, Contribution)
-                    for file in [one(doc.contents['files'])]
+                    for entity in bundle.entities
+                    if entity.entity_type == 'anvil_file'
+                    for file in [transformer._file(entity)]
                 }
                 expected_paths = {
                     file_id: f'{directories[file_id]}/{names[file_id]}'
                     for file_id in expected_files
                 }
                 self.assertEqual(expected_paths, paths)
+
+    def _contributions(self, bundles: list[TDRAnvilBundle]) -> list[Contribution]:
+        service = IndexService()
+        result = []
+        for bundle in bundles:
+            documents = service.transform(self.catalog, bundle, delete=False)
+            assert isinstance(documents, tuple), documents
+            for contribution in documents[0]:
+                entity = CataloguedEntityReference.for_entity(
+                    self.catalog, contribution.coordinates.entity)
+                coordinates = attrs.evolve(contribution.coordinates, entity=entity)
+                result.append(attrs.evolve(contribution, coordinates=coordinates))
+        return result
+
+    def _inclusions(self,
+                    contributions: list[Contribution]
+                    ) -> Counter[tuple[EntityReference, str, str]]:
+        """
+        The number of contributions to each outer entity that include each of
+        its inner entities, by outer entity, inner entity type and inner entity
+        ID.
+        """
+        return Counter(
+            (contribution.coordinates.entity, inner_type, json_str(inner['document_id']))
+            for contribution in contributions
+            for inner_type, inners in contribution.contents.items()
+            for inner in json_element_mappings(inners)
+        )
+
+    def test_ownership(self):
+        """
+        Of the contributions to an outer entity, only one includes any given
+        inner entity, except for the dataset as an inner entity of itself,
+        which every bundle includes. The aggregates are the same as if every
+        contribution included every inner entity linked to its outer entity.
+        """
+        self._mock_normal_duos()
+        self._make_mock_tables(self.source.ref)
+        bundles = []
+        for biosample in [self.b1, self.b2, self.b3]:
+            bundle = self.plugin.fetch_bundle(self.bundle_fqid(primary_key=biosample))
+            assert isinstance(bundle, TDRAnvilBundle)
+            bundles.append(bundle)
+        owned = self._contributions(bundles)
+        with patch.object(transform.BaseTransformer, '_owns', return_value=True):
+            unowned = self._contributions(bundles)
+
+        owned_inclusions, unowned_inclusions = self._inclusions(owned), self._inclusions(unowned)
+        self.assertEqual(unowned_inclusions.keys(), owned_inclusions.keys())
+        self.assertGreater(unowned_inclusions.total(), owned_inclusions.total())
+        dataset = one({
+            json_str(inner['document_id'])
+            for contribution in owned
+            if contribution.coordinates.entity.entity_type == 'datasets'
+            for inner in json_element_mappings(contribution.contents['datasets'])
+        })
+        duplicates = {
+            (outer.entity_type, inner_type, inner_id): count
+            for (outer, inner_type, inner_id), count in owned_inclusions.items()
+            if count > 1
+        }
+        self.assertEqual({('datasets', 'datasets', dataset): len(bundles)}, duplicates)
+
+        service = IndexService()
+
+        def aggregates(contributions: list[Contribution]) -> dict[EntityReference, JSON]:
+            return {
+                aggregate.coordinates.entity: aggregate.to_json()
+                for aggregate in service._aggregate(contributions)
+            }
+
+        self.assertEqual(aggregates(unowned), aggregates(owned))
