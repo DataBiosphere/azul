@@ -554,7 +554,20 @@ class DatasetTransformer(SingletonTransformer):
     def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'datasets': cls._detailed_dataset_types(),
+            'datasets': {
+                **cls._detailed_dataset_types(),
+                # FIXME: Remove the backwards compatibility
+                #        https://github.com/DataBiosphere/azul/issues/8448
+                #
+                # Only declared, so that documents carrying these fields can be
+                # translated. They must not be declared in the field types that
+                # drive `_entity`, which demands a value for every field it is
+                # given, and would therefore reject bundles, none of which
+                # carry these fields anymore.
+                #
+                '_tdr_non_schema_row_count': null_int,
+                '_tdr_non_schema_row_count_threshold': null_int
+            },
         }
 
     def _dataset(self, dataset: EntityReference) -> MutableJSON:

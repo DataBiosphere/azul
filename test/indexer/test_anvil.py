@@ -43,6 +43,7 @@ from azul.indexer.cache_service import (
 from azul.indexer.document import (
     CataloguedEntityReference,
     Contribution,
+    Document,
     DocumentType,
     EntityReference,
 )
@@ -65,6 +66,7 @@ from azul.plugins.metadata.anvil.indexer import (
     transform,
 )
 from azul.plugins.metadata.anvil.indexer.transform import (
+    DatasetTransformer,
     FileTransformer,
 )
 from azul.plugins.metadata.anvil.schema import (
@@ -262,6 +264,52 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                                   'file_inventory',
                                   'non_schema_orphan_table'],
                                  self.plugin._non_verbatim_tables(self.source.ref))
+
+    # FIXME: Remove this test
+    #        https://github.com/DataBiosphere/azul/issues/8448
+
+    def test_legacy_dataset_fields(self):
+        """
+        A dataset document indexed before `_non_verbatim_tables` replaced the
+        two row count fields still carries them. Translating such a document
+        must not fail, because `Document.translate_fields` iterates the keys
+        of the document, not the declared field types.
+        """
+        document = {
+            'datasets': [
+                {
+                    '_tdr_non_schema_row_count': 1,
+                    '_tdr_non_schema_row_count_threshold': 2
+                }
+            ]
+        }
+        field_types = DatasetTransformer.field_types()
+        translated = Document.translate_fields(document,
+                                               field_types,
+                                               forward=False)
+        self.assertEqual(document, translated)
+
+    # FIXME: Remove this test
+    #        https://github.com/DataBiosphere/azul/issues/8448
+
+    def test_legacy_dataset_fields_are_not_contributed(self):
+        """
+        Bundles don't carry the two row count fields anymore, so transforming
+        one must not fail, and the resulting contribution must not carry them
+        either. Unlike `Document.translate_fields`, `_entity` iterates the
+        declared field types, and demands a value for each of them.
+        """
+        bundle = self._load_canned_bundle(self.primary_bundle())
+        contributions, _ = self.index_service.transform(self.catalog,
+                                                        bundle,
+                                                        delete=False)
+        contents = one(
+            one(contribution.contents['datasets'])
+            for contribution in contributions
+            if contribution.entity.entity_type == 'datasets'
+        )
+        self.assertNotIn('_tdr_non_schema_row_count', contents)
+        self.assertNotIn('_tdr_non_schema_row_count_threshold', contents)
 
     def test_huge_table(self):
         """
