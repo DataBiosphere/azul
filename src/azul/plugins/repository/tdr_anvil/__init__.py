@@ -79,6 +79,7 @@ from azul.plugins.metadata.anvil.bundle import (
     EntityGraph,
     EntityLink,
     Key,
+    anvil_schema,
     snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.schema import (
@@ -98,10 +99,6 @@ from azul.terra import (
 )
 
 log = logging.getLogger(__name__)
-
-#: The version of the AnVIL schema that this module was written against
-#:
-anvil_schema = anvil_schemas[6]
 
 #: AnVIL snapshots are not versioned, so every AnVIL bundle has this version,
 #: and so does every entity in one

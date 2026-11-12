@@ -77,7 +77,6 @@ from azul.lib.types import (
     MutableJSON,
     MutableJSONs,
     json_bool,
-    json_element_mappings,
     json_element_strings,
     json_sequence_of_optional_strings,
     json_sorted,
@@ -87,6 +86,8 @@ from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
     EntityRefsByType,
     MutableEntityRefsByType,
+    activity_tables,
+    is_activity,
     snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
@@ -99,10 +100,6 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
 )
 
 log = logging.getLogger(__name__)
-
-#: The version of the AnVIL schema that this module was written against
-#:
-anvil_schema_version = 6
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
@@ -174,7 +171,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         assert entity_type == 'bundle' or entity_type.startswith('anvil_'), entity_type
         if entity_type == 'anvil_diagnosis':
             return 'diagnoses'
-        elif entity_type in self._activity_polymorphic_types:
+        elif entity_type in activity_tables:
             return 'activities'
         else:
             return pluralize(entity_type.removeprefix('anvil_'))
@@ -239,7 +236,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             # of building an equal one
             parents = self.bundle.graph.parents.get(entity, set())
             upstream = {self._upstream_biosample_ids(parent) for parent in parents}
-            if entity.entity_type in self._activity_polymorphic_types:
+            if is_activity(entity):
                 used = self.bundle.entities[entity].get('used_biosample_id', [])
                 upstream.add(frozenset(json_element_strings(used)))
             # The empty set of a parent such as the root biosample adds nothing
@@ -546,18 +543,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @property
     def _only_dataset_ref(self) -> EntityReference:
         return self._only_dataset[0]
-
-    @cached_property
-    def _activity_polymorphic_types(self) -> Set[str]:
-        from azul.plugins.metadata.anvil.schema import (
-            anvil_schemas,
-        )
-        anvil_schema = anvil_schemas[anvil_schema_version]
-        return {
-            json_str(table['name'])
-            for table in json_element_mappings(anvil_schema['tables'])
-            if json_str(table['name']).endswith('activity')
-        }
 
     @classmethod
     def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
