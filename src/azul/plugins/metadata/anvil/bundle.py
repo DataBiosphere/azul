@@ -49,6 +49,10 @@ from azul.lib.types import (
     MutableJSON,
     json_element_mappings,
     json_element_strings,
+    json_str,
+)
+from azul.plugins.metadata.anvil.schema import (
+    anvil_schemas,
 )
 
 #: The one snapshot whose files may lack an MD5 digest
@@ -101,9 +105,24 @@ type MutableEntityRefsByType = dict[EntityType, set[EntityReference]]
 
 type GraphEdges = dict[EntityReference, set[EntityReference]]
 
+#: The version of the AnVIL schema that this package was written against
+#:
+anvil_schema_version = 6
+
+anvil_schema = anvil_schemas[anvil_schema_version]
+
+#: The names of the tables whose rows are activities. The AnVIL schema
+#: identifies them only by the suffix of their name.
+#:
+activity_tables: Set[EntityType] = frozenset(
+    name
+    for table in json_element_mappings(anvil_schema['tables'])
+    if (name := json_str(table['name'])).endswith('activity')
+)
+
 
 def is_activity(entity: EntityReference) -> bool:
-    return entity.entity_type.endswith('activity')
+    return entity.entity_type in activity_tables
 
 
 @attrs.define(kw_only=True)
