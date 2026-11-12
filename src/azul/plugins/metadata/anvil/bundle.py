@@ -34,6 +34,7 @@ from azul.indexer.document import (
 from azul.lib.attrs import (
     SerializableAttrs,
     serializable,
+    serialized_as,
 )
 from azul.lib.collections import (
     aset,
@@ -237,7 +238,8 @@ class AnvilBundle[BUNDLE_FQID: SourcedBundleFQID](Bundle[BUNDLE_FQID],
     # the contributions (e.g. `activities`). The metadata plugin converts from
     # the former to the latter during transformation.
     entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
-    links: EntityGraph = attrs.field(factory=EntityGraph)
+    graph: EntityGraph = serialized_as(attrs.field(factory=EntityGraph),
+                                       name='links')
     orphans: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
 
     @property

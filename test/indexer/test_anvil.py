@@ -241,7 +241,7 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     assert isinstance(canned_bundle, TDRAnvilBundle)
                     self.assertEqual(canned_bundle.fqid, bundle.fqid)
                     self.assertEqual(canned_bundle.entities, bundle.entities)
-                    self.assertEqual(canned_bundle.links, bundle.links)
+                    self.assertEqual(canned_bundle.graph, bundle.graph)
                     self.assertEqual(canned_bundle.orphans, bundle.orphans)
 
     def test_links_round_trip(self):
@@ -586,7 +586,7 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
                                       entity_id='208441e2-cf28-584e-a0ac-7553c7118412')
         bundle_fqid = self.primary_bundle()
         bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
-        bundle.links = EntityGraph()
+        bundle.graph = EntityGraph()
         bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
         self._index_bundle(bundle, delete=False)
 
@@ -675,11 +675,11 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
         assert isinstance(bundle, TDRAnvilBundle)
         links = [
             link
-            for link in bundle.links.to_links()
+            for link in bundle.graph.to_links()
             if not any(ref.entity_type == 'anvil_file'
                        for ref in link.all_entities)
         ]
-        bundle.links = EntityGraph.from_links(links)
+        bundle.graph = EntityGraph.from_links(links)
         linked = set()
         for link in links:
             linked.update(link.all_entities)
@@ -837,7 +837,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
             **bundle.entities.pop(root),
             'biosample_id': biosample_id
         }
-        bundle.links = bundle.links.map(lambda entity: clone if entity == root else entity)
+        bundle.graph = bundle.graph.map(lambda entity: clone if entity == root else entity)
         bundle.fqid = attrs.evolve(bundle.fqid, primary_key=biosample_id, uuid=None)
         assert clone == bundle.bundle_entity, (clone, bundle.bundle_entity)
 
@@ -904,7 +904,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         it shares its name or not, no bundle being able to tell (#8386).
         """
         bundle = self._bundle('reads.bam', 'writes.bam')
-        bundle.links = EntityGraph()
+        bundle.graph = EntityGraph()
         self.assertEqual({f'detached/reads-{self.digest}.bam',
                           f'detached/writes-{self.digest}.bam'},
                          self._paths(bundle))
@@ -1115,7 +1115,7 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
                 assert isinstance(bundle, TDRAnvilBundle)
                 self.assertEqual({biosample}, self._keys(bundle, 'anvil_biosample'))
                 self.assertEqual(expected_files, self._keys(bundle, 'anvil_file'))
-                for link in bundle.links.to_links():
+                for link in bundle.graph.to_links():
                     if link.activity is not None:
                         self.assertEqual({bundle.bundle_entity}, link.inputs)
                 transformer = FileTransformer(bundle=bundle, deleted=False)

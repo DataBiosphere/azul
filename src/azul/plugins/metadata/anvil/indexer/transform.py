@@ -482,7 +482,7 @@ class ActivityTransformer(BaseTransformer):
         return 'activities'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self.bundle.links.lineage(entity)
+        linked = self.bundle.graph.lineage(entity)
         contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
@@ -494,7 +494,7 @@ class BiosampleTransformer(BaseTransformer):
         return 'biosamples'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self.bundle.links.lineage(entity)
+        linked = self.bundle.graph.lineage(entity)
         contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
@@ -581,7 +581,7 @@ class DonorTransformer(BaseTransformer):
         return 'donors'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self.bundle.links.lineage(entity)
+        linked = self.bundle.graph.lineage(entity)
         contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
@@ -601,7 +601,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
     def _transform(self,
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
-        linked = self.bundle.links.lineage(entity)
+        linked = self.bundle.graph.lineage(entity)
         dataset = self._only_dataset_ref
         contents = self._contribution_contents(entity, linked)
         file_id = entity.entity_id
@@ -666,7 +666,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 if json_bool(metadata['is_supplementary']):
                     dir = self._supplementary_dir
                 else:
-                    ancestors = self.bundle.links.ancestors(file)
+                    ancestors = self.bundle.graph.ancestors(file)
                     biosample_ids = (
                         biosample_id
                         for table, entities in ancestors.items()

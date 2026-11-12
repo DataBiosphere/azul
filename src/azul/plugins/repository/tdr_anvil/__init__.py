@@ -810,7 +810,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 entity = self._entity_ref(source.spec, entity_type, row)
                 entities_by_key[key] = entity
                 result.add_entity(entity, fixed_version, row)
-        result.links = graph.map(entities_by_key.__getitem__)
+        result.graph = graph.map(entities_by_key.__getitem__)
         return result
 
     def _supplementary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
@@ -832,7 +832,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # would be harmless in production, but would complicate the bundle
         # canning integration test.
         if linked_file_refs:
-            result.links = EntityGraph.from_links([
+            result.graph = EntityGraph.from_links([
                 EntityLink(inputs=singleton(dataset_ref),
                            outputs=frozenset(linked_file_refs))
             ])
