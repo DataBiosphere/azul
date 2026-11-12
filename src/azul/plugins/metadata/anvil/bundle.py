@@ -39,7 +39,12 @@ from azul.lib.collections import (
     aset,
     singleton,
 )
+from azul.lib.json import (
+    Serializable,
+)
 from azul.lib.types import (
+    AnyJSON,
+    JSONs,
     MutableJSON,
     json_element_mappings,
     json_element_strings,
@@ -101,7 +106,7 @@ def is_activity(entity: EntityReference) -> bool:
 
 
 @attrs.define(kw_only=True)
-class EntityGraph:
+class EntityGraph(Serializable):
     """
     The links between the entities in a bundle, as a directed graph. The graph
     has an edge from every input of a link to the link's activity, and from
@@ -118,6 +123,13 @@ class EntityGraph:
         self = cls()
         self.add_links(links)
         return self
+
+    @classmethod
+    def from_json(cls, json: AnyJSON) -> Self:
+        return cls.from_links(map(EntityLink.from_json, json_element_mappings(json)))
+
+    def to_json(self) -> JSONs:
+        return [link.to_json() for link in sorted(self.to_links())]
 
     @property
     def nodes(self) -> Set[EntityReference]:
@@ -225,12 +237,7 @@ class AnvilBundle[BUNDLE_FQID: SourcedBundleFQID](Bundle[BUNDLE_FQID],
     # the contributions (e.g. `activities`). The metadata plugin converts from
     # the former to the latter during transformation.
     entities: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
-    links: EntityGraph = serializable(
-        attrs.field(factory=EntityGraph),
-        from_json=lambda x: EntityGraph.from_links(map(EntityLink.from_json,
-                                                       json_element_mappings(x))),
-        to_json=lambda x: [v.to_json() for v in sorted(x.to_links())]
-    )
+    links: EntityGraph = attrs.field(factory=EntityGraph)
     orphans: dict[EntityReference, MutableJSON] = attrs.field(factory=dict)
 
     @property
