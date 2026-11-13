@@ -17,7 +17,6 @@ from operator import (
 )
 from typing import (
     Any,
-    cast,
     overload,
 )
 
@@ -647,21 +646,6 @@ class IndexService(DocumentService):
             for hits in pages()
             for hit in hits
         ]
-
-        log.info('Read %i contribution(s)', len(contributions))
-        if log.isEnabledFor(logging.DEBUG):
-            entity_ref = attrgetter('entity')
-            contributions_by_entity = cast(
-                Iterator[tuple[EntityReference, Iterator[Contribution]]],
-                groupby(sorted(contributions, key=entity_ref), key=entity_ref)
-            )
-            log.debug(
-                'Number of contributions read, by entity: %r',
-                {
-                    f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in contributions_by_entity
-                }
-            )
         return contributions
 
     def _aggregate(self,
@@ -680,6 +664,15 @@ class IndexService(DocumentService):
             # Track the raw, unfiltered number of contributions per entity.
             assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
             tallies[contribution.coordinates.entity] += 1
+        log.info('Read %i contribution(s)', sum(tallies.values()))
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug(
+                'Number of contributions read, by entity: %r',
+                {
+                    f'{entity.entity_type}/{entity.entity_id}': num_contributions
+                    for entity, num_contributions in sorted(tallies.items())
+                }
+            )
 
         # For each entity and bundle, find the most recent contribution that is
         # not a deletion
