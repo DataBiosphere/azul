@@ -169,7 +169,7 @@ requires-dist = [
     { name = "google-api-core", specifier = "==2.44.0" },
     { name = "google-auth", extras = ["pyopenssl"], specifier = "==2.62.2" },
     { name = "google-cloud-bigquery", specifier = "==3.47.0" },
-    { name = "http-message-signatures", specifier = "==2.1.0" },
+    { name = "http-message-signatures", specifier = "==3.0.0" },
     { name = "http-sfv", specifier = "==0.9.9" },
     { name = "jmespath", specifier = "==1.1.0" },
     { name = "jsonschema", specifier = "==4.26.0" },
@@ -866,15 +866,15 @@ wheels = [
 
 [[package]]
 name = "http-message-signatures"
-version = "2.1.0"
+version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "http-sf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/44/b1ddf9ed3fcf8d49df1dd83f23ce2ba7a6a7f0dd46a93ed801e0556939d5/http_message_signatures-2.1.0.tar.gz", hash = "sha256:171183a16f17c0e668c42471d345aa1faca6ceb0bfda380fa2542c91ae6f8702", size = 53495, upload-time = "2026-10-19T00:12:34.049Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/c7/eecd8e93818a29f6ceb02145018ee7c36469da543af7410981d2e9d40ee5/http_message_signatures-3.0.0.tar.gz", hash = "sha256:fcb26b157462483b4d6b264df8c9c1a796439a78a3d42ad412bcbf507f39db01", size = 115968, upload-time = "2026-10-26T02:17:36.249Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/88/7f5410f3b323258cee415eb473c33f96ddb3961874192d594cbe56804136/http_message_signatures-2.1.0-py3-none-any.whl", hash = "sha256:c54bacf9ef141864e51864e3a175f6cf777c405fb25bd4e003bfac6e8d9bb156", size = 27759, upload-time = "2026-10-19T00:12:32.625Z" },
+    { url = "https://files.pythonhosted.org/packages/14/e7/fc0c602d1e921b13e8451a9287289594871ca3c448f0c4d9bf0a9bd3b0b2/http_message_signatures-3.0.0-py3-none-any.whl", hash = "sha256:c289966e1b2950517cd57aed166be5e981de96f0cd29f69173f09ac547a8552a", size = 53460, upload-time = "2026-10-26T02:17:34.929Z" },
 ]
 
 [[package]]
