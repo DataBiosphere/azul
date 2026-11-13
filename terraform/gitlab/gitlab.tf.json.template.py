@@ -287,10 +287,10 @@ runner_image, _ = resolve_docker_image_for_pull('gitlab_runner')
 # For instructions on finding the latest CIS-hardened AMI, see "Updating the AMI
 # for GitLab instances" section in OPERATOR.rst.
 #
-# CIS Amazon Linux 2023 Benchmark - Level 1 - v10 -prod-fvm47vekg24oc
+# CIS Amazon Linux 2023 Benchmark - Level 1 - v11 -prod-fvm47vekg24oc
 #
 ami_id = {
-    'us-east-1': 'ami-0fccf34b5d6049266'
+    'us-east-1': 'ami-0d5d9375bf8170fa2'
 }
 
 # For instructions on finding the latest Amazon Linux 2023 release, see
