@@ -313,17 +313,40 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         if inner == outer:
             return True
         else:
-            upstream = [
+            upstream = tuple(
                 self._upstream_biosample_ids(entity)
                 for entity in (inner, outer)
                 if entity != self._only_dataset_ref
-            ]
-            candidates = frozenset.intersection(*upstream) if upstream else frozenset()
-            if candidates:
-                root = self._root_biosample_id
-                return root is None or root <= min(candidates)
-            else:
+            )
+            owner = self._owner_biosample_id(upstream)
+            if owner is None:
                 return True
+            else:
+                root = self._root_biosample_id
+                return root is None or root <= owner
+
+    def _owner_biosample_id(self, upstream: tuple[frozenset[str], ...]) -> str | None:
+        """
+        The lowest primary key among the biosamples in all of the given sets, or
+        None if no biosample is in all of them.
+        """
+        # Most pairs of entities in a bundle share the same sets of upstream
+        # biosamples, so this is memoized. The hash of a frozenset is computed
+        # only once, and the sets are mostly compared by identity.
+        cache = self.__owner_biosample_id
+        try:
+            result = cache[upstream]
+        except KeyError:
+            if upstream:
+                result = min(frozenset.intersection(*upstream), default=None)
+            else:
+                result = None
+            cache[upstream] = result
+        return result
+
+    @cached_property
+    def __owner_biosample_id(self) -> dict[tuple[frozenset[str], ...], str | None]:
+        return {}
 
     @classmethod
     def _entity_types(cls) -> FieldTypes:
