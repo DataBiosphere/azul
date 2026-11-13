@@ -478,19 +478,16 @@ class IndexService(DocumentService):
                 for old_aggregate in old_aggregates.values()
             })
 
-            # Read all contributions
+            # Read all contributions, and, as they are being read, combine them
+            # into new aggregates, one per entity
             contributions = self._read_contributions(total_tallies)
-            actual_tallies = Counter(contribution.coordinates.entity
-                                     for contribution in contributions)
+            new_aggregates, actual_tallies = self._aggregate(contributions)
             if tallies.keys() != actual_tallies.keys():
                 message = 'Could not find all expected contributions.'
                 args = (tallies, actual_tallies) if config.debug else ()
                 raise EventualConsistencyException(message, *args)
             assert all(tallies[entity] <= actual_tally
                        for entity, actual_tally in actual_tallies.items())
-
-            # Combine the contributions into new aggregates, one per entity
-            new_aggregates = self._aggregate(contributions)
 
             # Remove old aggregates (leaving over only deletions) while
             # propagating the expected document version to the corresponding new
@@ -587,7 +584,12 @@ class IndexService(DocumentService):
 
     def _read_contributions(self,
                             tallies: CataloguedTallies
-                            ) -> list[CataloguedContribution]:
+                            ) -> Iterator[CataloguedContribution]:
+        """
+        Page through the contributions to the given entities and yield each one
+        as soon as a page was read. This method yields the contributions sorted
+        by entity and bundle.
+        """
         opensearch = OpenSearchClientFactory.get()
 
         entity_ids_by_index: dict[str, set[str]] = defaultdict(set)
@@ -641,65 +643,23 @@ class IndexService(DocumentService):
                 else:
                     break
 
-        contributions: list[CataloguedContribution] = [
-            Contribution.from_index(self.catalogued_field_types(), hit)
-            for hits in pages()
-            for hit in hits
-        ]
-        return contributions
+        for hits in pages():
+            for hit in hits:
+                yield Contribution.from_index(self.catalogued_field_types(), hit)
 
     def _aggregate(self,
-                   contributions: list[CataloguedContribution]
-                   ) -> list[Aggregate]:
-        # Group contributions by entity and bundle UUID
-        contributions_by_bundle: Mapping[
-            tuple[CataloguedEntityReference, BundleUUID],
-            list[CataloguedContribution]
-        ] = defaultdict(list)
-        tallies: MutableCataloguedTallies = Counter()
-        for contribution in contributions:
-            entity = contribution.coordinates.entity
-            bundle_uuid = contribution.coordinates.bundle.uuid
-            contributions_by_bundle[entity, bundle_uuid].append(contribution)
-            # Track the raw, unfiltered number of contributions per entity.
-            assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
-            tallies[contribution.coordinates.entity] += 1
-        log.info('Read %i contribution(s)', sum(tallies.values()))
+                   contributions: Iterable[CataloguedContribution]
+                   ) -> tuple[list[Aggregate], CataloguedTallies]:
+        """
+        Combine the given contributions into one aggregate per entity, and
+        count the contributions to each entity, including those that weren't
+        selected for aggregation.
 
-        # For each entity and bundle, find the most recent contribution that is
-        # not a deletion
-        contributions_by_entity: dict[
-            CataloguedEntityReference,
-            list[CataloguedContribution]
-        ] = defaultdict(list)
-        # The number of contributions per entity from deleted bundle versions,
-        # and from bundle versions older than the selected one
-        deleted_tallies: MutableCataloguedTallies = Counter()
-        superseded_tallies: MutableCataloguedTallies = Counter()
-        sort_key = attrgetter('coordinates.bundle.version', 'coordinates.deleted')
-        group_key = attrgetter('coordinates.bundle.version')
-        for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
-            contributions = sorted(contributions, key=sort_key, reverse=True)
-            selected = False
-            for bundle_version, group in groupby(contributions, key=group_key):
-                group = list(group)
-                contribution = group[0]
-                if selected:
-                    superseded_tallies[entity] += len(group)
-                elif contribution.coordinates.deleted:
-                    deleted_tallies[entity] += len(group)
-                else:
-                    assert bundle_uuid == contribution.coordinates.bundle.uuid
-                    assert bundle_version == contribution.coordinates.bundle.version
-                    assert entity == contribution.coordinates.entity
-                    contributions_by_entity[entity].append(contribution)
-                    selected = True
-        num_contributions = sum(map(len, contributions_by_entity.values()))
-        log.info('Selected %i contribution(s) to be aggregated.', num_contributions)
-        for entity in sorted(tallies.keys() - contributions_by_entity.keys()):
-            log.debug('Skipping %i deleted contribution(s) to entity %r',
-                      deleted_tallies[entity], f'{entity.entity_type}/{entity.entity_id}')
-
+        All contributions to an entity must be adjacent, and so must all
+        contributions to an entity from the same bundle UUID. Only the
+        contributions to one entity from one bundle UUID are held at any time,
+        in addition to the reconciled inner entities of that entity.
+        """
         # Create lookup for transformer by entity type
         transformers: dict[tuple[CatalogName, str], type[Transformer]] = {
             (catalog, transformer_cls.entity_type()): transformer_cls
@@ -707,49 +667,88 @@ class IndexService(DocumentService):
             for transformer_cls in self.transformer_types(catalog)
         }
 
-        # Aggregate contributions for the same entity
+        # The raw, unfiltered number of contributions per entity
+        tallies: MutableCataloguedTallies = Counter()
+        num_selected_contributions = 0
+        entity_key = attrgetter('coordinates.entity')
+        bundle_key = attrgetter('coordinates.bundle.uuid')
+        sort_key = attrgetter('coordinates.bundle.version', 'coordinates.deleted')
+        group_key = attrgetter('coordinates.bundle.version')
         aggregates = []
-        for entity, contributions in contributions_by_entity.items():
-            log.debug('Aggregating %i contribution(s), '
-                      'skipping %i deleted and %i superseded, '
-                      'out of a total of %i, to entity %r',
-                      len(contributions),
-                      deleted_tallies[entity], superseded_tallies[entity],
-                      tallies[entity], f'{entity.entity_type}/{entity.entity_id}')
+        for entity, entity_contributions in groupby(contributions, key=entity_key):
+            assert isinstance(entity, CataloguedEntityReference)
+            assert entity not in tallies, R(
+                'Contributions to entity are not adjacent', entity)
             transformer = transformers[entity.catalog, entity.entity_type]
-            contents = self._aggregate_entity(transformer, contributions)
-            bundles = [
-                BundleFQID(uuid=c.coordinates.bundle.uuid,
-                           version=c.coordinates.bundle.version)
-                for c in contributions
-            ]
+            reconciliation = self.Reconciliation(transformer)
             # FIXME: Replace hard coded limit with a config property
             #       https://github.com/DataBiosphere/azul/issues/3725
             max_bundles = 100
-            if len(bundles) > max_bundles:
-                log.warning('Only aggregating %i out of %i bundles for outer entity %r',
-                            max_bundles, len(bundles), entity)
-            bundles = bundles[:max_bundles]
-            sources = set(c.source for c in contributions)
-            aggregate_cls = self.aggregate_class(entity.catalog)
-            aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
-                                      version=None,
-                                      sources=sources,
-                                      contents=contents,
-                                      bundles=bundles,
-                                      num_contributions=tallies[entity])
-            aggregates.append(aggregate)
-
-        return aggregates
+            bundles: list[BundleFQID] = []
+            sources = set()
+            bundle_uuids: set[BundleUUID] = set()
+            # The number of contributions to the entity that were selected,
+            # those from deleted bundle versions, and those from bundle
+            # versions older than the selected one
+            num_selected, num_deleted, num_superseded = 0, 0, 0
+            for bundle_uuid, bundle_contributions in groupby(entity_contributions, key=bundle_key):
+                assert bundle_uuid not in bundle_uuids, R(
+                    'Contributions to entity from bundle are not adjacent',
+                    entity, bundle_uuid)
+                bundle_uuids.add(bundle_uuid)
+                # Find the most recent contribution from the bundle that is not
+                # a deletion
+                bundle_contributions = sorted(bundle_contributions, key=sort_key, reverse=True)
+                tallies[entity] += len(bundle_contributions)
+                selected = False
+                for bundle_version, group in groupby(bundle_contributions, key=group_key):
+                    group = list(group)
+                    contribution = group[0]
+                    if selected:
+                        num_superseded += len(group)
+                    elif contribution.coordinates.deleted:
+                        num_deleted += len(group)
+                    else:
+                        assert bundle_uuid == contribution.coordinates.bundle.uuid
+                        assert bundle_version == contribution.coordinates.bundle.version
+                        assert entity == contribution.coordinates.entity
+                        reconciliation.add(contribution)
+                        if len(bundles) < max_bundles:
+                            bundles.append(BundleFQID(uuid=bundle_uuid, version=bundle_version))
+                        sources.add(contribution.source)
+                        num_selected += 1
+                        selected = True
+            num_selected_contributions += num_selected
+            if num_selected > 0:
+                log.debug('Aggregating %i contribution(s), '
+                          'skipping %i deleted and %i superseded, '
+                          'out of a total of %i, to entity %r',
+                          num_selected,
+                          num_deleted, num_superseded,
+                          tallies[entity], f'{entity.entity_type}/{entity.entity_id}')
+                if num_selected > max_bundles:
+                    log.warning('Only aggregating %i out of %i bundles for outer entity %r',
+                                max_bundles, num_selected, entity)
+                contents = self._aggregate_entity(transformer, reconciliation.result)
+                aggregate_cls = self.aggregate_class(entity.catalog)
+                aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
+                                          version=None,
+                                          sources=sources,
+                                          contents=contents,
+                                          bundles=bundles,
+                                          num_contributions=tallies[entity])
+                aggregates.append(aggregate)
+            else:
+                log.debug('Skipping %i deleted contribution(s) to entity %r',
+                          num_deleted, f'{entity.entity_type}/{entity.entity_id}')
+        log.info('Read %i contribution(s)', sum(tallies.values()))
+        log.info('Selected %i contribution(s) to be aggregated.', num_selected_contributions)
+        return aggregates, tallies
 
     def _aggregate_entity(self,
                           transformer: type[Transformer],
-                          contributions: list[Contribution]
+                          reconciled: InnerEntitiesByType
                           ) -> JSON:
-        reconciliation = self.Reconciliation(transformer)
-        for contribution in contributions:
-            reconciliation.add(contribution)
-        reconciled = reconciliation.result
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
         inner_entity_counts = []
