@@ -89,7 +89,6 @@ from azul.lib.types import (
     JSONs,
     PrimitiveJSON,
     json_element_mappings,
-    json_items_are_sequences_of_mappings,
     json_mapping,
     json_sequence,
 )
@@ -107,6 +106,8 @@ type Tallies = Mapping[EntityReference, int]
 type CataloguedTallies = Mapping[CataloguedEntityReference, int]
 
 type MutableCataloguedTallies = dict[CataloguedEntityReference, int]
+
+type InnerEntitiesByType = Mapping[EntityType, JSONs]
 
 
 class IndexExistsAndDiffersException(Exception):
@@ -749,11 +750,14 @@ class IndexService(DocumentService):
                           transformer: type[Transformer],
                           contributions: list[Contribution]
                           ) -> JSON:
-        contents = self._reconcile(transformer, contributions)
+        reconciliation = self.Reconciliation(transformer)
+        for contribution in contributions:
+            reconciliation.add(contribution)
+        reconciled = reconciliation.result
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
         inner_entity_counts = []
-        for entity_type, entities in contents.items():
+        for entity_type, entities in reconciled.items():
             num_entities = len(entities)
             if entity_type in inner_entity_types:
                 assert num_entities <= 1
@@ -767,40 +771,39 @@ class IndexService(DocumentService):
             assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
-    def _reconcile(self,
-                   transformer: type[Transformer],
-                   contributions: Sequence[Contribution],
-                   ) -> Mapping[EntityType, JSONs]:
+    class Reconciliation:
         """
-        Given all the contributions to a certain outer entity, reconcile
-        potentially different copies of the same inner entity in those
-        contributions.
+        Reconciles potentially different copies of the same inner entity in the
+        contributions to a certain outer entity, incrementally, one contribution
+        at a time.
         """
-        if len(contributions) == 1:
-            single_result = contributions[0].contents
-            assert json_items_are_sequences_of_mappings(single_result)
-            return single_result
-        else:
-            result: dict[EntityType, dict[EntityID, tuple[JSON, BundleFQID]]]
-            result = defaultdict(dict)
-            for contribution in contributions:
-                that_bundle = contribution.coordinates.bundle
-                for entity_type, those_entities in contribution.contents.items():
-                    these_entities = result[entity_type]
-                    for that_entity in json_element_mappings(those_entities):
-                        that = (that_entity, that_bundle)
-                        entity_id = transformer.inner_entity_id(entity_type, that_entity)
-                        try:
-                            this = these_entities[entity_id]
-                        except KeyError:
+
+        def __init__(self, transformer: type[Transformer]):
+            self._transformer = transformer
+            self._entities: dict[EntityType, dict[EntityID, tuple[JSON, BundleFQID]]]
+            self._entities = defaultdict(dict)
+
+        def add(self, contribution: Contribution):
+            that_bundle = contribution.coordinates.bundle
+            for entity_type, those_entities in contribution.contents.items():
+                these_entities = self._entities[entity_type]
+                for that_entity in json_element_mappings(those_entities):
+                    that = (that_entity, that_bundle)
+                    entity_id = self._transformer.inner_entity_id(entity_type, that_entity)
+                    try:
+                        this = these_entities[entity_id]
+                    except KeyError:
+                        these_entities[entity_id] = that
+                    else:
+                        that = self._transformer.reconcile_inner_entities(entity_type, this=this, that=that)
+                        if this != that:
                             these_entities[entity_id] = that
-                        else:
-                            that = transformer.reconcile_inner_entities(entity_type, this=this, that=that)
-                            if this != that:
-                                these_entities[entity_id] = that
+
+        @property
+        def result(self) -> InnerEntitiesByType:
             return {
                 entity_type: [entity for entity, _ in entities.values()]
-                for entity_type, entities in result.items()
+                for entity_type, entities in self._entities.items()
             }
 
     def _create_writer(self,
