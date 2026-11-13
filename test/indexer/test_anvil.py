@@ -901,9 +901,10 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                 contributions.append(attrs.evolve(contribution,
                                                   coordinates=coordinates))
         contributions.sort(key=_contribution_order)
+        aggregates, tallies = service._aggregate(contributions)
         paths = {
             json_str(one(aggregate.contents['files'])['file_path'])
-            for aggregate in service._aggregate(contributions)
+            for aggregate in aggregates
             if aggregate.coordinates.entity.entity_type == 'files'
         }
         self.assertEqual({f'{other}/reads-{self.digest}.bam'}, paths)
@@ -1214,9 +1215,10 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
 
         def aggregates(contributions: list[Contribution]) -> dict[EntityReference, JSON]:
             contributions = sorted(contributions, key=_contribution_order)
+            aggregates, tallies = service._aggregate(contributions)
             return {
                 aggregate.coordinates.entity: aggregate.to_json()
-                for aggregate in service._aggregate(contributions)
+                for aggregate in aggregates
             }
 
         self.assertEqual(aggregates(unowned), aggregates(owned))
