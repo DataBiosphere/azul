@@ -50,6 +50,10 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul.oauth2 import (
+    InvalidAccessTokenError,
+    OAuth2Client,
+)
 from azul.plugins import (
     ManifestFormat,
 )
@@ -775,6 +779,52 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         #
         token = Token.decode(url.path.segments[-1])
         self.assertEqual(1, token.iteration)
+
+    @mock.patch.object(OAuth2Client, 'token_info')
+    @mock.patch.object(ManifestService, 'get_manifest_url')
+    @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
+    @mock.patch.object(AsyncManifestService, 'inspect_generation')
+    def test_finished_generation_with_invalid_access_token(self,
+                                                           inspect_generation,
+                                                           get_cached_manifest_with_key,
+                                                           get_manifest_url,
+                                                           token_info):
+        """
+        An access token that the authorization server rejects, for example
+        because it expired while the client was polling, should cause a 401
+        when the client requests the finished generation.
+        """
+        manifest_key = ManifestKey(catalog=self.catalog,
+                                   format=ManifestFormat.compact,
+                                   manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                   source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+        manifest = Manifest(object_key='key/of/manifest',
+                            was_cached=False,
+                            format=ManifestFormat.compact,
+                            manifest_key=manifest_key,
+                            file_name='some_file_name')
+        inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
+        get_cached_manifest_with_key.return_value = manifest
+        get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
+        token_info.side_effect = InvalidAccessTokenError
+        access_token = 'ya29.mock_access_token'
+        for fetch in True, False:
+            with self.subTest(fetch=fetch):
+                path = ['manifest', 'files', self.token]
+                if fetch:
+                    path.insert(0, 'fetch')
+                url = self.base_url.set(path=path)
+                response = requests.get(str(url),
+                                        headers={'Authorization': f'Bearer {access_token}'},
+                                        allow_redirects=False)
+                self.assertEqual(401, response.status_code)
+                expected_response = {
+                    'Code': 'UnauthorizedError',
+                    'Message': 'Invalid credentials'
+                }
+                self.assertEqual(expected_response, response.json())
+                token_info.assert_called_once_with(access_token)
+                token_info.reset_mock()
 
     def _request(self, method: str, url: furl, *, expect: int) -> furl:
         response = requests.request(method=method,

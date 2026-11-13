@@ -10135,6 +10135,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
                     }
                 },
                 "tags": [
@@ -11839,6 +11842,9 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nThe access token may expire while the manifest is being\nprepared.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
+                    },
                     "410": {
                         "description": "\nThe manifest preparation job has expired. Request a\nnew preparation using the `PUT /manifest/files`\nendpoint.\n"
                     }
@@ -11916,6 +11922,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
                     }
                 },
                 "tags": [
@@ -13634,6 +13643,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nThe access token may expire while the manifest is being\nprepared.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
                     }
                 },
                 "tags": [
