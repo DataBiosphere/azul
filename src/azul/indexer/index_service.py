@@ -676,12 +676,12 @@ class IndexService(DocumentService):
         # and from bundle versions older than the selected one
         deleted_tallies: MutableCataloguedTallies = Counter()
         superseded_tallies: MutableCataloguedTallies = Counter()
+        sort_key = attrgetter('coordinates.bundle.version', 'coordinates.deleted')
+        group_key = attrgetter('coordinates.bundle.version')
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
-            contributions = sorted(contributions,
-                                   key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
-                                   reverse=True)
+            contributions = sorted(contributions, key=sort_key, reverse=True)
             selected = False
-            for bundle_version, group in groupby(contributions, key=attrgetter('coordinates.bundle.version')):
+            for bundle_version, group in groupby(contributions, key=group_key):
                 group = list(group)
                 contribution = group[0]
                 if selected:
@@ -694,8 +694,8 @@ class IndexService(DocumentService):
                     assert entity == contribution.coordinates.entity
                     contributions_by_entity[entity].append(contribution)
                     selected = True
-        log.info('Selected %i contribution(s) to be aggregated.',
-                 sum(len(contributions) for contributions in contributions_by_entity.values()))
+        num_contributions = sum(map(len, contributions_by_entity.values()))
+        log.info('Selected %i contribution(s) to be aggregated.', num_contributions)
         for entity in sorted(tallies.keys() - contributions_by_entity.keys()):
             log.debug('Skipping %i deleted contribution(s) to entity %r',
                       deleted_tallies[entity], f'{entity.entity_type}/{entity.entity_id}')
