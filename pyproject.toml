@@ -27,7 +27,7 @@ dependencies = [
     "google-api-core==2.44.0",
     "google-auth[pyopenssl]==2.62.2",
     "google-cloud-bigquery==3.47.0",
-    "http-message-signatures==2.1.0",
+    "http-message-signatures==3.0.0",
     "http-sfv==0.9.9",
     "jmespath==1.1.0",
     "jsonschema==4.26.0",
