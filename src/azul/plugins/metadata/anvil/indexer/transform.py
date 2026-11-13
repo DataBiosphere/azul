@@ -295,12 +295,18 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
            roots(dataset) is the set of every biosample in the dataset, which is
            not known from just the current bundle's content.
 
-        2) (dataset, E) and (E, dataset) are owned by the primary bundle whose
+        2) (E, E) is owned by every primary bundle containing E because
+           aggregation requires a copy of E in at least one of the contributions
+           to E. If we were to include E only in the contribution of a single
+           primary bundle, aggregations for E would temporarily fail until that
+           one contribution was written.
+
+        3) (dataset, E) and (E, dataset) are owned by the primary bundle whose
            biosample has the lowest primary key among the biosamples upstream of
            E or, if E isn't derived from any biosample, by every primary bundle
            containing E.
 
-        3) For every other pair (I, O) in which I, O or both lack an upstream
+        4) For every other pair (I, O) in which I, O or both lack an upstream
            biosample, the pair is owned by every primary bundle containing I and
            O. Examples are every donor or diagnosis, or any file that isn't
            derived from a biosample.
@@ -316,7 +322,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         snapshot. In that case, the current bundle will omit I from the
         contribution to O, yielding to another bundle that doesn't exist.
         """
-        if self._is_partial_source:
+        if inner == outer or self._is_partial_source:
             return True
         else:
             upstream = [
