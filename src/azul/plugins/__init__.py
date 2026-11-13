@@ -105,8 +105,8 @@ if TYPE_CHECKING:
         SummaryResponseStage,
     )
     from azul.service.query_service import (
-        AggregationStage,
-        FilterStage,
+        SearchAggregationStage,
+        SummaryAggregationStage,
     )
 
 #: Field names are used to reference fields in requests to the service, e.g.,
@@ -676,17 +676,12 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
 
     @property
     @abstractmethod
-    def summary_aggregation_stage(self) -> type[AggregationStage]:
+    def summary_aggregation_stage(self) -> type[SummaryAggregationStage]:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def aggregation_stage(self) -> type[AggregationStage]:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def filter_stage(self) -> type[FilterStage]:
+    def search_aggregation_stage(self) -> type[SearchAggregationStage]:
         raise NotImplementedError
 
     @property

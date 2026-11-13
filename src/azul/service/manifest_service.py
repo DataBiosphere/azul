@@ -176,7 +176,7 @@ from azul.service.avro_pfb import (
     PFBRelation,
 )
 from azul.service.query_service import (
-    OpenSearchChain,
+    Chain,
     Pagination,
     PaginationStage,
     QueryService,
@@ -1039,7 +1039,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         # The response is processed by the generator, not the pipeline
         return request
 
-    def _create_pipeline(self) -> OpenSearchChain[Response, Any, Response]:
+    def _create_pipeline(self) -> Chain[Response, Any, Response]:
         if self.included_fields is None:
             document_slice = DocumentSlice()
         else:
@@ -1052,7 +1052,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         pipeline = self.service.create_chain(catalog=self.catalog,
                                              entity_type=self.entity_type,
                                              filters=self.filters,
-                                             post_filter=False,
                                              document_slice=document_slice)
         return pipeline
 

@@ -6,9 +6,11 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
-    Iterable,
     Mapping,
     Sequence,
+)
+from copy import (
+    copy,
 )
 from functools import (
     partial,
@@ -28,6 +30,7 @@ from more_itertools import (
 )
 from opensearchpy import (
     A,
+    MultiSearch,
     OpenSearch,
     Q,
     Search,
@@ -49,6 +52,7 @@ from azul import (
     config,
 )
 from azul.field_type import (
+    IndexForm,
     Nested,
 )
 from azul.filters import (
@@ -57,6 +61,7 @@ from azul.filters import (
 )
 from azul.indexer.document import (
     DocumentType,
+    FieldPath,
     IndexName,
 )
 from azul.indexer.document_service import (
@@ -73,6 +78,15 @@ from azul.lib.types import (
     JSONs,
     MutableJSON,
     PrimitiveJSON,
+    json_dict,
+    json_element_dicts,
+    json_element_strings,
+    json_int,
+    json_item_dicts,
+    json_list,
+    json_list_of_dicts,
+    json_mapping,
+    json_sequence_of_mappings,
     json_str,
 )
 from azul.opensearch import (
@@ -81,7 +95,6 @@ from azul.opensearch import (
 from azul.plugins import (
     DocumentSlice,
     DottedFieldPath,
-    FieldPath,
     MetadataPlugin,
     dotted,
     undotted,
@@ -104,23 +117,15 @@ nested_agg_name = 'myNested'
 untagged_agg_name = 'myUntagged'
 
 
-class OpenSearchStage[R1, R2](metaclass=ABCMeta):
+class ResponseStage[S1, S2](metaclass=ABCMeta):
     """
-    A stage in a chain of responsibility to prepare an OpenSearch request and
-    to process the response to that request. If an implementation modifies the
-    argument in place, it must return the argument.
+    A stage in a chain of responsibility that only processes the response to
+    an OpenSearch request, leaving the preparation of the request to the stages
+    it wraps.
     """
 
     @abstractmethod
-    def prepare_request(self, request: Search) -> Search:
-        """
-        Modify the given request and return the argument or convert the given
-        request and return the result of the conversion.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def process_response(self, response: R1) -> R2:
+    def process_response(self, response: S1, /) -> S2:
         """
         Handle the given response and return the result of the processing.
         If an implementation modifies the argument in place it must return the
@@ -129,41 +134,107 @@ class OpenSearchStage[R1, R2](metaclass=ABCMeta):
         raise NotImplementedError
 
 
+class Stage[S1, S2, Q1 = Search, Q2 = Search](ResponseStage[S1, S2], metaclass=ABCMeta):
+    """
+    A stage in a chain of responsibility to prepare an OpenSearch request and
+    to process the response to that request. If an implementation modifies the
+    argument in place, it must return the argument. Most stages prepare a
+    search, but some turn one type of request into another.
+    """
+
+    @abstractmethod
+    def prepare_request(self, request: Q1, /) -> Q2:
+        """
+        Modify the given request and return the argument or convert the given
+        request and return the result of the conversion.
+        """
+        raise NotImplementedError
+
+
 @attrs.frozen(kw_only=True)
-class OpenSearchChain[R0, R1, R2](OpenSearchStage[R0, R2]):
+class Chain[S0, S1, S2, Q0 = Search, Q1 = Search, Q2 = Search](Stage[S0, S2, Q0, Q2]):
     """
     The result of wrapping a stage or chain in another stage.
     """
 
-    inner: OpenSearchStage[R0, R1]
-    outer: OpenSearchStage[R1, R2]
+    inner: Stage[S0, S1, Q0, Q1]
+    outer: Stage[S1, S2, Q1, Q2]
 
     def __attrs_post_init__(self):
-        assert not isinstance(self.outer, OpenSearchChain), R(
+        assert not isinstance(self.outer, Chain), R(
             'Outer stage must not be a chain', type(self.outer))
 
-    def prepare_request(self, request: Search) -> Search:
-        request = self.inner.prepare_request(request)
-        request = self.outer.prepare_request(request)
-        return request
+    def prepare_request(self, request0: Q0, /) -> Q2:
+        request1: Q1 = self.inner.prepare_request(request0)
+        request2: Q2 = self.outer.prepare_request(request1)
+        return request2
 
-    def process_response(self, response0: R0) -> R2:
-        response1: R1 = self.inner.process_response(response0)
-        response2: R2 = self.outer.process_response(response1)
+    def process_response(self, response0: S0, /) -> S2:
+        response1: S1 = self.inner.process_response(response0)
+        response2: S2 = self.outer.process_response(response1)
         return response2
-
-    def stages(self) -> Iterable[OpenSearchStage]:
-        yield self.outer
-        if isinstance(self.inner, OpenSearchChain):
-            yield from self.inner.stages()
-        else:
-            yield self.inner
 
 
 @attrs.frozen(kw_only=True)
-class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
+class ResponseChain[S0, S1, S2, Q0 = Search, Q1 = Search](Stage[S0, S2, Q0, Q1]):
     """
-    A base implementation of a stage.
+    The result of wrapping a stage or chain in a stage that only processes the
+    response. Such a stage can wrap a chain regardless of the type of request
+    the chain prepares.
+    """
+
+    inner: Stage[S0, S1, Q0, Q1]
+    outer: ResponseStage[S1, S2]
+
+    def prepare_request(self, request: Q0, /) -> Q1:
+        return self.inner.prepare_request(request)
+
+    def process_response(self, response0: S0, /) -> S2:
+        response1: S1 = self.inner.process_response(response0)
+        response2: S2 = self.outer.process_response(response1)
+        return response2
+
+
+@attrs.frozen(kw_only=True)
+class MultiSearchStage[S1, S2, S3](Stage[Sequence[Response], S3, Search, MultiSearch],
+                                   metaclass=ABCMeta):
+    """
+    Combines the searches prepared by two chains into one multi-search request
+    and merges what the two chains make of the responses to their respective
+    search.
+    """
+    service: QueryService
+    first: Stage[Response, S1]
+    second: Stage[Response, S2]
+
+    def prepare_request(self, request: Search, /) -> MultiSearch:
+        first, second = self._split(request)
+        first = self.first.prepare_request(first)
+        second = self.second.prepare_request(second)
+        return MultiSearch(using=self.service._opensearch).add(first).add(second)
+
+    def _split(self, request: Search) -> tuple[Search, Search]:
+        """
+        Return the requests for the first and the second chain to prepare,
+        respectively. Some stages modify the request in place, so the two
+        must be distinct copies of the given request.
+        """
+        return copy(request), copy(request)
+
+    def process_response(self, response: Sequence[Response], /) -> S3:
+        first, second = response
+        return self._merge(self.first.process_response(first),
+                           self.second.process_response(second))
+
+    @abstractmethod
+    def _merge(self, first: S1, second: S2) -> S3:
+        raise NotImplementedError
+
+
+@attrs.frozen(kw_only=True)
+class _UsesIndex:
+    """
+    A mixin for classes that target a specific index.
     """
     service: DocumentService
     catalog: CatalogName
@@ -173,49 +244,62 @@ class _OpenSearchStage[R1, R2](OpenSearchStage[R1, R2], metaclass=ABCMeta):
     def plugin(self) -> MetadataPlugin:
         return self.service.metadata_plugin(self.catalog)
 
-    def wrap[R0](self, other: OpenSearchStage[R0, R1]) -> OpenSearchChain[R0, R1, R2]:
-        return OpenSearchChain(inner=other, outer=self)
 
+@attrs.frozen(kw_only=True)
+class IndexResponseStage[S1, S2](_UsesIndex, ResponseStage[S1, S2], metaclass=ABCMeta):
+    """
+    A stage that only processes the response to a request against a particular
+    index.
+    """
 
-TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[PrimitiveJSON]]]
+    def wrap[S0, Q0, Q1](self,
+                         other: Stage[S0, S1, Q0, Q1]
+                         ) -> ResponseChain[S0, S1, S2, Q0, Q1]:
+        return ResponseChain(inner=other, outer=self)
 
 
 @attrs.frozen(kw_only=True)
-class FilterStage(_OpenSearchStage[Response, Response]):
+class IndexStage[S1, S2](_UsesIndex, Stage[S1, S2], metaclass=ABCMeta):
     """
-    Converts the given filters to an OpenSearch query and adds that query as
-    either a `query` or `post_filter` property to the request.
+    A stage for requests against a particular index.
+    """
+
+    def wrap[S0](self, other: Stage[S0, S1]) -> Chain[S0, S1, S2]:
+        return Chain(inner=other, outer=self)
+
+
+TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[IndexForm]]]
+
+
+@attrs.frozen(kw_only=True)
+class _FilterBuilder(_UsesIndex):
+    """
+    Converts the given filters to OpenSearch queries.
     """
     filters: Filters
-    post_filter: bool
-
-    def prepare_request(self, request: Search) -> Search:
-        query = self.prepare_query()
-        if self.post_filter:
-            request = request.post_filter(query)
-        else:
-            request = request.query(query)
-        return request
-
-    def process_response(self, response: Response) -> Response:
-        return response
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        limit_access = self.service.always_limit_access or self._limit_access
-        filters_json = self.filters.reify(self.plugin, limit_access=limit_access)
+        filters_json = self.filters.reify(self.plugin, limit_access=self.limit_access)
         return self._translate_filters(filters_json)
 
     @property
-    @abstractmethod
+    def limit_access(self) -> bool:
+        """
+        Whether the managed access controls are enforced
+        """
+        return self.service.always_limit_access or self._limit_access
+
+    @property
     def _limit_access(self) -> bool:
         """
         Whether to enforce the managed access controls during filter
         reification, provided that the service allows such conditional
         enforcement of access. If it doesn't, the return value should be
-        ignored, and access must be enforced unconditionally.
+        ignored, and access must be enforced unconditionally. Access is
+        enforced for every entity type except the root entity type.
         """
-        raise NotImplementedError
+        return self.entity_type != self.plugin.root_entity_type
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
@@ -229,12 +313,44 @@ class FilterStage(_OpenSearchStage[Response, Response]):
         for field, filter in filters.items():
             field = field_mapping[field]
             operator, values = one(filter.items())
+            # mypy widens the values of a union of TypedDicts to `object`
+            assert isinstance(values, list), values
             field_type = self.service.field_type(catalog, field)
             values = field_type.filter(operator, values)
             translated_filters[field] = {operator: list(values)}
         return translated_filters
 
-    def prepare_query(self, skip_field_paths: tuple[FieldPath] = ()) -> Query:
+    @property
+    def hoisted_field_paths(self) -> tuple[FieldPath, ...]:
+        """
+        The paths of the fields whose filters apply to every facet, including
+        the facet for the field itself. Instead of being repeated in each
+        aggregation, these filters can be applied once, in the top-level query
+        of a request for aggregations.
+        """
+        if self.limit_access:
+            # With access enforced, the only entities that can be filtered for
+            # are those in accessible sources, so there is no point in counting
+            # entities in other sources, not even in the facet for sources.
+            source_id = self.plugin.special_fields.source_id.name
+            return (self.plugin.field_mapping[source_id],)
+        else:
+            return ()
+
+    def prepare_hoisted_query(self) -> Query:
+        """
+        Converts the filters on the fields in :py:attr:`hoisted_field_paths`
+        into an OpenSearch DSL Query object.
+        """
+        hoisted_field_paths = self.hoisted_field_paths
+        skip_field_paths = tuple(
+            field_path
+            for field_path in self.prepared_filters
+            if field_path not in hoisted_field_paths
+        )
+        return self.prepare_query(skip_field_paths=skip_field_paths)
+
+    def prepare_query(self, skip_field_paths: tuple[FieldPath, ...] = ()) -> Query:
         """
         Converts the given filters into an OpenSearch DSL Query object.
         """
@@ -249,6 +365,7 @@ class FilterStage(_OpenSearchStage[Response, Response]):
                     if isinstance(field_type, Nested):
                         nested_queries = []
                         for value in values:
+                            assert isinstance(value, Mapping), value
                             term_queries = []
                             for nested_field, nested_value in value.items():
                                 nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
@@ -272,7 +389,8 @@ class FilterStage(_OpenSearchStage[Response, Response]):
                     filter_list.append(query)
                 elif operator in ('contains', 'within', 'intersects'):
                     for value in values:
-                        value = value | {'relation': operator}
+                        assert isinstance(value, Mapping), value
+                        value = {'gte': value['gte'], 'lte': value['lte'], 'relation': operator}
                         filter_list.append(Q('range', **{dotted(field_path): value}))
                 else:
                     assert False
@@ -284,29 +402,26 @@ class FilterStage(_OpenSearchStage[Response, Response]):
 
 
 @attrs.frozen(kw_only=True)
-class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
+class FilterStage(_FilterBuilder, IndexStage[Response, Response]):
     """
-    Cooperate with the given filter stage to augment the request with an
-    `aggregation` property containing an aggregation for each of the facet
-    fields configured in the current metadata plugin. If this aggregation stage
-    is to be part of a chain, the chain should include the given filter stage.
+    Adds a query for the given filters as the `query` property of the request.
     """
-    filter_stage: FilterStage
 
-    @classmethod
-    def create_and_wrap[R0](cls,
-                            chain: OpenSearchChain[R0, MutableJSON, MutableJSON]
-                            ) -> OpenSearchChain[R0, MutableJSON, MutableJSON]:
-        """
-        Creates and adds an aggregation stage to the specified chain. The chain
-        must contain a filter stage.
-        """
-        filter_stage = one(s for s in chain.stages() if isinstance(s, FilterStage))
-        aggregation_stage = cls(service=filter_stage.service,
-                                catalog=filter_stage.catalog,
-                                entity_type=filter_stage.entity_type,
-                                filter_stage=filter_stage)
-        return aggregation_stage.wrap(chain)
+    def prepare_request(self, request: Search, /) -> Search:
+        return request.query(self.prepare_query())
+
+    def process_response(self, response: Response, /) -> Response:
+        return response
+
+
+@attrs.frozen(kw_only=True)
+class AggregationStage(IndexStage[MutableJSON, MutableJSON]):
+    """
+    Augments the request with an `aggregation` property containing an
+    aggregation for each of the facet fields configured in the current metadata
+    plugin. By itself, this stage doesn't filter the entities the aggregations
+    count, but subclasses can, by overriding :meth:`_facet_filter`.
+    """
 
     @property
     def _facets(self) -> Sequence[str]:
@@ -315,7 +430,7 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         """
         return self.plugin.facets
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         field_mapping = self.plugin.field_mapping
         for facet in self._facets:
             aggregate = self._prepare_aggregation(facet=facet,
@@ -324,34 +439,21 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         self._annotate_aggs_for_translation(request)
         return request
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
         try:
-            aggs = response['aggregations']
+            aggs = json_dict(response['aggregations'])
         except KeyError:
             pass
         else:
             self._flatten_nested_aggs(aggs)
             self._translate_response_aggs(aggs)
-            # The `accessible` facet is synthesized from the `source_id`
-            # facet, so a stage that doesn't aggregate the latter can't offer
-            # the former either.
-            if self.plugin.special_fields.source_id.name in self._facets:
-                self._populate_accessible(aggs)
         return response
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         """
         Creates an aggregation to be used in an OpenSearch search request.
         """
-        if self.filter_stage.post_filter:
-            # Create a filter agg using a query that represents all filters
-            # except for the current facet.
-            query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
-        else:
-            # The top-level query in FilterStage already applies every
-            # filter, so filtering again here would be redundant.
-            query = Q('match_all')
-        agg = A('filter', query)
+        agg = A('filter', self._facet_filter(facet_path))
 
         field_type = self.service.field_type(self.catalog, facet_path)
         if isinstance(field_type, Nested):
@@ -406,6 +508,18 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
             agg.bucket(untagged_agg_name, 'missing', field=dotted_facet_path)
         return agg
 
+    def _facet_filter(self, facet_path: FieldPath) -> Query:
+        """
+        A query selecting the entities to be counted by the aggregation for the
+        facet of the field with the given path.
+        """
+        # The aggregation for a facet is a `filter` aggregation, even if its
+        # filter matches every entity. The aggregations of the facet's values
+        # are attached to it, and its `doc_count` is the number of entities the
+        # facet covers, which the response stages report as the facet's total
+        # or, for the summary, as a count of entities.
+        return Q('match_all')
+
     def _annotate_aggs_for_translation(self, request: Search):
         """
         Annotate the aggregations in the given OpenSearch search request so
@@ -447,9 +561,9 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
         Hoist the contents of each facet's nested aggregation bucket into its
         parent, so downstream response parsing is oblivious to nesting.
         """
-        for facet, agg in aggs.items():
+        for facet, agg in json_item_dicts(aggs):
             try:
-                nested_agg = agg.pop(nested_agg_name)
+                nested_agg = json_dict(agg.pop(nested_agg_name))
             except KeyError:
                 pass
             else:
@@ -458,8 +572,9 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 # nested document populating all the `multi_terms` fields, since
                 # a nested document missing any of them is omitted from the
                 # buckets but still counted by the `nested` aggregation.
-                doc_count = sum(bucket['doc_count']
-                                for bucket in nested_agg[values_agg_name]['buckets'])
+                values_agg = json_dict(nested_agg[values_agg_name])
+                doc_count = sum(json_int(bucket['doc_count'])
+                                for bucket in json_element_dicts(values_agg['buckets']))
                 assert nested_agg['doc_count'] == doc_count, R(
                     'Nested value buckets do not account for the nested total',
                     facet, nested_agg['doc_count'], doc_count)
@@ -467,7 +582,8 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                 # The `nested` aggregation only counts documents that have the
                 # field, so its doc_count omits those tallied by `filter`
                 # aggregation we use to count the missing fields.
-                agg['doc_count'] += agg[untagged_agg_name]['doc_count']
+                untagged_agg = json_dict(agg[untagged_agg_name])
+                agg['doc_count'] = json_int(agg['doc_count']) + json_int(untagged_agg['doc_count'])
 
     def _translate_response_aggs(self, aggs: MutableJSON):
         """
@@ -489,38 +605,73 @@ class AggregationStage(_OpenSearchStage[MutableJSON, MutableJSON]):
                     # (e.g. ['contents', 'projects', 'document_id']). There will
                     # be only one FieldPath in the case of a Terms aggregation,
                     # and multiple in the case of a MultiTerms aggregation.
-                    paths = v['meta']['paths']
+                    paths = json_list(json_dict(v['meta'])['paths'])
                 except KeyError:
                     pass
                 else:
+                    # Only `terms` and `multi_terms` aggregations carry `paths`
+                    # in their `meta` (see `_annotate_aggs_for_translation`),
+                    # and only those have a list of buckets
+                    buckets = json_list_of_dicts(buckets)
                     for i, path in enumerate(paths):
-                        field_type = self.service.field_type(self.catalog, tuple(path))
+                        path = tuple(json_element_strings(path))
+                        field_type = self.service.field_type(self.catalog, path)
                         for bucket in buckets:
-                            if isinstance(bucket['key'], list):
+                            key = bucket['key']
+                            if isinstance(key, list):
                                 # The bucket is from a MultiTerms aggregation
-                                bucket['key'][i] = field_type.from_index(bucket['key'][i])
+                                key[i] = field_type.from_index(key[i])
                             else:
                                 # The bucket is from a Terms aggregation
                                 bucket['key'] = field_type.from_index(bucket['key'])
                     for bucket in buckets:
                         translate(k, bucket)
 
-        for k, v in aggs.items():
+        for k, v in json_item_dicts(aggs):
             translate(k, v)
+
+
+@attrs.frozen(kw_only=True)
+class SearchAggregationStage(_FilterBuilder, AggregationStage):
+    """
+    An aggregation stage whose aggregations each apply the given filters, except
+    the one for their own facet. The filters that apply to every facet alike are
+    applied once instead, in the top-level query of the request. The request
+    must not apply the filters in any other way.
+    """
+
+    def prepare_request(self, request: Search, /) -> Search:
+        if self.hoisted_field_paths:
+            request = request.query(self.prepare_hoisted_query())
+        return super().prepare_request(request)
+
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
+        response = super().process_response(response)
+        # The `accessible` facet is synthesized from the `source_id` facet, so
+        # a stage that doesn't aggregate the latter can't offer the former
+        # either.
+        if self.plugin.special_fields.source_id.name in self._facets:
+            self._populate_accessible(json_dict(response['aggregations']))
+        return response
+
+    def _facet_filter(self, facet_path: FieldPath) -> Query:
+        skip_field_paths = (facet_path, *self.hoisted_field_paths)
+        return self.prepare_query(skip_field_paths=skip_field_paths)
 
     def _populate_accessible(self, aggs: MutableJSON) -> None:
         # Because the value of the `accessible` field depends on the provided
         # authentication, we have to synthesize the field and its corresponding
         # facet from the `sourceId` field.
-        source_ids = self.filter_stage.filters.source_ids
+        source_ids = self.filters.source_ids
         plugin = self.service.metadata_plugin(self.catalog)
         special_fields = plugin.special_fields
-        agg = aggs.pop(special_fields.source_id.name)
+        agg = json_dict(aggs.pop(special_fields.source_id.name))
+        values_agg = json_dict(agg[values_agg_name])
         counts_by_accessibility: dict[bool, int] = defaultdict(int)
-        for bucket in agg[values_agg_name]['buckets']:
+        for bucket in json_element_dicts(values_agg['buckets']):
             accessible = bucket['key'] in source_ids
-            counts_by_accessibility[accessible] += bucket['doc_count']
-        agg[values_agg_name]['buckets'] = [
+            counts_by_accessibility[accessible] += json_int(bucket['doc_count'])
+        values_agg['buckets'] = [
             {'key': accessible, 'doc_count': count}
             for accessible, count in counts_by_accessibility.items()
         ]
@@ -545,7 +696,7 @@ class SummaryAggregationStage(AggregationStage):
 
 
 @attrs.frozen(kw_only=True)
-class SlicingStage(_OpenSearchStage[Response, Response]):
+class SlicingStage(IndexStage[Response, Response]):
     """
     Augments the request with a document slice (known as a *source filter* in
     OpenSearch land) to restrict the set of properties in each hit in the
@@ -554,13 +705,13 @@ class SlicingStage(_OpenSearchStage[Response, Response]):
     """
     document_slice: DocumentSlice | None
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         document_slice = self._prepared_slice()
         if document_slice is not None:
             request = request.source(**document_slice)
         return request
 
-    def process_response(self, response: Response) -> Response:
+    def process_response(self, response: Response, /) -> Response:
         return response
 
     def _prepared_slice(self) -> DocumentSlice | None:
@@ -574,12 +725,12 @@ class SlicingStage(_OpenSearchStage[Response, Response]):
 #        https://github.com/DataBiosphere/azul/issues/4111
 
 @attrs.frozen(kw_only=True)
-class ToDictStage(_OpenSearchStage[Response, MutableJSON]):
+class ToDictStage(IndexStage[Response, MutableJSON]):
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         return request
 
-    def process_response(self, response: Response) -> MutableJSON:
+    def process_response(self, response: Response, /) -> MutableJSON:
         return response.to_dict()
 
 
@@ -588,9 +739,9 @@ type SortKey = tuple[PrimitiveJSON, str] | tuple[PrimitiveJSON]
 
 def sort_key_from_json(s: AnyJSON) -> SortKey:
     match s:
-        case [a, b]:
+        case [str() | int() | float() | bool() | None as a, b]:
             return (a, json_str(b))
-        case [a]:
+        case [str() | int() | float() | bool() | None as a]:
             return (a,)
         case _:
             assert False, s
@@ -643,7 +794,7 @@ ResponseTriple = tuple[JSONs, ResponsePagination, JSON]
 
 
 @attrs.frozen(kw_only=True)
-class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
+class PaginationStage(IndexStage[JSON, ResponseTriple]):
     """
     Handles the pagination of search results
     """
@@ -655,7 +806,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
 
     filters: Filters
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         sort_order = self.pagination.order
         sort_field = self.plugin.field_mapping[self.pagination.sort]
         field_type = self.service.field_type(self.catalog, sort_field)
@@ -711,7 +862,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
 
         return request
 
-    def process_response(self, response: JSON) -> ResponseTriple:
+    def process_response(self, response: JSON, /) -> ResponseTriple:
         """
         Returns hits and pagination as dict
         """
@@ -720,7 +871,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         hits = self._extract_hits(response)
         hits = self._translate_hits(hits)
         pagination = self._process_pagination(response)
-        aggregations = response.get('aggregations', {})
+        aggregations = json_mapping(response.get('aggregations', {}))
         return hits, pagination, aggregations
 
     def _extract_hits(self, response):
@@ -735,27 +886,28 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
         hits = list(map(f, hits))
         return hits
 
-    def _process_pagination(self, response: JSON) -> MutableJSON:
-        total = response['hits']['total']
+    def _process_pagination(self, response: JSON) -> ResponsePagination:
+        response_hits = json_mapping(response['hits'])
+        total = json_mapping(response_hits['total'])
         # FIXME: Handle other relations
         #        https://github.com/DataBiosphere/azul/issues/3770
         assert total['relation'] == 'eq'
-        pages = -(-total['value'] // self.pagination.size)
+        pages = -(-json_int(total['value']) // self.pagination.size)
 
         # ... else use search_after/search_before pagination
-        hits: JSONs = response['hits']['hits']
+        hits = json_sequence_of_mappings(response_hits['hits'])
         count = len(hits)
         if self.pagination.search_before is None:
             # hits are normal sorted
             if count > self.pagination.size:
                 # There is an extra hit, indicating a next page.
                 count -= 1
-                search_after = tuple(hits[count - 1]['sort'])
+                search_after = sort_key_from_json(hits[count - 1]['sort'])
             else:
                 # No next page
                 search_after = None
             if self.pagination.search_after is not None:
-                search_before = tuple(hits[0]['sort'])
+                search_before = sort_key_from_json(hits[0]['sort'])
             else:
                 search_before = None
         else:
@@ -763,11 +915,11 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
             if count > self.pagination.size:
                 # There is an extra hit, indicating a previous page.
                 count -= 1
-                search_before = tuple(hits[count - 1]['sort'])
+                search_before = sort_key_from_json(hits[count - 1]['sort'])
             else:
                 # No previous page
                 search_before = None
-            search_after = tuple(hits[0]['sort'])
+            search_after = sort_key_from_json(hits[0]['sort'])
 
         pagination = self.pagination.with_sort_keys(search_before=search_before,
                                                     search_after=search_after)
@@ -777,7 +929,7 @@ class PaginationStage(_OpenSearchStage[JSON, ResponseTriple]):
             return None if url is None else str(url)
 
         return ResponsePagination(count=count,
-                                  total=total['value'],
+                                  total=json_int(total['value']),
                                   size=pagination.size,
                                   next=page_link(previous=False),
                                   previous=page_link(previous=True),
@@ -797,22 +949,17 @@ class QueryService(DocumentService):
                      catalog: CatalogName,
                      entity_type: str,
                      filters: Filters,
-                     post_filter: bool,
                      document_slice: DocumentSlice | None
-                     ) -> OpenSearchChain[Response, Any, Response]:
+                     ) -> Chain[Response, Any, Response]:
         """
         Create a chain for a basic OpenSearch `search` request for documents
         matching the given filter, optionally restricting the set of properties
         returned for each matching document.
         """
-        plugin = self.metadata_plugin(catalog)
-
-        # noinspection PyArgumentList
-        chain = plugin.filter_stage(service=self,
-                                    catalog=catalog,
-                                    entity_type=entity_type,
-                                    filters=filters,
-                                    post_filter=post_filter)
+        chain = FilterStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type,
+                            filters=filters)
         chain = SlicingStage(service=self,
                              catalog=catalog,
                              entity_type=entity_type,

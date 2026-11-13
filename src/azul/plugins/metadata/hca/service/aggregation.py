@@ -30,6 +30,7 @@ from azul.plugins import (
 )
 from azul.service.query_service import (
     AggregationStage,
+    SearchAggregationStage,
     SummaryAggregationStage,
     untagged_agg_name,
     values_agg_name,
@@ -37,6 +38,10 @@ from azul.service.query_service import (
 
 
 class HCAAggregationStage(AggregationStage):
+    """
+    Adds the aggregations specific to HCA to the aggregation stages for searches
+    and for the summary.
+    """
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         agg = super()._prepare_aggregation(facet=facet, facet_path=facet_path)
@@ -61,9 +66,13 @@ class HCAAggregationStage(AggregationStage):
         return agg
 
 
+class HCASearchAggregationStage(SearchAggregationStage, HCAAggregationStage):
+    pass
+
+
 class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):
 
-    def prepare_request(self, request: Search) -> Search:
+    def prepare_request(self, request: Search, /) -> Search:
         request = super().prepare_request(request)
         entity_type = self.entity_type
 
@@ -132,7 +141,7 @@ class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):
             }
         }.get(self.entity_type, {})
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
         response = super().process_response(response)
         result = json_dict(response['aggregations'])
         threshold = config.precision_threshold

@@ -8,6 +8,9 @@ from collections.abc import (
 )
 import json
 import logging
+from typing import (
+    Union,
+)
 
 import attrs
 from more_itertools import (
@@ -20,6 +23,7 @@ from opensearchpy import (
 )
 from opensearchpy.helpers.response import (
     Hit,
+    Response,
 )
 
 from azul import (
@@ -32,9 +36,19 @@ from azul.filters import (
 from azul.indexer.mirror_service import (
     MirrorService,
 )
+from azul.lib import (
+    R,
+)
+from azul.lib.json import (
+    json_hash,
+)
 from azul.lib.types import (
     JSON,
     MutableJSON,
+    json_dict,
+    json_element_dicts,
+    json_element_mappings,
+    json_mapping,
 )
 from azul.plugins import (
     File,
@@ -45,13 +59,16 @@ from azul.service import (
     FileUrlFunc,
 )
 from azul.service.query_service import (
-    OpenSearchStage,
+    IndexResponseStage,
+    IndexStage,
+    MultiSearchStage,
     Pagination,
     PaginationStage,
     QueryService,
+    ResponseStage,
     ResponseTriple,
+    Stage,
     ToDictStage,
-    _OpenSearchStage,
 )
 from azul.source import (
     SourceRef,
@@ -61,13 +78,10 @@ log = logging.getLogger(__name__)
 
 
 @attrs.frozen(auto_attribs=True, kw_only=True)
-class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
+class SearchResponseStage(IndexResponseStage[ResponseTriple, MutableJSON],
                           metaclass=ABCMeta):
     service: IndexService
     file_url_func: FileUrlFunc
-
-    def prepare_request(self, request: Search) -> Search:
-        return request
 
     def _file_url(self, *, uuid: str, version: str, drs_uri: str | None) -> str | None:
         # FIXME: Redundant implementations of file URLs and mirror URIs
@@ -96,7 +110,59 @@ class SearchResponseStage(_OpenSearchStage[ResponseTriple, MutableJSON],
         return mirror_service.mirror_uri(source, file_cls, file)
 
 
-class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
+@attrs.frozen(kw_only=True)
+class AggregatingMultiSearchStage(MultiSearchStage[ResponseTriple, MutableJSON, ResponseTriple]):
+    """
+    Merges the aggregations from the response to one search into the page of
+    hits from the response to another.
+    """
+
+    def _split(self, request: Search) -> tuple[Search, Search]:
+        hits_request, aggregations_request = super()._split(request)
+        # The shard request cache only caches requests that don't return any
+        # hits
+        return hits_request, aggregations_request.extra(size=0)
+
+    def _merge(self, first: ResponseTriple, second: MutableJSON) -> ResponseTriple:
+        hits, pagination, aggregations = first
+        assert aggregations == {}, R(
+            'The search for hits must not aggregate', aggregations.keys())
+        return hits, pagination, json_dict(second['aggregations'])
+
+
+@attrs.frozen(kw_only=True)
+class ShardPinningStage[S1](IndexStage[S1, S1]):
+    """
+    Routes a request to a copy of each shard that depends only on the request.
+    """
+
+    def prepare_request(self, request: Search, /) -> Search:
+        # Each copy of a shard has its own request cache. Routing every
+        # occurrence of the request to the same copy means that only the first
+        # one misses the cache, and that only that copy's cache holds an entry
+        # for the request.
+        preference = json_hash(request.to_dict()).hexdigest()
+        return request.params(preference=preference)
+
+    def process_response(self, response: S1, /) -> S1:
+        return response
+
+
+@attrs.frozen(kw_only=True)
+class RequestCacheBypassStage[S1](IndexStage[S1, S1]):
+    """
+    Prevents the shard request cache from serving a request, or from storing
+    the response to it.
+    """
+
+    def prepare_request(self, request: Search, /) -> Search:
+        return request.params(request_cache=False)
+
+    def process_response(self, response: S1, /) -> S1:
+        return response
+
+
+class SummaryResponseStage(ResponseStage[JSON, MutableJSON],
                            metaclass=ABCMeta):
 
     @property
@@ -127,9 +193,6 @@ class SummaryResponseStage(OpenSearchStage[JSON, MutableJSON],
         may be taken from more than one index.
         """
         raise NotImplementedError
-
-    def prepare_request(self, request: Search) -> Search:
-        return request
 
 
 class IndexService(QueryService):
@@ -179,15 +242,11 @@ class IndexService(QueryService):
         chain = self.create_chain(catalog=catalog,
                                   entity_type=entity_type,
                                   filters=filters,
-                                  post_filter=True,
                                   document_slice=None)
 
         chain = ToDictStage(service=self,
                             catalog=catalog,
                             entity_type=entity_type).wrap(chain)
-
-        if aggregate:
-            chain = plugin.aggregation_stage.create_and_wrap(chain)
 
         chain = PaginationStage(service=self,
                                 catalog=catalog,
@@ -197,19 +256,66 @@ class IndexService(QueryService):
                                 filters=filters).wrap(chain)
 
         response_stage_cls = plugin.search_response_stage
-        chain = response_stage_cls(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   file_url_func=file_url_func).wrap(chain)
+        response_stage = response_stage_cls(service=self,
+                                            catalog=catalog,
+                                            entity_type=entity_type,
+                                            file_url_func=file_url_func)
+
+        full_chain: Union[
+            Stage[Response, MutableJSON, Search, Search],
+            Stage[Sequence[Response], MutableJSON, Search, MultiSearch]
+        ]
+        if aggregate:
+            stage = self._aggregating_stage(chain, catalog, entity_type, filters)
+            full_chain = response_stage.wrap(stage)
+        else:
+            full_chain = response_stage.wrap(chain)
 
         request = self.create_request(catalog, entity_type)
-        request = chain.prepare_request(request)
+        request = full_chain.prepare_request(request)
         response = request.execute(ignore_cache=True)
-        response = chain.process_response(response)
+        response = full_chain.process_response(response)
 
         self._synthesize_accessible(catalog, entity_type, filters, response)
 
         return response
+
+    def _aggregating_stage(self,
+                           search_chain: Stage[Response, ResponseTriple],
+                           catalog: CatalogName,
+                           entity_type: str,
+                           filters: Filters
+                           ) -> AggregatingMultiSearchStage:
+        """
+        Combine the given chain for a page of hits with a chain for a separate
+        request that tabulates the facets of all entities matching the given
+        filters, so that the facets can be served from the shard request cache,
+        unless the entities are of the root entity type.
+        """
+        plugin = self.metadata_plugin(catalog)
+        aggregation_chain = ToDictStage(service=self,
+                                        catalog=catalog,
+                                        entity_type=entity_type)
+        aggregation_chain = plugin.search_aggregation_stage(service=self,
+                                                            catalog=catalog,
+                                                            entity_type=entity_type,
+                                                            filters=filters).wrap(aggregation_chain)
+        caching_stage_cls: type[IndexStage[MutableJSON, MutableJSON]]
+        if entity_type == plugin.root_entity_type:
+            # The index of root entities is small, so their aggregations are
+            # cheap to compute. Caching them would gain little, while the large
+            # cache entries could displace those of the expensive aggregations
+            # over the other indices.
+            caching_stage_cls = RequestCacheBypassStage[MutableJSON]
+        else:
+            caching_stage_cls = ShardPinningStage[MutableJSON]
+        caching_stage = caching_stage_cls(service=self,
+                                          catalog=catalog,
+                                          entity_type=entity_type)
+        aggregation_chain = caching_stage.wrap(aggregation_chain)
+        return AggregatingMultiSearchStage(service=self,
+                                           first=search_chain,
+                                           second=aggregation_chain)
 
     def _synthesize_accessible(self,
                                catalog: CatalogName,
@@ -218,9 +324,9 @@ class IndexService(QueryService):
                                response: MutableJSON
                                ) -> None:
         special_fields = self.metadata_plugin(catalog).special_fields
-        for hit in response['hits']:
-            entity = one(hit[entity_type])
-            source_id = one(hit['sources'])[special_fields.source_id.name_in_hit]
+        for hit in json_element_dicts(response['hits']):
+            entity = one(json_element_dicts(hit[entity_type]))
+            source_id = one(json_element_dicts(hit['sources']))[special_fields.source_id.name_in_hit]
             accessible = source_id in filters.source_ids
             entity[special_fields.accessible.name_in_hit] = accessible
 
@@ -271,12 +377,13 @@ class IndexService(QueryService):
             chain = self.create_chain(catalog=catalog,
                                       entity_type=entity_type,
                                       filters=filters,
-                                      post_filter=False,
                                       document_slice=None)
             chain = ToDictStage(service=self,
                                 catalog=catalog,
                                 entity_type=entity_type).wrap(chain)
-            chain = plugin.summary_aggregation_stage.create_and_wrap(chain)
+            chain = plugin.summary_aggregation_stage(service=self,
+                                                     catalog=catalog,
+                                                     entity_type=entity_type).wrap(chain)
             chains[entity_type] = chain
             request = request.add(
                 chain.prepare_request(self.create_request(catalog, entity_type)))
@@ -335,7 +442,6 @@ class IndexService(QueryService):
         chain = self.create_chain(catalog=catalog,
                                   entity_type=entity_type,
                                   filters=filters,
-                                  post_filter=False,
                                   document_slice=None)
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)
@@ -356,8 +462,8 @@ class IndexService(QueryService):
             assert file_version is None, len(hits)
 
         hit = first(hits)
-        source = SourceRef.from_json(one(hit['sources']))
-        file = one(hit['contents']['files'])
+        source: SourceRef = SourceRef.from_json(one(json_element_mappings(hit['sources'])))
+        file = one(json_element_mappings(json_mapping(hit['contents'])['files']))
         file = plugin.file_class.from_index(file, source=source)
         if file_version is not None:
             assert file_version == file.version
