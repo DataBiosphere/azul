@@ -1600,6 +1600,8 @@ class FileTransformer(PartitionedTransformer[api.File], ReplicaTransformer):
                         contents['specimens'].append(
                             {
                                 'biomaterial_id': f'specimen_from_organism_{i}_{file_name}',
+                                # Reconciliation of inner entities requires a document_id.
+                                'document_id': str(uuid5(matrix_namespace, one_organ)),
                                 'organ': one_organ,
                             },
                         )
