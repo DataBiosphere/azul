@@ -740,6 +740,15 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
         self.assertEqual(expected, actual)
 
 
+def _contribution_order(contribution: Contribution) -> tuple[str, str]:
+    """
+    A sort key that emulates the order requested by the indexer when it reads
+    contributions from OpenSearch.
+    """
+    coordinates = contribution.coordinates
+    return coordinates.index_name, coordinates.document_id
+
+
 class TestAnvilFilePaths(AnvilCannedBundleTestCase):
     """
     The path backfilled for an AnVIL file that the snapshot gives none of its
@@ -891,6 +900,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                 coordinates = attrs.evolve(contribution.coordinates, entity=entity)
                 contributions.append(attrs.evolve(contribution,
                                                   coordinates=coordinates))
+        contributions.sort(key=_contribution_order)
         paths = {
             json_str(one(aggregate.contents['files'])['file_path'])
             for aggregate in service._aggregate(contributions)
@@ -1203,6 +1213,7 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
         service = IndexService()
 
         def aggregates(contributions: list[Contribution]) -> dict[EntityReference, JSON]:
+            contributions = sorted(contributions, key=_contribution_order)
             return {
                 aggregate.coordinates.entity: aggregate.to_json()
                 for aggregate in service._aggregate(contributions)
