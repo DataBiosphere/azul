@@ -446,6 +446,9 @@ class UserController(Controller):
                 if isinstance(body, bytes):
                     body = body.decode(charset)
                 params = urllib.parse.parse_qs(body)
+                for name in ('code', 'redirect_uri'):
+                    if name not in params:
+                        raise BadRequestError(f'Missing form parameter `{name}`')
                 authorization = Authorization(
                     code=params['code'][0],
                     scope=' '.join(sorted(self._service.required_scopes))

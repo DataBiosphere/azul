@@ -20,6 +20,7 @@ from unittest.mock import (
     PropertyMock,
     patch,
 )
+import urllib.parse
 
 import jwt
 from mypy_boto3_dynamodb.literals import (
@@ -210,6 +211,13 @@ class UserControllerTestCase(LocalAppTestCase,
                               body=body,
                               headers={'Content-Type': 'application/json'})
 
+    def _authorize_form(self, **params: str):
+        client = self._http_client
+        url = str(self.base_url.set(path='/user/authorize'))
+        body = urllib.parse.urlencode(params).encode()
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        return client.request('POST', url, body=body, headers=headers)
+
     def _get_token(self, access_token: str | None = None):
         client = self._http_client
         url = str(self.base_url.set(path='/user/token'))
@@ -332,6 +340,38 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             with self.subTest(scope=scope):
                 response = self._authorize(scope=scope)
                 self.assertEqual(400, response.status)
+
+    def test_authorize_form(self):
+        redirect_uri = 'https://example.org/oauth2-redirect.html'
+        params = dict(code=self._mock_auth_code, redirect_uri=redirect_uri)
+        with self._mock_token_for_code() as token_for_code:
+            response = self._authorize_form(**params)
+            self.assertEqual(200, response.status)
+            token_for_code.assert_called_once_with(
+                authorization_code=self._mock_auth_code,
+                client_id='mock_client_id',
+                client_secret='mock_client_secret',
+                redirect_uri=redirect_uri
+            )
+            body = json.loads(response.data)
+            self.assertEqual(self._mock_access_token, body['access_token'])
+            self.assertNotIn('refresh_token', body)
+
+    def test_authorize_form_missing_parameter(self):
+        params = dict(code=self._mock_auth_code,
+                      redirect_uri='https://example.org/oauth2-redirect.html')
+        with self._mock_token_for_code() as token_for_code:
+            for name in params:
+                with self.subTest(name=name):
+                    other_params = {k: v for k, v in params.items() if k != name}
+                    response = self._authorize_form(**other_params)
+                    self.assertEqual(400, response.status)
+                    message = json.loads(response.data)['Message']
+                    self.assertEqual(f'Missing form parameter `{name}`', message)
+            with self.subTest('unrelated parameter'):
+                response = self._authorize_form(foo='bar')
+                self.assertEqual(400, response.status)
+            token_for_code.assert_not_called()
 
     def test_mint_personal_access_token(self):
         with self._mock_token_for_code():
