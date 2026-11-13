@@ -373,6 +373,25 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self.assertEqual(400, response.status)
             token_for_code.assert_not_called()
 
+    def test_authorize_malformed_body(self):
+        url = str(self.base_url.set(path='/user/authorize'))
+        json_type, form_type = 'application/json', 'application/x-www-form-urlencoded'
+        params = urllib.parse.urlencode(dict(code=self._mock_auth_code,
+                                             redirect_uri='https://example.org/oauth2-redirect.html'))
+        with self._mock_token_for_code() as token_for_code:
+            for description, content_type, body in [
+                ('JSON array', json_type, b'[]'),
+                ('JSON null', json_type, b'null'),
+                ('JSON string', json_type, b'"foo"'),
+                ('unknown charset', form_type + '; charset=nonsense', params.encode()),
+                ('invalid UTF-8', form_type, b'\xff' + params.encode())
+            ]:
+                with self.subTest(description):
+                    headers = {'Content-Type': content_type}
+                    response = self._http_client.request('POST', url, body=body, headers=headers)
+                    self.assertEqual(400, response.status)
+            token_for_code.assert_not_called()
+
     def test_mint_personal_access_token(self):
         with self._mock_token_for_code():
             with self._mock_token_info() as token_info:

@@ -1,5 +1,6 @@
 from collections.abc import (
     Iterator,
+    Mapping,
 )
 from contextlib import (
     contextmanager,
@@ -47,7 +48,6 @@ from azul.lib.types import (
     JSON,
     JSONTypedDict,
     is_of_type,
-    json_mapping,
     json_untyped_dict,
 )
 from azul.oauth2 import (
@@ -444,7 +444,12 @@ class UserController(Controller):
             if content_type == self._form_content_type:
                 body = self.current_request.raw_body
                 if isinstance(body, bytes):
-                    body = body.decode(charset)
+                    try:
+                        body = body.decode(charset)
+                    except LookupError:
+                        raise BadRequestError(f'Unknown charset {charset!r}')
+                    except UnicodeDecodeError:
+                        raise BadRequestError(f'Request body is not encoded in {charset!r}')
                 params = urllib.parse.parse_qs(body)
                 for name in ('code', 'redirect_uri'):
                     if name not in params:
@@ -455,7 +460,8 @@ class UserController(Controller):
                 )
                 redirect_uri = params['redirect_uri'][0]
             elif content_type == self._json_content_type:
-                request: JSON = json_mapping(self.current_request.json_body)
+                request = self.current_request.json_body
+                assert isinstance(request, Mapping), R('Invalid request')
                 # FIXME: Use PEP 728 extra TypedDict items instead of removing them
                 #        https://github.com/DataBiosphere/azul/issues/7625
                 request = {
