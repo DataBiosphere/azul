@@ -1163,8 +1163,9 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
     def test_ownership(self):
         """
         Of the contributions to an outer entity, only one includes any given
-        inner entity, except for the dataset as an inner entity of itself,
-        which every bundle includes. The aggregates are the same as if every
+        inner entity, except for the outer entity itself, which every
+        contribution includes, unless the contents have no place for it, as is
+        the case with bundles. The aggregates are the same as if every
         contribution included every inner entity linked to its outer entity.
         """
         self._mock_normal_duos()
@@ -1181,18 +1182,23 @@ class TestAnvilHubActivity(AnvilCannedBundleTestCase,
         owned_inclusions, unowned_inclusions = self._inclusions(owned), self._inclusions(unowned)
         self.assertEqual(unowned_inclusions.keys(), owned_inclusions.keys())
         self.assertGreater(unowned_inclusions.total(), owned_inclusions.total())
-        dataset = one({
-            json_str(inner['document_id'])
+        contributions_by_outer = Counter(
+            contribution.coordinates.entity
             for contribution in owned
-            if contribution.coordinates.entity.entity_type == 'datasets'
-            for inner in json_element_mappings(contribution.contents['datasets'])
-        })
+            if contribution.coordinates.entity.entity_type in contribution.contents
+        )
+        self_inclusions = {
+            (outer, outer.entity_type, outer.entity_id): count
+            for outer, count in contributions_by_outer.items()
+        }
+        self.assertLessEqual(self_inclusions.items(), owned_inclusions.items())
         duplicates = {
-            (outer.entity_type, inner_type, inner_id): count
+            (outer, inner_type, inner_id): count
             for (outer, inner_type, inner_id), count in owned_inclusions.items()
             if count > 1
         }
-        self.assertEqual({('datasets', 'datasets', dataset): len(bundles)}, duplicates)
+        self.assertLessEqual(duplicates.items(), self_inclusions.items())
+        self.assertIn(len(bundles), duplicates.values())
 
         service = IndexService()
 
