@@ -54,6 +54,9 @@ from azul.oauth2 import (
     Authorization,
     InvalidAccessTokenError,
 )
+from azul.openapi import (
+    application_json,
+)
 from azul.openapi.responses import (
     json_content,
 )
@@ -128,14 +131,17 @@ class UserController(Controller):
                 ''', required_scopes=self._required_scopes),
                 'requestBody': {
                     'description': fd('''
-                        JSON conforming to the Google Sign-In [CodeResponse](
-                        https://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse),
-                        except for the error-related parts. Those should be
-                        handled client-side.
+                        Either JSON conforming to the Google Sign-In [CodeResponse](
+                        https://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse)
+                        or a form-encoded [OAuth 2.0 access token request](
+                        https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3).
+                        Both forms are part of the authorization code flow.
+                        The JSON form must omit the error-related parts. Any errors
+                        should have been handled by the client invoking this endpoint.
                     '''),
                     'required': True,
-                    **json_content(
-                        object(
+                    'content': {
+                        **application_json(object(
                             code=describe(str, fd('''
                                 The authorization code of a successful token
                                 response.
@@ -151,8 +157,21 @@ class UserController(Controller):
                                 request and the response.
                             '''))),
                             additionalProperties=True
-                        )
-                    )
+                        )),
+                        self._form_content_type: {
+                            'schema': object(
+                                code=describe(str, fd('''
+                                    The authorization code received from the
+                                    authorization server.
+                                ''')),
+                                redirect_uri=describe(str, fd('''
+                                    The redirect URI that was used when
+                                    requesting the authorization code.
+                                ''')),
+                                additionalProperties=True
+                            )
+                        }
+                    }
                 },
                 'tags': ['User'],
                 'responses': {
@@ -179,6 +198,14 @@ class UserController(Controller):
                                 '''))
                             )
                         )
+                    },
+                    '400': {
+                        'description': fd('''
+                            The request body is malformed or lacks a required
+                            property, the authorization code in it has an
+                            unexpected syntax, or the `scope` property of a JSON
+                            body lacks any of the {required_scopes} scopes.
+                        ''', required_scopes=self._required_scopes)
                     }
                 }
             }
