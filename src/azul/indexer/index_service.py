@@ -665,14 +665,6 @@ class IndexService(DocumentService):
             assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
             tallies[contribution.coordinates.entity] += 1
         log.info('Read %i contribution(s)', sum(tallies.values()))
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug(
-                'Number of contributions read, by entity: %r',
-                {
-                    f'{entity.entity_type}/{entity.entity_id}': num_contributions
-                    for entity, num_contributions in sorted(tallies.items())
-                }
-            )
 
         # For each entity and bundle, find the most recent contribution that is
         # not a deletion
@@ -680,28 +672,33 @@ class IndexService(DocumentService):
             CataloguedEntityReference,
             list[CataloguedContribution]
         ] = defaultdict(list)
+        # The number of contributions per entity from deleted bundle versions,
+        # and from bundle versions older than the selected one
+        deleted_tallies: MutableCataloguedTallies = Counter()
+        superseded_tallies: MutableCataloguedTallies = Counter()
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
             contributions = sorted(contributions,
                                    key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
                                    reverse=True)
+            selected = False
             for bundle_version, group in groupby(contributions, key=attrgetter('coordinates.bundle.version')):
-                contribution = next(group)
-                if not contribution.coordinates.deleted:
+                group = list(group)
+                contribution = group[0]
+                if selected:
+                    superseded_tallies[entity] += len(group)
+                elif contribution.coordinates.deleted:
+                    deleted_tallies[entity] += len(group)
+                else:
                     assert bundle_uuid == contribution.coordinates.bundle.uuid
                     assert bundle_version == contribution.coordinates.bundle.version
                     assert entity == contribution.coordinates.entity
                     contributions_by_entity[entity].append(contribution)
-                    break
+                    selected = True
         log.info('Selected %i contribution(s) to be aggregated.',
                  sum(len(contributions) for contributions in contributions_by_entity.values()))
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug(
-                'Number of contributions selected for aggregation, by entity: %r',
-                {
-                    f'{entity.entity_type}/{entity.entity_id}': len(contributions)
-                    for entity, contributions in sorted(contributions_by_entity.items())
-                }
-            )
+        for entity in sorted(tallies.keys() - contributions_by_entity.keys()):
+            log.debug('Skipping %i deleted contribution(s) to entity %r',
+                      deleted_tallies[entity], f'{entity.entity_type}/{entity.entity_id}')
 
         # Create lookup for transformer by entity type
         transformers: dict[tuple[CatalogName, str], type[Transformer]] = {
@@ -713,6 +710,12 @@ class IndexService(DocumentService):
         # Aggregate contributions for the same entity
         aggregates = []
         for entity, contributions in contributions_by_entity.items():
+            log.debug('Aggregating %i contribution(s), '
+                      'skipping %i deleted and %i superseded, '
+                      'out of a total of %i, to entity %r',
+                      len(contributions),
+                      deleted_tallies[entity], superseded_tallies[entity],
+                      tallies[entity], f'{entity.entity_type}/{entity.entity_id}')
             transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
             bundles = [
