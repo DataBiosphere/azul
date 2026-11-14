@@ -47,6 +47,13 @@ ARG APP
 
 COPY --from=deps /usr/local /usr/local
 
+# The base image comes with pip, which isn't needed at run time.
+# Removing pip also removes the packages it vendors, which are versioned
+# independently of our lock file and often lag behind in security fixes.
+#
+RUN python -m pip uninstall --yes --root-user-action ignore pip \
+    && rm /usr/local/lib/python3.*/ensurepip/_bundled/pip-*.whl
+
 COPY lambdas/${APP}/.chalice/terraform/deployment.zip /tmp/
 RUN python -m zipfile -e /tmp/deployment.zip /var/task \
     && rm /tmp/deployment.zip \
