@@ -1467,7 +1467,7 @@ anvil15_sources = union(anvil14_sources, 464, delta([
     # @formatter:on
 ]))
 
-anvil16_sources = union(anvil15_sources, 471, delta([
+anvil16_sources = union(anvil15_sources, 472, delta([
     # @formatter:off
     source('f9b4b8b6', 'ADOPT_PGx_Acute_Pain_GRU_R1_20261006_ANV6_202610061507', no_ma_mirror),
     source('0e650832', 'ADOPT_PGx_Acute_Pain_HMB_R1_20261006_ANV6_202610061510', no_ma_mirror),
@@ -1677,6 +1677,7 @@ anvil16_sources = union(anvil15_sources, 471, delta([
     source('70799d02', 'ccdg_broad_ai_ibd_niddk_daly_silverberg_wes_20240112_ANV6_202610010256', no_ma_mirror),
     source('468e955d', 'ccdg_broad_daly_igsr_1kg_twist_gsa_20260406_ANV6_202610061521', no_ma_mirror),
     source('d7e6849f', 'ccdg_broad_daly_igsr_1kg_twist_wes_20260406_ANV6_202610010357', no_ma_mirror),
+    source('a00fc2b1', 'eMERGE_IV_GRU_R1_20261105_ANV6_202611051908', no_ma_mirror),
     # @formatter:on
 ]))
 
