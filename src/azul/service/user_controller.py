@@ -1,5 +1,6 @@
 from collections.abc import (
     Iterator,
+    Mapping,
 )
 from contextlib import (
     contextmanager,
@@ -47,12 +48,14 @@ from azul.lib.types import (
     JSON,
     JSONTypedDict,
     is_of_type,
-    json_mapping,
     json_untyped_dict,
 )
 from azul.oauth2 import (
     Authorization,
     InvalidAccessTokenError,
+)
+from azul.openapi import (
+    application_json,
 )
 from azul.openapi.responses import (
     json_content,
@@ -128,14 +131,17 @@ class UserController(Controller):
                 ''', required_scopes=self._required_scopes),
                 'requestBody': {
                     'description': fd('''
-                        JSON conforming to the Google Sign-In [CodeResponse](
-                        https://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse),
-                        except for the error-related parts. Those should be
-                        handled client-side.
+                        Either JSON conforming to the Google Sign-In [CodeResponse](
+                        https://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse)
+                        or a form-encoded [OAuth 2.0 access token request](
+                        https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3).
+                        Both forms are part of the authorization code flow.
+                        The JSON form must omit the error-related parts. Any errors
+                        should have been handled by the client invoking this endpoint.
                     '''),
                     'required': True,
-                    **json_content(
-                        object(
+                    'content': {
+                        **application_json(object(
                             code=describe(str, fd('''
                                 The authorization code of a successful token
                                 response.
@@ -151,8 +157,21 @@ class UserController(Controller):
                                 request and the response.
                             '''))),
                             additionalProperties=True
-                        )
-                    )
+                        )),
+                        self._form_content_type: {
+                            'schema': object(
+                                code=describe(str, fd('''
+                                    The authorization code received from the
+                                    authorization server.
+                                ''')),
+                                redirect_uri=describe(str, fd('''
+                                    The redirect URI that was used when
+                                    requesting the authorization code.
+                                ''')),
+                                additionalProperties=True
+                            )
+                        }
+                    }
                 },
                 'tags': ['User'],
                 'responses': {
@@ -179,6 +198,14 @@ class UserController(Controller):
                                 '''))
                             )
                         )
+                    },
+                    '400': {
+                        'description': fd('''
+                            The request body is malformed or lacks a required
+                            property, the authorization code in it has an
+                            unexpected syntax, or the `scope` property of a JSON
+                            body lacks any of the {required_scopes} scopes.
+                        ''', required_scopes=self._required_scopes)
                     }
                 }
             }
@@ -417,15 +444,24 @@ class UserController(Controller):
             if content_type == self._form_content_type:
                 body = self.current_request.raw_body
                 if isinstance(body, bytes):
-                    body = body.decode(charset)
+                    try:
+                        body = body.decode(charset)
+                    except LookupError:
+                        raise BadRequestError(f'Unknown charset {charset!r}')
+                    except UnicodeDecodeError:
+                        raise BadRequestError(f'Request body is not encoded in {charset!r}')
                 params = urllib.parse.parse_qs(body)
+                for name in ('code', 'redirect_uri'):
+                    if name not in params:
+                        raise BadRequestError(f'Missing form parameter `{name}`')
                 authorization = Authorization(
                     code=params['code'][0],
                     scope=' '.join(sorted(self._service.required_scopes))
                 )
                 redirect_uri = params['redirect_uri'][0]
             elif content_type == self._json_content_type:
-                request: JSON = json_mapping(self.current_request.json_body)
+                request = self.current_request.json_body
+                assert isinstance(request, Mapping), R('Invalid request')
                 # FIXME: Use PEP 728 extra TypedDict items instead of removing them
                 #        https://github.com/DataBiosphere/azul/issues/7625
                 request = {

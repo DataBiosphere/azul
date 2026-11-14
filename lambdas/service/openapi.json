@@ -10135,6 +10135,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
                     }
                 },
                 "tags": [
@@ -11839,6 +11842,9 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nThe access token may expire while the manifest is being\nprepared.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
+                    },
                     "410": {
                         "description": "\nThe manifest preparation job has expired. Request a\nnew preparation using the `PUT /manifest/files`\nendpoint.\n"
                     }
@@ -11916,6 +11922,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
                     }
                 },
                 "tags": [
@@ -13634,6 +13643,9 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "description": "\nThe `Authorization` header is malformed, or the access token\nit contains is invalid or has expired.\n\nThe access token may expire while the manifest is being\nprepared.\n\nIf the access token has expired, obtain a new one and repeat\nthe request with it.\n"
                     }
                 },
                 "tags": [
@@ -13926,7 +13938,7 @@
             "post": {
                 "responses": {
                     "400": {
-                        "description": "Bad request. The request was rejected due to malformed parameters. It must not be retried without modification."
+                        "description": "\nThe request body is malformed or lacks a required\nproperty, the authorization code in it has an\nunexpected syntax, or the `scope` property of a JSON\nbody lacks any of the `email` and `openid` scopes.\n"
                     },
                     "429": {
                         "description": "Too many requests. \nClients should wait the number of seconds specified in the\nRetry-After response header and then retry the request.\n"
@@ -13988,7 +14000,7 @@
                 "summary": "Obtain an OAuth 2.0 access token in exchange for an authorization code",
                 "description": "\nInvoke this endpoint as part of the authorization code flow\nfrom a single-page app.\n\nNote that while this endpoint is part of the authorization\ncode flow, which typically yields a refresh token along with\nthe access token, this endpoint returns only the access\ntoken. Doing so is an aspect of the commonly adopted\nsecurity best practice known as [Backend For Frontend](\nhttps://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).\n\n**When initiating the authorization code flow, be\nsure to request the `email` and `openid` scopes.**\n",
                 "requestBody": {
-                    "description": "\nJSON conforming to the Google Sign-In [CodeResponse](\nhttps://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse),\nexcept for the error-related parts. Those should be\nhandled client-side.\n",
+                    "description": "\nEither JSON conforming to the Google Sign-In [CodeResponse](\nhttps://developers.google.com/identity/oauth2/web/reference/js-reference#CodeResponse)\nor a form-encoded [OAuth 2.0 access token request](\nhttps://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3).\nBoth forms are part of the authorization code flow.\nThe JSON form must omit the error-related parts. Any errors\nshould have been handled by the client invoking this endpoint.\n",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -14011,6 +14023,26 @@
                                 "required": [
                                     "code",
                                     "scope"
+                                ],
+                                "additionalProperties": true
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string",
+                                        "description": "\nThe authorization code received from the\nauthorization server.\n"
+                                    },
+                                    "redirect_uri": {
+                                        "type": "string",
+                                        "description": "\nThe redirect URI that was used when\nrequesting the authorization code.\n"
+                                    }
+                                },
+                                "required": [
+                                    "code",
+                                    "redirect_uri"
                                 ],
                                 "additionalProperties": true
                             }
