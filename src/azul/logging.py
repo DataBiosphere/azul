@@ -68,10 +68,37 @@ class LambdaLogFilter(logging.Filter):
         return True
 
 
+class GitStatusLogFilter(logging.Filter):
+    """
+    Adds the abbreviated commit of the running code to every log record,
+    followed by an asterisk if the working copy it was deployed or run from had
+    uncommitted changes.
+    """
+
+    def __init__(self):
+        super().__init__()
+        status = azul.config.git_status
+        self.git_status = status['commit'][:9] + ('*' if status['dirty'] else '')
+
+    def filter(self, record):
+        record.git_status = self.git_status
+        return True
+
+    @classmethod
+    def install(cls, handler: logging.Handler):
+        """
+        Add an instance of this filter to the given handler unless the handler
+        already has one.
+        """
+        if not any(isinstance(f, cls) for f in handler.filters):
+            handler.addFilter(cls())
+
+
 lambda_log_format = '\t'.join([
     '[%(levelname)s]',
     '%(asctime)s.%(msecs)03dZ',
     '%(aws_request_id)s',
+    '%(git_status)s',
     '%(name)s',
     '%(message)s'
 ])
@@ -113,6 +140,7 @@ def configure_app_logging(app: AzulChaliceApp, *loggers):
                                 datefmt=lambda_log_date_format,
                                 handlers=[handler])
         handler.addFilter(LambdaLogFilter(app))
+        GitStatusLogFilter.install(handler)
 
 
 def configure_script_logging(*loggers):
@@ -140,6 +168,7 @@ log_format = ' '.join([
     '%(asctime)s',
     '%(levelname)+7s',
     '%(threadName)s',
+    '%(git_status)s',
     '%(name)s:',
     '%(message)s'
 ])
@@ -154,6 +183,8 @@ def _configure_non_app_logging(*loggers):
         handler.setFormatter(root_formatter)
     else:
         logging.basicConfig(format=log_format)
+        handler = one(root_logger.handlers)
+    GitStatusLogFilter.install(handler)
 
 
 def _configure_log_levels(*loggers):
