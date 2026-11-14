@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from typing import (
     Any,
@@ -27,9 +28,12 @@ from azul.http import (
     AcceptEncodingClient,
 )
 from azul.logging import (
+    GitStatusLogFilter,
     azul_log_level,
     configure_test_logging,
     get_test_logger,
+    lambda_log_format,
+    log_format,
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -199,3 +203,34 @@ class TestUnexpectedWarnings(TestCase):
         error_line = trace_back.splitlines()[-1]
         self.assertRegex(error_line, '^AssertionError')
         self.assertIn(str(category(msg)), error_line)
+
+
+class TestGitStatusLogFilter(AzulUnitTestCase):
+
+    def test_formats(self):
+        commit = '5d5d4093914a8661b19b9dcb8cf20491795422d9'
+        for dirty in False, True:
+            with self.subTest(dirty=dirty):
+                expected = commit[:9] + ('*' if dirty else '')
+                with mock.patch.dict(os.environ,
+                                     azul_git_commit=commit,
+                                     azul_git_dirty=str(int(dirty))):
+                    log_filter = GitStatusLogFilter()
+                record = logging.LogRecord(name='foo',
+                                           level=logging.INFO,
+                                           pathname=__file__,
+                                           lineno=1,
+                                           msg='bar',
+                                           args=None,
+                                           exc_info=None)
+                record.aws_request_id = 'baz'
+                self.assertTrue(log_filter.filter(record))
+                for format, sep in [(lambda_log_format, '\t'), (log_format, ' ')]:
+                    with self.subTest(format=format):
+                        formatter = logging.Formatter(format)
+                        self.assertIn(sep + expected + sep, formatter.format(record))
+
+    def test_idempotence(self):
+        handler = one(logging.getLogger().handlers)
+        configure_test_logging()
+        self.assertEqual(1, sum(isinstance(f, GitStatusLogFilter) for f in handler.filters))

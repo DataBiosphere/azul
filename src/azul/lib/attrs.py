@@ -377,7 +377,7 @@ class SerializableAttrs(Serializable, attrs.AttrsInstance):
                 f'kwargs = super({cls.__name__}, cls)._from_json(json)',
                 *flatten(
                     [
-                        f'x = json["{deserializer.field.name}"]',
+                        f'x = json["{deserializer.property_name}"]',
                         *(deserializer.handle('x')),
                         f'kwargs["{deserializer.field.name}"] = x'
                     ]
@@ -402,7 +402,7 @@ class SerializableAttrs(Serializable, attrs.AttrsInstance):
                 *flatten(
                     [
                         f'x = self.{serializer.field.name}',
-                        f'json["{serializer.field.name}"] = ' + serializer.handle('x')
+                        f'json["{serializer.property_name}"] = ' + serializer.handle('x')
                     ]
                     for serializer in serializers
                     if serializer.enabled
@@ -489,6 +489,13 @@ class SerializableAttrs(Serializable, attrs.AttrsInstance):
         @cached_property
         def discriminator(self) -> str | None:
             return self._metadata('discriminator', None)
+
+        @cached_property
+        def property_name(self) -> str:
+            """
+            The name of the JSON property holding the field's value
+            """
+            return self._metadata('property_name', self.field.name)
 
         def handle(self, x: str) -> T:
             if self.custom is None:
@@ -777,10 +784,12 @@ class DiscriminatingPolymorphicSerializableAttrs(
 def serializable[T](field: T | None = None,
                     *,
                     from_json: FromJSON,
-                    to_json: ToJSON) -> T:
+                    to_json: ToJSON,
+                    name: str | None = None) -> T:
     """
     Use the provided callables to (de)serialize values of the given field,
-    instead of generating them.
+    instead of generating them. If a name is given, use it for the JSON
+    property holding the field's value, as :func:`serialized_as` does.
 
     >>> @attrs.frozen
     ... class Foo(SerializableAttrs):
@@ -791,10 +800,23 @@ def serializable[T](field: T | None = None,
 
     >>> Foo.from_json({'x': ['a']})
     Foo(x={'a'})
+
+    >>> @attrs.frozen
+    ... class Bar(SerializableAttrs):
+    ...     x: set[str] = serializable(to_json=sorted, from_json=set, name='y')
+
+    >>> Bar(x={'b', 'a'}).to_json()
+    {'y': ['a', 'b']}
+
+    >>> Bar.from_json({'y': ['a']})
+    Bar(x={'a'})
     """
     custom = SerializableAttrs.Strategy.Custom(from_json=from_json,
                                                to_json=to_json)
-    return _set_field_metadata(field, 'custom', custom)
+    field = _set_field_metadata(field, 'custom', custom)
+    if name is not None:
+        field = serialized_as(field, name=name)
+    return field
 
 
 def not_serializable[T](field: T) -> T:
@@ -817,6 +839,24 @@ def not_serializable[T](field: T) -> T:
     custom = SerializableAttrs.Strategy.Custom(from_json=None,
                                                to_json=None)
     return _set_field_metadata(field, 'custom', custom)
+
+
+def serialized_as[T](field: T | None = None, *, name: str) -> T:
+    """
+    Use the given name for the JSON property holding the value of the given
+    field, instead of the field's name.
+
+    >>> @attrs.frozen
+    ... class Foo(SerializableAttrs):
+    ...     x: int = serialized_as(name='y')
+
+    >>> Foo(x=42).to_json()
+    {'y': 42}
+
+    >>> Foo.from_json({'y': 42})
+    Foo(x=42)
+    """
+    return _set_field_metadata(field, 'property_name', name)
 
 
 def _set_field_metadata[T](field: T | None, key, value):

@@ -191,7 +191,7 @@ sell_unused_slots:
     - if: $CI_PIPELINE_SOURCE == 'schedule'
         && $azul_gitlab_schedule == 'sell_unused_slots'
   script:
-    - python scripts/sell_unused_slots.py
+    - python scripts/sell_slots.py
 
 fedramp_inventory:
   extends: .base

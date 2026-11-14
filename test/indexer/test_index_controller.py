@@ -7,6 +7,9 @@ from collections import (
 from functools import (
     partial,
 )
+from operator import (
+    itemgetter,
+)
 from unittest.mock import (
     MagicMock,
     PropertyMock,
@@ -283,7 +286,25 @@ class TestIndexController(WithIndexesSetUpTestCase,
         digest = self._digest_tallies(tallies)
         self.assertEqual(expected_digest, digest)
 
-        # Test aggregation
+        # Test aggregation. The two project tallies are consolidated and the
+        # resulting tally is deferred. Consequently, all other tallies are
+        # deferred as well, even though each is the only one for its entity.
+        # Nothing is referred, so the failing write has no effect.
+        messages = map(partial(self._mock_sqs_record, fifo=True), tallies)
+        with patch.object(IndexWriter, 'write', side_effect=TransportError):
+            self.controller.aggregate(messages)
+
+        tallies = self._read_queue(tallies_queue)
+        digest = self._digest_tallies(tallies)
+        expected_digest['projects'] = [2]
+        self.assertEqual(expected_digest, digest)
+        # The consolidated tally's deferral was justified and isn't counted
+        self.assertEqual({
+            entity_type: [0 if entity_type == 'projects' else 1] * len(counts)
+            for entity_type, counts in expected_digest.items()
+        }, self._digest_deferrals(tallies))
+
+        # Now that there is one tally per entity, all of them are referred
         messages = map(partial(self._mock_sqs_record, fifo=True), tallies)
         with patch.object(IndexWriter, 'write', side_effect=TransportError):
             try:
@@ -295,8 +316,8 @@ class TestIndexController(WithIndexesSetUpTestCase,
 
         self.assertEqual([], self._read_queue(tallies_queue))
 
-        # Poison the two project and the two bundle tallies, by simulating
-        # a number of failed attempts at processing them
+        # Poison the project and the two bundle tallies, by simulating a
+        # number of failed attempts at processing them
         attempts = self.queue_service._num_batched_aggregation_attempts
         # While 0 is a valid value, the test logic below wouldn't work with it
         self.assertGreater(attempts, 0)
@@ -312,13 +333,23 @@ class TestIndexController(WithIndexesSetUpTestCase,
 
         tallies = self._read_queue(tallies_retry_queue)
         digest = self._digest_tallies(tallies)
-        # The two project tallies were consolidated (despite being poisoned) and
-        # the resulting tally was deferred
-        expected_digest['projects'] = [2]
-        # One of the poisoned bundle tallies was referred. Since it was
-        # poisoned, all other tallies were deferred
-        expected_digest['bundles'] = [1]
-        self.assertEqual(expected_digest, digest)
+        # One of the poisoned tallies was referred. Since it was poisoned, all
+        # other tallies were deferred.
+        poisoned_digest = {
+            entity_type: expected_digest[entity_type]
+            for entity_type in ['bundles', 'projects']
+        }
+        self.assertEqual(sum(map(len, poisoned_digest.values())) - 1,
+                         sum(len(digest[entity_type]) for entity_type in poisoned_digest))
+        self.assertEqual({
+            entity_type: counts
+            for entity_type, counts in expected_digest.items()
+            if entity_type not in poisoned_digest
+        }, {
+            entity_type: counts
+            for entity_type, counts in digest.items()
+            if entity_type not in poisoned_digest
+        })
 
         # Aggregate the remaining deferred tallies
         messages = map(partial(self._mock_sqs_record, fifo=True), tallies)
@@ -328,10 +359,51 @@ class TestIndexController(WithIndexesSetUpTestCase,
         self.assertEqual([], self._read_queue(tallies_queue))
         self.assertEqual([], self._read_queue(tallies_retry_queue))
 
+    def test_lone_deferrals(self):
+        """
+        A lone tally in a batch with a consolidated tally is deferred, but only
+        a limited number of times.
+        """
+        self._create_mock_queues(config.indexer_queue_names)
+        tallies_queue = self.queue_service._tallies_queue()
+        max_deferrals = self.queue_service._max_lone_deferrals
+        project = dict(catalog=self.catalog,
+                       entity_type='projects',
+                       entity_id=str(uuid4()),
+                       num_contributions=1)
+        for deferrals in range(max_deferrals + 1):
+            with self.subTest(deferrals=deferrals):
+                file = dict(catalog=self.catalog,
+                            entity_type='files',
+                            entity_id=str(uuid4()),
+                            num_contributions=1,
+                            deferrals=deferrals)
+                messages = [
+                    self._mock_sqs_record(tally, fifo=True)
+                    for tally in [project, project, file]
+                ]
+                with patch.object(self.index_service, 'aggregate') as aggregate:
+                    self.controller.aggregate(messages)
+                tallies = self._read_queue(tallies_queue)
+                expected_tallies = [{**project, 'num_contributions': 2, 'deferrals': 0}]
+                if deferrals < max_deferrals:
+                    aggregate.assert_not_called()
+                    expected_tallies.append({**file, 'deferrals': deferrals + 1})
+                else:
+                    aggregate.assert_called_once()
+                self.assertEqual(sorted(expected_tallies, key=itemgetter('entity_type')),
+                                 sorted(tallies, key=itemgetter('entity_type')))
+
     def _digest_tallies(self, tallies):
         entities = defaultdict(list)
         for tally in tallies:
             insort(entities[tally['entity_type']], tally['num_contributions'])
+        return entities
+
+    def _digest_deferrals(self, tallies):
+        entities = defaultdict(list)
+        for tally in tallies:
+            insort(entities[tally['entity_type']], tally['deferrals'])
         return entities
 
 

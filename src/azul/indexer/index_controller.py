@@ -263,12 +263,15 @@ class IndexController(ActionController[IndexAction]):
 
     def aggregate(self, event: Iterable[SQSRecord], *, retry=False):
         # Consolidate multiple tallies for the same entity and process entities
-        # with only one message. Because SQS FIFO queues try to put as many
-        # messages from the same message group in a reception batch, a single
-        # message per group may indicate that that message is the last one in
-        # the group. Inversely, multiple messages per group in a batch are a
-        # likely indicator for the presence of even more queued messages in
-        # that group. The more bundle contributions we defer, the higher the
+        # with only one message, unless the tallies of another entity in the
+        # same batch were consolidated. Because SQS FIFO queues try to put as
+        # many messages from the same message group in a reception batch, a
+        # single message per group may indicate that that message is the last
+        # one in the group. Inversely, multiple messages per group in a batch
+        # are a likely indicator for the presence of even more queued messages
+        # in that group, and SQS may have filled the remainder of the batch
+        # with messages from other groups that aren't the last ones in their
+        # group either. The more bundle contributions we defer, the higher the
         # amortized savings on aggregation become. Aggregating bundle
         # contributions is a costly operation for any entity with many
         # contributions e.g., a large project.
@@ -278,9 +281,9 @@ class IndexController(ActionController[IndexAction]):
             message = SQSFifoMessage.from_record(record)
             tally = DocumentTally.from_message(message)
             log.info('Attempt %i of handling %i contribution(s) for entity %s, '
-                     'message ID %s, group ID %s',
+                     'after %i lone deferral(s), message ID %s, group ID %s',
                      tally.attempts, tally.num_contributions, tally.entity,
-                     message.id, message.group_id)
+                     tally.deferrals, message.id, message.group_id)
             tallies.append(tally)
         try:
             self.index_queue_service.aggregate(tallies, retry=retry)

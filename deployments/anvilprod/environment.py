@@ -1465,7 +1465,7 @@ anvil15_sources = union(anvil14_sources, 464, delta([
     # @formatter:on
 ]))
 
-anvil16_sources = union(anvil15_sources, 471, delta([
+anvil16_sources = union(anvil15_sources, 472, delta([
     # @formatter:off
     source('f9b4b8b6', 'ADOPT_PGx_Acute_Pain_GRU_R1_20261006_ANV6_202610061507', no_ma_mirror),
     source('0e650832', 'ADOPT_PGx_Acute_Pain_HMB_R1_20261006_ANV6_202610061510', no_ma_mirror),
@@ -1615,7 +1615,7 @@ anvil16_sources = union(anvil15_sources, 471, delta([
     source('b6c0bc47', 'DepMap_DS_GICANCER_MDS_20261019_ANV6_202610192050', no_ma_mirror),
     source('a5c4d0cc', 'DepMap_GRU_R2_20261028_ANV6_202610281929', no_ma_mirror),
     source('e6a4d775', 'DepMap_HMB_MDS_R4_20261028_ANV6_202610281939', no_ma_mirror),
-    source('56108102', 'MOHD_GRU_R1_20261022_ANV6_202610221648', no_ma_mirror),
+    source('daacbee8', 'ANVIL_MOHD_GRU_R1_20261110_ANV6_202611101604', no_ma_mirror),
     source('4492e653', 'ccdg_asc_ndd_daly_talkowski_AGRE_asd_exome_20250514_ANV6_202609301934', no_ma_mirror),
     source('33c5ff1b', 'ccdg_asc_ndd_daly_talkowski_IBIS_asd_exome_20250514_ANV6_202609302040', no_ma_mirror),
     source('a777316b', 'ccdg_asc_ndd_daly_talkowski_TASC_asd_exome_20250515_ANV6_202609302147', no_ma_mirror),
@@ -1675,6 +1675,7 @@ anvil16_sources = union(anvil15_sources, 471, delta([
     source('70799d02', 'ccdg_broad_ai_ibd_niddk_daly_silverberg_wes_20240112_ANV6_202610010256', no_ma_mirror),
     source('468e955d', 'ccdg_broad_daly_igsr_1kg_twist_gsa_20260406_ANV6_202610061521', no_ma_mirror),
     source('d7e6849f', 'ccdg_broad_daly_igsr_1kg_twist_wes_20260406_ANV6_202610010357', no_ma_mirror),
+    source('a00fc2b1', 'eMERGE_IV_GRU_R1_20261105_ANV6_202611051908', no_ma_mirror),
     # @formatter:on
 ]))
 
@@ -1742,6 +1743,11 @@ def env() -> Mapping[str, str | None]:
         'AZUL_OPENSEARCH_INSTANCE_COUNT': '6',
 
         'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
+
+        # Contribute the bundles of the MOHD snapshot whole, the largest of
+        # which has 3,743 entities.
+        #
+        'AZUL_MAX_BUNDLE_PARTITION_SIZE': '4096',
 
         'AZUL_DEBUG': '1',
 

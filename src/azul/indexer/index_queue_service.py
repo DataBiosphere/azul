@@ -272,6 +272,12 @@ class IndexQueueService:
     #
     _num_batched_aggregation_attempts = 3
 
+    #: The number of times a tally is deferred while it is the only one for its
+    #: entity in a batch, before it is referred regardless of the other tallies
+    #: in the batch.
+    #
+    _max_lone_deferrals = 5
+
     def aggregate(self, tallies: list[DocumentTally], *, retry: bool):
         tallies_by_entity: dict[CataloguedEntityReference, list[DocumentTally]] = defaultdict(list)
         for tally in tallies:
@@ -284,21 +290,40 @@ class IndexQueueService:
                 deferrals.append(tallies[0].consolidate(tallies[1:]))
             else:
                 assert False
+        if deferrals:
+            # Multiple tallies for the same entity in a batch suggest that the
+            # queue holds more tallies than fit into the batch. SQS may fill the
+            # remainder of the batch with tallies for other entities, so a lone
+            # tally in that batch isn't necessarily the last one for its entity,
+            # and referring it might be premature.
+            lone_tallies, referrals = referrals, []
+            for tally in lone_tallies:
+                if tally.deferrals < self._max_lone_deferrals:
+                    log.info('Deferring lone tally for entity %r '
+                             'with %i prior lone deferral(s)',
+                             tally.entity, tally.deferrals)
+                    deferrals.append(tally.defer())
+                else:
+                    log.info('Referring lone tally for entity %r, '
+                             'which reached the limit of %i lone deferral(s)',
+                             tally.entity, self._max_lone_deferrals)
+                    referrals.append(tally)
         if referrals:
             for i, tally in enumerate(referrals):
                 if tally.attempts > self._num_batched_aggregation_attempts:
                     log.info('Only aggregating problematic entity %s, deferring all others',
                              tally.entity)
                     referrals.pop(i)
-                    deferrals.extend(referrals)
+                    deferrals.extend(other.defer() for other in referrals)
                     referrals = [tally]
                     break
 
             log.info('Referring %i tallies', len(referrals))
             tally_by_entity = {}
             for tally in referrals:
-                log.info('Aggregating %i contribution(s) to entity %s',
-                         tally.num_contributions, tally.entity)
+                log.info('Aggregating %i contribution(s) to entity %s, '
+                         'after %i lone deferral(s)',
+                         tally.num_contributions, tally.entity, tally.deferrals)
                 tally_by_entity[tally.entity] = tally.num_contributions
 
             self._index_service.aggregate(tally_by_entity)
@@ -310,8 +335,9 @@ class IndexQueueService:
         if deferrals:
             log.info('Deferring %i tallies', len(deferrals))
             for tally in deferrals:
-                log.info('Deferring aggregation of %i contribution(s) to entity %s',
-                         tally.num_contributions, tally.entity)
+                log.info('Deferring aggregation of %i contribution(s) to entity %s, '
+                         'with %i lone deferral(s)',
+                         tally.num_contributions, tally.entity, tally.deferrals)
             messages = (tally.to_message() for tally in deferrals)
             # Hopefully this is more or less atomic. If we crash below here,
             # tallies will be inflated because some or all deferrals have
@@ -330,6 +356,11 @@ class DocumentTally:
     num_contributions: int
     attempts: int
 
+    #: The number of times this tally was deferred while it was the only one
+    #: for its entity in a batch
+    #
+    deferrals: int
+
     @classmethod
     def for_entity(cls,
                    catalog: CatalogName,
@@ -339,7 +370,8 @@ class DocumentTally:
                                                     entity_type=entity.entity_type,
                                                     entity_id=entity.entity_id),
                    num_contributions=num_contributions,
-                   attempts=0)
+                   attempts=0,
+                   deferrals=0)
 
     @classmethod
     def from_message(cls, msg: SQSFifoMessage) -> Self:
@@ -351,14 +383,17 @@ class DocumentTally:
                                                     entity_type=json_str(json['entity_type']),
                                                     entity_id=json_str(json['entity_id'])),
                    num_contributions=json_int(json['num_contributions']),
-                   attempts=attempts)
+                   attempts=attempts,
+                   # Tallies queued before this property was introduced lack it
+                   deferrals=json_int(json.get('deferrals', 0)))
 
     def to_json(self) -> JSON:
         return {
             'catalog': self.entity.catalog,
             'entity_type': self.entity.entity_type,
             'entity_id': self.entity.entity_id,
-            'num_contributions': self.num_contributions
+            'num_contributions': self.num_contributions,
+            'deferrals': self.deferrals
         }
 
     def to_message(self) -> SQSFifoMessage:
@@ -369,4 +404,9 @@ class DocumentTally:
         assert all(self.entity == other.entity for other in others)
         num_contributions = sum((other.num_contributions for other in others),
                                 start=self.num_contributions)
-        return attrs.evolve(self, num_contributions=num_contributions)
+        # The deferral of the consolidated tallies was justified, since more
+        # tallies for the entity did arrive
+        return attrs.evolve(self, num_contributions=num_contributions, deferrals=0)
+
+    def defer(self) -> Self:
+        return attrs.evolve(self, deferrals=self.deferrals + 1)

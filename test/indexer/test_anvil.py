@@ -2,6 +2,7 @@ from abc import (
     ABC,
 )
 from collections import (
+    Counter,
     defaultdict,
 )
 import json
@@ -34,9 +35,6 @@ from urllib3 import (
 from azul import (
     config,
 )
-from azul.indexer import (
-    BundlePartition,
-)
 from azul.indexer.cache_service import (
     UrlCacheService,
 )
@@ -54,13 +52,19 @@ from azul.lib import (
     R,
 )
 from azul.lib.types import (
+    AnyJSON,
     JSON,
     MutableJSON,
+    json_element_mappings,
     json_str,
+    not_none,
 )
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.plugins.metadata.anvil.bundle import (
+    EntityGraph,
 )
 from azul.plugins.metadata.anvil.indexer import (
     transform,
@@ -235,8 +239,25 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
                     assert isinstance(canned_bundle, TDRAnvilBundle)
                     self.assertEqual(canned_bundle.fqid, bundle.fqid)
                     self.assertEqual(canned_bundle.entities, bundle.entities)
-                    self.assertEqual(canned_bundle.links, bundle.links)
+                    self.assertEqual(canned_bundle.graph, bundle.graph)
                     self.assertEqual(canned_bundle.orphans, bundle.orphans)
+
+    def test_links_round_trip(self):
+        """
+        The links of a canned bundle survive deserialization followed by
+        serialization, up to their order.
+        """
+
+        def canonical(links: AnyJSON) -> list[str]:
+            return sorted(json.dumps(link, sort_keys=True) for link in json_element_mappings(links))
+
+        for bundle_fqid in [self.primary_bundle(), self.supplementary_bundle(), self.replica_bundle()]:
+            with self.subTest(bundle_fqid=bundle_fqid):
+                bundle_json = self._load_canned_file(bundle_fqid, TDRAnvilBundle.canning_qualifier())
+                assert isinstance(bundle_json, dict), bundle_json
+                bundle = self._load_canned_bundle(bundle_fqid)
+                self.assertEqual(canonical(bundle_json['links']),
+                                 canonical(bundle.to_json()['links']))
 
     def test_row_counts(self):
         tables = [
@@ -534,12 +555,6 @@ class TestAnvilIndexer(AnvilIndexerTestCase,
             row['file_path'] = None
         self._assert_duplicate_files(tables, [])
 
-    def _canned_tables(self) -> MutableJSON:
-        canned_file = self._load_canned_file_version(uuid=self.source.ref.id,
-                                                     version=None,
-                                                     extension='tables.tdr')
-        return canned_file['tables']
-
     def _assert_duplicate_files(self,
                                 tables: MutableJSON,
                                 expected: list[str]
@@ -569,7 +584,7 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
                                       entity_id='208441e2-cf28-584e-a0ac-7553c7118412')
         bundle_fqid = self.primary_bundle()
         bundle = cast(TDRAnvilBundle, self._load_canned_bundle(bundle_fqid))
-        bundle.links.clear()
+        bundle.graph = EntityGraph()
         bundle.entities = {dataset_ref: bundle.entities[dataset_ref]}
         self._index_bundle(bundle, delete=False)
 
@@ -656,14 +671,15 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
         """
         bundle = self._load_canned_bundle(self.primary_bundle())
         assert isinstance(bundle, TDRAnvilBundle)
-        bundle.links = {
+        links = [
             link
-            for link in bundle.links
+            for link in bundle.graph.to_links()
             if not any(ref.entity_type == 'anvil_file'
                        for ref in link.all_entities)
-        }
+        ]
+        bundle.graph = EntityGraph.from_links(links)
         linked = set()
-        for link in bundle.links:
+        for link in links:
             linked.update(link.all_entities)
         for ref in list(bundle.entities):
             if ref not in linked:
@@ -724,6 +740,15 @@ class TestAnvilIndexerWithIndexesSetUp(WithIndexesSetUpTestCase, AnvilIndexerTes
         self.assertEqual(expected, actual)
 
 
+def _contribution_order(contribution: Contribution) -> tuple[str, str]:
+    """
+    A sort key that emulates the order requested by the indexer when it reads
+    contributions from OpenSearch.
+    """
+    coordinates = contribution.coordinates
+    return coordinates.index_name, coordinates.document_id
+
+
 class TestAnvilFilePaths(AnvilCannedBundleTestCase):
     """
     The path backfilled for an AnVIL file that the snapshot gives none of its
@@ -754,11 +779,14 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         return bundle
 
     def _paths(self, bundle: TDRAnvilBundle) -> set[str]:
+        # Not every contribution to a file includes the file itself, so the
+        # paths are taken from the copies of the files the bundle would
+        # contribute, whether it does or not
         transformer = FileTransformer(bundle=bundle, deleted=False)
         return {
-            json_str(one(doc.contents['files'])['file_path'])
-            for doc in transformer.transform(BundlePartition.root)
-            if isinstance(doc, Contribution)
+            json_str(transformer._file(file)['file_path'])
+            for file in bundle.entities
+            if file.entity_type == 'anvil_file'
         }
 
     def test_shared_name(self):
@@ -791,30 +819,37 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                           f'supplementary/writes-{self.digest}.bam'},
                          self._paths(bundle))
 
-    def _add_biosample(self,
-                       bundle: TDRAnvilBundle,
-                       biosample_id: str
-                       ) -> EntityReference:
+    def _add_biosample(self, bundle: TDRAnvilBundle, biosample_id: str) -> None:
         """
-        Link every file in the given bundle to an additional biosample with
-        the given ID, besides the one the bundle is rooted at, and return a
-        reference to that biosample.
+        Record every activity in the given bundle that used the biosample the
+        bundle is rooted at as having used an additional biosample with the
+        given ID, too. Like every primary bundle, the given one doesn't contain
+        the additional biosample, only the activities listing it.
         """
-        root = one(e
-                   for e in bundle.entities
-                   if e.entity_type == 'anvil_biosample')
+        for entity, metadata in bundle.entities.items():
+            if entity.entity_type.endswith('activity'):
+                used = metadata.get('used_biosample_id', [])
+                if self.biosample in used:
+                    metadata['used_biosample_id'] = [*used, biosample_id]
+
+    def _reroot(self, bundle: TDRAnvilBundle, biosample_id: str) -> None:
+        """
+        Turn the given bundle into the primary bundle of the biosample with the
+        given ID, by replacing the biosample the bundle is rooted at. This also
+        changes the UUID of the bundle.
+        """
+        root = not_none(bundle.bundle_entity)
         clone = EntityReference(entity_type=root.entity_type,
                                 entity_id=_entity_id(self.source.ref.spec,
                                                      root.entity_type,
                                                      biosample_id))
-        bundle.entities[clone] = {**bundle.entities[root],
-                                  'biosample_id': biosample_id}
-        bundle.links = {
-            attrs.evolve(link, inputs=link.inputs | {clone})
-            if root in link.inputs else link
-            for link in bundle.links
+        bundle.entities[clone] = {
+            **bundle.entities.pop(root),
+            'biosample_id': biosample_id
         }
-        return clone
+        bundle.graph = bundle.graph.map(lambda entity: clone if entity == root else entity)
+        bundle.fqid = attrs.evolve(bundle.fqid, primary_key=biosample_id, uuid=None)
+        assert clone == bundle.bundle_entity, (clone, bundle.bundle_entity)
 
     def test_many_biosamples(self):
         """
@@ -837,12 +872,9 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         """
         other = '00000000-0000-0000-0000-000000000000'
         bundle = self._bundle('reads.bam', 'reads.bam')
-        clone = self._add_biosample(bundle, other)
-        self.assertNotEqual(clone, bundle.bundle_entity)
+        self._add_biosample(bundle, other)
         self.assertEqual({f'{other}/reads.bam'}, self._paths(bundle))
-        # Root the bundle at the other biosample, which also changes its UUID
-        bundle.fqid = attrs.evolve(bundle.fqid, primary_key=other, uuid=None)
-        self.assertEqual(clone, bundle.bundle_entity)
+        self._reroot(bundle, other)
         self.assertEqual({f'{other}/reads-{self.digest}.bam'},
                          self._paths(bundle))
 
@@ -858,9 +890,8 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         for primary_key in [self.biosample, other]:
             bundle = self._bundle('reads.bam', 'reads.bam')
             self._add_biosample(bundle, other)
-            bundle.fqid = attrs.evolve(bundle.fqid,
-                                       primary_key=primary_key,
-                                       uuid=None)
+            if primary_key != self.biosample:
+                self._reroot(bundle, primary_key)
             documents = service.transform(self.catalog, bundle, delete=False)
             assert isinstance(documents, tuple), documents
             for contribution in documents[0]:
@@ -869,9 +900,11 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
                 coordinates = attrs.evolve(contribution.coordinates, entity=entity)
                 contributions.append(attrs.evolve(contribution,
                                                   coordinates=coordinates))
+        contributions.sort(key=_contribution_order)
+        aggregates, tallies = service._aggregate(contributions)
         paths = {
             json_str(one(aggregate.contents['files'])['file_path'])
-            for aggregate in service._aggregate(contributions)
+            for aggregate in aggregates
             if aggregate.coordinates.entity.entity_type == 'files'
         }
         self.assertEqual({f'{other}/reads-{self.digest}.bam'}, paths)
@@ -883,7 +916,7 @@ class TestAnvilFilePaths(AnvilCannedBundleTestCase):
         it shares its name or not, no bundle being able to tell (#8386).
         """
         bundle = self._bundle('reads.bam', 'writes.bam')
-        bundle.links = set()
+        bundle.graph = EntityGraph()
         self.assertEqual({f'detached/reads-{self.digest}.bam',
                           f'detached/writes-{self.digest}.bam'},
                          self._paths(bundle))
@@ -997,3 +1030,195 @@ class TestAnvilSharedFile(WithIndexesSetUpTestCase, AnvilIndexerTestCase):
             for entity_id, path in self.expected_paths.items()
         }
         self.assertEqual(expected, actual)
+
+
+class TestAnvilHubActivity(AnvilCannedBundleTestCase,
+                           TDRPluginTestCase[tdr_anvil.Plugin],
+                           DUOSTestCase):
+    """
+    Primary bundles of biosamples used by activities that also use other
+    biosamples. The canned tables were taken from the MOHD snapshot, in which
+    a few such activities each use hundreds of biosamples and generate
+    hundreds of files. The tables were stripped down to three biosamples,
+    their donors and the donors' diagnoses, two of these activities and one
+    ordinary activity, and the files generated by them. The biosamples,
+    donors and diagnoses were redacted, except for their primary and foreign
+    keys. The files were stripped of their paths, so that the paths are
+    backfilled.
+    """
+
+    source = Source(
+        config=SourceConfig(mirror=False),
+        ref=TDRSourceRef(
+            id='79591509-9db1-4b16-812e-db31c5caf086',
+            spec=TDRSourceSpec.parse('tdr:bigquery:gcp:test_anvil_project:'
+                                     'ANVIL_MOHD_GRU_R1_20261110_ANV6_202611101604'),
+            prefix=Prefix.parse('/0')
+        )
+    )
+
+    #: The primary keys of the three biosamples
+    #:
+    b1, b2, b3 = (
+        '79860a38-62eb-4e8f-f665-9a300f5a101c',
+        '190882fa-0d8a-0685-3edd-6ce187dc5e2d',
+        '013f5f65-8f4d-3997-ac45-fa4245110a2e'
+    )
+
+    #: The primary keys and names of the files generated by an activity that
+    #: used biosamples b1 and b2
+    #:
+    lipidomics = {
+        '72d53b08-c3b6-3efa-80e5-2b826beadedd': 'MOHD_EL100939_quant_v0.tsv',
+        '2b2b78c6-a08b-3c96-b0d7-7a787266b5a2': 'MOHD_EL101183_quant_v0.tsv'
+    }
+
+    #: The primary keys and names of the files generated by an activity that
+    #: used biosamples b2 and b3
+    #:
+    exposomics = {
+        '16edd765-7b1b-36c4-89a8-a07da45ad020': 'MOHD_EE100716_pfas-concentrations_v0.tsv',
+        '3d1c29ef-df0a-341c-94c3-616212b243a2': 'MOHD_EE100733_pfas-concentrations_v0.tsv'
+    }
+
+    #: The primary key and name of the file generated by an activity that used
+    #: only biosample b1
+    #:
+    metabolomics = {
+        'b8d15a39-99c7-3101-bd25-8f9042070457': 'MOHD_EM100032_positive.mzML.gz'
+    }
+
+    @classmethod
+    def _plugin_cls(cls) -> Type[tdr_anvil.Plugin]:
+        return tdr_anvil.Plugin
+
+    def _keys(self, bundle: TDRAnvilBundle, entity_type: str) -> set[str]:
+        pk_column = entity_type.removeprefix('anvil_') + '_id'
+        return {
+            json_str(metadata[pk_column])
+            for entity, metadata in bundle.entities.items()
+            if entity.entity_type == entity_type
+        }
+
+    def test_bundles(self):
+        """
+        A primary bundle contains every file derived from its biosample, and
+        every activity those files were generated by, but none of the other
+        biosamples used by those activities. Each of these files is placed in
+        the directory of the lowest of the biosamples its activity used, no
+        matter which bundle the file is taken from.
+        """
+        self._mock_normal_duos()
+        self._make_mock_tables(self.source.ref)
+        files = {
+            self.b1: self.lipidomics.keys() | self.metabolomics.keys(),
+            self.b2: self.lipidomics.keys() | self.exposomics.keys(),
+            self.b3: self.exposomics.keys()
+        }
+        names = self.lipidomics | self.exposomics | self.metabolomics
+        directories = {
+            **dict.fromkeys(self.lipidomics, min(self.b1, self.b2)),
+            **dict.fromkeys(self.exposomics, min(self.b2, self.b3)),
+            **dict.fromkeys(self.metabolomics, self.b1)
+        }
+        for biosample, expected_files in files.items():
+            with self.subTest(biosample=biosample):
+                bundle = self.plugin.fetch_bundle(self.bundle_fqid(primary_key=biosample))
+                assert isinstance(bundle, TDRAnvilBundle)
+                self.assertEqual({biosample}, self._keys(bundle, 'anvil_biosample'))
+                self.assertEqual(expected_files, self._keys(bundle, 'anvil_file'))
+                for link in bundle.graph.to_links():
+                    if link.activity is not None:
+                        self.assertEqual({bundle.bundle_entity}, link.inputs)
+                transformer = FileTransformer(bundle=bundle, deleted=False)
+                paths = {
+                    json_str(file['file_id']): file['file_path']
+                    for entity in bundle.entities
+                    if entity.entity_type == 'anvil_file'
+                    for file in [transformer._file(entity)]
+                }
+                expected_paths = {
+                    file_id: f'{directories[file_id]}/{names[file_id]}'
+                    for file_id in expected_files
+                }
+                self.assertEqual(expected_paths, paths)
+
+    def _contributions(self, bundles: list[TDRAnvilBundle]) -> list[Contribution]:
+        service = IndexService()
+        result = []
+        for bundle in bundles:
+            documents = service.transform(self.catalog, bundle, delete=False)
+            assert isinstance(documents, tuple), documents
+            for contribution in documents[0]:
+                entity = CataloguedEntityReference.for_entity(
+                    self.catalog, contribution.coordinates.entity)
+                coordinates = attrs.evolve(contribution.coordinates, entity=entity)
+                result.append(attrs.evolve(contribution, coordinates=coordinates))
+        return result
+
+    def _inclusions(self,
+                    contributions: list[Contribution]
+                    ) -> Counter[tuple[EntityReference, str, str]]:
+        """
+        The number of contributions to each outer entity that include each of
+        its inner entities, by outer entity, inner entity type and inner entity
+        ID.
+        """
+        return Counter(
+            (contribution.coordinates.entity, inner_type, json_str(inner['document_id']))
+            for contribution in contributions
+            for inner_type, inners in contribution.contents.items()
+            for inner in json_element_mappings(inners)
+        )
+
+    def test_ownership(self):
+        """
+        Of the contributions to an outer entity, only one includes any given
+        inner entity, except for the outer entity itself, which every
+        contribution includes, unless the contents have no place for it, as is
+        the case with bundles. The aggregates are the same as if every
+        contribution included every inner entity linked to its outer entity.
+        """
+        self._mock_normal_duos()
+        self._make_mock_tables(self.source.ref)
+        bundles = []
+        for biosample in [self.b1, self.b2, self.b3]:
+            bundle = self.plugin.fetch_bundle(self.bundle_fqid(primary_key=biosample))
+            assert isinstance(bundle, TDRAnvilBundle)
+            bundles.append(bundle)
+        owned = self._contributions(bundles)
+        with patch.object(transform.BaseTransformer, '_owns', return_value=True):
+            unowned = self._contributions(bundles)
+
+        owned_inclusions, unowned_inclusions = self._inclusions(owned), self._inclusions(unowned)
+        self.assertEqual(unowned_inclusions.keys(), owned_inclusions.keys())
+        self.assertGreater(unowned_inclusions.total(), owned_inclusions.total())
+        contributions_by_outer = Counter(
+            contribution.coordinates.entity
+            for contribution in owned
+            if contribution.coordinates.entity.entity_type in contribution.contents
+        )
+        self_inclusions = {
+            (outer, outer.entity_type, outer.entity_id): count
+            for outer, count in contributions_by_outer.items()
+        }
+        self.assertLessEqual(self_inclusions.items(), owned_inclusions.items())
+        duplicates = {
+            (outer, inner_type, inner_id): count
+            for (outer, inner_type, inner_id), count in owned_inclusions.items()
+            if count > 1
+        }
+        self.assertLessEqual(duplicates.items(), self_inclusions.items())
+        self.assertIn(len(bundles), duplicates.values())
+
+        service = IndexService()
+
+        def aggregates(contributions: list[Contribution]) -> dict[EntityReference, JSON]:
+            contributions = sorted(contributions, key=_contribution_order)
+            aggregates, tallies = service._aggregate(contributions)
+            return {
+                aggregate.coordinates.entity: aggregate.to_json()
+                for aggregate in aggregates
+            }
+
+        self.assertEqual(aggregates(unowned), aggregates(owned))

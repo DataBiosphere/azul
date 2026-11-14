@@ -77,7 +77,6 @@ from azul.lib.types import (
     MutableJSON,
     MutableJSONs,
     json_bool,
-    json_element_mappings,
     json_element_strings,
     json_sequence_of_optional_strings,
     json_sorted,
@@ -85,7 +84,10 @@ from azul.lib.types import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
-    LinkedEntities,
+    EntityRefsByType,
+    MutableEntityRefsByType,
+    activity_tables,
+    is_activity,
     snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.indexer.aggregate import (
@@ -98,10 +100,6 @@ from azul.plugins.metadata.anvil.indexer.aggregate import (
 )
 
 log = logging.getLogger(__name__)
-
-#: The version of the AnVIL schema that this module was written against
-#:
-anvil_schema_version = 6
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
@@ -172,11 +170,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _convert_entity_type(self, entity_type: str) -> str:
         assert entity_type == 'bundle' or entity_type.startswith('anvil_'), entity_type
         if entity_type == 'anvil_diagnosis':
-            # Irregular plural form
             return 'diagnoses'
-        elif entity_type.endswith('activity'):
-            # Polymorphic. Could be `anvil_sequencingactivity`,
-            # `anvil_assayactivity`, `anvil_activity`, etc
+        elif entity_type in activity_tables:
             return 'activities'
         else:
             return pluralize(entity_type.removeprefix('anvil_'))
@@ -191,14 +186,167 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         )
 
     @cached_property
-    def _entities_by_type(self) -> dict[EntityType, set[EntityReference]]:
+    def _entities_by_type(self) -> MutableEntityRefsByType:
         entries = defaultdict(set)
         for e in self.bundle.entities:
             entries[e.entity_type].add(e)
         return entries
 
-    def _linked_entities(self, entity: EntityReference) -> LinkedEntities:
-        return LinkedEntities.from_links(entity, self.bundle.links)
+    @cached_property
+    def _root_biosample_id(self) -> str | None:
+        """
+        The primary key of the biosample the bundle is rooted at, or None if the
+        bundle isn't a primary bundle.
+        """
+        entity = self.bundle.bundle_entity
+        if entity is None or entity.entity_type != 'anvil_biosample':
+            return None
+        else:
+            return json_str(self.bundle.entities[entity]['biosample_id'])
+
+    @cached_property
+    def __upstream_biosample_ids_by_entity(self) -> dict[EntityReference, frozenset[str]]:
+        return {}
+
+    def _upstream_biosample_ids(self, entity: EntityReference) -> frozenset[str]:
+        """
+        The primary keys of the biosamples used by the given entity, if it is an
+        activity, or by any activity upstream of it. A primary bundle contains
+        at most one of these biosamples, the one it is rooted at, but it does
+        contain every activity upstream of its entities, and an activity
+        lists the primary keys of all biosamples it used.
+
+        For an entity in a primary bundle, the result includes the biosample
+        the bundle is rooted at only if the entity is derived from that
+        biosample. There are two kinds of entities in a primary bundle that
+        aren't: The first are the root biosample itself, its donors, their
+        diagnoses and the dataset. No activity is upstream of them, so the
+        result is empty. The second are entities that the bundle contains only
+        because they are upstream of an activity derived from the root, such
+        as a file that such an activity used, and the activity that generated
+        that file. The result for them consists of the biosamples, if any, that
+        they are derived from, and the root isn't one of them.
+        """
+        cache = self.__upstream_biosample_ids_by_entity
+        try:
+            result = cache[entity]
+        except KeyError:
+            # Most entities in a bundle have the same upstream biosamples, so
+            # an entity reuses the set of its parent wherever possible, instead
+            # of building an equal one
+            parents = self.bundle.graph.parents.get(entity, set())
+            upstream = {self._upstream_biosample_ids(parent) for parent in parents}
+            if is_activity(entity):
+                used = self.bundle.entities[entity].get('used_biosample_id', [])
+                upstream.add(frozenset(json_element_strings(used)))
+            # The empty set of a parent such as the root biosample adds nothing
+            # to the union, but would prevent the reuse of the only other set
+            upstream.discard(frozenset())
+            result = one(upstream) if len(upstream) == 1 else frozenset().union(*upstream)
+            cache[entity] = result
+        return result
+
+    def _owns(self, inner: EntityReference, outer: EntityReference) -> bool:
+        """
+        Whether the bundle handled by this transformer should contribute the
+        given inner entity to the given outer entity.
+
+        For any given pair of entities I and O, primary bundle B *owns* (I, O)
+        if B's contribution to O should include I. Also, let roots(E) denote the
+        set of biosamples whose primary bundles contain entity E. For B to own
+        (I, O), two things must hold:
+
+        - B contains O, so B's biosample is in roots(O)
+
+        - B contains I, so B's biosample is in roots(I)
+
+        Every primary bundle B whose biosample is in roots(I) ∩ roots(O) is able
+        to contribute I to O, and more than one of them doing so is redundant.
+        To arbitrate which of these primary bundles actually owns (I, O), this
+        method picks the bundle whose biosample has the lowest primary key among
+        those in roots(I) ∩ roots(O). Transformers for different bundles can't
+        coordinate with each other, but each can predict the owner from its
+        bundle's content, and their predictions agree except in the cases
+        described below.
+
+        Every bundle that isn't a primary bundle owns every pair.
+
+        Note that the biosample with the lowest primary key is also the one that
+        :meth:`FileTransformer._backfilled_file_paths` names the directory of a
+        file after, so the copy of a file that survives is the one with the
+        authoritative path.
+
+        Note that certain pairs (I, O) can be owned by more than one primary
+        bundle:
+
+        1) (dataset, dataset) is owned by every primary bundle. This is because
+           roots(dataset) is the set of every biosample in the dataset, which is
+           not known from just the current bundle's content.
+
+        2) (E, E) is owned by every primary bundle containing E because
+           aggregation requires a copy of E in at least one of the contributions
+           to E. If we were to include E only in the contribution of a single
+           primary bundle, aggregations for E would temporarily fail until that
+           one contribution was written.
+
+        3) (dataset, E) and (E, dataset) are owned by the primary bundle whose
+           biosample has the lowest primary key among the biosamples upstream of
+           E or, if E isn't derived from any biosample, by every primary bundle
+           containing E.
+
+        4) For every other pair (I, O) in which I, O or both lack an upstream
+           biosample, the pair is owned by every primary bundle containing I and
+           O. Examples are every donor or diagnosis, or any file that isn't
+           derived from a biosample.
+
+        A bundle approximates roots(E) as the biosample it is rooted at,
+        together with the biosamples upstream of E. The approximation may miss a
+        biosample, such as that of a bundle containing a file only because an
+        activity downstream of the file used the bundle's biosample. Such a miss
+        can only lead to false positives, i.e. the unnecessary inclusion of an
+        inner entity in the contribution to an outer entity, but is otherwise
+        harmless. False negatives occur only if the biosample with the lowest
+        primary key among those upstream of I and O is missing from the
+        snapshot. In that case, the current bundle will omit I from the
+        contribution to O, yielding to another bundle that doesn't exist.
+        """
+        if inner == outer:
+            return True
+        else:
+            upstream = tuple(
+                self._upstream_biosample_ids(entity)
+                for entity in (inner, outer)
+                if entity != self._only_dataset_ref
+            )
+            owner = self._owner_biosample_id(upstream)
+            if owner is None:
+                return True
+            else:
+                root = self._root_biosample_id
+                return root is None or root <= owner
+
+    def _owner_biosample_id(self, upstream: tuple[frozenset[str], ...]) -> str | None:
+        """
+        The lowest primary key among the biosamples in all of the given sets, or
+        None if no biosample is in all of them.
+        """
+        # Most pairs of entities in a bundle share the same sets of upstream
+        # biosamples, so this is memoized. The hash of a frozenset is computed
+        # only once, and the sets are mostly compared by identity.
+        cache = self.__owner_biosample_id
+        try:
+            result = cache[upstream]
+        except KeyError:
+            if upstream:
+                result = min(frozenset.intersection(*upstream), default=None)
+            else:
+                result = None
+            cache[upstream] = result
+        return result
+
+    @cached_property
+    def __owner_biosample_id(self) -> dict[tuple[frozenset[str], ...], str | None]:
+        return {}
 
     @classmethod
     def _entity_types(cls) -> FieldTypes:
@@ -331,11 +479,43 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _entities(self,
                   factory: Callable[[EntityReference], MutableJSON],
                   entities: Iterable[EntityReference],
+                  *,
+                  outer: EntityReference
                   ) -> MutableJSONs:
         return [
             factory(entity)
             for entity in sorted(entities, key=attrgetter('entity_id'))
+            if self._owns(entity, outer)
         ]
+
+    def _contribution_contents(self,
+                               entity: EntityReference,
+                               linked: EntityRefsByType
+                               ) -> dict[EntityType, MutableJSONs]:
+        """
+        The contents of the contribution for the given entity: the entity
+        itself, the only dataset and, for every other type of contribution, the
+        given linked entities of that type
+        """
+        factories: dict[EntityType, Callable[[EntityReference], MutableJSON]] = {
+            'activities': self._activity,
+            'biosamples': self._biosample,
+            'datasets': self._dataset,
+            'diagnoses': self._diagnosis,
+            'donors': self._donor,
+            'files': self._file
+        }
+        entities: MutableEntityRefsByType = {
+            entity_type: set() for entity_type in factories
+        }
+        for table, refs in linked.items():
+            entities[self._convert_entity_type(table)] |= refs
+        entities['datasets'] = {self._only_dataset_ref}
+        entities[self.entity_type()] = {entity}
+        return {
+            entity_type: self._entities(factory, entities[entity_type], outer=entity)
+            for entity_type, factory in factories.items()
+        }
 
     def _activity(self, activity: EntityReference) -> MutableJSON:
         metadata = self.bundle.entities[activity]
@@ -396,18 +576,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _only_dataset_ref(self) -> EntityReference:
         return self._only_dataset[0]
 
-    @cached_property
-    def _activity_polymorphic_types(self) -> Set[str]:
-        from azul.plugins.metadata.anvil.schema import (
-            anvil_schemas,
-        )
-        anvil_schema = anvil_schemas[anvil_schema_version]
-        return {
-            json_str(table['name'])
-            for table in json_element_mappings(anvil_schema['tables'])
-            if json_str(table['name']).endswith('activity')
-        }
-
     @classmethod
     def inner_entity_id(cls, entity_type: EntityType, entity: JSON) -> EntityID:
         return json_str(entity['document_id'])
@@ -438,17 +606,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                self._entities_by_type[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, self._entities_by_type['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, self._entities_by_type['anvil_diagnosis']),
-            donors=self._entities(self._donor, self._entities_by_type['anvil_donor']),
-            files=self._entities(self._file, self._entities_by_type['anvil_file'])
-        )
+        contents = self._contribution_contents(entity, self._entities_by_type)
         yield self._contribution(contents, entity.entity_id)
 
     def _list_entities(self) -> Iterable[EntityReference]:
@@ -468,15 +626,8 @@ class ActivityTransformer(BaseTransformer):
         return 'activities'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self._linked_entities(entity)
-        contents = dict(
-            activities=[self._activity(entity)],
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=self._entities(self._file, linked['anvil_file'])
-        )
+        linked = self.bundle.graph.lineage(entity)
+        contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
 
@@ -487,18 +638,8 @@ class BiosampleTransformer(BaseTransformer):
         return 'biosamples'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self._linked_entities(entity)
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=[self._biosample(entity)],
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=self._entities(self._file, linked['anvil_file']),
-        )
+        linked = self.bundle.graph.lineage(entity)
+        contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
 
@@ -584,18 +725,8 @@ class DonorTransformer(BaseTransformer):
         return 'donors'
 
     def _transform(self, entity: EntityReference) -> Iterable[Contribution]:
-        linked = self._linked_entities(entity)
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=[self._donor(entity)],
-            files=self._entities(self._file, linked['anvil_file']),
-        )
+        linked = self.bundle.graph.lineage(entity)
+        contents = self._contribution_contents(entity, linked)
         yield self._contribution(contents, entity.entity_id)
 
 
@@ -614,25 +745,15 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
     def _transform(self,
                    entity: EntityReference
                    ) -> Iterable[Contribution | Replica]:
-        linked = self._linked_entities(entity)
+        linked = self.bundle.graph.lineage(entity)
         dataset = self._only_dataset_ref
-        contents = dict(
-            activities=self._entities(self._activity, chain.from_iterable(
-                linked[activity_type]
-                for activity_type in self._activity_polymorphic_types
-            )),
-            biosamples=self._entities(self._biosample, linked['anvil_biosample']),
-            datasets=[self._dataset(self._only_dataset_ref)],
-            diagnoses=self._entities(self._diagnosis, linked['anvil_diagnosis']),
-            donors=self._entities(self._donor, linked['anvil_donor']),
-            files=[self._file(entity)],
-        )
+        contents = self._contribution_contents(entity, linked)
         file_id = entity.entity_id
         yield self._contribution(contents, file_id)
         if config.enable_replicas:
             dataset_id = dataset.entity_id
             yield self._replica(entity, file_hub=file_id, root_hub=dataset_id)
-            for linked_entity in linked:
+            for linked_entity in chain.from_iterable(linked.values()):
                 yield self._replica(
                     linked_entity,
                     file_hub=None if linked_entity.entity_type in self.hot_entity_types() else file_id,
@@ -662,23 +783,18 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
         decided based on just this bundle, as is the case with detached and
         supplementary files, it will be deduplicated defensively.
         """
-        # Determine the root biosample. Only a primary bundle has one.
-        #
-        entity = self.bundle.bundle_entity
-        if entity is None or entity.entity_type != 'anvil_biosample':
-            root_biosample_dir = None
-        else:
-            root_biosample = self.bundle.entities[entity]
-            root_biosample_dir = json_str(root_biosample['biosample_id'])
+        root_biosample_dir = self._root_biosample_id
 
         # Group all files in the bundle by intermediate directory and file name.
         # If we grouped only the files in the current partition, the groups
         # would be incomplete. If a file is derived from multiple biosamples, we
         # pick the one with the lowest primary key. Note that every primary
         # bundle contains the complete set of files derived from its root
-        # biosample, and the complete set of biosamples these files are derived
-        # from. This is why our pick is consistent for every file, even if the
-        # file is also part of other bundles.
+        # biosample, and the complete set of activities that generate these
+        # files. A primary bundle doesn't contain the other biosamples used by
+        # these activities, but the activities list the primary keys of all
+        # biosamples they used. This is why our pick is consistent for every
+        # file, even if the file is also part of other bundles.
         #
         groups = defaultdict(list)
         for file in self._entities_by_type['anvil_file']:
@@ -687,11 +803,7 @@ class FileTransformer(BaseTransformer, ReplicaTransformer):
                 if json_bool(metadata['is_supplementary']):
                     dir = self._supplementary_dir
                 else:
-                    biosamples = self._linked_entities(file)['anvil_biosample']
-                    biosample_ids = (
-                        json_str(self.bundle.entities[biosample]['biosample_id'])
-                        for biosample in biosamples
-                    )
+                    biosample_ids = self._upstream_biosample_ids(file)
                     # FIXME: Remove the default
                     #        https://github.com/DataBiosphere/azul/issues/8386
                     dir = min(biosample_ids, default=self._detached_dir)

@@ -692,6 +692,15 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_MIRRORING_CONCURRENCY': '8',
 
+        # The maximum number of entities in a bundle partition. The indexer
+        # divides a bundle with more entities into partitions and contributes
+        # each partition separately, fetching the bundle once per partition.
+        # Larger partitions require more memory and time in the contribution
+        # Lambda functions. A size of 512 once caused timeouts writing
+        # contributions, even in the retry Lambda function.
+        #
+        'AZUL_MAX_BUNDLE_PARTITION_SIZE': '256',
+
         # Collect and monitor important health metrics of the deployment (1 yes, 0 no).
         # Typically only enabled on main deployments.
         #
