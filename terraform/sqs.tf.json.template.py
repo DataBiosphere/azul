@@ -30,6 +30,12 @@ emit_tf(
                         config.tallies_queue.derive(retry=retry).unqual_name: {
                             'name': config.tallies_queue.derive(retry=retry).name,
                             'fifo_queue': True,
+                            # High throughput mode lifts the per-queue limit on
+                            # sends, which throttled the queueing of tallies for
+                            # large bundles. Messages are grouped by entity and
+                            # their deduplication IDs are random.
+                            'deduplication_scope': 'messageGroup',
+                            'fifo_throughput_limit': 'perMessageGroupId',
                             'delay_seconds': config.opensearch_refresh_interval + 9,
                             'visibility_timeout_seconds': config.aggregation_lambda_timeout(retry=retry) + 10,
                             'message_retention_seconds': 7 * 24 * 60 * 60,
