@@ -48,6 +48,9 @@ from azul.lib.time import (
 )
 from azul.lib.types import (
     JSON,
+    PrimitiveJSON,
+    json_str,
+    optional,
 )
 from azul.plugins import (
     File,
@@ -73,7 +76,7 @@ class TDRBundle(Bundle[TDRBundleFQID], ABC):
         return 'tdr'
 
     def drs_uri(self, manifest_entry: JSON) -> str | None:
-        return manifest_entry.get('drs_uri')
+        return optional(json_str, manifest_entry.get('drs_uri'))
 
 
 T = TypeVar('T')
@@ -92,7 +95,7 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
 ):
 
     @cached_property
-    def _common_source_filter(self) -> str:
+    def _common_source_filter(self) -> str | None:
         # We filter by prefix of snapshot names in an attempt to speed up the
         # listing by limiting the number of irrelevant snapshots returned. Note
         # that TDR does a substring match, not a prefix match, but determining
@@ -253,13 +256,16 @@ class TDRPlugin[TDR_BUNDLE: TDRBundle,
                     WHERE CONTAINS_SUBSTR({column}, {string!r})
                 '''
                 for row in self._run_sql(query):
+                    row_id, value = row['datarepo_row_id'], row[column]
+                    assert isinstance(row_id, str), row_id
+                    assert isinstance(value, PrimitiveJSON), value
                     match = {
                         'catalog': self.catalog,
                         'spec': str(source),
                         'table': table_name,
                         'column': column,
-                        'row_id': row['datarepo_row_id'],
-                        'value': row[column]
+                        'row_id': row_id,
+                        'value': value
                     }
                     log.warning('Undesired string found: %r', match)
                     yield match

@@ -1,6 +1,6 @@
 import logging.config
 
-from chalice import (
+from chalice.app import (
     UnauthorizedError,
 )
 
@@ -22,6 +22,7 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     JSON,
+    not_none,
 )
 from azul.logging import (
     configure_app_logging,
@@ -53,7 +54,7 @@ from azul.service.user_controller import (
 
 log = logging.getLogger(__name__)
 
-spec = {
+spec: JSON = {
     'openapi': '3.0.1',
     'info': {
         'title': config.service_name,
@@ -272,7 +273,7 @@ class ServiceApp(HealthApp):
 
     def _authenticate(self) -> BearerTokenAuthentication | None:
         try:
-            header = self.current_request.headers['Authorization']
+            header = not_none(self.current_request).headers['Authorization']
         except KeyError:
             return None
         else:
