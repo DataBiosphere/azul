@@ -1,4 +1,3 @@
-import builtins
 from collections import (
     deque,
 )
@@ -233,7 +232,7 @@ class Queues:
         'ApproximateNumberOfMessagesDelayed'
     )
 
-    def list(self):
+    def _list(self):
         log.info('Listing queues')
         print(f'\n{"Queue Name":<35s}'
               f'{"Messages Available":^20s}'
@@ -342,7 +341,7 @@ class Queues:
         queue.reload()
         return max(0, sum(self._message_counts(queue)) - num_in_flight)
 
-    def _message_counts(self, queue: Queue) -> builtins.list[int]:
+    def _message_counts(self, queue: Queue) -> list[int]:
         return [
             int(queue.attributes[name])
             for name in self.message_count_attributes
@@ -417,13 +416,13 @@ class Queues:
     def _is_fifo(self, queue: Queue) -> bool:
         return queue.attributes.get('FifoQueue') == 'true'
 
-    def _receive_messages(self, queue: Queue) -> builtins.list[Message]:
+    def _receive_messages(self, queue: Queue) -> list[Message]:
         return queue.receive_messages(AttributeNames=['All'],
                                       MaxNumberOfMessages=self.batch_size,
                                       VisibilityTimeout=300,
                                       WaitTimeSeconds=self.receive_wait_time)
 
-    def _get_messages(self, queue: Queue) -> builtins.list[Message]:
+    def _get_messages(self, queue: Queue) -> list[Message]:
         messages: list[Message] = []
         while True:
             message_batch = self._receive_messages(queue)
@@ -432,7 +431,7 @@ class Queues:
             else:
                 messages.extend(message_batch)
 
-    def read_messages(self, queue: Queue) -> builtins.list[Message]:
+    def read_messages(self, queue: Queue) -> list[Message]:
         messages = self._get_messages(queue)
         self._cleanup_messages(queue, messages)
         return messages
@@ -498,7 +497,7 @@ class Queues:
                 'Failed to return messages', response)
 
     def _delete_messages(self,
-                         message_batches: Iterable[builtins.list[Message]],
+                         message_batches: Iterable[list[Message]],
                          queue: Queue):
         for message_batch in message_batches:
             response = queue.delete_messages(
