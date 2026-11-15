@@ -117,8 +117,9 @@ class AzulTestCase(TestCase):
             pass
 
         catch_warnings = warnings.catch_warnings(record=True)
-        # Use tuple assignment to modify state atomically
-        cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
+        caught_warnings = catch_warnings.__enter__()
+        cls._caught_warnings = caught_warnings
+        cls._catch_warnings = catch_warnings
         permitted_warnings_: dict[type[Warning], set[str | tuple[str, str]]] = {
             ResourceWarning: {
                 RE(r'.*<ssl\.SSLSocket.*>'),
@@ -188,7 +189,6 @@ class AzulTestCase(TestCase):
         if cls._catch_warnings is not None:
             cls._catch_warnings.__exit__(None, None, None)
             caught_warnings = cls._caught_warnings
-            # Use tuple assignment to modify state atomically
             cls._catch_warnings, cls._caught_warnings = None, []
             if caught_warnings:
                 # Running a single test method in PyCharm somehow doesn't print
