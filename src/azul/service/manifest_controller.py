@@ -609,18 +609,19 @@ class ManifestController(QueryController):
                 url = self._manifest_url(fetch=False, token_or_key=manifest_key.encode())
             else:
                 url = furl(self._service.get_manifest_url(manifest))
-            if isinstance(authentication, AccessTokenAuthentication):
-                try:
-                    authentication = self._user_service.mint_personal_access_token(authentication)
-                except InvalidAccessTokenError as e:
-                    # The token may have been valid when the generation
-                    # started but expired while the client was polling for it
-                    log.warning('Rejecting %s', authentication, exc_info=e)
-                    raise UnauthorizedError('Invalid credentials')
-                except (ForeignTokenException, UnknownUserException):
-                    # Fall back to access token auth, but this will render the
-                    # command line useless when the access token expires.
-                    pass
+            if manifest.format is ManifestFormat.curl:
+                if isinstance(authentication, AccessTokenAuthentication):
+                    try:
+                        authentication = self._user_service.mint_personal_access_token(authentication)
+                    except InvalidAccessTokenError as e:
+                        # The token may have been valid when the generation
+                        # started but expired while the client was polling for it
+                        log.warning('Rejecting %s', authentication, exc_info=e)
+                        raise UnauthorizedError('Invalid credentials')
+                    except (ForeignTokenException, UnknownUserException):
+                        # Fall back to access token auth, but this will render the
+                        # command line useless when the access token expires.
+                        pass
             body = {
                 'Status': 302,
                 'Location': str(url),

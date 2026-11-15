@@ -781,6 +781,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         self.assertEqual(1, token.iteration)
 
     @mock.patch.object(OAuth2Client, 'token_info')
+    @mock.patch.object(ManifestService, 'sign_manifest_key')
     @mock.patch.object(ManifestService, 'get_manifest_url')
     @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
     @mock.patch.object(AsyncManifestService, 'inspect_generation')
@@ -788,6 +789,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                            inspect_generation,
                                                            get_cached_manifest_with_key,
                                                            get_manifest_url,
+                                                           sign_manifest_key,
                                                            token_info):
         """
         An access token that the authorization server rejects, for example
@@ -795,17 +797,21 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         when the client requests the finished generation.
         """
         manifest_key = ManifestKey(catalog=self.catalog,
-                                   format=ManifestFormat.compact,
+                                   format=ManifestFormat.curl,
                                    manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
                                    source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
         manifest = Manifest(object_key='key/of/manifest',
                             was_cached=False,
-                            format=ManifestFormat.compact,
+                            format=ManifestFormat.curl,
                             manifest_key=manifest_key,
                             file_name='some_file_name')
         inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
         get_cached_manifest_with_key.return_value = manifest
         get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
+        sign_manifest_key.return_value = SignedManifestKey(
+            value=BareManifestKey.unpack(manifest_key.pack()),
+            signature=b'123'
+        )
         token_info.side_effect = InvalidAccessTokenError
         access_token = 'ya29.mock_access_token'
         for fetch in True, False:
