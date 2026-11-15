@@ -499,6 +499,8 @@ class Submitter(Enum):
                         for p in file.from_processes.values())
             ):
                 self = cls.dcp2
+            elif file.submitter_id is None:
+                self = None
             else:
                 self = cls.for_id(file.submitter_id)
         else:

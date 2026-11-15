@@ -503,7 +503,7 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         sorting, to the field's path in index documents.
         """
 
-        def invert(v: InverseFieldMapping,
+        def invert(v: InverseFieldMapping | FieldName,
                    *path: FieldPathElement
                    ) -> Iterable[tuple[FieldName, FieldPath]]:
             if isinstance(v, dict):

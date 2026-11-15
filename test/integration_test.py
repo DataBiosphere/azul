@@ -1297,7 +1297,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                                   scope='openid email',
                                   access_type='offline',
                                   prompt='consent'))
-        auth_code = None
+        auth_code: str | None = None
 
         class Handler(BaseHTTPRequestHandler):
 

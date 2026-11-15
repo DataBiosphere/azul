@@ -98,7 +98,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-type Patch = _patch | _patch_dict
+type Patch = _patch | _patch_dict | moto.core.models.MockAWS
 
 
 def patch_config(name: str, value: bool | int | str | Mapping) -> Patch:
@@ -119,7 +119,7 @@ class AzulTestCase(TestCase):
         catch_warnings = warnings.catch_warnings(record=True)
         # Use tuple assignment to modify state atomically
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
-        permitted_warnings_: dict[type[Warning], set[str]] = {
+        permitted_warnings_: dict[type[Warning], set[str | tuple[str, str]]] = {
             ResourceWarning: {
                 RE(r'.*<ssl\.SSLSocket.*>'),
                 RE(r'.*<socket\.socket.*>'),
