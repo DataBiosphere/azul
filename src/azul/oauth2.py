@@ -106,6 +106,13 @@ class InvalidAccessTokenError(Exception):
     """
 
 
+class InvalidRefreshTokenError(Exception):
+    """
+    The authorization server rejected the refresh token. It may be expired or
+    revoked.
+    """
+
+
 class OAuth2Client(HasCachedHttpClient):
     """
     A client for Google's implementation of the OAuth 2.0 authorization server
@@ -178,13 +185,17 @@ class OAuth2Client(HasCachedHttpClient):
         }
         url = furl('https://oauth2.googleapis.com/token')
         response = self._http_client.request('POST', str(url), fields=fields)
-        assert response.status == 200, R(
-            'Unexpected status of response from authorization server', response.status)
-        response = json.loads(response.data)
-        assert is_of_type(response, TokenResponse)
-        assert response['token_type'] == 'Bearer'
-        assert_redactable(response['access_token'])
-        return response
+        # https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
+        if response.status == 400 and json.loads(response.data).get('error') == 'invalid_grant':
+            raise InvalidRefreshTokenError
+        else:
+            assert response.status == 200, R(
+                'Unexpected status of response from authorization server', response.status)
+            response = json.loads(response.data)
+            assert is_of_type(response, TokenResponse)
+            assert response['token_type'] == 'Bearer'
+            assert_redactable(response['access_token'])
+            return response
 
     def token_info(self, access_token: str) -> TokenInfoResponse:
         assert_redactable(access_token)

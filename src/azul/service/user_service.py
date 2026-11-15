@@ -84,6 +84,7 @@ from azul.lib.types import (
 )
 from azul.oauth2 import (
     Authorization,
+    InvalidRefreshTokenError,
     OAuth2Client,
     TokenForCodeResponse,
 )
@@ -166,7 +167,8 @@ class ForeignTokenException(Exception):
 
 class InvalidPersonalAccessTokenError(Exception):
     """
-    The token is a JWT but not a valid APAT (expired, tampered with, forged, …).
+    The token is a JWT but not a valid APAT (expired, tampered with, forged, …),
+    or the authorization of the user it was minted for has lapsed.
     """
 
 
@@ -471,7 +473,12 @@ class UserService:
         else:
             assert_redactable(apat_auth.token)
             iss, sub = self._decode_identity(claims['sub'])
-            user = self._load_user(iss, sub)
+            try:
+                user = self._load_user(iss, sub)
+            except UnknownUserException as e:
+                # The user's item expires along with their refresh token
+                log.warning('Unknown user of APAT %s', apat_auth, exc_info=e)
+                raise InvalidPersonalAccessTokenError from e
             jti = claims.get('jti')
             if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
                 log.warning('APAT jti %r out of range [%d, %d) for %s',
@@ -479,13 +486,19 @@ class UserService:
                 raise InvalidPersonalAccessTokenError
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
-                response = self._oauth_client.token_for_refresh(
-                    refresh_token=user['refresh_token'],
-                    client_id=self._client_id,
-                    client_secret=self._client_secret
-                )
-                access_token, expires_in = response['access_token'], response['expires_in']
-                self._update_access_token(user, access_token, expires_in)
+                try:
+                    response = self._oauth_client.token_for_refresh(
+                        refresh_token=user['refresh_token'],
+                        client_id=self._client_id,
+                        client_secret=self._client_secret
+                    )
+                except InvalidRefreshTokenError as e:
+                    log.warning('Rejected refresh token of user of APAT %s',
+                                apat_auth, exc_info=e)
+                    raise InvalidPersonalAccessTokenError from e
+                else:
+                    access_token, expires_in = response['access_token'], response['expires_in']
+                    self._update_access_token(user, access_token, expires_in)
             at_auth = AccessTokenAuthentication(access_token)
             log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
             return at_auth

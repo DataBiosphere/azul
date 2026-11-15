@@ -17,6 +17,7 @@ from typing import (
     ContextManager,
 )
 from unittest.mock import (
+    Mock,
     PropertyMock,
     patch,
 )
@@ -61,6 +62,7 @@ from azul.logging import (
 )
 from azul.oauth2 import (
     InvalidAccessTokenError,
+    InvalidRefreshTokenError,
     OAuth2Client,
     TokenForCodeResponse,
     TokenInfoResponse,
@@ -450,6 +452,41 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         )
         user = self._load_user()
         self.assertEqual(refreshed_token, user['access_token'])
+
+    def test_exchange_token_rejected_refresh_token(self):
+        apat = self._authorize_and_mint()
+        with (
+            patch.object(OAuth2Client, 'token_for_refresh', side_effect=InvalidRefreshTokenError),
+            patch.object(UserService, '_now', return_value=2 ** 31)
+        ):
+            with self.assertRaises(InvalidPersonalAccessTokenError):
+                self._service.exchange_token(apat)
+
+    def test_exchange_token_expired_user(self):
+        apat = self._authorize_and_mint()
+        key = self._service._encode_identity(self._mock_iss, self._mock_sub)
+        aws.dynamodb.delete_item(TableName=UserService._table_name,
+                                 Key={UserService.key_attribute: {'S': key}})
+        with self.assertRaises(InvalidPersonalAccessTokenError):
+            self._service.exchange_token(apat)
+
+    def test_token_for_refresh(self):
+        for status, error, expected in [
+            (400, 'invalid_grant', InvalidRefreshTokenError),
+            (400, 'invalid_client', AssertionError),
+            (500, 'invalid_grant', AssertionError)
+        ]:
+            with self.subTest(status=status, error=error):
+                response = Mock(status=status, data=json.dumps({'error': error}).encode())
+                http_client = Mock(request=Mock(return_value=response))
+                with patch.object(OAuth2Client, '_http_client',
+                                  new_callable=PropertyMock,
+                                  return_value=http_client):
+                    with self.assertRaises(expected):
+                        OAuth2Client().token_for_refresh(refresh_token=self._mock_refresh_token(),
+                                                         client_id='mock_client_id',
+                                                         client_secret='GOCSPX-mock_client_secret')
+                http_client.request.assert_called_once()
 
     def test_exchange_token_invalid_jwt(self):
         auth = PersonalAccessTokenAuthentication(token='eyJ.not.a.jwt')
