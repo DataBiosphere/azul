@@ -45,6 +45,7 @@ from azul import (
 )
 from azul.field_type import (
     ClosedRange,
+    FieldType,
     FieldTypes,
     Mode,
     Nested,
@@ -57,7 +58,6 @@ from azul.field_type import (
     null_str,
     pass_thru_float,
     pass_thru_int,
-    pass_thru_json,
 )
 from azul.indexer import (
     BundleFQID,
@@ -304,6 +304,63 @@ class ValueAndUnit(Nullable[JSON, str]):
 
 
 value_and_unit: ValueAndUnit = ValueAndUnit(dict, str)
+
+#: The counter in a contribution, or one of the counted strings in an aggregate
+#:
+type FrequenciesForm = dict[str, int] | str
+
+type NullableFrequenciesForm = FrequenciesForm | None
+
+
+class Frequencies(FieldType[NullableFrequenciesForm, FrequenciesForm]):
+    """
+    The type of a document field for which the index tracks a fixed number of
+    the most frequent string values. In a contribution, the field is stored as
+    an unlimited dict[str, int]. In an aggregate, the field lists the top-N most
+    frequent values, as produced by a FrequencySetAccumulator. Clients only see
+    the aggregate, so in requests, the value of such a field is a string.
+
+    >>> f = Frequencies()
+
+    >>> f.to_index({'in situ sequencing': 2})
+    {'in situ sequencing': 2}
+
+    >>> f.to_index('in situ sequencing')
+    'in situ sequencing'
+
+    >>> f.to_index(None)
+    '~null'
+
+    >>> f.from_index('~null') is None
+    True
+    """
+    es_type = 'keyword'
+    allow_sorting_by_empty_lists = False
+
+    def __init__(self):
+        super().__init__(NullableFrequenciesForm, FrequenciesForm)
+
+    def api_schema(self, mode: Mode) -> JSON:
+        return schema.nullable(str, for_openapi=mode is Mode.openapi)
+
+    def from_api(self, value: AnyJSON) -> str | None:
+        assert value is None or isinstance(value, str), value
+        return value
+
+    def to_index(self, value: NullableFrequenciesForm) -> FrequenciesForm:
+        if isinstance(value, str) or value is None:
+            return null_str.to_index(value)
+        else:
+            return value
+
+    def from_index(self, value: FrequenciesForm) -> NullableFrequenciesForm:
+        if isinstance(value, str):
+            return null_str.from_index(value)
+        else:
+            return value
+
+
+frequencies: Frequencies = Frequencies()
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
 
@@ -1029,8 +1086,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _imaging_protocol_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
-            # Pass through counter used to produce a FrequencySetAccumulator
-            'assay_type': pass_thru_json,
+            'assay_type': frequencies,
             'protocol_name': null_str
         }
 

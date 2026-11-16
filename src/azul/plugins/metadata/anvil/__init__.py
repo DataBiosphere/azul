@@ -82,15 +82,14 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     FileTransformer,
 )
 from azul.plugins.metadata.anvil.service.aggregation import (
-    AnvilAggregationStage,
     AnvilSummaryAggregationStage,
-)
-from azul.plugins.metadata.anvil.service.filter import (
-    AnvilFilterStage,
 )
 from azul.plugins.metadata.anvil.service.response import (
     AnvilSearchResponseStage,
     AnvilSummaryResponseStage,
+)
+from azul.service.query_service import (
+    SearchAggregationStage,
 )
 from azul.source import (
     SourceRef,
@@ -305,6 +304,10 @@ class Plugin(MetadataPlugin[AnvilBundle]):
     @property
     def root_entity_type(self) -> str:
         return 'datasets'
+
+    @property
+    def registered_access_contract(self) -> str | None:
+        return 'anvil_registered_access'
 
     @property
     def facets(self) -> Sequence[str]:
@@ -540,12 +543,8 @@ class Plugin(MetadataPlugin[AnvilBundle]):
         return AnvilSummaryAggregationStage
 
     @property
-    def aggregation_stage(self) -> type[AnvilAggregationStage]:
-        return AnvilAggregationStage
-
-    @property
-    def filter_stage(self) -> type[AnvilFilterStage]:
-        return AnvilFilterStage
+    def search_aggregation_stage(self) -> type[SearchAggregationStage]:
+        return SearchAggregationStage
 
     @property
     def file_class(self) -> type[File]:

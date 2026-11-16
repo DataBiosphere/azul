@@ -1687,6 +1687,27 @@ class TestAnvilManifests(AnvilManifestTestCase):
                 expected_rows = all_rows if expect_orphans else linked_rows
                 self._assert_jsonl(expected_rows, response)
 
+    def test_terra_pfb_manifest(self):
+        response = self._get_manifest(ManifestFormat.terra_pfb, filters={})
+        self.assertEqual(200, response.status_code)
+        reader = fastavro.reader(BytesIO(response.content))
+        records = list(reader)
+        self.assertEqual('Metadata', records[0]['name'])
+        entities = defaultdict(list)
+        for record in records[1:]:
+            entities[record['name']].append(record['object'])
+        expected_types = {'activities', 'biosamples', 'datasets', 'diagnoses', 'donors', 'files'}
+        self.assertEqual(expected_types, entities.keys())
+        # Fields of type `pass_thru_json` are omitted
+        for entity_type, field in [
+            ('biosamples', 'donor_age_at_collection'),
+            ('diagnoses', 'diagnosis_age'),
+            ('diagnoses', 'onset_age')
+        ]:
+            self.assertNotEqual([], entities[entity_type])
+            for entity in entities[entity_type]:
+                self.assertNotIn(field, entity)
+
     def test_verbatim_pfb_manifest_with_relations(self):
         self._test_verbatim_pfb_manifest(enable_relations=True)
 

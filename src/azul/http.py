@@ -213,7 +213,8 @@ class AcceptEncodingClient(HttpClientDecorator):
         return headers_str
 
     def urlopen(self, method, url, *args, **kwargs) -> urllib3.BaseHTTPResponse:
-        headers = kwargs.get('headers', {})
+        # Copy the headers so as to not modify those passed by the caller
+        headers = urllib3.HTTPHeaderDict(kwargs.get('headers'))
         headers.setdefault('accept-encoding', self.accept_encoding_header())
         kwargs['headers'] = headers
         return super().urlopen(method, url, *args, **kwargs)
