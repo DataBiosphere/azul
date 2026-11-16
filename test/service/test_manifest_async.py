@@ -794,28 +794,30 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         """
         An access token that the authorization server rejects, for example
         because it expired while the client was polling, should cause a 401
-        when the client requests the finished generation.
+        when the client requests the finished generation, regardless of whether
+        the manifest's format makes use of the token.
         """
-        manifest_key = ManifestKey(catalog=self.catalog,
-                                   format=ManifestFormat.curl,
-                                   manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
-                                   source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
-        manifest = Manifest(object_key='key/of/manifest',
-                            was_cached=False,
-                            format=ManifestFormat.curl,
-                            manifest_key=manifest_key,
-                            file_name='some_file_name')
-        inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
-        get_cached_manifest_with_key.return_value = manifest
         get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
-        sign_manifest_key.return_value = SignedManifestKey(
-            value=BareManifestKey.unpack(manifest_key.pack()),
-            signature=b'123'
-        )
         token_info.side_effect = InvalidAccessTokenError
         access_token = 'ya29.mock_access_token'
-        for fetch in True, False:
-            with self.subTest(fetch=fetch):
+        for format, fetch in product([ManifestFormat.compact, ManifestFormat.curl],
+                                     [True, False]):
+            with self.subTest(format=format, fetch=fetch):
+                manifest_key = ManifestKey(catalog=self.catalog,
+                                           format=format,
+                                           manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                           source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+                manifest = Manifest(object_key='key/of/manifest',
+                                    was_cached=False,
+                                    format=format,
+                                    manifest_key=manifest_key,
+                                    file_name='some_file_name')
+                inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
+                get_cached_manifest_with_key.return_value = manifest
+                sign_manifest_key.return_value = SignedManifestKey(
+                    value=BareManifestKey.unpack(manifest_key.pack()),
+                    signature=b'123'
+                )
                 path = ['manifest', 'files', self.token]
                 if fetch:
                     path.insert(0, 'fetch')
@@ -826,7 +828,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 self.assertEqual(401, response.status_code)
                 expected_response = {
                     'Code': 'UnauthorizedError',
-                    'Message': 'Invalid credentials'
+                    'Message': 'Invalid access token'
                 }
                 self.assertEqual(expected_response, response.json())
                 token_info.assert_called_once_with(access_token)

@@ -32,11 +32,13 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
+    Config,
     config,
 )
 from azul.auth import (
     AccessTokenAuthentication,
-    PersonalAccessTokenAuthentication,
+    UnverifiedAccessTokenAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -74,6 +76,7 @@ from azul.plugins import (
 from azul.service.user_service import (
     ForeignTokenException,
     InvalidPersonalAccessTokenError,
+    RejectedAccessTokenError,
     UnknownUserException,
     User,
     UserService,
@@ -251,11 +254,11 @@ class UserControllerTestCase(LocalAppTestCase,
         expiration = datetime.fromtimestamp(self._load_user()['expiration'], timezone.utc)
         return format_dcp2_datetime(expiration)
 
-    def _authorize_and_mint(self) -> PersonalAccessTokenAuthentication:
+    def _authorize_and_mint(self) -> UnverifiedPersonalAccessTokenAuthentication:
         with self._mock_token_for_code():
             self._authorize()
             with self._mock_token_info():
-                auth = AccessTokenAuthentication(self._mock_access_token)
+                auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
                 return self._service.mint_personal_access_token(auth)
 
     def _get_user(self, access_token: str | None = None):
@@ -398,7 +401,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_for_code():
             with self._mock_token_info() as token_info:
                 self._authorize()
-                auth = AccessTokenAuthentication(self._mock_access_token)
+                auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
                 apat_auth = self._service.mint_personal_access_token(auth)
                 token_info.assert_called_once_with(self._mock_access_token)
                 header = jwt.get_unverified_header(apat_auth.token)
@@ -415,21 +418,79 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     def test_mint_personal_access_token_unknown_user(self):
         with self._mock_token_info():
-            auth = AccessTokenAuthentication(self._mock_access_token)
+            auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
             with self.assertRaises(UnknownUserException):
                 self._service.mint_personal_access_token(auth)
 
     def test_mint_personal_access_token_foreign_token(self):
         with self._mock_token_info() as token_info:
             token_info.return_value['aud'] = 'some_other_client_id'
-            auth = AccessTokenAuthentication(self._mock_access_token)
+            auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
             with self.assertRaises(ForeignTokenException):
                 self._service.mint_personal_access_token(auth)
+
+    def test_verify_access_token(self):
+        client_id = '123-mock.apps.googleusercontent.com'
+        project = 'mock-project'
+        user = {
+            'azp': client_id,
+            'email': self._mock_email,
+            'email_verified': 'true'
+        }
+        service_account = {
+            'azp': '123456789012345678901',
+            'email': f'indexer@{project}.iam.gserviceaccount.com',
+            'email_verified': 'true'
+        }
+        cases = [
+            ('user', client_id, user, True),
+            ('user tokens disabled', None, user, False),
+            ('foreign client', client_id, {
+                **user,
+                'azp': '456-other.apps.googleusercontent.com'
+            }, False),
+            ('service account', client_id, service_account, True),
+            ('unverified service account', client_id, {
+                **service_account,
+                'email_verified': 'false'
+            }, False),
+            ('foreign project', client_id, {
+                **service_account,
+                'email': 'indexer@other-project.iam.gserviceaccount.com'
+            }, False),
+            ('unexpected party', client_id, {
+                **user,
+                'azp': '123456789012345678901'
+            }, False)
+        ]
+        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        for case, configured_client_id, token_info_fields, valid in cases:
+            with self.subTest(case):
+                with (
+                    patch.object(Config,
+                                 'google_oauth2_client_id',
+                                 new=PropertyMock(return_value=configured_client_id)),
+                    patch.object(config, 'google_project', return_value=project),
+                    self._mock_token_info() as token_info
+                ):
+                    token_info.return_value.update(token_info_fields)
+                    if valid:
+                        verified_auth = self._service.verify_access_token(auth)
+                        self.assertIsInstance(verified_auth, AccessTokenAuthentication)
+                        self.assertEqual(auth.token, verified_auth.token)
+                    else:
+                        with self.assertRaises(RejectedAccessTokenError):
+                            self._service.verify_access_token(auth)
+        with self.subTest('rejected by authorization server'):
+            with self._mock_token_info() as token_info:
+                token_info.side_effect = InvalidAccessTokenError
+                with self.assertRaises(InvalidAccessTokenError):
+                    self._service.verify_access_token(auth)
 
     def test_exchange_token(self):
         apat = self._authorize_and_mint()
         result = self._service.exchange_token(apat)
-        self.assertIsInstance(result, AccessTokenAuthentication)
+        self.assertIsInstance(result, UnverifiedAccessTokenAuthentication)
         self.assertEqual(self._mock_access_token, result.token)
 
     @patch.object(OAuth2Client, 'token_for_refresh')
@@ -489,7 +550,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 http_client.request.assert_called_once()
 
     def test_exchange_token_invalid_jwt(self):
-        auth = PersonalAccessTokenAuthentication(token='eyJ.not.a.jwt')
+        auth = UnverifiedPersonalAccessTokenAuthentication(token='eyJ.not.a.jwt')
         with self.assertRaises(InvalidPersonalAccessTokenError):
             self._service.exchange_token(auth)
 
@@ -503,7 +564,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             key=private_key,
             algorithm='ES256'
         )
-        auth = PersonalAccessTokenAuthentication(token=token)
+        auth = UnverifiedPersonalAccessTokenAuthentication(token=token)
         with self.assertRaises(InvalidPersonalAccessTokenError):
             self._service.exchange_token(auth)
 
@@ -512,12 +573,12 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_for_code(refresh_token='1//new_refresh_token'):
             self._authorize()
         result = self._service.exchange_token(apat)
-        self.assertIsInstance(result, AccessTokenAuthentication)
+        self.assertIsInstance(result, UnverifiedAccessTokenAuthentication)
 
     def test_exchange_token_revoked(self):
         apat = self._authorize_and_mint()
         with self._mock_token_info():
-            auth = AccessTokenAuthentication(self._mock_access_token)
+            auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
             self._service.revoke_personal_access_tokens(auth)
         with self.assertRaises(InvalidPersonalAccessTokenError):
             self._service.exchange_token(apat)
@@ -526,13 +587,13 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_for_code():
             self._authorize()
             with self._mock_token_info():
-                auth = AccessTokenAuthentication(self._mock_access_token)
+                auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
                 apat1 = self._service.mint_personal_access_token(auth)
                 apat2 = self._service.mint_personal_access_token(auth)
         result1 = self._service.exchange_token(apat1)
         result2 = self._service.exchange_token(apat2)
-        self.assertIsInstance(result1, AccessTokenAuthentication)
-        self.assertIsInstance(result2, AccessTokenAuthentication)
+        self.assertIsInstance(result1, UnverifiedAccessTokenAuthentication)
+        self.assertIsInstance(result2, UnverifiedAccessTokenAuthentication)
 
     def test_authorize_stores_access_token_expiration(self):
         with self._mock_token_for_code():
@@ -558,7 +619,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_for_code():
             self._authorize()
             with self._mock_token_info():
-                auth = AccessTokenAuthentication(self._mock_access_token)
+                auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
                 apat = self._service.mint_personal_access_token(auth)
                 response = self._get_token(apat.token)
                 self.assertEqual(403, response.status)

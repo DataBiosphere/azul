@@ -8,7 +8,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    BearerTokenAuthentication,
+    UnverifiedBearerTokenAuthentication,
 )
 from azul.health import (
     HealthApp,
@@ -271,7 +271,7 @@ class ServiceApp(HealthApp):
                          globals=globals(),
                          spec=spec)
 
-    def _authenticate(self) -> BearerTokenAuthentication | None:
+    def _authenticate(self) -> UnverifiedBearerTokenAuthentication | None:
         try:
             header = not_none(self.current_request).headers['Authorization']
         except KeyError:
@@ -286,7 +286,7 @@ class ServiceApp(HealthApp):
                     if not is_redactable(auth_token):
                         raise UnauthorizedError('Unexpected token syntax')
                     else:
-                        return BearerTokenAuthentication.for_token(auth_token)
+                        return UnverifiedBearerTokenAuthentication.for_token(auth_token)
                 else:
                     raise UnauthorizedError('Unsupported authorization scheme')
 

@@ -60,9 +60,6 @@ import uuid
 import webbrowser
 
 import attrs
-from chalice.app import (
-    UnauthorizedError,
-)
 import chalice.cli
 from chalice.local import (
     LocalDevServer,
@@ -102,7 +99,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    AccessTokenAuthentication,
+    UnverifiedAccessTokenAuthentication,
 )
 from azul.azulclient import (
     AzulClient,
@@ -1992,9 +1989,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertIn(public_source.id, public_source_ids)
             self.assertNotIn(ma_source.id, public_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())
-        invalid_auth = AccessTokenAuthentication('ya29.invalid')
-        with self.assertRaises(UnauthorizedError):
-            TDRClient.for_registered_user(invalid_auth)
+        invalid_auth = UnverifiedAccessTokenAuthentication('ya29.invalid')
         invalid_provider = UserCredentialsProvider(invalid_auth)
         invalid_client = CredentialedClient(credentials_provider=invalid_provider)
         with self._unregistered_service_account_credentials:

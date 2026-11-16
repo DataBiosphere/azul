@@ -22,9 +22,6 @@ from google.auth.transport.urllib3 import (
 import google.oauth2.credentials
 import google.oauth2.service_account
 
-from azul import (
-    config,
-)
 from azul.http import (
     HasCachedHttpClient,
     HttpClient,
@@ -32,7 +29,6 @@ from azul.http import (
 )
 from azul.lib import (
     R,
-    cached_property,
 )
 from azul.lib.strings import (
     assert_redactable,
@@ -236,10 +232,6 @@ class CredentialedClient(HasCachedHttpClient):
 
     credentials_provider: CredentialsProvider
 
-    @cached_property
-    def _oauth_client(self) -> OAuth2Client:
-        return OAuth2Client()
-
     @property
     def credentials(self) -> ScopedCredentials:
         return self.credentials_provider.scoped_credentials()
@@ -278,61 +270,3 @@ class CredentialedClient(HasCachedHttpClient):
         return AuthorizedHttp(self.credentials,
                               self._PoolManagerAdapter(super()._create_http_client()),
                               refresh_status_codes=())
-
-    def validate(self):
-        """
-        Validate the credentials from the provider this client was initialized
-        with. Raises an exception if the credentials are invalid, or if their
-        validity cannot be determined.
-
-        For a user's access token to be valid, it must not be expired, and
-        originate from a Google OAuth 2.0 client belonging to the current
-        Google Cloud project.
-
-        For service account credentials (those with a private key) to be valid,
-        the associated access token must not be expired and the email associated
-        with the token must be that of the service account itself.
-
-        For a service account's access token (a bare access token created from
-        the service account's private key by some other party) to be valid, the
-        token must not be expired and the service account must belong to the
-        current Google Cloud project.
-
-        :raise InvalidAccessTokenError: if the authorization server rejects the
-                                        token
-
-        :raise AssertionError: if the token is definitely invalid
-
-        :raise Exception: if the validity of the token cannot be determined
-        """
-        credentials = self.credentials
-        token_info = self._oauth_client.token_info(str(credentials.token))
-        # The error messages here intentionally lack detail, for confidentiality
-        if isinstance(credentials, ServiceAccountCredentials):
-            # Actual service account credentials
-            assert token_info['email_verified'] == 'true', R(
-                'Service account email is not verified')
-            assert token_info['email'] == credentials.service_account_email, R(
-                'Service account email does not match')
-        elif isinstance(credentials, TokenCredentials):
-            authorized_party = token_info['azp']
-            email = token_info.get('email')
-            if authorized_party.endswith('.apps.googleusercontent.com'):
-                # A user's access token originating from an OAuth 2.0 client
-                azul_client_id = config.google_oauth2_client_id
-                assert azul_client_id is not None, R(
-                    'Acceptance of OAuth 2.0 user access tokens is disabled')
-                assert authorized_party == azul_client_id, R(
-                    'OAuth 2.0 client does not match')
-            elif email is not None and email.endswith('.iam.gserviceaccount.com'):
-                # A service account's bare access token
-                assert token_info['email_verified'] == 'true', R(
-                    'Service account email is not verified')
-                local_part, _, host = email.partition('@')
-                host, _, domain = host.partition('.')
-                assert host == config.google_project(), R(
-                    'Service account project does not match')
-            else:
-                assert False, 'Unexpected type of authorized party'
-        else:
-            assert False, type(credentials)

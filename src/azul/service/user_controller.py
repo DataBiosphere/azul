@@ -25,8 +25,8 @@ from chalice.app import (
 import chevron
 
 from azul.auth import (
-    AccessTokenAuthentication,
-    PersonalAccessTokenAuthentication,
+    UnverifiedAccessTokenAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.chalice import (
     Controller,
@@ -597,7 +597,7 @@ class UserController(Controller):
             }
         }
 
-    def _access_token(self, message: str) -> AccessTokenAuthentication:
+    def _access_token(self, message: str) -> UnverifiedAccessTokenAuthentication:
         """
         Return the access token the current request is authenticated with.
 
@@ -605,16 +605,16 @@ class UserController(Controller):
                           authenticated with a personal access token
         """
         auth = self._authentication()
-        if isinstance(auth, PersonalAccessTokenAuthentication):
+        if isinstance(auth, UnverifiedPersonalAccessTokenAuthentication):
             raise ForbiddenError(message)
-        elif isinstance(auth, AccessTokenAuthentication):
+        elif isinstance(auth, UnverifiedAccessTokenAuthentication):
             return auth
         else:
             raise UnauthorizedError('Valid access token required')
 
     @contextmanager
     def _rejecting_unusable_token(self,
-                                  auth: AccessTokenAuthentication
+                                  auth: UnverifiedAccessTokenAuthentication
                                   ) -> Iterator[None]:
         """
         Translate the ways in which an access token can turn out to be unusable

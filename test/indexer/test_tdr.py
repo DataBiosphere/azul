@@ -24,10 +24,6 @@ from typing import (
 from unittest import (
     mock,
 )
-from unittest.mock import (
-    Mock,
-    patch,
-)
 
 import attr
 from furl import (
@@ -59,9 +55,6 @@ from more_itertools import (
 )
 import urllib3
 
-from azul import (
-    config,
-)
 from azul.auth import (
     AccessTokenAuthentication,
 )
@@ -529,38 +522,14 @@ class TestTDRSourceList(AzulUnitTestCase):
 
         return _mock_urlopen
 
-    def _mock_google_oauth_tokeninfo(self):
-        body = json.dumps({
-            'azp': config.google_oauth2_client_id,
-            'aud': config.google_oauth2_client_id,
-            'sub': config.google_oauth2_client_id.split('.')[0].split('-')[0],
-            'scope': 'https://www.googleapis.com/auth/userinfo.email openid',
-            'exp': '1689645319',
-            'expires_in': '3511',
-            'email': 'hannes@ucsc.edu',
-            'email_verified': 'true',
-            'access_type': 'online'
-        }).encode()
-        response = urllib3.HTTPResponse(status=200, body=BytesIO(body))
-        mock_urlopen = Mock()
-        mock_urlopen.return_value = response
-        return mock_urlopen
-
     def _patch_urlopen(self, **kwargs):
         return mock.patch.object(target=urllib3.poolmanager.PoolManager,
                                  attribute='urlopen',
                                  **kwargs)
 
-    def _patch_client_id(self):
-        return patch.object(type(config),
-                            'google_oauth2_client_id',
-                            '123-foobar.apps.googleusercontent.com')
-
     def test_auth_list_snapshots(self):
         for token in ('ya29.mock_token_1', 'ya29.mock_token_2'):
-            with self._patch_client_id():
-                with self._patch_urlopen(new=self._mock_google_oauth_tokeninfo()):
-                    tdr_client = TDRClient.for_registered_user(AccessTokenAuthentication(token))
+            tdr_client = TDRClient.for_registered_user(AccessTokenAuthentication(token))
             expected_snapshots = {
                 snapshot['id']: snapshot
                 for snapshot in self._mock_snapshots(token)

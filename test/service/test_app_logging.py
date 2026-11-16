@@ -7,6 +7,7 @@ from logging import (
     INFO,
 )
 from unittest.mock import (
+    MagicMock,
     PropertyMock,
     patch,
 )
@@ -27,6 +28,9 @@ from azul.lib.types import (
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
+)
+from azul.service.user_service import (
+    UserService,
 )
 from indexer import (
     DCP1CannedBundleTestCase,
@@ -60,6 +64,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
     def app_name(cls) -> str:
         return 'service'
 
+    @patch.object(UserService, '_validate_access_token', new=MagicMock())
     def test_request_logs(self):
         prefix_len = 1024
         http = self._http_client
@@ -141,7 +146,7 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
                         ),
                         (
                             INFO,
-                            "Authenticated request as AccessTokenAuthentication(token='ya29.REDACTED')"
+                            "Authenticated request as UnverifiedAccessTokenAuthentication(token='ya29.REDACTED')"
                             if authenticated else
                             'Did not authenticate request.'
                         ),

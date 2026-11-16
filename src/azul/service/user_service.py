@@ -51,6 +51,8 @@ from azul import (
 from azul.auth import (
     AccessTokenAuthentication,
     PersonalAccessTokenAuthentication,
+    UnverifiedAccessTokenAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -84,6 +86,7 @@ from azul.lib.types import (
 )
 from azul.oauth2 import (
     Authorization,
+    InvalidAccessTokenError,
     InvalidRefreshTokenError,
     OAuth2Client,
     TokenForCodeResponse,
@@ -169,6 +172,14 @@ class InvalidPersonalAccessTokenError(Exception):
     """
     The token is a JWT but not a valid APAT (expired, tampered with, forged, …),
     or the authorization of the user it was minted for has lapsed.
+    """
+
+
+class RejectedAccessTokenError(Exception):
+    """
+    The authorization server accepted the access token but this application
+    doesn't, because it was issued to a party this application doesn't accept
+    tokens from.
     """
 
 
@@ -298,8 +309,79 @@ class UserService:
         jwt._jws.register_algorithm(self._apat_algorithm, KMSSigningAlgorithm())
         return jwt
 
+    def verify_access_token(self,
+                            at_auth: UnverifiedAccessTokenAuthentication
+                            ) -> AccessTokenAuthentication:
+        """
+        Return the given access token as verified if it passes
+        :meth:`_validate_access_token`.
+
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
+
+        :raise RejectedAccessTokenError: if this application rejects the token
+
+        :raise Exception: if the validity of the token cannot be determined
+        """
+        try:
+            self._validate_access_token(at_auth.token)
+        except InvalidAccessTokenError as e:
+            log.warning('Invalid access token', exc_info=e)
+            raise
+        except RejectedAccessTokenError as e:
+            log.warning('Rejected access token', exc_info=e)
+            raise
+        else:
+            return AccessTokenAuthentication(at_auth.token)
+
+    def _validate_access_token(self, access_token: str) -> None:
+        """
+        Validate a bare access token, one obtained by some other party.
+
+        For a user's access token to be valid, it must not be expired, and
+        originate from a Google OAuth 2.0 client belonging to the current
+        Google Cloud project.
+
+        For a service account's access token (one created from the service
+        account's private key) to be valid, the token must not be expired and
+        the service account must belong to the current Google Cloud project.
+
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
+
+        :raise RejectedAccessTokenError: if this application rejects the token
+
+        :raise Exception: if the validity of the token cannot be determined
+        """
+
+        def require(condition: bool, message: str) -> None:
+            if not condition:
+                raise RejectedAccessTokenError(message)
+
+        token_info = self._oauth_client.token_info(access_token)
+        # The error messages here intentionally lack detail, for confidentiality
+        authorized_party = token_info['azp']
+        email = token_info.get('email')
+        if authorized_party.endswith('.apps.googleusercontent.com'):
+            # A user's access token originating from an OAuth 2.0 client
+            azul_client_id = config.google_oauth2_client_id
+            require(azul_client_id is not None,
+                    'Acceptance of OAuth 2.0 user access tokens is disabled')
+            require(authorized_party == azul_client_id,
+                    'OAuth 2.0 client does not match')
+        elif email is not None and email.endswith('.iam.gserviceaccount.com'):
+            # A service account's bare access token
+            require(token_info['email_verified'] == 'true',
+                    'Service account email is not verified')
+            local_part, _, host = email.partition('@')
+            host, _, domain = host.partition('.')
+            require(host == config.google_project(),
+                    'Service account project does not match')
+        else:
+            require(False, 'Unexpected type of authorized party')
+
     def _user_for_access_token(self,
-                               at_auth: AccessTokenAuthentication
+                               at_auth: UnverifiedAccessTokenAuthentication
                                ) -> User:
         token_info = self._oauth_client.token_info(at_auth.token)
         aud = token_info['aud']
@@ -310,7 +392,7 @@ class UserService:
         else:
             return self._load_user(self._google_issuer, token_info['sub'])
 
-    def get_user(self, at_auth: AccessTokenAuthentication) -> User:
+    def get_user(self, at_auth: UnverifiedAccessTokenAuthentication) -> User:
         """
         Return the stored information about the user identified by the given
         access token.
@@ -318,7 +400,7 @@ class UserService:
         return self._user_for_access_token(at_auth)
 
     def update_accepted_contracts(self,
-                                  at_auth: AccessTokenAuthentication,
+                                  at_auth: UnverifiedAccessTokenAuthentication,
                                   accepted_contracts: Mapping[str, ContractAcceptance | None] | None
                                   ) -> User:
         """
@@ -422,7 +504,7 @@ class UserService:
             return self._user_from_item(response['Attributes'])
 
     def mint_personal_access_token(self,
-                                   at_auth: AccessTokenAuthentication
+                                   at_auth: UnverifiedAccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
         """
         Given a valid access token for a user, issue a long-lived,
@@ -456,7 +538,7 @@ class UserService:
         return apat_auth
 
     def exchange_token(self,
-                       apat_auth: PersonalAccessTokenAuthentication
+                       apat_auth: UnverifiedPersonalAccessTokenAuthentication
                        ) -> AccessTokenAuthentication:
         """
         Return a usable access token in exchange for an APAT if valid and not
@@ -504,7 +586,7 @@ class UserService:
             return at_auth
 
     def revoke_personal_access_tokens(self,
-                                      at_auth: AccessTokenAuthentication
+                                      at_auth: UnverifiedAccessTokenAuthentication
                                       ) -> None:
         """
         Revoke all APATs for the user identified by the given access token.

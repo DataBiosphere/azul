@@ -21,7 +21,11 @@ from azul.lib.strings import (
 )
 
 
-class Authentication(metaclass=ABCMeta):
+class UnverifiedAuthentication(metaclass=ABCMeta):
+    """
+    An authentication claim that hasn't been verified yet, such as a bearer
+    token in an HTTP request.
+    """
 
     @abstractmethod
     def identity(self) -> str:
@@ -52,15 +56,16 @@ class Authentication(metaclass=ABCMeta):
 
 
 @attr.s(auto_attribs=True, frozen=True)
-class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
+class UnverifiedBearerTokenAuthentication(UnverifiedAuthentication,
+                                          metaclass=ABCMeta):
     token: str
 
     @classmethod
-    def for_token(cls, token: str) -> BearerTokenAuthentication:
+    def for_token(cls, token: str) -> UnverifiedBearerTokenAuthentication:
         if looks_like_redactable_jwt(token):
-            return PersonalAccessTokenAuthentication(token)
+            return UnverifiedPersonalAccessTokenAuthentication(token)
         elif looks_like_access_token(token):
-            return AccessTokenAuthentication(token)
+            return UnverifiedAccessTokenAuthentication(token)
         else:
             raise UnauthorizedError('Unexpected token syntax')
 
@@ -74,11 +79,28 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
         return f'{type(self).__name__}(token={redact(self.token, fullmatch=True)!r})'
 
 
-class AccessTokenAuthentication(BearerTokenAuthentication):
+class UnverifiedAccessTokenAuthentication(UnverifiedBearerTokenAuthentication):
     pass
 
 
-class PersonalAccessTokenAuthentication(BearerTokenAuthentication):
+class UnverifiedPersonalAccessTokenAuthentication(UnverifiedBearerTokenAuthentication):
+    pass
+
+
+class Authentication(UnverifiedAuthentication, metaclass=ABCMeta):
+    """
+    A verified authentication claim. Using separate types to represent verified
+    and unverified claims lets us enlist the help of the type checker to ensure
+    that unverified claims don't penetrate the lower layers of the application.
+    """
+    pass
+
+
+class AccessTokenAuthentication(Authentication, UnverifiedAccessTokenAuthentication):
+    pass
+
+
+class PersonalAccessTokenAuthentication(Authentication, UnverifiedPersonalAccessTokenAuthentication):
     pass
 
 

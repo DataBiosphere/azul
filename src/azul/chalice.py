@@ -54,8 +54,8 @@ from azul import (
     config,
 )
 from azul.auth import (
-    Authentication,
-    PersonalAccessTokenAuthentication,
+    UnverifiedAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.csp import (
     CSP,
@@ -488,7 +488,7 @@ class AzulChaliceApp(Chalice):
                 "Only specify 'spec' once per route path and method")
             path_methods[method] = copy_json(spec)
 
-    def _authenticate(self) -> Authentication | None:
+    def _authenticate(self) -> UnverifiedAuthentication | None:
         """
         Authenticate the current request, return None if it is unauthenticated,
         or raise a ChaliceViewError if it carries invalid authentication.
@@ -1000,12 +1000,12 @@ class Controller:
     def current_request(self) -> Request:
         return not_none(self.app.current_request)
 
-    def _authentication(self) -> Authentication | None:
+    def _authentication(self) -> UnverifiedAuthentication | None:
         authentication = getattr(self.current_request, 'authentication', None)
         if authentication is not None:
-            assert isinstance(authentication, Authentication)
+            assert isinstance(authentication, UnverifiedAuthentication)
             if (
-                isinstance(authentication, PersonalAccessTokenAuthentication)
+                isinstance(authentication, UnverifiedPersonalAccessTokenAuthentication)
                 and not self.accepts_personal_access_token
             ):
                 raise UnauthorizedError('This endpoint does not support a '

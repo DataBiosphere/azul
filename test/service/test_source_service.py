@@ -43,6 +43,9 @@ from azul.service.source_service import (
     NotFound,
     SourceService,
 )
+from azul.service.user_service import (
+    UserService,
+)
 from azul.source import (
     Source,
     SourceConfig,
@@ -192,7 +195,7 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
 
     @patch.object(SourceService, '_get')
     @patch.object(TDRClient, 'list_snapshots')
-    @patch.object(TDRClient, 'validate', new=MagicMock())
+    @patch.object(UserService, '_validate_access_token', new=MagicMock())
     def test(self, mock_list_snapshots, mock_source_cache_get):
         mock_list_snapshots.return_value = self.mock_list_snapshots_response
         client = http_client(log)

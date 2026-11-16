@@ -7,6 +7,7 @@ from typing import (
 from chalice.app import (
     BadRequestError as BRE,
     NotFoundError,
+    UnauthorizedError,
 )
 
 from azul import (
@@ -15,6 +16,8 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
+    UnverifiedAccessTokenAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.filters import (
     Filters,
@@ -25,11 +28,15 @@ from azul.filters import (
 )
 from azul.lib import (
     R,
+    cached_property,
     mutable_furl,
 )
 from azul.lib.strings import (
     format_and_dedent as fd,
     pluralize,
+)
+from azul.oauth2 import (
+    InvalidAccessTokenError,
 )
 from azul.openapi import (
     params,
@@ -37,6 +44,11 @@ from azul.openapi import (
 )
 from azul.service.source_controller import (
     SourceController,
+)
+from azul.service.user_service import (
+    InvalidPersonalAccessTokenError,
+    RejectedAccessTokenError,
+    UserService,
 )
 
 
@@ -113,6 +125,26 @@ class ServiceController(SourceController):
             if catalog not in config.catalogs:
                 raise NotFoundError(f'Catalog name {catalog!r} does not exist. '
                                     f'Must be one of {set(config.catalogs)}.')
+
+    def _authentication(self) -> Authentication | None:
+        authentication = super()._authentication()
+        if isinstance(authentication, UnverifiedPersonalAccessTokenAuthentication):
+            try:
+                authentication = self._user_service.exchange_token(authentication)
+            except InvalidPersonalAccessTokenError:
+                raise UnauthorizedError('Invalid personal access token')
+        elif isinstance(authentication, UnverifiedAccessTokenAuthentication):
+            try:
+                authentication = self._user_service.verify_access_token(authentication)
+            except (InvalidAccessTokenError, RejectedAccessTokenError):
+                raise UnauthorizedError('Invalid access token')
+        else:
+            assert authentication is None, type(authentication)
+        return authentication
+
+    @cached_property
+    def _user_service(self) -> UserService:
+        return UserService()
 
 
 type Validator = Callable[[Any], Any]
