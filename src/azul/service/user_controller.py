@@ -604,7 +604,7 @@ class UserController(Controller):
         :param message: The message of the error to raise if the request is
                           authenticated with a personal access token
         """
-        auth = self._authentication(self.current_request)
+        auth = self._authentication()
         if isinstance(auth, PersonalAccessTokenAuthentication):
             raise ForbiddenError(message)
         elif isinstance(auth, AccessTokenAuthentication):

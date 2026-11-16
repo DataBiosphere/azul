@@ -468,7 +468,7 @@ class ManifestController(QueryController):
             query_params.setdefault('format', default_format)
         else:
             validate_params(query_params)
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         return self._download(query_params=query_params,
                               token_or_key=token_or_key,
                               fetch=fetch,

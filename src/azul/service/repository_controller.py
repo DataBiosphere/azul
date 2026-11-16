@@ -13,7 +13,6 @@ from chalice.app import (
     BadRequestError,
     ForbiddenError,
     NotFoundError,
-    Request,
     Response,
     TooManyRequestsError,
     UnauthorizedError,
@@ -242,14 +241,14 @@ class RepositoryController(ServiceController):
             request = self.current_request
             query_params = self._query_params(request)
             validate_params(query_params, catalog=self._validate_catalog)
-            authentication = self._authentication(request)
+            authentication = self._authentication()
             sources = self.list_sources(self.app.catalog, authentication)
             return Response(body={'sources': sources}, status_code=200)
 
         return locals()
 
-    def _authentication(self, request: Request) -> Authentication | None:
-        authentication = super()._authentication(request)
+    def _authentication(self) -> Authentication | None:
+        authentication = super()._authentication()
         if isinstance(authentication, PersonalAccessTokenAuthentication):
             try:
                 authentication = self._user_service.exchange_token(authentication)
@@ -271,7 +270,7 @@ class RepositoryController(ServiceController):
         #        https://github.com/DataBiosphere/azul/issues/2682
 
         catalog = self.app.catalog
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         return self._download_file(catalog=catalog,
                                    fetch=fetch,
                                    file_uuid=file_uuid,

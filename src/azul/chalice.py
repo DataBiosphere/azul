@@ -1000,8 +1000,8 @@ class Controller:
     def current_request(self) -> Request:
         return not_none(self.app.current_request)
 
-    def _authentication(self, request: Request) -> Authentication | None:
-        authentication = getattr(request, 'authentication', None)
+    def _authentication(self) -> Authentication | None:
+        authentication = getattr(self.current_request, 'authentication', None)
         if authentication is not None:
             assert isinstance(authentication, Authentication)
             if (
