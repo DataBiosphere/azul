@@ -298,9 +298,9 @@ class UserService:
         jwt._jws.register_algorithm(self._apat_algorithm, KMSSigningAlgorithm())
         return jwt
 
-    def _verify_access_token(self,
-                             at_auth: AccessTokenAuthentication
-                             ) -> User:
+    def _user_for_access_token(self,
+                               at_auth: AccessTokenAuthentication
+                               ) -> User:
         token_info = self._oauth_client.token_info(at_auth.token)
         aud = token_info['aud']
         if aud != self._client_id:
@@ -315,7 +315,7 @@ class UserService:
         Return the stored information about the user identified by the given
         access token.
         """
-        return self._verify_access_token(at_auth)
+        return self._user_for_access_token(at_auth)
 
     def update_accepted_contracts(self,
                                   at_auth: AccessTokenAuthentication,
@@ -335,7 +335,7 @@ class UserService:
                                    mapping are left alone. None retracts the
                                    acceptance of every contract.
         """
-        user = self._verify_access_token(at_auth)
+        user = self._user_for_access_token(at_auth)
         if accepted_contracts is None:
             user = self._update_user(user,
                                      'REMOVE accepted_contracts',
@@ -434,7 +434,7 @@ class UserService:
         refresh token.
         """
         log.info('Minting APAT for %s', at_auth)
-        user = self._verify_access_token(at_auth)
+        user = self._user_for_access_token(at_auth)
         jti = self._next_jti(user)
         now = self._now()
         payload = {
@@ -510,7 +510,7 @@ class UserService:
         Revoke all APATs for the user identified by the given access token.
         """
         log.info('Revoking all APATs for %s', at_auth)
-        user = self._verify_access_token(at_auth)
+        user = self._user_for_access_token(at_auth)
         self._revoke_jti(user)
 
     def _store_user(self, user: User) -> None:
