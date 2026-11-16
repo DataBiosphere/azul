@@ -241,11 +241,9 @@ class RepositoryController(ServiceController):
         def get_repository_sources() -> Response:
             request = self.current_request
             query_params = self._query_params(request)
-            validate_params(query_params,
-                            catalog=self._validate_catalog)
+            validate_params(query_params, catalog=self._validate_catalog)
             authentication = self._authentication(request)
-            sources = self.list_sources(self.app.catalog,
-                                        authentication)
+            sources = self.list_sources(self.app.catalog, authentication)
             return Response(body={'sources': sources}, status_code=200)
 
         return locals()
