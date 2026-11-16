@@ -49,6 +49,21 @@ emit_tf(
                             "enabled": True
                         }
                     },
+                    "access_tokens": {
+                        "name": config.dynamo_access_tokens_table_name,
+                        "billing_mode": "PAY_PER_REQUEST",
+                        "hash_key": UserService.access_token_key_attribute,
+                        "attribute": [
+                            {
+                                "name": UserService.access_token_key_attribute,
+                                "type": "S"
+                            }
+                        ],
+                        "ttl": {
+                            "attribute_name": UserService.ttl_attribute,
+                            "enabled": True
+                        }
+                    },
                     "object_cache": {
                         "name": config.dynamo_object_cache_table_name,
                         "billing_mode": "PAY_PER_REQUEST",

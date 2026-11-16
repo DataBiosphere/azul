@@ -5,6 +5,7 @@ from datetime import (
     datetime,
     timezone,
 )
+import hashlib
 import json
 import logging
 from time import (
@@ -185,6 +186,15 @@ class UserService:
 
     _table_name = config.dynamo_users_table_name
     _key_separator = '#'
+
+    #: The table caching access tokens issued to known identities, so that
+    #: they can be verified without a round trip to the authorization server.
+    #: It's keyed by a hash of the token, so that the table doesn't contain
+    #: usable credentials.
+    #:
+    _access_tokens_table_name = config.dynamo_access_tokens_table_name
+    access_token_key_attribute = 'token_hash'
+
     _default_expiration = 180 * 24 * 60 * 60
 
     @cached_property
@@ -273,6 +283,9 @@ class UserService:
             expiration=now + expiration
         )
         self._store_user(user)
+        self._cache_access_token(response['access_token'],
+                                 self._identity(user),
+                                 response['expires_in'])
         return response
 
     _google_issuer = 'https://accounts.google.com'
@@ -315,19 +328,59 @@ class UserService:
 
         :raise Exception: if the validity of the token cannot be determined
         """
-        try:
-            token_info = self._token_info(at_auth.token)
-        except InvalidAccessTokenError as e:
-            log.warning('Invalid access token %s', at_auth, exc_info=e)
-            raise
-        except RejectedAccessTokenError as e:
-            log.warning('Rejected access token %s', at_auth, exc_info=e)
-            raise
+        identity = self._cached_identity(at_auth.token)
+        if identity is None:
+            try:
+                token_info = self._token_info(at_auth.token)
+            except InvalidAccessTokenError as e:
+                log.warning('Invalid access token %s', at_auth, exc_info=e)
+                raise
+            except RejectedAccessTokenError as e:
+                log.warning('Rejected access token %s', at_auth, exc_info=e)
+                raise
+            else:
+                # The token info endpoint doesn't report the issuer of an access
+                # token, but it only reports on tokens that Google issued.
+                identity = self._encode_identity(self._google_issuer, token_info['sub'])
+                self._cache_access_token(at_auth.token,
+                                         identity,
+                                         int(token_info['expires_in']))
+        return AccessTokenAuthentication(token=at_auth.token, identity=identity)
+
+    def _access_token_key(self, access_token: str) -> str:
+        return hashlib.sha256(access_token.encode()).hexdigest()
+
+    def _cached_identity(self, access_token: str) -> str | None:
+        """
+        Return the identity cached for the given access token, or None if the
+        token isn't cached, or has expired.
+        """
+        response = self._dynamodb.get_item(
+            TableName=self._access_tokens_table_name,
+            Key={self.access_token_key_attribute: {'S': self._access_token_key(access_token)}},
+            ConsistentRead=True
+        )
+        item = response.get('Item')
+        # Items can persist in DynamoDB after they are marked as expired
+        # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html
+        if item is None or int(item[self.ttl_attribute]['N']) <= self._now():
+            return None
         else:
-            # The token info endpoint doesn't report the issuer of an access
-            # token, but it only reports on tokens that Google issued.
-            identity = self._encode_identity(self._google_issuer, token_info['sub'])
-            return AccessTokenAuthentication(token=at_auth.token, identity=identity)
+            return item['identity']['S']
+
+    def _cache_access_token(self,
+                            access_token: str,
+                            identity: str,
+                            expires_in: int
+                            ) -> None:
+        self._dynamodb.put_item(
+            TableName=self._access_tokens_table_name,
+            Item={
+                self.access_token_key_attribute: {'S': self._access_token_key(access_token)},
+                'identity': {'S': identity},
+                self.ttl_attribute: {'N': str(self._now() + expires_in)}
+            }
+        )
 
     def _token_info(self, access_token: str) -> TokenInfoResponse:
         """

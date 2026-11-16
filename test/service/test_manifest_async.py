@@ -16,6 +16,7 @@ from unittest import (
     mock,
 )
 from unittest.mock import (
+    MagicMock,
     patch,
 )
 from uuid import (
@@ -785,6 +786,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         token = Token.decode(url.path.segments[-1])
         self.assertEqual(1, token.iteration)
 
+    @mock.patch.object(UserService, '_cache_access_token', new=MagicMock())
+    @mock.patch.object(UserService, '_cached_identity', new=MagicMock(return_value=None))
     @mock.patch.object(OAuth2Client, 'token_info')
     @mock.patch.object(ManifestService, 'sign_manifest_key')
     @mock.patch.object(ManifestService, 'get_manifest_url')
@@ -840,6 +843,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 token_info.reset_mock()
 
     @patch_config('google_oauth2_client_id', '123-mock_client_id.apps.googleusercontent.com')
+    @mock.patch.object(UserService, '_cache_access_token', new=MagicMock())
+    @mock.patch.object(UserService, '_cached_identity', new=MagicMock(return_value=None))
     @mock.patch.object(UserService, '_load_user', side_effect=UnknownUserException)
     @mock.patch.object(OAuth2Client, 'token_info')
     @mock.patch.object(ManifestService, 'sign_manifest_key')

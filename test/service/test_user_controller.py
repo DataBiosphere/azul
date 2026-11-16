@@ -154,6 +154,18 @@ class UserControllerTestCase(LocalAppTestCase,
 
     def setUp(self):
         super().setUp()
+        self.dynamodb.create_table(
+            TableName=UserService._access_tokens_table_name,
+            BillingMode='PAY_PER_REQUEST',
+            AttributeDefinitions=[
+                dict(AttributeName=UserService.access_token_key_attribute,
+                     AttributeType='S')
+            ],
+            KeySchema=[
+                dict(AttributeName=UserService.access_token_key_attribute,
+                     KeyType='HASH')
+            ]
+        )
         key = aws.kms.create_key(KeyUsage='SIGN_VERIFY',
                                  CustomerMasterKeySpec='ECC_NIST_P256')
         aws.kms.create_alias(AliasName=config.apat_kms_key.alias,
@@ -162,6 +174,10 @@ class UserControllerTestCase(LocalAppTestCase,
         # persists across tests (as part of the class-level app fixture),
         # so we must invalidate the cached public key material.
         UserService._apat_public_key.fdel(self._service)
+
+    def tearDown(self):
+        self.dynamodb.delete_table(TableName=UserService._access_tokens_table_name)
+        super().tearDown()
 
     @contextmanager
     def _mock_token_info(self, aud: str | None = None):
@@ -410,7 +426,9 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self._authorize()
                 auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
                 apat_auth = self._service.mint_personal_access_token(auth)
-                token_info.assert_called_once_with(self._mock_access_token)
+                # Authorizing cached the access token, so it was verified
+                # without asking the authorization server.
+                token_info.assert_not_called()
                 header = jwt.get_unverified_header(apat_auth.token)
                 self.assertEqual('ES256', header['alg'])
                 claims = jwt.decode(apat_auth.token,
@@ -480,8 +498,9 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 'azp': '123456789012345678901'
             }, False)
         ]
-        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
-        for case, configured_client_id, token_info_fields, valid in cases:
+        # Each case uses a different token because valid tokens are cached
+        for i, (case, configured_client_id, token_info_fields, valid) in enumerate(cases):
+            auth = UnverifiedAccessTokenAuthentication(f'{self._mock_access_token}_{i}')
             with self.subTest(case):
                 with (
                     patch.object(Config,
@@ -500,10 +519,38 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                         with self.assertRaises(RejectedAccessTokenError):
                             self._service.verify_access_token(auth)
         with self.subTest('rejected by authorization server'):
+            auth = UnverifiedAccessTokenAuthentication(f'{self._mock_access_token}_rejected')
             with self._mock_token_info() as token_info:
                 token_info.side_effect = InvalidAccessTokenError
                 with self.assertRaises(InvalidAccessTokenError):
                     self._service.verify_access_token(auth)
+
+    def test_verify_cached_access_token(self):
+        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        with self._mock_token_info() as token_info:
+            first, second = (self._service.verify_access_token(auth) for _ in range(2))
+            token_info.assert_called_once_with(auth.token)
+        self.assertEqual(first, second)
+        self.assertEqual(self._mock_identity, second.identity())
+
+    def test_verify_expired_cached_access_token(self):
+        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        now = self._service._now()
+        with self._mock_token_info() as token_info:
+            self._service.verify_access_token(auth)
+            # The mock reports that the token expires in an hour
+            with patch.object(UserService, '_now', return_value=now + 3600):
+                self._service.verify_access_token(auth)
+            self.assertEqual(2, token_info.call_count)
+
+    def test_authorize_caches_access_token(self):
+        with self._mock_token_for_code():
+            self._authorize()
+        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        with self._mock_token_info() as token_info:
+            verified_auth = self._service.verify_access_token(auth)
+            token_info.assert_not_called()
+        self.assertEqual(self._mock_identity, verified_auth.identity())
 
     def test_exchange_token(self):
         apat = self._authorize_and_mint()

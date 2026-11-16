@@ -1631,6 +1631,10 @@ class Config:
         return self.qualified_resource_name('users')
 
     @property
+    def dynamo_access_tokens_table_name(self) -> str:
+        return self.qualified_resource_name('access_tokens')
+
+    @property
     def dynamo_object_cache_table_name(self) -> str:
         return self.qualified_resource_name('object_cache')
 

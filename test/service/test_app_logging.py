@@ -15,6 +15,9 @@ from unittest.mock import (
 from azul import (
     Config,
 )
+from azul.auth import (
+    AccessTokenAuthentication,
+)
 from azul.chalice import (
     AzulChaliceApp,
     log as chalice_log,
@@ -64,8 +67,10 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
     def app_name(cls) -> str:
         return 'service'
 
-    @patch.object(UserService, '_token_info',
-                  new=MagicMock(return_value={'sub': '105096702580025601450'}))
+    @patch.object(UserService, 'verify_access_token', new=MagicMock(
+        side_effect=lambda auth: AccessTokenAuthentication(token=auth.token,
+                                                           identity='#105096702580025601450')
+    ))
     def test_request_logs(self):
         prefix_len = 1024
         http = self._http_client
