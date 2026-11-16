@@ -130,13 +130,17 @@ def main(argv):
     parser.add_argument('--dry-run',
                         action='store_true',
                         help='Report status without altering resources')
+    parser.add_argument('--force',
+                        action='store_true',
+                        help='Delete reservation resources even if they were '
+                             'updated recently or a reindex is ongoing')
     args = parser.parse_args(argv)
 
     for location in config.tdr_allowed_source_locations:
-        sell_unused_slots(location, args.dry_run)
+        sell_slots(location, args.dry_run, args.force)
 
 
-def sell_unused_slots(location: str, dry_run: bool):
+def sell_slots(location: str, dry_run: bool, force: bool):
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
     reservation = BigQueryReservation(location=location, dry_run=dry_run)
@@ -147,7 +151,10 @@ def sell_unused_slots(location: str, dry_run: bool):
         min_reservation_age = 30 * 60
         reservation_age = time.time() - reservation.update_time
         assert reservation_age > 0, reservation_age
-        if reservation_age < min_reservation_age:
+        if force:
+            log.info('Forcibly deleting reservation in location %r', location)
+            reservation.deactivate()
+        elif reservation_age < min_reservation_age:
             # Avoid race with recently started reindexing
             log.info('Reservation in location %r was updated %r < %r seconds ago; '
                      'taking no action.', location, reservation_age, min_reservation_age)

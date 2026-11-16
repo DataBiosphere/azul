@@ -263,9 +263,7 @@ class BundlePartition(UUIDPartition):
     #:
     group: int = 4
 
-    #: 512 caused timeouts writing contributions, even in the retry Lambda
-    #:
-    max_partition_size: ClassVar[int] = 256
+    max_partition_size: ClassVar[int] = config.max_bundle_partition_size
 
     def divisions(self, num_entities: int) -> int:
         return math.ceil(num_entities / self.max_partition_size)

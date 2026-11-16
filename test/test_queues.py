@@ -312,3 +312,70 @@ class TestQueues(SqsTestCase):
         queue.reload()
         self.assertEqual(str(num_messages),
                          queue.attributes['ApproximateNumberOfMessages'])
+
+    def _throttle(self,
+                  queue,
+                  num_throttles: dict[str, int],
+                  code: str = 'RequestThrottled'):
+        """
+        Patch the given queue to fail the entry with each given ID the given
+        number of times, the way SQS throttles individual entries of a
+        SendMessageBatch action in high-throughput mode.
+        """
+        send_messages = type(queue).send_messages
+
+        def throttle(self, *, Entries):
+            throttled = [entry for entry in Entries if num_throttles.get(entry['Id'], 0) > 0]
+            accepted = [entry for entry in Entries if entry not in throttled]
+            for entry in throttled:
+                num_throttles[entry['Id']] -= 1
+            response = send_messages(self, Entries=accepted) if accepted else {}
+            failures = [
+                # SQS considers throttled entries the sender's fault
+                dict(Id=entry['Id'],
+                     SenderFault=True,
+                     Code=code)
+                for entry in throttled
+            ]
+            return {**response, 'Failed': failures}
+
+        return patch.object(type(queue), 'send_messages', throttle)
+
+    def test_throttled_send(self):
+        queue_name, queue = self._create_queue()
+        num_throttles = {'1': 2, '3': 1}
+        with self._throttle(queue, num_throttles):
+            with patch.object(time, 'sleep') as sleep:
+                with self.assertLogs('azul.queues', level='WARNING') as logs:
+                    messages = self._send_messages(queue, 5)
+        self.assertEqual({'1': 0, '3': 0}, num_throttles)
+        self.assertEqual([.1, .2], [one(call.args) for call in sleep.call_args_list])
+        self.assertEqual(2, len(logs.output))
+        queue.reload()
+        self.assertEqual(str(len(messages)),
+                         queue.attributes['ApproximateNumberOfMessages'])
+
+    def test_persistently_throttled_send(self):
+        queue_name, queue = self._create_queue()
+        num_throttles = {'1': Queues.max_send_attempts}
+        with self._throttle(queue, num_throttles):
+            with patch.object(time, 'sleep') as sleep:
+                with self.assertLogs('azul.queues', level='WARNING'):
+                    with self.assertRaises(AssertionError) as context:
+                        self._send_messages(queue, 2)
+        self.assertEqual({'1': 0}, num_throttles)
+        self.assertEqual(Queues.max_send_attempts - 1, sleep.call_count)
+        self.assertEqual('SQS repeatedly failed to accept messages',
+                         one(context.exception.args).args[0])
+
+    def test_rejected_send(self):
+        queue_name, queue = self._create_queue()
+        num_throttles = {'1': 1}
+        with self._throttle(queue, num_throttles, code='InvalidMessageContents'):
+            with patch.object(time, 'sleep') as sleep:
+                with self.assertRaises(AssertionError) as context:
+                    self._send_messages(queue, 2)
+        self.assertEqual({'1': 0}, num_throttles)
+        self.assertEqual(0, sleep.call_count)
+        self.assertEqual('SQS rejected messages',
+                         one(context.exception.args).args[0])
