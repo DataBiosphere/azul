@@ -1284,7 +1284,7 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # is duplicated in README.md as well.
         redirect_url = furl('http://localhost:8088')
         auth_url = furl(url='https://accounts.google.com/o/oauth2/v2/auth',
-                        args=dict(client_id=not_none(config.google_oauth2_client_id),
+                        args=dict(client_id=config.google_oauth2_client_id,
                                   redirect_uri=str(redirect_url),
                                   response_type='code',
                                   scope='openid email',

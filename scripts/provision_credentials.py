@@ -125,7 +125,6 @@ class CredentialsProvisioner:
         if create:
             self._create_secret(secret_path)
             client_id = config.google_oauth2_client_id
-            assert client_id is not None, R('AZUL_GOOGLE_OAUTH2_CLIENT_ID is not set')
             google_project = config.google_project()
             assert google_project is not None, R('GOOGLE_PROJECT is not set')
             url = furl(scheme='https',

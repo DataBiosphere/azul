@@ -83,7 +83,6 @@ from azul.lib.types import (
     PrimitiveJSON,
     json_untyped_dict,
     json_untyped_flat_dict,
-    not_none,
 )
 from azul.oauth2 import (
     Authorization,
@@ -209,7 +208,7 @@ class UserService:
 
     @property
     def _client_id(self) -> str:
-        return not_none(config.google_oauth2_client_id)
+        return config.google_oauth2_client_id
 
     @cached_property
     def _apat_public_key(self) -> EllipticCurvePublicKey:
@@ -405,12 +404,9 @@ class UserService:
         email = token_info.get('email')
         if authorized_party.endswith('.apps.googleusercontent.com'):
             # A user's access token originating from an OAuth 2.0 client
-            azul_client_id = config.google_oauth2_client_id
-            require(azul_client_id is not None,
-                    'Acceptance of OAuth 2.0 user access tokens is disabled')
-            require(authorized_party == azul_client_id,
+            require(authorized_party == self._client_id,
                     'OAuth 2.0 client does not match')
-            require(audience == azul_client_id,
+            require(audience == self._client_id,
                     'OAuth 2.0 audience does not match')
         elif email is not None and email.endswith('.iam.gserviceaccount.com'):
             # A service account's bare access token

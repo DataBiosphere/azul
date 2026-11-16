@@ -1656,8 +1656,8 @@ class Config:
     minimum_compression_size = 0
 
     @property
-    def google_oauth2_client_id(self) -> str | None:
-        return self.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
+    def google_oauth2_client_id(self) -> str:
+        return self.environ['AZUL_GOOGLE_OAUTH2_CLIENT_ID']
 
     @property
     def monitoring_email(self) -> str:

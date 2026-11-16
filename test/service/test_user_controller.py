@@ -471,7 +471,6 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         }
         cases = [
             ('user', client_id, user, True),
-            ('user tokens disabled', None, user, False),
             ('foreign client', client_id, {
                 **user,
                 'azp': '456-other.apps.googleusercontent.com'

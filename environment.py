@@ -877,8 +877,11 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_TDR_REQUESTER_PAYS_PROJECT': None,
 
-        # OAuth2 Client ID to be used for authenticating users. See section
-        # 3.2 of the README
+        # The ID of the deployment's Google OAuth 2.0 client. Users authorize
+        # this client to act on their behalf, via the Swagger UI or the
+        # `/user/authorize` endpoint, and the service only accepts user access
+        # tokens issued to it. Every deployment must set this variable. See
+        # section 3.2.2 of the README for how to create the client.
         #
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
 
