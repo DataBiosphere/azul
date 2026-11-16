@@ -74,7 +74,6 @@ from azul.plugins import (
     MetadataPlugin,
 )
 from azul.service.user_service import (
-    ForeignTokenException,
     InvalidPersonalAccessTokenError,
     RejectedAccessTokenError,
     UnknownUserException,
@@ -120,6 +119,12 @@ class UserControllerTestCase(LocalAppTestCase,
 
     _mock_iss = 'https://accounts.google.com'
     _mock_sub = '105096702580025601450'
+    _mock_client_id = '123-mock_client_id.apps.googleusercontent.com'
+
+    @property
+    def _mock_identity(self) -> str:
+        return self._service._encode_identity(self._mock_iss, self._mock_sub)
+
     _mock_email = 'user@example.com'
     _mock_access_token = 'ya29.mock_access_token'
 
@@ -140,9 +145,9 @@ class UserControllerTestCase(LocalAppTestCase,
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.addClassPatch(patch.object(UserService, '_client_id',
+        cls.addClassPatch(patch.object(Config, 'google_oauth2_client_id',
                                        new_callable=PropertyMock,
-                                       return_value='mock_client_id'))
+                                       return_value=cls._mock_client_id))
         cls.addClassPatch(patch.object(UserService, '_client_secret',
                                        new_callable=PropertyMock,
                                        return_value='mock_client_secret'))
@@ -159,7 +164,9 @@ class UserControllerTestCase(LocalAppTestCase,
         UserService._apat_public_key.fdel(self._service)
 
     @contextmanager
-    def _mock_token_info(self, aud: str = 'mock_client_id'):
+    def _mock_token_info(self, aud: str | None = None):
+        if aud is None:
+            aud = self._mock_client_id
         with patch.object(OAuth2Client, 'token_info') as mock:
             mock.return_value = TokenInfoResponse(
                 azp=aud,
@@ -244,7 +251,7 @@ class UserControllerTestCase(LocalAppTestCase,
         return self._app.user_controller._service  # type: ignore[attr-defined]
 
     def _load_user(self) -> User:
-        return self._service._load_user(self._mock_iss, self._mock_sub)
+        return self._service._load_user(self._mock_identity)
 
     def _authorized_until(self) -> str:
         """
@@ -293,7 +300,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             self.assertEqual(200, response.status)
             token_for_code.assert_called_once_with(
                 authorization_code=self._mock_auth_code,
-                client_id='mock_client_id',
+                client_id=self._mock_client_id,
                 client_secret='mock_client_secret',
                 redirect_uri=None
             )
@@ -354,7 +361,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             self.assertEqual(200, response.status)
             token_for_code.assert_called_once_with(
                 authorization_code=self._mock_auth_code,
-                client_id='mock_client_id',
+                client_id=self._mock_client_id,
                 client_secret='mock_client_secret',
                 redirect_uri=redirect_uri
             )
@@ -424,21 +431,23 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     def test_mint_personal_access_token_foreign_token(self):
         with self._mock_token_info() as token_info:
-            token_info.return_value['aud'] = 'some_other_client_id'
+            token_info.return_value['aud'] = '456-other_client_id.apps.googleusercontent.com'
             auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
-            with self.assertRaises(ForeignTokenException):
+            with self.assertRaises(RejectedAccessTokenError):
                 self._service.mint_personal_access_token(auth)
 
     def test_verify_access_token(self):
-        client_id = '123-mock.apps.googleusercontent.com'
+        client_id = self._mock_client_id
         project = 'mock-project'
         user = {
             'azp': client_id,
+            'aud': client_id,
             'email': self._mock_email,
             'email_verified': 'true'
         }
         service_account = {
             'azp': '123456789012345678901',
+            'aud': '123456789012345678901',
             'email': f'indexer@{project}.iam.gserviceaccount.com',
             'email_verified': 'true'
         }
@@ -449,7 +458,15 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 **user,
                 'azp': '456-other.apps.googleusercontent.com'
             }, False),
+            ('foreign audience', client_id, {
+                **user,
+                'aud': '456-other.apps.googleusercontent.com'
+            }, False),
             ('service account', client_id, service_account, True),
+            ('service account token for another audience', client_id, {
+                **service_account,
+                'aud': '210987654321098765432'
+            }, False),
             ('unverified service account', client_id, {
                 **service_account,
                 'email_verified': 'false'
@@ -478,6 +495,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                         verified_auth = self._service.verify_access_token(auth)
                         self.assertIsInstance(verified_auth, AccessTokenAuthentication)
                         self.assertEqual(auth.token, verified_auth.token)
+                        self.assertEqual(self._mock_identity, verified_auth.identity())
                     else:
                         with self.assertRaises(RejectedAccessTokenError):
                             self._service.verify_access_token(auth)
@@ -508,7 +526,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         self.assertEqual(refreshed_token, result.token)
         mock_token_for_refresh.assert_called_once_with(
             refresh_token=self._mock_refresh_token(),
-            client_id='mock_client_id',
+            client_id=self._mock_client_id,
             client_secret='mock_client_secret'
         )
         user = self._load_user()
@@ -525,7 +543,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     def test_exchange_token_expired_user(self):
         apat = self._authorize_and_mint()
-        key = self._service._encode_identity(self._mock_iss, self._mock_sub)
+        key = self._mock_identity
         aws.dynamodb.delete_item(TableName=UserService._table_name,
                                  Key={UserService.key_attribute: {'S': key}})
         with self.assertRaises(InvalidPersonalAccessTokenError):
@@ -545,7 +563,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                                   return_value=http_client):
                     with self.assertRaises(expected):
                         OAuth2Client().token_for_refresh(refresh_token=self._mock_refresh_token(),
-                                                         client_id='mock_client_id',
+                                                         client_id=self._mock_client_id,
                                                          client_secret='GOCSPX-mock_client_secret')
                 http_client.request.assert_called_once()
 
@@ -694,7 +712,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             ),
             (
                 'issued to another client',
-                self._mock_token_info(aud='other_client_id')
+                self._mock_token_info(aud='456-other_client_id.apps.googleusercontent.com')
             ),
             (
                 'issued to an unknown user',
@@ -882,11 +900,10 @@ class TestContracts(AnvilTestCase, ContractTestCase, UserControllerTestCase):
             self._authorize()
         load_user = self._service._load_user
 
-        def load_and_expire_user(iss: str, sub: str) -> User:
-            user = load_user(iss, sub)
-            key = self._service._encode_identity(iss, sub)
+        def load_and_expire_user(identity: str) -> User:
+            user = load_user(identity)
             aws.dynamodb.delete_item(TableName=UserService._table_name,
-                                     Key={UserService.key_attribute: {'S': key}})
+                                     Key={UserService.key_attribute: {'S': identity}})
             return user
 
         with (

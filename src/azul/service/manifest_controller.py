@@ -15,7 +15,6 @@ from chalice.app import (
     BadRequestError,
     ChaliceViewError,
     Response,
-    UnauthorizedError,
 )
 from furl import (
     furl,
@@ -52,9 +51,6 @@ from azul.lib.types import (
     not_none,
     optional,
 )
-from azul.oauth2 import (
-    InvalidAccessTokenError,
-)
 from azul.openapi import (
     params,
     responses,
@@ -90,7 +86,6 @@ from azul.service.query_controller import (
     QueryController,
 )
 from azul.service.user_service import (
-    ForeignTokenException,
     UnknownUserException,
     UserService,
 )
@@ -613,12 +608,7 @@ class ManifestController(QueryController):
                 if isinstance(authentication, AccessTokenAuthentication):
                     try:
                         authentication = self._user_service.mint_personal_access_token(authentication)
-                    except InvalidAccessTokenError as e:
-                        # The token may have been valid when the generation
-                        # started but expired while the client was polling for it
-                        log.warning('Rejecting %s', authentication, exc_info=e)
-                        raise UnauthorizedError('Invalid credentials')
-                    except (ForeignTokenException, UnknownUserException):
+                    except UnknownUserException:
                         # Fall back to access token auth, but this will render the
                         # command line useless when the access token expires.
                         pass

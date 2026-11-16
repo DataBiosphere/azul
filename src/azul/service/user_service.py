@@ -90,6 +90,7 @@ from azul.oauth2 import (
     InvalidRefreshTokenError,
     OAuth2Client,
     TokenForCodeResponse,
+    TokenInfoResponse,
 )
 from azul.resources import (
     NotInLambdaContextException,
@@ -157,14 +158,6 @@ class UnknownUserException(Exception):
     """
     The access token was issued to this application but the user hasn't invoked
     the authorization code flow.
-    """
-
-
-class ForeignTokenException(Exception):
-    """
-    The access token was not issued to this application. It could be a rogue
-    token or a token belonging to one of our service accounts, during
-    integration tests.
     """
 
 
@@ -313,8 +306,7 @@ class UserService:
                             at_auth: UnverifiedAccessTokenAuthentication
                             ) -> AccessTokenAuthentication:
         """
-        Return the given access token as verified if it passes
-        :meth:`_validate_access_token`.
+        Verify the given access token.
 
         :raise InvalidAccessTokenError: if the authorization server rejects the
                                         token
@@ -324,27 +316,23 @@ class UserService:
         :raise Exception: if the validity of the token cannot be determined
         """
         try:
-            self._validate_access_token(at_auth.token)
+            token_info = self._token_info(at_auth.token)
         except InvalidAccessTokenError as e:
-            log.warning('Invalid access token', exc_info=e)
+            log.warning('Invalid access token %s', at_auth, exc_info=e)
             raise
         except RejectedAccessTokenError as e:
-            log.warning('Rejected access token', exc_info=e)
+            log.warning('Rejected access token %s', at_auth, exc_info=e)
             raise
         else:
-            return AccessTokenAuthentication(at_auth.token)
+            # The token info endpoint doesn't report the issuer of an access
+            # token, but it only reports on tokens that Google issued.
+            identity = self._encode_identity(self._google_issuer, token_info['sub'])
+            return AccessTokenAuthentication(token=at_auth.token, identity=identity)
 
-    def _validate_access_token(self, access_token: str) -> None:
+    def _token_info(self, access_token: str) -> TokenInfoResponse:
         """
-        Validate a bare access token, one obtained by some other party.
-
-        For a user's access token to be valid, it must not be expired, and
-        originate from a Google OAuth 2.0 client belonging to the current
-        Google Cloud project.
-
-        For a service account's access token (one created from the service
-        account's private key) to be valid, the token must not be expired and
-        the service account must belong to the current Google Cloud project.
+        Retrieve information about the given token from the authorization server
+        and ensure that it is suitable for this application.
 
         :raise InvalidAccessTokenError: if the authorization server rejects the
                                         token
@@ -360,7 +348,7 @@ class UserService:
 
         token_info = self._oauth_client.token_info(access_token)
         # The error messages here intentionally lack detail, for confidentiality
-        authorized_party = token_info['azp']
+        authorized_party, audience = token_info['azp'], token_info['aud']
         email = token_info.get('email')
         if authorized_party.endswith('.apps.googleusercontent.com'):
             # A user's access token originating from an OAuth 2.0 client
@@ -369,28 +357,28 @@ class UserService:
                     'Acceptance of OAuth 2.0 user access tokens is disabled')
             require(authorized_party == azul_client_id,
                     'OAuth 2.0 client does not match')
+            require(audience == azul_client_id,
+                    'OAuth 2.0 audience does not match')
         elif email is not None and email.endswith('.iam.gserviceaccount.com'):
             # A service account's bare access token
             require(token_info['email_verified'] == 'true',
                     'Service account email is not verified')
+            require(audience == authorized_party,
+                    'Service account audience does not match')
             local_part, _, host = email.partition('@')
             host, _, domain = host.partition('.')
             require(host == config.google_project(),
                     'Service account project does not match')
         else:
             require(False, 'Unexpected type of authorized party')
+        return token_info
 
     def _user_for_access_token(self,
                                at_auth: UnverifiedAccessTokenAuthentication
                                ) -> User:
-        token_info = self._oauth_client.token_info(at_auth.token)
-        aud = token_info['aud']
-        if aud != self._client_id:
-            log.warning('Unexpected access token audience %r for token %s',
-                        aud, at_auth)
-            raise ForeignTokenException(aud)
-        else:
-            return self._load_user(self._google_issuer, token_info['sub'])
+        if not isinstance(at_auth, AccessTokenAuthentication):
+            at_auth = self.verify_access_token(at_auth)
+        return self._load_user(at_auth.identity())
 
     def get_user(self, at_auth: UnverifiedAccessTokenAuthentication) -> User:
         """
@@ -554,9 +542,8 @@ class UserService:
             raise InvalidPersonalAccessTokenError from e
         else:
             assert_redactable(apat_auth.token)
-            iss, sub = self._decode_identity(claims['sub'])
             try:
-                user = self._load_user(iss, sub)
+                user = self._load_user(claims['sub'])
             except UnknownUserException as e:
                 # The user's item expires along with their refresh token
                 log.warning('Unknown user of APAT %s', apat_auth, exc_info=e)
@@ -581,7 +568,8 @@ class UserService:
                 else:
                     access_token, expires_in = response['access_token'], response['expires_in']
                     self._update_access_token(user, access_token, expires_in)
-            at_auth = AccessTokenAuthentication(access_token)
+            at_auth = AccessTokenAuthentication(token=access_token,
+                                                identity=self._identity(user))
             log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
             return at_auth
 
@@ -615,23 +603,18 @@ class UserService:
             .to_update_item_input()
         )
 
-    def _load_user(self, iss: str, sub: str) -> User:
+    def _load_user(self, identity: str) -> User:
         """
         Retrieve previously stored information about the user of the given
-        identity. The identity of a user can be obtained from the ``iss` and
-        ``sub`` claims of a valid ID token, or from the ``iss`` and ``sub``
-        properties of a response from the authorization server's /tokeninfo
-        endpoint.
-
-        :param iss: The issuer of the user's identity
-
-        :param sub: The user's identity
+        identity, as encoded by :meth:`_encode_identity`. A verified access
+        token carries the identity of its user, and so does the ``sub`` claim of
+        an APAT.
         """
+        iss, sub = self._decode_identity(identity)
         log.info('Retrieving user %r from %r', sub, iss)
-        key = self._encode_identity(iss, sub)
         response = self._dynamodb.get_item(
             TableName=self._table_name,
-            Key={self.key_attribute: {'S': key}}
+            Key={self.key_attribute: {'S': identity}}
         )
         item = response.get('Item')
         if item is None:

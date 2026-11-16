@@ -96,8 +96,16 @@ class Authentication(UnverifiedAuthentication, metaclass=ABCMeta):
     pass
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class AccessTokenAuthentication(Authentication, UnverifiedAccessTokenAuthentication):
-    pass
+    """
+    A verified access token, along with the identity of the user or service
+    account it was issued to.
+    """
+    _identity: str
+
+    def identity(self) -> str:
+        return self._identity
 
 
 class PersonalAccessTokenAuthentication(Authentication, UnverifiedPersonalAccessTokenAuthentication):

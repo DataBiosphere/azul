@@ -98,9 +98,6 @@ from azul import (
     Config,
     config,
 )
-from azul.auth import (
-    UnverifiedAccessTokenAuthentication,
-)
 from azul.azulclient import (
     AzulClient,
     AzulClientNotificationError,
@@ -238,7 +235,6 @@ from azul.terra import (
     TDRClient,
     TDRSourceRef,
     TDRSourceSpec,
-    UserCredentialsProvider,
 )
 from azul_test_case import (
     AzulTestCase,
@@ -1989,12 +1985,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertIn(public_source.id, public_source_ids)
             self.assertNotIn(ma_source.id, public_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())
-        invalid_auth = UnverifiedAccessTokenAuthentication('ya29.invalid')
-        invalid_provider = UserCredentialsProvider(invalid_auth)
-        invalid_client = CredentialedClient(credentials_provider=invalid_provider)
+        invalid_client = BearerTokenHttpClient(self._plain_http, 'ya29.invalid')
         with self._unregistered_service_account_credentials:
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
-        with self._authorization_context(invalid_client._http_client):
+        with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 
     def _test_managed_access_indices(self,

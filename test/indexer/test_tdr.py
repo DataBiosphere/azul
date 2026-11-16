@@ -529,7 +529,9 @@ class TestTDRSourceList(AzulUnitTestCase):
 
     def test_auth_list_snapshots(self):
         for token in ('ya29.mock_token_1', 'ya29.mock_token_2'):
-            tdr_client = TDRClient.for_registered_user(AccessTokenAuthentication(token))
+            authentication = AccessTokenAuthentication(token=token,
+                                                       identity='#105096702580025601450')
+            tdr_client = TDRClient.for_registered_user(authentication)
             expected_snapshots = {
                 snapshot['id']: snapshot
                 for snapshot in self._mock_snapshots(token)

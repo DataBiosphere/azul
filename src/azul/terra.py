@@ -62,7 +62,6 @@ from azul import (
 )
 from azul.auth import (
     AccessTokenAuthentication,
-    UnverifiedBearerTokenAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -244,8 +243,8 @@ class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider
 
 class UserCredentialsProvider(TerraCredentialsProvider):
 
-    def __init__(self, authentication: UnverifiedBearerTokenAuthentication):
-        self.token = authentication.identity()
+    def __init__(self, authentication: AccessTokenAuthentication):
+        self.token = authentication.token
 
     def oauth2_scopes(self) -> Sequence[str]:
         return ['https://www.googleapis.com/auth/userinfo.email']

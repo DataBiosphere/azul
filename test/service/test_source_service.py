@@ -195,7 +195,8 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
 
     @patch.object(SourceService, '_get')
     @patch.object(TDRClient, 'list_snapshots')
-    @patch.object(UserService, '_validate_access_token', new=MagicMock())
+    @patch.object(UserService, '_token_info',
+                  new=MagicMock(return_value={'sub': '105096702580025601450'}))
     def test(self, mock_list_snapshots, mock_source_cache_get):
         mock_list_snapshots.return_value = self.mock_list_snapshots_response
         client = http_client(log)

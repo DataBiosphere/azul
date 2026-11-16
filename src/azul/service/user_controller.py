@@ -9,7 +9,6 @@ from copy import (
     copy,
 )
 import json
-import logging
 from typing import (
     Any,
     NotRequired,
@@ -75,14 +74,12 @@ from azul.service.contract_service import (
 )
 from azul.service.user_service import (
     ContractAcceptance,
-    ForeignTokenException,
+    RejectedAccessTokenError,
     UnknownUserException,
     User,
     UserService,
     format_authorized_until,
 )
-
-log = logging.getLogger(__name__)
 
 
 class UserUpdate(JSONTypedDict):
@@ -492,13 +489,13 @@ class UserController(Controller):
 
     def _token(self) -> JSON:
         auth = self._access_token('Cannot exchange a personal access token for another')
-        with self._rejecting_unusable_token(auth):
+        with self._rejecting_unusable_token():
             apat_auth = self._service.mint_personal_access_token(auth)
         return {'token': apat_auth.token}
 
     def _revoke(self) -> Response:
         auth = self._access_token('Cannot revoke using a personal access token')
-        with self._rejecting_unusable_token(auth):
+        with self._rejecting_unusable_token():
             self._service.revoke_personal_access_tokens(auth)
         return Response(status_code=204, body='')
 
@@ -552,7 +549,7 @@ class UserController(Controller):
 
     def _get_user(self) -> JSON:
         auth = self._access_token('Cannot retrieve a user with a personal access token')
-        with self._rejecting_unusable_token(auth):
+        with self._rejecting_unusable_token():
             user = self._service.get_user(auth)
         return self._user_json(user)
 
@@ -566,7 +563,7 @@ class UserController(Controller):
             if accepted_contracts is not None:
                 for name, acceptance in accepted_contracts.items():
                     self._validate_acceptance(name, acceptance)
-            with self._rejecting_unusable_token(auth):
+            with self._rejecting_unusable_token():
                 user = self._service.update_accepted_contracts(auth, accepted_contracts)
             return self._user_json(user)
 
@@ -613,9 +610,7 @@ class UserController(Controller):
             raise UnauthorizedError('Valid access token required')
 
     @contextmanager
-    def _rejecting_unusable_token(self,
-                                  auth: UnverifiedAccessTokenAuthentication
-                                  ) -> Iterator[None]:
+    def _rejecting_unusable_token(self) -> Iterator[None]:
         """
         Translate the ways in which an access token can turn out to be unusable
         into the 401 response the endpoints document for that case. An
@@ -625,7 +620,6 @@ class UserController(Controller):
         try:
             yield
         except (InvalidAccessTokenError,
-                ForeignTokenException,
-                UnknownUserException) as e:
-            log.warning('Rejecting %s', auth, exc_info=e)
+                RejectedAccessTokenError,
+                UnknownUserException):
             raise UnauthorizedError('Valid access token required')

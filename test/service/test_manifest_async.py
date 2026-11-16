@@ -53,6 +53,7 @@ from azul.logging import (
 from azul.oauth2 import (
     InvalidAccessTokenError,
     OAuth2Client,
+    TokenInfoResponse,
 )
 from azul.plugins import (
     ManifestFormat,
@@ -77,6 +78,10 @@ from azul.service.manifest_service import (
     ManifestPartition,
     ManifestService,
     SignedManifestKey,
+)
+from azul.service.user_service import (
+    UnknownUserException,
+    UserService,
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -833,6 +838,73 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 self.assertEqual(expected_response, response.json())
                 token_info.assert_called_once_with(access_token)
                 token_info.reset_mock()
+
+    @patch_config('google_oauth2_client_id', '123-mock_client_id.apps.googleusercontent.com')
+    @mock.patch.object(UserService, '_load_user', side_effect=UnknownUserException)
+    @mock.patch.object(OAuth2Client, 'token_info')
+    @mock.patch.object(ManifestService, 'sign_manifest_key')
+    @mock.patch.object(ManifestService, 'get_manifest_url')
+    @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
+    @mock.patch.object(AsyncManifestService, 'inspect_generation')
+    def test_finished_curl_manifest_verifies_access_token_once(self,
+                                                               inspect_generation,
+                                                               get_cached_manifest_with_key,
+                                                               get_manifest_url,
+                                                               sign_manifest_key,
+                                                               token_info,
+                                                               load_user):
+        """
+        Minting a personal access token for the command lines of a finished
+        cURL manifest should rely on the verification of the access token in
+        the same request, instead of asking the authorization server about the
+        token a second time.
+        """
+        client_id = config.google_oauth2_client_id
+        token_info.return_value = TokenInfoResponse(azp=client_id,
+                                                    aud=client_id,
+                                                    sub='105096702580025601450',
+                                                    scope='openid email',
+                                                    exp='9999999999',
+                                                    expires_in='3600',
+                                                    email='user@example.com',
+                                                    email_verified='true',
+                                                    access_type='online')
+        get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
+        manifest_key = ManifestKey(catalog=self.catalog,
+                                   format=ManifestFormat.curl,
+                                   manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                   source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+        manifest = Manifest(object_key='key/of/manifest',
+                            was_cached=False,
+                            format=ManifestFormat.curl,
+                            manifest_key=manifest_key,
+                            file_name='some_file_name')
+        inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
+        get_cached_manifest_with_key.return_value = manifest
+        sign_manifest_key.return_value = SignedManifestKey(
+            value=BareManifestKey.unpack(manifest_key.pack()),
+            signature=b'123'
+        )
+        access_token = 'ya29.mock_access_token'
+        for fetch in True, False:
+            with self.subTest(fetch=fetch):
+                path = ['manifest', 'files', self.token]
+                if fetch:
+                    path.insert(0, 'fetch')
+                url = self.base_url.set(path=path)
+                response = requests.get(str(url),
+                                        headers={'Authorization': f'Bearer {access_token}'},
+                                        allow_redirects=False)
+                if fetch:
+                    self.assertEqual(200, response.status_code)
+                    self.assertEqual(302, response.json()['Status'])
+                else:
+                    self.assertEqual(302, response.status_code)
+                token_info.assert_called_once_with(access_token)
+                # The user is looked up while minting the personal access token
+                load_user.assert_called_once()
+                token_info.reset_mock()
+                load_user.reset_mock()
 
     def _request(self, method: str, url: furl, *, expect: int) -> furl:
         response = requests.request(method=method,
