@@ -339,8 +339,12 @@ class UserService:
                 raise
             else:
                 # The token info endpoint doesn't report the issuer of an access
-                # token, but it only reports on tokens that Google issued.
-                identity = self._encode_identity(self._google_issuer, token_info['sub'])
+                # token, but it only reports on tokens that Google issued. The
+                # subject of a user's token is always reported. That of a
+                # service account's token may be absent, but the authorized
+                # party is the service account's unique ID.
+                subject = token_info.get('sub', token_info['azp'])
+                identity = self._encode_identity(self._google_issuer, subject)
                 self._cache_access_token(at_auth.token,
                                          identity,
                                          int(token_info['expires_in']))
@@ -408,9 +412,11 @@ class UserService:
                     'OAuth 2.0 client does not match')
             require(audience == self._client_id,
                     'OAuth 2.0 audience does not match')
+            require('sub' in token_info,
+                    'OAuth 2.0 subject is missing')
         elif email is not None and email.endswith('.iam.gserviceaccount.com'):
             # A service account's bare access token
-            require(token_info['email_verified'] == 'true',
+            require(token_info.get('email_verified') == 'true',
                     'Service account email is not verified')
             require(audience == authorized_party,
                     'Service account audience does not match')

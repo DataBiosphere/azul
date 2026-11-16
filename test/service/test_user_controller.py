@@ -463,60 +463,83 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             'email': self._mock_email,
             'email_verified': 'true'
         }
+        service_account_id = '123456789012345678901'
         service_account = {
-            'azp': '123456789012345678901',
-            'aud': '123456789012345678901',
+            'azp': service_account_id,
+            'aud': service_account_id,
+            'sub': service_account_id,
             'email': f'indexer@{project}.iam.gserviceaccount.com',
             'email_verified': 'true'
         }
-        cases = [
-            ('user', client_id, user, True),
-            ('foreign client', client_id, {
+        # Maps each case to the fields to set, or to remove if None, and the
+        # expected subject, or None if the token should be rejected
+        cases: list[tuple[str, Mapping[str, str | None], str | None]] = [
+            ('user', user, self._mock_sub),
+            ('user without subject', {
+                **user,
+                'sub': None
+            }, None),
+            ('foreign client', {
                 **user,
                 'azp': '456-other.apps.googleusercontent.com'
-            }, False),
-            ('foreign audience', client_id, {
+            }, None),
+            ('foreign audience', {
                 **user,
                 'aud': '456-other.apps.googleusercontent.com'
-            }, False),
-            ('service account', client_id, service_account, True),
-            ('service account token for another audience', client_id, {
+            }, None),
+            ('service account', service_account, service_account_id),
+            ('service account without subject', {
+                **service_account,
+                'sub': None
+            }, service_account_id),
+            ('service account token for another audience', {
                 **service_account,
                 'aud': '210987654321098765432'
-            }, False),
-            ('unverified service account', client_id, {
+            }, None),
+            ('unverified service account', {
                 **service_account,
                 'email_verified': 'false'
-            }, False),
-            ('foreign project', client_id, {
+            }, None),
+            ('service account without verification status', {
+                **service_account,
+                'email_verified': None
+            }, None),
+            ('foreign project', {
                 **service_account,
                 'email': 'indexer@other-project.iam.gserviceaccount.com'
-            }, False),
-            ('unexpected party', client_id, {
+            }, None),
+            ('service account without email', {
+                **service_account,
+                'email': None,
+                'email_verified': None
+            }, None),
+            ('unexpected party', {
                 **user,
-                'azp': '123456789012345678901'
-            }, False)
+                'azp': service_account_id
+            }, None)
         ]
         # Each case uses a different token because valid tokens are cached
-        for i, (case, configured_client_id, token_info_fields, valid) in enumerate(cases):
+        for i, (case, token_info_fields, subject) in enumerate(cases):
             auth = UnverifiedAccessTokenAuthentication(f'{self._mock_access_token}_{i}')
             with self.subTest(case):
                 with (
-                    patch.object(Config,
-                                 'google_oauth2_client_id',
-                                 new=PropertyMock(return_value=configured_client_id)),
                     patch.object(config, 'google_project', return_value=project),
                     self._mock_token_info() as token_info
                 ):
-                    token_info.return_value.update(token_info_fields)
-                    if valid:
+                    for field, value in token_info_fields.items():
+                        if value is None:
+                            del token_info.return_value[field]
+                        else:
+                            token_info.return_value[field] = value
+                    if subject is None:
+                        with self.assertRaises(RejectedAccessTokenError):
+                            self._service.verify_access_token(auth)
+                    else:
                         verified_auth = self._service.verify_access_token(auth)
                         self.assertIsInstance(verified_auth, AccessTokenAuthentication)
                         self.assertEqual(auth.token, verified_auth.token)
-                        self.assertEqual(self._mock_identity, verified_auth.identity())
-                    else:
-                        with self.assertRaises(RejectedAccessTokenError):
-                            self._service.verify_access_token(auth)
+                        identity = self._service._encode_identity(self._mock_iss, subject)
+                        self.assertEqual(identity, verified_auth.identity())
         with self.subTest('rejected by authorization server'):
             auth = UnverifiedAccessTokenAuthentication(f'{self._mock_access_token}_rejected')
             with self._mock_token_info() as token_info:

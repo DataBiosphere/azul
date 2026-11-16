@@ -84,15 +84,21 @@ class TokenForCodeResponse(TokenResponse):
 
 
 class TokenInfoResponse(TypedDict):
+    """
+    https://docs.cloud.google.com/docs/authentication/token-types
+
+    Google documents `sub` only for user access tokens, and `email` only for
+    tokens with the `https://www.googleapis.com/auth/userinfo.email` scope.
+    """
     azp: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
     aud: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
-    sub: str  # "105096702580025601450",
-    scope: str  # "https://www.googleapis.com/auth/userinfo.email openid",
+    sub: NotRequired[str]  # "105096702580025601450",
+    scope: NotRequired[str]  # "https://www.googleapis.com/auth/userinfo.email openid",
     exp: str  # "1689645319",
     expires_in: str  # "3511",
-    email: str  # "hannes@ucsc.edu",
-    email_verified: str  # "true",
-    access_type: str  # "online"
+    email: NotRequired[str]  # "hannes@ucsc.edu",
+    email_verified: NotRequired[str]  # "true",
+    access_type: NotRequired[str]  # "online"
 
 
 class InvalidAccessTokenError(Exception):
