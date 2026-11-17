@@ -198,7 +198,8 @@ class TestListSources(DCP2TestCase, LocalAppTestCase):
     @patch.object(TDRClient, 'list_snapshots')
     @patch.object(UserService, 'verify_access_token', new=MagicMock(
         side_effect=lambda auth: AccessTokenAuthentication(token=auth.token,
-                                                           identity='#105096702580025601450')
+                                                           identity='#105096702580025601450',
+                                                           expiration=2 ** 31)
     ))
     def test(self, mock_list_snapshots, mock_source_cache_get):
         mock_list_snapshots.return_value = self.mock_list_snapshots_response

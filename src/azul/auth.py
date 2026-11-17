@@ -100,9 +100,12 @@ class Authentication(UnverifiedAuthentication, metaclass=ABCMeta):
 class AccessTokenAuthentication(Authentication, UnverifiedAccessTokenAuthentication):
     """
     A verified access token, along with the identity of the user or service
-    account it was issued to.
+    account it was issued to, and its expiration.
     """
     _identity: str
+
+    #: The Unix timestamp after which the token expires
+    expiration: int
 
     def identity(self) -> str:
         return self._identity

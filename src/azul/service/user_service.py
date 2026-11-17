@@ -91,6 +91,7 @@ from azul.oauth2 import (
     OAuth2Client,
     TokenForCodeResponse,
     TokenInfoResponse,
+    TokenResponse,
 )
 from azul.resources import (
     NotInLambdaContextException,
@@ -269,8 +270,7 @@ class UserService:
         iss, sub = id_claims['iss'], id_claims['sub']
         assert iss == self._google_issuer, R('Unexpected issuer', iss)
         now = self._now()
-        expiration = response.get('refresh_token_expires_in',
-                                  self._default_expiration)
+        expiration = response.get('refresh_token_expires_in', self._default_expiration)
         user = User(
             iss=iss,
             sub=sub,
@@ -282,9 +282,12 @@ class UserService:
             expiration=now + expiration
         )
         self._store_user(user)
-        self._cache_access_token(response['access_token'],
-                                 self._identity(user),
-                                 response['expires_in'])
+        at_auth = AccessTokenAuthentication(
+            token=user['access_token'],
+            identity=self._identity(user),
+            expiration=user['access_token_expiration']
+        )
+        self._cache_access_token(at_auth)
         return response
 
     _google_issuer = 'https://accounts.google.com'
@@ -327,8 +330,8 @@ class UserService:
 
         :raise Exception: if the validity of the token cannot be determined
         """
-        identity = self._cached_identity(uat_auth.token)
-        if identity is None:
+        at_auth = self._cached_access_token(uat_auth)
+        if at_auth is None:
             try:
                 token_info = self._token_info(uat_auth.token)
             except InvalidAccessTokenError as e:
@@ -343,45 +346,52 @@ class UserService:
                 # subject of a user's token is always reported. That of a
                 # service account's token may be absent, but the authorized
                 # party is the service account's unique ID.
-                subject = token_info.get('sub', token_info['azp'])
-                identity = self._encode_identity(self._google_issuer, subject)
-                self._cache_access_token(uat_auth.token,
-                                         identity,
-                                         int(token_info['expires_in']))
-        return AccessTokenAuthentication(token=uat_auth.token, identity=identity)
+                at_auth = AccessTokenAuthentication(
+                    token=uat_auth.token,
+                    identity=self._encode_identity(self._google_issuer, token_info.get('sub', token_info['azp'])),
+                    expiration=self._now() + int(token_info['expires_in'])
+                )
+                self._cache_access_token(at_auth)
+        return at_auth
 
     def _access_token_key(self, access_token: str) -> str:
         return hashlib.sha256(access_token.encode()).hexdigest()
 
-    def _cached_identity(self, access_token: str) -> str | None:
+    def _cached_access_token(self,
+                             uat_auth: UnverifiedAccessTokenAuthentication
+                             ) -> AccessTokenAuthentication | None:
         """
-        Return the identity cached for the given access token, or None if the
+        Return the given access token, verified from the cache, or None if the
         token isn't cached, or has expired.
         """
         response = self._dynamodb.get_item(
             TableName=self._access_tokens_table_name,
-            Key={self.access_token_key_attribute: {'S': self._access_token_key(access_token)}},
+            Key={self.access_token_key_attribute: {'S': self._access_token_key(uat_auth.token)}},
             ConsistentRead=True
         )
         item = response.get('Item')
-        # Items can persist in DynamoDB after they are marked as expired
-        # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html
-        if item is None or int(item[self.ttl_attribute]['N']) <= self._now():
+        if item is None:
             return None
         else:
-            return item['identity']['S']
+            expiration = int(item[self.ttl_attribute]['N'])
+            # Items can persist in DynamoDB after they are marked as expired
+            # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html
+            if expiration <= self._now():
+                return None
+            else:
+                return AccessTokenAuthentication(
+                    token=uat_auth.token,
+                    identity=item['identity']['S'],
+                    expiration=expiration
+                )
 
-    def _cache_access_token(self,
-                            access_token: str,
-                            identity: str,
-                            expires_in: int
-                            ) -> None:
+    def _cache_access_token(self, at_auth: AccessTokenAuthentication) -> None:
         self._dynamodb.put_item(
             TableName=self._access_tokens_table_name,
             Item={
-                self.access_token_key_attribute: {'S': self._access_token_key(access_token)},
-                'identity': {'S': identity},
-                self.ttl_attribute: {'N': str(self._now() + expires_in)}
+                self.access_token_key_attribute: {'S': self._access_token_key(at_auth.token)},
+                'identity': {'S': at_auth.identity()},
+                self.ttl_attribute: {'N': str(at_auth.expiration)}
             }
         )
 
@@ -610,8 +620,8 @@ class UserService:
                 log.warning('APAT jti %r out of range [%d, %d) for %s',
                             jti, user['min_jti'], user['max_jti'], uapat_auth)
                 raise InvalidPersonalAccessTokenError
-            access_token = user['access_token']
-            if user['access_token_expiration'] < self._now() + 60:
+            access_token, expiration = user['access_token'], user['access_token_expiration']
+            if expiration < self._now() + 60:
                 try:
                     response = self._oauth_client.token_for_refresh(
                         refresh_token=user['refresh_token'],
@@ -624,11 +634,63 @@ class UserService:
                     raise InvalidPersonalAccessTokenError from e
                 else:
                     access_token, expires_in = response['access_token'], response['expires_in']
+                    expiration = self._now() + expires_in
                     self._update_access_token(user, access_token, expires_in)
-            at_auth = AccessTokenAuthentication(token=access_token,
-                                                identity=self._identity(user))
+            at_auth = AccessTokenAuthentication(
+                token=access_token,
+                identity=self._identity(user),
+                expiration=expiration
+            )
             log.info('Exchanged %s for APAT %s', at_auth, uapat_auth)
             return at_auth
+
+    #: An access token that expires within this many seconds can be exchanged
+    #: for a fresh one
+    #:
+    reauthorization_window = 15 * 60
+
+    def reauthorize(self,
+                    uat_auth: UnverifiedAccessTokenAuthentication
+                    ) -> TokenResponse:
+        """
+        Return the given access token if it remains valid for longer than
+        :attr:`reauthorization_window`, or a fresh access token for the same
+        user, obtained with the user's refresh token, otherwise. The scopes of
+        the given access token are unknown, so they are reported as None.
+
+        :raise InvalidRefreshTokenError: if the authorization server rejects
+                                         the user's refresh token
+        """
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
+        expires_in = at_auth.expiration - self._now()
+        if expires_in > self.reauthorization_window:
+            log.info('Not reauthorizing %s, which expires in %d seconds',
+                     at_auth, expires_in)
+            # The cache lacks the token's scopes. Google always reports
+            # them, hence the type, but here they are unknown.
+            response = TokenResponse(
+                access_token=at_auth.token,
+                expires_in=expires_in,
+                scope=None,  # type: ignore[typeddict-item]
+                token_type='Bearer'
+            )
+        else:
+            response = self._oauth_client.token_for_refresh(
+                refresh_token=user['refresh_token'],
+                client_id=self._client_id,
+                client_secret=self._client_secret
+            )
+            at_auth = AccessTokenAuthentication(
+                token=response['access_token'],
+                identity=at_auth.identity(),
+                expiration=self._now() + response['expires_in']
+            )
+            log.info('Reauthorized %s, which expires in %d seconds, as %s',
+                     uat_auth, expires_in, at_auth)
+            self._update_access_token(user, at_auth.token, response['expires_in'])
+            self._cache_access_token(at_auth)
+        return response
 
     def revoke_personal_access_tokens(self,
                                       uat_auth: UnverifiedAccessTokenAuthentication

@@ -180,7 +180,7 @@ class UserControllerTestCase(LocalAppTestCase,
         super().tearDown()
 
     @contextmanager
-    def _mock_token_info(self, aud: str | None = None):
+    def _mock_token_info(self, aud: str | None = None, expires_in: int = 3600):
         if aud is None:
             aud = self._mock_client_id
         with patch.object(OAuth2Client, 'token_info') as mock:
@@ -190,7 +190,7 @@ class UserControllerTestCase(LocalAppTestCase,
                 sub=self._mock_sub,
                 scope='https://www.googleapis.com/auth/userinfo.email openid',
                 exp='9999999999',
-                expires_in='3600',
+                expires_in=str(expires_in),
                 email=self._mock_email,
                 email_verified='true',
                 access_type='online'
@@ -286,6 +286,9 @@ class UserControllerTestCase(LocalAppTestCase,
 
     def _get_user(self, access_token: str | None = None):
         return self._request('GET', '/user', access_token)
+
+    def _reauthorize(self, access_token: str | None = None):
+        return self._request('POST', '/user/reauthorize', access_token)
 
     def _patch_user(self, body: AnyJSON, access_token: str | None = None):
         return self._request('PATCH', '/user', access_token, body)
@@ -742,6 +745,132 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         response = self._revoke()
         self.assertEqual(401, response.status)
 
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_reauthorize(self, token_for_refresh):
+        refreshed_token = 'ya29.refreshed_access_token'
+        # The authorization server may rotate the refresh token, which must not
+        # reach the client
+        token_for_refresh.return_value = TokenForCodeResponse(
+            access_token=refreshed_token,
+            expires_in=3599,
+            scope='openid email',
+            token_type='Bearer',
+            id_token='mock_id_token',
+            refresh_token=self._mock_refresh_token('mock_rotated_refresh_token'),
+            refresh_token_expires_in=86400
+        )
+        window = UserService.reauthorization_window
+        now = self._service._now()
+        for expires_in, expected_token in [
+            (3600, self._mock_access_token),
+            (window + 1, self._mock_access_token),
+            (window, refreshed_token),
+            (1, refreshed_token)
+        ]:
+            with self.subTest(expires_in=expires_in):
+                # The mock token response reports that the token expires in an
+                # hour, and authorization caches it as such
+                with (
+                    patch.object(UserService, '_now', return_value=now),
+                    self._mock_token_for_code()
+                ):
+                    self._authorize()
+                with (
+                    patch.object(UserService, '_now', return_value=now + 3600 - expires_in),
+                    self._mock_token_info() as token_info
+                ):
+                    response = self._reauthorize(self._mock_access_token)
+                    token_info.assert_not_called()
+                self.assertEqual(200, response.status)
+                body = json.loads(response.data)
+                self.assertEqual(expected_token, body['access_token'])
+                self.assertEqual('Bearer', body['token_type'])
+                if expected_token == refreshed_token:
+                    expected_body = {
+                        'access_token': refreshed_token,
+                        'expires_in': 3599,
+                        'scope': 'openid email',
+                        'token_type': 'Bearer',
+                        'id_token': 'mock_id_token'
+                    }
+                    self.assertEqual(expected_body, body)
+                    token_for_refresh.assert_called_once_with(
+                        refresh_token=self._mock_refresh_token(),
+                        client_id=self._mock_client_id,
+                        client_secret='mock_client_secret'
+                    )
+                    # The fresh token is cached and doesn't require
+                    # verification with the authorization server
+                    with self._mock_token_info() as token_info:
+                        uat_auth = UnverifiedAccessTokenAuthentication(refreshed_token)
+                        at_auth = self._service.verify_access_token(uat_auth)
+                        token_info.assert_not_called()
+                    self.assertEqual(self._mock_identity, at_auth.identity())
+                else:
+                    self.assertEqual(expires_in, body['expires_in'])
+                    self.assertIsNone(body['scope'])
+                    token_for_refresh.assert_not_called()
+                self.assertEqual(expected_token, self._load_user()['access_token'])
+                token_for_refresh.reset_mock()
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_reauthorize_uncached_token(self, token_for_refresh):
+        token_for_refresh.return_value = TokenResponse(
+            access_token='ya29.refreshed_access_token',
+            expires_in=3599,
+            scope='openid email',
+            token_type='Bearer'
+        )
+        with self._mock_token_for_code():
+            self._authorize()
+        # A token of the same user that this application didn't obtain
+        uncached_token = 'ya29.uncached_access_token'
+        window = UserService.reauthorization_window
+        for expires_in, expected_token in [
+            (window + 1, uncached_token),
+            (window, 'ya29.refreshed_access_token')
+        ]:
+            with self.subTest(expires_in=expires_in):
+                key = self._service._access_token_key(uncached_token)
+                aws.dynamodb.delete_item(TableName=UserService._access_tokens_table_name,
+                                         Key={UserService.access_token_key_attribute: {'S': key}})
+                with self._mock_token_info(expires_in=expires_in) as token_info:
+                    response = self._reauthorize(uncached_token)
+                    token_info.assert_called_once_with(uncached_token)
+                self.assertEqual(200, response.status)
+                self.assertEqual(expected_token, json.loads(response.data)['access_token'])
+
+    def test_reauthorize_rejected_refresh_token(self):
+        now = self._service._now()
+        with (
+            patch.object(UserService, '_now', return_value=now),
+            self._mock_token_for_code()
+        ):
+            self._authorize()
+        window = UserService.reauthorization_window
+        with (
+            patch.object(UserService, '_now', return_value=now + 3600 - window),
+            patch.object(OAuth2Client, 'token_for_refresh', side_effect=InvalidRefreshTokenError)
+        ):
+            response = self._reauthorize(self._mock_access_token)
+        self.assertEqual(401, response.status)
+        expected_body = {
+            'Code': 'UnauthorizedError',
+            'Message': "The user's authorization of this application was revoked "
+                       'or has expired. Authorize this application again.'
+        }
+        self.assertEqual(expected_body, json.loads(response.data))
+        self.assertEqual(self._mock_access_token, self._load_user()['access_token'])
+
+    def test_reauthorize_rejects_pat(self):
+        apat = self._authorize_and_mint()
+        response = self._reauthorize(apat.token)
+        self.assertEqual(403, response.status)
+
+    def test_reauthorize_unauthenticated(self):
+        response = self._reauthorize()
+        self.assertEqual(401, response.status)
+
     def test_unusable_authorization_header(self):
         url = str(self.base_url.set(path='/user/token'))
         # A refresh token is redactable, so it passes the syntax check in the
@@ -810,7 +939,8 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             self._get_token(token),
             self._revoke(token),
             self._get_user(token),
-            self._patch_user({}, token)
+            self._patch_user({}, token),
+            self._reauthorize(token)
         ]
 
     def test_get_user(self):

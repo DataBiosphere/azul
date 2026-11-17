@@ -69,7 +69,8 @@ class TestServiceAppLogging(DCP1CannedBundleTestCase, WebServiceTestCase):
 
     @patch.object(UserService, 'verify_access_token', new=MagicMock(
         side_effect=lambda auth: AccessTokenAuthentication(token=auth.token,
-                                                           identity='#105096702580025601450')
+                                                           identity='#105096702580025601450',
+                                                           expiration=2 ** 31)
     ))
     def test_request_logs(self):
         prefix_len = 1024
