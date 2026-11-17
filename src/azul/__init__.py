@@ -1461,6 +1461,10 @@ class Config:
         return int(self.environ['AZUL_MIRRORING_CONCURRENCY'])
 
     @property
+    def max_bundle_partition_size(self) -> int:
+        return int(self.environ['AZUL_MAX_BUNDLE_PARTITION_SIZE'])
+
+    @property
     def bigquery_reserved_slots(self) -> int:
         """
         The number of BigQuery slots to reserve when reindexing a catalog from a

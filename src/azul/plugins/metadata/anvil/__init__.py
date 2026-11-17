@@ -70,6 +70,7 @@ from azul.plugins import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
+    anvil_schema,
 )
 from azul.plugins.metadata.anvil.indexer.transform import (
     ActivityTransformer,
@@ -79,9 +80,6 @@ from azul.plugins.metadata.anvil.indexer.transform import (
     DatasetTransformer,
     DonorTransformer,
     FileTransformer,
-)
-from azul.plugins.metadata.anvil.schema import (
-    anvil_schemas,
 )
 from azul.plugins.metadata.anvil.service.aggregation import (
     AnvilSummaryAggregationStage,
@@ -96,10 +94,6 @@ from azul.service.query_service import (
 from azul.source import (
     SourceRef,
 )
-
-#: The version of the AnVIL schema that this module was written against
-#:
-anvil_schema = anvil_schemas[6]
 
 
 class Plugin(MetadataPlugin[AnvilBundle]):

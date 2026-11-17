@@ -112,7 +112,7 @@ def main(argv):
     if args.command in commands:
         queues = Queues()
         if args.command == 'list':
-            queues.list()
+            queues._list()
         elif args.command == 'purge':
             queues.purge(args.queue)
         elif args.command == 'purge_all':

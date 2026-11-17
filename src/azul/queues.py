@@ -1,4 +1,3 @@
-import builtins
 from collections import (
     deque,
 )
@@ -186,6 +185,13 @@ class Queues:
     #:
     batch_size = 10
 
+    #: The maximum number of times a SendMessageBatch action is attempted for
+    #: the same message, and the number of seconds to wait before the first
+    #: retry. The wait doubles with every retry.
+    #:
+    max_send_attempts = 8
+    send_retry_delay = .1
+
     #: The number of seconds to wait between consecutive polls of the progress
     #: of a message move task. Such a task may run for up to 36 hours.
     #:
@@ -233,7 +239,7 @@ class Queues:
         'ApproximateNumberOfMessagesDelayed'
     )
 
-    def list(self):
+    def _list(self):
         log.info('Listing queues')
         print(f'\n{"Queue Name":<35s}'
               f'{"Messages Available":^20s}'
@@ -342,7 +348,7 @@ class Queues:
         queue.reload()
         return max(0, sum(self._message_counts(queue)) - num_in_flight)
 
-    def _message_counts(self, queue: Queue) -> builtins.list[int]:
+    def _message_counts(self, queue: Queue) -> list[int]:
         return [
             int(queue.attributes[name])
             for name in self.message_count_attributes
@@ -417,13 +423,13 @@ class Queues:
     def _is_fifo(self, queue: Queue) -> bool:
         return queue.attributes.get('FifoQueue') == 'true'
 
-    def _receive_messages(self, queue: Queue) -> builtins.list[Message]:
+    def _receive_messages(self, queue: Queue) -> list[Message]:
         return queue.receive_messages(AttributeNames=['All'],
                                       MaxNumberOfMessages=self.batch_size,
                                       VisibilityTimeout=300,
                                       WaitTimeSeconds=self.receive_wait_time)
 
-    def _get_messages(self, queue: Queue) -> builtins.list[Message]:
+    def _get_messages(self, queue: Queue) -> list[Message]:
         messages: list[Message] = []
         while True:
             message_batch = self._receive_messages(queue)
@@ -432,7 +438,7 @@ class Queues:
             else:
                 messages.extend(message_batch)
 
-    def read_messages(self, queue: Queue) -> builtins.list[Message]:
+    def read_messages(self, queue: Queue) -> list[Message]:
         messages = self._get_messages(queue)
         self._cleanup_messages(queue, messages)
         return messages
@@ -447,7 +453,7 @@ class Queues:
         for batch in chunked(messages, self.batch_size):
             entries = [message.to_batch_entry(i) for i, message in enumerate(batch)]
             start = time.time()
-            queue.send_messages(Entries=entries)
+            self._send_batch(queue, entries)
             for message in batch:
                 self._log_queued_message(message, log_level)
             if rate_limit is not None:
@@ -459,6 +465,36 @@ class Queues:
                     time.sleep(time_to_sleep)
             num_messages += len(batch)
         return num_messages
+
+    def _send_batch(self,
+                    queue: Queue,
+                    entries: list[SendMessageBatchRequestEntryTypeDef]):
+        """
+        Send the given entries to the given queue, resending those that SQS
+        throttles. A FIFO queue in high throughput mode throttles individual
+        entries of an otherwise successful request. SQS marks such entries as
+        the sender's fault, so their code is the only indication that resending
+        them can succeed.
+        """
+        num_attempts = 0
+        assert len(entries) > 0, R('No messages to send')
+        while True:
+            response = queue.send_messages(Entries=entries)
+            num_attempts += 1
+            failures = response.get('Failed', [])
+            rejections = [failure for failure in failures if failure['Code'] != 'RequestThrottled']
+            assert not rejections, R('SQS rejected messages', rejections)
+            failed_ids = {failure['Id'] for failure in failures}
+            if failed_ids:
+                assert num_attempts < self.max_send_attempts, R(
+                    'SQS repeatedly failed to accept messages', failures)
+                entries = [entry for entry in entries if entry['Id'] in failed_ids]
+                delay = self.send_retry_delay * 2 ** (num_attempts - 1)
+                log.warning('SQS failed to accept %i message(s), resending them in %.3fs: %r',
+                            len(entries), delay, failures)
+                time.sleep(delay)
+            else:
+                break
 
     def send_message(self,
                      queue: Queue,
@@ -498,7 +534,7 @@ class Queues:
                 'Failed to return messages', response)
 
     def _delete_messages(self,
-                         message_batches: Iterable[builtins.list[Message]],
+                         message_batches: Iterable[list[Message]],
                          queue: Queue):
         for message_batch in message_batches:
             response = queue.delete_messages(
@@ -673,7 +709,7 @@ class Queues:
                 num_skipped = 0
             for batch in chunked(messages, self.batch_size):
                 entries = [self._reconstitute(message) for message in batch]
-                queue.send_messages(Entries=entries)
+                self._send_batch(queue, entries)
                 num_fed += len(batch)
                 self._write_progress(progress_path, queue, num_fed)
         log.info('Wrote %i messages, %i overall', num_fed - num_skipped, num_fed)

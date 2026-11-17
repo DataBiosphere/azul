@@ -78,6 +78,7 @@ from azul.lib.types import (
     AnyJSON,
     JSON,
     JSONs,
+    MutableJSON,
     reify,
 )
 from azul.logging import (
@@ -261,6 +262,12 @@ class TDRPluginTestCase(TDRTestCase,
         8589934592000002
         """
         return int(float(value) * 10 ** 6)
+
+    def _canned_tables(self) -> MutableJSON:
+        canned_file = self._load_canned_file_version(uuid=self.source.ref.id,
+                                                     version=None,
+                                                     extension='tables.tdr')
+        return canned_file['tables']
 
     def _make_mock_tables(self, source: TDRSourceRef) -> None:
         can = self._load_canned_file_version(uuid=source.id,
