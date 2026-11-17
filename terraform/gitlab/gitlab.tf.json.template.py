@@ -23,6 +23,7 @@ from azul.deployment import (
     aws,
 )
 from azul.docker import (
+    lambda_image_repository_name,
     resolve_docker_image_for_pull,
 )
 from azul.infra.terraform import (
@@ -978,7 +979,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'ecr:UploadLayerPart'
                         ],
                         'resources': [
-                            f'arn:aws:ecr:{aws.region_name}:{aws.account}:repository/{config.domain_name}/azul/lambda'
+                            f'arn:aws:ecr:{aws.region_name}:{aws.account}:repository/{lambda_image_repository_name()}'
                         ]
                     },
                     {
