@@ -315,7 +315,7 @@ class UserService:
         return jwt
 
     def verify_access_token(self,
-                            at_auth: UnverifiedAccessTokenAuthentication
+                            uat_auth: UnverifiedAccessTokenAuthentication
                             ) -> AccessTokenAuthentication:
         """
         Verify the given access token.
@@ -327,15 +327,15 @@ class UserService:
 
         :raise Exception: if the validity of the token cannot be determined
         """
-        identity = self._cached_identity(at_auth.token)
+        identity = self._cached_identity(uat_auth.token)
         if identity is None:
             try:
-                token_info = self._token_info(at_auth.token)
+                token_info = self._token_info(uat_auth.token)
             except InvalidAccessTokenError as e:
-                log.warning('Invalid access token %s', at_auth, exc_info=e)
+                log.warning('Invalid access token %s', uat_auth, exc_info=e)
                 raise
             except RejectedAccessTokenError as e:
-                log.warning('Rejected access token %s', at_auth, exc_info=e)
+                log.warning('Rejected access token %s', uat_auth, exc_info=e)
                 raise
             else:
                 # The token info endpoint doesn't report the issuer of an access
@@ -345,10 +345,10 @@ class UserService:
                 # party is the service account's unique ID.
                 subject = token_info.get('sub', token_info['azp'])
                 identity = self._encode_identity(self._google_issuer, subject)
-                self._cache_access_token(at_auth.token,
+                self._cache_access_token(uat_auth.token,
                                          identity,
                                          int(token_info['expires_in']))
-        return AccessTokenAuthentication(token=at_auth.token, identity=identity)
+        return AccessTokenAuthentication(token=uat_auth.token, identity=identity)
 
     def _access_token_key(self, access_token: str) -> str:
         return hashlib.sha256(access_token.encode()).hexdigest()
@@ -429,21 +429,23 @@ class UserService:
         return token_info
 
     def _user_for_access_token(self,
-                               at_auth: UnverifiedAccessTokenAuthentication
+                               uat_auth: UnverifiedAccessTokenAuthentication
                                ) -> User:
-        if not isinstance(at_auth, AccessTokenAuthentication):
-            at_auth = self.verify_access_token(at_auth)
+        if isinstance(uat_auth, AccessTokenAuthentication):
+            at_auth = uat_auth
+        else:
+            at_auth = self.verify_access_token(uat_auth)
         return self._load_user(at_auth.identity())
 
-    def get_user(self, at_auth: UnverifiedAccessTokenAuthentication) -> User:
+    def get_user(self, uat_auth: UnverifiedAccessTokenAuthentication) -> User:
         """
         Return the stored information about the user identified by the given
         access token.
         """
-        return self._user_for_access_token(at_auth)
+        return self._user_for_access_token(uat_auth)
 
     def update_accepted_contracts(self,
-                                  at_auth: UnverifiedAccessTokenAuthentication,
+                                  uat_auth: UnverifiedAccessTokenAuthentication,
                                   accepted_contracts: Mapping[str, ContractAcceptance | None] | None
                                   ) -> User:
         """
@@ -451,7 +453,7 @@ class UserService:
         retracted the acceptance of, the given contracts, and return the updated
         information about that user.
 
-        :param at_auth: The access token of the user
+        :param uat_auth: The access token of the user
 
         :param accepted_contracts: Maps the name of each contract to the version
                                    the user accepted and its SHA-256 digest, or
@@ -460,7 +462,7 @@ class UserService:
                                    mapping are left alone. None retracts the
                                    acceptance of every contract.
         """
-        user = self._user_for_access_token(at_auth)
+        user = self._user_for_access_token(uat_auth)
         if accepted_contracts is None:
             user = self._update_user(user,
                                      'REMOVE accepted_contracts',
@@ -547,7 +549,7 @@ class UserService:
             return self._user_from_item(response['Attributes'])
 
     def mint_personal_access_token(self,
-                                   at_auth: UnverifiedAccessTokenAuthentication
+                                   uat_auth: UnverifiedAccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
         """
         Given a valid access token for a user, issue a long-lived,
@@ -558,8 +560,8 @@ class UserService:
         perform. The APAT can be thought of as a proxy secret for the user's
         refresh token.
         """
-        log.info('Minting APAT for %s', at_auth)
-        user = self._user_for_access_token(at_auth)
+        log.info('Minting APAT for %s', uat_auth)
+        user = self._user_for_access_token(uat_auth)
         jti = self._next_jti(user)
         now = self._now()
         payload = {
@@ -577,36 +579,36 @@ class UserService:
         assert_redactable(apat)
         apat_auth = PersonalAccessTokenAuthentication(token=apat)
         log.info('Minted APAT %s for access token %s',
-                 apat_auth, at_auth)
+                 apat_auth, uat_auth)
         return apat_auth
 
     def exchange_token(self,
-                       apat_auth: UnverifiedPersonalAccessTokenAuthentication
+                       uapat_auth: UnverifiedPersonalAccessTokenAuthentication
                        ) -> AccessTokenAuthentication:
         """
         Return a usable access token in exchange for an APAT if valid and not
         yet expired.
         """
-        log.info('Getting access token for APAT %s', apat_auth)
+        log.info('Getting access token for APAT %s', uapat_auth)
         try:
-            claims = self._jwt.decode(apat_auth.token,
+            claims = self._jwt.decode(uapat_auth.token,
                                       key=self._apat_public_key,
                                       algorithms=[self._apat_algorithm])
         except jwt.exceptions.PyJWTError as e:
-            log.warning('Invalid APAT %s', apat_auth, exc_info=e)
+            log.warning('Invalid APAT %s', uapat_auth, exc_info=e)
             raise InvalidPersonalAccessTokenError from e
         else:
-            assert_redactable(apat_auth.token)
+            assert_redactable(uapat_auth.token)
             try:
                 user = self._load_user(claims['sub'])
             except UnknownUserException as e:
                 # The user's item expires along with their refresh token
-                log.warning('Unknown user of APAT %s', apat_auth, exc_info=e)
+                log.warning('Unknown user of APAT %s', uapat_auth, exc_info=e)
                 raise InvalidPersonalAccessTokenError from e
             jti = claims.get('jti')
             if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
                 log.warning('APAT jti %r out of range [%d, %d) for %s',
-                            jti, user['min_jti'], user['max_jti'], apat_auth)
+                            jti, user['min_jti'], user['max_jti'], uapat_auth)
                 raise InvalidPersonalAccessTokenError
             access_token = user['access_token']
             if user['access_token_expiration'] < self._now() + 60:
@@ -618,24 +620,24 @@ class UserService:
                     )
                 except InvalidRefreshTokenError as e:
                     log.warning('Rejected refresh token of user of APAT %s',
-                                apat_auth, exc_info=e)
+                                uapat_auth, exc_info=e)
                     raise InvalidPersonalAccessTokenError from e
                 else:
                     access_token, expires_in = response['access_token'], response['expires_in']
                     self._update_access_token(user, access_token, expires_in)
             at_auth = AccessTokenAuthentication(token=access_token,
                                                 identity=self._identity(user))
-            log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
+            log.info('Exchanged %s for APAT %s', at_auth, uapat_auth)
             return at_auth
 
     def revoke_personal_access_tokens(self,
-                                      at_auth: UnverifiedAccessTokenAuthentication
+                                      uat_auth: UnverifiedAccessTokenAuthentication
                                       ) -> None:
         """
         Revoke all APATs for the user identified by the given access token.
         """
-        log.info('Revoking all APATs for %s', at_auth)
-        user = self._user_for_access_token(at_auth)
+        log.info('Revoking all APATs for %s', uat_auth)
+        user = self._user_for_access_token(uat_auth)
         self._revoke_jti(user)
 
     def _store_user(self, user: User) -> None:
