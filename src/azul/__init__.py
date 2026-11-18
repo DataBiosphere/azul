@@ -1660,6 +1660,10 @@ class Config:
         return self.environ['AZUL_GOOGLE_OAUTH2_CLIENT_ID']
 
     @property
+    def reauthorization_limit(self) -> int:
+        return int(self.environ['AZUL_REAUTHORIZATION_LIMIT'])
+
+    @property
     def monitoring_email(self) -> str:
         return self.environ['AZUL_MONITORING_EMAIL']
 

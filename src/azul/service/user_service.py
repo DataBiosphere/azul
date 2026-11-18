@@ -138,6 +138,9 @@ class User(JSONTypedDict):
     access_token_expiration: int
     #: The Unix timestamp after which the refresh token expires
     expiration: int
+    #: The Unix timestamp of the user's most recent authorization of this
+    #: application
+    authorization_time: int
     #: APATs with a jti below this value are considered revoked
     min_jti: NotRequired[int]
     #: The jti to assign to the APAT requested next
@@ -174,6 +177,13 @@ class RejectedAccessTokenError(Exception):
     The authorization server accepted the access token but this application
     doesn't, because it was issued to a party this application doesn't accept
     tokens from.
+    """
+
+
+class ReauthorizationLimitError(Exception):
+    """
+    The user's most recent authorization of this application is too long ago
+    for their access token to be refreshed.
     """
 
 
@@ -279,7 +289,8 @@ class UserService:
             email=id_claims['email'],
             email_verified=id_claims['email_verified'],
             access_token_expiration=now + response['expires_in'],
-            expiration=now + expiration
+            expiration=now + expiration,
+            authorization_time=now
         )
         self._store_user(user)
         at_auth = AccessTokenAuthentication(
@@ -658,6 +669,12 @@ class UserService:
         user, obtained with the user's refresh token, otherwise. The scopes of
         the given access token are unknown, so they are reported as None.
 
+        :raise ReauthorizationLimitError: A fresh access token is needed but
+                                          the user last authorized this
+                                          application longer than
+                                          :attr:`Config.reauthorization_limit`
+                                          seconds ago
+
         :raise InvalidRefreshTokenError: if the authorization server rejects
                                          the user's refresh token
         """
@@ -675,6 +692,13 @@ class UserService:
                 scope=None,  # type: ignore[typeddict-item]
                 token_type='Bearer'
             )
+        elif user['authorization_time'] + config.reauthorization_limit <= self._now():
+            log.warning('Not reauthorizing %s, which expires in %d seconds, '
+                        'because the user last authorized this application at '
+                        '%r, more than %d seconds ago',
+                        at_auth, expires_in, user['authorization_time'],
+                        config.reauthorization_limit)
+            raise ReauthorizationLimitError
         else:
             response = self._oauth_client.token_for_refresh(
                 refresh_token=user['refresh_token'],
@@ -717,6 +741,7 @@ class UserService:
             .set_from(user, 'email')
             .set_from(user, 'email_verified')
             .set_from(user, 'expiration', alias=True)
+            .set_from(user, 'authorization_time')
             .set_from(user, 'min_jti', default=0)
             .set_from(user, 'max_jti', default=0)
             .to_update_item_input()
@@ -756,6 +781,7 @@ class UserService:
             email_verified=item['email_verified']['BOOL'],
             access_token_expiration=int(item['access_token_expiration']['N']),
             expiration=int(item[self.ttl_attribute]['N']),
+            authorization_time=int(item.get('authorization_time', {'N': '0'})['N']),
             min_jti=int(item['min_jti']['N']),
             max_jti=int(item['max_jti']['N']),
             accepted_contracts={

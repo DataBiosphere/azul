@@ -20,6 +20,9 @@ from chalice.app import (
 )
 import chevron
 
+from azul import (
+    config,
+)
 from azul.auth import (
     UnverifiedAccessTokenAuthentication,
     UnverifiedPersonalAccessTokenAuthentication,
@@ -73,6 +76,7 @@ from azul.service.contract_service import (
 )
 from azul.service.user_service import (
     ContractAcceptance,
+    ReauthorizationLimitError,
     RejectedAccessTokenError,
     UnknownUserException,
     User,
@@ -303,8 +307,12 @@ class UserController(Controller):
                     header, passed as a Bearer token, for a fresh one. The user
                     must have previously completed the authorization code flow.
                     If the access token remains valid for more than
-                    {minutes} minutes, it is returned unchanged.
-                ''', minutes=self._service.reauthorization_window // 60),
+                    {minutes} minutes, it is returned unchanged. Otherwise, a
+                    fresh one is only issued within {hours} hours of the user
+                    completing the authorization code flow.
+                ''',
+                                  minutes=self._service.reauthorization_window // 60,
+                                  hours=self._reauthorization_limit_hours),
                 'tags': ['User'],
                 'responses': {
                     '200': {
@@ -340,11 +348,13 @@ class UserController(Controller):
                         'description': fd('''
                             No valid OAuth 2.0 access token was provided, the
                             user has not completed the authorization code flow,
-                            or the access token is about to expire and the
-                            user's authorization of this application has
-                            lapsed. In the latter case, the user must authorize
-                            this application again.
-                        ''')
+                            or the access token is about to expire and either
+                            the user's authorization of this application has
+                            lapsed or the user completed the authorization code
+                            flow more than {hours} hours ago. In the latter two
+                            cases, the user must authorize this application
+                            again.
+                        ''', hours=self._reauthorization_limit_hours)
                     }
                 }
             }
@@ -570,11 +580,18 @@ class UserController(Controller):
         with self._rejecting_unusable_token():
             try:
                 response = self._service.reauthorize(auth)
+            except ReauthorizationLimitError:
+                raise UnauthorizedError('The user authorized this application too '
+                                        'long ago. Authorize this application again.')
             except InvalidRefreshTokenError:
                 raise UnauthorizedError("The user's authorization of this "
                                         'application was revoked or has expired. '
                                         'Authorize this application again.')
         return self._token_response(response)
+
+    @property
+    def _reauthorization_limit_hours(self) -> str:
+        return f'{config.reauthorization_limit / 3600:g}'
 
     @property
     def _user_schema(self) -> JSON:

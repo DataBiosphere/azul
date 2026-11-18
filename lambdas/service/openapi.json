@@ -14210,14 +14210,14 @@
                         }
                     },
                     "401": {
-                        "description": "\nNo valid OAuth 2.0 access token was provided, the\nuser has not completed the authorization code flow,\nor the access token is about to expire and the\nuser's authorization of this application has\nlapsed. In the latter case, the user must authorize\nthis application again.\n"
+                        "description": "\nNo valid OAuth 2.0 access token was provided, the\nuser has not completed the authorization code flow,\nor the access token is about to expire and either\nthe user's authorization of this application has\nlapsed or the user completed the authorization code\nflow more than 12 hours ago. In the latter two\ncases, the user must authorize this application\nagain.\n"
                     },
                     "403": {
                         "description": "\nA personal access token was provided, which cannot be used\nfor this endpoint\n"
                     }
                 },
                 "summary": "Obtain a fresh OAuth 2.0 access token in exchange for one that is about to expire",
-                "description": "\nExchange the OAuth 2.0 access token in the `Authorization`\nheader, passed as a Bearer token, for a fresh one. The user\nmust have previously completed the authorization code flow.\nIf the access token remains valid for more than\n15 minutes, it is returned unchanged.\n",
+                "description": "\nExchange the OAuth 2.0 access token in the `Authorization`\nheader, passed as a Bearer token, for a fresh one. The user\nmust have previously completed the authorization code flow.\nIf the access token remains valid for more than\n15 minutes, it is returned unchanged. Otherwise, a\nfresh one is only issued within 12 hours of the user\ncompleting the authorization code flow.\n",
                 "tags": [
                     "User"
                 ]

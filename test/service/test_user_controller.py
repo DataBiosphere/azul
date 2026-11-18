@@ -697,6 +697,17 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                                    user['access_token_expiration'] - now,
                                    delta=5)
 
+    def test_authorize_stores_authorization_time(self):
+        now = self._service._now()
+        for authorization_time in [now, now + 60]:
+            with self.subTest(authorization_time=authorization_time):
+                with (
+                    patch.object(UserService, '_now', return_value=authorization_time),
+                    self._mock_token_for_code()
+                ):
+                    self._authorize()
+                self.assertEqual(authorization_time, self._load_user()['authorization_time'])
+
     def test_token(self):
         with self._mock_token_for_code():
             self._authorize()
@@ -861,6 +872,85 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         }
         self.assertEqual(expected_body, json.loads(response.data))
         self.assertEqual(self._mock_access_token, self._load_user()['access_token'])
+
+    def _set_authorization_time(self, authorization_time: int | None) -> None:
+        key = {UserService.key_attribute: {'S': self._mock_identity}}
+        if authorization_time is None:
+            aws.dynamodb.update_item(TableName=UserService._table_name,
+                                     Key=key,
+                                     UpdateExpression='REMOVE authorization_time')
+        else:
+            aws.dynamodb.update_item(TableName=UserService._table_name,
+                                     Key=key,
+                                     UpdateExpression='SET authorization_time = :t',
+                                     ExpressionAttributeValues={':t': {'N': str(authorization_time)}})
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_reauthorize_limit(self, token_for_refresh):
+        refreshed_token = 'ya29.refreshed_access_token'
+        token_for_refresh.return_value = TokenResponse(
+            access_token=refreshed_token,
+            expires_in=3599,
+            scope='openid email',
+            token_type='Bearer'
+        )
+        limit = config.reauthorization_limit
+        now = self._service._now()
+        # When the access token obtained by authorization is due for a refresh
+        due = now + 3600 - UserService.reauthorization_window
+        for authorization_time, expected_token in [
+            (due - limit + 1, refreshed_token),
+            (due - limit, None),
+            # The user last authorized this application before the time of
+            # authorization was recorded
+            (None, None)
+        ]:
+            with self.subTest(authorization_time=authorization_time):
+                with (
+                    patch.object(UserService, '_now', return_value=now),
+                    self._mock_token_for_code()
+                ):
+                    self._authorize()
+                self._set_authorization_time(authorization_time)
+                with patch.object(UserService, '_now', return_value=due):
+                    response = self._reauthorize(self._mock_access_token)
+                body = json.loads(response.data)
+                if expected_token is None:
+                    self.assertEqual(401, response.status)
+                    expected_body = {
+                        'Code': 'UnauthorizedError',
+                        'Message': 'The user authorized this application too long '
+                                   'ago. Authorize this application again.'
+                    }
+                    self.assertEqual(expected_body, body)
+                    token_for_refresh.assert_not_called()
+                    self.assertEqual(self._mock_access_token, self._load_user()['access_token'])
+                else:
+                    self.assertEqual(200, response.status)
+                    self.assertEqual(expected_token, body['access_token'])
+                    token_for_refresh.assert_called_once()
+                    self.assertEqual(expected_token, self._load_user()['access_token'])
+                # Reauthorization doesn't count as authorization
+                expected_time = 0 if authorization_time is None else authorization_time
+                self.assertEqual(expected_time, self._load_user()['authorization_time'])
+                token_for_refresh.reset_mock()
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_reauthorize_past_limit_unchanged(self, token_for_refresh):
+        now = self._service._now()
+        with (
+            patch.object(UserService, '_now', return_value=now),
+            self._mock_token_for_code()
+        ):
+            self._authorize()
+        # An access token that isn't due for a refresh is returned unchanged,
+        # even past the limit
+        self._set_authorization_time(now - 2 * config.reauthorization_limit)
+        with patch.object(UserService, '_now', return_value=now):
+            response = self._reauthorize(self._mock_access_token)
+        self.assertEqual(200, response.status)
+        self.assertEqual(self._mock_access_token, json.loads(response.data)['access_token'])
+        token_for_refresh.assert_not_called()
 
     def test_reauthorize_rejects_pat(self):
         apat = self._authorize_and_mint()

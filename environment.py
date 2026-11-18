@@ -885,6 +885,15 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
 
+        # The time interval, measured in seconds after the user last logged in,
+        # during which a user agent may obtain freshly minted access tokens via
+        # the `/user/reauthorize` endpoint. Login is done via the Swagger UI's
+        # "Authorize" button or the `/user/authorize` endpoint. Once the
+        # specified time interval has passed, the user must log in again. The
+        # default is 12 hours.
+        #
+        'AZUL_REAUTHORIZATION_LIMIT': '43200',
+
         # Maps a branch name to a list of names of deployments the branch may be
         # deployed to. When building a given branch, a GitLab instance uses this
         # variable to automatically determine the target deployment by using the
