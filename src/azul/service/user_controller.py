@@ -5,9 +5,6 @@ from collections.abc import (
 from contextlib import (
     contextmanager,
 )
-from copy import (
-    copy,
-)
 import json
 from typing import (
     Any,
@@ -52,6 +49,7 @@ from azul.lib.types import (
 from azul.oauth2 import (
     Authorization,
     InvalidAccessTokenError,
+    TokenResponse,
 )
 from azul.openapi import (
     application_json,
@@ -474,18 +472,24 @@ class UserController(Controller):
             if not is_redactable(authorization['code']):
                 raise BadRequestError('Unexpected authorization code syntax')
             else:
-                response = copy(self._service.authorize(authorization,
-                                                        redirect_uri=redirect_uri))
-                # Withhold refresh token from client for security reasons. The
-                # property is required so we need to override the type checker
-                # on that. This is safe because we made copy above.
-                response.pop('refresh_token')  # type: ignore[misc]
-                return json_untyped_dict(response)
+                response = self._service.authorize(authorization,
+                                                   redirect_uri=redirect_uri)
+                return self._token_response(response)
         except AssertionError as e:
             if R.caused(e):
                 raise BadRequestError(e.args)
             else:
                 raise
+
+    def _token_response(self, response: TokenResponse) -> JSON:
+        """
+        The properties of the given response from the authorization server that
+        are declared by :class:`TokenResponse`. The authorization server may
+        respond with more, a refresh token for example, which must be withheld
+        from the client.
+        """
+        keys = TokenResponse.__required_keys__ | TokenResponse.__optional_keys__
+        return {k: v for k, v in json_untyped_dict(response).items() if k in keys}
 
     def _token(self) -> JSON:
         auth = self._access_token('Cannot exchange a personal access token for another')

@@ -334,6 +334,9 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_for_code(refresh_token_expires_in=86400):
             response = self._authorize()
             self.assertEqual(200, response.status)
+            body = json.loads(response.data)
+            self.assertNotIn('refresh_token', body)
+            self.assertNotIn('refresh_token_expires_in', body)
             user = self._load_user()
             now = self._service._now()
             self.assertAlmostEqual(86400, user['expiration'] - now, delta=5)
