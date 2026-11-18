@@ -1,4 +1,10 @@
+from itertools import (
+    islice,
+)
 import json
+from typing import (
+    Callable,
+)
 from unittest.mock import (
     patch,
 )
@@ -20,11 +26,23 @@ from azul.logging import (
     configure_test_logging,
     get_test_logger,
 )
+from azul.plugins import (
+    MetadataPlugin,
+)
+from azul.plugins.metadata.anvil import (
+    Plugin as AnvilPlugin,
+)
 from azul.plugins.metadata.anvil.indexer.transform import (
     DatasetTransformer,
 )
 from azul.plugins.repository.tdr_anvil import (
     TDRAnvilBundleFQID,
+)
+from azul.service.index_controller import (
+    IndexController,
+)
+from azul.service.source_service import (
+    SourceService,
 )
 from indexer.test_anvil import (
     AnvilIndexerTestCase,
@@ -1519,6 +1537,70 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         }
         url = str(self.base_url.set(path='/index/summary'))
         self._assertResponse(url, expected_response)
+
+    def test_registered_access_buckets(self):
+        plugin: MetadataPlugin = MetadataPlugin.load(self.catalog).create()
+        cases = [
+            (
+                plugin.registered_access_count_buckets,
+                [50, 100, 500, 1000, 5000, 10000, 50000, 100000]
+            ),
+            (
+                plugin.registered_access_size_buckets,
+                [2 ** 16, 2 ** 17, 2 ** 18, 2 ** 19, 2 ** 20, 2 ** 21, 2 ** 22, 2 ** 23]
+            )
+        ]
+        for boundaries, expected in cases:
+            self.assertEqual(expected, list(islice(boundaries, len(expected))))
+
+    def test_summary_registered_access(self):
+        self.maxDiff = None
+
+        def expected_response(count: Callable[[int], int], size: float) -> JSON:
+            return {
+                'activityCount': count(2),
+                'biosampleCount': count(1),
+                'datasetCount': count(1),
+                'donorCount': count(1),
+                'donorDatasets': [{'count': count(1), 'dataset': 'ANVIL_Test'}],
+                'fileCount': count(2),
+                'fileDatasets': [{'count': count(2), 'dataset': 'ANVIL_Test'}],
+                'fileFormats': [
+                    {'count': count(1), 'format': '.bam'},
+                    {'count': count(1), 'format': '.vcf.gz'}
+                ],
+                'totalFileSize': size
+            }
+
+        # The verification of registered access is covered elsewhere
+        with (
+            patch.object(SourceService, 'list_source_ids', return_value=set()),
+            patch.object(IndexController, '_verify_registered_access')
+        ):
+            url = self.base_url.set(path='/index/summary')
+            self._assertResponse(str(url), {
+                'activityCount': 0,
+                'biosampleCount': 0,
+                # The root entity type isn't subject to access controls
+                'datasetCount': 1,
+                'donorCount': 0,
+                'donorDatasets': [],
+                'fileCount': 0,
+                'fileDatasets': [],
+                'fileFormats': [],
+                'totalFileSize': 0.0
+            })
+            url.set(args=dict(registered_access='1'))
+            # The default buckets
+            self._assertResponse(str(url), expected_response(lambda _: 50,
+                                                             size=float(2 ** 32)))
+            # Buckets configured by the plugin
+            with (
+                patch.object(AnvilPlugin, 'registered_access_count_buckets', [1, 2, 3]),
+                patch.object(AnvilPlugin, 'registered_access_size_buckets', [10 ** 9, 10 ** 10])
+            ):
+                self._assertResponse(str(url), expected_response(lambda count: count + 1,
+                                                                 size=float(10 ** 10)))
 
     def test_filter_by_age(self):
         # FIXME: Support range operators on AnVIL age fields

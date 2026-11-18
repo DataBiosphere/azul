@@ -278,6 +278,11 @@ class _FilterBuilder(_UsesIndex):
     """
     filters: Filters
 
+    #: False if managed-access enforcement should be lifted, provided that the
+    #: service allows it.
+    #:
+    _enforce_access: bool = True
+
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
         filters_json = self.filters.reify(self.plugin, enforce_access=self.enforce_access)
@@ -286,20 +291,14 @@ class _FilterBuilder(_UsesIndex):
     @property
     def enforce_access(self) -> bool:
         """
-        Whether the managed access controls are enforced
+        Whether managed-access is enforced. It is enforced unconditionally if
+        the service mandates it. Otherwise, and unless enforcement was lifted by
+        passing ``enforce_access=False`` to the constructor, it is enforced for
+        every entity type except the root entity type.
         """
-        return self.service.always_enforce_access or self._enforce_access
-
-    @property
-    def _enforce_access(self) -> bool:
-        """
-        Whether to enforce the managed access controls during filter
-        reification, provided that the service allows such conditional
-        enforcement of access. If it doesn't, the return value should be
-        ignored, and access must be enforced unconditionally. Access is
-        enforced for every entity type except the root entity type.
-        """
-        return self.entity_type != self.plugin.root_entity_type
+        return self.service.always_enforce_access or (
+            self._enforce_access and self.entity_type != self.plugin.root_entity_type
+        )
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
@@ -949,17 +948,22 @@ class QueryService(DocumentService):
                      catalog: CatalogName,
                      entity_type: str,
                      filters: Filters,
-                     document_slice: DocumentSlice | None
+                     document_slice: DocumentSlice | None,
+                     enforce_access: bool = True
                      ) -> Chain[Response, Any, Response]:
         """
         Create a chain for a basic OpenSearch `search` request for documents
         matching the given filter, optionally restricting the set of properties
         returned for each matching document.
+
+        :param enforce_access: False if managed-access enforcement should be
+                               lifted, provided that the service allows it.
         """
         chain = FilterStage(service=self,
                             catalog=catalog,
                             entity_type=entity_type,
-                            filters=filters)
+                            filters=filters,
+                            enforce_access=enforce_access)
         chain = SlicingStage(service=self,
                              catalog=catalog,
                              entity_type=entity_type,

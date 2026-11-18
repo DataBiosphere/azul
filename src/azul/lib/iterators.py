@@ -6,13 +6,21 @@ from functools import (
     partial,
 )
 from itertools import (
+    dropwhile,
     islice,
+)
+from operator import (
+    ge,
 )
 import random
 from typing import (
     Callable,
     TypeVar,
     cast,
+)
+
+from more_itertools import (
+    first,
 )
 
 from azul.lib import (
@@ -97,3 +105,36 @@ def reservoir_sample(k: int,
         if j < k:
             sample[j] = item
     return sample
+
+
+def find_range(value: int | float, upper_bounds: Iterable[int]) -> int:
+    """
+    The upper bound of the range that the given value falls into, given an
+    iterable of the exclusive upper bounds of adjacent ranges, in ascending
+    order. The first range has no lower bound. The value must be below the last
+    upper bound.
+
+    >>> [
+    ...     find_range(value, [50, 100])
+    ...     for value in [-1, 0, 1, 49, 50, 75, 99]
+    ... ]
+    [50, 50, 50, 50, 100, 100, 100]
+
+    >>> find_range(1.5, [1, 2])
+    2
+
+    >>> find_range(100, [50, 100])
+    Traceback (most recent call last):
+    ...
+    AssertionError: R('Value is not below the last upper bound', 100)
+
+    An infinite iterable of upper bounds is only consumed up to the first one
+    that exceeds the value.
+
+    >>> from itertools import count
+    >>> find_range(1000, (2 ** exponent for exponent in count()))
+    1024
+    """
+    bound = first(dropwhile(partial(ge, value), upper_bounds), None)
+    assert bound is not None, R('Value is not below the last upper bound', value)
+    return bound

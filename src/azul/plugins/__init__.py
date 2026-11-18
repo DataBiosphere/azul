@@ -6,6 +6,7 @@ import importlib
 from inspect import (
     isabstract,
 )
+import itertools
 from typing import (
     Callable,
     ClassVar,
@@ -618,6 +619,28 @@ class MetadataPlugin[BUNDLE: Bundle](Plugin[BUNDLE]):
         registered access.
         """
         raise NotImplementedError
+
+    @property
+    def registered_access_count_buckets(self) -> Iterable[int]:
+        """
+        The boundaries between the buckets into which a summary for registered
+        access quantizes counts, in ascending order. Each count is reported as
+        the exclusive upper bound of its bucket. The first bucket starts at 0.
+        The boundaries must not end before exceeding every count. The default
+        boundaries are 50, 100, 500, 1000, 5000, 10000 and so on, without end.
+        """
+        return itertools.chain.from_iterable(
+            (5 * 10 ** exponent, 10 ** (exponent + 1))
+            for exponent in itertools.count(1)
+        )
+
+    @property
+    def registered_access_size_buckets(self) -> Iterable[int]:
+        """
+        Like :py:attr:`registered_access_count_buckets` but for sizes in bytes.
+        The default boundaries are the powers of two from 64 KiB, without end.
+        """
+        return (2 ** exponent for exponent in itertools.count(16))
 
     @property
     @abstractmethod
