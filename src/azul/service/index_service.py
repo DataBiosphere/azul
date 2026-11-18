@@ -470,5 +470,5 @@ class IndexService(QueryService):
         return file
 
     @property
-    def always_limit_access(self) -> bool:
+    def always_enforce_access(self) -> bool:
         return False

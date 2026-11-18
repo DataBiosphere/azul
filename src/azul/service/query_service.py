@@ -280,18 +280,18 @@ class _FilterBuilder(_UsesIndex):
 
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        filters_json = self.filters.reify(self.plugin, limit_access=self.limit_access)
+        filters_json = self.filters.reify(self.plugin, enforce_access=self.enforce_access)
         return self._translate_filters(filters_json)
 
     @property
-    def limit_access(self) -> bool:
+    def enforce_access(self) -> bool:
         """
         Whether the managed access controls are enforced
         """
-        return self.service.always_limit_access or self._limit_access
+        return self.service.always_enforce_access or self._enforce_access
 
     @property
-    def _limit_access(self) -> bool:
+    def _enforce_access(self) -> bool:
         """
         Whether to enforce the managed access controls during filter
         reification, provided that the service allows such conditional
@@ -328,7 +328,7 @@ class _FilterBuilder(_UsesIndex):
         aggregation, these filters can be applied once, in the top-level query
         of a request for aggregations.
         """
-        if self.limit_access:
+        if self.enforce_access:
             # With access enforced, the only entities that can be filtered for
             # are those in accessible sources, so there is no point in counting
             # entities in other sources, not even in the facet for sources.
