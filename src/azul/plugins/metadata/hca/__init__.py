@@ -596,10 +596,6 @@ class HCAFile(File):
             content_type = cls._content_type_corrections.get(content_type, content_type)
             assert cls._content_type_re.match(content_type), R(
                 'Invalid content type', content_type)
-        elif atlas == 'lungmap':
-            # FIXME: Re-enable content-type validation for lungmap
-            #        https://github.com/DataBiosphere/azul/issues/7244
-            pass
         else:
             assert False, atlas
 

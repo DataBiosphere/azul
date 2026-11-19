@@ -226,10 +226,9 @@ Note that after requesting changes, the PR must be assigned to only the author.
 - [ ] `T13` Emptied fail queues in `dev` <sub>or this PR is not labeled `reindex:dev` or it is labeled reindex:partial</sub>
 - [ ] `T14` Emptied fail queues in `anvildev` <sub>or this PR is not labeled `reindex:anvildev` or it is labeled reindex:partial</sub>
 - [ ] `T15` Restarted the Data Browser pipeline for the [ucsc/hca/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fhca%2Fdev) on GitLab in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] `T16` Restarted the Data Browser pipeline for the [ucsc/lungmap/dev branch](https://gitlab.dev.singlecell.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Flungmap%2Fdev) on GitLab in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] `T17` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
-- [ ] `T18` Restarted the Data Browser pipeline for the [ucsc/anvil/anvildev branch](https://gitlab.anvil.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvildev) on GitLab in `anvildev`, and it succeeded <sub>or this PR is not labeled `reindex:anvildev`</sub>
-- [ ] `T19` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvildev`, and it succeeded <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] `T16` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `dev`, and it succeeded <sub>or this PR is not labeled `reindex:dev`</sub>
+- [ ] `T17` Restarted the Data Browser pipeline for the [ucsc/anvil/anvildev branch](https://gitlab.anvil.gi.ucsc.edu/ucsc/data-browser/-/pipelines/new?ref=ucsc%2Fanvil%2Fanvildev) on GitLab in `anvildev`, and it succeeded <sub>or this PR is not labeled `reindex:anvildev`</sub>
+- [ ] `T18` Restarted `deploy_browser` job in the GitLab pipeline for this PR in `anvildev`, and it succeeded <sub>or this PR is not labeled `reindex:anvildev`</sub>
 
 
 ### Operator (mirroring)

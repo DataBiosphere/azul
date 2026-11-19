@@ -1367,36 +1367,36 @@ Node.js prerequisite.
 The `npm run` example in the [Data Browser's README] is outdated. Instead,
 follow the steps below in order to compose a suitable `npm run` invocation for
 launching a local instance of the Data Browser backed by a main deployment of
-Azul, say, a LungMAP instance backed by Azul `dev`:
+Azul, say, an HCA instance backed by Azul `dev`:
 
 1. Open `.gitlab/sites/{deployment}/{atlas}/base.yaml`, e.g,
-   `.gitlab/sites/dev/lungmap/base.yaml`, and note the value of
-   `data_browser_build_script`, in this case `build-dev:lungmap`. This is the
+   `.gitlab/sites/dev/hca/base.yaml`, and note the value of
+   `data_browser_build_script`, in this case `build-ma-dev:hca-dcp`. This is the
    key of an `npm` script, which is what `npm run` expects as its argument. The
    script we noted here is for *building* the Data Browser, which we'll use to
    infer the key of the corresponding `npm` script for *launching* a local
    instance.
 
-2. In the same file, note the value of `data_browser_build_env`, e.g. `dev`.
+2. In the same file, note the value of `data_browser_build_env`, e.g. `ma-dev`.
 
 3. Under `scripts` in `package.json`, locate the entry for the build script
-   using the key noted in step 1, e.g., `build-dev:lungmap`. The value of that
-   entry should start with the path to a shell script, in this case
+   using the key noted in step 1, e.g., `build-ma-dev:hca-dcp`. The value of
+   that entry should start with the path to a shell script, in this case
    `./scripts/common-build.sh`, followed by one or two arguments. Note the first
-   argument, e.g., `lungmap`.
+   argument, e.g., `hca-dcp`.
 
 4. Under `scripts` in `package.json`, locate the entry whose value starts with
    `./scripts/dev.sh` followed by the same first argument as the build script,
    followed by the value of `data_browser_build_env` from step 2 above. In this
-   example the key of that entry is `dev:lungmap` and its value begins with
-   `./scripts/dev.sh lungmap dev && …`
+   example the key of that entry is `dev:hca-dcp` and its value begins with
+   `./scripts/dev.sh hca-dcp ma-dev && …`
 
 5. Invoke the launch script by passing its key to `npm run`, e.g., `npm run
-   dev:lungmap`.
+   dev:hca-dcp`.
 
 In some cases, there may be no matching launch script entry. For example, there
-is no launch script entry for running a LungMAP instance backed by Azul `prod`.
-There is only a build script for it (`build-prod:lungmap`), but no launch
+is no launch script entry for running an HCA instance backed by Azul `prod`.
+There is only a build script for it (`build-ma-prod:hca-dcp`), but no launch
 script. You can easily compose a launch script entry by duplicating and
 adjusting an existing entry.
 

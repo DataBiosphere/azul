@@ -873,13 +873,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::ux-dev.singlecell.gi.ucsc.edu',
                                     # Data Browser UX-Dev
                                     'arn:aws:s3:::ux-dev.explore.singlecell.gi.ucsc.edu/*',
-                                    'arn:aws:s3:::ux-dev.explore.singlecell.gi.ucsc.edu',
-                                    # Lungmap Data Portal Dev
-                                    'arn:aws:s3:::data-browser.dev.lungmap.net/*',
-                                    'arn:aws:s3:::data-browser.dev.lungmap.net',
-                                    # Lungmap Data Browser Dev
-                                    'arn:aws:s3:::dev.explore.lungmap.net/*',
-                                    'arn:aws:s3:::dev.explore.lungmap.net'
+                                    'arn:aws:s3:::ux-dev.explore.singlecell.gi.ucsc.edu'
                                 ]
                             }
                         ] if config.deployment_stage == 'dev' else [
@@ -893,13 +887,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     'arn:aws:s3:::org-humancellatlas-data-portal-dcp2-prod',
                                     # HCA Data Browser Prod
                                     'arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod/*',
-                                    'arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod',
-                                    # Lungmap Data Browser Prod
-                                    'arn:aws:s3:::data-browser.lungmap.net/*',
-                                    'arn:aws:s3:::data-browser.lungmap.net',
-                                    # Lungmap Data Portal Prod
-                                    'arn:aws:s3:::data-browser.explore.lungmap.net/*',
-                                    'arn:aws:s3:::data-browser.explore.lungmap.net'
+                                    'arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod'
                                 ]
                             }
                         ] if config.deployment_stage == 'prod' else [

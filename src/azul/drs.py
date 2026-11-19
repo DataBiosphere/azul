@@ -123,7 +123,7 @@ class DRSURI(metaclass=ABCMeta):
         >>> DRSURI.parse('drs://SERVER/I%44')
         HostBasedDRSURI(server='server', object_id='ID')
 
-        A real-world, compact identifier-based LungMAP DRS URI.
+        A real-world, compact identifier-based DRS URI.
 
         >>> DRSURI.parse('drs://dg.4503:44c5fa8e-c465-4187-8565-734b3ac0a32d')
         ... # doctest: +NORMALIZE_WHITESPACE
