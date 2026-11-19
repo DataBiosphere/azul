@@ -332,7 +332,7 @@ class UserService:
                             uat_auth: UnverifiedAccessTokenAuthentication
                             ) -> AccessTokenAuthentication:
         """
-        Verify the given access token.
+        Verify the given access token, unless it is already verified.
 
         :raise InvalidAccessTokenError: if the authorization server rejects the
                                         token
@@ -341,31 +341,34 @@ class UserService:
 
         :raise Exception: if the validity of the token cannot be determined
         """
-        at_auth = self._cached_access_token(uat_auth)
-        if at_auth is None:
-            try:
-                token_info = self._token_info(uat_auth.token)
-            except InvalidAccessTokenError as e:
-                log.warning('Invalid access token %s', uat_auth, exc_info=e)
-                raise
-            except RejectedAccessTokenError as e:
-                log.warning('Rejected access token %s', uat_auth, exc_info=e)
-                raise
-            else:
-                # While Google's token info endpoint doesn't explicitly report
-                # the issuer of a token, the endpoint only works with tokens
-                # issued by Google, so the issuer can be implied.
-                iss = self._google_issuer
-                # The `sub` (subject) of a service account's access token may
-                # be absent, but the `azp` (authorized party) is presumably
-                # always the service account's unique ID.
-                sub = token_info.get('sub', token_info['azp'])
-                at_auth = AccessTokenAuthentication(
-                    token=uat_auth.token,
-                    identity=self._encode_identity(iss, sub),
-                    expiration=self._now() + int(token_info['expires_in'])
-                )
-                self._cache_access_token(at_auth)
+        if isinstance(uat_auth, AccessTokenAuthentication):
+            at_auth = uat_auth
+        else:
+            at_auth = self._cached_access_token(uat_auth)
+            if at_auth is None:
+                try:
+                    token_info = self._token_info(uat_auth.token)
+                except InvalidAccessTokenError as e:
+                    log.warning('Invalid access token %s', uat_auth, exc_info=e)
+                    raise
+                except RejectedAccessTokenError as e:
+                    log.warning('Rejected access token %s', uat_auth, exc_info=e)
+                    raise
+                else:
+                    # While Google's token info endpoint doesn't explicitly
+                    # report the issuer of a token, the endpoint only works with
+                    # tokens issued by Google, so the issuer can be implied.
+                    iss = self._google_issuer
+                    # The `sub` (subject) of a service account's access token
+                    # may be absent, but the `azp` (authorized party) is
+                    # presumably always the service account's unique ID.
+                    sub = token_info.get('sub', token_info['azp'])
+                    at_auth = AccessTokenAuthentication(
+                        token=uat_auth.token,
+                        identity=self._encode_identity(iss, sub),
+                        expiration=self._now() + int(token_info['expires_in'])
+                    )
+                    self._cache_access_token(at_auth)
         return at_auth
 
     def _access_token_key(self, access_token: str) -> str:
@@ -452,21 +455,13 @@ class UserService:
             require(False, 'Unexpected type of authorized party')
         return token_info
 
-    def _user_for_access_token(self,
-                               uat_auth: UnverifiedAccessTokenAuthentication
-                               ) -> User:
-        if isinstance(uat_auth, AccessTokenAuthentication):
-            at_auth = uat_auth
-        else:
-            at_auth = self.verify_access_token(uat_auth)
-        return self._load_user(at_auth.identity())
-
     def get_user(self, uat_auth: UnverifiedAccessTokenAuthentication) -> User:
         """
         Return the stored information about the user identified by the given
         access token.
         """
-        return self._user_for_access_token(uat_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        return self._load_user(at_auth.identity())
 
     def update_accepted_contracts(self,
                                   uat_auth: UnverifiedAccessTokenAuthentication,
@@ -486,7 +481,8 @@ class UserService:
                                    mapping are left alone. None retracts the
                                    acceptance of every contract.
         """
-        user = self._user_for_access_token(uat_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
         if accepted_contracts is None:
             user = self._update_user(user,
                                      'REMOVE accepted_contracts',
@@ -585,7 +581,8 @@ class UserService:
         refresh token.
         """
         log.info('Minting APAT for %s', uat_auth)
-        user = self._user_for_access_token(uat_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
         jti = self._next_jti(user)
         now = self._now()
         payload = {
@@ -745,7 +742,8 @@ class UserService:
         Revoke all APATs for the user identified by the given access token.
         """
         log.info('Revoking all APATs for %s', uat_auth)
-        user = self._user_for_access_token(uat_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
         self._revoke_jti(user)
 
     def _store_user(self, user: User) -> None:
