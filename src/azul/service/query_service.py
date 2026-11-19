@@ -137,9 +137,20 @@ class ResponseStage[S1, S2](metaclass=ABCMeta):
 class Stage[S1, S2, Q1 = Search, Q2 = Search](ResponseStage[S1, S2], metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
-    to process the response to that request. If an implementation modifies the
-    argument in place, it must return the argument. Most stages prepare a
-    search, but some turn one type of request into another.
+    to process the response to that request. Most stages prepare a search, but
+    some turn one type of request into another.
+
+    Each method of a stage either modifies its argument in place or converts it
+    into something else, and returns the result. An implementation that modifies
+    its argument must still return it so that the result can be passed on to the
+    next stage in a uniform fashion, regardless of whether the argument was
+    modified or converted.
+
+    Furthermore, a stage may declare a wider type for its argument than the one
+    under which the caller holds it, as stages are contravariant in the type of
+    their argument. Modifying the argument through the wider type may invalidate
+    the narrower one, so the caller must continue with the returned value, whose
+    type the stage vouches for, and not with its own reference to the argument.
     """
 
     @abstractmethod
