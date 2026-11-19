@@ -739,11 +739,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                         for _ in range(num_threads_per_endpoint):
                             assignments.append((entity_type, url))
                     self.random.shuffle(assignments)
+                    # Isolate this subtest's cache entries from those of the
+                    # previous subtests and runs, which request the same URLs
+                    headers = {'X-Azul-Test-Nonce': str(uuid.uuid4())}
 
                     def worker(url: furl) -> BaseHTTPResponse:
                         while True:
                             try:
-                                return service.get_url(url)
+                                return service.get_url(url, headers)
                             except ConcurrentCacheFetchError:
                                 if retrying:
                                     self.assertFalse(retrying, 'Unexpected ConcurrentCacheFetchError')
