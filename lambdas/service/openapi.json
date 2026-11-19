@@ -14217,7 +14217,7 @@
                     }
                 },
                 "summary": "Obtain a fresh OAuth 2.0 access token in exchange for one that is about to expire",
-                "description": "\nExchange the OAuth 2.0 access token in the `Authorization`\nheader, passed as a Bearer token, for a fresh one. The user\nmust have previously completed the authorization code flow.\nIf the access token remains valid for more than\n15 minutes, it is returned unchanged. Otherwise, a\nfresh one is only issued within 12 hours of the user\ncompleting the authorization code flow.\n",
+                "description": "\nExchange the OAuth 2.0 access token in the `Authorization`\nheader, passed as a Bearer token, for a fresh one. The user\nmust have previously completed the authorization code flow.\nIf the access token remains valid for more than\n15 minutes, it is returned unchanged. Otherwise, a\nfresh one is only issued within 12 hours of the user\ncompleting the authorization code flow. If an earlier\nrequest already obtained a fresh access token for the user,\nand that token remains valid for more than 15\nminutes, that token is returned instead of a new one.\n",
                 "tags": [
                     "User"
                 ]

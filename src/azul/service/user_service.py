@@ -665,9 +665,11 @@ class UserService:
                     ) -> TokenResponse:
         """
         Return the given access token if it remains valid for longer than
-        :attr:`reauthorization_window`, or a fresh access token for the same
-        user, obtained with the user's refresh token, otherwise. The scopes of
-        the given access token are unknown, so they are reported as None.
+        :attr:`reauthorization_window`. Otherwise, return the user's stored
+        access token if that remains valid for longer than the window, or a
+        fresh access token for the user, obtained with the user's refresh token,
+        if it doesn't. The scopes of a returned access token other than a fresh
+        one are unknown, so they are reported as None.
 
         :raise ReauthorizationLimitError: A fresh access token is needed but
                                           the user last authorized this
@@ -699,6 +701,23 @@ class UserService:
                         at_auth, expires_in, user['authorization_time'],
                         config.reauthorization_limit)
             raise ReauthorizationLimitError
+        elif user['access_token_expiration'] - self._now() > self.reauthorization_window:
+            # Another request has already obtained a fresh access token
+            stored_auth = AccessTokenAuthentication(
+                token=user['access_token'],
+                identity=at_auth.identity(),
+                expiration=user['access_token_expiration']
+            )
+            stored_expires_in = stored_auth.expiration - self._now()
+            log.info('Not reauthorizing %s, which expires in %d seconds, '
+                     'because the stored %s expires in %d seconds',
+                     at_auth, expires_in, stored_auth, stored_expires_in)
+            response = TokenResponse(
+                access_token=stored_auth.token,
+                expires_in=stored_expires_in,
+                scope=None,  # type: ignore[typeddict-item]
+                token_type='Bearer'
+            )
         else:
             response = self._oauth_client.token_for_refresh(
                 refresh_token=user['refresh_token'],

@@ -832,11 +832,16 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             scope='openid email',
             token_type='Bearer'
         )
-        with self._mock_token_for_code():
+        window = UserService.reauthorization_window
+        # The access token obtained by authorization is due for a refresh, too,
+        # or it would be returned instead of a fresh one
+        with (
+            patch.object(UserService, '_now', return_value=self._service._now() - 3600 + window),
+            self._mock_token_for_code()
+        ):
             self._authorize()
         # A token of the same user that this application didn't obtain
         uncached_token = 'ya29.uncached_access_token'
-        window = UserService.reauthorization_window
         for expires_in, expected_token in [
             (window + 1, uncached_token),
             (window, 'ya29.refreshed_access_token')
@@ -951,6 +956,56 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         self.assertEqual(200, response.status)
         self.assertEqual(self._mock_access_token, json.loads(response.data)['access_token'])
         token_for_refresh.assert_not_called()
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_reauthorize_stored_token(self, token_for_refresh):
+        refreshed_token, stored_token = 'ya29.refreshed_access_token', 'ya29.stored_access_token'
+        token_for_refresh.return_value = TokenResponse(
+            access_token=refreshed_token,
+            expires_in=3599,
+            scope='openid email',
+            token_type='Bearer'
+        )
+        window = UserService.reauthorization_window
+        now = self._service._now()
+        # When the access token obtained by authorization is due for a refresh
+        due = now + 3600 - window
+        for stored_expires_in, past_limit, expected_token in [
+            (window + 1, False, stored_token),
+            (window, False, refreshed_token),
+            # The stored access token is returned only within the limit
+            (window + 1, True, None)
+        ]:
+            with self.subTest(stored_expires_in=stored_expires_in, past_limit=past_limit):
+                with (
+                    patch.object(UserService, '_now', return_value=now),
+                    self._mock_token_for_code()
+                ):
+                    self._authorize()
+                if past_limit:
+                    self._set_authorization_time(due - config.reauthorization_limit)
+                # Another request has stored a fresh access token for the user
+                with patch.object(UserService, '_now', return_value=due):
+                    self._service._update_access_token(self._load_user(),
+                                                       stored_token,
+                                                       stored_expires_in)
+                    response = self._reauthorize(self._mock_access_token)
+                body = json.loads(response.data)
+                if expected_token is None:
+                    self.assertEqual(401, response.status)
+                    token_for_refresh.assert_not_called()
+                    self.assertEqual(stored_token, self._load_user()['access_token'])
+                else:
+                    self.assertEqual(200, response.status)
+                    self.assertEqual(expected_token, body['access_token'])
+                    self.assertEqual(expected_token, self._load_user()['access_token'])
+                    if expected_token == stored_token:
+                        self.assertEqual(stored_expires_in, body['expires_in'])
+                        self.assertIsNone(body['scope'])
+                        token_for_refresh.assert_not_called()
+                    else:
+                        token_for_refresh.assert_called_once()
+                token_for_refresh.reset_mock()
 
     def test_reauthorize_rejects_pat(self):
         apat = self._authorize_and_mint()

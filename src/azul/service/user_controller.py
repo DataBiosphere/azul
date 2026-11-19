@@ -309,7 +309,10 @@ class UserController(Controller):
                     If the access token remains valid for more than
                     {minutes} minutes, it is returned unchanged. Otherwise, a
                     fresh one is only issued within {hours} hours of the user
-                    completing the authorization code flow.
+                    completing the authorization code flow. If an earlier
+                    request already obtained a fresh access token for the user,
+                    and that token remains valid for more than {minutes}
+                    minutes, that token is returned instead of a new one.
                 ''',
                                   minutes=self._service.reauthorization_window // 60,
                                   hours=self._reauthorization_limit_hours),
