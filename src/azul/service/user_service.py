@@ -352,14 +352,17 @@ class UserService:
                 log.warning('Rejected access token %s', uat_auth, exc_info=e)
                 raise
             else:
-                # The token info endpoint doesn't report the issuer of an access
-                # token, but it only reports on tokens that Google issued. The
-                # subject of a user's token is always reported. That of a
-                # service account's token may be absent, but the authorized
-                # party is the service account's unique ID.
+                # While Google's token info endpoint doesn't explicitly report
+                # the issuer of a token, the endpoint only works with tokens
+                # issued by Google, so the issuer can be implied.
+                iss = self._google_issuer
+                # The `sub` (subject) of a service account's access token may
+                # be absent, but the `azp` (authorized party) is presumably
+                # always the service account's unique ID.
+                sub = token_info.get('sub', token_info['azp'])
                 at_auth = AccessTokenAuthentication(
                     token=uat_auth.token,
-                    identity=self._encode_identity(self._google_issuer, token_info.get('sub', token_info['azp'])),
+                    identity=self._encode_identity(iss, sub),
                     expiration=self._now() + int(token_info['expires_in'])
                 )
                 self._cache_access_token(at_auth)
