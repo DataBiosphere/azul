@@ -1659,14 +1659,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
     def _test_repository_files(self, catalog: CatalogName):
         with self.subTest('repository_files', catalog=catalog):
             outer_file, inner_file = self._get_one_file(catalog)
-            file_url = inner_file['azul_url']
-            if file_url:
-                source = self._source_spec(catalog, outer_file)
-                self._test_file_download(source, inner_file)
-            else:
-                # Phantom files lack DRS URIs and cannot be downloaded
-                self.assertIsNone(file_url, inner_file)
-                self.assertEqual('lungmap', config.catalogs[catalog].atlas, inner_file)
+            source = self._source_spec(catalog, outer_file)
+            self._test_file_download(source, inner_file)
 
     def _test_file_download(self, source: SourceSpec, file: JSON) -> mutable_furl | None:
         file_url = mutable_furl(json_str(file['azul_url']))

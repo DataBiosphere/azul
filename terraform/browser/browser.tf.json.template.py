@@ -14,7 +14,6 @@ from furl import (
 import gitlab
 from more_itertools import (
     before_and_after,
-    flatten,
     one,
 )
 
@@ -317,15 +316,10 @@ def emit():
                                 }
                             ],
                             'browser_key_restrictions': {
-                                'allowed_referrers': list(flatten(
-                                    [f'https://{domain}', f'https://{domain}/*']
-                                    for domain in {
-                                        'prod': [
-                                            'data-browser.lungmap.net',
-                                            config.domain_name
-                                        ],
-                                    }.get(config.deployment_stage, [config.domain_name])
-                                ))
+                                'allowed_referrers': [
+                                    f'https://{config.domain_name}',
+                                    f'https://{config.domain_name}/*'
+                                ]
                             }
                         }
                     }
