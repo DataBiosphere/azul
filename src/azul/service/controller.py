@@ -48,6 +48,7 @@ from azul.service.source_controller import (
 from azul.service.user_service import (
     InvalidPersonalAccessTokenError,
     RejectedAccessTokenError,
+    SuspendedPersonalAccessTokenError,
     UserService,
 )
 
@@ -131,6 +132,9 @@ class ServiceController(SourceController):
         if isinstance(authentication, UnverifiedPersonalAccessTokenAuthentication):
             try:
                 authentication = self._user_service.exchange_token(authentication)
+            except SuspendedPersonalAccessTokenError:
+                raise UnauthorizedError('The user authorized this application too '
+                                        'long ago. Authorize this application again.')
             except InvalidPersonalAccessTokenError:
                 raise UnauthorizedError('Invalid personal access token')
         elif isinstance(authentication, UnverifiedAccessTokenAuthentication):

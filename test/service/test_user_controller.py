@@ -80,6 +80,7 @@ from azul.service.user_service import (
     OrphanedPersonalAccessTokenError,
     RejectedAccessTokenError,
     RevokedPersonalAccessTokenError,
+    SuspendedPersonalAccessTokenError,
     UnknownUserException,
     User,
     UserService,
@@ -600,7 +601,8 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             scope='openid email',
             token_type='Bearer'
         )
-        with patch.object(UserService, '_now', return_value=2 ** 31):
+        expiration = self._load_user()['access_token_expiration']
+        with patch.object(UserService, '_now', return_value=expiration):
             result = self._service.exchange_token(apat)
         self.assertEqual(refreshed_token, result.token)
         mock_token_for_refresh.assert_called_once_with(
@@ -613,12 +615,36 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     def test_exchange_token_rejected_refresh_token(self):
         apat = self._authorize_and_mint()
+        expiration = self._load_user()['access_token_expiration']
         with (
             patch.object(OAuth2Client, 'token_for_refresh', side_effect=InvalidRefreshTokenError),
-            patch.object(UserService, '_now', return_value=2 ** 31)
+            patch.object(UserService, '_now', return_value=expiration)
         ):
             with self.assertRaises(DeauthorizedPersonalAccessTokenError):
                 self._service.exchange_token(apat)
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_exchange_token_suspended(self, mock_token_for_refresh):
+        apat = self._authorize_and_mint()
+        authorization_time = self._load_user()['authorization_time']
+        now = authorization_time + config.reauthorization_limit
+        with patch.object(UserService, '_now', return_value=now):
+            with self.assertRaises(SuspendedPersonalAccessTokenError):
+                self._service.exchange_token(apat)
+            mock_token_for_refresh.assert_not_called()
+            # Even a stored access token that remains valid isn't returned
+            key = {UserService.key_attribute: {'S': self._mock_identity}}
+            aws.dynamodb.update_item(TableName=UserService._table_name,
+                                     Key=key,
+                                     UpdateExpression='SET access_token_expiration = :e',
+                                     ExpressionAttributeValues={':e': {'N': str(now + 3600)}})
+            with self.assertRaises(SuspendedPersonalAccessTokenError):
+                self._service.exchange_token(apat)
+            # Logging in again makes the APAT usable again
+            with self._mock_token_for_code():
+                self._authorize()
+            result = self._service.exchange_token(apat)
+        self.assertEqual(self._mock_access_token, result.token)
 
     def test_exchange_token_expired_user(self):
         apat = self._authorize_and_mint()

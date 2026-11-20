@@ -198,6 +198,14 @@ class RevokedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
     """
 
 
+class SuspendedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The most recent authorization of this application by the user the APAT was
+    minted for is too long ago. The APAT becomes usable again once the user
+    authorizes this application again.
+    """
+
+
 class DeauthorizedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
     """
     The authorization server rejected the refresh token of the user the APAT
@@ -665,12 +673,15 @@ class UserService:
                        ) -> AccessTokenAuthentication:
         """
         Return an access token in exchange for a valid APAT. For an APAT to be
-        considered valid, it must be signed, it must not be expired and it must
-        not have been revoked.
+        considered valid, it must be signed, it must not be expired, it must
+        not have been revoked, and the user owning the APAT must have logged in
+        within the last :attr:`Config.reauthorization_limit` seconds.
 
-        :raise InvalidPersonalAccessTokenError: if the APAT isn't valid or the
-                                                authorization of its user has
-                                                lapsed
+        :raise InvalidPersonalAccessTokenError: The APAT cannot be used to
+                                                obtain an access token, either
+                                                permanently or temporarily. See
+                                                the specific subclasses of
+                                                the exception for details.
         """
         log.info('Getting access token for APAT %s', uapat_auth)
         apat_auth = self.verify_personal_access_token(uapat_auth)
@@ -685,6 +696,10 @@ class UserService:
             log.warning('The jti of %s is out of range [%d, %d)',
                         apat_auth, user['min_jti'], user['max_jti'])
             raise RevokedPersonalAccessTokenError
+        if user['authorization_time'] + config.reauthorization_limit <= self._now():
+            log.warning('Unable to exchange %s for an access token. '
+                        'The user needs to log in again', apat_auth)
+            raise SuspendedPersonalAccessTokenError
         access_token, expiration = user['access_token'], user['access_token_expiration']
         if expiration < self._now() + 60:
             try:

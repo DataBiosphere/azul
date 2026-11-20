@@ -14103,7 +14103,7 @@
                     }
                 },
                 "summary": "Obtain a personal access token",
-                "description": "\nObtain a long-lived, application-specific personal access\ntoken (APAT) in exchange for a valid OAuth 2.0 access token.\nThe access token must be passed in the `Authorization`\nheader as a Bearer token. The user must have previously\ncompleted the authorization code flow. In the Swagger UI,\nthis can be done by clicking the Authorize button above.\n",
+                "description": "\nObtain a long-lived, application-specific personal access\ntoken (APAT) in exchange for a valid OAuth 2.0 access token.\nThe access token must be passed in the `Authorization`\nheader as a Bearer token. The user must have previously\ncompleted the authorization code flow. In the Swagger UI,\nthis can be done by clicking the Authorize button above.\nOnce 12 hours have passed since the user last completed\nthe authorization code flow, requests authenticated with\nthe APAT fail until the user completes the authorization\ncode flow again.\n",
                 "tags": [
                     "User"
                 ]

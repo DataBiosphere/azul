@@ -887,7 +887,8 @@ def env() -> Mapping[str, str | None]:
 
         # The time interval, measured in seconds after the user last logged in,
         # during which a user agent may obtain freshly minted access tokens via
-        # the `/user/reauthorize` endpoint. Login is done via the Swagger UI's
+        # the `/user/reauthorize` endpoint, and during which the user's personal
+        # access tokens (APATs) can be used. Login is done via the Swagger UI's
         # "Authorize" button or the `/user/authorize` endpoint. Once the
         # specified time interval has passed, the user must log in again. The
         # default is 12 hours.

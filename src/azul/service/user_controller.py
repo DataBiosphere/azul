@@ -226,7 +226,11 @@ class UserController(Controller):
                     header as a Bearer token. The user must have previously
                     completed the authorization code flow. In the Swagger UI,
                     this can be done by clicking the Authorize button above.
-                '''),
+                    Once {hours} hours have passed since the user last completed
+                    the authorization code flow, requests authenticated with
+                    the APAT fail until the user completes the authorization
+                    code flow again.
+                ''', hours=self._reauthorization_limit_hours),
                 'tags': ['User'],
                 'responses': {
                     '200': {
