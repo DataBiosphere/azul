@@ -1,2 +1,2 @@
-e14d48c117ec33601d6f860dda47aa5ea490d77a5a9ef770529c448fa6747d9f  uv-x86_64-unknown-linux-gnu.tar.gz
-3143e25fccac6f81b3b400792caa2ec431a5e8824d855cde9550a25f0fac8ea0  uv-aarch64-unknown-linux-gnu.tar.gz
+f29c3e94ffabd7e6f3ba521dba169a9b7ec12100bf3257087f0f24f6123f3645  uv-x86_64-unknown-linux-gnu.tar.gz
+229e194255c7958d86d56e8790d969a6f74736592133f0dfd0076f754c642c1d  uv-aarch64-unknown-linux-gnu.tar.gz

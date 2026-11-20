@@ -30,12 +30,18 @@ from azul.plugins import (
 )
 from azul.service.query_service import (
     AggregationStage,
+    SearchAggregationStage,
+    SummaryAggregationStage,
     untagged_agg_name,
     values_agg_name,
 )
 
 
 class HCAAggregationStage(AggregationStage):
+    """
+    Adds the aggregations specific to HCA to the aggregation stages for searches
+    and for the summary.
+    """
 
     def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         agg = super()._prepare_aggregation(facet=facet, facet_path=facet_path)
@@ -60,9 +66,13 @@ class HCAAggregationStage(AggregationStage):
         return agg
 
 
-class HCASummaryAggregationStage(HCAAggregationStage):
+class HCASearchAggregationStage(SearchAggregationStage, HCAAggregationStage):
+    pass
 
-    def prepare_request(self, request: Search) -> Search:
+
+class HCASummaryAggregationStage(SummaryAggregationStage, HCAAggregationStage):
+
+    def prepare_request(self, request: Search, /) -> Search:
         request = super().prepare_request(request)
         entity_type = self.entity_type
 
@@ -92,24 +102,6 @@ class HCASummaryAggregationStage(HCAAggregationStage):
             request.aggs.metric('totalFileSize',
                                 'sum',
                                 field='contents.files.size_')
-        elif entity_type == 'cell_suspensions':
-            # Add a cell count aggregate per organ
-            request.aggs.bucket(
-                'cellCountSummaries',
-                'terms',
-                field='contents.cell_suspensions.organ.keyword',
-                size=config.terms_aggregation_size
-            ).bucket(
-                'cellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
-        elif entity_type == 'samples':
-            # Add an organ aggregate to the OpenSearch request
-            request.aggs.bucket('organTypes',
-                                'terms',
-                                field='contents.samples.effective_organ.keyword',
-                                size=config.terms_aggregation_size)
         elif entity_type == 'projects':
             # Add project cell count sum aggregates from the projects with and
             # without any cell suspension cell counts.
@@ -124,7 +116,7 @@ class HCASummaryAggregationStage(HCAAggregationStage):
                                 child_field='contents.cell_suspensions.total_estimated_cells_',
                                 child_bucket='cellSuspensionCellCount')
         else:
-            assert False, entity_type
+            assert entity_type == 'samples', entity_type
 
         threshold = config.precision_threshold
         for agg_name, cardinality in self._cardinality_aggregations.items():
@@ -142,7 +134,6 @@ class HCASummaryAggregationStage(HCAAggregationStage):
         return {
             'samples': {
                 'specimenCount': 'contents.specimens.document_id',
-                'speciesCount': 'contents.donors.genus_species',
                 'donorCount': 'contents.donors.document_id',
             },
             'projects': {
@@ -150,7 +141,7 @@ class HCASummaryAggregationStage(HCAAggregationStage):
             }
         }.get(self.entity_type, {})
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
+    def process_response(self, response: MutableJSON, /) -> MutableJSON:
         response = super().process_response(response)
         result = json_dict(response['aggregations'])
         threshold = config.precision_threshold

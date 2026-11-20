@@ -30,7 +30,7 @@ from azul.plugins.metadata.hca import (
     Plugin,
 )
 from azul.plugins.metadata.hca.service.aggregation import (
-    HCAAggregationStage,
+    HCASearchAggregationStage,
 )
 from azul.service.query_service import (
     QueryService,
@@ -111,7 +111,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of a simple request
         """
         expected_output = {
-            'post_filter': {
+            'query': {
                 'bool': {
                     'must': [
                         {
@@ -151,14 +151,14 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
             }
         }
         sample_filter = {}
-        self._test_create_request(expected_output, sample_filter, post_filter=False)
+        self._test_create_request(expected_output, sample_filter)
 
     def test_create_request_complex(self):
         """
         Tests creation of a complex request.
         """
         expected_output = {
-            'post_filter': {
+            'query': {
                 'bool': {
                     'must': [
                         {
@@ -190,7 +190,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         Tests creation of a request for facets that do not have a value
         """
         expected_output = {
-            'post_filter': {
+            'query': {
                 'bool': {
                     'must': [
                         {
@@ -240,7 +240,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         not have a value
         """
         expected_output = {
-            'post_filter': {
+            'query': {
                 'bool': {
                     'must': [
                         {
@@ -317,31 +317,18 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         }
         self._test_create_request(expected_output, sample_filter)
 
-    def _test_create_request(self,
-                             expected_output,
-                             sample_filter,
-                             post_filter=True
-                             ):
+    def _test_create_request(self, expected_output, sample_filter):
         service = self.Service(self.MockPlugin())
         filters = Filters(explicit=sample_filter, source_ids=set())
-        request = self._prepare_request(filters, post_filter, service)
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(request.to_dict(), sort_keys=True)
-        self.assertEqual(actual_output, expected_output)
-
-    def _prepare_request(self, filters, post_filter, service):
         entity_type = 'files'
         pipeline = service.create_chain(catalog=self.catalog,
                                         entity_type=entity_type,
                                         filters=filters,
-                                        post_filter=post_filter,
                                         document_slice=None)
-        pipeline = ToDictStage(service=service,
-                               catalog=self.catalog,
-                               entity_type=entity_type).wrap(pipeline)
-        pipeline = HCAAggregationStage.create_and_wrap(pipeline)
         request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
-        return request
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(request.to_dict(), sort_keys=True)
+        self.assertEqual(actual_output, expected_output)
 
     def test_create_aggregate(self):
         """
@@ -349,11 +336,7 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         """
         expected_output = {
             'filter': {
-                'bool': {
-                    'must': [
-                        self.sources_filter
-                    ]
-                }
+                'bool': {}
             },
             'aggs': {
                 'myTerms': {
@@ -397,9 +380,20 @@ class TestRequestBuilder(DCP1CannedBundleTestCase, WebServiceTestCase):
         service = Service(MockPlugin())
 
         filters = Filters(explicit={}, source_ids=set())
-        post_filter = True
-        request = self._prepare_request(filters, post_filter, service)
+        entity_type = 'files'
+        pipeline = ToDictStage(service=service,
+                               catalog=self.catalog,
+                               entity_type=entity_type)
+        pipeline = HCASearchAggregationStage(service=service,
+                                             catalog=self.catalog,
+                                             entity_type=entity_type,
+                                             filters=filters).wrap(pipeline)
+        request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
         aggregation = request.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
+        # With access enforced, the source filter is applied once, in the
+        # top-level query, rather than in each aggregation
+        expected_query = {'bool': {'must': [self.sources_filter]}}
+        self.assertEqual(expected_query, request.to_dict()['query'])

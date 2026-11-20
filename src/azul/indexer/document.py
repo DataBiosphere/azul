@@ -968,6 +968,9 @@ class Contribution[E: EntityReference](Document[ContributionCoordinates[E]]):
         return {
             **super().field_types(field_types),
             'document_id': null_str,
+            # Aggregates have `sources` instead, as a singleton list of JSON
+            # objects. The field types of contributions and aggregates are
+            # merged, so the two names must differ.
             'source': pass_thru_json,
             # These pass-through fields will never be None
             'bundle_uuid': pass_thru_str,

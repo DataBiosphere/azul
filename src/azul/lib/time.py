@@ -114,6 +114,13 @@ def parse_http_date(http_date: str, base_time: float | None = None) -> float:
 
 dcp2_datetime_format = '%Y-%m-%dT%H:%M:%S.%f%z'
 
+#: A regular expression that matches exactly the strings produced by
+#: :func:`format_dcp2_datetime`. It is stricter than `dcp2_datetime_format`,
+#: which also admits, say, a different number of fractional digits or a numeric
+#: UTC offset in place of the `Z`.
+#:
+dcp2_datetime_pattern = r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z'
+
 
 def format_dcp2_datetime(d: datetime) -> str:
     """
@@ -186,8 +193,7 @@ def parse_dcp2_version(s: str) -> datetime:
     ...
     ValueError: Invalid version value '2020-01-01T00:00:00.12345Z'
     """
-    pattern = r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z'
-    if re.fullmatch(pattern, s):
+    if re.fullmatch(dcp2_datetime_pattern, s):
         return parse_dcp2_datetime(s)
     else:
         raise ValueError(f'Invalid version value {s!r}')

@@ -103,6 +103,14 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase, metaclass=ABCMeta):
     indexed_bundles: ClassVar[Optional[dict[BundleUUID, Bundle]]] = None
 
     @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Signing the sort key in a pagination link requires the HMAC secret
+        cls.addClassPatch(patch.object(aws,
+                                       'get_hmac_key_and_id',
+                                       return_value=(b'test key', 'test key id')))
+
+    @classmethod
     @abstractmethod
     def bundles(cls) -> list[SourcedBundleFQID]:
         raise NotImplementedError

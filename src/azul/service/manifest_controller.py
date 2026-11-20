@@ -1,6 +1,7 @@
 from collections.abc import (
     Mapping,
 )
+import logging
 from typing import (
     Any,
     Sequence,
@@ -14,6 +15,7 @@ from chalice.app import (
     BadRequestError,
     ChaliceViewError,
     Response,
+    UnauthorizedError,
 )
 from furl import (
     furl,
@@ -49,6 +51,9 @@ from azul.lib.types import (
     json_mapping,
     not_none,
     optional,
+)
+from azul.oauth2 import (
+    InvalidAccessTokenError,
 )
 from azul.openapi import (
     params,
@@ -89,6 +94,8 @@ from azul.service.user_service import (
     UnknownUserException,
     UserService,
 )
+
+log = logging.getLogger(__name__)
 
 manifest_state_key = 'manifest'
 
@@ -166,6 +173,20 @@ class ManifestController(QueryController):
 
     def _route(self, *, fetch: bool, initiate: bool):
         path = self._manifest_path(fetch=fetch, token=None if initiate else '{token}')
+        unauthorized_response = {
+            '401': {
+                'description': fd('''
+                    The `Authorization` header is malformed, or the access token
+                    it contains is invalid or has expired.
+                ''') + ('' if initiate else fd('''
+                    The access token may expire while the manifest is being
+                    prepared.
+                ''')) + fd('''
+                    If the access token has expired, obtain a new one and repeat
+                    the request with it.
+                ''')
+            }
+        }
         return self.app.route(
             # The path parameter could be a token *or* an object key, but we don't
             # want to complicate the API with this detail
@@ -328,6 +349,7 @@ class ManifestController(QueryController):
                             }
                         }
                     },
+                    **unauthorized_response,
                     **({} if initiate else {
                         '410': {
                             'description': fd('''
@@ -389,7 +411,8 @@ class ManifestController(QueryController):
                                 ))
                             )
                         ),
-                    }
+                    },
+                    **unauthorized_response
                 }
 
             }
@@ -589,6 +612,11 @@ class ManifestController(QueryController):
             if isinstance(authentication, AccessTokenAuthentication):
                 try:
                     authentication = self._user_service.mint_personal_access_token(authentication)
+                except InvalidAccessTokenError as e:
+                    # The token may have been valid when the generation
+                    # started but expired while the client was polling for it
+                    log.warning('Rejecting %s', authentication, exc_info=e)
+                    raise UnauthorizedError('Invalid credentials')
                 except (ForeignTokenException, UnknownUserException):
                     # Fall back to access token auth, but this will render the
                     # command line useless when the access token expires.

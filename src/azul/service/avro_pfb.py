@@ -62,6 +62,7 @@ from azul.lib.types import (
     MutableJSONs,
 )
 from azul.plugins.metadata.hca.indexer.transform import (
+    frequencies,
     pass_thru_uuid4,
     value_and_unit,
 )
@@ -518,6 +519,7 @@ _nullable_to_pfb_types = {
     null_int: ['null', 'long'],
     null_str: ['null', 'string'],
     null_datetime: ['null', 'string'],
+    frequencies: ['null', 'string'],
 }
 
 
@@ -640,9 +642,12 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     ]
                 }
             }
-        elif field_type in (pass_thru_json, pass_thru_int):
-            # Pass thru types are used only for aggregation and are excluded
-            # from actual hits
+        elif field_type is pass_thru_int:
+            # This type is used for aggregation only and is excluded from
+            # actual hits
+            pass
+        elif field_type is pass_thru_json:
+            # The manifest omits fields of this type, such as the ages in AnVIL
             pass
         else:
             assert False, field_type
