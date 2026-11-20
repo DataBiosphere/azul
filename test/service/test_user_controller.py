@@ -74,8 +74,12 @@ from azul.plugins import (
     MetadataPlugin,
 )
 from azul.service.user_service import (
-    InvalidPersonalAccessTokenError,
+    DeauthorizedPersonalAccessTokenError,
+    ExpiredPersonalAccessTokenError,
+    InauthenticPersonalAccessTokenError,
+    OrphanedPersonalAccessTokenError,
     RejectedAccessTokenError,
+    RevokedPersonalAccessTokenError,
     UnknownUserException,
     User,
     UserService,
@@ -613,7 +617,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             patch.object(OAuth2Client, 'token_for_refresh', side_effect=InvalidRefreshTokenError),
             patch.object(UserService, '_now', return_value=2 ** 31)
         ):
-            with self.assertRaises(InvalidPersonalAccessTokenError):
+            with self.assertRaises(DeauthorizedPersonalAccessTokenError):
                 self._service.exchange_token(apat)
 
     def test_exchange_token_expired_user(self):
@@ -621,7 +625,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         key = self._mock_identity
         aws.dynamodb.delete_item(TableName=UserService._table_name,
                                  Key={UserService.key_attribute: {'S': key}})
-        with self.assertRaises(InvalidPersonalAccessTokenError):
+        with self.assertRaises(OrphanedPersonalAccessTokenError):
             self._service.exchange_token(apat)
 
     def test_token_for_refresh(self):
@@ -644,8 +648,14 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     def test_exchange_token_invalid_jwt(self):
         auth = UnverifiedPersonalAccessTokenAuthentication(token='eyJ.not.a.jwt')
-        with self.assertRaises(InvalidPersonalAccessTokenError):
+        with self.assertRaises(InauthenticPersonalAccessTokenError):
             self._service.exchange_token(auth)
+
+    def test_exchange_token_expired_jwt(self):
+        apat = self._authorize_and_mint()
+        with patch.object(jwt.PyJWT, 'decode', side_effect=jwt.exceptions.ExpiredSignatureError):
+            with self.assertRaises(ExpiredPersonalAccessTokenError):
+                self._service.exchange_token(apat)
 
     def test_exchange_token_forged_jwt(self):
         from cryptography.hazmat.primitives.asymmetric import (
@@ -658,7 +668,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             algorithm='ES256'
         )
         auth = UnverifiedPersonalAccessTokenAuthentication(token=token)
-        with self.assertRaises(InvalidPersonalAccessTokenError):
+        with self.assertRaises(InauthenticPersonalAccessTokenError):
             self._service.exchange_token(auth)
 
     def test_exchange_token_survives_reauthorization(self):
@@ -673,7 +683,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_info():
             auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
             self._service.revoke_personal_access_tokens(auth)
-        with self.assertRaises(InvalidPersonalAccessTokenError):
+        with self.assertRaises(RevokedPersonalAccessTokenError):
             self._service.exchange_token(apat)
 
     def test_multiple_apats(self):
@@ -744,7 +754,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         with self._mock_token_info():
             response = self._revoke(self._mock_access_token)
             self.assertEqual(204, response.status)
-        with self.assertRaises(InvalidPersonalAccessTokenError):
+        with self.assertRaises(RevokedPersonalAccessTokenError):
             self._service.exchange_token(apat)
 
     def test_revoke_rejects_pat(self):

@@ -167,8 +167,42 @@ class UnknownUserException(Exception):
 
 class InvalidPersonalAccessTokenError(Exception):
     """
-    The token is a JWT but not a valid APAT (expired, tampered with, forged, …),
-    or the authorization of the user it was minted for has lapsed.
+    The token is a JWT but not a usable APAT. Subclasses represent the specific
+    reasons.
+    """
+
+
+class InauthenticPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The APAT is malformed or wasn't signed by this application.
+    """
+
+
+class ExpiredPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The APAT has expired.
+    """
+
+
+class OrphanedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The user the APAT was minted for is unknown, typically because the user's
+    stored information expired along with their refresh token.
+    """
+
+
+class RevokedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The APAT's JWT ID is absent or outside the range of JWT IDs that are valid
+    for its user, typically because the user revoked the APAT.
+    """
+
+
+class DeauthorizedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The authorization server rejected the refresh token of the user the APAT
+    was minted for, typically because the user's authorization of this
+    application was revoked or has expired.
     """
 
 
@@ -614,9 +648,12 @@ class UserService:
             claims = self._jwt.decode(uapat_auth.token,
                                       key=self._apat_public_key,
                                       algorithms=[self._apat_algorithm])
+        except jwt.exceptions.ExpiredSignatureError as e:
+            log.warning('Expired APAT %s', uapat_auth, exc_info=e)
+            raise ExpiredPersonalAccessTokenError from e
         except jwt.exceptions.PyJWTError as e:
             log.warning('Invalid APAT %s', uapat_auth, exc_info=e)
-            raise InvalidPersonalAccessTokenError from e
+            raise InauthenticPersonalAccessTokenError from e
         else:
             assert_redactable(uapat_auth.token)
             return PersonalAccessTokenAuthentication(token=uapat_auth.token,
@@ -630,6 +667,10 @@ class UserService:
         Return an access token in exchange for a valid APAT. For an APAT to be
         considered valid, it must be signed, it must not be expired and it must
         not have been revoked.
+
+        :raise InvalidPersonalAccessTokenError: if the APAT isn't valid or the
+                                                authorization of its user has
+                                                lapsed
         """
         log.info('Getting access token for APAT %s', uapat_auth)
         apat_auth = self.verify_personal_access_token(uapat_auth)
@@ -638,12 +679,12 @@ class UserService:
         except UnknownUserException as e:
             # The user's item expires along with their refresh token
             log.warning('Unknown user of %s', apat_auth, exc_info=e)
-            raise InvalidPersonalAccessTokenError from e
+            raise OrphanedPersonalAccessTokenError from e
         jti = apat_auth.jti
         if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
             log.warning('The jti of %s is out of range [%d, %d)',
                         apat_auth, user['min_jti'], user['max_jti'])
-            raise InvalidPersonalAccessTokenError
+            raise RevokedPersonalAccessTokenError
         access_token, expiration = user['access_token'], user['access_token_expiration']
         if expiration < self._now() + 60:
             try:
@@ -656,7 +697,7 @@ class UserService:
                 log.warning('Unable to exchange %s for an access token. '
                             "The user's refresh token is invalid or has been revoked",
                             apat_auth, exc_info=e)
-                raise InvalidPersonalAccessTokenError from e
+                raise DeauthorizedPersonalAccessTokenError from e
             else:
                 access_token, expires_in = response['access_token'], response['expires_in']
                 expiration = self._now() + expires_in
