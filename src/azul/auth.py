@@ -117,8 +117,25 @@ class AccessTokenAuthentication(Authentication, UnverifiedAccessTokenAuthenticat
                 f'expiration={self.expiration!r})')
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class PersonalAccessTokenAuthentication(Authentication, UnverifiedPersonalAccessTokenAuthentication):
-    pass
+    """
+    A verified APAT, along with the identity of the user it was minted for and
+    its JWT ID.
+    """
+    _identity: str
+
+    #: The APAT's `jti` claim, if present
+    jti: str | None
+
+    def identity(self) -> str:
+        return self._identity
+
+    def __str__(self) -> str:
+        return (f'{type(self).__name__}('
+                f'token={redact(self.token, fullmatch=True)!r}, '
+                f'identity={self._identity!r}, '
+                f'jti={self.jti!r})')
 
 
 @attr.s(auto_attribs=True, frozen=True)

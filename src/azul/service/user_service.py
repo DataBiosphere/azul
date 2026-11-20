@@ -594,23 +594,22 @@ class UserService:
         apat = self._jwt.encode(payload,
                                 key=config.apat_kms_key.alias,
                                 algorithm=self._apat_algorithm)
-        self._jwt.decode(apat,
-                         key=self._apat_public_key,
-                         algorithms=[self._apat_algorithm])
-        assert_redactable(apat)
-        apat_auth = PersonalAccessTokenAuthentication(token=apat)
-        log.info('Minted APAT %s for access token %s',
-                 apat_auth, uat_auth)
+        uapat_auth = UnverifiedPersonalAccessTokenAuthentication(token=apat)
+        apat_auth = self.verify_personal_access_token(uapat_auth)
+        log.info('Minted %s for %s', apat_auth, at_auth)
         return apat_auth
 
-    def exchange_token(self,
-                       uapat_auth: UnverifiedPersonalAccessTokenAuthentication
-                       ) -> AccessTokenAuthentication:
+    def verify_personal_access_token(self,
+                                     uapat_auth: UnverifiedPersonalAccessTokenAuthentication
+                                     ) -> PersonalAccessTokenAuthentication:
         """
-        Return a usable access token in exchange for an APAT if valid and not
-        yet expired.
+        Verify the signature and expiration of the given APAT. Determining
+        whether the APAT was revoked is not part of verification.
+
+        :raise InvalidPersonalAccessTokenError: if the APAT is malformed, its
+                                                signature is invalid or it has
+                                                expired
         """
-        log.info('Getting access token for APAT %s', uapat_auth)
         try:
             claims = self._jwt.decode(uapat_auth.token,
                                       key=self._apat_public_key,
@@ -620,40 +619,55 @@ class UserService:
             raise InvalidPersonalAccessTokenError from e
         else:
             assert_redactable(uapat_auth.token)
+            return PersonalAccessTokenAuthentication(token=uapat_auth.token,
+                                                     identity=claims['sub'],
+                                                     jti=claims.get('jti'))
+
+    def exchange_token(self,
+                       uapat_auth: UnverifiedPersonalAccessTokenAuthentication
+                       ) -> AccessTokenAuthentication:
+        """
+        Return an access token in exchange for a valid APAT. For an APAT to be
+        considered valid, it must be signed, it must not be expired and it must
+        not have been revoked.
+        """
+        log.info('Getting access token for APAT %s', uapat_auth)
+        apat_auth = self.verify_personal_access_token(uapat_auth)
+        try:
+            user = self._load_user(apat_auth.identity())
+        except UnknownUserException as e:
+            # The user's item expires along with their refresh token
+            log.warning('Unknown user of %s', apat_auth, exc_info=e)
+            raise InvalidPersonalAccessTokenError from e
+        jti = apat_auth.jti
+        if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
+            log.warning('The jti of %s is out of range [%d, %d)',
+                        apat_auth, user['min_jti'], user['max_jti'])
+            raise InvalidPersonalAccessTokenError
+        access_token, expiration = user['access_token'], user['access_token_expiration']
+        if expiration < self._now() + 60:
             try:
-                user = self._load_user(claims['sub'])
-            except UnknownUserException as e:
-                # The user's item expires along with their refresh token
-                log.warning('Unknown user of APAT %s', uapat_auth, exc_info=e)
+                response = self._oauth_client.token_for_refresh(
+                    refresh_token=user['refresh_token'],
+                    client_id=self._client_id,
+                    client_secret=self._client_secret
+                )
+            except InvalidRefreshTokenError as e:
+                log.warning('Unable to exchange %s for an access token. '
+                            "The user's refresh token is invalid or has been revoked",
+                            apat_auth, exc_info=e)
                 raise InvalidPersonalAccessTokenError from e
-            jti = claims.get('jti')
-            if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
-                log.warning('APAT jti %r out of range [%d, %d) for %s',
-                            jti, user['min_jti'], user['max_jti'], uapat_auth)
-                raise InvalidPersonalAccessTokenError
-            access_token, expiration = user['access_token'], user['access_token_expiration']
-            if expiration < self._now() + 60:
-                try:
-                    response = self._oauth_client.token_for_refresh(
-                        refresh_token=user['refresh_token'],
-                        client_id=self._client_id,
-                        client_secret=self._client_secret
-                    )
-                except InvalidRefreshTokenError as e:
-                    log.warning('Rejected refresh token of user of APAT %s',
-                                uapat_auth, exc_info=e)
-                    raise InvalidPersonalAccessTokenError from e
-                else:
-                    access_token, expires_in = response['access_token'], response['expires_in']
-                    expiration = self._now() + expires_in
-                    self._update_access_token(user, access_token, expires_in)
-            at_auth = AccessTokenAuthentication(
-                token=access_token,
-                identity=self._identity(user),
-                expiration=expiration
-            )
-            log.info('Exchanged %s for APAT %s', at_auth, uapat_auth)
-            return at_auth
+            else:
+                access_token, expires_in = response['access_token'], response['expires_in']
+                expiration = self._now() + expires_in
+                self._update_access_token(user, access_token, expires_in)
+        at_auth = AccessTokenAuthentication(
+            token=access_token,
+            identity=self._identity(user),
+            expiration=expiration
+        )
+        log.info('Exchanged %s for %s', at_auth, apat_auth)
+        return at_auth
 
     #: An access token that expires within this many seconds can be exchanged
     #: for a fresh one
