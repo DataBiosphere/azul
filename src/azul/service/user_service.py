@@ -249,7 +249,27 @@ class UserService:
     _access_tokens_table_name = config.dynamo_access_tokens_table_name
     access_token_key_attribute = 'token_hash'
 
+    #: The number of seconds after the user authorizes this application that
+    #: the user's item expires, if the authorization server doesn't report when
+    #: the refresh token in that item expires
+    #:
     _default_expiration = 180 * 24 * 60 * 60
+
+    #: The number of seconds after it is minted that an APAT expires. A revoked
+    #: or suspended APAT is unusable before then.
+    #:
+    _apat_expiration = 30 * 24 * 60 * 60
+
+    #: A registered access token is verified again with the authorization
+    #: server once this many seconds have passed since it was last verified
+    #: there, so that a revoked token is rejected within that interval.
+    #:
+    reverification_interval = 5 * 60
+
+    #: An access token that expires within this many seconds can be exchanged
+    #: for a fresh one
+    #:
+    reauthorization_window = 15 * 60
 
     @cached_property
     def _oauth_client(self) -> OAuth2Client:
@@ -363,7 +383,6 @@ class UserService:
         return self._encode_identity(user['iss'], user['sub'])
 
     _apat_algorithm = 'ES256'
-    _apat_expiration = 30 * 24 * 60 * 60
 
     @cached_property
     def _jwt(self) -> PyJWT:
@@ -452,12 +471,6 @@ class UserService:
 
     def _access_token_key(self, access_token: str) -> str:
         return hashlib.sha256(access_token.encode()).hexdigest()
-
-    #: A registered access token is verified again with the authorization
-    #: server once this many seconds have passed since it was last verified
-    #: there, so that a revoked token is rejected within that interval.
-    #:
-    reverification_interval = 5 * 60
 
     def _registered_access_token(self,
                                  uat_auth: UnverifiedAccessTokenAuthentication
@@ -826,11 +839,6 @@ class UserService:
                 self._register_access_token(at_auth)
         log.info('Exchanged %s for %s', at_auth, apat_auth)
         return at_auth
-
-    #: An access token that expires within this many seconds can be exchanged
-    #: for a fresh one
-    #:
-    reauthorization_window = 15 * 60
 
     def reauthorize(self,
                     uat_auth: UnverifiedAccessTokenAuthentication
