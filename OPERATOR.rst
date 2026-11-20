@@ -497,7 +497,7 @@ body, e.g.::
 Export AWS Inspector findings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. ``_select anvilprod``
+#. ``_select anvildev``
 
 #. Run ``python scripts/export_inspector_findings.py`` to generate a CSV file
 

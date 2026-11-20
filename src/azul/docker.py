@@ -384,10 +384,19 @@ def lambda_architecture() -> str:
     return _docker_to_lambda_arch[lambda_image_platform().arch]
 
 
+def lambda_image_repository_name() -> str:
+    """
+    The name, relative to the registry, of the repository that holds the app
+    images of all deployments in the current AWS account.
+    """
+    # Must agree with `docker_repo` in lambdas/lambdas.mk
+    return config.domain_name + '/azul/lambda'
+
+
 def lambda_image_uri(app_name: str) -> str:
     platform = lambda_image_platform()
     tag = config.deployment_stage + '-' + app_name + platform.tag_suffix
-    name = config.docker_registry + '/' + config.domain_name + '/azul/lambda'
+    name = config.docker_registry + '/' + lambda_image_repository_name()
     tag_ref = TagImageRef.create(name, tag)
     repo = Repository(tag_ref)
     digest = repo.get_tag(tag)

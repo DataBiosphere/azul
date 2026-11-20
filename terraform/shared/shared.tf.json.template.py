@@ -1136,7 +1136,7 @@ tf_config = {
                 if config.docker_registry
             },
             'lambda': {
-                'name': config.domain_name + '/azul/lambda',
+                'name': docker.lambda_image_repository_name(),
                 'force_delete': True
             },
         },
