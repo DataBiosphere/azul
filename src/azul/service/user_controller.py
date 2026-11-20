@@ -127,8 +127,8 @@ class UserController(Controller):
                     https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).
 
                     **When initiating the authorization code flow, be
-                    sure to request the {required_scopes} scopes.**
-                ''', required_scopes=self._required_scopes),
+                    sure to request the {required_oauth_scopes} scopes.**
+                ''', required_oauth_scopes=self._required_oauth_scopes),
                 'requestBody': {
                     'description': fd('''
                         Either JSON conforming to the Google Sign-In [CodeResponse](
@@ -149,8 +149,8 @@ class UserController(Controller):
                             scope=describe(str, fd('''
                                 A space-delimited list of scopes that are
                                 approved by the user. Must contain
-                                {required_scopes}.
-                            ''', required_scopes=self._required_scopes)),
+                                {required_oauth_scopes}.
+                            ''', required_oauth_scopes=self._required_oauth_scopes)),
                             state=optional(describe(str, fd('''
                                 The string value that your application uses to
                                 maintain state between your authorization
@@ -204,8 +204,8 @@ class UserController(Controller):
                             The request body is malformed or lacks a required
                             property, the authorization code in it has an
                             unexpected syntax, or the `scope` property of a JSON
-                            body lacks any of the {required_scopes} scopes.
-                        ''', required_scopes=self._required_scopes)
+                            body lacks any of the {required_oauth_scopes} scopes.
+                        ''', required_oauth_scopes=self._required_oauth_scopes)
                     }
                 }
             }
@@ -484,8 +484,8 @@ class UserController(Controller):
         return locals()
 
     @cached_property
-    def _required_scopes(self) -> str:
-        scopes = sorted(self._service.required_scopes)
+    def _required_oauth_scopes(self) -> str:
+        scopes = sorted(self._service.required_oauth_scopes)
         scopes = list(map(back_quote, scopes))
         return join_grammatically(scopes)
 
@@ -530,7 +530,7 @@ class UserController(Controller):
                         raise BadRequestError(f'Missing form parameter `{name}`')
                 authorization = Authorization(
                     code=params['code'][0],
-                    scope=' '.join(sorted(self._service.required_scopes))
+                    scope=' '.join(sorted(self._service.required_oauth_scopes))
                 )
                 redirect_uri = params['redirect_uri'][0]
             elif content_type == self._json_content_type:

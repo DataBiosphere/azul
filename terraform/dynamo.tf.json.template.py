@@ -35,22 +35,22 @@ emit_tf(
                         }
                     },
                     "users": {
-                        "name": config.dynamo_users_table_name,
+                        "name": config.dynamo_user_table_name,
                         "billing_mode": "PAY_PER_REQUEST",
-                        "hash_key": UserService.key_attribute,
+                        "hash_key": UserService.user_key_attribute,
                         "attribute": [
                             {
-                                "name": UserService.key_attribute,
+                                "name": UserService.user_key_attribute,
                                 "type": "S"
                             }
                         ],
                         "ttl": {
-                            "attribute_name": UserService.ttl_attribute,
+                            "attribute_name": UserService.user_ttl_attribute,
                             "enabled": True
                         }
                     },
                     "access_tokens": {
-                        "name": config.dynamo_access_tokens_table_name,
+                        "name": config.dynamo_access_token_table_name,
                         "billing_mode": "PAY_PER_REQUEST",
                         "hash_key": UserService.access_token_key_attribute,
                         "attribute": [
@@ -60,7 +60,7 @@ emit_tf(
                             }
                         ],
                         "ttl": {
-                            "attribute_name": UserService.ttl_attribute,
+                            "attribute_name": UserService.access_token_ttl_attribute,
                             "enabled": True
                         }
                     },

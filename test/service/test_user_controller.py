@@ -114,13 +114,13 @@ class UserControllerTestCase(LocalAppTestCase,
         return 'service'
 
     def _dynamodb_table_name(self) -> str:
-        return UserService._table_name
+        return UserService._user_table_name
 
     def _dynamodb_attributes(self) -> Mapping[str, ScalarAttributeTypeType]:
-        return {UserService.key_attribute: 'S'}
+        return {UserService.user_key_attribute: 'S'}
 
     def _dynamodb_hash_key(self) -> str:
-        return UserService.key_attribute
+        return UserService.user_key_attribute
 
     _mock_iss = 'https://accounts.google.com'
     _mock_sub = '105096702580025601450'
@@ -160,7 +160,7 @@ class UserControllerTestCase(LocalAppTestCase,
     def setUp(self):
         super().setUp()
         self.dynamodb.create_table(
-            TableName=UserService._access_tokens_table_name,
+            TableName=UserService._access_token_table_name,
             BillingMode='PAY_PER_REQUEST',
             AttributeDefinitions=[
                 dict(AttributeName=UserService.access_token_key_attribute,
@@ -181,7 +181,7 @@ class UserControllerTestCase(LocalAppTestCase,
         UserService._apat_public_key.fdel(self._service)
 
     def tearDown(self):
-        self.dynamodb.delete_table(TableName=UserService._access_tokens_table_name)
+        self.dynamodb.delete_table(TableName=UserService._access_token_table_name)
         super().tearDown()
 
     @contextmanager
@@ -737,8 +737,8 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self._service.exchange_token(apat)
             mock_token_for_refresh.assert_not_called()
             # Even a stored access token that remains valid isn't returned
-            key = {UserService.key_attribute: {'S': self._mock_identity}}
-            aws.dynamodb.update_item(TableName=UserService._table_name,
+            key = {UserService.user_key_attribute: {'S': self._mock_identity}}
+            aws.dynamodb.update_item(TableName=UserService._user_table_name,
                                      Key=key,
                                      UpdateExpression='SET access_token_expiration = :e',
                                      ExpressionAttributeValues={':e': {'N': str(now + 3600)}})
@@ -792,7 +792,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
             token_type='Bearer'
         )
         key = self._service._access_token_key(self._mock_access_token)
-        aws.dynamodb.delete_item(TableName=UserService._access_tokens_table_name,
+        aws.dynamodb.delete_item(TableName=UserService._access_token_table_name,
                                  Key={UserService.access_token_key_attribute: {'S': key}})
         result = self._service.exchange_token(apat)
         self.assertEqual(refreshed_token, result.token)
@@ -802,8 +802,8 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
     def test_exchange_token_expired_user(self):
         apat = self._authorize_and_mint()
         key = self._mock_identity
-        aws.dynamodb.delete_item(TableName=UserService._table_name,
-                                 Key={UserService.key_attribute: {'S': key}})
+        aws.dynamodb.delete_item(TableName=UserService._user_table_name,
+                                 Key={UserService.user_key_attribute: {'S': key}})
         with self.assertRaises(OrphanedPersonalAccessTokenError):
             self._service.exchange_token(apat)
 
@@ -1060,13 +1060,13 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         self.assertEqual(self._mock_access_token, self._load_user()['access_token'])
 
     def _set_authorization_time(self, authorization_time: int | None) -> None:
-        key = {UserService.key_attribute: {'S': self._mock_identity}}
+        key = {UserService.user_key_attribute: {'S': self._mock_identity}}
         if authorization_time is None:
-            aws.dynamodb.update_item(TableName=UserService._table_name,
+            aws.dynamodb.update_item(TableName=UserService._user_table_name,
                                      Key=key,
                                      UpdateExpression='REMOVE authorization_time')
         else:
-            aws.dynamodb.update_item(TableName=UserService._table_name,
+            aws.dynamodb.update_item(TableName=UserService._user_table_name,
                                      Key=key,
                                      UpdateExpression='SET authorization_time = :t',
                                      ExpressionAttributeValues={':t': {'N': str(authorization_time)}})
@@ -1436,8 +1436,8 @@ class TestContracts(AnvilTestCase, ContractTestCase, UserControllerTestCase):
 
         def load_and_expire_user(identity: str) -> User:
             user = load_user(identity)
-            aws.dynamodb.delete_item(TableName=UserService._table_name,
-                                     Key={UserService.key_attribute: {'S': identity}})
+            aws.dynamodb.delete_item(TableName=UserService._user_table_name,
+                                     Key={UserService.user_key_attribute: {'S': identity}})
             return user
 
         with (

@@ -1627,11 +1627,11 @@ class Config:
         return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
-    def dynamo_users_table_name(self) -> str:
+    def dynamo_user_table_name(self) -> str:
         return self.qualified_resource_name('users')
 
     @property
-    def dynamo_access_tokens_table_name(self) -> str:
+    def dynamo_access_token_table_name(self) -> str:
         return self.qualified_resource_name('access_tokens')
 
     @property

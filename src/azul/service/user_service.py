@@ -231,14 +231,33 @@ class ReauthorizationLimitError(Exception):
 
 
 class UserService:
-    required_scopes = {'openid', 'email'}
+    """
+    Manages the users of this application and their credentials. A user is a
+    person who authorized this application via the OAuth 2.0 authorization
+    code flow, which yields a refresh token and an access token for the user.
+    This class persists both, along with other information about the user. It
+    verifies the access tokens presented to this application, including those
+    of service accounts, obtains fresh access tokens for users, and mints,
+    exchanges and revokes their personal access tokens (APATs).
+    """
 
-    key_attribute = 'identity'
-    ttl_attribute = 'expiration'
-    assert ttl_attribute in User.__annotations__
+    #: The OAuth 2.0 scopes a user must grant when authorizing this
+    #: application. The ``openid`` scope yields the ID token that identifies
+    #: the user, the ``email`` scope the user's email address.
+    #:
+    required_oauth_scopes = {'openid', 'email'}
 
-    _table_name = config.dynamo_users_table_name
-    _key_separator = '#'
+    #: The name of the DynamoDB table holding one item per user, keyed by the
+    #: user's identity, a combination of the issuer and subject of the user's
+    #: ID token. The item holds the attributes of :class:`User`, including the
+    #: user's refresh token and most recent access token, and expires along
+    #: with the refresh token.
+    #:
+    _user_table_name = config.dynamo_user_table_name
+    user_key_attribute = 'identity'
+    _user_key_separator = '#'
+    user_ttl_attribute = 'expiration'
+    assert user_ttl_attribute in User.__annotations__
 
     #: The name of the DynamoDB table serving as a registry of every access
     #: token this application obtained or accepted, along with the identity of
@@ -246,8 +265,9 @@ class UserService:
     #: lets the application verify the tokens without a round trip to the
     #: authorization server.
     #:
-    _access_tokens_table_name = config.dynamo_access_tokens_table_name
+    _access_token_table_name = config.dynamo_access_token_table_name
     access_token_key_attribute = 'token_hash'
+    access_token_ttl_attribute = 'expiration'
 
     #: The number of seconds after the user authorizes this application that
     #: the user's item expires, if the authorization server doesn't report when
@@ -327,9 +347,9 @@ class UserService:
         """
         log.info("Authorizing app, using code %r", redact_json(authorization['code']))
         scopes = set(authorization['scope'].split())
-        assert self.required_scopes.issubset(scopes), R(
+        assert self.required_oauth_scopes.issubset(scopes), R(
             'Be sure to include the required scopes when requesting the '
-            'authorization code:', sorted(self.required_scopes))
+            'authorization code:', sorted(self.required_oauth_scopes))
         response = self._oauth_client.token_for_code(
             authorization_code=authorization['code'],
             client_id=self._client_id,
@@ -371,10 +391,10 @@ class UserService:
         assert iss, iss
         if iss == self._google_issuer:
             iss = ''
-        return self._key_separator.join([iss, sub])
+        return self._user_key_separator.join([iss, sub])
 
     def _decode_identity(self, identity: str) -> tuple[str, str]:
-        iss, sub = identity.split(self._key_separator, 1)
+        iss, sub = identity.split(self._user_key_separator, 1)
         if iss == '':
             iss = self._google_issuer
         return iss, sub
@@ -488,7 +508,7 @@ class UserService:
         :raise Exception: if the validity of the token cannot be determined
         """
         response = self._dynamodb.get_item(
-            TableName=self._access_tokens_table_name,
+            TableName=self._access_token_table_name,
             Key={self.access_token_key_attribute: {'S': self._access_token_key(uat_auth.token)}},
             ConsistentRead=True
         )
@@ -496,7 +516,7 @@ class UserService:
         if item is None:
             return None
         else:
-            expiration = int(item[self.ttl_attribute]['N'])
+            expiration = int(item[self.access_token_ttl_attribute]['N'])
             # Items can persist in DynamoDB after they are marked as expired
             # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html
             if expiration <= self._now():
@@ -538,11 +558,11 @@ class UserService:
         obtained from that server counts as verified.
         """
         self._dynamodb.put_item(
-            TableName=self._access_tokens_table_name,
+            TableName=self._access_token_table_name,
             Item={
                 self.access_token_key_attribute: {'S': self._access_token_key(at_auth.token)},
                 'identity': {'S': at_auth.identity()},
-                self.ttl_attribute: {'N': str(at_auth.expiration)},
+                self.access_token_ttl_attribute: {'N': str(at_auth.expiration)},
                 'verification_time': {'N': str(self._now())}
             }
         )
@@ -687,13 +707,13 @@ class UserService:
         given user, and return the updated user.
         """
         request: UpdateItemInputTypeDef = dict(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._identity(user)}},
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': self._identity(user)}},
             UpdateExpression=expression,
             # Without the condition, the update would create a partial item for
             # a user whose item expired after it was loaded
             ConditionExpression='attribute_exists(#key)',
-            ExpressionAttributeNames={'#key': self.key_attribute, **names},
+            ExpressionAttributeNames={'#key': self.user_key_attribute, **names},
             ReturnValues='ALL_NEW'
         )
         # DynamoDB rejects an empty mapping of values
@@ -926,8 +946,8 @@ class UserService:
         log.debug('Storing user %r', redact_json(user))
         self._dynamodb.update_item(
             **DynamoDBItemUpdate(
-                table_name=self._table_name,
-                key={self.key_attribute: {'S': key}}
+                table_name=self._user_table_name,
+                key={self.user_key_attribute: {'S': key}}
             )
             .set_from(user, 'access_token')
             .set_from(user, 'access_token_expiration')
@@ -951,8 +971,8 @@ class UserService:
         iss, sub = self._decode_identity(identity)
         log.info('Retrieving user %r from %r', sub, iss)
         response = self._dynamodb.get_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': identity}}
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': identity}}
         )
         item = response.get('Item')
         if item is None:
@@ -964,7 +984,7 @@ class UserService:
             return user
 
     def _user_from_item(self, item: Mapping[str, AttributeValueTypeDef]) -> User:
-        iss, sub = self._decode_identity(item[self.key_attribute]['S'])
+        iss, sub = self._decode_identity(item[self.user_key_attribute]['S'])
         accepted_contracts = item.get('accepted_contracts', {'M': {}})['M']
         return User(
             iss=iss,
@@ -974,7 +994,7 @@ class UserService:
             email=item['email']['S'],
             email_verified=item['email_verified']['BOOL'],
             access_token_expiration=int(item['access_token_expiration']['N']),
-            expiration=int(item[self.ttl_attribute]['N']),
+            expiration=int(item[self.user_ttl_attribute]['N']),
             authorization_time=int(item.get('authorization_time', {'N': '0'})['N']),
             min_jti=int(item['min_jti']['N']),
             max_jti=int(item['max_jti']['N']),
@@ -990,8 +1010,8 @@ class UserService:
 
     def _next_jti(self, user: User) -> int:
         response = self._dynamodb.update_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._identity(user)}},
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': self._identity(user)}},
             UpdateExpression=fd('''
                 SET max_jti = max_jti + :one
             '''),
@@ -1011,8 +1031,8 @@ class UserService:
                   user['sub'], user['iss'], redact_json(access_token))
         self._dynamodb.update_item(
             **DynamoDBItemUpdate(
-                table_name=self._table_name,
-                key={self.key_attribute: {'S': self._identity(user)}}
+                table_name=self._user_table_name,
+                key={self.user_key_attribute: {'S': self._identity(user)}}
             )
             .set('access_token', {'S': access_token})
             .set('access_token_expiration', {'N': str(self._now() + expires_in)})
@@ -1021,8 +1041,8 @@ class UserService:
 
     def _revoke_jti(self, user: User) -> None:
         response = self._dynamodb.update_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._identity(user)}},
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': self._identity(user)}},
             UpdateExpression=fd('''
                 SET min_jti = max_jti
             '''),
