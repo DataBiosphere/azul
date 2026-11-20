@@ -684,8 +684,7 @@ class UserService:
         user = self._load_user(at_auth.identity())
         expires_in = at_auth.expiration - self._now()
         if expires_in > self.reauthorization_window:
-            log.info('Not reauthorizing %s, which expires in %d seconds',
-                     at_auth, expires_in)
+            log.info('No need to reauthorize %s, it is still fresh', at_auth)
             # The cache lacks the token's scopes. Google always reports
             # them, hence the type, but here they are unknown.
             response = TokenResponse(
@@ -695,25 +694,20 @@ class UserService:
                 token_type='Bearer'
             )
         elif user['authorization_time'] + config.reauthorization_limit <= self._now():
-            log.warning('Not reauthorizing %s, which expires in %d seconds, '
-                        'because the user last authorized this application at '
-                        '%r, more than %d seconds ago',
-                        at_auth, expires_in, user['authorization_time'],
-                        config.reauthorization_limit)
+            log.warning('Cannot reauthorize %s, the user needs to log in again', at_auth)
             raise ReauthorizationLimitError
         elif user['access_token_expiration'] - self._now() > self.reauthorization_window:
             # Another request has already obtained a fresh access token
-            stored_auth = AccessTokenAuthentication(
+            at_reauth = AccessTokenAuthentication(
                 token=user['access_token'],
-                identity=at_auth.identity(),
+                identity=self._identity(user),
                 expiration=user['access_token_expiration']
             )
-            stored_expires_in = stored_auth.expiration - self._now()
-            log.info('Not reauthorizing %s, which expires in %d seconds, '
-                     'because the stored %s expires in %d seconds',
-                     at_auth, expires_in, stored_auth, stored_expires_in)
+            assert at_reauth.identity() == at_auth.identity()
+            stored_expires_in = at_reauth.expiration - self._now()
+            log.info('No need to reauthorize %s, reusing stored %s', at_auth, at_reauth)
             response = TokenResponse(
-                access_token=stored_auth.token,
+                access_token=at_reauth.token,
                 expires_in=stored_expires_in,
                 scope=None,  # type: ignore[typeddict-item]
                 token_type='Bearer'
@@ -724,15 +718,15 @@ class UserService:
                 client_id=self._client_id,
                 client_secret=self._client_secret
             )
-            at_auth = AccessTokenAuthentication(
+            at_reauth = AccessTokenAuthentication(
                 token=response['access_token'],
-                identity=at_auth.identity(),
+                identity=self._identity(user),
                 expiration=self._now() + response['expires_in']
             )
-            log.info('Reauthorized %s, which expires in %d seconds, as %s',
-                     uat_auth, expires_in, at_auth)
-            self._update_access_token(user, at_auth.token, response['expires_in'])
-            self._cache_access_token(at_auth)
+            assert at_reauth.identity() == at_auth.identity()
+            log.info('Reauthorized %s as %s', at_auth, at_reauth)
+            self._update_access_token(user, at_reauth.token, response['expires_in'])
+            self._cache_access_token(at_reauth)
         return response
 
     def revoke_personal_access_tokens(self,

@@ -110,6 +110,12 @@ class AccessTokenAuthentication(Authentication, UnverifiedAccessTokenAuthenticat
     def identity(self) -> str:
         return self._identity
 
+    def __str__(self) -> str:
+        return (f'{type(self).__name__}('
+                f'token={redact(self.token, fullmatch=True)!r}, '
+                f'identity={self._identity!r}, '
+                f'expiration={self.expiration!r})')
+
 
 class PersonalAccessTokenAuthentication(Authentication, UnverifiedPersonalAccessTokenAuthentication):
     pass
