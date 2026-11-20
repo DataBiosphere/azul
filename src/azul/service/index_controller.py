@@ -363,7 +363,7 @@ class IndexController(QueryController):
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_sort_field)
         filters = query_params.get('filters')
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
         pagination = self._Pagination.from_request(self, entity_type, filters)
         response = self._search(entity_type, filters, pagination, aggregate=True)
@@ -386,7 +386,7 @@ class IndexController(QueryController):
             raise BadRequestError(e)
         sort = Sorting(field_name='entryId')
         pagination = Pagination(sort=sort.field_name, order=sort.order, size=1)
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         filters = self._prepare_filters(self.app.catalog, authentication, None)
         filters = filters.set_explicit({'entryId': {'is': [entity_id]}})
         response = self._search(entity_type, filters, pagination, aggregate=False)
@@ -427,7 +427,7 @@ class IndexController(QueryController):
                         catalog=self._validate_catalog)
         filters = query_params.get('filters', '{}')
         self._validate_filters(filters)
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
         try:
             response = self._service.summary(self.app.catalog, filters)

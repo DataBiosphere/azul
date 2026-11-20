@@ -16,6 +16,7 @@ from unittest import (
     mock,
 )
 from unittest.mock import (
+    MagicMock,
     patch,
 )
 from uuid import (
@@ -38,6 +39,9 @@ from app_test_case import (
 )
 from azul import (
     config,
+)
+from azul.auth import (
+    AccessTokenAuthentication,
 )
 from azul.filters import (
     Filters,
@@ -77,6 +81,10 @@ from azul.service.manifest_service import (
     ManifestPartition,
     ManifestService,
     SignedManifestKey,
+)
+from azul.service.user_service import (
+    UnknownUserException,
+    UserService,
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -780,7 +788,10 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         token = Token.decode(url.path.segments[-1])
         self.assertEqual(1, token.iteration)
 
+    @mock.patch.object(UserService, '_register_access_token', new=MagicMock())
+    @mock.patch.object(UserService, '_registered_access_token', new=MagicMock(return_value=None))
     @mock.patch.object(OAuth2Client, 'token_info')
+    @mock.patch.object(ManifestService, 'sign_manifest_key')
     @mock.patch.object(ManifestService, 'get_manifest_url')
     @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
     @mock.patch.object(AsyncManifestService, 'inspect_generation')
@@ -788,28 +799,35 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                            inspect_generation,
                                                            get_cached_manifest_with_key,
                                                            get_manifest_url,
+                                                           sign_manifest_key,
                                                            token_info):
         """
         An access token that the authorization server rejects, for example
         because it expired while the client was polling, should cause a 401
-        when the client requests the finished generation.
+        when the client requests the finished generation, regardless of whether
+        the manifest's format makes use of the token.
         """
-        manifest_key = ManifestKey(catalog=self.catalog,
-                                   format=ManifestFormat.compact,
-                                   manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
-                                   source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
-        manifest = Manifest(object_key='key/of/manifest',
-                            was_cached=False,
-                            format=ManifestFormat.compact,
-                            manifest_key=manifest_key,
-                            file_name='some_file_name')
-        inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
-        get_cached_manifest_with_key.return_value = manifest
         get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
         token_info.side_effect = InvalidAccessTokenError
         access_token = 'ya29.mock_access_token'
-        for fetch in True, False:
-            with self.subTest(fetch=fetch):
+        for format, fetch in product([ManifestFormat.compact, ManifestFormat.curl],
+                                     [True, False]):
+            with self.subTest(format=format, fetch=fetch):
+                manifest_key = ManifestKey(catalog=self.catalog,
+                                           format=format,
+                                           manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                           source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+                manifest = Manifest(object_key='key/of/manifest',
+                                    was_cached=False,
+                                    format=format,
+                                    manifest_key=manifest_key,
+                                    file_name='some_file_name')
+                inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
+                get_cached_manifest_with_key.return_value = manifest
+                sign_manifest_key.return_value = SignedManifestKey(
+                    value=BareManifestKey.unpack(manifest_key.pack()),
+                    signature=b'123'
+                )
                 path = ['manifest', 'files', self.token]
                 if fetch:
                     path.insert(0, 'fetch')
@@ -820,11 +838,72 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 self.assertEqual(401, response.status_code)
                 expected_response = {
                     'Code': 'UnauthorizedError',
-                    'Message': 'Invalid credentials'
+                    'Message': 'Invalid access token'
                 }
                 self.assertEqual(expected_response, response.json())
                 token_info.assert_called_once_with(access_token)
                 token_info.reset_mock()
+
+    @mock.patch.object(UserService, '_registered_access_token')
+    @mock.patch.object(UserService, '_load_user', side_effect=UnknownUserException)
+    @mock.patch.object(OAuth2Client, 'token_info')
+    @mock.patch.object(ManifestService, 'sign_manifest_key')
+    @mock.patch.object(ManifestService, 'get_manifest_url')
+    @mock.patch.object(ManifestService, 'get_cached_manifest_with_key')
+    @mock.patch.object(AsyncManifestService, 'inspect_generation')
+    def test_finished_curl_manifest_verifies_access_token_once(self,
+                                                               inspect_generation,
+                                                               get_cached_manifest_with_key,
+                                                               get_manifest_url,
+                                                               sign_manifest_key,
+                                                               token_info,
+                                                               load_user,
+                                                               registered_access_token):
+        """
+        Minting a personal access token for the command lines of a finished
+        cURL manifest should rely on the verification of the access token in
+        the same request, instead of verifying the token a second time.
+        """
+        access_token = 'ya29.mock_access_token'
+        registered_access_token.return_value = AccessTokenAuthentication(token=access_token,
+                                                                         identity='#105096702580025601450',
+                                                                         expiration=2 ** 31)
+        get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
+        manifest_key = ManifestKey(catalog=self.catalog,
+                                   format=ManifestFormat.curl,
+                                   manifest_hash=UUID('d2b0ce3c-46f0-57fe-b9d4-2e38d8934fd4'),
+                                   source_hash=UUID('77936747-5968-588e-809f-af842d6be9e0'))
+        manifest = Manifest(object_key='key/of/manifest',
+                            was_cached=False,
+                            format=ManifestFormat.curl,
+                            manifest_key=manifest_key,
+                            file_name='some_file_name')
+        inspect_generation.return_value = {'output': {'manifest': manifest.to_json()}}
+        get_cached_manifest_with_key.return_value = manifest
+        sign_manifest_key.return_value = SignedManifestKey(
+            value=BareManifestKey.unpack(manifest_key.pack()),
+            signature=b'123'
+        )
+        for fetch in True, False:
+            with self.subTest(fetch=fetch):
+                path = ['manifest', 'files', self.token]
+                if fetch:
+                    path.insert(0, 'fetch')
+                url = self.base_url.set(path=path)
+                response = requests.get(str(url),
+                                        headers={'Authorization': f'Bearer {access_token}'},
+                                        allow_redirects=False)
+                if fetch:
+                    self.assertEqual(200, response.status_code)
+                    self.assertEqual(302, response.json()['Status'])
+                else:
+                    self.assertEqual(302, response.status_code)
+                registered_access_token.assert_called_once()
+                token_info.assert_not_called()
+                # The user is looked up while minting the personal access token
+                load_user.assert_called_once()
+                registered_access_token.reset_mock()
+                load_user.reset_mock()
 
     def _request(self, method: str, url: furl, *, expect: int) -> furl:
         response = requests.request(method=method,

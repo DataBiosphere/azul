@@ -5,11 +5,7 @@ from collections.abc import (
 from contextlib import (
     contextmanager,
 )
-from copy import (
-    copy,
-)
 import json
-import logging
 from typing import (
     Any,
     NotRequired,
@@ -24,9 +20,12 @@ from chalice.app import (
 )
 import chevron
 
+from azul import (
+    config,
+)
 from azul.auth import (
-    AccessTokenAuthentication,
-    PersonalAccessTokenAuthentication,
+    UnverifiedAccessTokenAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.chalice import (
     Controller,
@@ -53,6 +52,8 @@ from azul.lib.types import (
 from azul.oauth2 import (
     Authorization,
     InvalidAccessTokenError,
+    InvalidRefreshTokenError,
+    TokenResponse,
 )
 from azul.openapi import (
     application_json,
@@ -75,14 +76,13 @@ from azul.service.contract_service import (
 )
 from azul.service.user_service import (
     ContractAcceptance,
-    ForeignTokenException,
+    ReauthorizationLimitError,
+    RejectedAccessTokenError,
     UnknownUserException,
     User,
     UserService,
     format_authorized_until,
 )
-
-log = logging.getLogger(__name__)
 
 
 class UserUpdate(JSONTypedDict):
@@ -127,8 +127,8 @@ class UserController(Controller):
                     https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps#section-6.1).
 
                     **When initiating the authorization code flow, be
-                    sure to request the {required_scopes} scopes.**
-                ''', required_scopes=self._required_scopes),
+                    sure to request the {required_oauth_scopes} scopes.**
+                ''', required_oauth_scopes=self._required_oauth_scopes),
                 'requestBody': {
                     'description': fd('''
                         Either JSON conforming to the Google Sign-In [CodeResponse](
@@ -149,8 +149,8 @@ class UserController(Controller):
                             scope=describe(str, fd('''
                                 A space-delimited list of scopes that are
                                 approved by the user. Must contain
-                                {required_scopes}.
-                            ''', required_scopes=self._required_scopes)),
+                                {required_oauth_scopes}.
+                            ''', required_oauth_scopes=self._required_oauth_scopes)),
                             state=optional(describe(str, fd('''
                                 The string value that your application uses to
                                 maintain state between your authorization
@@ -204,8 +204,8 @@ class UserController(Controller):
                             The request body is malformed or lacks a required
                             property, the authorization code in it has an
                             unexpected syntax, or the `scope` property of a JSON
-                            body lacks any of the {required_scopes} scopes.
-                        ''', required_scopes=self._required_scopes)
+                            body lacks any of the {required_oauth_scopes} scopes.
+                        ''', required_oauth_scopes=self._required_oauth_scopes)
                     }
                 }
             }
@@ -226,7 +226,11 @@ class UserController(Controller):
                     header as a Bearer token. The user must have previously
                     completed the authorization code flow. In the Swagger UI,
                     this can be done by clicking the Authorize button above.
-                '''),
+                    Once {hours} hours have passed since the user last completed
+                    the authorization code flow, requests authenticated with
+                    the APAT fail until the user completes the authorization
+                    code flow again.
+                ''', hours=self._reauthorization_limit_hours),
                 'tags': ['User'],
                 'responses': {
                     '200': {
@@ -294,6 +298,76 @@ class UserController(Controller):
         )
         def revoke():
             return self._revoke()
+
+        @self.app.route(
+            '/user/reauthorize',
+            methods=['POST'],
+            cors=True,
+            spec={
+                'summary': 'Obtain a fresh OAuth 2.0 access token '
+                           'in exchange for one that is about to expire',
+                'description': fd('''
+                    Exchange the OAuth 2.0 access token in the `Authorization`
+                    header, passed as a Bearer token, for a fresh one. The user
+                    must have previously completed the authorization code flow.
+                    If the access token remains valid for more than
+                    {minutes} minutes, it is returned unchanged. Otherwise, a
+                    fresh one is only issued within {hours} hours of the user
+                    completing the authorization code flow. If an earlier
+                    request already obtained a fresh access token for the user,
+                    and that token remains valid for more than {minutes}
+                    minutes, that token is returned instead of a new one.
+                ''',
+                                  minutes=self._service.reauthorization_window // 60,
+                                  hours=self._reauthorization_limit_hours),
+                'tags': ['User'],
+                'responses': {
+                    '200': {
+                        'description': fd('''
+                            The access token, or a fresh one if it was about to
+                            expire
+                        '''),
+                        **json_content(
+                            object(
+                                access_token=describe(str, fd('''
+                                    An access token for the user
+                                ''')),
+                                expires_in=describe(int, fd('''
+                                    Expiration of the access token, in seconds
+                                ''')),
+                                scope=describe(nullable(str), fd('''
+                                    The scopes granted by the user, or `null`
+                                    if the access token is returned unchanged
+                                ''')),
+                                token_type=describe(str, fd('''
+                                    Always 'Bearer'
+                                ''')),
+                                id_token=optional(describe(str, fd('''
+                                    The OIDC ID token identifying the user,
+                                    absent if the access token is returned
+                                    unchanged
+                                ''')))
+                            )
+                        )
+                    },
+                    **self._user_error_responses,
+                    '401': {
+                        'description': fd('''
+                            No valid OAuth 2.0 access token was provided, the
+                            user has not completed the authorization code flow,
+                            or the access token is about to expire and either
+                            the user's authorization of this application has
+                            lapsed or the user completed the authorization code
+                            flow more than {hours} hours ago. In the latter two
+                            cases, the user must authorize this application
+                            again.
+                        ''', hours=self._reauthorization_limit_hours)
+                    }
+                }
+            }
+        )
+        def reauthorize():
+            return self._reauthorize()
 
         @self.app.route(
             '/user',
@@ -410,8 +484,8 @@ class UserController(Controller):
         return locals()
 
     @cached_property
-    def _required_scopes(self) -> str:
-        scopes = sorted(self._service.required_scopes)
+    def _required_oauth_scopes(self) -> str:
+        scopes = sorted(self._service.required_oauth_scopes)
         scopes = list(map(back_quote, scopes))
         return join_grammatically(scopes)
 
@@ -456,7 +530,7 @@ class UserController(Controller):
                         raise BadRequestError(f'Missing form parameter `{name}`')
                 authorization = Authorization(
                     code=params['code'][0],
-                    scope=' '.join(sorted(self._service.required_scopes))
+                    scope=' '.join(sorted(self._service.required_oauth_scopes))
                 )
                 redirect_uri = params['redirect_uri'][0]
             elif content_type == self._json_content_type:
@@ -477,30 +551,54 @@ class UserController(Controller):
             if not is_redactable(authorization['code']):
                 raise BadRequestError('Unexpected authorization code syntax')
             else:
-                response = copy(self._service.authorize(authorization,
-                                                        redirect_uri=redirect_uri))
-                # Withhold refresh token from client for security reasons. The
-                # property is required so we need to override the type checker
-                # on that. This is safe because we made copy above.
-                response.pop('refresh_token')  # type: ignore[misc]
-                return json_untyped_dict(response)
+                response = self._service.authorize(authorization,
+                                                   redirect_uri=redirect_uri)
+                return self._token_response(response)
         except AssertionError as e:
             if R.caused(e):
                 raise BadRequestError(e.args)
             else:
                 raise
 
+    def _token_response(self, response: TokenResponse) -> JSON:
+        """
+        The properties of the given response from the authorization server that
+        are declared by :class:`TokenResponse`. The authorization server may
+        respond with more, a refresh token for example, which must be withheld
+        from the client.
+        """
+        keys = TokenResponse.__required_keys__ | TokenResponse.__optional_keys__
+        return {k: v for k, v in json_untyped_dict(response).items() if k in keys}
+
     def _token(self) -> JSON:
         auth = self._access_token('Cannot exchange a personal access token for another')
-        with self._rejecting_unusable_token(auth):
+        with self._rejecting_unusable_token():
             apat_auth = self._service.mint_personal_access_token(auth)
         return {'token': apat_auth.token}
 
     def _revoke(self) -> Response:
         auth = self._access_token('Cannot revoke using a personal access token')
-        with self._rejecting_unusable_token(auth):
+        with self._rejecting_unusable_token():
             self._service.revoke_personal_access_tokens(auth)
         return Response(status_code=204, body='')
+
+    def _reauthorize(self) -> JSON:
+        auth = self._access_token('Cannot reauthorize with a personal access token')
+        with self._rejecting_unusable_token():
+            try:
+                response = self._service.reauthorize(auth)
+            except ReauthorizationLimitError:
+                raise UnauthorizedError('The user authorized this application too '
+                                        'long ago. Authorize this application again.')
+            except InvalidRefreshTokenError:
+                raise UnauthorizedError("The user's authorization of this "
+                                        'application was revoked or has expired. '
+                                        'Authorize this application again.')
+        return self._token_response(response)
+
+    @property
+    def _reauthorization_limit_hours(self) -> str:
+        return f'{config.reauthorization_limit / 3600:g}'
 
     @property
     def _user_schema(self) -> JSON:
@@ -552,7 +650,7 @@ class UserController(Controller):
 
     def _get_user(self) -> JSON:
         auth = self._access_token('Cannot retrieve a user with a personal access token')
-        with self._rejecting_unusable_token(auth):
+        with self._rejecting_unusable_token():
             user = self._service.get_user(auth)
         return self._user_json(user)
 
@@ -566,7 +664,7 @@ class UserController(Controller):
             if accepted_contracts is not None:
                 for name, acceptance in accepted_contracts.items():
                     self._validate_acceptance(name, acceptance)
-            with self._rejecting_unusable_token(auth):
+            with self._rejecting_unusable_token():
                 user = self._service.update_accepted_contracts(auth, accepted_contracts)
             return self._user_json(user)
 
@@ -597,25 +695,23 @@ class UserController(Controller):
             }
         }
 
-    def _access_token(self, message: str) -> AccessTokenAuthentication:
+    def _access_token(self, message: str) -> UnverifiedAccessTokenAuthentication:
         """
         Return the access token the current request is authenticated with.
 
         :param message: The message of the error to raise if the request is
                           authenticated with a personal access token
         """
-        auth = self._authentication(self.current_request)
-        if isinstance(auth, PersonalAccessTokenAuthentication):
+        auth = self._authentication()
+        if isinstance(auth, UnverifiedPersonalAccessTokenAuthentication):
             raise ForbiddenError(message)
-        elif isinstance(auth, AccessTokenAuthentication):
+        elif isinstance(auth, UnverifiedAccessTokenAuthentication):
             return auth
         else:
             raise UnauthorizedError('Valid access token required')
 
     @contextmanager
-    def _rejecting_unusable_token(self,
-                                  auth: AccessTokenAuthentication
-                                  ) -> Iterator[None]:
+    def _rejecting_unusable_token(self) -> Iterator[None]:
         """
         Translate the ways in which an access token can turn out to be unusable
         into the 401 response the endpoints document for that case. An
@@ -625,7 +721,6 @@ class UserController(Controller):
         try:
             yield
         except (InvalidAccessTokenError,
-                ForeignTokenException,
-                UnknownUserException) as e:
-            log.warning('Rejecting %s', auth, exc_info=e)
+                RejectedAccessTokenError,
+                UnknownUserException):
             raise UnauthorizedError('Valid access token required')

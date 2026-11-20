@@ -21,7 +21,11 @@ from azul.lib.strings import (
 )
 
 
-class Authentication(metaclass=ABCMeta):
+class UnverifiedAuthentication(metaclass=ABCMeta):
+    """
+    An authentication claim that hasn't been verified yet, such as a bearer
+    token in an HTTP request.
+    """
 
     @abstractmethod
     def identity(self) -> str:
@@ -52,15 +56,16 @@ class Authentication(metaclass=ABCMeta):
 
 
 @attr.s(auto_attribs=True, frozen=True)
-class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
+class UnverifiedBearerTokenAuthentication(UnverifiedAuthentication,
+                                          metaclass=ABCMeta):
     token: str
 
     @classmethod
-    def for_token(cls, token: str) -> BearerTokenAuthentication:
+    def for_token(cls, token: str) -> UnverifiedBearerTokenAuthentication:
         if looks_like_redactable_jwt(token):
-            return PersonalAccessTokenAuthentication(token)
+            return UnverifiedPersonalAccessTokenAuthentication(token)
         elif looks_like_access_token(token):
-            return AccessTokenAuthentication(token)
+            return UnverifiedAccessTokenAuthentication(token)
         else:
             raise UnauthorizedError('Unexpected token syntax')
 
@@ -74,12 +79,63 @@ class BearerTokenAuthentication(Authentication, metaclass=ABCMeta):
         return f'{type(self).__name__}(token={redact(self.token, fullmatch=True)!r})'
 
 
-class AccessTokenAuthentication(BearerTokenAuthentication):
+class UnverifiedAccessTokenAuthentication(UnverifiedBearerTokenAuthentication):
     pass
 
 
-class PersonalAccessTokenAuthentication(BearerTokenAuthentication):
+class UnverifiedPersonalAccessTokenAuthentication(UnverifiedBearerTokenAuthentication):
     pass
+
+
+class Authentication(UnverifiedAuthentication, metaclass=ABCMeta):
+    """
+    A verified authentication claim. Using separate types to represent verified
+    and unverified claims lets us enlist the help of the type checker to ensure
+    that unverified claims don't penetrate the lower layers of the application.
+    """
+    pass
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class AccessTokenAuthentication(Authentication, UnverifiedAccessTokenAuthentication):
+    """
+    A verified access token, along with the identity of the user or service
+    account it was issued to, and its expiration.
+    """
+    _identity: str
+
+    #: The Unix timestamp after which the token expires
+    expiration: int
+
+    def identity(self) -> str:
+        return self._identity
+
+    def __str__(self) -> str:
+        return (f'{type(self).__name__}('
+                f'token={redact(self.token, fullmatch=True)!r}, '
+                f'identity={self._identity!r}, '
+                f'expiration={self.expiration!r})')
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class PersonalAccessTokenAuthentication(Authentication, UnverifiedPersonalAccessTokenAuthentication):
+    """
+    A verified APAT, along with the identity of the user it was minted for and
+    its JWT ID.
+    """
+    _identity: str
+
+    #: The APAT's `jti` claim, if present
+    jti: str | None
+
+    def identity(self) -> str:
+        return self._identity
+
+    def __str__(self) -> str:
+        return (f'{type(self).__name__}('
+                f'token={redact(self.token, fullmatch=True)!r}, '
+                f'identity={self._identity!r}, '
+                f'jti={self.jti!r})')
 
 
 @attr.s(auto_attribs=True, frozen=True)
