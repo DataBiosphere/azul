@@ -594,6 +594,87 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self._service.verify_access_token(auth)
             self.assertEqual(2, token_info.call_count)
 
+    def test_reverify_access_token(self):
+        now = self._service._now()
+        with (
+            patch.object(UserService, '_now', return_value=now),
+            self._mock_token_for_code()
+        ):
+            self._authorize()
+        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        interval = UserService.reverification_interval
+        for elapsed, verified in [
+            (interval - 1, False),
+            (interval, True),
+            # Reverification restarts the interval
+            (2 * interval - 1, False),
+            (2 * interval, True)
+        ]:
+            with self.subTest(elapsed=elapsed):
+                with (
+                    patch.object(UserService, '_now', return_value=now + elapsed),
+                    self._mock_token_info() as token_info
+                ):
+                    verified_auth = self._service.verify_access_token(auth)
+                if verified:
+                    token_info.assert_called_once_with(auth.token)
+                else:
+                    token_info.assert_not_called()
+                self.assertEqual(self._mock_identity, verified_auth.identity())
+
+    def test_reverify_unusable_access_token(self):
+        interval = UserService.reverification_interval
+        foreign_user_token_info = TokenInfoResponse(azp=self._mock_client_id,
+                                                    aud=self._mock_client_id,
+                                                    sub='210987654321098765432',
+                                                    exp='9999999999',
+                                                    expires_in='3600')
+        cases: list[tuple[str, ContextManager, int]] = [
+            (
+                'revoked',
+                patch.object(OAuth2Client, 'token_info', side_effect=InvalidAccessTokenError),
+                401
+            ),
+            (
+                'issued to another client',
+                self._mock_token_info(aud='456-other_client_id.apps.googleusercontent.com'),
+                401
+            ),
+            (
+                'issued to another user',
+                patch.object(OAuth2Client, 'token_info', return_value=foreign_user_token_info),
+                401
+            ),
+            (
+                # A failure to reverify the token fails closed. The resulting
+                # 5xx trips an alarm.
+                'unexpected response',
+                patch.object(OAuth2Client, 'token_info',
+                             side_effect=AssertionError(R('Unexpected response status', 503))),
+                500
+            )
+        ]
+        for description, context, status in cases:
+            with self.subTest(description):
+                now = self._service._now()
+                with (
+                    patch.object(UserService, '_now', return_value=now),
+                    self._mock_token_for_code()
+                ):
+                    self._authorize()
+                with (
+                    patch.object(UserService, '_now', return_value=now + interval),
+                    context
+                ):
+                    for response in self._token_responses(self._mock_access_token):
+                        self.assertEqual(status, response.status)
+                        if status == 401:
+                            expected_body = {
+                                'Code': 'UnauthorizedError',
+                                'Message': 'Valid access token required'
+                            }
+                            self.assertEqual(expected_body, json.loads(response.data))
+
     def test_authorize_registers_access_token(self):
         with self._mock_token_for_code():
             self._authorize()
@@ -668,6 +749,55 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self._authorize()
             result = self._service.exchange_token(apat)
         self.assertEqual(self._mock_access_token, result.token)
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_exchange_token_reverifies_stored_token(self, mock_token_for_refresh):
+        apat = self._authorize_and_mint()
+        now = self._service._now()
+        interval = UserService.reverification_interval
+        for elapsed, verified in [(interval - 1, False), (interval, True)]:
+            with self.subTest(elapsed=elapsed):
+                with (
+                    patch.object(UserService, '_now', return_value=now + elapsed),
+                    self._mock_token_info() as token_info
+                ):
+                    result = self._service.exchange_token(apat)
+                if verified:
+                    token_info.assert_called_once_with(self._mock_access_token)
+                else:
+                    token_info.assert_not_called()
+                self.assertEqual(self._mock_access_token, result.token)
+        mock_token_for_refresh.assert_not_called()
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_exchange_token_revoked_stored_token(self, mock_token_for_refresh):
+        apat = self._authorize_and_mint()
+        now = self._service._now()
+        with (
+            patch.object(UserService, '_now', return_value=now + UserService.reverification_interval),
+            patch.object(OAuth2Client, 'token_info', side_effect=InvalidAccessTokenError)
+        ):
+            with self.assertRaises(DeauthorizedPersonalAccessTokenError):
+                self._service.exchange_token(apat)
+        mock_token_for_refresh.assert_not_called()
+
+    @patch.object(OAuth2Client, 'token_for_refresh')
+    def test_exchange_token_unregistered_stored_token(self, mock_token_for_refresh):
+        apat = self._authorize_and_mint()
+        refreshed_token = 'ya29.refreshed_access_token'
+        mock_token_for_refresh.return_value = TokenResponse(
+            access_token=refreshed_token,
+            expires_in=3600,
+            scope='openid email',
+            token_type='Bearer'
+        )
+        key = self._service._access_token_key(self._mock_access_token)
+        aws.dynamodb.delete_item(TableName=UserService._access_tokens_table_name,
+                                 Key={UserService.access_token_key_attribute: {'S': key}})
+        result = self._service.exchange_token(apat)
+        self.assertEqual(refreshed_token, result.token)
+        mock_token_for_refresh.assert_called_once()
+        self.assertEqual(refreshed_token, self._load_user()['access_token'])
 
     def test_exchange_token_expired_user(self):
         apat = self._authorize_and_mint()
@@ -850,7 +980,10 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                     self._mock_token_info() as token_info
                 ):
                     response = self._reauthorize(self._mock_access_token)
-                    token_info.assert_not_called()
+                    if 3600 - expires_in < UserService.reverification_interval:
+                        token_info.assert_not_called()
+                    else:
+                        token_info.assert_called_once_with(self._mock_access_token)
                 self.assertEqual(200, response.status)
                 body = json.loads(response.data)
                 self.assertEqual(expected_token, body['access_token'])
@@ -913,6 +1046,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         window = UserService.reauthorization_window
         with (
             patch.object(UserService, '_now', return_value=now + 3600 - window),
+            self._mock_token_info(),
             patch.object(OAuth2Client, 'token_for_refresh', side_effect=InvalidRefreshTokenError)
         ):
             response = self._reauthorize(self._mock_access_token)
@@ -964,7 +1098,10 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 ):
                     self._authorize()
                 self._set_authorization_time(authorization_time)
-                with patch.object(UserService, '_now', return_value=due):
+                with (
+                    patch.object(UserService, '_now', return_value=due),
+                    self._mock_token_info()
+                ):
                     response = self._reauthorize(self._mock_access_token)
                 body = json.loads(response.data)
                 if expected_token is None:
@@ -1032,7 +1169,10 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 if past_limit:
                     self._set_authorization_time(due - config.reauthorization_limit)
                 # Another request has stored a fresh access token for the user
-                with patch.object(UserService, '_now', return_value=due):
+                with (
+                    patch.object(UserService, '_now', return_value=due),
+                    self._mock_token_info()
+                ):
                     self._service._update_access_token(self._load_user(),
                                                        stored_token,
                                                        stored_expires_in)

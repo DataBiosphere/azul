@@ -208,9 +208,9 @@ class SuspendedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
 
 class DeauthorizedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
     """
-    The authorization server rejected the refresh token of the user the APAT
-    was minted for, typically because the user's authorization of this
-    application was revoked or has expired.
+    The authorization server rejected the refresh token or the stored access
+    token of the user the APAT was minted for, typically because the user's
+    authorization of this application was revoked or has expired.
     """
 
 
@@ -421,7 +421,7 @@ class UserService:
                     log.warning('Rejected access token %s', uat_auth, exc_info=e)
                     raise
                 else:
-                    if token_info['azp'].endswith('.apps.googleusercontent.com'):
+                    if self._is_user_token(token_info):
                         # A user's access token, cases 2) through 5) above
                         log.warning('Rejected access token %s, a user token '
                                     'this application has not registered', uat_auth)
@@ -429,27 +429,50 @@ class UserService:
                                                        'not obtained by this application')
                     else:
                         # A service account's access token, case 1) above
-                        iss = self._google_issuer
-                        # The `azp` (authorized party) of a service account's
-                        # access token is the service account's unique ID.
-                        sub = token_info['azp']
                         at_auth = AccessTokenAuthentication(
                             token=uat_auth.token,
-                            identity=self._encode_identity(iss, sub),
+                            identity=self._token_identity(token_info),
                             expiration=self._now() + int(token_info['expires_in'])
                         )
                         self._register_access_token(at_auth)
         return at_auth
 
+    def _is_user_token(self, token_info: TokenInfoResponse) -> bool:
+        """
+        True if the given information describes a user's access token, False
+        if it describes a service account's.
+        """
+        # A user's token originates from an OAuth 2.0 client, a service
+        # account's from the service account itself.
+        return token_info['azp'].endswith('.apps.googleusercontent.com')
+
+    def _token_identity(self, token_info: TokenInfoResponse) -> str:
+        sub = token_info['sub' if self._is_user_token(token_info) else 'azp']
+        return self._encode_identity(self._google_issuer, sub)
+
     def _access_token_key(self, access_token: str) -> str:
         return hashlib.sha256(access_token.encode()).hexdigest()
+
+    #: A registered access token is verified again with the authorization
+    #: server once this many seconds have passed since it was last verified
+    #: there, so that a revoked token is rejected within that interval.
+    #:
+    reverification_interval = 5 * 60
 
     def _registered_access_token(self,
                                  uat_auth: UnverifiedAccessTokenAuthentication
                                  ) -> AccessTokenAuthentication | None:
         """
         Return the given access token, verified by the registry, or None if the
-        token isn't registered, or has expired.
+        token isn't registered, or has expired. A registered token that is due
+        for reverification is verified with the authorization server first.
+
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
+
+        :raise RejectedAccessTokenError: if this application rejects the token
+
+        :raise Exception: if the validity of the token cannot be determined
         """
         response = self._dynamodb.get_item(
             TableName=self._access_tokens_table_name,
@@ -466,19 +489,48 @@ class UserService:
             if expiration <= self._now():
                 return None
             else:
-                return AccessTokenAuthentication(
+                at_auth = AccessTokenAuthentication(
                     token=uat_auth.token,
                     identity=item['identity']['S'],
                     expiration=expiration
                 )
+                verification_time = int(item['verification_time']['N'])
+                if verification_time + self.reverification_interval <= self._now():
+                    self._reverify_access_token(at_auth)
+                return at_auth
+
+    def _reverify_access_token(self, at_auth: AccessTokenAuthentication) -> None:
+        try:
+            token_info = self._token_info(at_auth.token)
+        except InvalidAccessTokenError as e:
+            log.warning('Registered access token %s is no longer valid', at_auth, exc_info=e)
+            raise
+        except RejectedAccessTokenError as e:
+            log.warning('Rejected registered access token %s', at_auth, exc_info=e)
+            raise
+        else:
+            if self._token_identity(token_info) == at_auth.identity():
+                log.info('Reverified access token %s', at_auth)
+                self._register_access_token(at_auth)
+            else:
+                log.warning('Rejected registered access token %s, '
+                            'its identity has changed', at_auth)
+                # The message intentionally lacks detail, for confidentiality
+                raise RejectedAccessTokenError('OAuth 2.0 subject does not match')
 
     def _register_access_token(self, at_auth: AccessTokenAuthentication) -> None:
+        """
+        Register the given access token, recording that it was verified with
+        the authorization server just now. A token this application just
+        obtained from that server counts as verified.
+        """
         self._dynamodb.put_item(
             TableName=self._access_tokens_table_name,
             Item={
                 self.access_token_key_attribute: {'S': self._access_token_key(at_auth.token)},
                 'identity': {'S': at_auth.identity()},
-                self.ttl_attribute: {'N': str(at_auth.expiration)}
+                self.ttl_attribute: {'N': str(at_auth.expiration)},
+                'verification_time': {'N': str(self._now())}
             }
         )
 
@@ -503,7 +555,7 @@ class UserService:
         # The error messages here intentionally lack detail, for confidentiality
         authorized_party, audience = token_info['azp'], token_info['aud']
         email = token_info.get('email')
-        if authorized_party.endswith('.apps.googleusercontent.com'):
+        if self._is_user_token(token_info):
             # A user's access token originating from an OAuth 2.0 client
             require(authorized_party == self._client_id,
                     'OAuth 2.0 client does not match')
@@ -731,14 +783,28 @@ class UserService:
             log.warning('Unable to exchange %s for an access token. '
                         'The user needs to log in again', apat_auth)
             raise SuspendedPersonalAccessTokenError
-        at_auth = AccessTokenAuthentication(
-            token=user['access_token'],
-            identity=self._identity(user),
-            expiration=user['access_token_expiration']
-        )
+        at_auth: AccessTokenAuthentication | None
         # The access token must remain valid for the rest of the request. Only
         # the REST API Lambda handles requests authenticated with an APAT.
-        if at_auth.expiration < self._now() + 2 * config.api_gateway_lambda_timeout:
+        if user['access_token_expiration'] < self._now() + 2 * config.api_gateway_lambda_timeout:
+            at_auth = None
+        else:
+            uat_auth = UnverifiedAccessTokenAuthentication(token=user['access_token'])
+            try:
+                at_auth = self._registered_access_token(uat_auth)
+            except InvalidAccessTokenError as e:
+                log.warning('Unable to exchange %s for an access token. '
+                            "The user's access token is no longer valid",
+                            apat_auth, exc_info=e)
+                raise DeauthorizedPersonalAccessTokenError from e
+            else:
+                if at_auth is None:
+                    # A refresh confirms that the user's authorization of this
+                    # application is still in effect
+                    log.warning('Stored %s is not registered, refreshing it', uat_auth)
+                else:
+                    assert at_auth.identity() == self._identity(user)
+        if at_auth is None:
             try:
                 response = self._oauth_client.token_for_refresh(
                     refresh_token=user['refresh_token'],
@@ -753,7 +819,7 @@ class UserService:
             else:
                 at_auth = AccessTokenAuthentication(
                     token=response['access_token'],
-                    identity=at_auth.identity(),
+                    identity=self._identity(user),
                     expiration=self._now() + response['expires_in']
                 )
                 self._update_access_token(user, at_auth.token, response['expires_in'])
