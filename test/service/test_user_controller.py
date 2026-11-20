@@ -454,7 +454,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self._authorize()
                 auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
                 apat_auth = self._service.mint_personal_access_token(auth)
-                # Authorizing cached the access token, so it was verified
+                # Authorizing registered the access token, so it was verified
                 # without asking the authorization server.
                 token_info.assert_not_called()
                 header = jwt.get_unverified_header(apat_auth.token)
@@ -503,8 +503,8 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         # Maps each case to the fields to set, or to remove if None, and the
         # expected subject, or None if the token should be rejected
         cases: list[tuple[str, Mapping[str, str | None], str | None]] = [
-            # A user's token is only accepted from the cache, which every token
-            # this application obtains is written to
+            # A user's token is only accepted if this application registered
+            # it, which it does with every token it obtains
             ('user', user, None),
             ('foreign client', {
                 **user,
@@ -546,7 +546,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 'azp': service_account_id
             }, None)
         ]
-        # Each case uses a different token because valid tokens are cached
+        # Each case uses a different token because valid tokens are registered
         for i, (case, token_info_fields, subject) in enumerate(cases):
             auth = UnverifiedAccessTokenAuthentication(f'{self._mock_access_token}_{i}')
             with self.subTest(case):
@@ -575,7 +575,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 with self.assertRaises(InvalidAccessTokenError):
                     self._service.verify_access_token(auth)
 
-    def test_verify_cached_access_token(self):
+    def test_verify_registered_access_token(self):
         auth = UnverifiedAccessTokenAuthentication(self._mock_service_account_token)
         with self._mock_service_account_token_info() as token_info:
             first, second = (self._service.verify_access_token(auth) for _ in range(2))
@@ -584,7 +584,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         identity = self._service._encode_identity(self._mock_iss, self._mock_service_account_id)
         self.assertEqual(identity, second.identity())
 
-    def test_verify_expired_cached_access_token(self):
+    def test_verify_expired_registered_access_token(self):
         auth = UnverifiedAccessTokenAuthentication(self._mock_service_account_token)
         now = self._service._now()
         with self._mock_service_account_token_info() as token_info:
@@ -594,7 +594,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 self._service.verify_access_token(auth)
             self.assertEqual(2, token_info.call_count)
 
-    def test_authorize_caches_access_token(self):
+    def test_authorize_registers_access_token(self):
         with self._mock_token_for_code():
             self._authorize()
         auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
@@ -839,7 +839,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         ]:
             with self.subTest(expires_in=expires_in):
                 # The mock token response reports that the token expires in an
-                # hour, and authorization caches it as such
+                # hour, and authorization registers it as such
                 with (
                     patch.object(UserService, '_now', return_value=now),
                     self._mock_token_for_code()
@@ -869,7 +869,7 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                         client_id=self._mock_client_id,
                         client_secret='mock_client_secret'
                     )
-                    # The fresh token is cached and doesn't require
+                    # The fresh token is registered and doesn't require
                     # verification with the authorization server
                     with self._mock_token_info() as token_info:
                         uat_auth = UnverifiedAccessTokenAuthentication(refreshed_token)

@@ -240,10 +240,11 @@ class UserService:
     _table_name = config.dynamo_users_table_name
     _key_separator = '#'
 
-    #: The table caching access tokens issued to known identities, so that
-    #: they can be verified without a round trip to the authorization server.
-    #: It's keyed by a hash of the token, so that the table doesn't contain
-    #: usable credentials.
+    #: The name of the DynamoDB table serving as a registry of every access
+    #: token this application obtained or accepted, along with the identity of
+    #: the user or service account to which that token belongs. The registry
+    #: lets the application verify the tokens without a round trip to the
+    #: authorization server.
     #:
     _access_tokens_table_name = config.dynamo_access_tokens_table_name
     access_token_key_attribute = 'token_hash'
@@ -341,7 +342,7 @@ class UserService:
             identity=self._identity(user),
             expiration=user['access_token_expiration']
         )
-        self._cache_access_token(at_auth)
+        self._register_access_token(at_auth)
         return response
 
     _google_issuer = 'https://accounts.google.com'
@@ -387,13 +388,13 @@ class UserService:
         if isinstance(uat_auth, AccessTokenAuthentication):
             at_auth = uat_auth
         else:
-            at_auth = self._cached_access_token(uat_auth)
+            at_auth = self._registered_access_token(uat_auth)
             if at_auth is None:
                 #
-                # We expect cache misses in the following cases:
+                # We expect to encounter unregistered tokens in these cases:
                 #
                 # 1) The access token belongs to a service account. This is the
-                #    only token we accept, and we cache it here. In the
+                #    only token we accept, and we register it here. In the
                 #    remaining cases below, we reject the token.
                 #
                 # 2) The access token wasn't obtained from this application,
@@ -403,12 +404,12 @@ class UserService:
                 #    specific redirect URL is registered in the client
                 #
                 # 3) The access token was obtained from this application, but
-                #    before it cached every user's access token
+                #    before it registered every user's access token
                 #
-                # 4) The application attempted to write the cache, but failed
-                #    due to a transient problem
+                # 4) The application attempted to register the token, but
+                #    failed due to a transient problem
                 #
-                # 5) The contents of the cache were lost, for example because
+                # 5) The contents of the registry were lost, for example because
                 #    its table was recreated.
                 #
                 try:
@@ -423,7 +424,7 @@ class UserService:
                     if token_info['azp'].endswith('.apps.googleusercontent.com'):
                         # A user's access token, cases 2) through 5) above
                         log.warning('Rejected access token %s, a user token '
-                                    'this application has not cached', uat_auth)
+                                    'this application has not registered', uat_auth)
                         raise RejectedAccessTokenError('OAuth 2.0 access token was '
                                                        'not obtained by this application')
                     else:
@@ -437,18 +438,18 @@ class UserService:
                             identity=self._encode_identity(iss, sub),
                             expiration=self._now() + int(token_info['expires_in'])
                         )
-                        self._cache_access_token(at_auth)
+                        self._register_access_token(at_auth)
         return at_auth
 
     def _access_token_key(self, access_token: str) -> str:
         return hashlib.sha256(access_token.encode()).hexdigest()
 
-    def _cached_access_token(self,
-                             uat_auth: UnverifiedAccessTokenAuthentication
-                             ) -> AccessTokenAuthentication | None:
+    def _registered_access_token(self,
+                                 uat_auth: UnverifiedAccessTokenAuthentication
+                                 ) -> AccessTokenAuthentication | None:
         """
-        Return the given access token, verified from the cache, or None if the
-        token isn't cached, or has expired.
+        Return the given access token, verified by the registry, or None if the
+        token isn't registered, or has expired.
         """
         response = self._dynamodb.get_item(
             TableName=self._access_tokens_table_name,
@@ -471,7 +472,7 @@ class UserService:
                     expiration=expiration
                 )
 
-    def _cache_access_token(self, at_auth: AccessTokenAuthentication) -> None:
+    def _register_access_token(self, at_auth: AccessTokenAuthentication) -> None:
         self._dynamodb.put_item(
             TableName=self._access_tokens_table_name,
             Item={
@@ -756,7 +757,7 @@ class UserService:
                     expiration=self._now() + response['expires_in']
                 )
                 self._update_access_token(user, at_auth.token, response['expires_in'])
-                self._cache_access_token(at_auth)
+                self._register_access_token(at_auth)
         log.info('Exchanged %s for %s', at_auth, apat_auth)
         return at_auth
 
@@ -790,7 +791,7 @@ class UserService:
         expires_in = at_auth.expiration - self._now()
         if expires_in > self.reauthorization_window:
             log.info('No need to reauthorize %s, it is still fresh', at_auth)
-            # The cache lacks the token's scopes. Google always reports
+            # The registry lacks the token's scopes. Google always reports
             # them, hence the type, but here they are unknown.
             response = TokenResponse(
                 access_token=at_auth.token,
@@ -831,7 +832,7 @@ class UserService:
             assert at_reauth.identity() == at_auth.identity()
             log.info('Reauthorized %s as %s', at_auth, at_reauth)
             self._update_access_token(user, at_reauth.token, response['expires_in'])
-            self._cache_access_token(at_reauth)
+            self._register_access_token(at_reauth)
         return response
 
     def revoke_personal_access_tokens(self,

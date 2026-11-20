@@ -788,8 +788,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         token = Token.decode(url.path.segments[-1])
         self.assertEqual(1, token.iteration)
 
-    @mock.patch.object(UserService, '_cache_access_token', new=MagicMock())
-    @mock.patch.object(UserService, '_cached_access_token', new=MagicMock(return_value=None))
+    @mock.patch.object(UserService, '_register_access_token', new=MagicMock())
+    @mock.patch.object(UserService, '_registered_access_token', new=MagicMock(return_value=None))
     @mock.patch.object(OAuth2Client, 'token_info')
     @mock.patch.object(ManifestService, 'sign_manifest_key')
     @mock.patch.object(ManifestService, 'get_manifest_url')
@@ -844,7 +844,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 token_info.assert_called_once_with(access_token)
                 token_info.reset_mock()
 
-    @mock.patch.object(UserService, '_cached_access_token')
+    @mock.patch.object(UserService, '_registered_access_token')
     @mock.patch.object(UserService, '_load_user', side_effect=UnknownUserException)
     @mock.patch.object(OAuth2Client, 'token_info')
     @mock.patch.object(ManifestService, 'sign_manifest_key')
@@ -858,16 +858,16 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                                sign_manifest_key,
                                                                token_info,
                                                                load_user,
-                                                               cached_access_token):
+                                                               registered_access_token):
         """
         Minting a personal access token for the command lines of a finished
         cURL manifest should rely on the verification of the access token in
         the same request, instead of verifying the token a second time.
         """
         access_token = 'ya29.mock_access_token'
-        cached_access_token.return_value = AccessTokenAuthentication(token=access_token,
-                                                                     identity='#105096702580025601450',
-                                                                     expiration=2 ** 31)
+        registered_access_token.return_value = AccessTokenAuthentication(token=access_token,
+                                                                         identity='#105096702580025601450',
+                                                                         expiration=2 ** 31)
         get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
         manifest_key = ManifestKey(catalog=self.catalog,
                                    format=ManifestFormat.curl,
@@ -898,11 +898,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(302, response.json()['Status'])
                 else:
                     self.assertEqual(302, response.status_code)
-                cached_access_token.assert_called_once()
+                registered_access_token.assert_called_once()
                 token_info.assert_not_called()
                 # The user is looked up while minting the personal access token
                 load_user.assert_called_once()
-                cached_access_token.reset_mock()
+                registered_access_token.reset_mock()
                 load_user.reset_mock()
 
     def _request(self, method: str, url: furl, *, expect: int) -> furl:
