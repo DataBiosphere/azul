@@ -43,7 +43,8 @@ emit({
                 },
                 indexer.contribute_retry.name: {
                     'reserved_concurrency': config.contribution_concurrency(retry=True),
-                    'lambda_memory_size': 256 if config.is_anvil_enabled() else 1024,
+                    # The larger bundle partitions on AnVIL need more than 256 MB
+                    'lambda_memory_size': 512 if config.is_anvil_enabled() else 1024,
                     'lambda_timeout': config.contribution_lambda_timeout(retry=True),
                     **chalice.vpc_lambda_config(app_name)
                 },

@@ -32,6 +32,7 @@ from azul.lib import (
     cached_property,
 )
 from azul.lib.time import (
+    dcp2_datetime_pattern,
     format_dcp2_datetime,
     parse_dcp2_datetime,
 )
@@ -98,6 +99,8 @@ class Mode(Enum):
 
 class FieldType[N, X: IndexForm](metaclass=ABCMeta):
     shadowed: ClassVar[bool] = False
+    #: Whether hits can be sorted by fields of this type
+    sortable: ClassVar[bool] = True
     es_sort_mode: ClassVar[str] = 'min'
     allow_sorting_by_empty_lists: ClassVar[bool] = True
 
@@ -220,9 +223,24 @@ class PassThrough[T: AnyJSON](FieldType[T, T]):
         return value
 
 
-# FIXME: change the es_type for JSON to `nested`
-#        https://github.com/DataBiosphere/azul/issues/2621
-pass_thru_json: PassThrough[JSON] = PassThrough(JSON, es_type=None)
+class PassThroughJSON(PassThrough[JSON]):
+    # A sort targets a field's keyword representation, which an object lacks
+    sortable = False
+
+    def __init__(self):
+        # FIXME: change the es_type for JSON to `nested`
+        #        https://github.com/DataBiosphere/azul/issues/2621
+        super().__init__(JSON, es_type=None)
+
+    @property
+    def supported_filter_operators(self) -> tuple[str, ...]:
+        # The index represents an object as an object, or as a range if a
+        # dynamic template says so, but never as the keyword that the `is`
+        # operator compares against
+        return ()
+
+
+pass_thru_json: PassThroughJSON = PassThroughJSON()
 
 
 class NumericPassThrough[T: JSONNumber](PassThrough[T]):
@@ -276,8 +294,11 @@ class Nullable[N, X: IndexForm](FieldType[N | None, X], metaclass=ABCMeta):
         super().__init__(native_type | None, translated_from)
 
     def api_schema(self, mode: Mode) -> JSON:
-        return schema.nullable(schema.make(self.native_type),
+        return schema.nullable(self._api_schema(mode),
                                for_openapi=mode is Mode.openapi)
+
+    def _api_schema(self, mode: Mode) -> JSON:
+        return schema.make(self.native_type)
 
 
 class NullableScalar[N, X: IndexForm](Nullable[N, X], metaclass=ABCMeta):
@@ -285,7 +306,7 @@ class NullableScalar[N, X: IndexForm](Nullable[N, X], metaclass=ABCMeta):
     def api_filter_value_schema(self, operator: str, mode: Mode) -> JSON:
         if operator == 'within':
             # The LHS operand of a range operator can't be null
-            api_type = schema.make(self.native_type)
+            api_type = self._api_schema(mode)
             return self._api_range_schema(api_type, mode)
         else:
             return super().api_filter_value_schema(operator, mode)
@@ -329,6 +350,13 @@ class NullableNumber[U: bool | int | float](NullableScalar[U, JSONNumber]):
     @property
     def es_type(self) -> str | None:
         return self._es_type
+
+    def _api_schema(self, mode: Mode) -> JSON:
+        # The index holds a 64-bit integer or a double, and `null_value` is
+        # reserved for `None`, so the largest value a field can hold is one
+        # below that reserved value
+        minimum = -sys.maxsize - 1 if self.native_type is int else -sys.float_info.max
+        return schema.range(minimum, self.null_value - 1, self.native_type)
 
     def to_index(self, value: U | None) -> JSONNumber:
         if value is None:
@@ -395,6 +423,11 @@ class NullableBool(NullableNumber[bool]):
     def __init__(self):
         super().__init__(bool, 'boolean')
 
+    def _api_schema(self, mode: Mode) -> JSON:
+        # Booleans are not numbers in the API representation, and their index
+        # representations, 0 and 1, are well within the bounds on numbers
+        return schema.make(self.native_type)
+
     @property
     def supported_filter_operators(self) -> tuple[str, ...]:
         return 'is',  # no point in supporting range operator
@@ -406,6 +439,9 @@ null_bool = NullableBool()
 class NullableDateTime(NullableScalar[str, str]):
     es_type = 'date'
     null = format_dcp2_datetime(datetime(9999, 1, 1, tzinfo=timezone.utc))
+
+    def _api_schema(self, mode: Mode) -> JSON:
+        return schema.pattern(f'^{dcp2_datetime_pattern}$')
 
     def to_index(self, value: str | None) -> str:
         if value is None:
@@ -426,6 +462,9 @@ null_datetime: NullableDateTime = NullableDateTime(str, str)
 
 class Nested(FieldType[JSON, JSON]):
     allow_sorting_by_empty_lists = False
+    # FIXME: Can't sort on fields of nested type
+    #        https://github.com/DataBiosphere/azul/issues/2621
+    sortable = False
     es_type = 'nested'
     properties: Mapping[str, FieldType]
 
@@ -479,6 +518,9 @@ class Nested(FieldType[JSON, JSON]):
 
 
 class ClosedRange[N: PrimitiveJSON, X: IndexForm](FieldType[Range[N], IndexRange[X]]):
+    # FIXME: Can't sort on range fields
+    #        https://github.com/DataBiosphere/azul/issues/2621
+    sortable = False
 
     def __init__(self, ends_type: FieldType[N, X]):
         super().__init__(reify(Range[N]), reify(JSON))
@@ -502,7 +544,10 @@ class ClosedRange[N: PrimitiveJSON, X: IndexForm](FieldType[Range[N], IndexRange
 
     @property
     def supported_filter_operators(self) -> tuple[str, ...]:
-        return 'is', 'within', 'contains', 'intersects'
+        # Note the absence of `is`. The index represents a range as a range
+        # field, which answers questions about how two ranges relate, not
+        # whether they are equal.
+        return 'within', 'contains', 'intersects'
 
     def api_filter_value_schema(self, operator: str, mode: Mode) -> JSON:
         if operator == 'contains':

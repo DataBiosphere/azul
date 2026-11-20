@@ -19,14 +19,11 @@ from more_itertools import (
     one,
 )
 
-from azul import (
-    CatalogName,
+from azul.chalice import (
+    cache_per_catalog,
 )
 from azul.field_type import (
     Mode,
-)
-from azul.lib import (
-    cache,
 )
 from azul.lib.collections import (
     OrderedSet,
@@ -83,6 +80,22 @@ class QueryController(ServiceController, metaclass=ABCMeta):
     def _synthetic_fields(self) -> Sequence[str]:
         return tuple(f.name for f in self._metadata_plugin.special_fields.synthetics)
 
+    @property
+    @cache_per_catalog
+    def _sort_fields(self) -> Sequence[str]:
+        types = self._service.mapped_field_types(self.app.catalog)
+        return tuple(field for field in self._organic_fields if types[field].sortable)
+
+    @property
+    @cache_per_catalog
+    def _filter_fields(self) -> Sequence[str]:
+        types = self._service.mapped_field_types(self.app.catalog)
+        return tuple(
+            field
+            for field in self._fields
+            if types[field].supported_filter_operators
+        )
+
     def _hoist_parameters(self, request: Request) -> MultiDict:
         query_params = self._query_params(request)
         if request.method in ('POST', 'PUT'):
@@ -117,7 +130,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
 
     @property
     def _filters_param_spec(self):
-        filter_schema = self._filter_schema(self.app.catalog, Mode.openapi)
+        filter_schema = self._filter_schema(Mode.openapi)
         return params.query(
             'filters',
             schema.optional(application_json(filter_schema)),
@@ -154,13 +167,13 @@ class QueryController(ServiceController, metaclass=ABCMeta):
                 "unit": "year"}]}}`. Both keys are required. `{"organismAge": {"is":
                 [null]}}` selects entities that have no organism age.''' + f'''
 
-                Supported field names are: {', '.join(self._fields)}
+                Supported field names are: {', '.join(self._filter_fields)}
             ''')
         )
 
-    @cache
-    def _filter_schema(self, catalog: CatalogName, mode: Mode) -> JSON:
-        types = self._service.mapped_field_types(catalog)
+    @cache_per_catalog
+    def _filter_schema(self, mode: Mode) -> JSON:
+        types = self._service.mapped_field_types(self.app.catalog)
 
         def _filter_schema(field_type):
             operators = field_type.supported_filter_operators
@@ -184,7 +197,7 @@ class QueryController(ServiceController, metaclass=ABCMeta):
                                       additionalProperties=False,
                                       properties={
                                           field: _filter_schema(types[field])
-                                          for field in self._fields
+                                          for field in self._filter_fields
                                       })
         return filter_schema
 
@@ -194,25 +207,29 @@ class QueryController(ServiceController, metaclass=ABCMeta):
         except json.decoder.JSONDecodeError:
             raise BRE(f'The {name!r} parameter is not valid JSON')
 
-    def _validate_field(self, field: str, *, include_synthetic: bool = False):
-        fields = self._fields if include_synthetic else self._organic_fields
-        if field not in fields:
-            raise BRE(f'Unknown field `{field}`')
+    def _validate_sort_field(self, field: str):
+        if field not in self._sort_fields:
+            if field in self._organic_fields:
+                raise BRE(f'Sorting by field `{field}` is not supported')
+            else:
+                raise BRE(f'Unknown field `{field}`')
 
     def _validate_filters(self, filters):
         filters = self._validate_json_param('filters', filters)
 
-        validator = self._filter_schema_validator(self.app.catalog)
-        try:
-            validator.validate(filters)
-        except jsonschema.exceptions.ValidationError as e:
+        validator = self._filter_schema_validator()
+        # A field that supports more than one operator has a `oneOf` schema,
+        # and the first error against such a schema merely states that none of
+        # the alternatives matched. `best_match` descends into the alternative
+        # that came closest, naming the offending value instead.
+        errors = validator.iter_errors(filters)
+        error = jsonschema.exceptions.best_match(errors)
+        if error is not None:
             raise BRE(f'The value of the `filters` parameter is '
-                      f'invalid against the schema: {e.message} '
-                      f'at path {e.json_path}')
+                      f'invalid against the schema: {error.message} '
+                      f'at path {error.json_path}')
 
-    @cache
-    def _filter_schema_validator(self,
-                                 catalog: CatalogName
-                                 ) -> jsonschema.protocols.Validator:
-        schema = self._filter_schema(catalog, Mode.jsonschema)
+    @cache_per_catalog
+    def _filter_schema_validator(self) -> jsonschema.protocols.Validator:
+        schema = self._filter_schema(Mode.jsonschema)
         return jsonschema.validators.validator_for(schema)(schema)

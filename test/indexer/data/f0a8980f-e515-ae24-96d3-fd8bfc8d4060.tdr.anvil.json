@@ -158,27 +158,6 @@
             ],
             "version": "2022-06-01T00:00:00.000000Z"
         },
-        "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8": {
-            "anatomical_site": null,
-            "apriori_cell_type": [],
-            "biosample_id": "72ee95e4-04b7-93c1-36c7-b3f06058407f",
-            "biosample_type": null,
-            "datarepo_row_id": "bd3c909b-9228-429f-9db1-d2aff492f512",
-            "disease": null,
-            "donor_age_at_collection_lower_bound": null,
-            "donor_age_at_collection_unit": null,
-            "donor_age_at_collection_upper_bound": null,
-            "donor_id": [
-                "52cb7acf-36e4-7ee2-33b7-7772edd60b3f"
-            ],
-            "part_of_dataset_id": [
-                "8a756d17-c54c-3b33-312b-c767552a8516"
-            ],
-            "source_datarepo_row_ids": [
-                "participant:e92121e7-4814-4d2c-8da6-7ec8ee08291c"
-            ],
-            "version": "2022-06-01T00:00:00.000000Z"
-        },
         "anvil_dataset/57c19f3f-17cd-5b67-adf6-27ca9820394d": {
             "_non_verbatim_tables": [
                 "datarepo_row_ids"
@@ -367,9 +346,7 @@
     },
     "links": [
         {
-            "inputs": [
-                "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8"
-            ],
+            "inputs": [],
             "activity": "anvil_activity/d2ef2898-86ba-596c-82a2-be09056f9a30",
             "outputs": [
                 "anvil_file/045547b7-12b1-5e4d-9eb5-854c963a6522",
@@ -393,15 +370,6 @@
             ],
             "activity": null,
             "outputs": [
-                "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8"
-            ]
-        },
-        {
-            "inputs": [
-                "anvil_dataset/57c19f3f-17cd-5b67-adf6-27ca9820394d"
-            ],
-            "activity": null,
-            "outputs": [
                 "anvil_biosample/f0a8980f-e515-5e24-96d3-fd8bfc8d4060"
             ]
         },
@@ -412,15 +380,6 @@
             "activity": null,
             "outputs": [
                 "anvil_biosample/f0a8980f-e515-5e24-96d3-fd8bfc8d4060"
-            ]
-        },
-        {
-            "inputs": [
-                "anvil_donor/c7214518-6fe4-59d0-a37a-e4ef97e0260b"
-            ],
-            "activity": null,
-            "outputs": [
-                "anvil_biosample/bd929148-c0b4-52da-963d-9a76a3e47bc8"
             ]
         },
         {

@@ -132,6 +132,10 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
                                                  host='localhost',
                                                  port=0)
         self.server_thread.start()
+        # A cleanup, unlike tearDown(), also runs if a subclass's setUp() fails
+        # after this one returned. A server thread that isn't stopped keeps the
+        # interpreter from exiting.
+        self.addCleanup(self._kill_server_thread)
         deadline = time.time() + 10
         while True:
             try:
@@ -149,7 +153,7 @@ class LocalAppTestCase(CatalogTestCase, metaclass=ABCMeta):
         return self._http_client.request('GET',
                                          str(self.base_url.set(path='/health/basic')))
 
-    def tearDown(self):
+    def _kill_server_thread(self):
         log.debug('Tearing down server thread …')
         self.server_thread.kill_thread()
         self.server_thread.join(timeout=10)

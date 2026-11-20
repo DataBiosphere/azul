@@ -1,3 +1,10 @@
+from collections.abc import (
+    Mapping,
+)
+from datetime import (
+    datetime,
+    timezone,
+)
 import json
 import logging
 from time import (
@@ -63,6 +70,9 @@ from azul.lib.strings import (
     assert_redactable,
     format_and_dedent as fd,
 )
+from azul.lib.time import (
+    format_dcp2_datetime,
+)
 from azul.lib.types import (
     FlatJSON,
     JSON,
@@ -91,7 +101,25 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
+class ContractAcceptance(JSONTypedDict):
+    #: The version of the contract the user accepted
+    version: int
+    #: The SHA-256 digest of the text of that version, in hexadecimal
+    sha256: str
+
+
+class AcceptedContract(ContractAcceptance):
+    #: When the user accepted the contract, as formatted by
+    #: :func:`format_dcp2_datetime`
+    time: str
+
+
 class User(JSONTypedDict):
+    #: The issuer of the user's identity. Together with `sub`, it forms the key
+    #: of the item representing the user, rather than an attribute of its own.
+    iss: str
+    #: The user's identity, unique within the issuer
+    sub: str
     #: The OAuth 2.0 access token issued by the authorization server
     access_token: str
     #: The OAuth 2.0 refresh token used to obtain new access tokens
@@ -108,6 +136,17 @@ class User(JSONTypedDict):
     min_jti: NotRequired[int]
     #: The jti to assign to the APAT requested next
     max_jti: NotRequired[int]
+    #: The contracts the user accepted, by name
+    accepted_contracts: NotRequired[dict[str, AcceptedContract]]
+
+
+def format_authorized_until(user: User) -> str:
+    """
+    When the given user's authorization lapses, as formatted by
+    :func:`format_dcp2_datetime`. This is when the user's refresh token
+    expires. The user's acceptance of contracts lapses along with it.
+    """
+    return format_dcp2_datetime(datetime.fromtimestamp(user['expiration'], timezone.utc))
 
 
 class UnknownUserException(Exception):
@@ -218,6 +257,8 @@ class UserService:
         expiration = response.get('refresh_token_expires_in',
                                   self._default_expiration)
         user = User(
+            iss=iss,
+            sub=sub,
             access_token=response['access_token'],
             refresh_token=response['refresh_token'],
             email=id_claims['email'],
@@ -225,7 +266,7 @@ class UserService:
             access_token_expiration=now + response['expires_in'],
             expiration=now + expiration
         )
-        self._store_user(iss, sub, user)
+        self._store_user(user)
         return response
 
     _google_issuer = 'https://accounts.google.com'
@@ -242,6 +283,9 @@ class UserService:
             iss = self._google_issuer
         return iss, sub
 
+    def _identity(self, user: User) -> str:
+        return self._encode_identity(user['iss'], user['sub'])
+
     _apat_algorithm = 'ES256'
     _apat_expiration = 30 * 24 * 60 * 60
 
@@ -254,7 +298,7 @@ class UserService:
 
     def _verify_access_token(self,
                              at_auth: AccessTokenAuthentication
-                             ) -> tuple[str, str]:
+                             ) -> User:
         token_info = self._oauth_client.token_info(at_auth.token)
         aud = token_info['aud']
         if aud != self._client_id:
@@ -262,9 +306,118 @@ class UserService:
                         aud, at_auth)
             raise ForeignTokenException(aud)
         else:
-            iss, sub = self._google_issuer, token_info['sub']
-            self._load_user(iss, sub)
-            return iss, sub
+            return self._load_user(self._google_issuer, token_info['sub'])
+
+    def get_user(self, at_auth: AccessTokenAuthentication) -> User:
+        """
+        Return the stored information about the user identified by the given
+        access token.
+        """
+        return self._verify_access_token(at_auth)
+
+    def update_accepted_contracts(self,
+                                  at_auth: AccessTokenAuthentication,
+                                  accepted_contracts: Mapping[str, ContractAcceptance | None] | None
+                                  ) -> User:
+        """
+        Record that the user identified by the given access token accepted, or
+        retracted the acceptance of, the given contracts, and return the updated
+        information about that user.
+
+        :param at_auth: The access token of the user
+
+        :param accepted_contracts: Maps the name of each contract to the version
+                                   the user accepted and its SHA-256 digest, or
+                                   to None if the user retracts the acceptance
+                                   of that contract. Contracts absent from this
+                                   mapping are left alone. None retracts the
+                                   acceptance of every contract.
+        """
+        user = self._verify_access_token(at_auth)
+        if accepted_contracts is None:
+            user = self._update_user(user,
+                                     'REMOVE accepted_contracts',
+                                     names={},
+                                     values={})
+            log.info('User %r from %r retracted the acceptance of all contracts',
+                     user['sub'], user['iss'])
+        elif accepted_contracts:
+            # An attribute nested in a map can't be set or removed unless the
+            # map exists
+            self._update_user(user,
+                              'SET accepted_contracts = if_not_exists(accepted_contracts, :empty)',
+                              names={},
+                              values={':empty': {'M': {}}})
+            now = format_dcp2_datetime(datetime.now(timezone.utc))
+            names: dict[str, str] = {}
+            values: dict[str, AttributeValueTypeDef] = {}
+            assignments, removals = [], []
+            for i, (name, acceptance) in enumerate(accepted_contracts.items()):
+                names[f'#c{i}'] = name
+                path = f'accepted_contracts.#c{i}'
+                if acceptance is None:
+                    removals.append(path)
+                else:
+                    assignments.append(f'{path} = :c{i}')
+                    values[f':c{i}'] = {
+                        'M': {
+                            'version': {'N': str(acceptance['version'])},
+                            'sha256': {'S': acceptance['sha256']},
+                            'time': {'S': now}
+                        }
+                    }
+            expression = ' '.join(
+                f'{action} {", ".join(paths)}'
+                for action, paths in [('SET', assignments), ('REMOVE', removals)]
+                if paths
+            )
+            user = self._update_user(user, expression, names=names, values=values)
+            # These messages are the audit trail of the acceptance of contracts,
+            # so they are only logged once the update succeeded
+            authorized_until = format_authorized_until(user)
+            for name, acceptance in accepted_contracts.items():
+                if acceptance is None:
+                    log.info('User %r from %r retracted the acceptance of contract %r',
+                             user['sub'], user['iss'], name)
+                else:
+                    accepted = user['accepted_contracts'][name]
+                    log.info('User %r from %r accepted version %r with SHA-256 %r '
+                             'of contract %r at %r, authorized until %r',
+                             user['sub'], user['iss'],
+                             accepted['version'], accepted['sha256'], name,
+                             accepted['time'], authorized_until)
+        return user
+
+    def _update_user(self,
+                     user: User,
+                     expression: str,
+                     *,
+                     names: Mapping[str, str],
+                     values: Mapping[str, AttributeValueTypeDef]
+                     ) -> User:
+        """
+        Apply the given update expression to the stored item representing the
+        given user, and return the updated user.
+        """
+        request: UpdateItemInputTypeDef = dict(
+            TableName=self._table_name,
+            Key={self.key_attribute: {'S': self._identity(user)}},
+            UpdateExpression=expression,
+            # Without the condition, the update would create a partial item for
+            # a user whose item expired after it was loaded
+            ConditionExpression='attribute_exists(#key)',
+            ExpressionAttributeNames={'#key': self.key_attribute, **names},
+            ReturnValues='ALL_NEW'
+        )
+        # DynamoDB rejects an empty mapping of values
+        if values:
+            request['ExpressionAttributeValues'] = values
+        try:
+            response = self._dynamodb.update_item(**request)
+        except self._dynamodb.exceptions.ConditionalCheckFailedException:
+            raise UnknownUserException(user['iss'], user['sub'])
+        else:
+            return self._user_from_item(response['Attributes'])
 
     def mint_personal_access_token(self,
                                    at_auth: AccessTokenAuthentication
@@ -279,11 +432,11 @@ class UserService:
         refresh token.
         """
         log.info('Minting APAT for %s', at_auth)
-        iss, sub = self._verify_access_token(at_auth)
-        jti = self._next_jti(iss, sub)
+        user = self._verify_access_token(at_auth)
+        jti = self._next_jti(user)
         now = self._now()
         payload = {
-            'sub': self._encode_identity(iss, sub),
+            'sub': self._identity(user),
             'exp': now + self._apat_expiration,
             'iat': now,
             'jti': str(jti)
@@ -332,7 +485,7 @@ class UserService:
                     client_secret=self._client_secret
                 )
                 access_token, expires_in = response['access_token'], response['expires_in']
-                self._update_access_token(iss, sub, access_token, expires_in)
+                self._update_access_token(user, access_token, expires_in)
             at_auth = AccessTokenAuthentication(access_token)
             log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
             return at_auth
@@ -344,16 +497,17 @@ class UserService:
         Revoke all APATs for the user identified by the given access token.
         """
         log.info('Revoking all APATs for %s', at_auth)
-        iss, sub = self._verify_access_token(at_auth)
-        self._revoke_jti(iss, sub)
+        user = self._verify_access_token(at_auth)
+        self._revoke_jti(user)
 
-    def _store_user(self, iss: str, sub: str, user: User) -> None:
+    def _store_user(self, user: User) -> None:
+        key = self._identity(user)
         user = json_untyped_flat_dict(user)
         log.debug('Storing user %r', redact_json(user))
         self._dynamodb.update_item(
             **DynamoDBItemUpdate(
                 table_name=self._table_name,
-                key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+                key={self.key_attribute: {'S': key}}
             )
             .set_from(user, 'access_token')
             .set_from(user, 'access_token_expiration')
@@ -389,23 +543,38 @@ class UserService:
             log.warning('No user %r from %r', sub, iss)
             raise UnknownUserException(iss, sub)
         else:
-            user = User(
-                access_token=item['access_token']['S'],
-                refresh_token=item['refresh_token']['S'],
-                email=item['email']['S'],
-                email_verified=item['email_verified']['BOOL'],
-                access_token_expiration=int(item['access_token_expiration']['N']),
-                expiration=int(item[self.ttl_attribute]['N']),
-                min_jti=int(item['min_jti']['N']),
-                max_jti=int(item['max_jti']['N'])
-            )
+            user = self._user_from_item(item)
             log.info('Retrieved user %r', redact_json(json_untyped_dict(user)))
             return user
 
-    def _next_jti(self, iss: str, sub: str) -> int:
+    def _user_from_item(self, item: Mapping[str, AttributeValueTypeDef]) -> User:
+        iss, sub = self._decode_identity(item[self.key_attribute]['S'])
+        accepted_contracts = item.get('accepted_contracts', {'M': {}})['M']
+        return User(
+            iss=iss,
+            sub=sub,
+            access_token=item['access_token']['S'],
+            refresh_token=item['refresh_token']['S'],
+            email=item['email']['S'],
+            email_verified=item['email_verified']['BOOL'],
+            access_token_expiration=int(item['access_token_expiration']['N']),
+            expiration=int(item[self.ttl_attribute]['N']),
+            min_jti=int(item['min_jti']['N']),
+            max_jti=int(item['max_jti']['N']),
+            accepted_contracts={
+                name: AcceptedContract(
+                    version=int(contract['M']['version']['N']),
+                    sha256=contract['M']['sha256']['S'],
+                    time=contract['M']['time']['S']
+                )
+                for name, contract in accepted_contracts.items()
+            }
+        )
+
+    def _next_jti(self, user: User) -> int:
         response = self._dynamodb.update_item(
             TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
+            Key={self.key_attribute: {'S': self._identity(user)}},
             UpdateExpression=fd('''
                 SET max_jti = max_jti + :one
             '''),
@@ -417,34 +586,34 @@ class UserService:
         return int(response['Attributes']['max_jti']['N'])
 
     def _update_access_token(self,
-                             iss: str,
-                             sub: str,
+                             user: User,
                              access_token: str,
                              expires_in: int
                              ) -> None:
         log.debug('Updating access token of user %r at %r to %r',
-                  sub, iss, redact_json(access_token))
+                  user['sub'], user['iss'], redact_json(access_token))
         self._dynamodb.update_item(
             **DynamoDBItemUpdate(
                 table_name=self._table_name,
-                key={self.key_attribute: {'S': self._encode_identity(iss, sub)}}
+                key={self.key_attribute: {'S': self._identity(user)}}
             )
             .set('access_token', {'S': access_token})
             .set('access_token_expiration', {'N': str(self._now() + expires_in)})
             .to_update_item_input()
         )
 
-    def _revoke_jti(self, iss: str, sub: str) -> None:
+    def _revoke_jti(self, user: User) -> None:
         response = self._dynamodb.update_item(
             TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._encode_identity(iss, sub)}},
+            Key={self.key_attribute: {'S': self._identity(user)}},
             UpdateExpression=fd('''
                 SET min_jti = max_jti
             '''),
             ReturnValues='ALL_NEW'
         )
         min_jti = response['Attributes']['min_jti']['N']
-        log.info('Set min_jti for user %r from %r to %s', sub, iss, min_jti)
+        log.info('Set min_jti for user %r from %r to %s',
+                 user['sub'], user['iss'], min_jti)
 
 
 @attrs.frozen(kw_only=True)

@@ -61,8 +61,9 @@ class BiosampleAggregator(AnVILEntityAggregator):
         if field in self._never_accumulate():
             if self.outer_entity_type == 'files':
                 # These fields are only aggregated for files, where they are
-                # needed for compact and PFB manifests.
-                return SetAccumulator(max_size=1500)
+                # needed for compact and PFB manifests. Before the MOHD
+                # dataset was added, a limit of 1500 was sufficient.
+                return SetAccumulator(max_size=2000)
             else:
                 return None
         elif field == 'donor_age_at_collection':
@@ -98,8 +99,9 @@ class DiagnosisAggregator(AnVILEntityAggregator):
         if field in self._never_accumulate():
             if self.outer_entity_type == 'files':
                 # These fields are only aggregated for files, where they are
-                # needed for compact and PFB manifests
-                return SetAccumulator(max_size=200)
+                # needed for compact and PFB manifests. Before the MOHD
+                # dataset was added, a limit of 200 was sufficient.
+                return SetAccumulator(max_size=1000)
             else:
                 return None
         elif field in ('diagnosis_age', 'onset_age'):
@@ -124,13 +126,14 @@ class DiagnosisAggregator(AnVILEntityAggregator):
 class DonorAggregator(AnVILEntityAggregator):
 
     def _accumulator(self, field: str) -> Accumulator | None:
-        if (
-            field in self._never_accumulate()
-            and self.outer_entity_type != 'files'
-        ):
-            # These fields are only aggregated for files, where they are needed
-            # for compact and PFB manifests
-            return None
+        if field in self._never_accumulate():
+            if self.outer_entity_type == 'files':
+                # These fields are only aggregated for files, where they are
+                # needed for compact and PFB manifests. Before the MOHD
+                # dataset was added, the default limit of 100 was sufficient.
+                return SetAccumulator(max_size=1000)
+            else:
+                return None
         else:
             return super()._accumulator(field)
 

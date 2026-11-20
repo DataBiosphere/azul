@@ -1,3 +1,4 @@
+import json
 from unittest.mock import (
     patch,
 )
@@ -1488,38 +1489,22 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
     def test_summary(self):
         expected_response = {
             'activityCount': 2,
-            'activityTypes': [
-                {
-                    'count': 2,
-                    'type': 'Sequencing'
-                }
-            ],
             'biosampleCount': 1,
             'datasetCount': 1,
             'donorCount': 1,
-            'donorDiagnosisDiseases': [
+            'donorDatasets': [
                 {
                     'count': 1,
-                    'disease': 'redacted-A61iJlLx'
-                },
-                {
-                    'count': 1,
-                    'disease': 'redacted-g50ublm/'
-                }
-            ],
-            'donorDiagnosisPhenotypes': [
-                {
-                    'count': 1,
-                    'phenotype': 'redacted-acSYHZUr'
-                }
-            ],
-            'donorSpecies': [
-                {
-                    'count': 1,
-                    'species': 'redacted-ACw+6ecI'
+                    'dataset': 'ANVIL_Test'
                 }
             ],
             'fileCount': 2,
+            'fileDatasets': [
+                {
+                    'count': 2,
+                    'dataset': 'ANVIL_Test'
+                }
+            ],
             'fileFormats': [
                 {
                     'count': 1,
@@ -1534,6 +1519,44 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         }
         url = str(self.base_url.set(path='/index/summary'))
         self._assertResponse(url, expected_response)
+
+    def test_filter_by_age(self):
+        # FIXME: Support range operators on AnVIL age fields
+        #        https://github.com/DataBiosphere/azul/issues/8442
+        for field in [
+            'biosamples.donor_age_at_collection',
+            'diagnoses.diagnosis_age',
+            'diagnoses.onset_age'
+        ]:
+            filters = {field: {'is': [{'gte': 1, 'lte': None}]}}
+            with self.subTest(field=field):
+                url = self.base_url.set(path='/index/datasets',
+                                        args=dict(filters=json.dumps(filters)))
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(400, response.status)
+                expected_response = {
+                    'Code': 'BadRequestError',
+                    'Message': 'The value of the `filters` parameter is invalid '
+                               'against the schema: Additional properties are not '
+                               f'allowed ({field!r} was unexpected) at path $'
+                }
+                self.assertEqual(expected_response, response.json())
+
+    def test_sort_by_age(self):
+        for field in [
+            'biosamples.donor_age_at_collection',
+            'diagnoses.diagnosis_age',
+            'diagnoses.onset_age'
+        ]:
+            with self.subTest(field=field):
+                url = self.base_url.set(path='/index/datasets', args=dict(sort=field))
+                response = self._http_client.request('GET', str(url))
+                self.assertEqual(400, response.status)
+                expected_response = {
+                    'Code': 'BadRequestError',
+                    'Message': f'Sorting by field `{field}` is not supported'
+                }
+                self.assertEqual(expected_response, response.json())
 
     def _assertResponse(self, url: str, expected_response: JSON):
         response = self._http_client.request('GET', url)

@@ -1,6 +1,5 @@
 ﻿from collections import (
     Counter,
-    defaultdict,
 )
 from collections.abc import (
     Set,
@@ -77,10 +76,10 @@ from azul.plugins.metadata.anvil import (
 )
 from azul.plugins.metadata.anvil.bundle import (
     AnvilBundle,
+    EntityGraph,
     EntityLink,
     Key,
-    KeyLink,
-    KeyReference,
+    anvil_schema,
     snapshot_without_md5s,
 )
 from azul.plugins.metadata.anvil.schema import (
@@ -101,10 +100,6 @@ from azul.terra import (
 
 log = logging.getLogger(__name__)
 
-#: The version of the AnVIL schema that this module was written against
-#:
-anvil_schema = anvil_schemas[6]
-
 #: AnVIL snapshots are not versioned, so every AnVIL bundle has this version,
 #: and so does every entity in one
 #:
@@ -112,11 +107,14 @@ fixed_version: BundleVersion = format_dcp2_datetime(
     datetime.datetime(year=2022, month=6, day=1, hour=0,
                       tzinfo=datetime.timezone.utc))
 
-Keys = Set[KeyReference]
-MutableKeys = set[KeyReference]
+# References to entities whose ID is the entity's primary key (see
+# `_primary_bundle`)
+#
+Keys = Set[EntityReference]
+KeyLinks = set[EntityLink]
+
 KeysByType = dict[EntityType, Set[Key]]
 MutableKeysByType = dict[EntityType, set[Key]]
-KeyLinks = set[KeyLink]
 
 
 @attrs.frozen(kw_only=True)
@@ -283,14 +281,27 @@ class BundleType(Enum):
 
     #: Primary bundles are defined by a biosample entity, termed the *bundle
     #: entity*. Each primary bundle includes all of the bundle entity's
-    #: descendants and all of those entities' ancestors. Descendants and
-    #: ancestors are discovered by iteratively following foreign keys.
+    #: descendants and most of those entities' ancestors. The ancestors
+    #: obviously include the biosample that defines the bundle, but other
+    #: ancestor biosamples are excluded, as is the ancestry of those excluded
+    #: biosamples.
+    #:
+    #: Descendants and ancestors are discovered by iteratively following foreign
+    #: keys. It is safe to only include one biosample in each bundle. The other,
+    #: excluded biosamples each define their own bundle, which then includes the
+    #: descendants the two biosamples have in common, so the aggregate of every
+    #: entity still reflects all of its ancestors. The exclusion of other
+    #: biosamples is needed to accommodate activities that use many biosamples
+    #: and generate many files, such as those in MOHD, which would otherwise
+    #: make the total size of the contributions cubic in the size of such an
+    #: activity.
+    #:
     #: Biosamples were chosen to act as the bundle entities for primary bundles
     #: based on a desirable balance between the size and number of the resulting
     #: bundles as well as the degree of overlap between them. The implementation
     #: of the graph traversal is tightly coupled to this choice, and switching
     #: to a different bundle entity type would require re-implementing much of
-    #: the Plugin code. Primary bundles consist of at least one biosample (the
+    #: the Plugin code. Primary bundles consist of exactly one biosample (the
     #: bundle entity), exactly one dataset entity, and zero or more other
     #: entities of assorted types. Primary bundles never contain bundle orphans
     #: because they are bijective to rows in the biosample table.
@@ -467,23 +478,6 @@ class TDRAnvilBundle(AnvilBundle[TDRAnvilBundleFQID], TDRBundle):
                 assert self.fqid.source.spec.name == snapshot_without_md5s, R(
                     'File lacks MD5 digest', entity, self.fqid)
         target[entity] = metadata
-
-    def add_links(self, links: Iterable[EntityLink]):
-        self.links.update(links)
-        # Merge links that share the same (non-null) activity
-        groups_by_activity: dict[EntityReference, set[EntityLink]] = defaultdict(set)
-        for link in self.links:
-            if link.activity is not None:
-                groups_by_activity[link.activity].add(link)
-        for activity, group in groups_by_activity.items():
-            if len(group) > 1:
-                self.links -= group
-                merged_link = EntityLink(
-                    inputs=frozenset.union(*[link.inputs for link in group]),
-                    activity=activity,
-                    outputs=frozenset.union(*[link.outputs for link in group])
-                )
-                self.links.add(merged_link)
 
     def reject_duplicate_file_paths(self) -> None:
         """
@@ -753,36 +747,39 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         return sorted(tables)
 
     def _primary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
+        # While the graph is being built it uses the dataset-scoped primary key
+        # to refer to entities, not the globally scoped entity ID that Azul
+        # derives from that key. Luckily, both are strings. This cheat is
+        # confined to this method, which maps the primary keys to entity IDs
+        # before it returns the bundle with the fully constructed graph.
+        #
         assert not bundle_fqid.is_batched, bundle_fqid
         source = bundle_fqid.source
-        bundle_entity = KeyReference(key=not_none(bundle_fqid.primary_key),
-                                     entity_type=bundle_fqid.table_name)
-
-        keys: MutableKeys = {bundle_entity}
-        links: KeyLinks = set()
+        bundle_entity = EntityReference(entity_id=not_none(bundle_fqid.primary_key),
+                                        entity_type=bundle_fqid.table_name)
+        graph = EntityGraph()
+        graph.add_node(bundle_entity)
 
         for method in [self._follow_downstream, self._follow_upstream]:
             method: Callable[[TDRSourceSpec, KeysByType], KeyLinks]
-            n = len(keys)
-            frontier: Keys = keys
+            n = len(graph.nodes)
+            frontier: Keys = set(graph.nodes)
             while frontier:
-                new_links = method(source.spec, self._consolidate_by_type(frontier))
-                links.update(new_links)
-                frontier = frozenset().union(*(link.all_entities for link in new_links)) - keys
-                keys.update(frontier)
+                links = method(source.spec, self._consolidate_by_type(frontier))
+                frontier = graph.add_links(links)
             log.debug('Found %r linked entities via method %s',
-                      len(keys) - n, method.__name__)
+                      len(graph.nodes) - n, method.__name__)
 
-        keys_by_type: KeysByType = self._consolidate_by_type(keys)
+        keys_by_type: KeysByType = self._consolidate_by_type(graph.nodes)
         if log.isEnabledFor(logging.DEBUG):
             arg = keys_by_type
         else:
             arg = {entity_type: len(keys) for entity_type, keys in keys_by_type.items()}
         log.info('Found %i entities linked to bundle %r: %r',
-                 len(keys), bundle_fqid.uuid, arg)
+                 len(graph.nodes), bundle_fqid.uuid, arg)
 
         result = TDRAnvilBundle(fqid=bundle_fqid)
-        entities_by_key: dict[KeyReference, EntityReference] = {}
+        entities_by_key: dict[EntityReference, EntityReference] = {}
         for entity_type, typed_keys in sorted(keys_by_type.items()):
             pk_column = not_none(self._pk_column(source.spec, entity_type))
             rows = self._retrieve_entities(source.spec, entity_type, typed_keys)
@@ -806,11 +803,11 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                         'File derived from biosample cannot be supplementary',
                         row[pk_column], bundle_fqid)
             for row in sorted(rows, key=itemgetter(pk_column)):
-                key = KeyReference(key=row[pk_column], entity_type=entity_type)
+                key = EntityReference(entity_id=row[pk_column], entity_type=entity_type)
                 entity = self._entity_ref(source.spec, entity_type, row)
                 entities_by_key[key] = entity
                 result.add_entity(entity, fixed_version, row)
-        result.add_links(link.to_entity_link(entities_by_key) for link in links)
+        result.graph = graph.map(entities_by_key.__getitem__)
         return result
 
     def _supplementary_bundle(self, bundle_fqid: TDRAnvilBundleFQID) -> TDRAnvilBundle:
@@ -832,7 +829,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
         # would be harmless in production, but would complicate the bundle
         # canning integration test.
         if linked_file_refs:
-            result.add_links([
+            result.graph = EntityGraph.from_links([
                 EntityLink(inputs=singleton(dataset_ref),
                            outputs=frozenset(linked_file_refs))
             ])
@@ -928,7 +925,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             for table in anvil_schema['tables']
         }
         for e in entities:
-            result[e.entity_type].add(e.key)
+            result[e.entity_type].add(e.entity_id)
         return result
 
     def _follow_upstream(self,
@@ -988,15 +985,15 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
             ''')
             result: KeyLinks = set()
             for row in rows:
-                outputs = singleton(KeyReference(entity_type='anvil_biosample',
-                                                 key=row['biosample_id']))
-                inputs = singleton(KeyReference(entity_type='anvil_dataset',
-                                                key=one(row['part_of_dataset_id'])))
-                result.add(KeyLink(outputs=outputs, inputs=inputs))
+                outputs = singleton(EntityReference(entity_type='anvil_biosample',
+                                                    entity_id=row['biosample_id']))
+                inputs = singleton(EntityReference(entity_type='anvil_dataset',
+                                                   entity_id=one(row['part_of_dataset_id'])))
+                result.add(EntityLink(outputs=outputs, inputs=inputs))
                 for donor_id in row['donor_id']:
-                    inputs = singleton(KeyReference(entity_type='anvil_donor',
-                                                    key=donor_id))
-                    result.add(KeyLink(outputs=outputs, inputs=inputs))
+                    inputs = singleton(EntityReference(entity_type='anvil_donor',
+                                                       entity_id=donor_id))
+                    result.add(EntityLink(outputs=outputs, inputs=inputs))
             return result
         else:
             return set()
@@ -1015,8 +1012,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       f.file_id AS generated_file_id,
                       'anvil_alignmentactivity' AS activity_table,
                       ama.alignmentactivity_id AS activity_id,
-                      ama.used_file_id AS uses_file_id,
-                      [] AS uses_biosample_id,
+                      ama.used_file_id AS uses_file_id
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_alignmentactivity'))} AS ama
                     ON f.file_id IN UNNEST(ama.generated_file_id)
@@ -1024,8 +1020,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       f.file_id,
                       'anvil_assayactivity',
                       aya.assayactivity_id,
-                      [],
-                      aya.used_biosample_id,
+                      []
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_assayactivity'))} AS aya
                     ON f.file_id IN UNNEST(aya.generated_file_id)
@@ -1033,8 +1028,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                       f.file_id,
                       'anvil_sequencingactivity',
                       sqa.sequencingactivity_id,
-                      [],
-                      sqa.used_biosample_id,
+                      []
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_sequencingactivity'))} AS sqa
                     ON f.file_id IN UNNEST(sqa.generated_file_id)
@@ -1042,8 +1036,7 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     f.file_id,
                     'anvil_variantcallingactivity',
                     vca.variantcallingactivity_id,
-                    vca.used_file_id,
-                    []
+                    vca.used_file_id
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_variantcallingactivity'))} AS vca
                     ON f.file_id IN UNNEST(vca.generated_file_id)
@@ -1051,30 +1044,30 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                     f.file_id,
                     'anvil_activity',
                     a.activity_id,
-                    a.used_file_id,
-                    a.used_biosample_id,
+                    a.used_file_id
                   FROM file AS f
                   JOIN {backtick(self._full_table_name(source, 'anvil_activity'))} AS a
                     ON f.file_id IN UNNEST(a.generated_file_id)
             ''')
             return {
-                KeyLink(
-                    activity=KeyReference(entity_type=row['activity_table'],
-                                          key=row['activity_id']),
+                EntityLink(
+                    activity=EntityReference(entity_type=row['activity_table'],
+                                             entity_id=row['activity_id']),
                     # The generated link is not a complete representation of the
                     # upstream activity because it does not include generated files
-                    # that are not ancestors of the downstream file
+                    # that are not ancestors of the downstream file …
                     outputs=singleton(
-                        KeyReference(entity_type='anvil_file',
-                                     key=row['generated_file_id'])),
+                        EntityReference(entity_type='anvil_file',
+                                        entity_id=row['generated_file_id'])
+                    ),
+                    # … nor does it include the biosamples used by the activity.
+                    # The bundle entity is linked to the activities using it
+                    # by the downstream pass, and any other biosample is
+                    # excluded from the bundle. See BundleType.primary.
                     inputs=frozenset(
-                        KeyReference(entity_type=entity_type,
-                                     key=key)
-                        for entity_type, column in [
-                            ('anvil_file', 'uses_file_id'),
-                            ('anvil_biosample', 'uses_biosample_id')
-                        ]
-                        for key in row[column]
+                        EntityReference(entity_type='anvil_file',
+                                        entity_id=key)
+                        for key in row['uses_file_id']
                     )
                 )
                 for row in rows
@@ -1093,13 +1086,15 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 WHERE dgn.donor_id IN ({', '.join(map(repr, donor_ids))})
             ''')
             return {
-                KeyLink(
+                EntityLink(
                     inputs=singleton(
-                        KeyReference(key=row['diagnosis_id'],
-                                     entity_type='anvil_diagnosis')),
+                        EntityReference(entity_id=row['diagnosis_id'],
+                                        entity_type='anvil_diagnosis')
+                    ),
                     outputs=singleton(
-                        KeyReference(key=row['donor_id'],
-                                     entity_type='anvil_donor')),
+                        EntityReference(entity_id=row['donor_id'],
+                                        entity_type='anvil_donor')
+                    ),
                     activity=None)
                 for row in rows
             }
@@ -1143,18 +1138,18 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 WHERE biosample_id IN ({', '.join(map(repr, biosample_ids))})
             ''')
             return {
-                KeyLink(
+                EntityLink(
                     inputs=singleton(
-                        KeyReference(key=row['biosample_id'],
-                                     entity_type='anvil_biosample')
+                        EntityReference(entity_id=row['biosample_id'],
+                                        entity_type='anvil_biosample')
                     ),
                     outputs=frozenset(
-                        KeyReference(key=output_id,
-                                     entity_type='anvil_file')
+                        EntityReference(entity_id=output_id,
+                                        entity_type='anvil_file')
                         for output_id in row['generated_file_id']
                     ),
-                    activity=KeyReference(key=row['activity_id'],
-                                          entity_type=row['activity_table']))
+                    activity=EntityReference(entity_id=row['activity_id'],
+                                             entity_type=row['activity_table']))
                 for row in rows
             }
         else:
@@ -1195,17 +1190,17 @@ class Plugin(TDRPlugin[TDRAnvilBundle, TDRAnvilBundleFQID]):
                 WHERE used_file_id IN ({', '.join(map(repr, file_ids))})
             ''')
             return {
-                KeyLink(
+                EntityLink(
                     inputs=singleton(
-                        KeyReference(key=row['used_file_id'],
-                                     entity_type='anvil_file')),
+                        EntityReference(entity_id=row['used_file_id'],
+                                        entity_type='anvil_file')),
                     outputs=frozenset(
-                        KeyReference(key=file_id,
-                                     entity_type='anvil_file')
+                        EntityReference(entity_id=file_id,
+                                        entity_type='anvil_file')
                         for file_id in row['generated_file_id']
                     ),
-                    activity=KeyReference(key=row['activity_id'],
-                                          entity_type=row['activity_table']))
+                    activity=EntityReference(entity_id=row['activity_id'],
+                                             entity_type=row['activity_table']))
                 for row in rows
             }
         else:

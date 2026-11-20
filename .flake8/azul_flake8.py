@@ -70,6 +70,11 @@ class ModuleType(enum.IntEnum):
         >>> ModuleType.from_module_name('os')
         <ModuleType.python_runtime: 1>
 
+        # A standard library module that `six` replaces with an alias
+        >>> import six.moves.BaseHTTPServer
+        >>> ModuleType.from_module_name('http.server')
+        <ModuleType.python_runtime: 1>
+
         # A downloaded external package
         >>> ModuleType.from_module_name('boto3')
         <ModuleType.external_dependency: 2>
@@ -87,15 +92,15 @@ class ModuleType(enum.IntEnum):
         >>> ModuleType.from_module_name('lambdas.service')
         <ModuleType.internal: 3>
         """
-        spec = importlib.util.find_spec(module_name)
-        if spec is None:
-            raise ImportError
-        elif spec.origin is None and spec.submodule_search_locations is None:
-            # Not every module included in the Python standard library is
-            # considered "builtin." That term is reserved for modules such as
-            # `sys` that are implemented in C and lack an associated .py file.
-            assert module_name in sys.builtin_module_names, module_name
+        if module_name.partition('.')[0] in sys.stdlib_module_names:
+            # The spec of a standard library module can't be relied upon.
+            # Looking up the spec of a submodule imports its parent package,
+            # and that import may replace a standard library module in
+            # sys.modules. Importing `chalice.local`, for example, makes `six`
+            # register an alias for `http.server` that lacks an origin.
             return cls.python_runtime
+        elif (spec := importlib.util.find_spec(module_name)) is None:
+            raise ImportError
         else:
             if spec.origin is None:
                 # Namespace modules lack an __init__.py and represent their
