@@ -701,7 +701,9 @@ class UserService:
                         'The user needs to log in again', apat_auth)
             raise SuspendedPersonalAccessTokenError
         access_token, expiration = user['access_token'], user['access_token_expiration']
-        if expiration < self._now() + 60:
+        # The access token must remain valid for the rest of the request. Only
+        # the REST API Lambda handles requests authenticated with an APAT.
+        if expiration < self._now() + 2 * config.api_gateway_lambda_timeout:
             try:
                 response = self._oauth_client.token_for_refresh(
                     refresh_token=user['refresh_token'],
