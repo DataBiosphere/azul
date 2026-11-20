@@ -227,6 +227,23 @@ class UserControllerTestCase(LocalAppTestCase,
             response['refresh_token_expires_in'] = refresh_token_expires_in
         return response
 
+    _mock_project = 'mock-project'
+    _mock_service_account_id = '123456789012345678901'
+    _mock_service_account_token = 'ya29.mock_service_account_token'
+
+    @contextmanager
+    def _mock_service_account_token_info(self):
+        with (
+            patch.object(config, 'google_project', return_value=self._mock_project),
+            self._mock_token_info(aud=self._mock_service_account_id) as token_info
+        ):
+            token_info.return_value.update(
+                sub=self._mock_service_account_id,
+                email=f'indexer@{self._mock_project}.iam.gserviceaccount.com',
+                email_verified='true'
+            )
+            yield token_info
+
     @contextmanager
     def _mock_token_for_code(self, **kwargs):
         with patch.object(OAuth2Client, 'token_for_code') as mock:
@@ -453,8 +470,9 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                                        delta=5)
 
     def test_mint_personal_access_token_unknown_user(self):
-        with self._mock_token_info():
-            auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        # A service account never authorizes this application
+        with self._mock_service_account_token_info():
+            auth = UnverifiedAccessTokenAuthentication(self._mock_service_account_token)
             with self.assertRaises(UnknownUserException):
                 self._service.mint_personal_access_token(auth)
 
@@ -467,14 +485,14 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     def test_verify_access_token(self):
         client_id = self._mock_client_id
-        project = 'mock-project'
+        project = self._mock_project
         user = {
             'azp': client_id,
             'aud': client_id,
             'email': self._mock_email,
             'email_verified': 'true'
         }
-        service_account_id = '123456789012345678901'
+        service_account_id = self._mock_service_account_id
         service_account = {
             'azp': service_account_id,
             'aud': service_account_id,
@@ -485,17 +503,12 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         # Maps each case to the fields to set, or to remove if None, and the
         # expected subject, or None if the token should be rejected
         cases: list[tuple[str, Mapping[str, str | None], str | None]] = [
-            ('user', user, self._mock_sub),
-            ('user without subject', {
-                **user,
-                'sub': None
-            }, None),
+            # A user's token is only accepted from the cache, which every token
+            # this application obtains is written to
+            ('user', user, None),
             ('foreign client', {
                 **user,
-                'azp': '456-other.apps.googleusercontent.com'
-            }, None),
-            ('foreign audience', {
-                **user,
+                'azp': '456-other.apps.googleusercontent.com',
                 'aud': '456-other.apps.googleusercontent.com'
             }, None),
             ('service account', service_account, service_account_id),
@@ -503,6 +516,10 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 **service_account,
                 'sub': None
             }, service_account_id),
+            ('service account with another subject', {
+                **service_account,
+                'sub': '210987654321098765432'
+            }, None),
             ('service account token for another audience', {
                 **service_account,
                 'aud': '210987654321098765432'
@@ -559,17 +576,18 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                     self._service.verify_access_token(auth)
 
     def test_verify_cached_access_token(self):
-        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
-        with self._mock_token_info() as token_info:
+        auth = UnverifiedAccessTokenAuthentication(self._mock_service_account_token)
+        with self._mock_service_account_token_info() as token_info:
             first, second = (self._service.verify_access_token(auth) for _ in range(2))
             token_info.assert_called_once_with(auth.token)
         self.assertEqual(first, second)
-        self.assertEqual(self._mock_identity, second.identity())
+        identity = self._service._encode_identity(self._mock_iss, self._mock_service_account_id)
+        self.assertEqual(identity, second.identity())
 
     def test_verify_expired_cached_access_token(self):
-        auth = UnverifiedAccessTokenAuthentication(self._mock_access_token)
+        auth = UnverifiedAccessTokenAuthentication(self._mock_service_account_token)
         now = self._service._now()
-        with self._mock_token_info() as token_info:
+        with self._mock_service_account_token_info() as token_info:
             self._service.verify_access_token(auth)
             # The mock reports that the token expires in an hour
             with patch.object(UserService, '_now', return_value=now + 3600):
@@ -612,6 +630,11 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
         )
         user = self._load_user()
         self.assertEqual(refreshed_token, user['access_token'])
+        auth = UnverifiedAccessTokenAuthentication(refreshed_token)
+        with self._mock_token_info() as token_info:
+            verified_auth = self._service.verify_access_token(auth)
+            token_info.assert_not_called()
+        self.assertEqual(self._mock_identity, verified_auth.identity())
 
     def test_exchange_token_rejected_refresh_token(self):
         apat = self._authorize_and_mint()
@@ -861,36 +884,24 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                 token_for_refresh.reset_mock()
 
     @patch.object(OAuth2Client, 'token_for_refresh')
-    def test_reauthorize_uncached_token(self, token_for_refresh):
-        token_for_refresh.return_value = TokenResponse(
-            access_token='ya29.refreshed_access_token',
-            expires_in=3599,
-            scope='openid email',
-            token_type='Bearer'
-        )
-        window = UserService.reauthorization_window
-        # The access token obtained by authorization is due for a refresh, too,
-        # or it would be returned instead of a fresh one
-        with (
-            patch.object(UserService, '_now', return_value=self._service._now() - 3600 + window),
-            self._mock_token_for_code()
-        ):
+    def test_reauthorize_foreign_token(self, token_for_refresh):
+        with self._mock_token_for_code():
             self._authorize()
         # A token of the same user that this application didn't obtain
-        uncached_token = 'ya29.uncached_access_token'
-        for expires_in, expected_token in [
-            (window + 1, uncached_token),
-            (window, 'ya29.refreshed_access_token')
-        ]:
+        foreign_token = 'ya29.foreign_access_token'
+        window = UserService.reauthorization_window
+        for expires_in in [window + 1, window]:
             with self.subTest(expires_in=expires_in):
-                key = self._service._access_token_key(uncached_token)
-                aws.dynamodb.delete_item(TableName=UserService._access_tokens_table_name,
-                                         Key={UserService.access_token_key_attribute: {'S': key}})
                 with self._mock_token_info(expires_in=expires_in) as token_info:
-                    response = self._reauthorize(uncached_token)
-                    token_info.assert_called_once_with(uncached_token)
-                self.assertEqual(200, response.status)
-                self.assertEqual(expected_token, json.loads(response.data)['access_token'])
+                    response = self._reauthorize(foreign_token)
+                    token_info.assert_called_once_with(foreign_token)
+                self.assertEqual(401, response.status)
+                expected_body = {
+                    'Code': 'UnauthorizedError',
+                    'Message': 'Valid access token required'
+                }
+                self.assertEqual(expected_body, json.loads(response.data))
+                token_for_refresh.assert_not_called()
 
     def test_reauthorize_rejected_refresh_token(self):
         now = self._service._now()

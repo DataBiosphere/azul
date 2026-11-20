@@ -40,6 +40,9 @@ from app_test_case import (
 from azul import (
     config,
 )
+from azul.auth import (
+    AccessTokenAuthentication,
+)
 from azul.filters import (
     Filters,
     FiltersJSON,
@@ -54,7 +57,6 @@ from azul.logging import (
 from azul.oauth2 import (
     InvalidAccessTokenError,
     OAuth2Client,
-    TokenInfoResponse,
 )
 from azul.plugins import (
     ManifestFormat,
@@ -842,9 +844,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 token_info.assert_called_once_with(access_token)
                 token_info.reset_mock()
 
-    @patch_config('google_oauth2_client_id', '123-mock_client_id.apps.googleusercontent.com')
-    @mock.patch.object(UserService, '_cache_access_token', new=MagicMock())
-    @mock.patch.object(UserService, '_cached_access_token', new=MagicMock(return_value=None))
+    @mock.patch.object(UserService, '_cached_access_token')
     @mock.patch.object(UserService, '_load_user', side_effect=UnknownUserException)
     @mock.patch.object(OAuth2Client, 'token_info')
     @mock.patch.object(ManifestService, 'sign_manifest_key')
@@ -857,23 +857,17 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                                                                get_manifest_url,
                                                                sign_manifest_key,
                                                                token_info,
-                                                               load_user):
+                                                               load_user,
+                                                               cached_access_token):
         """
         Minting a personal access token for the command lines of a finished
         cURL manifest should rely on the verification of the access token in
-        the same request, instead of asking the authorization server about the
-        token a second time.
+        the same request, instead of verifying the token a second time.
         """
-        client_id = config.google_oauth2_client_id
-        token_info.return_value = TokenInfoResponse(azp=client_id,
-                                                    aud=client_id,
-                                                    sub='105096702580025601450',
-                                                    scope='openid email',
-                                                    exp='9999999999',
-                                                    expires_in='3600',
-                                                    email='user@example.com',
-                                                    email_verified='true',
-                                                    access_type='online')
+        access_token = 'ya29.mock_access_token'
+        cached_access_token.return_value = AccessTokenAuthentication(token=access_token,
+                                                                     identity='#105096702580025601450',
+                                                                     expiration=2 ** 31)
         get_manifest_url.return_value = 'https://url.to.manifest?foo=bar'
         manifest_key = ManifestKey(catalog=self.catalog,
                                    format=ManifestFormat.curl,
@@ -890,7 +884,6 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
             value=BareManifestKey.unpack(manifest_key.pack()),
             signature=b'123'
         )
-        access_token = 'ya29.mock_access_token'
         for fetch in True, False:
             with self.subTest(fetch=fetch):
                 path = ['manifest', 'files', self.token]
@@ -905,10 +898,11 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     self.assertEqual(302, response.json()['Status'])
                 else:
                     self.assertEqual(302, response.status_code)
-                token_info.assert_called_once_with(access_token)
+                cached_access_token.assert_called_once()
+                token_info.assert_not_called()
                 # The user is looked up while minting the personal access token
                 load_user.assert_called_once()
-                token_info.reset_mock()
+                cached_access_token.reset_mock()
                 load_user.reset_mock()
 
     def _request(self, method: str, url: furl, *, expect: int) -> furl:

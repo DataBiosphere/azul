@@ -218,7 +218,8 @@ class RejectedAccessTokenError(Exception):
     """
     The authorization server accepted the access token but this application
     doesn't, because it was issued to a party this application doesn't accept
-    tokens from.
+    tokens from, or because it is a user's access token that this application
+    didn't obtain.
     """
 
 
@@ -388,6 +389,28 @@ class UserService:
         else:
             at_auth = self._cached_access_token(uat_auth)
             if at_auth is None:
+                #
+                # We expect cache misses in the following cases:
+                #
+                # 1) The access token belongs to a service account. This is the
+                #    only token we accept, and we cache it here. In the
+                #    remaining cases below, we reject the token.
+                #
+                # 2) The access token wasn't obtained from this application,
+                #    using, say, the implicit flow with just the client ID and a
+                #    redirect to http://localhost:8088. This works because the
+                #    implicit flow doesn't require a client secret and that
+                #    specific redirect URL is registered in the client
+                #
+                # 3) The access token was obtained from this application, but
+                #    before it cached every user's access token
+                #
+                # 4) The application attempted to write the cache, but failed
+                #    due to a transient problem
+                #
+                # 5) The contents of the cache were lost, for example because
+                #    its table was recreated.
+                #
                 try:
                     token_info = self._token_info(uat_auth.token)
                 except InvalidAccessTokenError as e:
@@ -397,20 +420,24 @@ class UserService:
                     log.warning('Rejected access token %s', uat_auth, exc_info=e)
                     raise
                 else:
-                    # While Google's token info endpoint doesn't explicitly
-                    # report the issuer of a token, the endpoint only works with
-                    # tokens issued by Google, so the issuer can be implied.
-                    iss = self._google_issuer
-                    # The `sub` (subject) of a service account's access token
-                    # may be absent, but the `azp` (authorized party) is
-                    # presumably always the service account's unique ID.
-                    sub = token_info.get('sub', token_info['azp'])
-                    at_auth = AccessTokenAuthentication(
-                        token=uat_auth.token,
-                        identity=self._encode_identity(iss, sub),
-                        expiration=self._now() + int(token_info['expires_in'])
-                    )
-                    self._cache_access_token(at_auth)
+                    if token_info['azp'].endswith('.apps.googleusercontent.com'):
+                        # A user's access token, cases 2) through 5) above
+                        log.warning('Rejected access token %s, a user token '
+                                    'this application has not cached', uat_auth)
+                        raise RejectedAccessTokenError('OAuth 2.0 access token was '
+                                                       'not obtained by this application')
+                    else:
+                        # A service account's access token, case 1) above
+                        iss = self._google_issuer
+                        # The `azp` (authorized party) of a service account's
+                        # access token is the service account's unique ID.
+                        sub = token_info['azp']
+                        at_auth = AccessTokenAuthentication(
+                            token=uat_auth.token,
+                            identity=self._encode_identity(iss, sub),
+                            expiration=self._now() + int(token_info['expires_in'])
+                        )
+                        self._cache_access_token(at_auth)
         return at_auth
 
     def _access_token_key(self, access_token: str) -> str:
@@ -489,6 +516,9 @@ class UserService:
                     'Service account email is not verified')
             require(audience == authorized_party,
                     'Service account audience does not match')
+            # The `sub` (subject) is present it must match `azp`
+            require(token_info.get('sub', authorized_party) == authorized_party,
+                    'Service account subject does not match')
             local_part, _, host = email.partition('@')
             host, _, domain = host.partition('.')
             require(host == config.google_project(),
@@ -700,10 +730,14 @@ class UserService:
             log.warning('Unable to exchange %s for an access token. '
                         'The user needs to log in again', apat_auth)
             raise SuspendedPersonalAccessTokenError
-        access_token, expiration = user['access_token'], user['access_token_expiration']
+        at_auth = AccessTokenAuthentication(
+            token=user['access_token'],
+            identity=self._identity(user),
+            expiration=user['access_token_expiration']
+        )
         # The access token must remain valid for the rest of the request. Only
         # the REST API Lambda handles requests authenticated with an APAT.
-        if expiration < self._now() + 2 * config.api_gateway_lambda_timeout:
+        if at_auth.expiration < self._now() + 2 * config.api_gateway_lambda_timeout:
             try:
                 response = self._oauth_client.token_for_refresh(
                     refresh_token=user['refresh_token'],
@@ -716,14 +750,13 @@ class UserService:
                             apat_auth, exc_info=e)
                 raise DeauthorizedPersonalAccessTokenError from e
             else:
-                access_token, expires_in = response['access_token'], response['expires_in']
-                expiration = self._now() + expires_in
-                self._update_access_token(user, access_token, expires_in)
-        at_auth = AccessTokenAuthentication(
-            token=access_token,
-            identity=self._identity(user),
-            expiration=expiration
-        )
+                at_auth = AccessTokenAuthentication(
+                    token=response['access_token'],
+                    identity=at_auth.identity(),
+                    expiration=self._now() + response['expires_in']
+                )
+                self._update_access_token(user, at_auth.token, response['expires_in'])
+                self._cache_access_token(at_auth)
         log.info('Exchanged %s for %s', at_auth, apat_auth)
         return at_auth
 
