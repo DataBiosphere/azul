@@ -416,8 +416,8 @@ class Biomaterial(LinkedEntity):
 class DonorOrganism(Biomaterial):
     genus_species: set[str]
     diseases: set[str]
-    organism_age: str
-    organism_age_unit: str
+    organism_age: str | None
+    organism_age_unit: str | None
     sex: str
     development_stage: str | None
 
@@ -770,7 +770,7 @@ class File(LinkedEntity):
     to_processes: MutableMapping[UUID4, Process]
     manifest_entry: ManifestEntry
     content_description: set[str]
-    file_source: str
+    file_source: str | None
 
     def __init__(self,
                  json: JSON,

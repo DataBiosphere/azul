@@ -60,9 +60,6 @@ import uuid
 import webbrowser
 
 import attrs
-from chalice.app import (
-    UnauthorizedError,
-)
 import chalice.cli
 from chalice.local import (
     LocalDevServer,
@@ -100,9 +97,6 @@ from azul import (
     CatalogName,
     Config,
     config,
-)
-from azul.auth import (
-    AccessTokenAuthentication,
 )
 from azul.azulclient import (
     AzulClient,
@@ -241,7 +235,6 @@ from azul.terra import (
     TDRClient,
     TDRSourceRef,
     TDRSourceSpec,
-    UserCredentialsProvider,
 )
 from azul_test_case import (
     AzulTestCase,
@@ -746,11 +739,14 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                         for _ in range(num_threads_per_endpoint):
                             assignments.append((entity_type, url))
                     self.random.shuffle(assignments)
+                    # Isolate this subtest's cache entries from those of the
+                    # previous subtests and runs, which request the same URLs
+                    headers = {'X-Azul-Test-Nonce': str(uuid.uuid4())}
 
                     def worker(url: furl) -> BaseHTTPResponse:
                         while True:
                             try:
-                                return service.get_url(url)
+                                return service.get_url(url, headers)
                             except ConcurrentCacheFetchError:
                                 if retrying:
                                     self.assertFalse(retrying, 'Unexpected ConcurrentCacheFetchError')
@@ -1291,13 +1287,13 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # is duplicated in README.md as well.
         redirect_url = furl('http://localhost:8088')
         auth_url = furl(url='https://accounts.google.com/o/oauth2/v2/auth',
-                        args=dict(client_id=not_none(config.google_oauth2_client_id),
+                        args=dict(client_id=config.google_oauth2_client_id,
                                   redirect_uri=str(redirect_url),
                                   response_type='code',
                                   scope='openid email',
                                   access_type='offline',
                                   prompt='consent'))
-        auth_code = None
+        auth_code: str | None = None
 
         class Handler(BaseHTTPRequestHandler):
 
@@ -1992,14 +1988,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             self.assertIn(public_source.id, public_source_ids)
             self.assertNotIn(ma_source.id, public_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())
-        invalid_auth = AccessTokenAuthentication('ya29.invalid')
-        with self.assertRaises(UnauthorizedError):
-            TDRClient.for_registered_user(invalid_auth)
-        invalid_provider = UserCredentialsProvider(invalid_auth)
-        invalid_client = CredentialedClient(credentials_provider=invalid_provider)
+        invalid_client = BearerTokenHttpClient(self._plain_http, 'ya29.invalid')
         with self._unregistered_service_account_credentials:
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
-        with self._authorization_context(invalid_client._http_client):
+        with self._authorization_context(invalid_client):
             self.assertEqual(401, self._get_url_unchecked(GET, url).status)
 
     def _test_managed_access_indices(self,

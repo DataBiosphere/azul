@@ -97,10 +97,11 @@ class SourceService:
             source_ids = {source.ref.id for source in self._public_sources[catalog]}
         else:
             plugin = self.repository_plugin(catalog)
-            cache_key = (catalog, authentication.identity())
+            # The key is unambiguous as long as the catalog name doesn't contain
+            # the joiner. The identity might.
             joiner = ':'
-            assert not any(joiner in c for c in cache_key), cache_key
-            cache_key = joiner.join(cache_key)
+            assert joiner not in catalog, catalog
+            cache_key = joiner.join([catalog, authentication.identity()])
             try:
                 source_ids = set(json_element_strings(self._get(cache_key)))
             except CacheMiss:

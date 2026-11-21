@@ -61,7 +61,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    BearerTokenAuthentication,
+    AccessTokenAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -107,7 +107,6 @@ from azul.lib.types import (
 from azul.oauth2 import (
     CredentialedClient,
     CredentialsProvider,
-    InvalidAccessTokenError,
     ServiceAccountCredentials,
     TokenCredentials,
 )
@@ -244,8 +243,8 @@ class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider
 
 class UserCredentialsProvider(TerraCredentialsProvider):
 
-    def __init__(self, authentication: BearerTokenAuthentication):
-        self.token = authentication.identity()
+    def __init__(self, authentication: AccessTokenAuthentication):
+        self.token = authentication.token
 
     def oauth2_scopes(self) -> Sequence[str]:
         return ['https://www.googleapis.com/auth/userinfo.email']
@@ -675,21 +674,8 @@ class TDRClient(SAMClient, DRSClient):
         )
 
     @classmethod
-    def for_registered_user(cls, authentication: BearerTokenAuthentication) -> Self:
-        self = cls(credentials_provider=UserCredentialsProvider(authentication))
-        try:
-            self.validate()
-        except InvalidAccessTokenError as e:
-            log.warning('Invalid credentials', exc_info=e)
-            raise UnauthorizedError('Invalid credentials')
-        except AssertionError as e:
-            if R.caused(e):
-                log.warning('Invalid credentials', exc_info=e)
-                raise UnauthorizedError('Invalid credentials')
-            else:
-                raise
-        else:
-            return self
+    def for_registered_user(cls, authentication: AccessTokenAuthentication) -> Self:
+        return cls(credentials_provider=UserCredentialsProvider(authentication))
 
     def drs_object(self, drs_url: furl) -> DRSObject:
         return DRSObject(url=drs_url, http_client=self._http_client)

@@ -5,6 +5,7 @@ from datetime import (
     datetime,
     timezone,
 )
+import hashlib
 import json
 import logging
 from time import (
@@ -51,6 +52,8 @@ from azul import (
 from azul.auth import (
     AccessTokenAuthentication,
     PersonalAccessTokenAuthentication,
+    UnverifiedAccessTokenAuthentication,
+    UnverifiedPersonalAccessTokenAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -80,12 +83,15 @@ from azul.lib.types import (
     PrimitiveJSON,
     json_untyped_dict,
     json_untyped_flat_dict,
-    not_none,
 )
 from azul.oauth2 import (
     Authorization,
+    InvalidAccessTokenError,
+    InvalidRefreshTokenError,
     OAuth2Client,
     TokenForCodeResponse,
+    TokenInfoResponse,
+    TokenResponse,
 )
 from azul.resources import (
     NotInLambdaContextException,
@@ -132,6 +138,9 @@ class User(JSONTypedDict):
     access_token_expiration: int
     #: The Unix timestamp after which the refresh token expires
     expiration: int
+    #: The Unix timestamp of the user's most recent authorization of this
+    #: application
+    authorization_time: int
     #: APATs with a jti below this value are considered revoked
     min_jti: NotRequired[int]
     #: The jti to assign to the APAT requested next
@@ -156,30 +165,131 @@ class UnknownUserException(Exception):
     """
 
 
-class ForeignTokenException(Exception):
-    """
-    The access token was not issued to this application. It could be a rogue
-    token or a token belonging to one of our service accounts, during
-    integration tests.
-    """
-
-
 class InvalidPersonalAccessTokenError(Exception):
     """
-    The token is a JWT but not a valid APAT (expired, tampered with, forged, …).
+    The token is a JWT but not a usable APAT. Subclasses represent the specific
+    reasons.
+    """
+
+
+class InauthenticPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The APAT is malformed or wasn't signed by this application.
+    """
+
+
+class ExpiredPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The APAT has expired.
+    """
+
+
+class OrphanedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The user the APAT was minted for is unknown, typically because the user's
+    stored information expired along with their refresh token.
+    """
+
+
+class RevokedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The APAT's JWT ID is absent or outside the range of JWT IDs that are valid
+    for its user, typically because the user revoked the APAT.
+    """
+
+
+class SuspendedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The most recent authorization of this application by the user the APAT was
+    minted for is too long ago. The APAT becomes usable again once the user
+    authorizes this application again.
+    """
+
+
+class DeauthorizedPersonalAccessTokenError(InvalidPersonalAccessTokenError):
+    """
+    The authorization server rejected the refresh token or the stored access
+    token of the user the APAT was minted for, typically because the user's
+    authorization of this application was revoked or has expired.
+    """
+
+
+class RejectedAccessTokenError(Exception):
+    """
+    The authorization server accepted the access token but this application
+    doesn't, because it was issued to a party this application doesn't accept
+    tokens from, or because it is a user's access token that this application
+    didn't obtain.
+    """
+
+
+class ReauthorizationLimitError(Exception):
+    """
+    The user's most recent authorization of this application is too long ago
+    for their access token to be refreshed.
     """
 
 
 class UserService:
-    required_scopes = {'openid', 'email'}
+    """
+    Manages the users of this application and their credentials. A user is a
+    person who authorized this application via the OAuth 2.0 authorization
+    code flow, which yields a refresh token and an access token for the user.
+    This class persists both, along with other information about the user. It
+    verifies the access tokens presented to this application, including those
+    of service accounts, obtains fresh access tokens for users, and mints,
+    exchanges and revokes their personal access tokens (APATs).
+    """
 
-    key_attribute = 'identity'
-    ttl_attribute = 'expiration'
-    assert ttl_attribute in User.__annotations__
+    #: The OAuth 2.0 scopes a user must grant when authorizing this
+    #: application. The ``openid`` scope yields the ID token that identifies
+    #: the user, the ``email`` scope the user's email address.
+    #:
+    required_oauth_scopes = {'openid', 'email'}
 
-    _table_name = config.dynamo_users_table_name
-    _key_separator = '#'
+    #: The name of the DynamoDB table holding one item per user, keyed by the
+    #: user's identity, a combination of the issuer and subject of the user's
+    #: ID token. The item holds the attributes of :class:`User`, including the
+    #: user's refresh token and most recent access token, and expires along
+    #: with the refresh token.
+    #:
+    _user_table_name = config.dynamo_user_table_name
+    user_key_attribute = 'identity'
+    _user_key_separator = '#'
+    user_ttl_attribute = 'expiration'
+    assert user_ttl_attribute in User.__annotations__
+
+    #: The name of the DynamoDB table serving as a registry of every access
+    #: token this application obtained or accepted, along with the identity of
+    #: the user or service account to which that token belongs. The registry
+    #: lets the application verify the tokens without a round trip to the
+    #: authorization server.
+    #:
+    _access_token_table_name = config.dynamo_access_token_table_name
+    access_token_key_attribute = 'token_hash'
+    access_token_ttl_attribute = 'expiration'
+
+    #: The number of seconds after the user authorizes this application that
+    #: the user's item expires, if the authorization server doesn't report when
+    #: the refresh token in that item expires
+    #:
     _default_expiration = 180 * 24 * 60 * 60
+
+    #: The number of seconds after it is minted that an APAT expires. A revoked
+    #: or suspended APAT is unusable before then.
+    #:
+    _apat_expiration = 30 * 24 * 60 * 60
+
+    #: A registered access token is verified again with the authorization
+    #: server once this many seconds have passed since it was last verified
+    #: there, so that a revoked token is rejected within that interval.
+    #:
+    reverification_interval = 5 * 60
+
+    #: An access token that expires within this many seconds can be exchanged
+    #: for a fresh one
+    #:
+    reauthorization_window = 15 * 60
 
     @cached_property
     def _oauth_client(self) -> OAuth2Client:
@@ -193,7 +303,7 @@ class UserService:
 
     @property
     def _client_id(self) -> str:
-        return not_none(config.google_oauth2_client_id)
+        return config.google_oauth2_client_id
 
     @cached_property
     def _apat_public_key(self) -> EllipticCurvePublicKey:
@@ -237,9 +347,9 @@ class UserService:
         """
         log.info("Authorizing app, using code %r", redact_json(authorization['code']))
         scopes = set(authorization['scope'].split())
-        assert self.required_scopes.issubset(scopes), R(
+        assert self.required_oauth_scopes.issubset(scopes), R(
             'Be sure to include the required scopes when requesting the '
-            'authorization code:', sorted(self.required_scopes))
+            'authorization code:', sorted(self.required_oauth_scopes))
         response = self._oauth_client.token_for_code(
             authorization_code=authorization['code'],
             client_id=self._client_id,
@@ -254,8 +364,7 @@ class UserService:
         iss, sub = id_claims['iss'], id_claims['sub']
         assert iss == self._google_issuer, R('Unexpected issuer', iss)
         now = self._now()
-        expiration = response.get('refresh_token_expires_in',
-                                  self._default_expiration)
+        expiration = response.get('refresh_token_expires_in', self._default_expiration)
         user = User(
             iss=iss,
             sub=sub,
@@ -264,9 +373,16 @@ class UserService:
             email=id_claims['email'],
             email_verified=id_claims['email_verified'],
             access_token_expiration=now + response['expires_in'],
-            expiration=now + expiration
+            expiration=now + expiration,
+            authorization_time=now
         )
         self._store_user(user)
+        at_auth = AccessTokenAuthentication(
+            token=user['access_token'],
+            identity=self._identity(user),
+            expiration=user['access_token_expiration']
+        )
+        self._register_access_token(at_auth)
         return response
 
     _google_issuer = 'https://accounts.google.com'
@@ -275,10 +391,10 @@ class UserService:
         assert iss, iss
         if iss == self._google_issuer:
             iss = ''
-        return self._key_separator.join([iss, sub])
+        return self._user_key_separator.join([iss, sub])
 
     def _decode_identity(self, identity: str) -> tuple[str, str]:
-        iss, sub = identity.split(self._key_separator, 1)
+        iss, sub = identity.split(self._user_key_separator, 1)
         if iss == '':
             iss = self._google_issuer
         return iss, sub
@@ -287,7 +403,6 @@ class UserService:
         return self._encode_identity(user['iss'], user['sub'])
 
     _apat_algorithm = 'ES256'
-    _apat_expiration = 30 * 24 * 60 * 60
 
     @cached_property
     def _jwt(self) -> PyJWT:
@@ -296,27 +411,218 @@ class UserService:
         jwt._jws.register_algorithm(self._apat_algorithm, KMSSigningAlgorithm())
         return jwt
 
-    def _verify_access_token(self,
-                             at_auth: AccessTokenAuthentication
-                             ) -> User:
-        token_info = self._oauth_client.token_info(at_auth.token)
-        aud = token_info['aud']
-        if aud != self._client_id:
-            log.warning('Unexpected access token audience %r for token %s',
-                        aud, at_auth)
-            raise ForeignTokenException(aud)
-        else:
-            return self._load_user(self._google_issuer, token_info['sub'])
+    def verify_access_token(self,
+                            uat_auth: UnverifiedAccessTokenAuthentication
+                            ) -> AccessTokenAuthentication:
+        """
+        Verify the given access token, unless it is already verified.
 
-    def get_user(self, at_auth: AccessTokenAuthentication) -> User:
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
+
+        :raise RejectedAccessTokenError: if this application rejects the token
+
+        :raise Exception: if the validity of the token cannot be determined
+        """
+        if isinstance(uat_auth, AccessTokenAuthentication):
+            at_auth = uat_auth
+        else:
+            at_auth = self._registered_access_token(uat_auth)
+            if at_auth is None:
+                #
+                # We expect to encounter unregistered tokens in these cases:
+                #
+                # 1) The access token belongs to a service account. This is the
+                #    only token we accept, and we register it here. In the
+                #    remaining cases below, we reject the token.
+                #
+                # 2) The access token wasn't obtained from this application,
+                #    using, say, the implicit flow with just the client ID and a
+                #    redirect to http://localhost:8088. This works because the
+                #    implicit flow doesn't require a client secret and that
+                #    specific redirect URL is registered in the client
+                #
+                # 3) The access token was obtained from this application, but
+                #    before it registered every user's access token
+                #
+                # 4) The application attempted to register the token, but
+                #    failed due to a transient problem
+                #
+                # 5) The contents of the registry were lost, for example because
+                #    its table was recreated.
+                #
+                try:
+                    token_info = self._token_info(uat_auth.token)
+                except InvalidAccessTokenError as e:
+                    log.warning('Invalid access token %s', uat_auth, exc_info=e)
+                    raise
+                except RejectedAccessTokenError as e:
+                    log.warning('Rejected access token %s', uat_auth, exc_info=e)
+                    raise
+                else:
+                    if self._is_user_token(token_info):
+                        # A user's access token, cases 2) through 5) above
+                        log.warning('Rejected access token %s, a user token '
+                                    'this application has not registered', uat_auth)
+                        raise RejectedAccessTokenError('OAuth 2.0 access token was '
+                                                       'not obtained by this application')
+                    else:
+                        # A service account's access token, case 1) above
+                        at_auth = AccessTokenAuthentication(
+                            token=uat_auth.token,
+                            identity=self._token_identity(token_info),
+                            expiration=self._now() + int(token_info['expires_in'])
+                        )
+                        self._register_access_token(at_auth)
+        return at_auth
+
+    def _is_user_token(self, token_info: TokenInfoResponse) -> bool:
+        """
+        True if the given information describes a user's access token, False
+        if it describes a service account's.
+        """
+        # A user's token originates from an OAuth 2.0 client, a service
+        # account's from the service account itself.
+        return token_info['azp'].endswith('.apps.googleusercontent.com')
+
+    def _token_identity(self, token_info: TokenInfoResponse) -> str:
+        sub = token_info['sub' if self._is_user_token(token_info) else 'azp']
+        return self._encode_identity(self._google_issuer, sub)
+
+    def _access_token_key(self, access_token: str) -> str:
+        return hashlib.sha256(access_token.encode()).hexdigest()
+
+    def _registered_access_token(self,
+                                 uat_auth: UnverifiedAccessTokenAuthentication
+                                 ) -> AccessTokenAuthentication | None:
+        """
+        Return the given access token, verified by the registry, or None if the
+        token isn't registered, or has expired. A registered token that is due
+        for reverification is verified with the authorization server first.
+
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
+
+        :raise RejectedAccessTokenError: if this application rejects the token
+
+        :raise Exception: if the validity of the token cannot be determined
+        """
+        response = self._dynamodb.get_item(
+            TableName=self._access_token_table_name,
+            Key={self.access_token_key_attribute: {'S': self._access_token_key(uat_auth.token)}},
+            ConsistentRead=True
+        )
+        item = response.get('Item')
+        if item is None:
+            return None
+        else:
+            expiration = int(item[self.access_token_ttl_attribute]['N'])
+            # Items can persist in DynamoDB after they are marked as expired
+            # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html
+            if expiration <= self._now():
+                return None
+            else:
+                at_auth = AccessTokenAuthentication(
+                    token=uat_auth.token,
+                    identity=item['identity']['S'],
+                    expiration=expiration
+                )
+                verification_time = int(item['verification_time']['N'])
+                if verification_time + self.reverification_interval <= self._now():
+                    self._reverify_access_token(at_auth)
+                return at_auth
+
+    def _reverify_access_token(self, at_auth: AccessTokenAuthentication) -> None:
+        try:
+            token_info = self._token_info(at_auth.token)
+        except InvalidAccessTokenError as e:
+            log.warning('Registered access token %s is no longer valid', at_auth, exc_info=e)
+            raise
+        except RejectedAccessTokenError as e:
+            log.warning('Rejected registered access token %s', at_auth, exc_info=e)
+            raise
+        else:
+            if self._token_identity(token_info) == at_auth.identity():
+                log.info('Reverified access token %s', at_auth)
+                self._register_access_token(at_auth)
+            else:
+                log.warning('Rejected registered access token %s, '
+                            'its identity has changed', at_auth)
+                # The message intentionally lacks detail, for confidentiality
+                raise RejectedAccessTokenError('OAuth 2.0 subject does not match')
+
+    def _register_access_token(self, at_auth: AccessTokenAuthentication) -> None:
+        """
+        Register the given access token, recording that it was verified with
+        the authorization server just now. A token this application just
+        obtained from that server counts as verified.
+        """
+        self._dynamodb.put_item(
+            TableName=self._access_token_table_name,
+            Item={
+                self.access_token_key_attribute: {'S': self._access_token_key(at_auth.token)},
+                'identity': {'S': at_auth.identity()},
+                self.access_token_ttl_attribute: {'N': str(at_auth.expiration)},
+                'verification_time': {'N': str(self._now())}
+            }
+        )
+
+    def _token_info(self, access_token: str) -> TokenInfoResponse:
+        """
+        Retrieve information about the given token from the authorization server
+        and ensure that it is suitable for this application.
+
+        :raise InvalidAccessTokenError: if the authorization server rejects the
+                                        token
+
+        :raise RejectedAccessTokenError: if this application rejects the token
+
+        :raise Exception: if the validity of the token cannot be determined
+        """
+
+        def require(condition: bool, message: str) -> None:
+            if not condition:
+                raise RejectedAccessTokenError(message)
+
+        token_info = self._oauth_client.token_info(access_token)
+        # The error messages here intentionally lack detail, for confidentiality
+        authorized_party, audience = token_info['azp'], token_info['aud']
+        email = token_info.get('email')
+        if self._is_user_token(token_info):
+            # A user's access token originating from an OAuth 2.0 client
+            require(authorized_party == self._client_id,
+                    'OAuth 2.0 client does not match')
+            require(audience == self._client_id,
+                    'OAuth 2.0 audience does not match')
+            require('sub' in token_info,
+                    'OAuth 2.0 subject is missing')
+        elif email is not None and email.endswith('.iam.gserviceaccount.com'):
+            # A service account's bare access token
+            require(token_info.get('email_verified') == 'true',
+                    'Service account email is not verified')
+            require(audience == authorized_party,
+                    'Service account audience does not match')
+            # The `sub` (subject) is present it must match `azp`
+            require(token_info.get('sub', authorized_party) == authorized_party,
+                    'Service account subject does not match')
+            local_part, _, host = email.partition('@')
+            host, _, domain = host.partition('.')
+            require(host == config.google_project(),
+                    'Service account project does not match')
+        else:
+            require(False, 'Unexpected type of authorized party')
+        return token_info
+
+    def get_user(self, uat_auth: UnverifiedAccessTokenAuthentication) -> User:
         """
         Return the stored information about the user identified by the given
         access token.
         """
-        return self._verify_access_token(at_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        return self._load_user(at_auth.identity())
 
     def update_accepted_contracts(self,
-                                  at_auth: AccessTokenAuthentication,
+                                  uat_auth: UnverifiedAccessTokenAuthentication,
                                   accepted_contracts: Mapping[str, ContractAcceptance | None] | None
                                   ) -> User:
         """
@@ -324,7 +630,7 @@ class UserService:
         retracted the acceptance of, the given contracts, and return the updated
         information about that user.
 
-        :param at_auth: The access token of the user
+        :param uat_auth: The access token of the user
 
         :param accepted_contracts: Maps the name of each contract to the version
                                    the user accepted and its SHA-256 digest, or
@@ -333,7 +639,8 @@ class UserService:
                                    mapping are left alone. None retracts the
                                    acceptance of every contract.
         """
-        user = self._verify_access_token(at_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
         if accepted_contracts is None:
             user = self._update_user(user,
                                      'REMOVE accepted_contracts',
@@ -400,13 +707,13 @@ class UserService:
         given user, and return the updated user.
         """
         request: UpdateItemInputTypeDef = dict(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._identity(user)}},
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': self._identity(user)}},
             UpdateExpression=expression,
             # Without the condition, the update would create a partial item for
             # a user whose item expired after it was loaded
             ConditionExpression='attribute_exists(#key)',
-            ExpressionAttributeNames={'#key': self.key_attribute, **names},
+            ExpressionAttributeNames={'#key': self.user_key_attribute, **names},
             ReturnValues='ALL_NEW'
         )
         # DynamoDB rejects an empty mapping of values
@@ -420,7 +727,7 @@ class UserService:
             return self._user_from_item(response['Attributes'])
 
     def mint_personal_access_token(self,
-                                   at_auth: AccessTokenAuthentication
+                                   uat_auth: UnverifiedAccessTokenAuthentication
                                    ) -> PersonalAccessTokenAuthentication:
         """
         Given a valid access token for a user, issue a long-lived,
@@ -431,8 +738,9 @@ class UserService:
         perform. The APAT can be thought of as a proxy secret for the user's
         refresh token.
         """
-        log.info('Minting APAT for %s', at_auth)
-        user = self._verify_access_token(at_auth)
+        log.info('Minting APAT for %s', uat_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
         jti = self._next_jti(user)
         now = self._now()
         payload = {
@@ -444,60 +752,192 @@ class UserService:
         apat = self._jwt.encode(payload,
                                 key=config.apat_kms_key.alias,
                                 algorithm=self._apat_algorithm)
-        self._jwt.decode(apat,
-                         key=self._apat_public_key,
-                         algorithms=[self._apat_algorithm])
-        assert_redactable(apat)
-        apat_auth = PersonalAccessTokenAuthentication(token=apat)
-        log.info('Minted APAT %s for access token %s',
-                 apat_auth, at_auth)
+        uapat_auth = UnverifiedPersonalAccessTokenAuthentication(token=apat)
+        apat_auth = self.verify_personal_access_token(uapat_auth)
+        log.info('Minted %s for %s', apat_auth, at_auth)
         return apat_auth
 
-    def exchange_token(self,
-                       apat_auth: PersonalAccessTokenAuthentication
-                       ) -> AccessTokenAuthentication:
+    def verify_personal_access_token(self,
+                                     uapat_auth: UnverifiedPersonalAccessTokenAuthentication
+                                     ) -> PersonalAccessTokenAuthentication:
         """
-        Return a usable access token in exchange for an APAT if valid and not
-        yet expired.
+        Verify the signature and expiration of the given APAT. Determining
+        whether the APAT was revoked is not part of verification.
+
+        :raise InvalidPersonalAccessTokenError: if the APAT is malformed, its
+                                                signature is invalid or it has
+                                                expired
         """
-        log.info('Getting access token for APAT %s', apat_auth)
         try:
-            claims = self._jwt.decode(apat_auth.token,
+            claims = self._jwt.decode(uapat_auth.token,
                                       key=self._apat_public_key,
                                       algorithms=[self._apat_algorithm])
+        except jwt.exceptions.ExpiredSignatureError as e:
+            log.warning('Expired APAT %s', uapat_auth, exc_info=e)
+            raise ExpiredPersonalAccessTokenError from e
         except jwt.exceptions.PyJWTError as e:
-            log.warning('Invalid APAT %s', apat_auth, exc_info=e)
-            raise InvalidPersonalAccessTokenError from e
+            log.warning('Invalid APAT %s', uapat_auth, exc_info=e)
+            raise InauthenticPersonalAccessTokenError from e
         else:
-            assert_redactable(apat_auth.token)
-            iss, sub = self._decode_identity(claims['sub'])
-            user = self._load_user(iss, sub)
-            jti = claims.get('jti')
-            if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
-                log.warning('APAT jti %r out of range [%d, %d) for %s',
-                            jti, user['min_jti'], user['max_jti'], apat_auth)
-                raise InvalidPersonalAccessTokenError
-            access_token = user['access_token']
-            if user['access_token_expiration'] < self._now() + 60:
+            assert_redactable(uapat_auth.token)
+            return PersonalAccessTokenAuthentication(token=uapat_auth.token,
+                                                     identity=claims['sub'],
+                                                     jti=claims.get('jti'))
+
+    def exchange_token(self,
+                       uapat_auth: UnverifiedPersonalAccessTokenAuthentication
+                       ) -> AccessTokenAuthentication:
+        """
+        Return an access token in exchange for a valid APAT. For an APAT to be
+        considered valid, it must be signed, it must not be expired, it must
+        not have been revoked, and the user owning the APAT must have logged in
+        within the last :attr:`Config.reauthorization_limit` seconds.
+
+        :raise InvalidPersonalAccessTokenError: The APAT cannot be used to
+                                                obtain an access token, either
+                                                permanently or temporarily. See
+                                                the specific subclasses of
+                                                the exception for details.
+        """
+        log.info('Getting access token for APAT %s', uapat_auth)
+        apat_auth = self.verify_personal_access_token(uapat_auth)
+        try:
+            user = self._load_user(apat_auth.identity())
+        except UnknownUserException as e:
+            # The user's item expires along with their refresh token
+            log.warning('Unknown user of %s', apat_auth, exc_info=e)
+            raise OrphanedPersonalAccessTokenError from e
+        jti = apat_auth.jti
+        if jti is None or not (user['min_jti'] <= int(jti) < user['max_jti']):
+            log.warning('The jti of %s is out of range [%d, %d)',
+                        apat_auth, user['min_jti'], user['max_jti'])
+            raise RevokedPersonalAccessTokenError
+        if user['authorization_time'] + config.reauthorization_limit <= self._now():
+            log.warning('Unable to exchange %s for an access token. '
+                        'The user needs to log in again', apat_auth)
+            raise SuspendedPersonalAccessTokenError
+        at_auth: AccessTokenAuthentication | None
+        # The access token must remain valid for the rest of the request. Only
+        # the REST API Lambda handles requests authenticated with an APAT.
+        if user['access_token_expiration'] < self._now() + 2 * config.api_gateway_lambda_timeout:
+            at_auth = None
+        else:
+            uat_auth = UnverifiedAccessTokenAuthentication(token=user['access_token'])
+            try:
+                at_auth = self._registered_access_token(uat_auth)
+            except InvalidAccessTokenError as e:
+                log.warning('Unable to exchange %s for an access token. '
+                            "The user's access token is no longer valid",
+                            apat_auth, exc_info=e)
+                raise DeauthorizedPersonalAccessTokenError from e
+            else:
+                if at_auth is None:
+                    # A refresh confirms that the user's authorization of this
+                    # application is still in effect
+                    log.warning('Stored %s is not registered, refreshing it', uat_auth)
+                else:
+                    assert at_auth.identity() == self._identity(user)
+        if at_auth is None:
+            try:
                 response = self._oauth_client.token_for_refresh(
                     refresh_token=user['refresh_token'],
                     client_id=self._client_id,
                     client_secret=self._client_secret
                 )
-                access_token, expires_in = response['access_token'], response['expires_in']
-                self._update_access_token(user, access_token, expires_in)
-            at_auth = AccessTokenAuthentication(access_token)
-            log.info('Exchanged %s for APAT %s', at_auth, apat_auth)
-            return at_auth
+            except InvalidRefreshTokenError as e:
+                log.warning('Unable to exchange %s for an access token. '
+                            "The user's refresh token is invalid or has been revoked",
+                            apat_auth, exc_info=e)
+                raise DeauthorizedPersonalAccessTokenError from e
+            else:
+                at_auth = AccessTokenAuthentication(
+                    token=response['access_token'],
+                    identity=self._identity(user),
+                    expiration=self._now() + response['expires_in']
+                )
+                self._update_access_token(user, at_auth.token, response['expires_in'])
+                self._register_access_token(at_auth)
+        log.info('Exchanged %s for %s', at_auth, apat_auth)
+        return at_auth
+
+    def reauthorize(self,
+                    uat_auth: UnverifiedAccessTokenAuthentication
+                    ) -> TokenResponse:
+        """
+        Return the given access token if it remains valid for longer than
+        :attr:`reauthorization_window`. Otherwise, return the user's stored
+        access token if that remains valid for longer than the window, or a
+        fresh access token for the user, obtained with the user's refresh token,
+        if it doesn't. The scopes of a returned access token other than a fresh
+        one are unknown, so they are reported as None.
+
+        :raise ReauthorizationLimitError: A fresh access token is needed but
+                                          the user last authorized this
+                                          application longer than
+                                          :attr:`Config.reauthorization_limit`
+                                          seconds ago
+
+        :raise InvalidRefreshTokenError: if the authorization server rejects
+                                         the user's refresh token
+        """
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
+        expires_in = at_auth.expiration - self._now()
+        if expires_in > self.reauthorization_window:
+            log.info('No need to reauthorize %s, it is still fresh', at_auth)
+            # The registry lacks the token's scopes. Google always reports
+            # them, hence the type, but here they are unknown.
+            response = TokenResponse(
+                access_token=at_auth.token,
+                expires_in=expires_in,
+                scope=None,  # type: ignore[typeddict-item]
+                token_type='Bearer'
+            )
+        elif user['authorization_time'] + config.reauthorization_limit <= self._now():
+            log.warning('Cannot reauthorize %s, the user needs to log in again', at_auth)
+            raise ReauthorizationLimitError
+        elif user['access_token_expiration'] - self._now() > self.reauthorization_window:
+            # Another request has already obtained a fresh access token
+            at_reauth = AccessTokenAuthentication(
+                token=user['access_token'],
+                identity=self._identity(user),
+                expiration=user['access_token_expiration']
+            )
+            assert at_reauth.identity() == at_auth.identity()
+            stored_expires_in = at_reauth.expiration - self._now()
+            log.info('No need to reauthorize %s, reusing stored %s', at_auth, at_reauth)
+            response = TokenResponse(
+                access_token=at_reauth.token,
+                expires_in=stored_expires_in,
+                scope=None,  # type: ignore[typeddict-item]
+                token_type='Bearer'
+            )
+        else:
+            response = self._oauth_client.token_for_refresh(
+                refresh_token=user['refresh_token'],
+                client_id=self._client_id,
+                client_secret=self._client_secret
+            )
+            at_reauth = AccessTokenAuthentication(
+                token=response['access_token'],
+                identity=self._identity(user),
+                expiration=self._now() + response['expires_in']
+            )
+            assert at_reauth.identity() == at_auth.identity()
+            log.info('Reauthorized %s as %s', at_auth, at_reauth)
+            self._update_access_token(user, at_reauth.token, response['expires_in'])
+            self._register_access_token(at_reauth)
+        return response
 
     def revoke_personal_access_tokens(self,
-                                      at_auth: AccessTokenAuthentication
+                                      uat_auth: UnverifiedAccessTokenAuthentication
                                       ) -> None:
         """
         Revoke all APATs for the user identified by the given access token.
         """
-        log.info('Revoking all APATs for %s', at_auth)
-        user = self._verify_access_token(at_auth)
+        log.info('Revoking all APATs for %s', uat_auth)
+        at_auth = self.verify_access_token(uat_auth)
+        user = self._load_user(at_auth.identity())
         self._revoke_jti(user)
 
     def _store_user(self, user: User) -> None:
@@ -506,8 +946,8 @@ class UserService:
         log.debug('Storing user %r', redact_json(user))
         self._dynamodb.update_item(
             **DynamoDBItemUpdate(
-                table_name=self._table_name,
-                key={self.key_attribute: {'S': key}}
+                table_name=self._user_table_name,
+                key={self.user_key_attribute: {'S': key}}
             )
             .set_from(user, 'access_token')
             .set_from(user, 'access_token_expiration')
@@ -515,28 +955,24 @@ class UserService:
             .set_from(user, 'email')
             .set_from(user, 'email_verified')
             .set_from(user, 'expiration', alias=True)
+            .set_from(user, 'authorization_time')
             .set_from(user, 'min_jti', default=0)
             .set_from(user, 'max_jti', default=0)
             .to_update_item_input()
         )
 
-    def _load_user(self, iss: str, sub: str) -> User:
+    def _load_user(self, identity: str) -> User:
         """
         Retrieve previously stored information about the user of the given
-        identity. The identity of a user can be obtained from the ``iss` and
-        ``sub`` claims of a valid ID token, or from the ``iss`` and ``sub``
-        properties of a response from the authorization server's /tokeninfo
-        endpoint.
-
-        :param iss: The issuer of the user's identity
-
-        :param sub: The user's identity
+        identity, as encoded by :meth:`_encode_identity`. A verified access
+        token carries the identity of its user, and so does the ``sub`` claim of
+        an APAT.
         """
+        iss, sub = self._decode_identity(identity)
         log.info('Retrieving user %r from %r', sub, iss)
-        key = self._encode_identity(iss, sub)
         response = self._dynamodb.get_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': key}}
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': identity}}
         )
         item = response.get('Item')
         if item is None:
@@ -548,7 +984,7 @@ class UserService:
             return user
 
     def _user_from_item(self, item: Mapping[str, AttributeValueTypeDef]) -> User:
-        iss, sub = self._decode_identity(item[self.key_attribute]['S'])
+        iss, sub = self._decode_identity(item[self.user_key_attribute]['S'])
         accepted_contracts = item.get('accepted_contracts', {'M': {}})['M']
         return User(
             iss=iss,
@@ -558,7 +994,8 @@ class UserService:
             email=item['email']['S'],
             email_verified=item['email_verified']['BOOL'],
             access_token_expiration=int(item['access_token_expiration']['N']),
-            expiration=int(item[self.ttl_attribute]['N']),
+            expiration=int(item[self.user_ttl_attribute]['N']),
+            authorization_time=int(item.get('authorization_time', {'N': '0'})['N']),
             min_jti=int(item['min_jti']['N']),
             max_jti=int(item['max_jti']['N']),
             accepted_contracts={
@@ -573,8 +1010,8 @@ class UserService:
 
     def _next_jti(self, user: User) -> int:
         response = self._dynamodb.update_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._identity(user)}},
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': self._identity(user)}},
             UpdateExpression=fd('''
                 SET max_jti = max_jti + :one
             '''),
@@ -594,8 +1031,8 @@ class UserService:
                   user['sub'], user['iss'], redact_json(access_token))
         self._dynamodb.update_item(
             **DynamoDBItemUpdate(
-                table_name=self._table_name,
-                key={self.key_attribute: {'S': self._identity(user)}}
+                table_name=self._user_table_name,
+                key={self.user_key_attribute: {'S': self._identity(user)}}
             )
             .set('access_token', {'S': access_token})
             .set('access_token_expiration', {'N': str(self._now() + expires_in)})
@@ -604,8 +1041,8 @@ class UserService:
 
     def _revoke_jti(self, user: User) -> None:
         response = self._dynamodb.update_item(
-            TableName=self._table_name,
-            Key={self.key_attribute: {'S': self._identity(user)}},
+            TableName=self._user_table_name,
+            Key={self.user_key_attribute: {'S': self._identity(user)}},
             UpdateExpression=fd('''
                 SET min_jti = max_jti
             '''),

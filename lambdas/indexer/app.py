@@ -1,7 +1,4 @@
 import logging
-from typing import (
-    Optional,
-)
 
 import chalice
 
@@ -104,7 +101,7 @@ class IndexerApp(HealthApp, SignatureHelper):
         else:
             return lambda func: func
 
-    def _authenticate(self) -> Optional[HMACAuthentication]:
+    def _authenticate(self) -> HMACAuthentication | None:
         return self.auth_from_request(not_none(self.current_request))
 
 
