@@ -1664,6 +1664,18 @@ class Config:
         return int(self.environ['AZUL_REAUTHORIZATION_LIMIT'])
 
     @property
+    def registered_access_limited_to(self) -> Set[str] | None:
+        """
+        The identities of the users to whom registered access is offered, or
+        None if it is offered to every user.
+        """
+        value = self.environ.get('AZUL_REGISTERED_ACCESS_LIMITED_TO')
+        if value is None:
+            return None
+        else:
+            return frozenset(value.split())
+
+    @property
     def monitoring_email(self) -> str:
         return self.environ['AZUL_MONITORING_EMAIL']
 

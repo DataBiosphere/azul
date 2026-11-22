@@ -24,6 +24,9 @@ from furl import (
     furl,
 )
 
+from azul import (
+    config,
+)
 from azul.auth import (
     AccessTokenAuthentication,
     Authentication,
@@ -514,28 +517,36 @@ class IndexController(QueryController):
 
     def _verify_registered_access(self, authentication: Authentication | None) -> None:
         """
-        Raise an error unless the given authentication identifies a user who
-        accepted the current version of the contract for registered access to
-        the current catalog.
+        Raise an error unless the given authentication identifies a user to
+        whom this instance offers registered access and who accepted the
+        current version of the contract for registered access to the current
+        catalog.
         """
-        name = self._metadata_plugin.registered_access_contract
-        if name is None:
-            raise BadRequestError(f'Catalog {self.app.catalog!r} does not offer '
-                                  f'registered access')
-        elif authentication is None:
-            raise UnauthorizedError('Registered access requires authentication')
+        identities = config.registered_access_limited_to
+        if identities == set():
+            raise BadRequestError('This instance does not offer registered access')
         else:
-            assert isinstance(authentication, AccessTokenAuthentication), type(authentication)
-            try:
-                user = self._user_service.get_user(authentication)
-            except UnknownUserException:
-                accepted = None
+            name = self._metadata_plugin.registered_access_contract
+            if name is None:
+                raise BadRequestError(f'Catalog {self.app.catalog!r} does not offer '
+                                      f'registered access')
+            elif authentication is None:
+                raise UnauthorizedError('Registered access requires authentication')
+            elif identities is not None and authentication.identity() not in identities:
+                raise ForbiddenError('This instance does not offer registered '
+                                     'access to the requesting user')
             else:
-                accepted = user.get('accepted_contracts', {}).get(name)
-            contract = self._contract_service.contract(name)
-            if accepted is None or accepted['version'] != contract.current:
-                raise ForbiddenError(f'Registered access requires the acceptance of '
-                                     f'the current version of contract {name!r}')
+                assert isinstance(authentication, AccessTokenAuthentication), type(authentication)
+                try:
+                    user = self._user_service.get_user(authentication)
+                except UnknownUserException:
+                    accepted = None
+                else:
+                    accepted = user.get('accepted_contracts', {}).get(name)
+                contract = self._contract_service.contract(name)
+                if accepted is None or accepted['version'] != contract.current:
+                    raise ForbiddenError(f'Registered access requires the acceptance of '
+                                         f'the current version of contract {name!r}')
 
     @cached_property
     def _contract_service(self) -> ContractService:

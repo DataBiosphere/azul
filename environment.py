@@ -895,6 +895,18 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_REAUTHORIZATION_LIMIT': '43200',
 
+        # A whitespace-separated list of the identities of the users that may be
+        # able to use registered access in this deployment. An identity is the
+        # issuer and subject of the user's ID token, joined by `#`, with the
+        # issuer omitted if it is Google, e.g., `#123456789012345678`. If unset,
+        # registered access is offered to every user. If empty, registered
+        # access is offered to no one. To actually request a registered-access
+        # summary of a certain catalog, the catalog's metadata plugin must
+        # define a corresponding contract and the requesting user must have
+        # accepted that contract.
+        #
+        'AZUL_REGISTERED_ACCESS_LIMITED_TO': None,
+
         # Maps a branch name to a list of names of deployments the branch may be
         # deployed to. When building a given branch, a GitLab instance uses this
         # variable to automatically determine the target deployment by using the

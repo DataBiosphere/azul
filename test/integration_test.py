@@ -6,6 +6,7 @@ from collections.abc import (
     Iterable,
     Mapping,
     Sequence,
+    Set,
 )
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
@@ -196,6 +197,7 @@ from azul.modules import (
 )
 from azul.oauth2 import (
     CredentialedClient,
+    OAuth2Client,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -226,6 +228,9 @@ from azul.service.manifest_controller import (
 from azul.service.manifest_service import (
     CurlManifestGenerator,
     ManifestGenerator,
+)
+from azul.service.user_service import (
+    UserService,
 )
 from azul.source import (
     Prefix,
@@ -394,6 +399,11 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
     _user_access_token: ClassVar[str]
 
+    #: The identity of the user the above access token belongs to, as defined
+    #: by :class:`UserService`
+    #:
+    _user_identity: ClassVar[str]
+
     @classmethod
     def early_setup(cls) -> None:
         # Getting a user access token requires user intervention. We'll get it
@@ -402,6 +412,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # more information.
         if 'unattended' not in config.it_flags:
             cls._user_access_token = cls.__user_access_token()
+            token_info = OAuth2Client().token_info(cls._user_access_token)
+            cls._user_identity = UserService()._token_identity(token_info)
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -2479,9 +2491,9 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                 response = self._user_request_unchecked(method, body)
                 self.assertEqual(401, response.status)
             for catalog in config.integration_test_catalogs:
-                contract = self.metadata_plugin(catalog).registered_access_contract
+                identities = self._registered_access_identities(catalog)
                 response = self._registered_access_summary(catalog)
-                self.assertEqual(400 if contract is None else 401, response.status)
+                self.assertEqual(400 if identities == set() else 401, response.status)
         if 'unattended' in config.it_flags:
             log.warning('Will skip testing the user endpoints with an access '
                         'token since the IT is running unattended')
@@ -2550,9 +2562,17 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
     def _test_registered_access(self, contract: str, *, accepted: bool) -> None:
         for catalog in config.integration_test_catalogs:
             plugin = self.metadata_plugin(catalog)
+            identities = self._registered_access_identities(catalog)
             response = self._registered_access_summary(catalog)
-            if plugin.registered_access_contract is None:
+            if identities == set():
                 self.assertEqual(400, response.status)
+            elif identities is not None and self._user_identity not in identities:
+                self.assertEqual(403, response.status)
+                self.assertEqual({
+                    'Code': 'ForbiddenError',
+                    'Message': 'This instance does not offer registered '
+                               'access to the requesting user'
+                }, json.loads(response.data))
             else:
                 self.assertEqual(contract, plugin.registered_access_contract)
                 if accepted:
@@ -2595,6 +2615,19 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                    path='/index/summary',
                    args=dict(catalog=catalog, registered_access='1'))
         return self._get_url_unchecked(GET, url)
+
+    def _registered_access_identities(self,
+                                      catalog: CatalogName
+                                      ) -> Set[str] | None:
+        """
+        The identities of the users to whom the deployment offers registered
+        access to the given catalog, or None if it is offered to every user.
+        """
+        plugin = self.metadata_plugin(catalog)
+        if plugin.registered_access_contract is None:
+            return frozenset()
+        else:
+            return config.registered_access_limited_to
 
     def _user_request(self, method: str, body: JSON | None = None) -> JSON:
         response = self._user_request_unchecked(method, body)

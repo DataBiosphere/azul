@@ -159,6 +159,9 @@ class UserControllerTestCase(LocalAppTestCase,
         cls.addClassPatch(patch.object(Config, 'google_oauth2_client_id',
                                        new_callable=PropertyMock,
                                        return_value=cls._mock_client_id))
+        cls.addClassPatch(patch.object(Config, 'registered_access_limited_to',
+                                       new_callable=PropertyMock,
+                                       return_value=None))
         cls.addClassPatch(patch.object(UserService, '_client_secret',
                                        new_callable=PropertyMock,
                                        return_value='mock_client_secret'))
@@ -1499,6 +1502,43 @@ class TestContracts(AnvilTestCase, ContractTestCase, UserControllerTestCase):
                         self._accept(version)
                         response = self._registered_access_summary(self._mock_access_token)
                         self.assertEqual(status, response.status)
+                self._accept(2)
+                other_identity = '#210987654321098765432'
+                message = 'This instance does not offer registered access'
+                cases = [
+                    (
+                        [],
+                        400,
+                        {
+                            'Code': 'BadRequestError',
+                            'Message': message
+                        }
+                    ),
+                    (
+                        [other_identity],
+                        403,
+                        {
+                            'Code': 'ForbiddenError',
+                            'Message': message + ' to the requesting user'
+                        }
+                    ),
+                    (
+                        [other_identity, self._mock_identity],
+                        200,
+                        None
+                    )
+                ]
+                for identities, status, error in cases:
+                    with (
+                        self.subTest(identities=identities),
+                        patch.object(Config, 'registered_access_limited_to',
+                                     new_callable=PropertyMock,
+                                     return_value=frozenset(identities))
+                    ):
+                        response = self._registered_access_summary(self._mock_access_token)
+                        self.assertEqual(status, response.status)
+                        if error is not None:
+                            self.assertEqual(error, json.loads(response.data))
                 with self.subTest('retracted acceptance'):
                     self._accept(None)
                     response = self._registered_access_summary(self._mock_access_token)
@@ -1508,7 +1548,7 @@ class TestContracts(AnvilTestCase, ContractTestCase, UserControllerTestCase):
                         args = {} if registered_access is None else {'registered_access': registered_access}
                         response = self._request('GET', '/index/summary', args=args)
                         self.assertEqual(200, response.status)
-        self.assertEqual([True, False, False],
+        self.assertEqual([True, True, False, False],
                          [call.kwargs['registered_access'] for call in summary.call_args_list])
 
     def test_registered_access_contract_link(self):

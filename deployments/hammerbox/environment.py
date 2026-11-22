@@ -1792,4 +1792,9 @@ def env() -> Mapping[str, str | None]:
         'AZUL_ENABLE_VERBATIM_RELATIONS': '0',
 
         'AZUL_ENABLE_MIRRORING': '1',
+
+        'AZUL_REGISTERED_ACCESS_LIMITED_TO': ' '.join([
+            '#105096702580025601450',  # the system administrator
+            '#116910437014536760459',  # the system administrator's personal account
+        ]),
     }
