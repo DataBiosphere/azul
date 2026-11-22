@@ -1507,7 +1507,19 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
     def test_summary(self):
         expected_response = {
             'activityCount': 2,
+            'activityDatasets': [
+                {
+                    'count': 2,
+                    'dataset': 'ANVIL_Test'
+                }
+            ],
             'biosampleCount': 1,
+            'biosampleDatasets': [
+                {
+                    'count': 1,
+                    'dataset': 'ANVIL_Test'
+                }
+            ],
             'datasetCount': 1,
             'donorCount': 1,
             'donorDatasets': [
@@ -1559,7 +1571,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
         def expected_response(count: Callable[[int], int], size: float) -> JSON:
             return {
                 'activityCount': count(2),
+                'activityDatasets': [{'count': count(2), 'dataset': 'ANVIL_Test'}],
                 'biosampleCount': count(1),
+                'biosampleDatasets': [{'count': count(1), 'dataset': 'ANVIL_Test'}],
                 'datasetCount': count(1),
                 'donorCount': count(1),
                 'donorDatasets': [{'count': count(1), 'dataset': 'ANVIL_Test'}],
@@ -1580,7 +1594,9 @@ class TestAnvilResponse(AnvilIndexerTestCase, WebServiceTestCase):
             url = self.base_url.set(path='/index/summary')
             self._assertResponse(str(url), {
                 'activityCount': 0,
+                'activityDatasets': [],
                 'biosampleCount': 0,
+                'biosampleDatasets': [],
                 # The root entity type isn't subject to access controls
                 'datasetCount': 1,
                 'donorCount': 0,

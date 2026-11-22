@@ -78,7 +78,9 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         return schema.object(
             activityCount=int,
+            activityDatasets=_groups_schema('dataset'),
             biosampleCount=int,
+            biosampleDatasets=_groups_schema('dataset'),
             datasetCount=int,
             donorCount=int,
             donorDatasets=_groups_schema('dataset'),
@@ -104,20 +106,24 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             by format. A group whose key is `null` counts the entities that
             have no value for the property being grouped by.
 
-            `donorDatasets` and `fileDatasets` group donors and files by the
-            title of the dataset they belong to. Every donor and every file
-            belongs to exactly one dataset, so the counts in those two
-            properties add up to `donorCount` and `fileCount` respectively.
+            `activityDatasets`, `biosampleDatasets`, `donorDatasets` and
+            `fileDatasets` group activities, biosamples, donors and files by
+            the title of the dataset they belong to. Every such entity belongs
+            to exactly one dataset, so the counts in those four properties add
+            up to `activityCount`, `biosampleCount`, `donorCount` and
+            `fileCount` respectively.
         ''')
 
     @property
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
         return {
             'activities': [
-                'activities.activity_type'
+                'activities.activity_type',
+                'datasets.title'
             ],
             'biosamples': [
-                'biosamples.anatomical_site'
+                'biosamples.anatomical_site',
+                'datasets.title'
             ],
             'datasets': [
                 'datasets.title'
@@ -154,7 +160,9 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         summary = {
             'activityCount': doc_count('activities', 'activities.activity_type'),
+            'activityDatasets': bucket_count('activities', 'datasets.title', 'dataset'),
             'biosampleCount': doc_count('biosamples', 'biosamples.anatomical_site'),
+            'biosampleDatasets': bucket_count('biosamples', 'datasets.title', 'dataset'),
             'datasetCount': doc_count('datasets', 'datasets.title'),
             'donorCount': doc_count('donors', 'donors.organism_type'),
             'donorDatasets': bucket_count('donors', 'datasets.title', 'dataset'),
@@ -175,6 +183,8 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             'fileCount'
         ]
         group_fields = [
+            'activityDatasets',
+            'biosampleDatasets',
             'donorDatasets',
             'fileDatasets',
             'fileFormats'
@@ -200,7 +210,7 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             summary[field] = size(summary[field])
 
     def _validate_response(self, summary: MutableJSON):
-        for entity_type in ['donor', 'file']:
+        for entity_type in ['activity', 'biosample', 'donor', 'file']:
             total = json_int(summary[f'{entity_type}Count'])
             buckets = json_element_mappings(summary[f'{entity_type}Datasets'])
             subtotal = sum(json_int(bucket['count']) for bucket in buckets)
