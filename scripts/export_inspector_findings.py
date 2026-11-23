@@ -11,11 +11,18 @@ import json
 import logging
 import sys
 
+from azul import (
+    R,
+    config,
+)
 from azul.args import (
     AzulArgumentHelpFormatter,
 )
 from azul.deployment import (
     aws,
+)
+from azul.docker import (
+    lambda_image_repository_name,
 )
 from azul.http import (
     http_client,
@@ -71,7 +78,8 @@ class ParseInspectorFindings:
         parser.add_argument('--all-images', '-a',
                             default=False, action='store_true',
                             help='Fetch findings for all images, including those'
-                                 ' outside the security boundary.')
+                                 ' outside the security boundary and the app'
+                                 ' images of sandbox and personal deployments.')
         parser.add_argument('--json', '-j',
                             default=False, action='store_true',
                             help='Dump findings to a JSON file.')
@@ -132,7 +140,9 @@ class ParseInspectorFindings:
         parsed_findings = defaultdict(list)
         for finding in findings:
             vulnerability, summary = self.parse_finding(finding)
-            parsed_findings[vulnerability].append(summary)
+            # A finding whose images are all excluded would yield an empty row
+            if summary['resources']:
+                parsed_findings[vulnerability].append(summary)
         log.info('Found %i unique vulnerabilities', len(parsed_findings))
         log.info('Generating CSV output')
         self.write_to_csv(parsed_findings)
@@ -169,9 +179,10 @@ class ParseInspectorFindings:
         if resource_type == 'AWS_ECR_CONTAINER_IMAGE':
             for tag in resource['details']['awsEcrContainerImage']['imageTags']:
                 repo = resource['details']['awsEcrContainerImage']['repositoryName']
-                image = f'{repo}/{tag}'
-                summary['resources'].add(image)
-                self.images.add(image)
+                if not self.is_excluded_image(repo, tag):
+                    image = f'{repo}/{tag}'
+                    summary['resources'].add(image)
+                    self.images.add(image)
         elif resource_type == 'AWS_EC2_INSTANCE':
             instance_name = resource['tags']['Name']
             instance_image_id = resource['details']['awsEc2Instance']['imageId']
@@ -182,6 +193,20 @@ class ParseInspectorFindings:
         else:
             assert False, resource
         return vulnerability, summary
+
+    def is_excluded_image(self, repo: str, tag: str) -> bool:
+        if self.args.all_images or repo != lambda_image_repository_name():
+            return False
+        else:
+            # Sandbox and personal deployments push their app images to the
+            # same repository as their main deployment, but only the findings
+            # for main deployments are representative of stable deployments.
+            # The tag starts with the deployment name, which can't contain a
+            # hyphen (see lambda_image_uri).
+            deployment, separator, _ = tag.partition('-')
+            assert separator, R('Malformed app image tag', tag)
+            config.validate_deployment_name(deployment)
+            return not config.Deployment(deployment).is_main
 
     def column_alpha(self, col: int) -> str:
         assert col > 0, col
