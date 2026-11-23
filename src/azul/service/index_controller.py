@@ -16,12 +16,21 @@ from typing import (
 import attr
 from chalice.app import (
     BadRequestError,
+    ForbiddenError,
     NotFoundError,
+    UnauthorizedError,
 )
 from furl import (
     furl,
 )
 
+from azul import (
+    config,
+)
+from azul.auth import (
+    AccessTokenAuthentication,
+    Authentication,
+)
 from azul.deployment import (
     aws,
 )
@@ -64,6 +73,12 @@ from azul.plugins import (
 from azul.service import (
     BadArgumentException,
 )
+from azul.service.contract_controller import (
+    ContractController,
+)
+from azul.service.contract_service import (
+    ContractService,
+)
 from azul.service.controller import (
     validate_params,
 )
@@ -78,6 +93,9 @@ from azul.service.query_service import (
     Pagination,
     SortKey,
     sort_key_to_json,
+)
+from azul.service.user_service import (
+    UnknownUserException,
 )
 
 log = logging.getLogger(__name__)
@@ -276,8 +294,55 @@ class IndexController(QueryController):
     def _summary_spec(self):
         return {
             'tags': ['Index'],
-            'parameters': [self._catalog_param_spec, self._filters_param_spec]
+            'parameters': [
+                self._catalog_param_spec,
+                self._filters_param_spec,
+                params.query(
+                    'registered_access',
+                    schema.optional(schema.default('0', form=schema.enum('0', '1'))),
+                    description=fd(f'''
+                        If `1`, summarize the entities in all sources, including
+                        those the requesting user is not authorized to access, and
+                        report each count and size as the upper bound of the
+                        bucket the value falls into, so that a reported value of
+                        N means less than N. Registered access is only
+                        offered for certain atlases and only to users who
+                        accepted the current version of the
+                        [corresponding contract][1].
+
+                        [1]: {self._registered_access_contract_url}
+                    ''')
+                )
+            ]
         }
+
+    @property
+    def _summary_error_responses(self) -> JSON:
+        return {
+            '401': {
+                'description': fd('''
+                    Registered access was requested without authentication.
+                ''')
+            },
+            '403': {
+                'description': fd(f'''
+                    Registered access was requested by a user who has yet to
+                    accept the current version of the
+                    [corresponding contract][1].
+
+                    [1]: {self._registered_access_contract_url}
+                ''')
+            }
+        }
+
+    @property
+    def _registered_access_contract_url(self) -> str:
+        name = self._metadata_plugin.registered_access_contract
+        if name is None:
+            return '#operations-tag-Contracts'
+        else:
+            path = ['contracts', name, ContractController._current_version_name]
+            return str(self.app.base_url.add(path=path).path)
 
     def handlers(self) -> dict[str, Any]:
         @self.app.route(
@@ -326,7 +391,8 @@ class IndexController(QueryController):
                     '200': {
                         'description': self._summary_response_stage.response_description,
                         **responses.json_content(self._summary_response_stage.response_schema)
-                    }
+                    },
+                    **self._summary_error_responses
                 },
                 **self._summary_spec
             }
@@ -363,7 +429,7 @@ class IndexController(QueryController):
                         size=partial(self._validate_size, entity_type),
                         sort=self._validate_sort_field)
         filters = query_params.get('filters')
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
         pagination = self._Pagination.from_request(self, entity_type, filters)
         response = self._search(entity_type, filters, pagination, aggregate=True)
@@ -386,7 +452,7 @@ class IndexController(QueryController):
             raise BadRequestError(e)
         sort = Sorting(field_name='entryId')
         pagination = Pagination(sort=sort.field_name, order=sort.order, size=1)
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         filters = self._prepare_filters(self.app.catalog, authentication, None)
         filters = filters.set_explicit({'entryId': {'is': [entity_id]}})
         response = self._search(entity_type, filters, pagination, aggregate=False)
@@ -424,16 +490,67 @@ class IndexController(QueryController):
         query_params = self._query_params(request)
         validate_params(query_params,
                         filters=str,
-                        catalog=self._validate_catalog)
+                        catalog=self._validate_catalog,
+                        registered_access=self._parse_flag)
         filters = query_params.get('filters', '{}')
         self._validate_filters(filters)
-        authentication = self._authentication(request)
+        registered_access = self._parse_flag(query_params.get('registered_access', '0'))
+        authentication = self._authentication()
+        if registered_access:
+            self._verify_registered_access(authentication)
         filters = self._prepare_filters(self.app.catalog, authentication, filters)
         try:
-            response = self._service.summary(self.app.catalog, filters)
+            response = self._service.summary(self.app.catalog,
+                                             filters,
+                                             registered_access=registered_access)
         except BadArgumentException as e:
             raise BadRequestError(e)
         return '' if request.method == 'HEAD' else response
+
+    def _parse_flag(self, value: str) -> bool:
+        if value == '0':
+            return False
+        elif value == '1':
+            return True
+        else:
+            raise ValueError('Expected "0" or "1"', value)
+
+    def _verify_registered_access(self, authentication: Authentication | None) -> None:
+        """
+        Raise an error unless the given authentication identifies a user to
+        whom this instance offers registered access and who accepted the
+        current version of the contract for registered access to the current
+        catalog.
+        """
+        identities = config.registered_access_limited_to
+        if identities == set():
+            raise BadRequestError('This instance does not offer registered access')
+        else:
+            name = self._metadata_plugin.registered_access_contract
+            if name is None:
+                raise BadRequestError(f'Catalog {self.app.catalog!r} does not offer '
+                                      f'registered access')
+            elif authentication is None:
+                raise UnauthorizedError('Registered access requires authentication')
+            elif identities is not None and authentication.identity() not in identities:
+                raise ForbiddenError('This instance does not offer registered '
+                                     'access to the requesting user')
+            else:
+                assert isinstance(authentication, AccessTokenAuthentication), type(authentication)
+                try:
+                    user = self._user_service.get_user(authentication)
+                except UnknownUserException:
+                    accepted = None
+                else:
+                    accepted = user.get('accepted_contracts', {}).get(name)
+                contract = self._contract_service.contract(name)
+                if accepted is None or accepted['version'] != contract.current:
+                    raise ForbiddenError(f'Registered access requires the acceptance of '
+                                         f'the current version of contract {name!r}')
+
+    @cached_property
+    def _contract_service(self) -> ContractService:
+        return ContractService(package_root=self.app.package_root)
 
     def _validate_entity_type(self, entity_type: str):
         entity_types = self._metadata_plugin.exposed_indices.keys()

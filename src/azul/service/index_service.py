@@ -52,6 +52,7 @@ from azul.lib.types import (
 )
 from azul.plugins import (
     File,
+    MetadataPlugin,
     dotted,
 )
 from azul.service import (
@@ -194,6 +195,16 @@ class SummaryResponseStage(ResponseStage[JSON, MutableJSON],
         """
         raise NotImplementedError
 
+    def quantize(self, summary: MutableJSON, plugin: MetadataPlugin, /) -> None:
+        """
+        Quantize, in place, each count and size in the given summary, as
+        returned by :meth:`process_response`, by replacing it with the upper
+        bound of the bucket it falls into, as configured in the given plugin.
+        Only the plugins of catalogs that offer registered access need to
+        implement this method.
+        """
+        raise NotImplementedError
+
 
 class IndexService(QueryService):
 
@@ -332,8 +343,19 @@ class IndexService(QueryService):
 
     def summary(self,
                 catalog: CatalogName,
-                filters: Filters
+                filters: Filters,
+                *,
+                registered_access: bool
                 ) -> MutableJSON:
+        """
+        Summarize the entities matching the given filters.
+
+        :param registered_access: If True, lift managed-access enforcement,
+                                  but quantize the counts and sizes in the
+                                  summary. The caller is responsible for
+                                  verifying that the requester has registered
+                                  access.
+        """
         # FIXME: Due to the fact that we run one chain per authority, and the
         #        resulting need to multiplex the responses, the response stage
         #        is not part of any chain.
@@ -345,7 +367,8 @@ class IndexService(QueryService):
 
         aggs = self._summary(catalog=catalog,
                              entity_types=list(aggs_by_authority),
-                             filters=filters)
+                             filters=filters,
+                             enforce_access=not registered_access)
 
         aggs = {
             entity_type: {
@@ -356,13 +379,16 @@ class IndexService(QueryService):
         }
 
         response = response_stage.process_response(aggs)
+        if registered_access:
+            response_stage.quantize(response, plugin)
         return response
 
     def _summary(self,
                  *,
                  catalog: CatalogName,
                  entity_types: Sequence[str],
-                 filters: Filters
+                 filters: Filters,
+                 enforce_access: bool
                  ) -> Mapping[str, MutableJSON]:
         """
         Aggregate the index of each of the given entity types, in one request,
@@ -377,7 +403,8 @@ class IndexService(QueryService):
             chain = self.create_chain(catalog=catalog,
                                       entity_type=entity_type,
                                       filters=filters,
-                                      document_slice=None)
+                                      document_slice=None,
+                                      enforce_access=enforce_access)
             chain = ToDictStage(service=self,
                                 catalog=catalog,
                                 entity_type=entity_type).wrap(chain)
@@ -470,5 +497,5 @@ class IndexService(QueryService):
         return file
 
     @property
-    def always_limit_access(self) -> bool:
+    def always_enforce_access(self) -> bool:
         return False

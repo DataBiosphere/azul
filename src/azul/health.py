@@ -129,7 +129,7 @@ class HealthController(Controller):
                 else:
                     raise
         else:
-            body = {'Message': 'Invalid health keys'}
+            assert False, type(keys)
         return self._make_response(body)
 
     def fast_health(self) -> Response:

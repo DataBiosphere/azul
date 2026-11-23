@@ -22,9 +22,6 @@ from google.auth.transport.urllib3 import (
 import google.oauth2.credentials
 import google.oauth2.service_account
 
-from azul import (
-    config,
-)
 from azul.http import (
     HasCachedHttpClient,
     HttpClient,
@@ -32,7 +29,6 @@ from azul.http import (
 )
 from azul.lib import (
     R,
-    cached_property,
 )
 from azul.lib.strings import (
     assert_redactable,
@@ -88,21 +84,34 @@ class TokenForCodeResponse(TokenResponse):
 
 
 class TokenInfoResponse(TypedDict):
+    """
+    https://docs.cloud.google.com/docs/authentication/token-types
+
+    Google documents `sub` only for user access tokens, and `email` only for
+    tokens with the `https://www.googleapis.com/auth/userinfo.email` scope.
+    """
     azp: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
     aud: str  # "713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com",
-    sub: str  # "105096702580025601450",
-    scope: str  # "https://www.googleapis.com/auth/userinfo.email openid",
+    sub: NotRequired[str]  # "105096702580025601450",
+    scope: NotRequired[str]  # "https://www.googleapis.com/auth/userinfo.email openid",
     exp: str  # "1689645319",
     expires_in: str  # "3511",
-    email: str  # "hannes@ucsc.edu",
-    email_verified: str  # "true",
-    access_type: str  # "online"
+    email: NotRequired[str]  # "hannes@ucsc.edu",
+    email_verified: NotRequired[str]  # "true",
+    access_type: NotRequired[str]  # "online"
 
 
 class InvalidAccessTokenError(Exception):
     """
     The authorization server rejected the access token. It may be expired,
     revoked or forged.
+    """
+
+
+class InvalidRefreshTokenError(Exception):
+    """
+    The authorization server rejected the refresh token. It may be expired or
+    revoked.
     """
 
 
@@ -178,13 +187,17 @@ class OAuth2Client(HasCachedHttpClient):
         }
         url = furl('https://oauth2.googleapis.com/token')
         response = self._http_client.request('POST', str(url), fields=fields)
-        assert response.status == 200, R(
-            'Unexpected status of response from authorization server', response.status)
-        response = json.loads(response.data)
-        assert is_of_type(response, TokenResponse)
-        assert response['token_type'] == 'Bearer'
-        assert_redactable(response['access_token'])
-        return response
+        # https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
+        if response.status == 400 and json.loads(response.data).get('error') == 'invalid_grant':
+            raise InvalidRefreshTokenError
+        else:
+            assert response.status == 200, R(
+                'Unexpected status of response from authorization server', response.status)
+            response = json.loads(response.data)
+            assert is_of_type(response, TokenResponse)
+            assert response['token_type'] == 'Bearer'
+            assert_redactable(response['access_token'])
+            return response
 
     def token_info(self, access_token: str) -> TokenInfoResponse:
         assert_redactable(access_token)
@@ -225,10 +238,6 @@ class CredentialedClient(HasCachedHttpClient):
 
     credentials_provider: CredentialsProvider
 
-    @cached_property
-    def _oauth_client(self) -> OAuth2Client:
-        return OAuth2Client()
-
     @property
     def credentials(self) -> ScopedCredentials:
         return self.credentials_provider.scoped_credentials()
@@ -267,61 +276,3 @@ class CredentialedClient(HasCachedHttpClient):
         return AuthorizedHttp(self.credentials,
                               self._PoolManagerAdapter(super()._create_http_client()),
                               refresh_status_codes=())
-
-    def validate(self):
-        """
-        Validate the credentials from the provider this client was initialized
-        with. Raises an exception if the credentials are invalid, or if their
-        validity cannot be determined.
-
-        For a user's access token to be valid, it must not be expired, and
-        originate from a Google OAuth 2.0 client belonging to the current
-        Google Cloud project.
-
-        For service account credentials (those with a private key) to be valid,
-        the associated access token must not be expired and the email associated
-        with the token must be that of the service account itself.
-
-        For a service account's access token (a bare access token created from
-        the service account's private key by some other party) to be valid, the
-        token must not be expired and the service account must belong to the
-        current Google Cloud project.
-
-        :raise InvalidAccessTokenError: if the authorization server rejects the
-                                        token
-
-        :raise AssertionError: if the token is definitely invalid
-
-        :raise Exception: if the validity of the token cannot be determined
-        """
-        credentials = self.credentials
-        token_info = self._oauth_client.token_info(str(credentials.token))
-        # The error messages here intentionally lack detail, for confidentiality
-        if isinstance(credentials, ServiceAccountCredentials):
-            # Actual service account credentials
-            assert token_info['email_verified'] == 'true', R(
-                'Service account email is not verified')
-            assert token_info['email'] == credentials.service_account_email, R(
-                'Service account email does not match')
-        elif isinstance(credentials, TokenCredentials):
-            authorized_party = token_info['azp']
-            email = token_info.get('email')
-            if authorized_party.endswith('.apps.googleusercontent.com'):
-                # A user's access token originating from an OAuth 2.0 client
-                azul_client_id = config.google_oauth2_client_id
-                assert azul_client_id is not None, R(
-                    'Acceptance of OAuth 2.0 user access tokens is disabled')
-                assert authorized_party == azul_client_id, R(
-                    'OAuth 2.0 client does not match')
-            elif email is not None and email.endswith('.iam.gserviceaccount.com'):
-                # A service account's bare access token
-                assert token_info['email_verified'] == 'true', R(
-                    'Service account email is not verified')
-                local_part, _, host = email.partition('@')
-                host, _, domain = host.partition('.')
-                assert host == config.google_project(), R(
-                    'Service account project does not match')
-            else:
-                assert False, 'Unexpected type of authorized party'
-        else:
-            assert False, type(credentials)

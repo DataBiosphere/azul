@@ -42,16 +42,13 @@ window.onload = function() {
     oauth2RedirectUrl: {{{OAUTH2_REDIRECT_URL}}}
   });
 
-  const client_id = {{{OAUTH2_CLIENT_ID}}};
-  if (client_id !== null) {
-      window.ui.initOAuth({
-        clientId: client_id,
-        additionalQueryStringParams: {
-          access_type: 'offline',
-          prompt: 'consent'
-        }
-      })
-  }
+  window.ui.initOAuth({
+    clientId: {{{OAUTH2_CLIENT_ID}}},
+    additionalQueryStringParams: {
+      access_type: 'offline',
+      prompt: 'consent'
+    }
+  })
 
   //</editor-fold>
 };

@@ -13,7 +13,6 @@ from chalice.app import (
     BadRequestError,
     ForbiddenError,
     NotFoundError,
-    Request,
     Response,
     TooManyRequestsError,
     UnauthorizedError,
@@ -28,7 +27,6 @@ from azul import (
 )
 from azul.auth import (
     Authentication,
-    PersonalAccessTokenAuthentication,
 )
 from azul.chalice import (
     TemporaryRedirectError,
@@ -72,10 +70,6 @@ from azul.service.controller import (
 )
 from azul.service.index_service import (
     IndexService,
-)
-from azul.service.user_service import (
-    InvalidPersonalAccessTokenError,
-    UserService,
 )
 
 log = logging.getLogger(__name__)
@@ -241,27 +235,12 @@ class RepositoryController(ServiceController):
         def get_repository_sources() -> Response:
             request = self.current_request
             query_params = self._query_params(request)
-            validate_params(query_params,
-                            catalog=self._validate_catalog)
-            authentication = self._authentication(request)
-            sources = self.list_sources(self.app.catalog,
-                                        authentication)
+            validate_params(query_params, catalog=self._validate_catalog)
+            authentication = self._authentication()
+            sources = self.list_sources(self.app.catalog, authentication)
             return Response(body={'sources': sources}, status_code=200)
 
         return locals()
-
-    def _authentication(self, request: Request) -> Authentication | None:
-        authentication = super()._authentication(request)
-        if isinstance(authentication, PersonalAccessTokenAuthentication):
-            try:
-                authentication = self._user_service.exchange_token(authentication)
-            except InvalidPersonalAccessTokenError:
-                raise UnauthorizedError('Invalid token')
-        return authentication
-
-    @cached_property
-    def _user_service(self) -> UserService:
-        return UserService()
 
     def download_file(self, file_uuid: str, fetch: bool) -> MutableJSON:
         request = self.current_request
@@ -273,7 +252,7 @@ class RepositoryController(ServiceController):
         #        https://github.com/DataBiosphere/azul/issues/2682
 
         catalog = self.app.catalog
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         return self._download_file(catalog=catalog,
                                    fetch=fetch,
                                    file_uuid=file_uuid,
@@ -289,7 +268,6 @@ class RepositoryController(ServiceController):
                        headers: Mapping[str, str],
                        authentication: Authentication | None
                        ):
-
         # Check the catalog in a separate step so that the plugins can be loaded
         # safely, since doing so requires a valid catalog. We need the
         # repository plugin to validate the file version.

@@ -15,6 +15,9 @@ from azul.lib import (
     R,
     cached_property,
 )
+from azul.lib.iterators import (
+    find_range,
+)
 from azul.lib.json import (
     copy_any_json,
     copy_json,
@@ -28,6 +31,7 @@ from azul.lib.types import (
     MutableJSON,
     MutableJSONArray,
     MutableJSONs,
+    json_element_dicts,
     json_element_mappings,
     json_float,
     json_int,
@@ -42,6 +46,7 @@ from azul.openapi import (
     schema,
 )
 from azul.plugins import (
+    MetadataPlugin,
     SpecialFields,
 )
 from azul.service.index_service import (
@@ -73,7 +78,9 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         return schema.object(
             activityCount=int,
+            activityDatasets=_groups_schema('dataset'),
             biosampleCount=int,
+            biosampleDatasets=_groups_schema('dataset'),
             datasetCount=int,
             donorCount=int,
             donorDatasets=_groups_schema('dataset'),
@@ -99,20 +106,24 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
             by format. A group whose key is `null` counts the entities that
             have no value for the property being grouped by.
 
-            `donorDatasets` and `fileDatasets` group donors and files by the
-            title of the dataset they belong to. Every donor and every file
-            belongs to exactly one dataset, so the counts in those two
-            properties add up to `donorCount` and `fileCount` respectively.
+            `activityDatasets`, `biosampleDatasets`, `donorDatasets` and
+            `fileDatasets` group activities, biosamples, donors and files by
+            the title of the dataset they belong to. Every such entity belongs
+            to exactly one dataset, so the counts in those four properties add
+            up to `activityCount`, `biosampleCount`, `donorCount` and
+            `fileCount` respectively.
         ''')
 
     @property
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
         return {
             'activities': [
-                'activities.activity_type'
+                'activities.activity_type',
+                'datasets.title'
             ],
             'biosamples': [
-                'biosamples.anatomical_site'
+                'biosamples.anatomical_site',
+                'datasets.title'
             ],
             'datasets': [
                 'datasets.title'
@@ -149,7 +160,9 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
 
         summary = {
             'activityCount': doc_count('activities', 'activities.activity_type'),
+            'activityDatasets': bucket_count('activities', 'datasets.title', 'dataset'),
             'biosampleCount': doc_count('biosamples', 'biosamples.anatomical_site'),
+            'biosampleDatasets': bucket_count('biosamples', 'datasets.title', 'dataset'),
             'datasetCount': doc_count('datasets', 'datasets.title'),
             'donorCount': doc_count('donors', 'donors.organism_type'),
             'donorDatasets': bucket_count('donors', 'datasets.title', 'dataset'),
@@ -161,8 +174,43 @@ class AnvilSummaryResponseStage(SummaryResponseStage):
         self._validate_response(summary)
         return summary
 
+    def quantize(self, summary: MutableJSON, plugin: MetadataPlugin, /) -> None:
+        count_fields = [
+            'activityCount',
+            'biosampleCount',
+            'datasetCount',
+            'donorCount',
+            'fileCount'
+        ]
+        group_fields = [
+            'activityDatasets',
+            'biosampleDatasets',
+            'donorDatasets',
+            'fileDatasets',
+            'fileFormats'
+        ]
+        size_fields = [
+            'totalFileSize'
+        ]
+
+        def count(value: AnyMutableJSON) -> int:
+            return find_range(json_int(value), plugin.registered_access_count_buckets)
+
+        def size(value: AnyMutableJSON) -> float:
+            return float(find_range(json_float(value), plugin.registered_access_size_buckets))
+
+        for field in count_fields:
+            summary[field] = count(summary[field])
+
+        for field in group_fields:
+            for group in json_element_dicts(summary[field]):
+                group['count'] = count(group['count'])
+
+        for field in size_fields:
+            summary[field] = size(summary[field])
+
     def _validate_response(self, summary: MutableJSON):
-        for entity_type in ['donor', 'file']:
+        for entity_type in ['activity', 'biosample', 'donor', 'file']:
             total = json_int(summary[f'{entity_type}Count'])
             buckets = json_element_mappings(summary[f'{entity_type}Datasets'])
             subtotal = sum(json_int(bucket['count']) for bucket in buckets)

@@ -1627,8 +1627,12 @@ class Config:
         return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
-    def dynamo_users_table_name(self) -> str:
+    def dynamo_user_table_name(self) -> str:
         return self.qualified_resource_name('users')
+
+    @property
+    def dynamo_access_token_table_name(self) -> str:
+        return self.qualified_resource_name('access_tokens')
 
     @property
     def dynamo_object_cache_table_name(self) -> str:
@@ -1652,8 +1656,24 @@ class Config:
     minimum_compression_size = 0
 
     @property
-    def google_oauth2_client_id(self) -> str | None:
-        return self.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
+    def google_oauth2_client_id(self) -> str:
+        return self.environ['AZUL_GOOGLE_OAUTH2_CLIENT_ID']
+
+    @property
+    def reauthorization_limit(self) -> int:
+        return int(self.environ['AZUL_REAUTHORIZATION_LIMIT'])
+
+    @property
+    def registered_access_limited_to(self) -> Set[str] | None:
+        """
+        The identities of the users to whom registered access is offered, or
+        None if it is offered to every user.
+        """
+        value = self.environ.get('AZUL_REGISTERED_ACCESS_LIMITED_TO')
+        if value is None:
+            return None
+        else:
+            return frozenset(value.split())
 
     @property
     def monitoring_email(self) -> str:

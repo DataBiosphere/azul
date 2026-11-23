@@ -877,10 +877,35 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_TDR_REQUESTER_PAYS_PROJECT': None,
 
-        # OAuth2 Client ID to be used for authenticating users. See section
-        # 3.2 of the README
+        # The ID of the deployment's Google OAuth 2.0 client. Users authorize
+        # this client to act on their behalf, via the Swagger UI or the
+        # `/user/authorize` endpoint, and the service only accepts user access
+        # tokens issued to it. Every deployment must set this variable. See
+        # section 3.2.2 of the README for how to create the client.
         #
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
+
+        # The time interval, measured in seconds after the user last logged in,
+        # during which a user agent may obtain freshly minted access tokens via
+        # the `/user/reauthorize` endpoint, and during which the user's personal
+        # access tokens (APATs) can be used. Login is done via the Swagger UI's
+        # "Authorize" button or the `/user/authorize` endpoint. Once the
+        # specified time interval has passed, the user must log in again. The
+        # default is 12 hours.
+        #
+        'AZUL_REAUTHORIZATION_LIMIT': '43200',
+
+        # A whitespace-separated list of the identities of the users that may be
+        # able to use registered access in this deployment. An identity is the
+        # issuer and subject of the user's ID token, joined by `#`, with the
+        # issuer omitted if it is Google, e.g., `#123456789012345678`. If unset,
+        # registered access is offered to every user. If empty, registered
+        # access is offered to no one. To actually request a registered-access
+        # summary of a certain catalog, the catalog's metadata plugin must
+        # define a corresponding contract and the requesting user must have
+        # accepted that contract.
+        #
+        'AZUL_REGISTERED_ACCESS_LIMITED_TO': None,
 
         # Maps a branch name to a list of names of deployments the branch may be
         # deployed to. When building a given branch, a GitLab instance uses this

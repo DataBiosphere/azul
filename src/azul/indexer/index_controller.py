@@ -206,7 +206,7 @@ class IndexController(ActionController[IndexAction]):
 
     def index_bundle(self, catalog: CatalogName):
         request = self.current_request
-        authentication = self._authentication(request)
+        authentication = self._authentication()
         if isinstance(authentication, HMACAuthentication):
             assert authentication.identity() is not None
             try:

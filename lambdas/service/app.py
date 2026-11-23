@@ -1,6 +1,6 @@
 import logging.config
 
-from chalice import (
+from chalice.app import (
     UnauthorizedError,
 )
 
@@ -8,7 +8,7 @@ from azul import (
     config,
 )
 from azul.auth import (
-    BearerTokenAuthentication,
+    UnverifiedBearerTokenAuthentication,
 )
 from azul.health import (
     HealthApp,
@@ -22,6 +22,7 @@ from azul.lib.strings import (
 )
 from azul.lib.types import (
     JSON,
+    not_none,
 )
 from azul.logging import (
     configure_app_logging,
@@ -53,7 +54,7 @@ from azul.service.user_controller import (
 
 log = logging.getLogger(__name__)
 
-spec = {
+spec: JSON = {
     'openapi': '3.0.1',
     'info': {
         'title': config.service_name,
@@ -62,7 +63,7 @@ spec = {
         # changes and reset the minor version to zero. Otherwise, increment only
         # the minor version for backwards compatible changes. A backwards
         # compatible change is one that does not require updates to clients.
-        'version': '24.2',
+        'version': '24.4',
         'description': fd(f'''
             # Overview
 
@@ -270,9 +271,9 @@ class ServiceApp(HealthApp):
                          globals=globals(),
                          spec=spec)
 
-    def _authenticate(self) -> BearerTokenAuthentication | None:
+    def _authenticate(self) -> UnverifiedBearerTokenAuthentication | None:
         try:
-            header = self.current_request.headers['Authorization']
+            header = not_none(self.current_request).headers['Authorization']
         except KeyError:
             return None
         else:
@@ -285,7 +286,7 @@ class ServiceApp(HealthApp):
                     if not is_redactable(auth_token):
                         raise UnauthorizedError('Unexpected token syntax')
                     else:
-                        return BearerTokenAuthentication.for_token(auth_token)
+                        return UnverifiedBearerTokenAuthentication.for_token(auth_token)
                 else:
                     raise UnauthorizedError('Unsupported authorization scheme')
 

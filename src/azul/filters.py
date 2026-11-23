@@ -588,7 +588,7 @@ class Filters:
     def reify(self,
               plugin: MetadataPlugin,
               *,
-              limit_access: bool = True
+              enforce_access: bool = True
               ) -> FiltersJSON:
         """
         Combine the explicit filters passed in by clients with the implicit ones
@@ -597,8 +597,8 @@ class Filters:
 
         :param plugin: Metadata plugin for the current request's catalog
 
-        :param limit_access: Whether to enforce data access controls by
-                             inserting an implicit filter on the source ID facet
+        :param enforce_access: Whether to enforce data access controls by
+                               inserting an implicit filter on the source ID facet
         """
         filters = copy.copy(_upcast_filters_unsafe(self.explicit))
         special_fields = plugin.special_fields
@@ -621,7 +621,7 @@ class Filters:
         source_operator = 'is'
         sources: set | list | None
 
-        if limit_access:
+        if enforce_access:
             if explicit_sources is None:
                 sources = self.source_ids if True in accessible else []
             else:
@@ -651,11 +651,11 @@ class Filters:
                 assert False, accessible
 
         if sources is None:
-            assert limit_access is False, limit_access
+            assert enforce_access is False, enforce_access
         else:
             filters[source_id_name] = {source_operator: sorted(sources)}
 
-        if limit_access:
+        if enforce_access:
             assert set(filters[source_id_name]['is']) <= self.source_ids
 
         assert is_filters_json(filters)

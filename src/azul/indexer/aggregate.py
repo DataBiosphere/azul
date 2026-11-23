@@ -461,7 +461,7 @@ class LastValueAccumulator(Accumulator):
 
     def __init__(self) -> None:
         super().__init__()
-        self.value = None
+        self.value: Any = None
 
     def accumulate(self, value):
         self.value = value

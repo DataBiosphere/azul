@@ -50,7 +50,7 @@ class TestFilterReification(AzulUnitTestCase):
 
     def _get_filters(self,
                      *,
-                     limit_access: bool,
+                     enforce_access: bool,
                      explicit_sources: Optional[list[str]] = None,
                      explicit_access: Optional[list[Optional[bool]]] = None
                      ) -> FiltersJSON:
@@ -70,12 +70,12 @@ class TestFilterReification(AzulUnitTestCase):
             })
         }
         filters = Filters(explicit=explicit, source_ids=self.accessible_sources)
-        return filters.reify(plugin=self.plugin, limit_access=limit_access)
+        return filters.reify(plugin=self.plugin, enforce_access=enforce_access)
 
     def _test_filters(self,
                       expected_source_id_filter: Optional[FilterJSON],
                       *,
-                      limit_access: bool,
+                      enforce_access: bool,
                       explicit_sources: Optional[list[str]] = None,
                       explicit_access: Optional[list[Optional[bool]]] = None
                       ):
@@ -87,22 +87,22 @@ class TestFilterReification(AzulUnitTestCase):
         }
         with self.subTest(explicit_sources=explicit_sources,
                           explicit_access=explicit_access,
-                          limit_access=limit_access):
-            filters = self._get_filters(limit_access=limit_access,
+                          enforce_access=enforce_access):
+            filters = self._get_filters(enforce_access=enforce_access,
                                         explicit_sources=explicit_sources,
                                         explicit_access=explicit_access)
             self.assertEqual(expected_filters, filters)
 
     def test_implicit(self):
         self._test_filters({'is': sorted(self.accessible_sources)},
-                           limit_access=True)
+                           enforce_access=True)
         self._test_filters(None,
-                           limit_access=False)
+                           enforce_access=False)
 
     def test_explicit_accessible_sources(self):
-        for limit_access in True, False:
+        for enforce_access in True, False:
             self._test_filters({'is': [self.accessible_source]},
-                               limit_access=limit_access,
+                               enforce_access=enforce_access,
                                explicit_sources=[self.accessible_source])
 
     def test_explicit_inaccessible_sources(self):
@@ -111,56 +111,56 @@ class TestFilterReification(AzulUnitTestCase):
             [self.accessible_source, self.inaccessible_source]
         ]:
             with self.assertRaises(ForbiddenError):
-                self._get_filters(limit_access=True,
+                self._get_filters(enforce_access=True,
                                   explicit_sources=sources)
 
         self._test_filters({'is': [self.inaccessible_source]},
-                           limit_access=False,
+                           enforce_access=False,
                            explicit_sources=[self.inaccessible_source])
 
     def test_explicit_access(self):
-        for limit_access in True, False:
+        for enforce_access in True, False:
             self._test_filters({'is': sorted(self.accessible_sources)},
-                               limit_access=limit_access,
+                               enforce_access=enforce_access,
                                explicit_access=[True])
             self._test_filters({'is': []},
                                explicit_access=[],
-                               limit_access=limit_access)
+                               enforce_access=enforce_access)
 
         self._test_filters({'is_not': sorted(self.accessible_sources)},
                            explicit_access=[False],
-                           limit_access=False)
+                           enforce_access=False)
         self._test_filters({'is': []},
                            explicit_access=[False],
-                           limit_access=True)
+                           enforce_access=True)
         self._test_filters(None,
                            explicit_access=[True, False],
-                           limit_access=False)
+                           enforce_access=False)
         self._test_filters({'is': sorted(self.accessible_sources)},
                            explicit_access=[True, False],
-                           limit_access=True)
+                           enforce_access=True)
 
     def test_explicit_access_with_explicit_public_source(self):
-        for limit_access in True, False:
+        for enforce_access in True, False:
             for explicit_access in [[True], [False, True]]:
                 self._test_filters({'is': [self.accessible_source]},
                                    explicit_sources=[self.accessible_source],
                                    explicit_access=explicit_access,
-                                   limit_access=limit_access)
+                                   enforce_access=enforce_access)
             for explicit_access in [[], [False]]:
                 self._test_filters({'is': []},
                                    explicit_sources=[self.accessible_source],
                                    explicit_access=explicit_access,
-                                   limit_access=limit_access)
+                                   enforce_access=enforce_access)
 
     def test_explicit_access_with_explicit_protected_source(self):
         for explicit_access in [[], [True], [False], [True, False]]:
             with self.assertRaises(ForbiddenError):
-                self._get_filters(limit_access=True,
+                self._get_filters(enforce_access=True,
                                   explicit_sources=[self.inaccessible_source],
                                   explicit_access=explicit_access)
             is_filter = [self.inaccessible_source] if False in explicit_access else []
             self._test_filters({'is': is_filter},
                                explicit_sources=[self.inaccessible_source],
-                               limit_access=False,
+                               enforce_access=False,
                                explicit_access=explicit_access)
