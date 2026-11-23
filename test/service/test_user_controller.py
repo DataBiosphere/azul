@@ -769,8 +769,11 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
 
     @patch.object(OAuth2Client, 'token_for_refresh')
     def test_exchange_token_reverifies_stored_token(self, mock_token_for_refresh):
-        apat = self._authorize_and_mint()
+        # The time of verification recorded while authorizing must be the same
+        # as the time the elapsed times below are relative to
         now = self._service._now()
+        with patch.object(UserService, '_now', return_value=now):
+            apat = self._authorize_and_mint()
         interval = UserService.reverification_interval
         for elapsed, verified in [(interval - 1, False), (interval, True)]:
             with self.subTest(elapsed=elapsed):
