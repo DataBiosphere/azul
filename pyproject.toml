@@ -17,15 +17,15 @@ requires-python = "==3.14.10"
 dependencies = [
     "attrs==26.1.0",
     # Match version of the `boto3-stubs` dev dependency
-    "boto3==1.44.2",
-    "botocore==1.44.2",
+    "boto3==1.44.12",
+    "botocore==1.44.12",
     # Match with `types-chevron` in the `dev` group
     "chevron==0.14.0",
     "cryptography==50.0.2",
     "fastavro==1.13.1",
     "furl==2.1.4",
     "google-api-core==2.44.0",
-    "google-auth[pyopenssl]==2.62.2",
+    "google-auth[pyopenssl]==2.63.1",
     "google-cloud-bigquery==3.47.0",
     "http-message-signatures==3.0.0",
     "http-sfv==0.9.9",
@@ -61,21 +61,21 @@ lambda = [
 dev = [
     "atomicwrites==1.4.1",
     # Match this with the version of the `boto3` runtime dependency
-    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.44.2",
+    "boto3-stubs-lite[apigateway,cloudwatch,dynamodb,ec2,ecr,iam,kms,lambda,opensearch,s3,secretsmanager,securityhub,sns,sqs,ssm,stepfunctions,sts]==1.44.12",
     # Match version with the `chalice` index below
     "chalice==1.32.0+21",
-    "coverage==7.17.3",
+    "coverage==7.17.5",
     "docker==7.2.0",
     "flake8==7.5.0",
     "gevent==26.9.0",
     "gitpython==3.2.1",
     "google-api-python-client==2.202.0",
     "google-cloud-bigquery-reservation==1.28.0",
-    "google-cloud-storage==3.17.1",
+    "google-cloud-storage==3.17.2",
     "isort==9.0.2",
     "jq==1.13.0",
     # Match the extras with the backends listed in AzulUnitTestCase._reset_moto
-    "moto[dynamodb,iam,s3,sns,sqs]==5.2.5",
+    "moto[dynamodb,iam,s3,sns,sqs]==5.2.6",
     # Versioned independently from the corresponding runtime dependency but when
     # updating one, the other should be updated, too
     "msgpack-types==0.8.0",
@@ -86,13 +86,13 @@ dev = [
     "pygithub==2.10.0",
     "python-dxf==12.1.1",
     "python-gitlab==8.6.0",
-    "pyyaml==6.0.3",
+    "pyyaml==6.0.4",
     "responses==0.26.3",
     "strict-rfc3339==0.7",
     # Match with `chevron` in the runtime dependencies
     "types-chevron==0.14.2.20260408",
     "types-jsonschema==4.26.0.20261006",
-    "watchdog==7.1.0",
+    "watchdog==7.1.1",
 ]
 
 [tool.uv]
