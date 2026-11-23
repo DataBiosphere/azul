@@ -288,9 +288,16 @@ class IntegrationTestCase(AzulTestCase, HasCachedHttpClient):
         # warranted. We accept the occassional IT failure due to legitimate,
         # transient 5xx responses. ITs are required to explicitly assert the
         # expected response so we don't rely on the client raising an exception.
+        #
+        # A 307 is different. The service returns one when an internal request
+        # to Terra times out, as an instruction to repeat the request. Like any
+        # other client of the service, the IT honors that instruction.
+        #
         return DefaultRetryHttpClient(
             super()._create_http_client(),
-            retries=urllib3.util.Retry(status=0, raise_on_status=False)
+            retries=urllib3.util.Retry(status=5,
+                                       status_forcelist={307},
+                                       raise_on_status=False)
         )
 
     @cached_property
