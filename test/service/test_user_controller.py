@@ -24,6 +24,9 @@ from unittest.mock import (
 import urllib.parse
 
 import jwt
+from more_itertools import (
+    one,
+)
 from mypy_boto3_dynamodb.literals import (
     ScalarAttributeTypeType,
 )
@@ -72,6 +75,9 @@ from azul.oauth2 import (
 )
 from azul.plugins import (
     MetadataPlugin,
+)
+from azul.service.index_service import (
+    IndexService,
 )
 from azul.service.user_service import (
     DeauthorizedPersonalAccessTokenError,
@@ -153,6 +159,9 @@ class UserControllerTestCase(LocalAppTestCase,
         cls.addClassPatch(patch.object(Config, 'google_oauth2_client_id',
                                        new_callable=PropertyMock,
                                        return_value=cls._mock_client_id))
+        cls.addClassPatch(patch.object(Config, 'registered_access_limited_to',
+                                       new_callable=PropertyMock,
+                                       return_value=None))
         cls.addClassPatch(patch.object(UserService, '_client_secret',
                                        new_callable=PropertyMock,
                                        return_value='mock_client_secret'))
@@ -315,12 +324,20 @@ class UserControllerTestCase(LocalAppTestCase,
     def _patch_user(self, body: AnyJSON, access_token: str | None = None):
         return self._request('PATCH', '/user', access_token, body)
 
+    def _registered_access_summary(self,
+                                   access_token: str | None = None,
+                                   registered_access: str = '1'):
+        args = dict(registered_access=registered_access)
+        return self._request('GET', '/index/summary', access_token, args=args)
+
     def _request(self,
                  method: str,
                  path: str,
                  access_token: str | None = None,
-                 body: AnyJSON | None = None):
-        url = str(self.base_url.set(path=path))
+                 body: AnyJSON | None = None,
+                 *,
+                 args: Mapping[str, str] | None = None):
+        url = str(self.base_url.set(path=path, args={} if args is None else args))
         headers = {}
         if access_token is not None:
             headers['Authorization'] = f'Bearer {access_token}'
@@ -1309,6 +1326,14 @@ class TestUserController(DCP2TestCase, UserControllerTestCase):
                        'personal access token (APAT)'
         }, json.loads(response.data))
 
+    def test_registered_access_unsupported(self):
+        response = self._registered_access_summary()
+        self.assertEqual(400, response.status)
+        self.assertEqual({
+            'Code': 'BadRequestError',
+            'Message': f'Catalog {self.catalog!r} does not offer registered access'
+        }, json.loads(response.data))
+
 
 class TestContracts(AnvilTestCase, ContractTestCase, UserControllerTestCase):
 
@@ -1450,6 +1475,93 @@ class TestContracts(AnvilTestCase, ContractTestCase, UserControllerTestCase):
         # The update must not have resurrected the item
         with self.assertRaises(UnknownUserException):
             self._load_user()
+
+    def test_registered_access(self):
+        with (
+            self._mock_contract_files(self._contract_files),
+            patch.object(IndexService, 'summary', return_value={}) as summary
+        ):
+            with self.subTest('invalid flag'):
+                response = self._registered_access_summary(registered_access='2')
+                self.assertEqual(400, response.status)
+            with self.subTest('unauthenticated'):
+                response = self._registered_access_summary()
+                self.assertEqual(401, response.status)
+            with self.subTest('unregistered token'), self._mock_token_info():
+                response = self._registered_access_summary(self._mock_access_token)
+                self.assertEqual(401, response.status)
+            with self._mock_token_for_code():
+                self._authorize()
+            with self._mock_token_info():
+                with self.subTest('no acceptance'):
+                    response = self._registered_access_summary(self._mock_access_token)
+                    self.assertEqual(403, response.status)
+                # Version 2 is the current one
+                for version, status in [(1, 403), (2, 200), (4, 403)]:
+                    with self.subTest(version=version):
+                        self._accept(version)
+                        response = self._registered_access_summary(self._mock_access_token)
+                        self.assertEqual(status, response.status)
+                self._accept(2)
+                other_identity = '#210987654321098765432'
+                message = 'This instance does not offer registered access'
+                cases = [
+                    (
+                        [],
+                        400,
+                        {
+                            'Code': 'BadRequestError',
+                            'Message': message
+                        }
+                    ),
+                    (
+                        [other_identity],
+                        403,
+                        {
+                            'Code': 'ForbiddenError',
+                            'Message': message + ' to the requesting user'
+                        }
+                    ),
+                    (
+                        [other_identity, self._mock_identity],
+                        200,
+                        None
+                    )
+                ]
+                for identities, status, error in cases:
+                    with (
+                        self.subTest(identities=identities),
+                        patch.object(Config, 'registered_access_limited_to',
+                                     new_callable=PropertyMock,
+                                     return_value=frozenset(identities))
+                    ):
+                        response = self._registered_access_summary(self._mock_access_token)
+                        self.assertEqual(status, response.status)
+                        if error is not None:
+                            self.assertEqual(error, json.loads(response.data))
+                with self.subTest('retracted acceptance'):
+                    self._accept(None)
+                    response = self._registered_access_summary(self._mock_access_token)
+                    self.assertEqual(403, response.status)
+                with self.subTest('without registered access'):
+                    for registered_access in ['0', None]:
+                        args = {} if registered_access is None else {'registered_access': registered_access}
+                        response = self._request('GET', '/index/summary', args=args)
+                        self.assertEqual(200, response.status)
+        self.assertEqual([True, True, False, False],
+                         [call.kwargs['registered_access'] for call in summary.call_args_list])
+
+    def test_registered_access_contract_link(self):
+        response = self._request('GET', '/openapi.json')
+        self.assertEqual(200, response.status)
+        operation = json.loads(response.data)['paths']['/index/summary']['get']
+        parameter = one(p for p in operation['parameters'] if p['name'] == 'registered_access')
+        descriptions = [parameter['description'], operation['responses']['403']['description']]
+        for description in descriptions:
+            with self.subTest(description=description):
+                self.assertIn('[corresponding contract][1]', description)
+                link = f'/contracts/{self._contract}/current'
+                self.assertIn(f'\n[1]: {link}\n', description)
 
     def test_accept_contract_from_files(self):
         with self._mock_token_for_code():

@@ -6,6 +6,7 @@ from collections.abc import (
     Iterable,
     Mapping,
     Sequence,
+    Set,
 )
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
@@ -156,6 +157,9 @@ from azul.lib.collections import (
     alist,
     lookup,
 )
+from azul.lib.iterators import (
+    find_range,
+)
 from azul.lib.json_freeze import (
     freeze,
 )
@@ -173,6 +177,7 @@ from azul.lib.types import (
     json_element_dicts,
     json_element_mappings,
     json_element_strings,
+    json_float,
     json_int,
     json_list,
     json_mapping,
@@ -192,6 +197,7 @@ from azul.modules import (
 )
 from azul.oauth2 import (
     CredentialedClient,
+    OAuth2Client,
 )
 from azul.opensearch import (
     OpenSearchClientFactory,
@@ -222,6 +228,9 @@ from azul.service.manifest_controller import (
 from azul.service.manifest_service import (
     CurlManifestGenerator,
     ManifestGenerator,
+)
+from azul.service.user_service import (
+    UserService,
 )
 from azul.source import (
     Prefix,
@@ -390,6 +399,11 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
 
     _user_access_token: ClassVar[str]
 
+    #: The identity of the user the above access token belongs to, as defined
+    #: by :class:`UserService`
+    #:
+    _user_identity: ClassVar[str]
+
     @classmethod
     def early_setup(cls) -> None:
         # Getting a user access token requires user intervention. We'll get it
@@ -398,6 +412,8 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
         # more information.
         if 'unattended' not in config.it_flags:
             cls._user_access_token = cls.__user_access_token()
+            token_info = OAuth2Client().token_info(cls._user_access_token)
+            cls._user_identity = UserService()._token_identity(token_info)
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -2474,6 +2490,10 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             for method, body in requests:
                 response = self._user_request_unchecked(method, body)
                 self.assertEqual(401, response.status)
+            for catalog in config.integration_test_catalogs:
+                identities = self._registered_access_identities(catalog)
+                response = self._registered_access_summary(catalog)
+                self.assertEqual(400 if identities == set() else 401, response.status)
         if 'unattended' in config.it_flags:
             log.warning('Will skip testing the user endpoints with an access '
                         'token since the IT is running unattended')
@@ -2487,10 +2507,19 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
                          user.keys())
         now = datetime.now(timezone.utc)
         self.assertGreater(parse_dcp2_datetime(json_str(user['authorized_until'])), now)
-        contracts = self._contract_versions()
-        name = self.random.choice(sorted(contracts))
+        names = set(filter(None, (
+            self.metadata_plugin(catalog).registered_access_contract
+            for catalog in config.integration_test_catalogs
+        )))
+        if names:
+            self._test_contract_acceptance(user, one(names))
+        else:
+            log.warning('Will skip testing the acceptance of contracts since no '
+                        'catalog under test offers registered access')
+
+    def _test_contract_acceptance(self, user: JSON, name: str):
         log.info('Testing the acceptance of contract %r', name)
-        contract = contracts[name]
+        contract = self._contract_versions()[name]
         current = one(
             version
             for version in json_element_mappings(contract['versions'])
@@ -2521,12 +2550,84 @@ class IndexingIntegrationTest(SourceSelectingIntegrationTest):
             })
             parse_dcp2_datetime(json_str(accepted['time']))
             self.assertEqual(user, self._user_request(GET))
+            self._test_registered_access(name, accepted=True)
             body = {'accepted_contracts': {name: None}}
             user = self._user_request(PATCH, body)
             self.assertNotIn(name, json_mapping(user['accepted_contracts']))
             self.assertEqual(user, self._user_request(GET))
+            self._test_registered_access(name, accepted=False)
         finally:
             self._user_request(PATCH, {'accepted_contracts': {name: original}})
+
+    def _test_registered_access(self, contract: str, *, accepted: bool) -> None:
+        for catalog in config.integration_test_catalogs:
+            plugin = self.metadata_plugin(catalog)
+            identities = self._registered_access_identities(catalog)
+            response = self._registered_access_summary(catalog)
+            if identities == set():
+                self.assertEqual(400, response.status)
+            elif identities is not None and self._user_identity not in identities:
+                self.assertEqual(403, response.status)
+                self.assertEqual({
+                    'Code': 'ForbiddenError',
+                    'Message': 'This instance does not offer registered '
+                               'access to the requesting user'
+                }, json.loads(response.data))
+            else:
+                self.assertEqual(contract, plugin.registered_access_contract)
+                if accepted:
+                    self._assertResponseStatus(response, 200)
+                    summary = json_mapping(json.loads(response.data))
+                    url = furl(url=config.service_endpoint,
+                               path='/index/summary',
+                               args=dict(catalog=catalog))
+                    regular = json_mapping(self._get_url_json(GET, url))
+                    for field, value in summary.items():
+                        if field.endswith('Count'):
+                            self._assert_quantized(json_int(value),
+                                                   json_int(regular[field]),
+                                                   lambda: plugin.registered_access_count_buckets)
+                    self._assert_quantized(json_float(summary['totalFileSize']),
+                                           json_float(regular['totalFileSize']),
+                                           lambda: plugin.registered_access_size_buckets)
+                else:
+                    self.assertEqual(403, response.status)
+
+    def _assert_quantized(self,
+                          quantized: int | float,
+                          regular: int | float,
+                          buckets: Callable[[], Iterable[int]]
+                          ) -> None:
+        """
+        Assert that the given value from a summary for registered access is
+        quantized, and consistent with the corresponding value from a regular
+        summary. The latter covers fewer sources, if any, than the former.
+        The given callable must return a fresh iterable of bucket boundaries
+        whenever it is called.
+        """
+        # A quantized value is the boundary of a bucket …
+        self.assertEqual(quantized, find_range(quantized - 1, buckets()))
+        # … at or above that of the bucket the regular value falls into
+        self.assertLessEqual(find_range(regular, buckets()), quantized)
+
+    def _registered_access_summary(self, catalog: CatalogName) -> urllib3.HTTPResponse:
+        url = furl(url=config.service_endpoint,
+                   path='/index/summary',
+                   args=dict(catalog=catalog, registered_access='1'))
+        return self._get_url_unchecked(GET, url)
+
+    def _registered_access_identities(self,
+                                      catalog: CatalogName
+                                      ) -> Set[str] | None:
+        """
+        The identities of the users to whom the deployment offers registered
+        access to the given catalog, or None if it is offered to every user.
+        """
+        plugin = self.metadata_plugin(catalog)
+        if plugin.registered_access_contract is None:
+            return frozenset()
+        else:
+            return config.registered_access_limited_to
 
     def _user_request(self, method: str, body: JSON | None = None) -> JSON:
         response = self._user_request_unchecked(method, body)

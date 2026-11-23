@@ -59,7 +59,7 @@ class DocumentService:
         return self.metadata_plugin(catalog).aggregate_class()
 
     @property
-    def always_limit_access(self) -> bool:
+    def always_enforce_access(self) -> bool:
         """
         True if access restrictions are enforced unconditionally. False, if the
         filter stage is allowed to weaken them, e.g., based on the entity type.

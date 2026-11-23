@@ -1779,6 +1779,11 @@ def env() -> Mapping[str, str | None]:
 
         'AZUL_MIRRORING_CONCURRENCY': '128',
 
+        'AZUL_REGISTERED_ACCESS_LIMITED_TO': ' '.join([
+            '#105096702580025601450',  # the system administrator
+            '#116910437014536760459',  # the system administrator's personal account
+        ]),
+
         'azul_browser_sites': json.dumps({
             'browser': {
                 'zone': '{AZUL_DOMAIN_NAME}',

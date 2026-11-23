@@ -137,9 +137,20 @@ class ResponseStage[S1, S2](metaclass=ABCMeta):
 class Stage[S1, S2, Q1 = Search, Q2 = Search](ResponseStage[S1, S2], metaclass=ABCMeta):
     """
     A stage in a chain of responsibility to prepare an OpenSearch request and
-    to process the response to that request. If an implementation modifies the
-    argument in place, it must return the argument. Most stages prepare a
-    search, but some turn one type of request into another.
+    to process the response to that request. Most stages prepare a search, but
+    some turn one type of request into another.
+
+    Each method of a stage either modifies its argument in place or converts it
+    into something else, and returns the result. An implementation that modifies
+    its argument must still return it so that the result can be passed on to the
+    next stage in a uniform fashion, regardless of whether the argument was
+    modified or converted.
+
+    Furthermore, a stage may declare a wider type for its argument than the one
+    under which the caller holds it, as stages are contravariant in the type of
+    their argument. Modifying the argument through the wider type may invalidate
+    the narrower one, so the caller must continue with the returned value, whose
+    type the stage vouches for, and not with its own reference to the argument.
     """
 
     @abstractmethod
@@ -278,28 +289,27 @@ class _FilterBuilder(_UsesIndex):
     """
     filters: Filters
 
+    #: False if managed-access enforcement should be lifted, provided that the
+    #: service allows it.
+    #:
+    _enforce_access: bool = True
+
     @cached_property
     def prepared_filters(self) -> TranslatedFilters:
-        filters_json = self.filters.reify(self.plugin, limit_access=self.limit_access)
+        filters_json = self.filters.reify(self.plugin, enforce_access=self.enforce_access)
         return self._translate_filters(filters_json)
 
     @property
-    def limit_access(self) -> bool:
+    def enforce_access(self) -> bool:
         """
-        Whether the managed access controls are enforced
+        Whether managed-access is enforced. It is enforced unconditionally if
+        the service mandates it. Otherwise, and unless enforcement was lifted by
+        passing ``enforce_access=False`` to the constructor, it is enforced for
+        every entity type except the root entity type.
         """
-        return self.service.always_limit_access or self._limit_access
-
-    @property
-    def _limit_access(self) -> bool:
-        """
-        Whether to enforce the managed access controls during filter
-        reification, provided that the service allows such conditional
-        enforcement of access. If it doesn't, the return value should be
-        ignored, and access must be enforced unconditionally. Access is
-        enforced for every entity type except the root entity type.
-        """
-        return self.entity_type != self.plugin.root_entity_type
+        return self.service.always_enforce_access or (
+            self._enforce_access and self.entity_type != self.plugin.root_entity_type
+        )
 
     def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
@@ -328,7 +338,7 @@ class _FilterBuilder(_UsesIndex):
         aggregation, these filters can be applied once, in the top-level query
         of a request for aggregations.
         """
-        if self.limit_access:
+        if self.enforce_access:
             # With access enforced, the only entities that can be filtered for
             # are those in accessible sources, so there is no point in counting
             # entities in other sources, not even in the facet for sources.
@@ -949,17 +959,22 @@ class QueryService(DocumentService):
                      catalog: CatalogName,
                      entity_type: str,
                      filters: Filters,
-                     document_slice: DocumentSlice | None
+                     document_slice: DocumentSlice | None,
+                     enforce_access: bool = True
                      ) -> Chain[Response, Any, Response]:
         """
         Create a chain for a basic OpenSearch `search` request for documents
         matching the given filter, optionally restricting the set of properties
         returned for each matching document.
+
+        :param enforce_access: False if managed-access enforcement should be
+                               lifted, provided that the service allows it.
         """
         chain = FilterStage(service=self,
                             catalog=catalog,
                             entity_type=entity_type,
-                            filters=filters)
+                            filters=filters,
+                            enforce_access=enforce_access)
         chain = SlicingStage(service=self,
                              catalog=catalog,
                              entity_type=entity_type,
