@@ -258,16 +258,6 @@ dcp3_min_sources = union(dcp3_sources, 48, delta([
     # @formatter:on
 ]))
 
-lungmap_sources = union({}, 2, delta([
-    source('bigquery', 'datarepo-dev-5d9526e0', 'lungmap_dev_1bdcecde16be420888f478cd2133d11d__20220401_20220404'),
-    source('bigquery', 'datarepo-dev-8de6d66b', 'lungmap_dev_2620497955a349b28d2b53e0bdfcb176__20220404_20220404')
-]))
-
-lm2_sources = union(lungmap_sources, 4, delta([
-    source('bigquery', 'datarepo-dev-b47b6759', 'lungmap_dev_00f056f273ff43ac97ff69ca10e38c89__20220404_20220404_lm2'),
-    source('bigquery', 'datarepo-dev-419f6325', 'lungmap_dev_fdadee7e209745d5bf81cc280bd8348e__20240206_20251204_lm10')
-]))
-
 
 def env() -> Mapping[str, str | None]:
     """
@@ -321,9 +311,6 @@ def env() -> Mapping[str, str | None]:
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit, in [
                 ('hca', 'dcp3', dcp3_min_sources, int(1.5 * 1024 ** 3), int(1.5 * 1024 ** 3)),
-                # FIXME: Decommission LungMAP
-                #        https://github.com/DataBiosphere/azul/issues/8412
-                # ('lungmap', 'lm2', lm2_sources, -1, -1)
             ]
             for suffix, is_it in [
                 ('', False),

@@ -23,6 +23,17 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Decommission LungMAP (#8412)
+============================
+
+Everyone
+~~~~~~~~
+
+Remove the ``lungmap_sources`` and ``lm2_sources`` definitions and the
+commented-out ``lm2`` catalog from personal deployments colocated with ``dev``.
+Use the ``sandbox`` deployment's ``environment.py`` as a model.
+
+
 Update Terraform to 1.17.1 (#8452)
 ==================================
 

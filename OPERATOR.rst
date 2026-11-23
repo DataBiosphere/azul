@@ -263,7 +263,7 @@ To specify a catalog to be reindexed, set ``Key`` to ``azul_current_catalog``
 and ``Value`` to the name of the catalog, for example, ``dcp3``. To specify the
 sources to be reindexed, set ``Key`` to ``azul_current_sources`` and
 ``Value`` to a space-separated list of sources globs, e.g.
-``*:hca_dev_* *:lungmap_dev_*``. Check the inputs you just
+``*:hca_dev_0* *:hca_dev_1*``. Check the inputs you just
 made. Start the ``reindex`` job by clicking on ``Run job``. Wait until the job
 has completed.
 
@@ -673,10 +673,10 @@ project on GitLab (same instance as above). For the merge commit title,
 SmartGit's default can be used, as long as the title reflects the commit (tag or
 sha1) specified by CC.
 
-The ``{atlas}`` placeholder can be ``hca``, ``anvil`` or ``lungmap``. Not all
-combinations of ``{atlas}`` and ``{deployment}`` are valid. Valid combinations
-are ``ucsc/anvil/anvildev``, ``ucsc/anvil/anvilprod``, ``ucsc/hca/dev``,
-``ucsc/hca/prod``, ``ucsc/lungmap/dev`` or ``ucsc/lungmap/prod``, for example.
+The ``{atlas}`` placeholder can be ``hca`` or ``anvil``. Not all combinations
+of ``{atlas}`` and ``{deployment}`` are valid. Valid combinations are
+``ucsc/anvil/anvildev``, ``ucsc/anvil/anvilprod``, ``ucsc/hca/dev`` or
+``ucsc/hca/prod``, for example.
 The ``ucsc/data-browser`` pipeline on GitLab blindly builds any branch, but
 Azul's ``deploy_browser`` job is configured to only use the tarball from exactly
 one branch (see ``deployments/*.browser/environment.py``) and it will always use

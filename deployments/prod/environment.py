@@ -1805,93 +1805,6 @@ dcp60_sources = union(dcp59_sources, 532, delta([
     source('bigquery', 'datarepo-e928935c', 'hca_prod_cb4e5e44d8984819a456393527c3186f__20250404_dcp2_20260529_dcp60'),
 ]))
 
-lungmap_sources = union({}, 3, delta([
-    source('bigquery', 'datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308'),
-    source('bigquery', 'datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308'),
-    source('bigquery', 'datarepo-cfaedae8', 'lungmap_prod_2620497955a349b28d2b53e0bdfcb176__20220308_20220308'),
-]))
-
-lm2_sources = union(lungmap_sources, 5, delta([
-    source('bigquery', 'datarepo-5eee9956', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220314_lm2'),
-    source('bigquery', 'datarepo-73453de6', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20220310_lm2'),
-    source('bigquery', 'datarepo-360d3b54', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20220608_lm2'),
-]))
-
-lm3_sources = union(lm2_sources, 6, delta([
-    source('bigquery', 'datarepo-d139f96d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20230207_lm3'),
-    source('bigquery', 'datarepo-0fdfdb69', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20230314_lm3'),
-]))
-
-lm4_sources = union(lm3_sources, 7, delta([
-    source('bigquery', 'datarepo-3d684ccd', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20231207_lm4'),
-    source('bigquery', 'datarepo-a65c8237', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20231207_lm4'),
-    source('bigquery', 'datarepo-43d1f2cb', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20231207_lm4'),
-    source('bigquery', 'datarepo-91587240', 'lungmap_prod_2620497955a349b28d2b53e0bdfcb176__20220308_20231207_lm4'),
-    source('bigquery', 'datarepo-252f2a7d', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20231207_lm4'),
-    source('bigquery', 'datarepo-e70d4665', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20231207_lm4'),
-    source('bigquery', 'datarepo-3f332829', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20231207_lm4'),
-]))
-
-lm6_sources = union(lm4_sources, 8, delta([
-    source('bigquery', 'datarepo-c3ad47d2', 'lungmap_prod_6511b041b11e4ccf85932b40148c437e__20240326_20240326_lm6'),
-]))
-
-lm7_sources = union(lm6_sources, 2, delta([
-    # @formatter:off
-    source('bigquery', 'datarepo-3d684ccd', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20231207_lm4', pop),  # noqa: E501
-    source('bigquery', 'datarepo-43d1f2cb', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20231207_lm4', pop),  # noqa: E501
-    source('bigquery', 'datarepo-91587240', 'lungmap_prod_2620497955a349b28d2b53e0bdfcb176__20220308_20231207_lm4', pop),  # noqa: E501
-    source('bigquery', 'datarepo-252f2a7d', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20231207_lm4', pop),  # noqa: E501
-    source('bigquery', 'datarepo-c3ad47d2', 'lungmap_prod_6511b041b11e4ccf85932b40148c437e__20240326_20240326_lm6', pop),  # noqa: E501
-    source('bigquery', 'datarepo-3f332829', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20231207_lm4', pop),  # noqa: E501
-    # @formatter:on
-]))
-
-lm8_sources = union(lm7_sources, 12, delta([
-    source('bigquery', 'datarepo-3f02598d', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20250325_lm8'),
-    source('bigquery', 'datarepo-2b15227b', 'lungmap_prod_1977dc4784144263a8706b0f207d8ab3__20240206_20241002_lm8'),
-    source('bigquery', 'datarepo-c9158593', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20241002_lm8'),
-    source('bigquery', 'datarepo-2f143f27', 'lungmap_prod_2620497955a349b28d2b53e0bdfcb176__20220308_20250325_lm8'),
-    source('bigquery', 'datarepo-35a6d7ca', 'lungmap_prod_3a02d15f9c6a4ef7852b4ddec733b70b__20241001_20241002_lm8'),
-    source('bigquery', 'datarepo-131a1234', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20241002_lm8'),
-    source('bigquery', 'datarepo-936db385', 'lungmap_prod_6135382f487d4adb9cf84d6634125b68__20230207_20241106_lm8'),
-    source('bigquery', 'datarepo-42daf980', 'lungmap_prod_6511b041b11e4ccf85932b40148c437e__20240326_20250325_lm8'),
-    source('bigquery', 'datarepo-3c4905d2', 'lungmap_prod_834e0d1671b64425a8ab022b5000961c__20241001_20241002_lm8'),
-    source('bigquery', 'datarepo-d7447983', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20241002_lm8'),
-    source('bigquery', 'datarepo-c11ef363', 'lungmap_prod_fdadee7e209745d5bf81cc280bd8348e__20240206_20241002_lm8')
-]))
-
-lm9_sources = union(lm8_sources, 16, delta([
-    # @formatter:off
-    source('bigquery', 'datarepo-6a2dd798', 'lungmap_prod_0229ea32ef02489eb11eff15819e22c1__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-1635e8d0', 'lungmap_prod_1977dc4784144263a8706b0f207d8ab3__20240206_20250521_lm9', pop),  # noqa: E501
-    source('bigquery', 'datarepo-753403ae', 'lungmap_prod_1f00915122064294929a9c720f19a13f__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-13f2c938', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20250521_lm9', pop),  # noqa: E501
-    source('bigquery', 'datarepo-aa49b92f', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20250521_lm9'),
-    source('bigquery', 'datarepo-27a7736d', 'lungmap_prod_4fb3669262404146a7e654543543230c__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-73797ea1', 'lungmap_prod_5134c97dbbdb4d9db483cdebeaf667b3__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-4f6af8a7', 'lungmap_prod_ccea5717a8484c068d2dd1b694e89441__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-9c6a9693', 'lungmap_prod_e651ac3e03aa46fa9ed370c6fda4e440__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-35ee2bca', 'lungmap_prod_e68d2111316f4dedbf490ab332488665__20250415_20250521_lm9'),
-    source('bigquery', 'datarepo-79fb8a00', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20250521_lm9', pop),  # noqa: E501
-    source('bigquery', 'datarepo-c10ea239', 'lungmap_prod_fdadee7e209745d5bf81cc280bd8348e__20240206_20250521_lm9'),
-    # @formatter:on
-]))
-
-lm10_sources = union(lm9_sources, 25, delta([
-    source('bigquery', 'datarepo-27e08fa5', 'lungmap_prod_0e2b244192a5424cbce1abc13435686f__20251204_20251204_lm10'),
-    source('bigquery', 'datarepo-96fffa45', 'lungmap_prod_1977dc4784144263a8706b0f207d8ab3__20240206_20251204_lm10'),
-    source('bigquery', 'datarepo-6a0330b7', 'lungmap_prod_20037472ea1d4ddb9cd356a11a6f0f76__20220307_20251204_lm10'),
-    source('bigquery', 'datarepo-b90b4d81', 'lungmap_prod_4ae8c5c91520437198276935661f6c84__20231004_20251204_lm10'),
-    source('bigquery', 'datarepo-cf74ef80', 'lungmap_prod_4c40f6e7b9f545288e2dd1129014cec8__20251204_20251204_lm10'),
-    source('bigquery', 'datarepo-8927acab', 'lungmap_prod_780514ad4c1e40a890342ee7ec447dcb__20251204_20251204_lm10'),
-    source('bigquery', 'datarepo-e248f3b9', 'lungmap_prod_9393acbfe8d84b969c71996e245e5f23__20251204_20251204_lm10'),
-    source('bigquery', 'datarepo-3d3a02e4', 'lungmap_prod_aef908bcfeec4c549b3b78b0adbd6502__20251204_20251204_lm10'),
-    source('bigquery', 'datarepo-f5e7ee25', 'lungmap_prod_e99faee277064c1a9d2876c68320f549__20251204_20251204_lm10'),
-    source('bigquery', 'datarepo-ff773934', 'lungmap_prod_f899709cae2c4bb988f0131142e6c7ec__20220310_20251204_lm10'),
-    source('bigquery', 'datarepo-1c09ab61', 'lungmap_prod_fdadee7e209745d5bf81cc280bd8348e__20240206_20251204_lm10'),
-]))
-
 
 def env() -> Mapping[str, str | None]:
     """
@@ -1935,9 +1848,6 @@ def env() -> Mapping[str, str | None]:
                                        sources=condense(sources))
             for atlas, catalog, sources, mirror_limit, it_mirror_limit in [
                 ('hca', 'dcp60', dcp60_sources, None, int(1.5 * 1024 ** 3)),
-                # FIXME: Decommission LungMAP
-                #        https://github.com/DataBiosphere/azul/issues/8412
-                # ('lungmap', 'lm10', lm10_sources, -1, -1)
             ]
             for suffix, is_it in [
                 ('', False),
@@ -1995,15 +1905,6 @@ def env() -> Mapping[str, str | None]:
                 'project': 'ucsc/data-browser',
                 'branch': 'ucsc/hca/prod',
                 'tarball_name': 'hca',
-                'tarball_path': 'out',
-                'real_path': ''
-            },
-            'lungmap': {
-                'zone': 'data-browser.lungmap.net',
-                'domain': 'data-browser.lungmap.net',
-                'project': 'ucsc/data-browser',
-                'branch': 'ucsc/lungmap/prod',
-                'tarball_name': 'lungmap',
                 'tarball_path': 'out',
                 'real_path': ''
             }
