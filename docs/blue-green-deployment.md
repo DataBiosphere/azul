@@ -18,6 +18,19 @@ Exactly one instance is live at any time. A live instance is never dormant. Brin
 
 Each instance has *canonical* domain names, such as `service.1.explore.anvilproject.org`, which always lead to that instance. The deployment has *public* domain names, such as `service.explore.anvilproject.org`, which lead to whichever instance is live.
 
+## Configuration
+
+The deployments that take part set `AZUL_BLUE_GREEN_MODE` to `1`. All other deployments leave it at its default of `0` and behave exactly as before. Its name begins with `AZUL_` so that it is exported to the Lambdas, which need it at runtime (see *Self-referencing URLs*).
+
+When the mode is on, the name of the deployment determines its role. A name without a numeric suffix, such as `anvilprod`, denotes the alias. A name with one, such as `anvilprod1`, denotes the instance of that number. There are always exactly two instances, `1` and `2`. Components take the role of the deployment they belong to: `anvilprod1.base` is the `base` component of instance 1. When the mode is off, a numeric suffix has no meaning, as in the existing personal deployment `hannes2`.
+
+Each of the three deployments has its own `environment.py`, and the environment loader is unchanged. An instance doesn't inherit from the alias's `environment.py`. The three files are kept in sync manually, as is already done for hammerbox and anvilprod, or for a personal deployment and the sandbox it is based on:
+
+- `deployments/anvilprod1/environment.py` and `deployments/anvilprod2/environment.py` must be identical except for `AZUL_DEPLOYMENT_STAGE` and `AZUL_SUBDOMAIN_TEMPLATE`. This is stricter than the relationship between hammerbox and anvilprod: if a promotion that adds a catalog changed only the file of the instance it switches to, the other instance would come back without that catalog when it is woken for the next switch.
+- `deployments/anvilprod/environment.py` configures the alias, whose main component needs little more than the domain names. However, the `shared`, `gitlab` and `browser` components inherit from it through the existing component mechanism, so whatever they read must remain in that file.
+
+A unit test enforces the first rule. For every deployment `D` that has `AZUL_BLUE_GREEN_MODE` set to `1` and no numeric suffix, the test loads `env()` from `deployments/D1/environment.py` and `deployments/D2/environment.py`, removes `AZUL_DEPLOYMENT_STAGE` and `AZUL_SUBDOMAIN_TEMPLATE` from both, and asserts that the remainders are equal. It also asserts that both instance directories exist and that both set `AZUL_BLUE_GREEN_MODE` to `1`. A forgotten sync thereby fails the build instead of breaking an instance at the next switch.
+
 ## Terraform components
 
 | Component | `anvilprod` | `anvilprod1`, `anvilprod2` |
@@ -30,7 +43,7 @@ Each instance has *canonical* domain names, such as `service.1.explore.anvilproj
 
 In *alias mode*, the main component owns only the public domain names: the ACM certificates, the API Gateway custom domain names and the Route 53 A records. It doesn't own the base path mappings that connect a public custom domain name to an instance's API. Those are maintained by the `go_live` job.
 
-The instances' main components are configured like any other main deployment, in `deployments/anvilprod1/environment.py` and `deployments/anvilprod2/environment.py`, with `AZUL_SUBDOMAIN_TEMPLATE` set to `*.1` or `*.2`, and the same `AZUL_DOMAIN_NAME` as `anvilprod`. All resource names are qualified with `AZUL_DEPLOYMENT_STAGE`, so the two instances don't collide. These files also exist on `develop`. Which instance a build deploys is not configured in the source (see *Branches and pipelines*).
+The instances' main components are configured like any other main deployment (see *Configuration*), with `AZUL_SUBDOMAIN_TEMPLATE` set to `*.1` or `*.2`, and the same `AZUL_DOMAIN_NAME` as `anvilprod`. All resource names are qualified with `AZUL_DEPLOYMENT_STAGE`, so the two instances don't collide. These files also exist on `develop`. Which instance a build deploys is not configured in the source (see *Branches and pipelines*).
 
 ### Why not alias records
 
@@ -49,20 +62,36 @@ The Lambda image repository is unaffected. Its tags are qualified with the stage
 The instance states live in a single SSM parameter per deployment, such as `/azul/anvilprod/instances`:
 
 ```json
-{"live": "1", "dormant": {"1": false, "2": true}}
+{"live": 1, "standby": false}
 ```
 
-Storing the live instance as a single value guarantees that exactly one instance is live. The scripts that write the parameter enforce the remaining rule that a live instance must not be dormant: making the live instance dormant is refused, and so is making a dormant instance live. SSM has no compare-and-swap, so every job that writes the parameter is placed in the GitLab `resource_group: anvilprod`, which makes GitLab run them one at a time.
+`live` is the number of the live instance, `1` or `2`, and `standby` says whether the other instance is standby (`true`) or dormant (`false`). These are the only four valid states, and every document of this shape is one of them: exactly one instance is live, and a live instance can't be dormant.
 
-SSM is authoritative. The base path mappings are derived from it, and `go_live` reconciles them with it, so re-running `go_live` repairs a switch that failed halfway.
+Each transition writes a single field:
 
-GitLab CI/CD variables were considered. `CI_JOB_TOKEN` can't write them: the variables API isn't listed among the APIs a job token can access, nor among those covered by fine-grained job token permissions. Writing them would require a stored personal access token. The deployment's pipelines can already write to SSM.
+| Transition | Write | Precondition |
+|---|---|---|
+| Wake the other instance | `standby: true` | — |
+| Run the `go_live` job of the other instance | `live: <other>` | `standby` is `true`; the previously live instance becomes standby |
+| Make the other instance dormant | `standby: false` | — |
 
-### Effect on `deploy`
+Making the live instance dormant can't be expressed, and making a dormant instance live requires waking it first. SSM has no compare-and-swap, so every job that writes the parameter is placed in the GitLab `resource_group: anvilprod`, which makes GitLab run them one at a time.
 
-`deploy` reconciles an instance's resources with its state. For a dormant instance, the OpenSearch domain (and the alarms that depend on it, as in `_hibernate`) are omitted from the Terraform configuration, so applying it destroys them. For any other instance, they are created. Making an instance dormant or waking it therefore takes two steps: change the state, then deploy. `deploy` refuses if the state is inconsistent.
+SSM is authoritative. The base path mappings are derived from it, and the `go_live` job reconciles them with it, so re-running that job repairs a switch that failed halfway.
 
-The integration test, `early_reindex` and `reindex` short-circuit for dormant instances.
+### Effect on the `deploy` job in GitLab
+
+The `deploy` job reconciles an instance's resources with its state. For a dormant instance, the OpenSearch domain (and the alarms that depend on it, as in the `_hibernate` convenience function) are omitted from the Terraform configuration, so applying it destroys them. For any other instance, they are created. Making an instance dormant or waking it therefore takes two steps: change the state, then deploy.
+
+A script changes the state, with one subcommand per transition: wake, go live, and make dormant. Each subcommand checks the transition's precondition before writing the parameter. The `go_live` job uses the same script, so that every write goes through it. A script run locally isn't part of the `resource_group`, so it isn't serialized with the jobs. SSM can't prevent such a race, but it can detect it: `put_parameter` returns the new version of the parameter, so the script reads the version, writes, and fails if the version it wrote isn't exactly one higher than the one it read.
+
+The Terraform config templates read the state when they are rendered, and include or exclude resources with a Python conditional, as they already do for, say, `config.is_tdr_enabled()`. Templates already query external state at render time: `lambda_image_uri` asks the registry for an image digest, and the `browser` template asks GitLab for a tarball hash. A conditional in the template leaves the excluded resources out of the generated configuration entirely, which is simpler than an `aws_ssm_parameter` data source with `count`, which would require every reference to the domain to be indexed and guarded in Terraform.
+
+The existing `config.share_opensearch_domain` mode already omits `aws_opensearch_domain.index` and supplies its dependents from elsewhere: the endpoint and instance count in the Lambdas' environment, and the `opensearch_nodes` data source of the CloudWatch dashboard. Dormancy uses the same branch points, but with no endpoint to supply: the Lambdas of a dormant instance get an empty endpoint and fail any request that needs the index. The `cluster_settings` null resource is omitted along with the domain.
+
+Since rendering reads SSM, every deployment of an instance applies its current state, regardless of who started it. A deployment that happens between changing the state and the intended push already creates or destroys the domain. In a switch, steps 1 and 8 immediately precede their push, so this doesn't matter.
+
+The `integration_test`, `early_reindex` and `reindex` jobs short-circuit for dormant instances.
 
 ## Branches and pipelines
 
@@ -97,22 +126,22 @@ The `anvilprod` entry lets local builds on the `anvilprod` branch select any of 
 
 Jobs short-circuit based on the configuration (`if python -m azul -t config.deployment.is_alias …`). The manual jobs use `rules:` on `$CI_COMMIT_BRANCH` instead, so that no button appears that does nothing when clicked.
 
-The instance pipelines skip `test` because the same commit is tested in the `anvilprod` pipeline. GitLab doesn't link the two pipelines, so the checklist makes the operator wait for `test` in the `anvilprod` pipeline before pushing the instance branch.
+The instance pipelines skip the `test` job because the same commit is tested in the `anvilprod` pipeline. GitLab doesn't link the two pipelines, so the checklist makes the operator wait for the `test` job in the `anvilprod` pipeline before pushing the instance branch.
 
-### `go_live`
+### The `go_live` job
 
 1. Refuse if this instance is dormant or its index is incomplete. The index is complete when every catalog's indices exist and the indexer queues are empty. `needs: [integration_test]` covers the integration test.
 2. Record this instance as live in SSM.
 3. Point each public custom domain name's base path mapping at this instance's API and stage.
 4. Check `/version` and `/health/basic` through the public names.
 
-Running `go_live` in the other instance's pipeline switches back.
+Running the `go_live` job in the other instance's pipeline switches back.
 
 ## Integration test
 
 The integration test needs no changes. It runs in the instance's pipeline, with the instance's configuration, so `config.service_endpoint` and `config.indexer_endpoint` resolve to the canonical names, and every AWS resource it touches is qualified with the instance's stage. The OAuth flow in the attended mode of the test redirects to a local HTTP server, so the canonical names don't need to be registered with Google as redirect URIs.
 
-The test doesn't cover the public path, from the public custom domain name through the base path mapping to the instance. The check at the end of `go_live` and the QC period cover it.
+The test doesn't cover the public path, from the public custom domain name through the base path mapping to the instance. The check at the end of the `go_live` job and the QC period cover it.
 
 ## Self-referencing URLs
 
@@ -120,7 +149,7 @@ During a request, the service derives its base URL from the `Host` header (`Azul
 
 Outside a request, `base_url` falls back to `config.lambda_endpoint`, which will be the canonical name. The compact and curl manifests use that fallback: they are generated in Step Functions and embed `/repository/files` URLs. Users would receive manifests that refer to the canonical name, and those URLs would break once that instance becomes dormant after a later switch.
 
-The fix is to capture the base URL of the request that starts the manifest's Step Functions execution, include it in the `ManifestKey` (and therefore in the manifest hash), and have `generate()` build its URLs from the key rather than from `app.base_url`. Including the base URL in the hash also keeps a manifest generated on a standby instance from being served from the cache after `go_live`. Taking the value from the key also prevents a race with `go_live` between starting the execution and generating the manifest.
+The fix is to capture the base URL of the request that starts the manifest's Step Functions execution, include it in the `ManifestKey` (and therefore in the manifest hash), and have `generate()` build its URLs from the key rather than from `app.base_url`. Including the base URL in the hash also keeps a manifest generated on a standby instance from being served from the cache after the `go_live` job has run. Taking the value from the key also prevents a race with the `go_live` job between starting the execution and generating the manifest.
 
 Any other code that builds URLs outside of a request would read the SSM parameter (with a short cache) and use the public name when its instance is live and the canonical name otherwise. Whether any such code exists besides the manifest generators hasn't been checked.
 
@@ -139,7 +168,7 @@ A dormant instance comes back without any OpenSearch indices, so a switch always
 Precondition: the other instance is dormant. This rules out an in-place promotion during the QC period of a switch.
 
 1. Phase 1 of the `shared` deploy (`apply_keep_unused`)
-2. Merge, push `anvilprod`, wait for `test`
+2. Merge, push `anvilprod`, wait for the `test` job
 3. Push `anvilprod:anvilprodL`, where L is the live instance
 4. Partial reindex in the `anvilprodL` pipeline, if one is required
 5. Phase 2 of the `shared` deploy (`apply`). The dormant instance's Lambda images aren't in the mirrored repositories, and it will be brought to the current commit before it is woken.
@@ -150,12 +179,12 @@ L is the live instance, S the dormant instance that becomes live.
 
 1. Wake S in SSM
 2. Phase 1 of the `shared` deploy (`apply_keep_unused`)
-3. Merge, push `anvilprod`, wait for `test`
-4. Push `anvilprod:anvilprodS`. `deploy` creates the OpenSearch domain and the integration test runs.
-5. `early_reindex` or `reindex` in the `anvilprodS` pipeline
-6. `go_live` in the `anvilprodS` pipeline
-7. QC period. L is still on the previous commit with a complete index, so rolling back is a matter of running `go_live` in the latest `anvilprodL` pipeline.
-8. Mark L dormant in SSM, then push `anvilprod:anvilprodL`. `deploy` destroys L's OpenSearch domain, and the integration test short-circuits. This is the point of no return. After it, rolling back requires another switch.
+3. Merge, push `anvilprod`, wait for the `test` job
+4. Push `anvilprod:anvilprodS`. The `deploy` job creates the OpenSearch domain, and the `integration_test` job runs.
+5. Run the `early_reindex` or `reindex` job in the `anvilprodS` pipeline
+6. Run the `go_live` job in the `anvilprodS` pipeline
+7. QC period. L is still on the previous commit with a complete index, so rolling back is a matter of running the `go_live` job in the latest `anvilprodL` pipeline.
+8. Mark L dormant in SSM, then push `anvilprod:anvilprodL`. The `deploy` job destroys L's OpenSearch domain, and the `integration_test` job short-circuits. This is the point of no return. After it, rolling back requires another switch.
 9. Phase 2 of the `shared` deploy (`apply`). All instances and `shared` are on the same commit.
 
 Steps 1 and 8 change the state before the push. Whether they are done by a script that the operator runs locally or by a manual job in some pipeline is still open.
