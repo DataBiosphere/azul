@@ -167,6 +167,15 @@ The manifest generators are the only code that hands out URLs to users outside o
 URLs that refer to state held by one instance, such as cached manifest objects and manifest fetch tokens, break after a switch no matter which name they use, because each instance has its own storage bucket. How long such URLs need to stay valid limits how soon the old instance may rest.
 
 
+## Sign-in
+
+The Data Browser obtains tokens through `/user/authorize` using Google's authorization code flow in a popup, for which the redirect URI is `postmessage`. Google checks the Data Browser's origin against the OAuth client's authorized JavaScript origins, and that origin doesn't change. The Data Browser only uses the public names, so nothing needs to be registered for the instances.
+
+The Swagger UI uses the authorization code flow, with `/user/authorize` as the token URL and `{base URL}/swagger/oauth2-redirect.html` as the redirect URI. The base URL comes from the `Host` header, so signing in to the Swagger UI of an instance at its canonical name requires that name's redirect URI to be registered with the OAuth client of the deployment. The redirect URIs of both instances, such as `https://service.1.explore.anvilproject.org/swagger/oauth2-redirect.html`, are registered once, in addition to the one for the public name. This lets the operator try authenticated endpoints on a standby instance before the `go_live` job has run.
+
+Both instances use the same OAuth client ID (`AZUL_GOOGLE_OAUTH2_CLIENT_ID`), and therefore the same client secret. In blue-green mode, `config.oauth2_client_secret_path()` uses the name of the deployment instead of the name of the instance, so that both instances read the one secret `dcp/azul/anvilprod/service/google_oauth2_client_secret`. That is where the secret already resides, and the service Lambda may already read any secret in the account. Secrets that the `base` component provisions, such as the HMAC key and the credentials of the Google service accounts, remain specific to each instance.
+
+
 ## Promotions
 
 A promotion switches instances if it requires a full reindex, a catalog-wide reindex, or the addition of a catalog. A catalog-wide reindex affects the performance that all external users observe, and so does adding a catalog. Every other promotion, and every hotfix, is deployed to the live instance in place.
@@ -221,15 +230,13 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 ## Open questions
 
-1. Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
+1. Contents and duration of the QC period
 
-2. Contents and duration of the QC period
+2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
 
-3. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
+3. `reindex:` label for catalog-wide reindexing
 
-4. `reindex:` label for catalog-wide reindexing
-
-5. Managed-access mirror bucket. anvilprod mirrors open-access files to an external bucket (`AZUL_MIRROR_BUCKET`), which both instances can share. `AZUL_MANAGED_ACCESS_MIRROR_BUCKET` isn't set, so managed-access files are mirrored to a bucket that the main component provisions and names after the stage. Each instance would get its own, storing the managed-access files twice and copying them anew the first time the instance wakes, and the existing bucket would be left behind by the migration to `anvilprod1`. A shared, external bucket for managed-access files, like the one for open-access files, would avoid that.
+4. Managed-access mirror bucket. anvilprod mirrors open-access files to an external bucket (`AZUL_MIRROR_BUCKET`), which both instances can share. `AZUL_MANAGED_ACCESS_MIRROR_BUCKET` isn't set, so managed-access files are mirrored to a bucket that the main component provisions and names after the stage. Each instance would get its own, storing the managed-access files twice and copying them anew the first time the instance wakes, and the existing bucket would be left behind by the migration to `anvilprod1`. A shared, external bucket for managed-access files, like the one for open-access files, would avoid that.
 
 
 ## Appendix
