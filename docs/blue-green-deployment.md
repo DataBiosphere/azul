@@ -73,6 +73,12 @@ The `rest` job destroys the OpenSearch domain of the instance of the pipeline it
 
 Waking is implicit. Deploying a resting instance recreates whatever the `rest` job destroyed, so pushing to the branch of a resting instance (see *Branches and pipelines*) wakes it. The `deploy` job doesn't read the state, and the Terraform configuration of an instance doesn't depend on it.
 
+### Switching the base path mappings
+
+Switching the base path mapping of an edge-optimized custom domain name from one REST API to another in the same account and region causes no downtime, but takes up to about 80 seconds to propagate (see *How we tested the base path mapping switch*). For about 40 seconds after the call, every request still reaches the old API. For the next 30 to 40 seconds, either API may answer, presumably depending on which CloudFront server handles the request. After that, only the new API answers.
+
+The `go_live` job therefore polls the public names until only the new instance answers, with a timeout of a few minutes. For about half a minute after the job ran, consecutive requests from the same client may be served by different instances.
+
 
 ## Branches and pipelines
 
@@ -134,7 +140,7 @@ The `go_live` subcommand makes the instance of the pipeline it runs in live:
 
 3. Point each public custom domain name's base path mapping at the instance's API and stage.
 
-4. Check `/version` and `/health/basic` through the public names.
+4. Poll `/version` and `/health/basic` through the public names until only the instance answers, for up to a few minutes (see *Switching the base path mappings*).
 
 Running the `go_live` job again is harmless, and repairs a run that was interrupted after step 2. The subcommand doesn't require the other instance to be on the same commit, because rolling back makes an instance on the previous commit live.
 
@@ -215,23 +221,37 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 ## Open questions
 
-1. Whether the public custom domain names behave as assumed, specifically that the base path mapping of an edge-optimized custom domain name can be switched between two APIs in the same account and region without downtime
+1. Other code paths outside of a request that hand out URLs
 
-2. Other code paths outside of a request that hand out URLs
+2. Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
 
-3. Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
+3. Contents and duration of the QC period
 
-4. Contents and duration of the QC period
+4. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
 
-5. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
-
-6. `reindex:` label for catalog-wide reindexing
+5. `reindex:` label for catalog-wide reindexing
 
 
-## Discarded ideas
+## Appendix
 
-### DNS alias records
+### Why not use DNS alias records
 
 Switching the public names by repointing DNS alias records doesn't work with edge-optimized API Gateway custom domain names. A custom domain name can exist only once, so both instances can't own `service.explore.anvilproject.org`. CloudFront also routes by the `Host` header, so a request for the public name reaching the distribution of `service.1.…` would most likely be rejected. This hasn't been tested, but the existing DRS alias also needed a custom domain name of its own, not just a DNS record.
 
-Switching the base path mapping (`update-base-path-mapping` with patch operations on `/restapiId` and `/stage`) avoids that problem. It takes effect without waiting for a DNS TTL to expire, and switching back is the same operation.
+Switching the base path mapping (`update-base-path-mapping` with patch operations on `/restapiId` and `/stage`) avoids that problem. It doesn't depend on DNS TTLs, takes effect within about 80 seconds (see *Switching the base path mappings*), and switching back is the same operation.
+
+### How we tested the base path mapping switch
+
+The switch was tested on 2026-11-25 in tempdev, by switching the mapping of `service.temp.gi.ucsc.edu` from the service's REST API to the indexer's and back with `update-base-path-mapping`, while two pollers requested `/openapi.json` twice per second, one from a laptop and one from a CloudShell in `us-west-1`, and recorded which app answered:
+
+| | Laptop | CloudShell |
+|---|---|---|
+| To indexer: first response from the new API | +40 s | +41 s |
+| To indexer: last response from the old API | +67 s | +73 s |
+| Back to service: first response from the new API | +43 s | +44 s |
+| Back to service: last response from the old API | +80 s | +75 s |
+| Failed requests | 0 of about 2,000 | 0 of 2,315 |
+
+Both locations saw nearly the same timing.
+
+The pollers must stay below the WAF's rate limit of 1,000 requests per IP in 5 minutes. A first attempt at 10 requests per second per poller was blocked with `429` responses and yielded no data.
