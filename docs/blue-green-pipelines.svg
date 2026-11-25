@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1530" height="380" viewBox="0 0 1530 380" font-family="-apple-system, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1530" height="440" viewBox="0 0 1530 440" font-family="-apple-system, Helvetica, Arial, sans-serif">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
@@ -20,7 +20,7 @@
     </style>
   </defs>
 
-  <rect width="1530" height="380" fill="#fff"/>
+  <rect width="1530" height="440" fill="#fff"/>
   <text x="20" y="30" class="title">GitLab pipeline of an instance (anvilprod1 or anvilprod2), proposed</text>
 
   <g>
@@ -30,7 +30,7 @@
     <text x="535" y="70" class="stage">deploy</text>
     <text x="685" y="70" class="stage">early_reindex</text>
     <text x="835" y="70" class="stage">integration_test</text>
-    <text x="985" y="70" class="stage">deploy_alias</text>
+    <text x="985" y="70" class="stage">deploy_browser</text>
     <text x="1135" y="70" class="stage">teardown</text>
     <text x="1285" y="70" class="stage">reindex</text>
     <text x="1435" y="70" class="stage">state</text>
@@ -53,13 +53,21 @@
   <rect class="job" x="320" y="85" width="130" height="44" rx="6"/>
   <text class="name" x="385" y="111">test</text>
 
-  <rect class="job" x="470" y="85" width="130" height="44" rx="6"/>
-  <text class="name" x="535" y="103">deploy_base</text>
-  <text class="note" x="535" y="120">anvilprodN.base</text>
+  <rect class="alias" x="470" y="85" width="130" height="44" rx="6"/>
+  <text class="name" x="535" y="103">deploy_alias_base</text>
+  <text class="note" x="535" y="120">anvilprod.base</text>
   <path class="dep" d="M535,129 V143" marker-end="url(#arrow)"/>
-  <rect class="job" x="470" y="145" width="130" height="44" rx="6"/>
-  <text class="name" x="535" y="163">deploy</text>
-  <text class="note" x="535" y="180">anvilprodN, wakes it</text>
+  <rect class="alias" x="470" y="145" width="130" height="44" rx="6"/>
+  <text class="name" x="535" y="163">deploy_alias</text>
+  <text class="note" x="535" y="180">anvilprod</text>
+  <path class="dep" d="M535,189 V203" marker-end="url(#arrow)"/>
+  <rect class="job" x="470" y="205" width="130" height="44" rx="6"/>
+  <text class="name" x="535" y="223">deploy_base</text>
+  <text class="note" x="535" y="240">anvilprodN.base</text>
+  <path class="dep" d="M535,249 V263" marker-end="url(#arrow)"/>
+  <rect class="job" x="470" y="265" width="130" height="44" rx="6"/>
+  <text class="name" x="535" y="283">deploy</text>
+  <text class="note" x="535" y="300">anvilprodN, wakes it</text>
 
   <rect class="manual" x="620" y="85" width="130" height="44" rx="6"/>
   <text class="name" x="685" y="111">✋ early_reindex</text>
@@ -69,15 +77,8 @@
   <text class="note" x="835" y="120">canonical names</text>
 
   <rect class="alias" x="920" y="85" width="130" height="44" rx="6"/>
-  <text class="name" x="985" y="103">deploy_alias_base</text>
-  <text class="note" x="985" y="120">anvilprod.base</text>
-  <path class="dep" d="M985,129 V143" marker-end="url(#arrow)"/>
-  <rect class="alias" x="920" y="145" width="130" height="44" rx="6"/>
-  <text class="name" x="985" y="163">deploy_alias</text>
-  <text class="note" x="985" y="180">anvilprod</text>
-  <rect class="alias" x="920" y="205" width="130" height="44" rx="6"/>
-  <text class="name" x="985" y="223">deploy_browser</text>
-  <text class="note" x="985" y="240">anvilprod.browser</text>
+  <text class="name" x="985" y="103">deploy_browser</text>
+  <text class="note" x="985" y="120">anvilprod.browser</text>
 
   <rect class="job" x="1070" y="85" width="130" height="44" rx="6"/>
   <text class="name" x="1135" y="111">on_success</text>
@@ -98,20 +99,20 @@
   <circle class="badge" cx="1500" cy="145" r="8"/>
   <text class="badge-text" x="1500" y="148">R</text>
 
-  <line class="sep" x1="20" y1="280" x2="1510" y2="280"/>
+  <line class="sep" x1="20" y1="340" x2="1510" y2="340"/>
 
-  <rect class="job" x="20" y="300" width="70" height="26" rx="5"/>
-  <text class="legend" x="100" y="318">automatic, instance</text>
-  <rect class="alias" x="240" y="300" width="70" height="26" rx="5"/>
-  <text class="legend" x="320" y="318">automatic, alias</text>
-  <rect class="manual" x="450" y="300" width="70" height="26" rx="5"/>
-  <text class="legend" x="530" y="318">manual (✋)</text>
-  <circle class="badge" cx="640" cy="313" r="8"/>
-  <text class="badge-text" x="640" y="316">R</text>
-  <text class="legend" x="655" y="318">resource_group: anvilprod</text>
-  <path class="dep" d="M840,313 H880" marker-end="url(#arrow)"/>
-  <text class="legend" x="888" y="318">needs:</text>
-  <path class="seq" d="M960,313 H1000"/>
-  <text class="legend" x="1008" y="318">stage order</text>
-  <text class="legend" x="20" y="360" fill="#777">N is the instance named by the branch being built. The deploy_alias and state stages are new.</text>
+  <rect class="job" x="20" y="360" width="70" height="26" rx="5"/>
+  <text class="legend" x="100" y="378">automatic, instance</text>
+  <rect class="alias" x="240" y="360" width="70" height="26" rx="5"/>
+  <text class="legend" x="320" y="378">automatic, alias</text>
+  <rect class="manual" x="450" y="360" width="70" height="26" rx="5"/>
+  <text class="legend" x="530" y="378">manual (✋)</text>
+  <circle class="badge" cx="640" cy="373" r="8"/>
+  <text class="badge-text" x="640" y="376">R</text>
+  <text class="legend" x="655" y="378">resource_group: anvilprod</text>
+  <path class="dep" d="M840,373 H880" marker-end="url(#arrow)"/>
+  <text class="legend" x="888" y="378">needs:</text>
+  <path class="seq" d="M960,373 H1000"/>
+  <text class="legend" x="1008" y="378">stage order</text>
+  <text class="legend" x="20" y="420" fill="#777">N is the instance named by the branch being built. The deploy_browser and state stages are new.</text>
 </svg>

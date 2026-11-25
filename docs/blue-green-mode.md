@@ -42,15 +42,15 @@ A unit test enforces the first rule. For every deployment `D` that has `azul_blu
 
 | Component | `anvilprod` | `anvilprod1`, `anvilprod2` |
 |---|---|---|
-| main | alias mode: public domain names only | full instance |
-| `base` | empty | per instance (KMS keys, GCP service account) |
+| main | alias mode: public domain names, user tables | full instance |
+| `base` | APAT KMS key | manifest KMS key, HMAC key, GCP service account |
 | `shared` | single, as today | — |
 | `gitlab` | single, as today | — |
 | `browser` | single | — |
 
-The alias's main, `base` and `browser` components are deployed by the instance pipelines (see *The `deploy_alias` stage*). `shared` and `gitlab` are deployed manually, as today.
+The alias's main, `base` and `browser` components are deployed by the instance pipelines (see *Deploying the alias*). `shared` and `gitlab` are deployed manually, as today.
 
-In *alias mode*, the main component owns only the public domain names: the ACM certificates, the API Gateway custom domain names and the Route 53 A records. It doesn't own the base path mappings that connect a public custom domain name to an instance's API. Those are maintained by `scripts/manage_blue_green.py` (see *The state jobs*).
+In *alias mode*, the main component owns only the public domain names (the ACM certificates, the API Gateway custom domain names and the Route 53 A records) and the user tables (see *User state*). It doesn't own the base path mappings that connect a public custom domain name to an instance's API. Those are maintained by `scripts/manage_blue_green.py` (see *The state jobs*).
 
 The instances' main components are configured like any other main deployment (see *Configuration*), with `AZUL_SUBDOMAIN_TEMPLATE` set to `*.1` or `*.2`, and the same `AZUL_DOMAIN_NAME` as `anvilprod`. All resource names are qualified with `AZUL_DEPLOYMENT_STAGE`, so the two instances don't collide. These files also exist on `develop`. Which instance a build deploys is not configured in the source (see *Branches and pipelines*).
 
@@ -65,6 +65,14 @@ The Lambda image repository is unaffected. Its tags are qualified with the stage
 anvilprod mirrors open-access files to an external bucket (`AZUL_MIRROR_BUCKET`), which both instances share. Each instance also provisions its own open-access and managed-access mirror buckets. The integration test catalogs are always mirrored to those, and since `AZUL_MANAGED_ACCESS_MIRROR_BUCKET` isn't set, so are the managed-access files of the other catalogs. These buckets hold only test data, so keeping one set per instance costs next to nothing, and copying the files anew when an instance wakes is cheap.
 
 Sharing the provisioned buckets between the instances would mix the test data of both instances' integration tests, which may run concurrently. An external managed-access bucket would also require adding it to the boundary policy of the `gitlab` component, which currently permits only the provisioned buckets and `AZUL_MIRROR_BUCKET`.
+
+### User state
+
+User state belongs to the deployment, not to an instance, so that a switch doesn't sign users out or invalidate their APATs. It consists of the `users` and `access_tokens` DynamoDB tables, which the alias-mode main component owns, and the KMS key that signs APATs, which `anvilprod.base` owns. In blue-green mode, `config.dynamo_user_table_name`, `config.dynamo_access_token_table_name` and the alias of `config.apat_kms_key` use the name of the deployment instead of that of the instance, so that both instances use the same tables and key. The IAM policies of the Lambdas are derived from the same properties and follow suit.
+
+The other state remains specific to each instance: the manifest KMS key, the HMAC key, the source and object caches, and the storage bucket. Signed manifest keys refer to an instance's storage bucket anyway.
+
+During the QC period of a blue-green promotion, the two instances run different commits and read and write the same user records. A change to the format of these records must therefore remain readable by the previous commit for one promotion, so that rolling back works.
 
 
 ## State
@@ -107,28 +115,30 @@ The name of the branch being built selects the instance:
 
 The `anvilprod` entry lets local builds on the `anvilprod` branch select any of the three deployments. The other two entries make GitLab deploy the instance named by the branch being built.
 
-Every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias components, which matters because hotfixes made during a promotion are committed directly to the `anvilprod` branch and pushed to GitHub and GitLab.
+Every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias's components, which matters because hotfixes made during a promotion are committed directly to the `anvilprod` branch and pushed to GitHub and GitLab.
 
 ![GitLab pipelines for blue-green deployments](blue-green-pipelines.svg)
 
 | Stage | Jobs |
 |---|---|
 | `test` | `test` |
-| `deploy` | `deploy_base`, `deploy`: the instance |
+| `deploy` | `deploy_alias_base`, `deploy_alias`: the alias; `deploy_base`, `deploy`: the instance |
 | `early_reindex` | `early_reindex` (manual) |
 | `integration_test` | `integration_test`, against the canonical names |
-| `deploy_alias` | `deploy_alias_base`, `deploy_alias`, `deploy_browser`: the alias |
+| `deploy_browser` | `deploy_browser`: the alias's `browser` component |
 | `teardown` | `on_success`, `on_failure` |
 | `reindex` | `reindex` (manual) |
 | `state` | `go_live`, `rest` (manual) |
 
-### The `deploy_alias` stage
+### Deploying the alias
 
-The `deploy_alias` stage holds the jobs that deploy the alias's components: `deploy_alias_base` deploys `anvilprod.base`, which is empty for now, `deploy_alias` deploys the alias-mode main component `anvilprod`, and `deploy_browser` deploys `anvilprod.browser`. Each job removes the numeric suffix from the name of the deployment being built to select its component. The jobs need names of their own because job names must be unique within a pipeline, and the instance's `deploy_base` and `deploy` jobs already exist.
+Three jobs deploy the alias's components: `deploy_alias_base` deploys `anvilprod.base`, `deploy_alias` deploys the alias-mode main component `anvilprod`, and `deploy_browser` deploys `anvilprod.browser`. Each job removes the numeric suffix from the name of the deployment being built to select its component. The jobs need names of their own because job names must be unique within a pipeline, and the instance's `deploy_base` and `deploy` jobs already exist.
 
-The stage lies between `integration_test` and `teardown`, so that the alias components are deployed only after the instance passed the integration test. Placing the stage before `teardown` keeps a failure of its jobs reflected in the GitHub status check. The `needs:` of the jobs name `integration_test` rather than the `deploy` job, since `needs:` would otherwise let them start as soon as the `deploy` job finishes, regardless of their stage.
+`deploy_alias_base` and `deploy_alias` run in the `deploy` stage, before the instance's `deploy_base`, because the instance depends on the user state that they own (see *User state*): the instance's main component looks up the APAT key with a data source, and the integration test needs the user tables. The alias-mode main component holds only the public domain names and the user tables, so deploying it before the integration test is acceptable.
 
-Both instance pipelines deploy the alias components, possibly from different commits, for example when a hotfix is pushed to the previously live instance during the QC period of a blue-green promotion. This is harmless as long as the two commits configure the public domain names the same way, because the base path mappings aren't managed by Terraform.
+`deploy_browser` runs in a stage of its own, between `integration_test` and `teardown`, so that the `browser` component is deployed only after the instance passed the integration test. Placing the stage before `teardown` keeps a failure of the job reflected in the GitHub status check. The job's `needs:` names `integration_test` rather than the `deploy` job, since `needs:` would otherwise let it start as soon as the `deploy` job finishes, regardless of its stage.
+
+Both instance pipelines deploy the alias's components, possibly from different commits, for example when a hotfix is pushed to the previously live instance during the QC period of a blue-green promotion. This is harmless as long as the two commits configure the public domain names and the user tables the same way, because the base path mappings aren't managed by Terraform.
 
 The Data Browser doesn't inherit Azul's default catalog. Its sites are deployed from the tarballs of the most recent successful Data Browser builds, so deploying the `browser` component from the pipeline of a standby instance doesn't change which catalog the Data Browser defaults to. Making a new catalog the default requires a change to the Data Browser's repository, pushed to GitHub and GitLab. Once the Data Browser build succeeds, the operator retries the `deploy_browser` job in the most recent pipeline of the live instance, which picks up the new tarball. In a blue-green promotion, this must happen after the `go_live` job has run, because only the new instance has the new catalog.
 
@@ -238,7 +248,19 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 1. Contents and duration of the QC period
 
-2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime. The old main component's provisioned buckets hold only cached manifests and test data (see *Mirror buckets*), so they can be destroyed along with it.
+2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime. Findings so far:
+
+   - The migration is a minimal hotfix that sets `azul_blue_green_mode` to `1` in `deployments/anvilprod/environment.py`. The code for blue-green mode reaches anvilprod in earlier promotions, in which the mode is off and the code has no effect.
+
+   - `anvilprod1` is created next to the existing main component, whose resource names don't collide with its own, and is reindexed while `anvilprod` keeps serving users. The migration is therefore a blue-green promotion in which the old main component plays the part of the live instance.
+
+   - The public domain names and the user tables are already in the Terraform state of the `anvilprod` main component, and the APAT key is in that of `anvilprod.base`, under the names that the alias uses. They stay there.
+
+   - The base path mappings are removed from the state of the `anvilprod` main component with `removed` blocks that don't destroy them, as was done when the KMS keys moved into the `base` component.
+
+   - Applying alias mode to the `anvilprod` main component destroys everything else of the old instance, so it happens only after the `go_live` job has run in the `anvilprod1` pipeline and QC has passed. The old provisioned buckets hold only cached manifests and test data (see *Mirror buckets*). The mirror buckets lack `force_destroy`, so they must be emptied first.
+
+   - Applying alias mode to `anvilprod.base` destroys its manifest KMS key, HMAC key and GCP service account, which the instances' `base` components replace. The service accounts of the instances need the same registration with Terra and the same access to TDR snapshots as the existing one.
 
 3. `reindex:` label for catalog-wide reindexing
 
