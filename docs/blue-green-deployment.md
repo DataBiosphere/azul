@@ -43,7 +43,7 @@ A unit test enforces the first rule. For every deployment `D` that has `AZUL_BLU
 | Component | `anvilprod` | `anvilprod1`, `anvilprod2` |
 |---|---|---|
 | main | alias mode: public domain names only | full instance |
-| `base` | alias | per instance (KMS keys, GCP service account) |
+| `base` | empty | per instance (KMS keys, GCP service account) |
 | `shared` | single, as today | — |
 | `gitlab` | single, as today | — |
 | `browser` | single | — |
@@ -112,7 +112,7 @@ Every pipeline is an instance pipeline. It tests the commit before deploying any
 
 ### The `deploy_alias` stage
 
-The `deploy_alias` stage holds the jobs that deploy the alias's components: `deploy_alias_base` deploys `anvilprod.base`, `deploy_alias` deploys the alias-mode main component `anvilprod`, and `deploy_browser` deploys `anvilprod.browser`. Each job removes the numeric suffix from the name of the deployment being built to select its component. The jobs need names of their own because job names must be unique within a pipeline, and the instance's `deploy_base` and `deploy` jobs already exist.
+The `deploy_alias` stage holds the jobs that deploy the alias's components: `deploy_alias_base` deploys `anvilprod.base`, which is empty for now, `deploy_alias` deploys the alias-mode main component `anvilprod`, and `deploy_browser` deploys `anvilprod.browser`. Each job removes the numeric suffix from the name of the deployment being built to select its component. The jobs need names of their own because job names must be unique within a pipeline, and the instance's `deploy_base` and `deploy` jobs already exist.
 
 The stage lies between `integration_test` and `teardown`, so that the alias components are deployed only after the instance passed the integration test. Placing the stage before `teardown` keeps a failure of its jobs reflected in the GitHub status check. The `needs:` of the jobs name `integration_test` rather than the `deploy` job, since `needs:` would otherwise let them start as soon as the `deploy` job finishes, regardless of their stage.
 
@@ -202,22 +202,18 @@ L is the live instance, S the resting instance that becomes live.
 
 ## PR templates
 
-The steps are spelled out verbatim, with instance names, in one template per instance and mode, for example:
+The steps are spelled out verbatim, with instance names, in one template per instance and mode:
 
-- `anvilprod1-promotion.md`, `anvilprod2-promotion.md`: in place
-- `anvilprod1-switch.md`, `anvilprod2-switch.md`: switch to that instance
+- `anvilprod1-promotion.md`, `anvilprod2-promotion.md`: in-place promotion of that instance
+
+- `anvilprod1-blue-green-promotion.md`, `anvilprod2-blue-green-promotion.md`: blue-green promotion to that instance
+
 - `anvilprod1-hotfix.md`, `anvilprod2-hotfix.md`
 
-All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so a branch name such as `promotions/2026-11-21-anvilprod2` works without changes to the script. The template generator needs reworking: it derives the file name and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), which would have to be keyed by instance instead.
+All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator needs reworking: it derives the file name and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), which would have to be keyed by instance instead.
 
 
 ## Open questions
-
-- Canonical domain names: `service.1.explore.anvilproject.org` (`*.1`) or `service.anvilprod1.explore.anvilproject.org` (`*.{AZUL_DEPLOYMENT_STAGE}`, the convention used by hammerbox)
-
-- What the alias's `base` component contains, if anything
-
-- Naming of the templates and of the promotion branches that select them
 
 - Whether the public custom domain names behave as assumed, specifically that the base path mapping of an edge-optimized custom domain name can be switched between two APIs in the same account and region without downtime
 
