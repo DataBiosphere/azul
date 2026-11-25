@@ -1,4 +1,4 @@
-# Blue-green deployments (#6026)
+# Blue-green mode deployments (#6026)
 
 
 ## Problem
