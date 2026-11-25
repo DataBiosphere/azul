@@ -89,7 +89,7 @@ The Terraform config templates read the state when they are rendered, and includ
 
 The existing `config.share_opensearch_domain` mode already omits `aws_opensearch_domain.index` and supplies its dependents from elsewhere: the endpoint and instance count in the Lambdas' environment, and the `opensearch_nodes` data source of the CloudWatch dashboard. Dormancy uses the same branch points, but with no endpoint to supply: the Lambdas of a dormant instance get an empty endpoint and fail any request that needs the index. The `cluster_settings` null resource is omitted along with the domain.
 
-Since rendering reads SSM, every deployment of an instance applies its current state, regardless of who started it. A deployment that happens between changing the state and the intended push already creates or destroys the domain. In a switch, steps 3 and 8 immediately precede their push, so this doesn't matter.
+Since rendering reads SSM, deploying an instance always applies its current state, regardless of who started it. Deploying the instance between changing the state and the intended push already creates or destroys the domain. In a switch, steps 3 and 8 immediately precede their push, so this doesn't matter.
 
 The `integration_test`, `early_reindex` and `reindex` jobs short-circuit for dormant instances.
 
@@ -140,7 +140,7 @@ Running the `go_live` job in the other instance's pipeline switches back.
 
 ### The `wake` and `make_dormant` jobs
 
-Both jobs act on the instance that isn't live, so they need no instance number and run in the `anvilprod` pipeline. Neither changes any resources. The next deployment of the affected instance creates or destroys its OpenSearch domain.
+Both jobs act on the instance that isn't live, so they need no instance number and run in the `anvilprod` pipeline. Neither changes any resources. Deploying the affected instance next creates or destroys its OpenSearch domain.
 
 ## Integration test
 
