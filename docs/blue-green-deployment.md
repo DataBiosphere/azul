@@ -215,17 +215,17 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 ## Open questions
 
-- Whether the public custom domain names behave as assumed, specifically that the base path mapping of an edge-optimized custom domain name can be switched between two APIs in the same account and region without downtime
+1. Whether the public custom domain names behave as assumed, specifically that the base path mapping of an edge-optimized custom domain name can be switched between two APIs in the same account and region without downtime
 
-- Other code paths outside of a request that hand out URLs
+2. Other code paths outside of a request that hand out URLs
 
-- Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
+3. Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
 
-- Contents and duration of the QC period
+4. Contents and duration of the QC period
 
-- Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
+5. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
 
-- `reindex:` label for catalog-wide reindexing
+6. `reindex:` label for catalog-wide reindexing
 
 
 ## Discarded ideas
