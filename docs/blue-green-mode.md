@@ -25,7 +25,7 @@ Each instance has *canonical* domain names, such as `service.1.explore.anvilproj
 
 ## Configuration
 
-The deployments that take part set `AZUL_BLUE_GREEN_MODE` to `1`. All other deployments leave it at its default of `0` and behave exactly as before. Its name begins with `AZUL_` so that it is exported to the Lambdas, which need it at runtime (see *Self-referencing URLs*).
+The deployments that take part set `azul_blue_green_mode` to `1`. All other deployments leave it at its default of `0` and behave exactly as before. Only the scripts, the Terraform config templates and the GitLab jobs read it. The Lambdas don't, so its name is lowercase, which keeps it from being exported to them (see *Self-referencing URLs*).
 
 When the mode is on, the name of the deployment determines its role. A name without a numeric suffix, such as `anvilprod`, denotes the alias. A name with one, such as `anvilprod1`, denotes the instance of that number. There are always exactly two instances, `1` and `2`. Components take the role of the deployment they belong to: `anvilprod1.base` is the `base` component of instance 1. When the mode is off, a numeric suffix has no meaning, as in the existing personal deployment `hannes2`.
 
@@ -35,7 +35,7 @@ Each of the three deployments has its own `environment.py`. The three files are 
 
 - `deployments/anvilprod/environment.py` configures the alias, whose main component needs little more than the domain names. However, the `shared`, `gitlab` and `browser` components inherit from it through the existing component mechanism, so whatever they read must remain in that file.
 
-A unit test enforces the first rule. For every deployment `D` that has `AZUL_BLUE_GREEN_MODE` set to `1` and no numeric suffix, the test loads `env()` from `deployments/D1/environment.py` and `deployments/D2/environment.py`, removes `AZUL_DEPLOYMENT_STAGE` and `AZUL_SUBDOMAIN_TEMPLATE` from both, and asserts that the remainders are equal. It also asserts that both instance directories exist and that both set `AZUL_BLUE_GREEN_MODE` to `1`. A forgotten sync thereby fails the build instead of breaking an instance at the next switch.
+A unit test enforces the first rule. For every deployment `D` that has `azul_blue_green_mode` set to `1` and no numeric suffix, the test loads `env()` from `deployments/D1/environment.py` and `deployments/D2/environment.py`, removes `AZUL_DEPLOYMENT_STAGE` and `AZUL_SUBDOMAIN_TEMPLATE` from both, and asserts that the remainders are equal. It also asserts that both instance directories exist and that both set `azul_blue_green_mode` to `1`. A forgotten sync thereby fails the build instead of breaking an instance at the next switch.
 
 
 ## Terraform components
@@ -162,7 +162,7 @@ Outside a request, `base_url` falls back to `config.lambda_endpoint`, which will
 
 The fix is to capture the base URL of the request that starts the manifest's Step Functions execution, include it in the `ManifestKey` (and therefore in the manifest hash), and have `generate()` build its URLs from the key rather than from `app.base_url`. Including the base URL in the hash also keeps a manifest generated on a standby instance from being served from the cache after the `go_live` job has run. Taking the value from the key also prevents a race with the `go_live` job between starting the execution and generating the manifest.
 
-Any other code that builds URLs outside of a request would read the SSM parameter (with a short cache) and use the public name when its instance is live and the canonical name otherwise. Whether any such code exists besides the manifest generators hasn't been checked.
+The manifest generators are the only code that hands out URLs to users outside of a request (see *Which code builds URLs outside of a request*). The deployed code therefore never needs to know which instance is live, and the Lambdas don't read the state.
 
 URLs that refer to state held by one instance, such as cached manifest objects and manifest fetch tokens, break after a switch no matter which name they use, because each instance has its own storage bucket. How long such URLs need to stay valid limits how soon the old instance may rest.
 
@@ -221,15 +221,15 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 ## Open questions
 
-1. Other code paths outside of a request that hand out URLs
+1. Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
 
-2. Do the Data Browser or Swagger UI need the canonical names registered as OAuth redirect URIs, for use against a standby instance?
+2. Contents and duration of the QC period
 
-3. Contents and duration of the QC period
+3. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
 
-4. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
+4. `reindex:` label for catalog-wide reindexing
 
-5. `reindex:` label for catalog-wide reindexing
+5. Managed-access mirror bucket. anvilprod mirrors open-access files to an external bucket (`AZUL_MIRROR_BUCKET`), which both instances can share. `AZUL_MANAGED_ACCESS_MIRROR_BUCKET` isn't set, so managed-access files are mirrored to a bucket that the main component provisions and names after the stage. Each instance would get its own, storing the managed-access files twice and copying them anew the first time the instance wakes, and the existing bucket would be left behind by the migration to `anvilprod1`. A shared, external bucket for managed-access files, like the one for open-access files, would avoid that.
 
 
 ## Appendix
@@ -255,3 +255,17 @@ The switch was tested on 2026-11-25 in tempdev, by switching the mapping of `ser
 Both locations saw nearly the same timing.
 
 The pollers must stay below the WAF's rate limit of 1,000 requests per IP in 5 minutes. A first attempt at 10 requests per second per poller was blocked with `429` responses and yielded no data.
+
+### Which code builds URLs outside of a request
+
+A search of `src/` and `lambdas/` for every use of `base_url`, `self_url`, `lambda_endpoint`, `service_endpoint`, `indexer_endpoint`, `drs_endpoint`, `drs_domain` and `api_lambda_domain` found the following uses outside of a request. Code outside of a request comprises the indexer's SQS handlers, the manifest Step Functions Lambda, the scheduled health check and the log forwarders.
+
+| Use | Context | Reaches users | Assessment |
+|---|---|---|---|
+| `Controller._file_url`, via the compact and curl manifest generators | Step Functions | yes | Fixed by capturing the base URL in the `ManifestKey` |
+| `HealthController._api_endpoint` and `HealthController._lambda` | scheduled health check | no | Checks the instance itself, so the canonical names are correct |
+| `AzulClient`, for the indexer endpoint | operator scripts, integration test, reindex | no | The canonical names are correct |
+| `DSSBundle.drs_uri` and `dss_drs_object_uri` | indexing, DRS | yes | Only used by the DSS repository plugin, which no deployment uses |
+| `FedRAMPInventoryService` | scheduled GitLab job | no | Compliance inventory, which may need to list the names of both instances |
+
+Every other use builds URLs from the `Host` header of the current request. Mirror URIs are S3 URIs, and the DRS URIs that the TDR repository plugins put into the index are TDR's. The search would miss a URL built from a hard-coded host name.
