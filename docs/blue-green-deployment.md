@@ -1,10 +1,12 @@
 # Blue-green deployments (#6026)
 
+
 ## Problem
 
 Reindexing a stable deployment degrades the service for external users: responses are slow, the index is incomplete, manifests fail, and code deployed ahead of the reindex can fail on documents that haven't been reindexed yet (see the 2026-09-24 recurrence in `prod`). The goal is to reindex out of sight of users and switch over once the new index is complete, without permanently doubling the cost of the deployment.
 
 This design uses `anvilprod` as the example. `prod` would follow the same pattern.
+
 
 ## Terminology
 
@@ -20,19 +22,21 @@ Exactly one instance is live at any time. A live instance never rests. Deploying
 
 Each instance has *canonical* domain names, such as `service.1.explore.anvilproject.org`, which always lead to that instance. The deployment has *public* domain names, such as `service.explore.anvilproject.org`, which lead to whichever instance is live.
 
+
 ## Configuration
 
 The deployments that take part set `AZUL_BLUE_GREEN_MODE` to `1`. All other deployments leave it at its default of `0` and behave exactly as before. Its name begins with `AZUL_` so that it is exported to the Lambdas, which need it at runtime (see *Self-referencing URLs*).
 
 When the mode is on, the name of the deployment determines its role. A name without a numeric suffix, such as `anvilprod`, denotes the alias. A name with one, such as `anvilprod1`, denotes the instance of that number. There are always exactly two instances, `1` and `2`. Components take the role of the deployment they belong to: `anvilprod1.base` is the `base` component of instance 1. When the mode is off, a numeric suffix has no meaning, as in the existing personal deployment `hannes2`.
 
-Each of the three deployments has its own `environment.py`, and the environment loader is unchanged. An instance doesn't inherit from the alias's `environment.py`. The three files are kept in sync manually, as is already done for hammerbox and anvilprod, or for a personal deployment and the sandbox it is based on:
+Each of the three deployments has its own `environment.py`. The three files are kept in sync manually, as is already done for hammerbox and anvilprod, or for a personal deployment and the sandbox it is based on:
 
 - `deployments/anvilprod1/environment.py` and `deployments/anvilprod2/environment.py` must be identical except for `AZUL_DEPLOYMENT_STAGE` and `AZUL_SUBDOMAIN_TEMPLATE`. This is stricter than the relationship between hammerbox and anvilprod: if a promotion that adds a catalog changed only the file of the instance it switches to, the other instance would come back without that catalog when it is woken for the next switch.
 
 - `deployments/anvilprod/environment.py` configures the alias, whose main component needs little more than the domain names. However, the `shared`, `gitlab` and `browser` components inherit from it through the existing component mechanism, so whatever they read must remain in that file.
 
 A unit test enforces the first rule. For every deployment `D` that has `AZUL_BLUE_GREEN_MODE` set to `1` and no numeric suffix, the test loads `env()` from `deployments/D1/environment.py` and `deployments/D2/environment.py`, removes `AZUL_DEPLOYMENT_STAGE` and `AZUL_SUBDOMAIN_TEMPLATE` from both, and asserts that the remainders are equal. It also asserts that both instance directories exist and that both set `AZUL_BLUE_GREEN_MODE` to `1`. A forgotten sync thereby fails the build instead of breaking an instance at the next switch.
+
 
 ## Terraform components
 
@@ -50,17 +54,12 @@ In *alias mode*, the main component owns only the public domain names: the ACM c
 
 The instances' main components are configured like any other main deployment (see *Configuration*), with `AZUL_SUBDOMAIN_TEMPLATE` set to `*.1` or `*.2`, and the same `AZUL_DOMAIN_NAME` as `anvilprod`. All resource names are qualified with `AZUL_DEPLOYMENT_STAGE`, so the two instances don't collide. These files also exist on `develop`. Which instance a build deploys is not configured in the source (see *Branches and pipelines*).
 
-### Why not alias records
-
-Switching the public names by repointing DNS alias records doesn't work with edge-optimized API Gateway custom domain names. A custom domain name can exist only once, so both instances can't own `service.explore.anvilproject.org`. CloudFront also routes by the `Host` header, so a request for the public name reaching the distribution of `service.1.…` would most likely be rejected. This hasn't been tested, but the existing DRS alias also needed a custom domain name of its own, not just a DNS record.
-
-Switching the base path mapping (`update-base-path-mapping` with patch operations on `/restapiId` and `/stage`) avoids that problem. It takes effect without waiting for a DNS TTL to expire, and switching back is the same operation.
-
 ### `shared` and the ECR images
 
 `shared` remains single. It mirrors upstream images into ECR and, on every regular `apply`, deletes the images that the current commit doesn't use. The two-phase `shared` deploy that already exists (`apply_keep_unused`, then `apply`) covers this. The second phase may run only from a commit that every instance is on, except for resting ones.
 
 The Lambda image repository is unaffected. Its tags are qualified with the stage (`anvilprod1-service`, …), and `--delete-unused` doesn't touch it.
+
 
 ## State
 
@@ -73,6 +72,7 @@ SSM is authoritative. The base path mappings are derived from it, and `scripts/m
 The `rest` job destroys the OpenSearch domain of the instance of the pipeline it runs in, together with its cache-health alarms. It does so with a targeted `terraform destroy` of the same resources that the main-component part of the `_hibernate` convenience function destroys, which is used routinely in tempdev. A targeted destroy also destroys any resources that depend on its targets.
 
 Waking is implicit. Deploying a resting instance recreates whatever the `rest` job destroyed, so pushing to the branch of a resting instance (see *Branches and pipelines*) wakes it. The `deploy` job doesn't read the state, and the Terraform configuration of an instance doesn't depend on it.
+
 
 ## Branches and pipelines
 
@@ -140,11 +140,13 @@ Running the `go_live` job again is harmless, and repairs a run that was interrup
 
 The `rest` subcommand makes the instance of the pipeline it runs in rest. It refuses if the instance is live, and destroys the instance's OpenSearch domain as described in *Resting and waking*. The operator runs the job in the most recent pipeline of the instance, which was built from the commit that last deployed it. The targeted destroy therefore uses the same Terraform configuration and provider versions as the instance's Terraform state. That pipeline may be old, and its job image, tagged with the pipeline's ID, must still be in the GitLab registry. If it isn't, the operator runs `make rest` from a local checkout of that commit instead.
 
+
 ## Integration test
 
 The integration test needs no changes. It runs in the instance's pipeline, with the instance's configuration, so `config.service_endpoint` and `config.indexer_endpoint` resolve to the canonical names, and every AWS resource it touches is qualified with the instance's stage. The OAuth flow in the attended mode of the test redirects to a local HTTP server, so the canonical names don't need to be registered with Google as redirect URIs.
 
 The test doesn't cover the public path, from the public custom domain name through the base path mapping to the instance. The check at the end of the `go_live` job and the QC period cover it.
+
 
 ## Self-referencing URLs
 
@@ -157,6 +159,7 @@ The fix is to capture the base URL of the request that starts the manifest's Ste
 Any other code that builds URLs outside of a request would read the SSM parameter (with a short cache) and use the public name when its instance is live and the canonical name otherwise. Whether any such code exists besides the manifest generators hasn't been checked.
 
 URLs that refer to state held by one instance, such as cached manifest objects and manifest fetch tokens, break after a switch no matter which name they use, because each instance has its own storage bucket. How long such URLs need to stay valid limits how soon the old instance may rest.
+
 
 ## Promotions
 
@@ -196,6 +199,7 @@ L is the live instance, S the resting instance that becomes live.
 
 7. Phase 2 of the `shared` deploy (`apply`). Every instance that isn't resting is on the current commit.
 
+
 ## PR templates
 
 The steps are spelled out verbatim, with instance names, in one template per instance and mode, for example:
@@ -205,6 +209,7 @@ The steps are spelled out verbatim, with instance names, in one template per ins
 - `anvilprod1-hotfix.md`, `anvilprod2-hotfix.md`
 
 All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so a branch name such as `promotions/2026-11-21-anvilprod2` works without changes to the script. The template generator needs reworking: it derives the file name and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), which would have to be keyed by instance instead.
+
 
 ## Open questions
 
@@ -225,3 +230,12 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 - Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
 
 - `reindex:` label for catalog-wide reindexing
+
+
+## Discarded ideas
+
+### DNS alias records
+
+Switching the public names by repointing DNS alias records doesn't work with edge-optimized API Gateway custom domain names. A custom domain name can exist only once, so both instances can't own `service.explore.anvilproject.org`. CloudFront also routes by the `Host` header, so a request for the public name reaching the distribution of `service.1.…` would most likely be rejected. This hasn't been tested, but the existing DRS alias also needed a custom domain name of its own, not just a DNS record.
+
+Switching the base path mapping (`update-base-path-mapping` with patch operations on `/restapiId` and `/stage`) avoids that problem. It takes effect without waiting for a DNS TTL to expire, and switching back is the same operation.
