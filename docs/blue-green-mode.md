@@ -60,6 +60,12 @@ The instances' main components are configured like any other main deployment (se
 
 The Lambda image repository is unaffected. Its tags are qualified with the stage (`anvilprod1-service`, …), and `--delete-unused` doesn't touch it.
 
+### Mirror buckets
+
+anvilprod mirrors open-access files to an external bucket (`AZUL_MIRROR_BUCKET`), which both instances share. Each instance also provisions its own open-access and managed-access mirror buckets. The integration test catalogs are always mirrored to those, and since `AZUL_MANAGED_ACCESS_MIRROR_BUCKET` isn't set, so are the managed-access files of the other catalogs. These buckets hold only test data, so keeping one set per instance costs next to nothing, and copying the files anew when an instance wakes is cheap.
+
+Sharing the provisioned buckets between the instances would mix the test data of both instances' integration tests, which may run concurrently. An external managed-access bucket would also require adding it to the boundary policy of the `gitlab` component, which currently permits only the provisioned buckets and `AZUL_MIRROR_BUCKET`.
+
 
 ## State
 
@@ -232,11 +238,9 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 1. Contents and duration of the QC period
 
-2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime
+2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime. The old main component's provisioned buckets hold only cached manifests and test data (see *Mirror buckets*), so they can be destroyed along with it.
 
 3. `reindex:` label for catalog-wide reindexing
-
-4. Managed-access mirror bucket. anvilprod mirrors open-access files to an external bucket (`AZUL_MIRROR_BUCKET`), which both instances can share. `AZUL_MANAGED_ACCESS_MIRROR_BUCKET` isn't set, so managed-access files are mirrored to a bucket that the main component provisions and names after the stage. Each instance would get its own, storing the managed-access files twice and copying them anew the first time the instance wakes, and the existing bucket would be left behind by the migration to `anvilprod1`. A shared, external bucket for managed-access files, like the one for open-access files, would avoid that.
 
 
 ## Appendix
