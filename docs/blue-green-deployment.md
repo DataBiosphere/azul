@@ -71,11 +71,11 @@ Each transition writes a single field:
 
 | Transition | Write | Precondition |
 |---|---|---|
-| Wake the other instance | `standby: true` | — |
+| Run the `wake` job | `standby: true` | — |
 | Run the `go_live` job of the other instance | `live: <other>` | `standby` is `true`; the previously live instance becomes standby |
-| Make the other instance dormant | `standby: false` | — |
+| Run the `make_dormant` job | `standby: false` | — |
 
-Making the live instance dormant can't be expressed, and making a dormant instance live requires waking it first. SSM has no compare-and-swap, so every job that writes the parameter is placed in the GitLab `resource_group: anvilprod`, which makes GitLab run them one at a time.
+Making the live instance dormant can't be expressed, and making a dormant instance live requires waking it first. Every state change is made by one of three manual GitLab jobs: `wake`, `go_live` and `make_dormant`. SSM has no compare-and-swap, so all three are placed in the GitLab `resource_group: anvilprod`, which makes GitLab run them one at a time. Nothing else writes the parameter.
 
 SSM is authoritative. The base path mappings are derived from it, and the `go_live` job reconciles them with it, so re-running that job repairs a switch that failed halfway.
 
@@ -83,13 +83,13 @@ SSM is authoritative. The base path mappings are derived from it, and the `go_li
 
 The `deploy` job reconciles an instance's resources with its state. For a dormant instance, the OpenSearch domain (and the alarms that depend on it, as in the `_hibernate` convenience function) are omitted from the Terraform configuration, so applying it destroys them. For any other instance, they are created. Making an instance dormant or waking it therefore takes two steps: change the state, then deploy.
 
-A script changes the state, with one subcommand per transition: wake, go live, and make dormant. Each subcommand checks the transition's precondition before writing the parameter. The `go_live` job uses the same script, so that every write goes through it. A script run locally isn't part of the `resource_group`, so it isn't serialized with the jobs. SSM can't prevent such a race, but it can detect it: `put_parameter` returns the new version of the parameter, so the script reads the version, writes, and fails if the version it wrote isn't exactly one higher than the one it read.
+The three state-changing jobs share a script with one subcommand per transition. Each subcommand checks the transition's precondition before writing the parameter. The script is not meant to be run locally, because a local run wouldn't be serialized with the jobs.
 
 The Terraform config templates read the state when they are rendered, and include or exclude resources with a Python conditional, as they already do for, say, `config.is_tdr_enabled()`. Templates already query external state at render time: `lambda_image_uri` asks the registry for an image digest, and the `browser` template asks GitLab for a tarball hash. A conditional in the template leaves the excluded resources out of the generated configuration entirely, which is simpler than an `aws_ssm_parameter` data source with `count`, which would require every reference to the domain to be indexed and guarded in Terraform.
 
 The existing `config.share_opensearch_domain` mode already omits `aws_opensearch_domain.index` and supplies its dependents from elsewhere: the endpoint and instance count in the Lambdas' environment, and the `opensearch_nodes` data source of the CloudWatch dashboard. Dormancy uses the same branch points, but with no endpoint to supply: the Lambdas of a dormant instance get an empty endpoint and fail any request that needs the index. The `cluster_settings` null resource is omitted along with the domain.
 
-Since rendering reads SSM, every deployment of an instance applies its current state, regardless of who started it. A deployment that happens between changing the state and the intended push already creates or destroys the domain. In a switch, steps 1 and 8 immediately precede their push, so this doesn't matter.
+Since rendering reads SSM, every deployment of an instance applies its current state, regardless of who started it. A deployment that happens between changing the state and the intended push already creates or destroys the domain. In a switch, steps 3 and 8 immediately precede their push, so this doesn't matter.
 
 The `integration_test`, `early_reindex` and `reindex` jobs short-circuit for dormant instances.
 
@@ -123,6 +123,7 @@ The `anvilprod` entry lets local builds on the `anvilprod` branch select any of 
 | `integration_test` | skipped | runs against the canonical names |
 | `early_reindex`, `reindex` | absent | manual |
 | `go_live` | absent | manual |
+| `wake`, `make_dormant` | manual | absent |
 
 Jobs short-circuit based on the configuration (`if python -m azul -t config.deployment.is_alias …`). The manual jobs use `rules:` on `$CI_COMMIT_BRANCH` instead, so that no button appears that does nothing when clicked.
 
@@ -136,6 +137,10 @@ The instance pipelines skip the `test` job because the same commit is tested in 
 4. Check `/version` and `/health/basic` through the public names.
 
 Running the `go_live` job in the other instance's pipeline switches back.
+
+### The `wake` and `make_dormant` jobs
+
+Both jobs act on the instance that isn't live, so they need no instance number and run in the `anvilprod` pipeline. Neither changes any resources. The next deployment of the affected instance creates or destroys its OpenSearch domain.
 
 ## Integration test
 
@@ -177,17 +182,15 @@ Precondition: the other instance is dormant. This rules out an in-place promotio
 
 L is the live instance, S the dormant instance that becomes live.
 
-1. Wake S in SSM
-2. Phase 1 of the `shared` deploy (`apply_keep_unused`)
-3. Merge, push `anvilprod`, wait for the `test` job
+1. Phase 1 of the `shared` deploy (`apply_keep_unused`)
+2. Merge, push `anvilprod`, wait for the `test` job
+3. Run the `wake` job in the `anvilprod` pipeline
 4. Push `anvilprod:anvilprodS`. The `deploy` job creates the OpenSearch domain, and the `integration_test` job runs.
 5. Run the `early_reindex` or `reindex` job in the `anvilprodS` pipeline
 6. Run the `go_live` job in the `anvilprodS` pipeline
 7. QC period. L is still on the previous commit with a complete index, so rolling back is a matter of running the `go_live` job in the latest `anvilprodL` pipeline.
-8. Mark L dormant in SSM, then push `anvilprod:anvilprodL`. The `deploy` job destroys L's OpenSearch domain, and the `integration_test` job short-circuits. This is the point of no return. After it, rolling back requires another switch.
+8. Run the `make_dormant` job in the `anvilprod` pipeline, then push `anvilprod:anvilprodL`. The `deploy` job destroys L's OpenSearch domain, and the `integration_test` job short-circuits. This is the point of no return. After it, rolling back requires another switch.
 9. Phase 2 of the `shared` deploy (`apply`). All instances and `shared` are on the same commit.
-
-Steps 1 and 8 change the state before the push. Whether they are done by a script that the operator runs locally or by a manual job in some pipeline is still open.
 
 ## PR templates
 
@@ -203,7 +206,6 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 
 - Canonical domain names: `service.1.explore.anvilproject.org` (`*.1`) or `service.anvilprod1.explore.anvilproject.org` (`*.{AZUL_DEPLOYMENT_STAGE}`, the convention used by hammerbox)
 - Does the alias-mode `anvilprod` need a `base` component, or do only the instances have one?
-- Who changes the state in steps 1 and 8 of a switch: a local script or a manual job?
 - Naming of the templates and of the promotion branches that select them
 - Alarms and scheduled Lambdas of a dormant instance. Its Lambdas and API remain, but requests to them fail without an OpenSearch domain.
 - Whether the public custom domain names behave as assumed, specifically that the base path mapping of an edge-optimized custom domain name can be switched between two APIs in the same account and region without downtime
