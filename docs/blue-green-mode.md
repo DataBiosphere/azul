@@ -98,26 +98,31 @@ The `go_live` job therefore polls the public names until only the new instance a
 
 ## Branches and pipelines
 
-Promotion and hotfix PRs target the `anvilprod` branch, as they do today. The `anvilprod` branch is no longer pushed to GitLab. Instead, the operator pushes the merge commit to the GitLab branch named after the instance it is to be deployed to:
+The `anvilprod` branch is retired. Instead, each instance has a branch named after it, `anvilprod1` and `anvilprod2`, on both GitHub and GitLab. A promotion or hotfix PR targets the branch of the instance it is deployed to: an in-place promotion or a hotfix targets the branch of the live instance, a blue-green promotion that of the resting instance. After merging the PR, the operator pushes the branch to GitLab:
 
 ```
-git push gitlab.anvilprod anvilprod:anvilprod1
+git push gitlab.anvilprod anvilprod1
 ```
+
+The history of each branch on GitHub records which commits were deployed to the instance, and when. The tip of a branch is the commit last deployed to the instance, whether the instance is live, standby or resting. Which instance is live is recorded in SSM.
+
+Merging a promotion into the branch of the resting instance brings that branch up to date, even though it may lag behind by several promotions: the promotion branch is based on `develop`, into which every hotfix is backported before the next promotion. The diff of a blue-green promotion PR is correspondingly larger than that of an in-place one. Both branches only ever move forward, so they are protected against force pushes and deletion, as the `anvilprod` branch is today.
 
 The name of the branch being built selects the instance:
 
 ```python
 'azul_shared_deployments': json.dumps({
     …
-    'anvilprod': ['anvilprod', 'anvilprod1', 'anvilprod2', 'hammerbox'],
-    'anvilprod1': ['anvilprod1'],
-    'anvilprod2': ['anvilprod2'],
+    'anvilprod1': ['anvilprod1', 'anvilprod', 'hammerbox'],
+    'anvilprod2': ['anvilprod2', 'anvilprod', 'hammerbox'],
 })
 ```
 
-The `anvilprod` entry lets local builds on the `anvilprod` branch select any of the three deployments. The other two entries make GitLab deploy the instance named by the branch being built.
+The first entry of each list is the instance that GitLab deploys when it builds the branch. The `anvilprod` entries let the operator select the alias in a checkout of either branch, for example to deploy the `shared` and `gitlab` components, and `hammerbox` remains the sandbox for PRs that target either branch.
 
-In blue-green mode, every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias's components, which matters because hotfixes made during a promotion are committed directly to the `anvilprod` branch and pushed to GitHub and GitLab.
+Everything that names the `anvilprod` branch must name the instance branches instead, such as `azul_shared_deployments`, `T.target_deployments` in the generator of the PR templates, the names of promotion branches, backports of hotfixes, and checks of whether a commit has reached a stable branch. The latter look at the branch of the live instance.
+
+In blue-green mode, every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias's components, which matters because hotfixes made during a promotion are committed directly to the instance's branch and pushed to GitHub and GitLab.
 
 ![GitLab pipelines for blue-green deployments](blue-green-pipelines.svg)
 
@@ -236,7 +241,7 @@ Precondition: the other instance is resting. This rules out an in-place promotio
 
 1. Phase 1 of the `shared` deploy (`apply_keep_unused`)
 
-2. Merge, push `anvilprod:anvilprodL`, where L is the live instance
+2. Merge into `anvilprodL`, where L is the live instance, and push `anvilprodL` to GitLab
 
 3. Partial reindex in the `anvilprodL` pipeline, if one is required
 
@@ -248,7 +253,7 @@ L is the live instance, S the resting instance that becomes live.
 
 1. Phase 1 of the `shared` deploy (`apply_keep_unused`)
 
-2. Merge, push `anvilprod:anvilprodS`. The `deploy` job wakes S, and the `integration_test` job runs.
+2. Merge into `anvilprodS` and push `anvilprodS` to GitLab. The `deploy` job wakes S, and the `integration_test` job runs.
 
 3. Run the `early_reindex` or `reindex` job in the `anvilprodS` pipeline
 
@@ -271,7 +276,7 @@ The steps are spelled out verbatim, with instance names, in one template per ins
 
 - `anvilprod1-hotfix.md`, `anvilprod2-hotfix.md`
 
-All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator needs reworking: it derives the file name and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), which would have to be keyed by instance instead.
+Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvilprod1-blue-green-promotion.md` both say "Target branch is `anvilprod1`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator already derives the file names and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), so it needs the instance branches as target branches, with `hammerbox` as their sandbox, and a variant for blue-green promotions.
 
 
 ## Open questions
@@ -281,6 +286,8 @@ All of them still say "Target branch is `anvilprod`". `scripts/pull_request.py` 
 2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime. Findings so far:
 
    - The migration is a minimal hotfix that sets `azul_blue_green_mode` to `1` in `deployments/anvilprod/environment.py`. The code for blue-green mode reaches anvilprod in earlier promotions, in which the mode is off and the code has no effect. One of these promotions moves the user tables into the `base` component (see *User state*).
+
+   - The migration creates the `anvilprod1` and `anvilprod2` branches on GitHub and GitLab from the tip of the `anvilprod` branch, which is retired afterwards. The hotfix is the last PR to target the `anvilprod` branch.
 
    - `anvilprod1` is created next to the existing main component, whose resource names don't collide with its own, and is reindexed while `anvilprod` keeps serving users. The migration is therefore a blue-green promotion in which the old main component plays the part of the live instance.
 
