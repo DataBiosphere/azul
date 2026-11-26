@@ -95,6 +95,10 @@ Switching the base path mapping of an edge-optimized custom domain name from one
 
 The `go_live` job therefore polls the public names until only the new instance answers, with a timeout of a few minutes. For about half a minute after the job ran, consecutive requests from the same client may be served by different instances.
 
+### Identifying the instance
+
+Every response from the REST APIs of the service and the indexer carries the header `X-Azul-Deployment`, whose value is the name of the deployment that produced it, such as `anvilprod1`. The header is one of the headers that `AzulChaliceApp.security_headers()` returns, in every deployment, regardless of the mode. That method already supplies the headers that the middleware adds to the responses of the Lambdas, and the headers of the responses that API Gateway produces itself, such as its default `4XX` and `5XX` responses. The Lambdas know the name of their deployment, so they don't need to read the state. The header shows which instance answered a request made at a public name, which helps with diagnosing problems during the period in which both instances answer, and is what the `go_live` job and the QC period use to verify the switch. Responses that the WAF produces, such as the `429` responses of its rate limit, and errors that CloudFront produces before a request reaches API Gateway, don't carry the header.
+
 
 ## Branches and pipelines
 
@@ -194,7 +198,7 @@ The `go_live` subcommand makes the instance of the pipeline it runs in live:
 
 3. Point each public custom domain name's base path mapping at the instance's API and stage.
 
-4. Poll `/version` and `/health/basic` through the public names until only the instance answers, for up to a few minutes (see *Switching the base path mappings*).
+4. Poll `/health/basic` through the public names until every response carries the instance's name in the `X-Azul-Deployment` header, for up to a few minutes (see *Switching the base path mappings* and *Identifying the instance*).
 
 Running the `go_live` job again is harmless, and repairs a run that was interrupted after step 2. The subcommand doesn't require the other instance to be on the same commit, because rolling back makes an instance on the previous commit live.
 
@@ -218,7 +222,7 @@ The fix is to capture the base URL of the request that starts the manifest's Ste
 
 The manifest generators are the only code that hands out URLs to users outside of a request (see *Which code builds URLs outside of a request*). The deployed code therefore never needs to know which instance is live, and the Lambdas don't read the state.
 
-URLs that refer to state held by one instance, such as cached manifest objects and manifest fetch tokens, break after a switch no matter which name they use, because each instance has its own storage bucket. How long such URLs need to stay valid limits how soon the old instance may rest.
+URLs that refer to state held by one instance, such as cached manifest objects and manifest fetch tokens, break after a switch no matter which name they use, because each instance has its own storage bucket. They break when the `go_live` job has run, whether the old instance rests or not, so they don't constrain the QC period.
 
 
 ## Sign-in
@@ -274,11 +278,29 @@ L is the live instance, S the resting instance that becomes live.
 
 5. Run the `deploy_browser` job in the `anvilprodS` pipeline
 
-6. QC period. L is still on the previous commit with a complete index, so rolling back is a matter of running the `go_live` and `deploy_browser` jobs in the latest `anvilprodL` pipeline.
+6. QC period (see *QC period*). L is still on the previous commit with a complete index, so rolling back is a matter of running the `go_live` and `deploy_browser` jobs in the latest `anvilprodL` pipeline.
 
 7. Run the `rest` job in the latest `anvilprodL` pipeline. L rests on the previous commit. Rolling back after this step requires waking L by pushing to its branch, and reindexing it.
 
 8. Phase 2 of the `shared` deploy (`apply`). Every instance that isn't resting is on the current commit.
+
+### QC period
+
+The QC period of a blue-green promotion begins when the `go_live` job has run and ends with the `rest` job. It lasts at least one hour and at most one day. During it, both instances are active, so rolling back is a matter of running the `go_live` and `deploy_browser` jobs in the latest pipeline of the previously live instance. After the `rest` job, rolling back requires waking that instance and reindexing it from scratch. Since the QC period must not extend over a weekend, no blue-green promotion is started on a Friday.
+
+During the QC period, the operator checks that:
+
+- the responses to requests made at the public names carry the new instance's name in the `X-Azul-Deployment` header (see *Identifying the instance*)
+
+- no alarm fires, the alarm for `5xx` responses in particular
+
+- the Data Browser works, for its default catalog and its main pages
+
+- manifests in the common formats can be generated through the public names
+
+- for catalogs the promotion doesn't change, the responses to `/index/summary` at the canonical names of the two instances match, which indicates that the reindex is complete. Differences are expected where the promotion changes how documents are indexed.
+
+The QC period is concerned with the switch, not with the approval of a release (see *AnVIL releases*).
 
 ### AnVIL releases
 
@@ -365,11 +387,6 @@ The steps are spelled out verbatim, with instance names, in one template per ins
 - `anvilprod1-blue-green-hotfix.md`, `anvilprod2-blue-green-hotfix.md`: blue-green hotfix to that instance, for example one that adds a catalog (see *AnVIL releases*)
 
 Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvilprod1-blue-green-promotion.md` both say "Target branch is `anvilprod1`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator already derives the file names and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), so it needs the instance branches as target branches, with `hammerbox` as their sandbox, and a blue-green variant of promotions and hotfixes.
-
-
-## Open questions
-
-1. Contents and duration of the QC period. The QC period is concerned with the switch, and ends with the `rest` job, not with the approval of a release (see *AnVIL releases*).
 
 
 ## Appendix
