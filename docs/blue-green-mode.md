@@ -79,15 +79,15 @@ During the QC period of a blue-green promotion, the two instances run different 
 
 ## State
 
-The state is the number of the live instance, `1` or `2`, in an SSM parameter per deployment, such as `/azul/anvilprod/live`. Whether the other instance is standby or resting isn't recorded: it is resting if its OpenSearch domain doesn't exist.
+The state of the instances isn't stored separately, but observed. An instance is live if the base path mappings of the public custom domain names point at its API. Each of the two public custom domain names, one for the service and one for the indexer, has a mapping, and `get-base-path-mapping` reflects a change immediately, even though the change takes up to about 80 seconds to propagate (see *Switching the base path mappings*). An instance that isn't live is standby if its OpenSearch domain exists, and resting otherwise.
 
-SSM is authoritative. The base path mappings are derived from it, and `scripts/manage_blue_green.py` reconciles them with it, so re-running the `go_live` job repairs a switch that failed halfway (see *The state jobs*).
+The two mappings can disagree only if a run of the `go_live` job was interrupted between updating one and the other. Running the job again repairs that (see *The state jobs*). During the migration, the mappings point at the API of the legacy instance, so neither instance is live (see *Migration*).
 
 ### Resting and waking
 
 The `rest` job destroys the OpenSearch domain of the instance of the pipeline it runs in, together with its cache-health alarms. It does so with a targeted `terraform destroy` of the same resources that the main-component part of the `_hibernate` convenience function destroys, which is used routinely in tempdev. A targeted destroy also destroys any resources that depend on its targets.
 
-Waking is implicit. Deploying a resting instance recreates whatever the `rest` job destroyed, so pushing to the branch of a resting instance (see *Branches and pipelines*) wakes it. The `deploy` job doesn't read the state, and the Terraform configuration of an instance doesn't depend on it.
+Waking is implicit. Deploying a resting instance recreates whatever the `rest` job destroyed, so pushing to the branch of a resting instance (see *Branches and pipelines*) wakes it. The `deploy` job doesn't look at the state, and the Terraform configuration of an instance doesn't depend on it.
 
 ### Switching the base path mappings
 
@@ -97,7 +97,7 @@ The `go_live` job therefore polls the public names until only the new instance a
 
 ### Identifying the instance
 
-Every response from the REST APIs of the service and the indexer carries the header `X-Azul-Deployment`, whose value is the name of the deployment that produced it, such as `anvilprod1`. The header is one of the headers that `AzulChaliceApp.security_headers()` returns, in every deployment, regardless of the mode. That method already supplies the headers that the middleware adds to the responses of the Lambdas, and the headers of the responses that API Gateway produces itself, such as its default `4XX` and `5XX` responses. The Lambdas know the name of their deployment, so they don't need to read the state. The header shows which instance answered a request made at a public name, which helps with diagnosing problems during the period in which both instances answer, and is what the `go_live` job and the QC period use to verify the switch. Responses that the WAF produces, such as the `429` responses of its rate limit, and errors that CloudFront produces before a request reaches API Gateway, don't carry the header.
+Every response from the REST APIs of the service and the indexer carries the header `X-Azul-Deployment`, whose value is the name of the deployment that produced it, such as `anvilprod1`. The header is one of the headers that `AzulChaliceApp.security_headers()` returns, in every deployment, regardless of the mode. That method already supplies the headers that the middleware adds to the responses of the Lambdas, and the headers of the responses that API Gateway produces itself, such as its default `4XX` and `5XX` responses. The Lambdas know the name of their deployment, so they don't need to know the state. The header shows which instance answered a request made at a public name, which helps with diagnosing problems during the period in which both instances answer, and is what the `go_live` job and the QC period use to verify the switch. Responses that the WAF produces, such as the `429` responses of its rate limit, and errors that CloudFront produces before a request reaches API Gateway, don't carry the header.
 
 
 ## Branches and pipelines
@@ -108,7 +108,7 @@ The `anvilprod` branch is retired. Instead, each instance has a branch named aft
 git push gitlab.anvilprod anvilprod1
 ```
 
-The history of each branch on GitHub records which commits were deployed to the instance, and when. The tip of a branch is the commit last deployed to the instance, whether the instance is live, standby or resting. Which instance is live is recorded in SSM.
+The history of each branch on GitHub records which commits were deployed to the instance, and when. The tip of a branch is the commit last deployed to the instance, whether the instance is live, standby or resting. Which instance is live is determined by the base path mappings (see *State*).
 
 Merging a promotion into the branch of the resting instance brings that branch up to date, even though it may lag behind by several promotions: the promotion branch is based on `develop`, into which every hotfix is backported before the next promotion. The diff of a blue-green promotion PR is correspondingly larger than that of an in-place one. Both branches only ever move forward, so they are protected against force pushes and deletion, as the `anvilprod` branch is today.
 
@@ -188,21 +188,19 @@ The Data Browser doesn't inherit Azul's default catalog. Its sites are deployed 
 
 The `go_live` and `rest` jobs are manual jobs in the `state` stage of every instance pipeline. Both are placed in the GitLab `resource_group: anvilprod`, which makes GitLab run them one at a time.
 
-A single script, `scripts/manage_blue_green.py`, implements both jobs, with one subcommand per job. The `Makefile` has a target for each subcommand, `make go_live` and `make rest`, and each job runs its target, as the `reindex` job runs `make reindex`. Only the script mutates the state and only the script updates the base path mappings. Each subcommand checks its precondition before making any change. The operator can also run the targets from a local checkout, for example when GitLab is unavailable.
+A single script, `scripts/manage_blue_green.py`, implements both jobs, with one subcommand per job. The `Makefile` has a target for each subcommand, `make go_live` and `make rest`, and each job runs its target, as the `reindex` job runs `make reindex`. Only the script updates the base path mappings, and with them, which instance is live. Each subcommand checks its precondition before making any change. The operator can also run the targets from a local checkout, for example when GitLab is unavailable.
 
 The `go_live` subcommand makes the instance of the pipeline it runs in live:
 
 1. Refuse unless the public custom domain names exist, the instance's index is complete, and its canonical names answer `/health/basic`. The public custom domain names exist once the `deploy_alias` job has run. The index is complete when every catalog's indices exist and the indexer queues are empty. The job's `needs: [integration_test]` ensures that the integration test passed.
 
-2. Record the instance as live in SSM.
+2. Point each public custom domain name's base path mapping at the instance's API and stage.
 
-3. Point each public custom domain name's base path mapping at the instance's API and stage.
+3. Poll `/health/basic` through the public names until every response carries the instance's name in the `X-Azul-Deployment` header, for up to a few minutes (see *Switching the base path mappings* and *Identifying the instance*).
 
-4. Poll `/health/basic` through the public names until every response carries the instance's name in the `X-Azul-Deployment` header, for up to a few minutes (see *Switching the base path mappings* and *Identifying the instance*).
+Running the `go_live` job again is harmless, and repairs a run that was interrupted during step 2. The subcommand doesn't require the other instance to be on the same commit, because rolling back makes an instance on the previous commit live.
 
-Running the `go_live` job again is harmless, and repairs a run that was interrupted after step 2. The subcommand doesn't require the other instance to be on the same commit, because rolling back makes an instance on the previous commit live.
-
-The `rest` subcommand makes the instance of the pipeline it runs in rest. It refuses if the instance is live, and destroys the instance's OpenSearch domain as described in *Resting and waking*. The operator runs the job in the most recent pipeline of the instance, which was built from the commit that last deployed it. The targeted destroy therefore uses the same Terraform configuration and provider versions as the instance's Terraform state. That pipeline may be old, and its job image, tagged with the pipeline's ID, must still be in the GitLab registry. If it isn't, the operator runs `make rest` from a local checkout of that commit instead.
+The `rest` subcommand makes the instance of the pipeline it runs in rest. It refuses if either base path mapping points at the instance's API, and destroys the instance's OpenSearch domain as described in *Resting and waking*. The operator runs the job in the most recent pipeline of the instance, which was built from the commit that last deployed it. The targeted destroy therefore uses the same Terraform configuration and provider versions as the instance's Terraform state. That pipeline may be old, and its job image, tagged with the pipeline's ID, must still be in the GitLab registry. If it isn't, the operator runs `make rest` from a local checkout of that commit instead.
 
 
 ## Integration test
@@ -220,7 +218,7 @@ Outside a request, `base_url` falls back to `config.lambda_endpoint`, which will
 
 The fix is to capture the base URL of the request that starts the manifest's Step Functions execution, include it in the `ManifestKey` (and therefore in the manifest hash), and have `generate()` build its URLs from the key rather than from `app.base_url`. Including the base URL in the hash also keeps a manifest generated on a standby instance from being served from the cache after the `go_live` job has run. Taking the value from the key also prevents a race with the `go_live` job between starting the execution and generating the manifest.
 
-The manifest generators are the only code that hands out URLs to users outside of a request (see *Which code builds URLs outside of a request*). The deployed code therefore never needs to know which instance is live, and the Lambdas don't read the state.
+The manifest generators are the only code that hands out URLs to users outside of a request (see *Which code builds URLs outside of a request*). The deployed code therefore never needs to know which instance is live.
 
 URLs that refer to state held by one instance, such as cached manifest objects and manifest fetch tokens, break after a switch no matter which name they use, because each instance has its own storage bucket. They break when the `go_live` job has run, whether the old instance rests or not, so they don't constrain the QC period.
 
@@ -355,11 +353,11 @@ The legacy instance serves users throughout this step.
 
 5. Run the `early_reindex` or `reindex` job in the `anvilprod1` pipeline.
 
-6. Run the `go_live` job in the `anvilprod1` pipeline. It creates the SSM parameter and points the base path mappings of the public custom domain names, which are still in the Terraform state of the legacy instance, at `anvilprod1`.
+6. Run the `go_live` job in the `anvilprod1` pipeline. It points the base path mappings of the public custom domain names, which are still in the Terraform state of the legacy instance, at `anvilprod1`.
 
 7. Run the `deploy_browser` job in the `anvilprod1` pipeline.
 
-8. QC period. To roll back, point the base path mappings back at the API of the legacy instance with `update-base-path-mapping`, and delete the SSM parameter. The legacy instance is unchanged, so it is still up to date.
+8. QC period. To roll back, point the base path mappings back at the API of the legacy instance with `update-base-path-mapping`. The legacy instance is unchanged, so it is still up to date.
 
 ### 3. Enabling hotfix
 
