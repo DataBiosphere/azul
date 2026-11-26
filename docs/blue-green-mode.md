@@ -389,6 +389,11 @@ The steps are spelled out verbatim, with instance names, in one template per ins
 Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvilprod1-blue-green-promotion.md` both say "Target branch is `anvilprod1`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator already derives the file names and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), so it needs the instance branches as target branches, with `hammerbox` as their sandbox, and a blue-green variant of promotions and hotfixes.
 
 
+## Open questions
+
+1. Replacing the stage of the live instance. Changing the OpenAPI spec of an API, for example its gateway responses, makes Terraform replace the `aws_api_gateway_deployment` and with it the `aws_api_gateway_stage`. Today, the base path mappings, which are managed by Terraform and declare `replace_triggered_by` on the stage, are deleted and recreated along with it, so the API is unavailable until the recreated mappings have propagated. On tempdev, that took about one minute, during which every request got a `403` response. In blue-green mode, the mappings of the public custom domain names aren't managed by Terraform, so nothing deletes and recreates them when an in-place promotion or hotfix replaces the stage of the live instance. It is unknown whether API Gateway then refuses to delete the stage, failing the `deploy` job, or deletes the public mappings along with it, so that the public names stop working until the `go_live` job runs again. Step 11 of the implementation tests this (see *Implementation*).
+
+
 ## Implementation
 
 The changes are implemented and tested on tempdev in the following order, so that each step is tested before the next depends on it. Changes that also apply in single mode come first, followed by the code for blue-green mode, which has no effect while the mode is off, and finally a rehearsal of the migration and of a blue-green promotion. Steps 1 through 4 can each be a small PR to `develop` that precedes the preparatory PR (see *Migration*).
@@ -423,7 +428,7 @@ In the short term, tempdev remains in blue-green mode after the rehearsals. The 
 
 10. Step 3 of the migration. Empty the mirror buckets of the legacy instance, commit the change of `azul_blue_green_mode` in `deployments/tempdev/environment.py`, push `tempdev1` and run the `deploy_browser` job. This applies the plans checked in step 6.
 
-11. A blue-green promotion. Push `tempdev2`, reindex, and run the `go_live` and `deploy_browser` jobs. Roll back during the QC period by running the `go_live` job in the latest `tempdev1` pipeline, switch forward again, and run the `rest` job in the latest `tempdev1` pipeline. Wake `tempdev1` with a push, and push once more for an in-place deployment.
+11. A blue-green promotion. Push `tempdev2`, reindex, and run the `go_live` and `deploy_browser` jobs. Roll back during the QC period by running the `go_live` job in the latest `tempdev1` pipeline, switch forward again, and run the `rest` job in the latest `tempdev1` pipeline. Wake `tempdev1` with a push, and push once more for an in-place deployment. For that push, use a change to the OpenAPI spec, so that the stage of the live instance is replaced, and observe what happens to the mappings of the public custom domain names (see *Open questions*).
 
 ### Merging into `develop`
 
