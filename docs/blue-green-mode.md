@@ -329,7 +329,7 @@ During the migration, the instances are in blue-green mode while the alias isn't
 
 ### 1. Preparatory PR
 
-A PR that is promoted to anvilprod normally. In single mode, it changes nothing but the first two items:
+A PR that is promoted to anvilprod normally. In single mode, it changes nothing but the first two items and the PR templates:
 
 - The user tables move from the main component into the `base` component, in every deployment (see *User state*).
 
@@ -338,6 +338,8 @@ A PR that is promoted to anvilprod normally. In single mode, it changes nothing 
 - The code for blue-green mode, which has no effect while the mode is off: alias mode for the main and `base` components, including `removed` blocks that don't destroy the base path mappings; the use of the deployment's name for user state and the OAuth client secret; `scripts/manage_blue_green.py` and its `make` targets; the `azul_shared_deployments` entries of the instance branches; and the short-circuit of the alias jobs.
 
 - `deployments/anvilprod1` and `deployments/anvilprod2`, which set `azul_blue_green_mode` to `1`. Nothing builds them until their branches exist.
+
+- The generator of the PR templates, which provides the templates for PRs that target the instance branches (see *PR templates*), and the renamed `reindex:` labels. The migration itself doesn't use the new templates, and the templates for PRs that target the `anvilprod` branch remain until the branch is retired.
 
 ### 2. Bringing up `anvilprod1`
 
@@ -385,6 +387,49 @@ The steps are spelled out verbatim, with instance names, in one template per ins
 - `anvilprod1-blue-green-hotfix.md`, `anvilprod2-blue-green-hotfix.md`: blue-green hotfix to that instance, for example one that adds a catalog (see *AnVIL releases*)
 
 Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvilprod1-blue-green-promotion.md` both say "Target branch is `anvilprod1`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator already derives the file names and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), so it needs the instance branches as target branches, with `hammerbox` as their sandbox, and a blue-green variant of promotions and hotfixes.
+
+
+## Implementation
+
+The changes are implemented and tested on tempdev in the following order, so that each step is tested before the next depends on it. Changes that also apply in single mode come first, followed by the code for blue-green mode, which has no effect while the mode is off, and finally a rehearsal of the migration and of a blue-green promotion. Steps 1 through 4 can each be a small PR to `develop` that precedes the preparatory PR (see *Migration*).
+
+The steps relate to the migration as follows. Steps 1 through 8, together with the generator of the PR templates, make up the preparatory PR, the first step of the migration, unless some of them are merged into `develop` separately. Steps 9 and 10 rehearse the second and third steps of the migration on tempdev, with `tempdev` as the legacy instance and `tempdev1` taking its place, and step 11 rehearses a blue-green promotion as anvilprod will perform them after its migration. tempdev is a personal deployment that can be deployed from any branch, so the rehearsals use the feature branch and precede merging into `develop`. Once the preparatory PR has been promoted to anvilprod, the second and third steps of the migration follow there.
+
+In the short term, tempdev remains in blue-green mode after the rehearsals. The commit that turns on blue-green mode for `tempdev` in step 10 is therefore part of the preparatory PR, as are `deployments/tempdev1` and `deployments/tempdev2`.
+
+### Changes that also apply in single mode
+
+1. Move the user tables into the `base` component, with `removed` and `import` blocks and an entry in `UPGRADING.rst`. On tempdev, the plans for the `base` and main components must import the tables and forget them, respectively, without destroying or recreating them. The remaining steps depend on this one.
+
+2. Add the `X-Azul-Deployment` header to `AzulChaliceApp.security_headers()`. On tempdev, both a regular response and a `404` response from API Gateway must carry the header.
+
+3. Capture the base URL in the `ManifestKey`. Unit tests, and on tempdev, the file URLs in a curl manifest must remain the same.
+
+4. Move the GitLab configuration into the `.gitlab` directory, with the templates, `single.yml`, the stub and the freshness check in GitHub CI. On tempdev, after the project setting of its GitLab instance is changed, the pipeline must be the same as before.
+
+### Code for blue-green mode
+
+5. The configuration: `azul_blue_green_mode` and `config.blue_green_mode`, the role determined by the name of the deployment, the use of the deployment's name for the user tables, the APAT key and the OAuth client secret, the unit test that keeps the instance files in sync, and `deployments/tempdev1` and `deployments/tempdev2`. Unit tests only.
+
+6. Alias mode for the main and `base` components, including the `removed` blocks for the base path mappings. On tempdev, render the configuration of the alias with the mode turned on locally and run `terraform plan`, without applying it. The plans must keep the public domain names, the user tables and the APAT key, and destroy everything else. Should they recreate anything, the design must be corrected before any further code is written.
+
+7. `scripts/manage_blue_green.py`, with its `go_live` and `rest` subcommands and the corresponding `make` targets. Their first real test is in step 9.
+
+8. `blue-green.yml`, with the alias jobs and their short-circuit, the manual `deploy_browser` job, the `state` stage and the `resource_group`, as well as the stub's pattern for the instance branches. The `azul_shared_deployments` override on the runner of tempdev's GitLab instance must be updated manually to include `tempdev1` and `tempdev2`.
+
+### Rehearsals on tempdev
+
+9. Step 2 of the migration. Create the `tempdev1` branch on tempdev's GitLab instance, apply `tempdev1.base` locally and, if tempdev's catalogs require access to TDR, register its GCP service account. Push `tempdev1`, check that the alias jobs short-circuit, and reindex. Run the `go_live` job, observing the `X-Azul-Deployment` header and the timing of the switch. Roll back to the legacy instance with `update-base-path-mapping`, and run the `go_live` job again.
+
+10. Step 3 of the migration. Empty the mirror buckets of the legacy instance, commit the change of `azul_blue_green_mode` in `deployments/tempdev/environment.py`, push `tempdev1` and run the `deploy_browser` job. This applies the plans checked in step 6.
+
+11. A blue-green promotion. Push `tempdev2`, reindex, and run the `go_live` and `deploy_browser` jobs. Roll back during the QC period by running the `go_live` job in the latest `tempdev1` pipeline, switch forward again, and run the `rest` job in the latest `tempdev1` pipeline. Wake `tempdev1` with a push, and push once more for an in-place deployment.
+
+### Merging into `develop`
+
+12. The generator of the PR templates, with the instance branches as target branches, the blue-green variants of promotions and hotfixes, and the new `reindex:` labels. tempdev doesn't use promotions, so this step can't be rehearsed there. Once the `anvilprod` branch is retired, every PR targets `anvilprod1` or `anvilprod2`, so the templates for these must reach anvilprod with the preparatory PR, or before it. The migration itself doesn't need them, since its hotfixes are committed directly to `anvilprod1`.
+
+13. The preparatory PR, with whatever of steps 1 through 8 and 12 wasn't merged into `develop` separately.
 
 
 ## Appendix
