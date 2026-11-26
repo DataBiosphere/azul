@@ -129,13 +129,13 @@ In blue-green mode, every pipeline is an instance pipeline. It tests the commit 
 | Stage | Jobs |
 |---|---|
 | `test` | `test` |
-| `deploy` | `deploy_alias_base`: the alias's `base` component; `deploy_base`, `deploy`: the instance |
+| `deploy` | `deploy_alias_base`, `deploy_alias`: the alias's `base` and main components; `deploy_base`, `deploy`: the instance |
 | `early_reindex` | `early_reindex` (manual) |
 | `integration_test` | `integration_test`, against the canonical names |
-| `deploy_alias` | `deploy_alias`, `deploy_browser`: the alias's main and `browser` components |
 | `teardown` | `on_success`, `on_failure` |
 | `reindex` | `reindex` (manual) |
 | `state` | `go_live`, `rest` (manual) |
+| `deploy_browser` | `deploy_browser` (manual): the alias's `browser` component |
 
 ### GitLab configuration
 
@@ -169,13 +169,13 @@ The project setting *CI/CD configuration file* of every GitLab instance changes 
 
 Three jobs deploy the alias's components: `deploy_alias_base` deploys `anvilprod.base`, `deploy_alias` deploys the alias-mode main component `anvilprod`, and `deploy_browser` deploys `anvilprod.browser`. Each job removes the numeric suffix from the name of the deployment being built to select its component. The jobs need names of their own because job names must be unique within a pipeline, and the instance's `deploy_base` and `deploy` jobs already exist.
 
-`deploy_alias_base` runs in the `deploy` stage, before the instance's `deploy_base`, because the instance depends on the user state that the alias's `base` component owns (see *User state*): the instance's main component looks up the APAT key with a data source, and the integration test needs the user tables.
+`deploy_alias_base` and `deploy_alias` run in the `deploy` stage, before the instance's `deploy_base`. The instance depends on the user state that the alias's `base` component owns (see *User state*): the instance's main component looks up the APAT key with a data source, and the integration test needs the user tables. The `go_live` job depends on the alias's main component, whose public custom domain names it maps to the instance. Deploying the alias's main component changes nothing about which instance serves users, because the base path mappings aren't managed by Terraform, and the integration test, which uses the canonical names, wouldn't exercise it anyway.
 
-`deploy_alias` and `deploy_browser` run in the `deploy_alias` stage, between `integration_test` and `teardown`, so that the public domain names and the Data Browser are deployed only after the instance passed the integration test. Placing the stage before `teardown` keeps a failure of these jobs reflected in the GitHub status check. The jobs' `needs:` name `integration_test` rather than the `deploy` job, since `needs:` would otherwise let them start as soon as the `deploy` job finishes, regardless of their stage.
+`deploy_browser` is a manual job in a stage of its own, after the `state` stage, and is placed in the GitLab `resource_group: anvilprod`. The `browser` component configures what users of the Data Browser get, for example its response headers, so it should change only along with the instance serving them. The operator runs the job in the pipeline of the live instance at the end of an in-place promotion or hotfix, and after the `go_live` job in a blue-green one. Being manual, a failure of the job isn't reflected in the GitHub status check, so the operator checks its outcome.
 
 Both instance pipelines deploy the alias's components, possibly from different commits, for example when a hotfix is pushed to the previously live instance during the QC period of a blue-green promotion. This is harmless as long as the two commits configure the public domain names and the user tables the same way, because the base path mappings aren't managed by Terraform.
 
-The Data Browser doesn't inherit Azul's default catalog. Its sites are deployed from the tarballs of the most recent successful Data Browser builds, so deploying the `browser` component from the pipeline of a standby instance doesn't change which catalog the Data Browser defaults to. Making a new catalog the default requires a change to the Data Browser's repository, pushed to GitHub and GitLab. Once the Data Browser build succeeds, the operator retries the `deploy_browser` job in the most recent pipeline of the live instance, which picks up the new tarball. In a blue-green promotion, this must happen after the `go_live` job has run, because only the new instance has the new catalog.
+The Data Browser doesn't inherit Azul's default catalog. Its sites are deployed from the tarballs of the most recent successful Data Browser builds, so deploying the `browser` component from the pipeline of a standby instance doesn't change which catalog the Data Browser defaults to. Making a new catalog the default requires a change to the Data Browser's repository, pushed to GitHub and GitLab. Once the Data Browser build succeeds, the operator runs the `deploy_browser` job in the most recent pipeline of the live instance, which picks up the new tarball. In a blue-green promotion, this must happen after the `go_live` job has run, because only the new instance has the new catalog.
 
 ### The state jobs
 
@@ -185,7 +185,7 @@ A single script, `scripts/manage_blue_green.py`, implements both jobs, with one 
 
 The `go_live` subcommand makes the instance of the pipeline it runs in live:
 
-1. Refuse unless the instance's index is complete and its canonical names answer `/health/basic`. The index is complete when every catalog's indices exist and the indexer queues are empty. The job's `needs: [integration_test]` ensures that the integration test passed.
+1. Refuse unless the public custom domain names exist, the instance's index is complete, and its canonical names answer `/health/basic`. The public custom domain names exist once the `deploy_alias` job has run. The index is complete when every catalog's indices exist and the indexer queues are empty. The job's `needs: [integration_test]` ensures that the integration test passed.
 
 2. Record the instance as live in SSM.
 
@@ -245,7 +245,9 @@ Precondition: the other instance is resting. This rules out an in-place promotio
 
 3. Partial reindex in the `anvilprodL` pipeline, if one is required
 
-4. Phase 2 of the `shared` deploy (`apply`). The resting instance doesn't use the mirrored images, and it will be deployed from the then-current commit when it wakes.
+4. Run the `deploy_browser` job in the `anvilprodL` pipeline
+
+5. Phase 2 of the `shared` deploy (`apply`). The resting instance doesn't use the mirrored images, and it will be deployed from the then-current commit when it wakes.
 
 ### Blue-green promotions
 
@@ -259,11 +261,13 @@ L is the live instance, S the resting instance that becomes live.
 
 4. Run the `go_live` job in the `anvilprodS` pipeline
 
-5. QC period. L is still on the previous commit with a complete index, so rolling back is a matter of running the `go_live` job in the latest `anvilprodL` pipeline.
+5. Run the `deploy_browser` job in the `anvilprodS` pipeline
 
-6. Run the `rest` job in the latest `anvilprodL` pipeline. L rests on the previous commit. Rolling back after this step requires waking L by pushing to its branch, and reindexing it.
+6. QC period. L is still on the previous commit with a complete index, so rolling back is a matter of running the `go_live` and `deploy_browser` jobs in the latest `anvilprodL` pipeline.
 
-7. Phase 2 of the `shared` deploy (`apply`). Every instance that isn't resting is on the current commit.
+7. Run the `rest` job in the latest `anvilprodL` pipeline. L rests on the previous commit. Rolling back after this step requires waking L by pushing to its branch, and reindexing it.
+
+8. Phase 2 of the `shared` deploy (`apply`). Every instance that isn't resting is on the current commit.
 
 ### AnVIL releases
 
@@ -271,13 +275,13 @@ An AnVIL release adds a catalog, say `anvil17`, and later removes its predecesso
 
 1. A blue-green promotion or hotfix to S adds `anvil17`. S wakes and indexes both `anvil16` and `anvil17` from scratch.
 
-2. The `go_live` job runs in the `anvilprodS` pipeline. `anvil16` remains the default catalog, so users notice no change.
+2. The `go_live` and `deploy_browser` jobs run in the `anvilprodS` pipeline. `anvil16` remains the default catalog, so users notice no change.
 
 3. Once the QC of the switch passes, the `rest` job runs in the latest `anvilprodL` pipeline.
 
 4. Internal users preview `anvil17` by appending `?catalog=anvil17` to the Data Browser URL.
 
-5. Once they approve the release, a change to the Data Browser's repository makes `anvil17` its default catalog, and the operator retries the `deploy_browser` job in the latest `anvilprodS` pipeline (see *Deploying the alias*).
+5. Once they approve the release, a change to the Data Browser's repository makes `anvil17` its default catalog, and the operator runs the `deploy_browser` job in the latest `anvilprodS` pipeline again (see *Deploying the alias*).
 
 6. An in-place promotion or hotfix to S removes `anvil16` and makes `anvil17` the default catalog of Azul. Removing a catalog only deletes indices, so it requires no switch. Should the release be rejected instead, `anvil17` is removed the same way.
 
