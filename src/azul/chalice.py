@@ -243,7 +243,9 @@ class AzulChaliceApp(Chalice):
     def standard_headers(cls, cors: bool = False) -> dict[str, str]:
         """
         Default values for headers added to every response from the app, as well
-        as canned 4XX and 5XX responses from API Gateway. Pass ``cors`` for the
+        as canned 4XX and 5XX responses from API Gateway. Besides the headers
+        concerning security, these include ``X-Azul-Deployment``, which names
+        the deployment that produced the response. Pass ``cors`` for the
         response to a request against a route that enables CORS.
         """
         hsts_max_age = 60 * 60 * 24 * 365 * 2
@@ -254,6 +256,7 @@ class AzulChaliceApp(Chalice):
             'Strict-Transport-Security': jw(f'max-age={hsts_max_age};',
                                             'includeSubDomains;',
                                             'preload'),
+            'X-Azul-Deployment': config.deployment_stage,
             'X-Content-Type-Options': 'nosniff',
             'X-Frame-Options': 'DENY',
             'X-XSS-Protection': '1; mode=block'
