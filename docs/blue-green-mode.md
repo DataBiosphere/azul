@@ -117,7 +117,7 @@ The name of the branch being built selects the instance:
 
 The `anvilprod` entry lets local builds on the `anvilprod` branch select any of the three deployments. The other two entries make GitLab deploy the instance named by the branch being built.
 
-Every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias's components, which matters because hotfixes made during a promotion are committed directly to the `anvilprod` branch and pushed to GitHub and GitLab.
+In blue-green mode, every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias's components, which matters because hotfixes made during a promotion are committed directly to the `anvilprod` branch and pushed to GitHub and GitLab.
 
 ![GitLab pipelines for blue-green deployments](blue-green-pipelines.svg)
 
@@ -131,6 +131,34 @@ Every pipeline is an instance pipeline. It tests the commit before deploying any
 | `teardown` | `on_success`, `on_failure` |
 | `reindex` | `reindex` (manual) |
 | `state` | `go_live`, `rest` (manual) |
+
+### GitLab configuration
+
+The GitLab configuration moves from `.gitlab-ci.yml` into the `.gitlab` directory, and is rendered from templates, as the PR templates in the `.github` directory already are. `make -C .gitlab` renders three files:
+
+- `.gitlab/single.yml`, the pipeline of deployments in single mode, which is today's pipeline
+
+- `.gitlab/blue-green.yml`, the pipeline of the instances of deployments in blue-green mode, as shown above
+
+- `.gitlab/gitlab-ci.yml`, a stub that includes one of the other two, depending on the branch being built
+
+The stub includes `blue-green.yml` for the branches of the instances of every deployment that sets `azul_blue_green_mode` to `1`, and `single.yml` for all other branches:
+
+```yaml
+include:
+  - local: .gitlab/blue-green.yml
+    rules:
+      - if: $CI_COMMIT_BRANCH =~ /^(anvilprod)[12]$/
+  - local: .gitlab/single.yml
+    rules:
+      - if: $CI_COMMIT_BRANCH !~ /^(anvilprod)[12]$/
+```
+
+The template derives the names of the deployments from their configuration. A generic pattern like `[12]$` would also match feature branches that happen to end in a digit. Since each pipeline is defined for one mode only, no job needs to short-circuit or be excluded depending on the mode, and no `needs:` refers to a job that might be absent.
+
+The rendered files are committed. GitHub CI checks their freshness by rendering them and asserting that the working copy is clean afterwards.
+
+The project setting *CI/CD configuration file* of every GitLab instance changes from `.gitlab-ci.yml` to `.gitlab/gitlab-ci.yml`. The setting applies to all branches of the project, so a branch that doesn't contain the `.gitlab` directory yet fails to build once it is changed. The PR that introduces the directory therefore instructs the operator to change the setting on the GitLab instance before pushing the PR branch to it, and to change it back if the sandbox build fails. The setting on the GitLab instances of the stable deployments is changed when the PR is promoted to them.
 
 ### Deploying the alias
 
