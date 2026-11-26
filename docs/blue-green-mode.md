@@ -97,7 +97,7 @@ The `go_live` job therefore polls the public names until only the new instance a
 
 ### Identifying the instance
 
-Every response from the REST APIs of the service and the indexer carries the header `X-Azul-Deployment`, whose value is the name of the deployment that produced it, such as `anvilprod1`. The header is one of the headers that `AzulChaliceApp.security_headers()` returns, in every deployment, regardless of the mode. That method already supplies the headers that the middleware adds to the responses of the Lambdas, and the headers of the responses that API Gateway produces itself, such as its default `4XX` and `5XX` responses. The Lambdas know the name of their deployment, so they don't need to know the state. The header shows which instance answered a request made at a public name, which helps with diagnosing problems during the period in which both instances answer, and is what the `go_live` job and the QC period use to verify the switch. Responses that the WAF produces, such as the `429` responses of its rate limit, and errors that CloudFront produces before a request reaches API Gateway, don't carry the header.
+Every response from the REST APIs of the service and the indexer carries the header `X-Azul-Deployment`, whose value is the name of the deployment that produced it, such as `anvilprod1`. The header is one of the headers that `AzulChaliceApp.standard_headers()` returns, in every deployment, regardless of the mode. That method already supplies the headers that the middleware adds to the responses of the Lambdas, and the headers of the responses that API Gateway produces itself, such as its default `4XX` and `5XX` responses. The Lambdas know the name of their deployment, so they don't need to know the state. The header shows which instance answered a request made at a public name, which helps with diagnosing problems during the period in which both instances answer, and is what the `go_live` job and the QC period use to verify the switch. Responses that the WAF produces, such as the `429` responses of its rate limit, and errors that CloudFront produces before a request reaches API Gateway, don't carry the header.
 
 
 ## Branches and pipelines
@@ -406,7 +406,7 @@ In the short term, tempdev remains in blue-green mode after the rehearsals. The 
 
 1. Move the user tables into the `base` component, with `removed` and `import` blocks and an entry in `UPGRADING.rst`. On tempdev, the plans for the `base` and main components must import the tables and forget them, respectively, without destroying or recreating them. The remaining steps depend on this one.
 
-2. Add the `X-Azul-Deployment` header to `AzulChaliceApp.security_headers()`. On tempdev, both a regular response and a `404` response from API Gateway must carry the header.
+2. Add the `X-Azul-Deployment` header to `AzulChaliceApp.standard_headers()`. On tempdev, both a regular response and a `404` response from API Gateway must carry the header.
 
 3. Capture the base URL in the `ManifestKey`. Unit tests, and on tempdev, the file URLs in a curl manifest must remain the same.
 
