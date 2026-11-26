@@ -265,6 +265,24 @@ L is the live instance, S the resting instance that becomes live.
 
 7. Phase 2 of the `shared` deploy (`apply`). Every instance that isn't resting is on the current commit.
 
+### AnVIL releases
+
+An AnVIL release adds a catalog, say `anvil17`, and later removes its predecessor, `anvil16`. L is the live instance, S the resting one.
+
+1. A blue-green promotion or hotfix to S adds `anvil17`. S wakes and indexes both `anvil16` and `anvil17` from scratch.
+
+2. The `go_live` job runs in the `anvilprodS` pipeline. `anvil16` remains the default catalog, so users notice no change.
+
+3. Once the QC of the switch passes, the `rest` job runs in the latest `anvilprodL` pipeline.
+
+4. Internal users preview `anvil17` by appending `?catalog=anvil17` to the Data Browser URL.
+
+5. Once they approve the release, a change to the Data Browser's repository makes `anvil17` its default catalog, and the operator retries the `deploy_browser` job in the latest `anvilprodS` pipeline (see *Deploying the alias*).
+
+6. An in-place promotion or hotfix to S removes `anvil16` and makes `anvil17` the default catalog of Azul. Removing a catalog only deletes indices, so it requires no switch. Should the release be rejected instead, `anvil17` is removed the same way.
+
+The preview follows the `go_live` job because the Data Browser only uses the public names. It has no easy way of using the canonical names of a standby instance. Even if a future release of the Data Browser had one, previewing the standby instance would keep both instances active for the duration of the review, which often takes one or two weeks. With the preview following the `go_live` job, both instances are active only during the QC period of the switch, which is concerned with `anvil16` on S, not with the release.
+
 
 ## PR templates
 
@@ -274,14 +292,16 @@ The steps are spelled out verbatim, with instance names, in one template per ins
 
 - `anvilprod1-blue-green-promotion.md`, `anvilprod2-blue-green-promotion.md`: blue-green promotion to that instance
 
-- `anvilprod1-hotfix.md`, `anvilprod2-hotfix.md`
+- `anvilprod1-hotfix.md`, `anvilprod2-hotfix.md`: in-place hotfix of that instance
 
-Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvilprod1-blue-green-promotion.md` both say "Target branch is `anvilprod1`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator already derives the file names and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), so it needs the instance branches as target branches, with `hammerbox` as their sandbox, and a variant for blue-green promotions.
+- `anvilprod1-blue-green-hotfix.md`, `anvilprod2-blue-green-hotfix.md`: blue-green hotfix to that instance, for example one that adds a catalog (see *AnVIL releases*)
+
+Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvilprod1-blue-green-promotion.md` both say "Target branch is `anvilprod1`". `scripts/pull_request.py` already derives the template from the name of the promotion branch (`promotions/<date>-<name>` → `<name>-promotion.md`) and the target branch from the item in the template, so branch names such as `promotions/2026-11-21-anvilprod2` and `promotions/2026-11-21-anvilprod2-blue-green` work without changes to the script. The template generator already derives the file names and the target deployments from the target branch (`T.target_branch_by_path`, `T.target_deployments`), so it needs the instance branches as target branches, with `hammerbox` as their sandbox, and a blue-green variant of promotions and hotfixes.
 
 
 ## Open questions
 
-1. Contents and duration of the QC period
+1. Contents and duration of the QC period. The QC period is concerned with the switch, and ends with the `rest` job, not with the approval of a release (see *AnVIL releases*).
 
 2. Migration of the existing `anvilprod` main component into `anvilprod1`, and of its public domain names into the alias-mode component, without downtime. Findings so far:
 
