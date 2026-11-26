@@ -140,7 +140,7 @@ The GitLab configuration moves from `.gitlab-ci.yml` into the `.gitlab` director
 
 - `.gitlab/blue-green.yml`, the pipeline of the instances of deployments in blue-green mode, as shown above
 
-- `.gitlab/gitlab-ci.yml`, a stub that includes one of the other two, depending on the branch being built
+- `.gitlab/stub.yml`, which replaces `.gitlab-ci.yml` and includes one of the other two, depending on the branch being built
 
 The stub includes `blue-green.yml` for the branches of the instances of every deployment that sets `azul_blue_green_mode` to `1`, and `single.yml` for all other branches:
 
@@ -158,7 +158,7 @@ The template derives the names of the deployments from their configuration. A ge
 
 The rendered files are committed. GitHub CI checks their freshness by rendering them and asserting that the working copy is clean afterwards.
 
-The project setting *CI/CD configuration file* of every GitLab instance changes from `.gitlab-ci.yml` to `.gitlab/gitlab-ci.yml`. The setting applies to all branches of the project, so a branch that doesn't contain the `.gitlab` directory yet fails to build once it is changed. The PR that introduces the directory therefore instructs the operator to change the setting on the GitLab instance before pushing the PR branch to it, and to change it back if the sandbox build fails. The setting on the GitLab instances of the stable deployments is changed when the PR is promoted to them.
+The project setting *CI/CD configuration file* of every GitLab instance changes from `.gitlab-ci.yml` to `.gitlab/stub.yml`. The setting applies to all branches of the project, so a branch that doesn't contain the `.gitlab` directory yet fails to build once it is changed. The PR that introduces the directory therefore instructs the operator to change the setting on the GitLab instance before pushing the PR branch to it, and to change it back if the sandbox build fails. The setting on the GitLab instances of the stable deployments is changed when the PR is promoted to them.
 
 ### Deploying the alias
 
