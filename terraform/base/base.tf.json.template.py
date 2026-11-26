@@ -3,9 +3,27 @@ import shlex
 from azul import (
     config,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.infra.terraform import (
     emit_tf,
 )
+from azul.service.user_service import (
+    UserService,
+)
+
+
+# FIXME: Remove this function along with the `import` section below
+#        https://github.com/DataBiosphere/azul/issues/8518
+#
+def _table_exists(table_name: str) -> bool:
+    try:
+        aws.dynamodb.describe_table(TableName=table_name)
+    except aws.dynamodb.exceptions.ResourceNotFoundException:
+        return False
+    else:
+        return True
 
 
 emit_tf({
@@ -118,7 +136,56 @@ emit_tf({
                     'target_key_id': '${aws_kms_key.%s.key_id}' % key.name
                 }
                 for key in config.kms_keys
+            },
+            'aws_dynamodb_table': {
+                'users': {
+                    'name': config.dynamo_user_table_name,
+                    'billing_mode': 'PAY_PER_REQUEST',
+                    'hash_key': UserService.user_key_attribute,
+                    'attribute': [
+                        {
+                            'name': UserService.user_key_attribute,
+                            'type': 'S'
+                        }
+                    ],
+                    'ttl': {
+                        'attribute_name': UserService.user_ttl_attribute,
+                        'enabled': True
+                    }
+                },
+                'access_tokens': {
+                    'name': config.dynamo_access_token_table_name,
+                    'billing_mode': 'PAY_PER_REQUEST',
+                    'hash_key': UserService.access_token_key_attribute,
+                    'attribute': [
+                        {
+                            'name': UserService.access_token_key_attribute,
+                            'type': 'S'
+                        }
+                    ],
+                    'ttl': {
+                        'attribute_name': UserService.access_token_ttl_attribute,
+                        'enabled': True
+                    }
+                }
             }
         },
+    ],
+    # The user tables moved here from the main component. Adopt the existing
+    # ones during the first apply.
+    #
+    # FIXME: Remove this section once every deployment has been upgraded
+    #        https://github.com/DataBiosphere/azul/issues/8518
+    #
+    'import': [
+        {
+            'to': f'aws_dynamodb_table.{name}',
+            'id': table_name
+        }
+        for name, table_name in [
+            ('users', config.dynamo_user_table_name),
+            ('access_tokens', config.dynamo_access_token_table_name)
+        ]
+        if _table_exists(table_name)
     ]
 })

@@ -10,9 +10,6 @@ from azul.infra.terraform import (
 from azul.service.source_service import (
     SourceService,
 )
-from azul.service.user_service import (
-    UserService,
-)
 
 emit_tf(
     {
@@ -34,36 +31,6 @@ emit_tf(
                             "enabled": True
                         }
                     },
-                    "users": {
-                        "name": config.dynamo_user_table_name,
-                        "billing_mode": "PAY_PER_REQUEST",
-                        "hash_key": UserService.user_key_attribute,
-                        "attribute": [
-                            {
-                                "name": UserService.user_key_attribute,
-                                "type": "S"
-                            }
-                        ],
-                        "ttl": {
-                            "attribute_name": UserService.user_ttl_attribute,
-                            "enabled": True
-                        }
-                    },
-                    "access_tokens": {
-                        "name": config.dynamo_access_token_table_name,
-                        "billing_mode": "PAY_PER_REQUEST",
-                        "hash_key": UserService.access_token_key_attribute,
-                        "attribute": [
-                            {
-                                "name": UserService.access_token_key_attribute,
-                                "type": "S"
-                            }
-                        ],
-                        "ttl": {
-                            "attribute_name": UserService.access_token_ttl_attribute,
-                            "enabled": True
-                        }
-                    },
                     "object_cache": {
                         "name": config.dynamo_object_cache_table_name,
                         "billing_mode": "PAY_PER_REQUEST",
@@ -81,6 +48,20 @@ emit_tf(
                     }
                 }
             }
+        ],
+        # The user tables moved to the `base` component, which imports them
+        #
+        # FIXME: Remove this section once every deployment has been upgraded
+        #        https://github.com/DataBiosphere/azul/issues/8518
+        #
+        "removed": [
+            {
+                "from": f"aws_dynamodb_table.{name}",
+                "lifecycle": {
+                    "destroy": False
+                }
+            }
+            for name in ("users", "access_tokens")
         ]
     }
 )

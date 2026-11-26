@@ -23,6 +23,25 @@ Note that as of September 2026, the issue number(s) must be occur in parentheses
 and at the end of section titles, instead of the beginning.
 
 
+Reindexing is disruptive in stable deployments (#6026)
+======================================================
+
+Developer
+~~~~~~~~~
+
+The ``users`` and ``access_tokens`` DynamoDB tables moved from the main
+Terraform component to the ``base`` component. For deployments managed by CI,
+the move happens automatically. For each of your personal deployments, apply
+the ``base`` component first, which adopts the existing tables, and then deploy
+the main component, which forgets them without destroying them::
+
+    _select foo.base.local
+    make -C terraform/base apply
+
+    _select foo.local
+    make deploy
+
+
 Update Terraform to 1.17.1 (#8452)
 ==================================
 
