@@ -232,9 +232,17 @@ Both instances use the same OAuth client ID (`AZUL_GOOGLE_OAUTH2_CLIENT_ID`), an
 
 ## Promotions
 
-A promotion switches instances if it requires a full reindex, a catalog-wide reindex, or the addition of a catalog. A catalog-wide reindex affects the performance that all external users observe, and so does adding a catalog. Every other promotion, and every hotfix, is deployed to the live instance in place.
+A promotion or hotfix switches instances if it requires a full reindex, a catalog-wide reindex, or the addition of a catalog, and may do so if it requires reindexing a large source. A catalog-wide reindex affects the performance that all external users observe, and so does adding a catalog. Every other promotion or hotfix is deployed to the live instance in place.
 
-The `reindex:` labels currently can't distinguish a catalog-wide reindex from a partial one: `reindex:partial` covers both. A `reindex:catalog` label or a narrower definition of `reindex:partial` is needed.
+The `reindex:` labels of a PR describe the scope of the reindex it requires, which determines the procedure it may follow. The label `reindex:partial` is renamed to `reindex:sources`, and a new label, `reindex:catalog`, is added. Together with the existing label naming the deployment, such as `reindex:anvilprod`, they distinguish three kinds of reindex:
+
+| Labels | Reindex | Procedure |
+|---|---|---|
+| `reindex:anvilprod`, `reindex:sources` | some, but not all, sources of a catalog | in place, or blue-green |
+| `reindex:anvilprod`, `reindex:catalog` | all sources of at least one catalog, including a catalog that is added | blue-green |
+| `reindex:anvilprod` | every catalog | blue-green |
+
+Reindexing a large source can affect the performance that external users observe as much as reindexing a catalog does, so the author of a PR labeled `reindex:sources` may choose the blue-green procedure, for example for MOHD or eMERGE. The labels describe the scope of the reindex, and the name of the promotion branch selects the procedure (see *PR templates*). A PR without a `reindex:` label for the deployment follows the in-place procedure. So does one that only removes a catalog, since that requires no reindex.
 
 A resting instance wakes without any OpenSearch indices, so a switch always indexes every catalog from scratch. Adding `anvil17` to a deployment with `anvil16` means indexing both. That is acceptable for now. Restoring an unchanged catalog's indices from a snapshot of the live domain would be an optimization for promotions that change neither the index schema nor the aggregation logic.
 
@@ -362,8 +370,6 @@ Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvi
 ## Open questions
 
 1. Contents and duration of the QC period. The QC period is concerned with the switch, and ends with the `rest` job, not with the approval of a release (see *AnVIL releases*).
-
-2. `reindex:` label for catalog-wide reindexing
 
 
 ## Appendix
