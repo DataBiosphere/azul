@@ -2898,7 +2898,7 @@ class DisableAutomaticIndexCreationTest(IntegrationTestCase):
 
 class ResponseHeadersTest(IntegrationTestCase):
 
-    def test_response_security_headers(self):
+    def test_response_standard_headers(self):
         no_cache = 'no-store'
         short_cache = 'public, max-age=60, must-revalidate'
         long_cache = 'public, max-age=86400, must-revalidate'
@@ -2923,13 +2923,13 @@ class ResponseHeadersTest(IntegrationTestCase):
                     self.assertIs(nonce, None)
                     expected_headers = {
                         # The fact that most headers are hard-coded in
-                        # security_headers() gives us license to use that
+                        # standard_headers() gives us license to use that
                         # method here to compose the expected value, even
                         # though it constitutes code under test. There is
                         # not much that can break in that method, and even
                         # if one of the literals in it had an error, that
                         # error would likely be repeated in a literal here.
-                        **AzulChaliceApp.security_headers(cors=cors),
+                        **AzulChaliceApp.standard_headers(cors=cors),
                         'Cache-Control': cache_control,
                         # The random nonce in the actual CSP makes it hard
                         # to compose an expected value for it. Instead, we
@@ -2946,7 +2946,7 @@ class ResponseHeadersTest(IntegrationTestCase):
             with self.subTest(endpoint=endpoint):
                 response = self._http_client.request(GET, str(endpoint / 'does-not-exist'))
                 self.assertEqual(403, response.status)
-                self.assertIsSubset(AzulChaliceApp.security_headers().items(),
+                self.assertIsSubset(AzulChaliceApp.standard_headers().items(),
                                     set(list(response.headers.items())))
 
 

@@ -992,12 +992,12 @@ class Chalice:
         #
         # https://docs.aws.amazon.com/apigateway/latest/developerguide/request-response-data-mappings.html#mapping-response-parameters
         #
-        security_headers: MutableJSON = {
+        standard_headers: MutableJSON = {
             f'gatewayresponse.header.{k}': f"'{v}'"
-            for k, v in AzulChaliceApp.security_headers().items()
+            for k, v in AzulChaliceApp.standard_headers().items()
         }
         default_responses: MutableJSON = {
-            f'DEFAULT_{response_type}': {'responseParameters': security_headers}
+            f'DEFAULT_{response_type}': {'responseParameters': standard_headers}
             for response_type in ['4XX', '5XX']
         }
         error_responses: MutableJSON = {
@@ -1005,14 +1005,14 @@ class Chalice:
                 response_type: {
                     'statusCode': '429',
                     'responseParameters': {
-                        **security_headers,
+                        **standard_headers,
                         'gatewayresponse.header.Retry-After': "'30'"
                     }
                 } for response_type in ['QUOTA_EXCEEDED', 'THROTTLED']
             },
             'INTEGRATION_FAILURE': {
                 'statusCode': '502',
-                'responseParameters': security_headers,
+                'responseParameters': standard_headers,
                 'responseTemplates': {
                     "application/json": json.dumps({
                         'message': '502 Bad Gateway. The server was unable '

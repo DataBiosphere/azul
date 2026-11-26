@@ -3755,7 +3755,7 @@ class TestListCatalogsResponse(DCP1CannedBundleTestCase, LocalAppTestCase):
         response = self._http_client.request('DELETE', str(url))
         self.assertEqual(405, response.status)
         self.assertEqual('GET', response.headers['Allow'])
-        self.assertIsSubset(AzulChaliceApp.security_headers().items(),
+        self.assertIsSubset(AzulChaliceApp.standard_headers().items(),
                             set(list(response.headers.items())))
         self.assertEqual('no-store', response.headers['Cache-Control'])
         self.assertNotIn('Access-Control-Expose-Headers', response.headers)

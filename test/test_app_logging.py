@@ -137,7 +137,7 @@ class TestAppLogging(AzulUnitTestCase):
                             # isn't set when running Chalice locally. If it
                             # were, the expected value would be application/json
                             **({} if debug < 2 else {'Content-Type': 'text/plain'}),
-                            **app.security_headers(),
+                            **app.standard_headers(),
                             'Cache-Control': 'no-store',
                         }
                     }

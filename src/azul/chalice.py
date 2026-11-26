@@ -161,7 +161,7 @@ class AzulChaliceApp(Chalice):
         super().__init__(app_name, debug=config.debug > 1, configure_logs=False)
         # Middleware is invoked in order of registration
         self.register_middleware(self._logging_middleware, 'http')
-        self.register_middleware(self._security_headers_middleware, 'http')
+        self.register_middleware(self._standard_headers_middleware, 'http')
         self.register_middleware(self._retry_after, 'http')
         self.register_middleware(self._api_gateway_context_middleware, 'http')
         self.register_middleware(self._authentication_middleware, 'http')
@@ -240,7 +240,7 @@ class AzulChaliceApp(Chalice):
             config.lambda_is_handling_api_gateway_request = False
 
     @classmethod
-    def security_headers(cls, cors: bool = False) -> dict[str, str]:
+    def standard_headers(cls, cors: bool = False) -> dict[str, str]:
         """
         Default values for headers added to every response from the app, as well
         as canned 4XX and 5XX responses from API Gateway. Pass ``cors`` for the
@@ -264,7 +264,7 @@ class AzulChaliceApp(Chalice):
             headers['Access-Control-Expose-Headers'] = '*'
         return headers
 
-    def _security_headers_middleware(self, event, get_response):
+    def _standard_headers_middleware(self, event, get_response):
         """
         Add headers to the response
         """
@@ -274,9 +274,9 @@ class AzulChaliceApp(Chalice):
             cors = route.cors is not None
         except KeyError:
             route, cors = None, False
-        # Add security headers to the response without overwriting any headers
+        # Add standard headers to the response without overwriting any headers
         # that might have been added already (e.g. Content-Security-Policy)
-        for k, v in self.security_headers(cors=cors).items():
+        for k, v in self.standard_headers(cors=cors).items():
             response.headers.setdefault(k, v)
         if self.is_running_locally or route is None:
             # Caching defeats the automatic reloading of application source code
