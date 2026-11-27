@@ -71,6 +71,7 @@ jobs:
           make isort
           make -C lambdas openapi
           make -C .github
+          make -C .gitlab
           make anvil_schema
           make check_clean
           make pep8

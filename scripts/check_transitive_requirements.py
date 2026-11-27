@@ -82,12 +82,13 @@ def diverged_at() -> str | None:
     point of divergence the same way it reports genuinely unrelated histories,
     by exiting non-zero and saying nothing.
 
-    How much history is at hand is what `GIT_DEPTH` governs in `.gitlab-ci.yml`.
-    It is a GitLab concept, not one that `git` itself knows about; each instance
-    otherwise configures its own depth, and the shallowest of them is too
-    shallow for this. The depth set there covers all but three of the last
-    hundred branches merged into `develop`, and those three are asked to rebase,
-    which puts the tip of `develop` back within reach.
+    How much history is at hand is what `GIT_DEPTH` governs in
+    `.gitlab/pipeline.yml.template.py`. It is a GitLab concept, not one that
+    `git` itself knows about; each instance otherwise configures its own depth,
+    and the shallowest of them is too shallow for this. The depth set there
+    covers all but three of the last hundred branches merged into `develop`, and
+    those three are asked to rebase, which puts the tip of `develop` back within
+    reach.
     """
     process = run('git', 'merge-base', 'FETCH_HEAD', 'HEAD')
     return process.stdout.strip() if process.returncode == 0 else None
