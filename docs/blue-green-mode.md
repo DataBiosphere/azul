@@ -124,6 +124,8 @@ The name of the branch being built selects the instance:
 
 The first entry of each list is the instance that GitLab deploys when it builds the branch. The `anvilprod` entries let the operator select the alias in a checkout of either branch, for example to deploy the `shared` and `gitlab` components, and `hammerbox` remains the sandbox for PRs that target either branch.
 
+The variable is overridden in two places, both of which need entries for the instance branches as well. The runner of every GitLab instance overrides it in the `environment.local.py` that its jobs copy into the project root, which narrows the mapping to the deployments of that GitLab instance and maps every other branch to its sandbox. Without the entries, GitLab would build the instance branches as `hammerbox`. The override lives outside the repository, so the operator updates it manually (see *Migration*). GitHub CI overrides the variable to select the deployment whose configuration the unit tests run with, keyed by the branch a PR targets. Without the entries, PRs that target an instance branch would be tested with the configuration of `dev`.
+
 Everything that names the `anvilprod` branch must name the instance branches instead, such as `azul_shared_deployments`, `T.target_deployments` in the generator of the PR templates, the names of promotion branches, backports of hotfixes, and checks of whether a commit has reached a stable branch. The latter look at the branch of the live instance.
 
 In blue-green mode, every pipeline is an instance pipeline. It tests the commit before deploying anything, including the alias's components, which matters because hotfixes made during a promotion are committed directly to the instance's branch and pushed to GitHub and GitLab.
@@ -335,7 +337,7 @@ A PR that is promoted to anvilprod normally. In single mode, it changes nothing 
 
 - The GitLab configuration moves into the `.gitlab` directory, including the operator's steps for changing the project setting (see *GitLab configuration*).
 
-- The code for blue-green mode, which has no effect while the mode is off: alias mode for the main and `base` components, including `removed` blocks that don't destroy the base path mappings; the use of the deployment's name for user state and the OAuth client secret; `scripts/manage_blue_green.py` and its `make` targets; the `azul_shared_deployments` entries of the instance branches; and the short-circuit of the alias jobs.
+- The code for blue-green mode, which has no effect while the mode is off: alias mode for the main and `base` components, including `removed` blocks that don't destroy the base path mappings; the use of the deployment's name for user state and the OAuth client secret; `scripts/manage_blue_green.py` and its `make` targets; the `azul_shared_deployments` entries of the instance branches, in `environment.py` and in the override of GitHub CI; and the short-circuit of the alias jobs.
 
 - `deployments/anvilprod1` and `deployments/anvilprod2`, which set `azul_blue_green_mode` to `1`. Nothing builds them until their branches exist.
 
@@ -347,19 +349,21 @@ The legacy instance serves users throughout this step.
 
 1. Register the redirect URIs of the Swagger UI of both instances with the OAuth client (see *Sign-in*).
 
-2. Create the `anvilprod1` and `anvilprod2` branches on GitHub and GitLab from the tip of the `anvilprod` branch, which is retired.
+2. Add the entries of the instance branches to the `azul_shared_deployments` override on the runner of anvilprod's GitLab instance (see *Branches and pipelines*).
 
-3. From a local checkout, apply `anvilprod1.base` and register its GCP service account with Terra and TDR. The integration test needs this access.
+3. Create the `anvilprod1` and `anvilprod2` branches on GitHub from the tip of the `anvilprod` branch, which is retired. A branch is created on GitLab when it is first pushed there, which starts a pipeline that deploys the instance. For `anvilprod2`, that happens when it first wakes.
 
-4. Push `anvilprod1` to GitLab. The alias jobs short-circuit, the `deploy` job creates the OpenSearch domain of `anvilprod1`, and the `integration_test` job runs.
+4. From a local checkout, apply `anvilprod1.base` and register its GCP service account with Terra and TDR. The integration test needs this access.
 
-5. Run the `early_reindex` or `reindex` job in the `anvilprod1` pipeline.
+5. Push `anvilprod1` to GitLab. The alias jobs short-circuit, the `deploy` job creates the OpenSearch domain of `anvilprod1`, and the `integration_test` job runs.
 
-6. Run the `go_live` job in the `anvilprod1` pipeline. It points the base path mappings of the public custom domain names, which are still in the Terraform state of the legacy instance, at `anvilprod1`.
+6. Run the `early_reindex` or `reindex` job in the `anvilprod1` pipeline.
 
-7. Run the `deploy_browser` job in the `anvilprod1` pipeline.
+7. Run the `go_live` job in the `anvilprod1` pipeline. It points the base path mappings of the public custom domain names, which are still in the Terraform state of the legacy instance, at `anvilprod1`.
 
-8. QC period. To roll back, point the base path mappings back at the API of the legacy instance with `update-base-path-mapping`. The legacy instance is unchanged, so it is still up to date.
+8. Run the `deploy_browser` job in the `anvilprod1` pipeline.
+
+9. QC period. To roll back, point the base path mappings back at the API of the legacy instance with `update-base-path-mapping`. The legacy instance is unchanged, so it is still up to date.
 
 ### 3. Enabling hotfix
 
@@ -424,7 +428,7 @@ In the short term, tempdev remains in blue-green mode after the rehearsals. The 
 
 ### Rehearsals on tempdev
 
-9. Step 2 of the migration. Create the `tempdev1` branch on tempdev's GitLab instance, apply `tempdev1.base` locally and, if tempdev's catalogs require access to TDR, register its GCP service account. Push `tempdev1`, check that the alias jobs short-circuit, and reindex. Run the `go_live` job, observing the `X-Azul-Deployment` header and the timing of the switch. Roll back to the legacy instance with `update-base-path-mapping`, and run the `go_live` job again.
+9. Step 2 of the migration. Apply `tempdev1.base` locally and, if tempdev's catalogs require access to TDR, register its GCP service account. Push `tempdev1` to tempdev's GitLab instance, check that the alias jobs short-circuit, and reindex. Run the `go_live` job, observing the `X-Azul-Deployment` header and the timing of the switch. Roll back to the legacy instance with `update-base-path-mapping`, and run the `go_live` job again.
 
 10. Step 3 of the migration. Empty the mirror buckets of the legacy instance, commit the change of `azul_blue_green_mode` in `deployments/tempdev/environment.py`, push `tempdev1` and run the `deploy_browser` job. This applies the plans checked in step 6.
 
