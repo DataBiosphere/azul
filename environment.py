@@ -223,6 +223,17 @@ def env() -> Mapping[str, str | None]:
         #
         'AZUL_DEPLOYMENT_STAGE': None,
 
+        # 1 if the current deployment is in blue-green mode, 0 otherwise. In
+        # blue-green mode, the name of the deployment determines its role: a
+        # name with the numeric suffix 1 or 2, such as `anvilprod1`, denotes
+        # the instance of that number, and the name without the suffix,
+        # `anvilprod`, denotes the alias. Outside of blue-green mode, a numeric
+        # suffix has no meaning. The variable isn't exported to the Lambda
+        # functions, which get its value through `azul_deployment` instead.
+        # See docs/blue-green-mode.md.
+        #
+        'azul_blue_green_mode': '0',
+
         # Whether to tolerate the loss of values that don't fit into the
         # accumulator for a field during aggregation. By default, such an
         # overflow fails the aggregation and therefore the reindex. Setting this
@@ -945,13 +956,17 @@ def env() -> Mapping[str, str | None]:
         # ║            ║ ║ ╚═════════════╝ ╚═════════════════════════════════╝ ║
         # ╚════════════╝ ╚═════════════════════════════════════════════════════╝
         #
-        # Any branch may be deployed to `tempdev`.
+        # Any branch may be deployed to `tempdev` and its instances in
+        # blue-green mode, `tempdev1` and `tempdev2`. The branch of an
+        # instance is deployed to that instance by default.
         #
         'azul_shared_deployments': json.dumps({
-            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'tempdev'],
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'tempdev', 'tempdev1', 'tempdev2'],
             'prod': ['prod'],
             'anvilprod': ['anvilprod', 'hammerbox'],
-            '': ['tempdev']
+            'tempdev1': ['tempdev1', 'tempdev', 'tempdev2'],
+            'tempdev2': ['tempdev2', 'tempdev', 'tempdev1'],
+            '': ['tempdev', 'tempdev1', 'tempdev2']
         }),
 
         # A dictionary with one entry per browser or portal site that is to be

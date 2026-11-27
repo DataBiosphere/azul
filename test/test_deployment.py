@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 from collections.abc import (
     Iterator,
 )
@@ -97,3 +100,68 @@ class TestAnvilSnapshotNames(AzulUnitTestCase):
                 for catalog in catalogs:
                     for source in catalog.sources:
                         yield module, catalog, TDRSourceSpec.parse(source)
+
+
+class TestBlueGreenMode(AzulUnitTestCase):
+
+    def test_instances_in_sync(self):
+        """
+        The `environment.py` files of the two instances of a deployment in
+        blue-green mode must be identical, except for the name of the instance
+        and the template of its domain names. Otherwise, a forgotten change to
+        one of them would break that instance the next time it becomes live.
+        """
+        instances: dict[str, dict[str, Config.Deployment]] = defaultdict(dict)
+        for deployment in config.Deployment.all():
+            alias = deployment.alias
+            if alias is not None:
+                number = deployment.name.removeprefix(alias.name)
+                instances[alias.name][number] = deployment
+        # Guard against this test silently passing without examining anything
+        self.assertIn('tempdev', instances)
+        for alias, deployments in instances.items():
+            with self.subTest(alias=alias):
+                self.assertEqual({'1', '2'}, deployments.keys())
+                # Raises if the alias has no directory
+                config.Deployment(alias).directory
+                env1, env2 = self._env(deployments['1']), self._env(deployments['2'])
+                self.assertEqual(env1, env2)
+
+    def _env(self, deployment: Config.Deployment) -> dict[str, str | None]:
+        path = deployment.directory / 'environment.py'
+        module_name = 'environment_' + deployment.name
+        env = dict(load_module(str(path), module_name).env())
+        for variable in ['AZUL_DEPLOYMENT_STAGE', 'AZUL_SUBDOMAIN_TEMPLATE']:
+            del env[variable]
+        return env
+
+    def test_names_of_shared_resources(self):
+        for stage, mode, alias_stage in [
+            ('tempdev1', '1', 'tempdev'),
+            ('tempdev', '1', 'tempdev'),
+            ('tempdev1', '0', 'tempdev1'),
+            ('hannes2', '0', 'hannes2')
+        ]:
+            with self.subTest(stage=stage, mode=mode):
+                with (
+                    mock.patch.object(type(config),
+                                      'deployment_stage',
+                                      new_callable=mock.PropertyMock,
+                                      return_value=stage),
+                    mock.patch.dict(os.environ, azul_blue_green_mode=mode)
+                ):
+                    # The cached properties of the global config would retain
+                    # the key's alias between subtests
+                    apat_kms_key = Config().apat_kms_key
+                    self.assertEqual(alias_stage, config.alias_stage)
+                    self.assertEqual(config.qualified_resource_name('users', stage=alias_stage),
+                                     config.dynamo_user_table_name)
+                    self.assertEqual(config.qualified_resource_name('access_tokens', stage=alias_stage),
+                                     config.dynamo_access_token_table_name)
+                    self.assertEqual('alias/' + config.qualified_resource_name('apat', stage=alias_stage),
+                                     apat_kms_key.alias)
+                    self.assertEqual(f'dcp/azul/{alias_stage}/service/google_oauth2_client_secret',
+                                     config.oauth2_client_secret_path())
+                    # The manifest key remains specific to the instance
+                    self.assertEqual('alias/' + config.qualified_resource_name('manifest'),
+                                     Config().manifest_kms_key.alias)

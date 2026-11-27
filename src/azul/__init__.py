@@ -257,10 +257,17 @@ class Config:
         usage: str
         #: The AWS KMS key spec, e.g. 'RSA_2048' or 'HMAC_256'
         spec: str
+        #: Whether this key is used in conjunction with user state
+        user_state: bool = False
 
         @cached_property
         def alias(self) -> str:
-            return 'alias/' + self.config.qualified_resource_name(self.name)
+            # For a blue-green deployment, user state is shared by all instances
+            # in that deployment. The alias of a KMS key that affects user state
+            # therefore needs to reside in the alias stage. Note that the use of
+            # the term *alias* for both KMS keys and stages is coincidental.
+            stage = self.config.alias_stage if self.user_state else None
+            return 'alias/' + self.config.qualified_resource_name(self.name, stage=stage)
 
     @cached_property
     def manifest_kms_key(self) -> KMSKey:
@@ -274,7 +281,8 @@ class Config:
         return self.KMSKey(config=self,
                            name='apat',
                            usage='SIGN_VERIFY',
-                           spec='ECC_NIST_P256')
+                           spec='ECC_NIST_P256',
+                           user_state=True)
 
     @cached_property
     def kms_keys(self) -> tuple[KMSKey, ...]:
@@ -726,6 +734,27 @@ class Config:
         self.validate_deployment_name(deployment_name)
         return deployment_name
 
+    @property
+    def blue_green_mode(self) -> bool:
+        """
+        ``True`` if the current deployment is configured to be in blue-green
+        mode. Not available in a Lambda function, use
+        ``config.deployment.blue_green_mode`` there.
+        """
+        return self._boolean(self.environ['azul_blue_green_mode'])
+
+    @property
+    def alias_stage(self) -> str:
+        """
+        The name of the deployment whose resources the two instances of a
+        deployment in blue-green mode share, such as the user tables, the APAT
+        key and the OAuth client secret. That is the name of the alias if the
+        current deployment is an instance, and the name of the current
+        deployment otherwise.
+        """
+        alias = self.deployment.alias
+        return self.deployment_stage if alias is None else alias.name
+
     @cached_property
     def main_deployment_stage(self) -> str:
         """
@@ -1110,6 +1139,127 @@ class Config:
         def is_unit_test(self):
             return self.name == self.test_name
 
+        #: The suffix of the name of the directory of a personal deployment
+        #:
+        local_suffix: ClassVar[str] = '.local'
+
+        @classmethod
+        def all(cls) -> list[Self]:
+            """
+            Every deployment with a directory in the `deployments` directory of
+            the project. The directory of a shared deployment is named after
+            it, that of a personal deployment has an additional `.local`
+            suffix, as in `hannes.local`. The directories of components, such
+            as `anvilprod.base` or `hannes.base.local`, are skipped.
+
+            >>> deployments = config.Deployment.all()
+            >>> {'anvilprod', 'dev', 'prod'} <= {d.name for d in deployments}
+            True
+
+            >>> [d.name for d in deployments if not config._is_valid_qualifier(d.name)]
+            []
+            """
+            path = Path(config.project_root) / 'deployments'
+            deployments = [
+                cls(name)
+                for child in sorted(path.iterdir())
+                if child.is_dir()
+                for name in [child.name.removesuffix(cls.local_suffix)]
+                if config._is_valid_qualifier(name)
+            ]
+            assert len(set(deployments)) == len(deployments), R(
+                'A personal deployment has the name of a shared one', deployments)
+            return deployments
+
+        @property
+        def directory(self) -> Path:
+            """
+            The directory in the `deployments` directory of the project that
+            contains the configuration of this deployment.
+
+            >>> config.Deployment('anvilprod').directory.name
+            'anvilprod'
+            """
+            path = Path(config.project_root) / 'deployments'
+            return one(
+                directory
+                for directory in [path / self.name, path / (self.name + self.local_suffix)]
+                if directory.is_dir()
+            )
+
+        def environment(self) -> Mapping[str, str]:
+            """
+            The environment of this deployment, as compiled from the
+            `environment.py` files that make up its configuration. Unlike
+            ``config.environ``, which is the environment of the current
+            deployment, this works for any deployment that has a directory in
+            the `deployments` directory of the project.
+
+            >>> config.Deployment('anvilprod').environment()['AZUL_DEPLOYMENT_STAGE']
+            'anvilprod'
+            """
+            from azul.modules import (
+                load_script,
+            )
+            script = load_script('export_environment')
+            env, warning = script.load_env(self.directory.name)
+            assert warning is None, R('Unexpected warning', warning)
+            return script.filter_env(script.resolve_env(env))
+
+        @cached_property
+        def blue_green_mode(self) -> bool:
+            """
+            ``True`` if this deployment is configured to be in blue-green mode.
+            For the current deployment, the value comes from the environment,
+            for any other deployment, from the `environment.py` files that make
+            up its configuration. The Lambda functions have neither, but get
+            the value of the current deployment through :meth:`render`.
+
+            >>> config.Deployment('anvilprod').blue_green_mode
+            False
+            """
+            if self.name == config.deployment_stage:
+                return config.blue_green_mode
+            else:
+                return config._boolean(self.environment()['azul_blue_green_mode'])
+
+        @property
+        def _numeric_suffix(self) -> re.Match[str] | None:
+            return re.fullmatch(r'(.*\D)(\d+)', self.name)
+
+        @property
+        def alias(self) -> Self | None:
+            """
+            The alias that this deployment is an instance of, or ``None`` if
+            this deployment isn't an instance. An instance is a deployment in
+            blue-green mode whose name has a numeric suffix, the number of the
+            instance. Removing the suffix yields the name of the alias. Outside
+            of blue-green mode, a numeric suffix has no meaning.
+
+            >>> config.Deployment('anvilprod').alias is None
+            True
+            """
+            match = self._numeric_suffix
+            if match is not None and self.blue_green_mode:
+                alias, number = match.groups()
+                assert number in ('1', '2'), R(
+                    'The number of an instance must be 1 or 2', self.name)
+                return type(self)(alias)
+            else:
+                return None
+
+        @property
+        def is_alias(self) -> bool:
+            """
+            ``True`` if this deployment is the alias of a deployment in
+            blue-green mode, ``False`` otherwise. The alias is the deployment
+            in blue-green mode whose name has no numeric suffix.
+
+            >>> config.Deployment('anvilprod').is_alias
+            False
+            """
+            return self.blue_green_mode and self._numeric_suffix is None
+
         def render(self) -> JSON:
             """
             >>> original = config.deployment
@@ -1118,13 +1268,15 @@ class Config:
             ...                                                rendered=rendered)
 
             >>> rendered.keys()
-            dict_keys(['is_lower_sandbox', 'is_shared', 'is_stable'])
+            dict_keys(['blue_green_mode', 'is_lower_sandbox', 'is_shared', 'is_stable'])
 
             >>> reconstituted.is_shared == original.is_shared
             True
             >>> reconstituted.is_stable == original.is_stable
             True
             >>> reconstituted.is_lower_sandbox == original.is_lower_sandbox
+            True
+            >>> reconstituted.blue_green_mode == original.blue_green_mode
             True
             """
             cls = type(self)
@@ -1377,7 +1529,7 @@ class Config:
     def validate_qualifier(cls, qualifier: str) -> None:
         cls._validate_term(qualifier, name='qualifier')
 
-    def secret_path(self, *args):
+    def secret_path(self, *args, stage: str | None = None):
         """
         The fully qualified name of a secret in AWS Secrets Manager. Internally,
         we use the term "secret path" for this in order to better distinguish
@@ -1387,14 +1539,20 @@ class Config:
         is made up of the secrets's account ID, its fully qualified name and an
         optional suffix consisting of a dash followed by six characters. We
         don't use ARNs in Azul to refer to secrets.
+
+        The path is qualified with the name of the current deployment, unless
+        the name of another deployment is given.
         """
-        return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
+        if stage is None:
+            stage = self.deployment_stage
+        return '/'.join(['dcp', 'azul', stage, *args])
 
     def hmac_secret_path(self):
         return self.secret_path('indexer', 'hmac')
 
     def oauth2_client_secret_path(self):
-        return self.secret_path('service', 'google_oauth2_client_secret')
+        return self.secret_path('service', 'google_oauth2_client_secret',
+                                stage=self.alias_stage)
 
     def enable_gcp(self):
         return self.google_project() is not None
@@ -1628,11 +1786,11 @@ class Config:
 
     @property
     def dynamo_user_table_name(self) -> str:
-        return self.qualified_resource_name('users')
+        return self.qualified_resource_name('users', stage=self.alias_stage)
 
     @property
     def dynamo_access_token_table_name(self) -> str:
-        return self.qualified_resource_name('access_tokens')
+        return self.qualified_resource_name('access_tokens', stage=self.alias_stage)
 
     @property
     def dynamo_object_cache_table_name(self) -> str:
