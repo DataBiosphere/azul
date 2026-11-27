@@ -503,7 +503,8 @@ class ManifestController(QueryController):
                 try:
                     manifest = self._service.get_cached_manifest(format=format,
                                                                  catalog=catalog,
-                                                                 filters=filters)
+                                                                 filters=filters,
+                                                                 base_url=self.app.base_url)
                 except CachedManifestNotFound as e:
                     # A cache miss, but the exception tells us the cache key
                     manifest, manifest_key = None, e.manifest_key

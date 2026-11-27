@@ -299,6 +299,12 @@ class ManifestTestCase(WebServiceTestCase,
     def _service(self):
         return ManifestService(file_url_func=self._controller._file_url)
 
+    @property
+    def _base_url(self) -> furl:
+        # The base URL is part of the manifest hash, so it must not vary
+        # between runs or deployments, like the port of the local server does
+        return furl('https://service.azul.test')
+
     def _get_manifest(self,
                       format: ManifestFormat,
                       filters: FiltersJSON,
@@ -326,6 +332,7 @@ class ManifestTestCase(WebServiceTestCase,
             partition = self._service.get_manifest(format=format,
                                                    catalog=self.catalog,
                                                    filters=filters,
+                                                   base_url=self._base_url,
                                                    partition=partition)
             if isinstance(partition, Manifest):
                 return partition, num_partitions
@@ -755,15 +762,15 @@ class TestManifests(DCP1ManifestTestCase):
                     # a pair of deterministically derived v5 UUIDs.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-89bc9973-de91-5fc4-9c6a-8c1f547d45c6.' + source_hash
+                        'hca-manifest-84aeb93d-aea3-5f2a-aec7-bcf586769a71.' + source_hash
                         if config.enable_bundle_notifications else
-                        'hca-manifest-e639622e-55b5-597e-907d-e28ceca3357e.' + source_hash
+                        'hca-manifest-0f2ed043-39a1-5088-a35a-b6606a725844.' + source_hash
                     ),
                     (
                         {},
-                        'hca-manifest-832a257c-5540-567b-bcb6-260d2e374508.' + source_hash
+                        'hca-manifest-ce3e9c5c-dedc-5b4b-80df-00f7c9ca4217.' + source_hash
                         if config.enable_bundle_notifications else
-                        'hca-manifest-57a7eb28-d918-5a62-9462-36b53b1ed111.' + source_hash
+                        'hca-manifest-05569504-6b3d-5093-acad-e80edb384408.' + source_hash
                     )
                 ]
                 for filters, expected_name in cases:
@@ -943,9 +950,9 @@ class TestManifestCache(DCP1ManifestTestCase):
             with self.subTest('First bundle indexed', format=format):
                 # A manifest for a filter matching files in the first bundle …
                 generator = manifest_generator(format)
-                manifest_key = generator.manifest_key()
+                manifest_key = generator.manifest_key(self._base_url)
                 # … should remain cached …
-                self.assertEqual(manifest_key, generator.manifest_key())
+                self.assertEqual(manifest_key, generator.manifest_key(self._base_url))
                 keys[0][format] = manifest_key
 
         # … until a new bundle with files also matching the filter is indexed.
@@ -953,7 +960,7 @@ class TestManifestCache(DCP1ManifestTestCase):
         for format in ManifestFormat:
             with self.subTest('Second bundle indexed', format=format):
                 generator = manifest_generator(format)
-                manifest_key = generator.manifest_key()
+                manifest_key = generator.manifest_key(self._base_url)
                 # The updated manifest is cached under a different key.
                 self.assertNotEqual(keys[0][format], manifest_key)
                 keys[1][format] = manifest_key
@@ -964,7 +971,7 @@ class TestManifestCache(DCP1ManifestTestCase):
         for format in ManifestFormat:
             with self.subTest('Unrelated bundle indexed', format=format):
                 generator = manifest_generator(format)
-                manifest_key = generator.manifest_key()
+                manifest_key = generator.manifest_key(self._base_url)
                 self.assertEqual(keys[1][format], manifest_key)
 
     @patch.object(StorageService, '_time_until_object_expires')
@@ -983,7 +990,8 @@ class TestManifestCache(DCP1ManifestTestCase):
         filters = self._filters(filters)
         cached_manifest_1 = self._service.get_cached_manifest(format=format,
                                                               catalog=manifest_key.catalog,
-                                                              filters=filters)
+                                                              filters=filters,
+                                                              base_url=self._base_url)
         self.assertTrue(cached_manifest_1.was_cached)
         _time_until_object_expires.assert_called_once()
         _time_until_object_expires.reset_mock()
@@ -1007,7 +1015,8 @@ class TestManifestCache(DCP1ManifestTestCase):
         with self.assertRaises(CachedManifestNotFound) as e:
             self._service.get_cached_manifest(format=format,
                                               catalog=manifest_key.catalog,
-                                              filters=filters)
+                                              filters=filters,
+                                              base_url=self._base_url)
         self.assertEqual(manifest_key, e.exception.manifest_key)
         _time_until_object_expires.assert_called_once()
         _time_until_object_expires.reset_mock()

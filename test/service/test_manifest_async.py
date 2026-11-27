@@ -369,7 +369,8 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                     get_cached_manifest.assert_called_once_with(
                         format=format,
                         catalog=self.catalog,
-                        filters=filters
+                        filters=filters,
+                        base_url=self.base_url
                     )
 
                 def assert_get_manifest(partition):

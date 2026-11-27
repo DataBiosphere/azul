@@ -585,7 +585,8 @@ class ManifestService(QueryService):
                      catalog: CatalogName,
                      filters: Filters,
                      partition: ManifestPartition,
-                     manifest_key: ManifestKey | None = None
+                     manifest_key: ManifestKey | None = None,
+                     base_url: furl | None = None
                      ) -> Manifest | ManifestPartition:
         """
         Return a fully populated manifest that ends with the given partition or
@@ -622,12 +623,18 @@ class ManifestService(QueryService):
                              may take a few seconds. If a valid cached manifest
                              exists under the given key, it will be used.
                              Otherwise, a new manifest will be created and
-                             stored under the given key.
+                             stored under the given key. Pass either this or
+                             ``base_url``, but not both.
+
+        :param base_url: The base URL of the request for the manifest. Pass
+                         either this or ``manifest_key``, but not both.
         """
+        assert (manifest_key is None) != (base_url is None), R(
+            'Pass either a manifest key or a base URL', manifest_key, base_url)
         generator_cls = ManifestGenerator.cls_for_format(format)
         generator = generator_cls(self, catalog, filters)
         if manifest_key is None:
-            manifest_key = generator.manifest_key()
+            manifest_key = generator.manifest_key(not_none(base_url))
         if partition.is_first:
             try:
                 return self._get_cached_manifest(generator_cls, manifest_key)
@@ -653,11 +660,12 @@ class ManifestService(QueryService):
     def get_cached_manifest(self,
                             format: ManifestFormat,
                             catalog: CatalogName,
-                            filters: Filters
+                            filters: Filters,
+                            base_url: furl
                             ) -> Manifest:
         generator_cls = ManifestGenerator.cls_for_format(format)
         generator = generator_cls(self, catalog, filters)
-        manifest_key = generator.manifest_key()
+        manifest_key = generator.manifest_key(base_url)
         return self._get_cached_manifest(generator_cls, manifest_key)
 
     @classmethod
@@ -969,14 +977,15 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     source_namespace = UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
 
-    def manifest_key(self) -> ManifestKey:
+    def manifest_key(self, base_url: furl) -> ManifestKey:
         """
         Return a manifest object key deterministically derived from this
         generator's parameters (its concrete type and the arguments passed to
-        its constructor) and the current commit hash. The same parameters will
-        always produce the same return value in one revision of this code.
-        Different parameters should, with a very high probability, produce
-        different return values.
+        its constructor), the given base URL of the request for the manifest,
+        and the current commit hash. The same parameters will always produce
+        the same return value in one revision of this code. Different
+        parameters should, with a very high probability, produce different
+        return values.
         """
         git_commit = config.git_status['commit']
         # The explicit filters are already normalized so we don't to do anything
@@ -990,6 +999,12 @@ class ManifestGenerator(metaclass=ABCMeta):
             catalog,
             format.value,
             content_hash,
+            # In blue-green mode, a manifest requested from an instance via its
+            # canonical host name should not be reused when an otherwise
+            # identical request for it is made through the alias host name while
+            # that instance is live. This is because the manifest embeds file
+            # URLs that reference the host name from the manifest request.
+            str(base_url),
             filter_string
         ]
         joiner = ','
