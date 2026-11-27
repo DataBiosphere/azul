@@ -4,5 +4,5 @@ azul_docker_version=29.10.1
 azul_terraform_version=1.17.2
 azul_awscli_version=2.42.4
 azul_ghcli_version=2.106.0
-azul_uv_version=0.13.8
+azul_uv_version=0.13.10
 azul_ecr_helper_version=0.12.0
