@@ -147,20 +147,20 @@ In blue-green mode, every pipeline is an instance pipeline. It tests the commit 
 
 The GitLab configuration moves from `.gitlab-ci.yml` into the `.gitlab` directory, and is rendered from templates, as the PR templates in the `.github` directory already are. `make -C .gitlab` renders three files:
 
-- `.gitlab/single.yml`, the pipeline of deployments in single mode, which is today's pipeline
+- `.gitlab/standalone.yml`, the pipeline of deployments in stand-alone mode, which is today's pipeline
 
 - `.gitlab/blue-green.yml`, the pipeline of the instances of deployments in blue-green mode, as shown above
 
 - `.gitlab/stub.yml`, which replaces `.gitlab-ci.yml` and includes one of the other two, depending on the branch being built
 
-The stub includes `blue-green.yml` for the branch of every instance, that is, every deployment with a numeric suffix that sets `azul_blue_green_mode` to `1`, and `single.yml` for all other branches. It looks at the instances rather than the alias, because during the migration, the instances are in blue-green mode before the alias is:
+The stub includes `blue-green.yml` for the branch of every instance, that is, every deployment with a numeric suffix that sets `azul_blue_green_mode` to `1`, and `standalone.yml` for all other branches. It looks at the instances rather than the alias, because during the migration, the instances are in blue-green mode before the alias is:
 
 ```yaml
 include:
   - local: .gitlab/blue-green.yml
     rules:
       - if: $CI_COMMIT_BRANCH =~ /^(anvilprod)[12]$/
-  - local: .gitlab/single.yml
+  - local: .gitlab/standalone.yml
     rules:
       - if: $CI_COMMIT_BRANCH !~ /^(anvilprod)[12]$/
 ```
@@ -325,13 +325,13 @@ The preview follows the `go_live` job because the Data Browser only uses the pub
 
 The migration of anvilprod into blue-green mode takes three steps. Some time may pass between the first and the second, but the third follows the second in quick succession. The second and third steps are likely to require hotfixes, which are committed directly to `anvilprod1` and pushed to GitHub and GitLab, without a PR.
 
-During the migration, the instances are in blue-green mode while the alias isn't. `deployments/anvilprod1/environment.py` and `deployments/anvilprod2/environment.py` set `azul_blue_green_mode` to `1` from the first step on, but `deployments/anvilprod/environment.py` does so only in the third. Until then, `anvilprod` is the existing deployment in single mode, the *legacy instance*, and the `deploy_alias_base` and `deploy_alias` jobs short-circuit. Otherwise, the first pipeline of `anvilprod1` would apply alias mode to the components of `anvilprod`, which would destroy the legacy instance while it still serves users.
+During the migration, the instances are in blue-green mode while the alias isn't. `deployments/anvilprod1/environment.py` and `deployments/anvilprod2/environment.py` set `azul_blue_green_mode` to `1` from the first step on, but `deployments/anvilprod/environment.py` does so only in the third. Until then, `anvilprod` is the existing deployment in stand-alone mode, the *legacy instance*, and the `deploy_alias_base` and `deploy_alias` jobs short-circuit. Otherwise, the first pipeline of `anvilprod1` would apply alias mode to the components of `anvilprod`, which would destroy the legacy instance while it still serves users.
 
 `anvilprod1` gets an OpenSearch domain of its own, and is reindexed from scratch, like any instance that wakes for a blue-green promotion.
 
 ### 1. Preparatory PR
 
-A PR that is promoted to anvilprod normally. In single mode, it changes nothing but the first two items and the PR templates:
+A PR that is promoted to anvilprod normally. In stand-alone mode, it changes nothing but the first two items and the PR templates:
 
 - The user tables move from the main component into the `base` component, in every deployment (see *User state*).
 
@@ -402,13 +402,13 @@ Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvi
 
 ## Implementation
 
-The changes are implemented and tested on tempdev in the following order, so that each step is tested before the next depends on it. Changes that also apply in single mode come first, followed by the code for blue-green mode, which has no effect while the mode is off, and finally a rehearsal of the migration and of a blue-green promotion. Steps 1 through 4 can each be a small PR to `develop` that precedes the preparatory PR (see *Migration*).
+The changes are implemented and tested on tempdev in the following order, so that each step is tested before the next depends on it. Changes that also apply in stand-alone mode come first, followed by the code for blue-green mode, which has no effect while the mode is off, and finally a rehearsal of the migration and of a blue-green promotion. Steps 1 through 4 can each be a small PR to `develop` that precedes the preparatory PR (see *Migration*).
 
 The steps relate to the migration as follows. Steps 1 through 8, together with the generator of the PR templates, make up the preparatory PR, the first step of the migration, unless some of them are merged into `develop` separately. Steps 9 and 10 rehearse the second and third steps of the migration on tempdev, with `tempdev` as the legacy instance and `tempdev1` taking its place, and step 11 rehearses a blue-green promotion as anvilprod will perform them after its migration. Any branch can be deployed to tempdev, so the rehearsals use the feature branch and precede merging into `develop`. Once the preparatory PR has been promoted to anvilprod, the second and third steps of the migration follow there.
 
 In the short term, tempdev remains in blue-green mode after the rehearsals. The commit that turns on blue-green mode for `tempdev` in step 10 is therefore part of the preparatory PR, as are `deployments/tempdev1` and `deployments/tempdev2`.
 
-### Changes that also apply in single mode
+### Changes that also apply in stand-alone mode
 
 1. Move the user tables into the `base` component, with `removed` and `import` blocks and an entry in `UPGRADING.rst`. On tempdev, the plans for the `base` and main components must import the tables and forget them, respectively, without destroying or recreating them. The remaining steps depend on this one.
 
@@ -416,7 +416,7 @@ In the short term, tempdev remains in blue-green mode after the rehearsals. The 
 
 3. Capture the base URL of the request in the state of the manifest's Step Functions execution, and include it in the manifest hash. Unit tests, and on tempdev, the file URLs in a curl manifest must remain the same.
 
-4. Move the GitLab configuration into the `.gitlab` directory, with the templates, `single.yml`, the stub and the freshness check in GitHub CI. On tempdev, after the project setting of its GitLab instance is changed, the pipeline must be the same as before.
+4. Move the GitLab configuration into the `.gitlab` directory, with the templates, `standalone.yml`, the stub and the freshness check in GitHub CI. On tempdev, after the project setting of its GitLab instance is changed, the pipeline must be the same as before.
 
 ### Code for blue-green mode
 
