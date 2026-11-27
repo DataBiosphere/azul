@@ -379,7 +379,7 @@ def env() -> Mapping[str, str | None]:
                 'is_custom': True
             },
             'opensearch': {
-                'ref': 'docker.io/opensearchproject/opensearch:2.19.7',
+                'ref': 'docker.io/opensearchproject/opensearch:2.19.8',
                 'url': 'https://hub.docker.com/r/opensearchproject/opensearch',
                 'is_custom': False
             },
