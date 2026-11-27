@@ -24,4 +24,18 @@ class FileUrlFunc(Protocol):
                  file_uuid: str,
                  fetch: bool = True,
                  **params: str
-                 ) -> mutable_furl: ...
+                 ) -> mutable_furl:
+        """
+        Return the URL at which the service serves the file with the given
+        UUID.
+
+        :param catalog: the name of the catalog containing the file
+
+        :param file_uuid: the UUID of the file
+
+        :param fetch: True if the URL should point at the fetch variant of the
+                      file endpoint, which is better suited for XHR
+
+        :param params: additional query parameters to append to the URL
+        """
+        ...
