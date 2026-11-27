@@ -216,7 +216,7 @@ During a request, the service derives its base URL from the `Host` header (`Azul
 
 Outside a request, `base_url` falls back to `config.lambda_endpoint`, which will be the canonical name. The compact and curl manifests use that fallback: they are generated in Step Functions and embed `/repository/files` URLs. Users would receive manifests that refer to the canonical name, and those URLs would break once that instance rests after a later switch.
 
-The fix is to capture the base URL of the request that starts the manifest's Step Functions execution, include it in the `ManifestKey` (and therefore in the manifest hash), and have `generate()` build its URLs from the key rather than from `app.base_url`. Including the base URL in the hash also keeps a manifest generated on a standby instance from being served from the cache after the `go_live` job has run. Taking the value from the key also prevents a race with the `go_live` job between starting the execution and generating the manifest.
+The fix is to capture the base URL of the request that starts the manifest's Step Functions execution, carry it in the execution's state, next to the `ManifestKey` and the filters, and have `generate()` build its URLs from it rather than from `app.base_url`. The base URL is also part of the input to the manifest hash, which keeps a manifest generated on a standby instance from being served from the cache after the `go_live` job has run. The `ManifestKey` itself doesn't contain the base URL, so the encoded keys in URLs don't get longer. Taking the value from the state also prevents a race with the `go_live` job between starting the execution and generating the manifest.
 
 The manifest generators are the only code that hands out URLs to users outside of a request (see *Which code builds URLs outside of a request*). The deployed code therefore never needs to know which instance is live.
 
@@ -408,7 +408,7 @@ In the short term, tempdev remains in blue-green mode after the rehearsals. The 
 
 2. Add the `X-Azul-Deployment` header to `AzulChaliceApp.standard_headers()`. On tempdev, both a regular response and a `404` response from API Gateway must carry the header.
 
-3. Capture the base URL in the `ManifestKey`. Unit tests, and on tempdev, the file URLs in a curl manifest must remain the same.
+3. Capture the base URL of the request in the state of the manifest's Step Functions execution, and include it in the manifest hash. Unit tests, and on tempdev, the file URLs in a curl manifest must remain the same.
 
 4. Move the GitLab configuration into the `.gitlab` directory, with the templates, `single.yml`, the stub and the freshness check in GitHub CI. On tempdev, after the project setting of its GitLab instance is changed, the pipeline must be the same as before.
 
@@ -467,7 +467,7 @@ A search of `src/` and `lambdas/` for every use of `base_url`, `self_url`, `lamb
 
 | Use | Context | Reaches users | Assessment |
 |---|---|---|---|
-| `Controller._file_url`, via the compact and curl manifest generators | Step Functions | yes | Fixed by capturing the base URL in the `ManifestKey` |
+| `Controller._file_url`, via the compact and curl manifest generators | Step Functions | yes | Fixed by capturing the request's base URL for the manifest generation |
 | `HealthController._api_endpoint` and `HealthController._lambda` | scheduled health check | no | Checks the instance itself, so the canonical names are correct |
 | `AzulClient`, for the indexer endpoint | operator scripts, integration test, reindex | no | The canonical names are correct |
 | `DSSBundle.drs_uri` and `dss_drs_object_uri` | indexing, DRS | yes | Only used by the DSS repository plugin, which no deployment uses |
