@@ -584,9 +584,9 @@ class ManifestService(QueryService):
                      format: ManifestFormat,
                      catalog: CatalogName,
                      filters: Filters,
+                     base_url: furl,
                      partition: ManifestPartition,
-                     manifest_key: ManifestKey | None = None,
-                     base_url: furl | None = None
+                     manifest_key: ManifestKey | None = None
                      ) -> Manifest | ManifestPartition:
         """
         Return a fully populated manifest that ends with the given partition or
@@ -613,6 +613,9 @@ class ManifestService(QueryService):
         :param filters: The filters by which to restrict the contents of the
                         manifest.
 
+        :param base_url: The base URL of the request for the manifest. The file
+                         URLs inside the manifest will use it.
+
         :param partition: The manifest partition to generate. Not all manifests
                           involve multiple partitions. If they don't, a Manifest
                           instance will be returned. Otherwise, the next
@@ -623,18 +626,12 @@ class ManifestService(QueryService):
                              may take a few seconds. If a valid cached manifest
                              exists under the given key, it will be used.
                              Otherwise, a new manifest will be created and
-                             stored under the given key. Pass either this or
-                             ``base_url``, but not both.
-
-        :param base_url: The base URL of the request for the manifest. Pass
-                         either this or ``manifest_key``, but not both.
+                             stored under the given key.
         """
-        assert (manifest_key is None) != (base_url is None), R(
-            'Pass either a manifest key or a base URL', manifest_key, base_url)
         generator_cls = ManifestGenerator.cls_for_format(format)
-        generator = generator_cls(self, catalog, filters)
+        generator = generator_cls(self, catalog, filters, base_url)
         if manifest_key is None:
-            manifest_key = generator.manifest_key(not_none(base_url))
+            manifest_key = generator.manifest_key()
         if partition.is_first:
             try:
                 return self._get_cached_manifest(generator_cls, manifest_key)
@@ -664,8 +661,8 @@ class ManifestService(QueryService):
                             base_url: furl
                             ) -> Manifest:
         generator_cls = ManifestGenerator.cls_for_format(format)
-        generator = generator_cls(self, catalog, filters)
-        manifest_key = generator.manifest_key(base_url)
+        generator = generator_cls(self, catalog, filters, base_url)
+        manifest_key = generator.manifest_key()
         return self._get_cached_manifest(generator_cls, manifest_key)
 
     @classmethod
@@ -954,7 +951,8 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: Filters
+                 filters: Filters,
+                 base_url: furl
                  ) -> None:
         """
         Construct a generator instance.
@@ -965,27 +963,30 @@ class ManifestGenerator(metaclass=ABCMeta):
         :param filters: the filter to use when querying the index for the
                         documents to be transformed into the manifest
 
+        :param base_url: the base URL of the request for the manifest, which the
+                         file URLs inside the manifest will use
+
         :param service: the service to use when querying the index
         """
         super().__init__()
         self.service = service
         self.catalog = catalog
         self.filters = filters
+        self.base_url = base_url
         self.file_url_func = service.file_url_func
 
     manifest_namespace = UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
 
     source_namespace = UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
 
-    def manifest_key(self, base_url: furl) -> ManifestKey:
+    def manifest_key(self) -> ManifestKey:
         """
         Return a manifest object key deterministically derived from this
         generator's parameters (its concrete type and the arguments passed to
-        its constructor), the given base URL of the request for the manifest,
-        and the current commit hash. The same parameters will always produce
-        the same return value in one revision of this code. Different
-        parameters should, with a very high probability, produce different
-        return values.
+        its constructor) and the current commit hash. The same parameters will
+        always produce the same return value in one revision of this code.
+        Different parameters should, with a very high probability, produce
+        different return values.
         """
         git_commit = config.git_status['commit']
         # The explicit filters are already normalized so we don't to do anything
@@ -1004,7 +1005,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             # identical request for it is made through the alias host name while
             # that instance is live. This is because the manifest embeds file
             # URLs that reference the host name from the manifest request.
-            str(base_url),
+            str(self.base_url),
             filter_string
         ]
         joiner = ','
@@ -1226,6 +1227,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                                           file_uuid=json_str(file[special_fields.file_uuid.name_in_hit]),
                                           version=json_str(file['version']),
                                           fetch=False,
+                                          base_url=self.base_url,
                                           **args))
 
     def _azul_mirror_uri(self, source: SourceRef, file: JSON) -> str | None:

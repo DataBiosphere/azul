@@ -299,11 +299,10 @@ class ManifestTestCase(WebServiceTestCase,
     def _service(self):
         return ManifestService(file_url_func=self._controller._file_url)
 
-    @property
-    def _base_url(self) -> furl:
-        # The base URL is part of the manifest hash, so it must not vary
-        # between runs or deployments, like the port of the local server does
-        return furl('https://service.azul.test')
+    # The base URL is part of the manifest hash, so it must not vary between
+    # runs or deployments, like the port of the local server does
+    #
+    _base_url = furl('https://service.azul.test')
 
     def _get_manifest(self,
                       format: ManifestFormat,
@@ -376,9 +375,10 @@ class ManifestTestCase(WebServiceTestCase,
         self.assertEqual(expected_body, sorted(chunked(body, 3)))
 
     def _file_url(self, file_id, version):
-        return str(self.base_url.set(path='/repository/files/' + file_id,
-                                     args=dict(catalog=self.catalog,
-                                               version=version)))
+        return str(furl(url=self._base_url,
+                        path='/repository/files/' + file_id,
+                        args=dict(catalog=self.catalog,
+                                  version=version)))
 
     def _drs_uri(self, file_id, version=None):
         return str(furl(scheme='drs',
@@ -695,7 +695,7 @@ class TestManifests(DCP1ManifestTestCase):
         filters = {'fileFormat': {'is': ['pdf']}}
         response = self._get_manifest(ManifestFormat.curl, filters)
         self.assertEqual(200, response.status_code)
-        base_url = str(self.base_url.set(path='/repository/files'))
+        base_url = str(furl(url=self._base_url, path='/repository/files'))
         download_dir = 'melanoma-infiltration-of-stromal-and-immune-cells--6qb17r'
         expected_body = [
             [
@@ -942,7 +942,7 @@ class TestManifestCache(DCP1ManifestTestCase):
 
         def manifest_generator(format: ManifestFormat) -> ManifestGenerator:
             generator_cls = ManifestGenerator.cls_for_format(format)
-            return generator_cls(service, self.catalog, filters)
+            return generator_cls(service, self.catalog, filters, self._base_url)
 
         keys = [{}, {}]
 
@@ -950,9 +950,9 @@ class TestManifestCache(DCP1ManifestTestCase):
             with self.subTest('First bundle indexed', format=format):
                 # A manifest for a filter matching files in the first bundle …
                 generator = manifest_generator(format)
-                manifest_key = generator.manifest_key(self._base_url)
+                manifest_key = generator.manifest_key()
                 # … should remain cached …
-                self.assertEqual(manifest_key, generator.manifest_key(self._base_url))
+                self.assertEqual(manifest_key, generator.manifest_key())
                 keys[0][format] = manifest_key
 
         # … until a new bundle with files also matching the filter is indexed.
@@ -960,7 +960,7 @@ class TestManifestCache(DCP1ManifestTestCase):
         for format in ManifestFormat:
             with self.subTest('Second bundle indexed', format=format):
                 generator = manifest_generator(format)
-                manifest_key = generator.manifest_key(self._base_url)
+                manifest_key = generator.manifest_key()
                 # The updated manifest is cached under a different key.
                 self.assertNotEqual(keys[0][format], manifest_key)
                 keys[1][format] = manifest_key
@@ -971,7 +971,7 @@ class TestManifestCache(DCP1ManifestTestCase):
         for format in ManifestFormat:
             with self.subTest('Unrelated bundle indexed', format=format):
                 generator = manifest_generator(format)
-                manifest_key = generator.manifest_key(self._base_url)
+                manifest_key = generator.manifest_key()
                 self.assertEqual(keys[1][format], manifest_key)
 
     @patch.object(StorageService, '_time_until_object_expires')
@@ -1652,7 +1652,7 @@ class TestAnvilManifests(AnvilManifestTestCase):
                                                   # Redundant filter to avoid caching
                                                   filters={'source_id': {'is': [self.source.ref.id] * i}})
                 self.assertEqual(200, response.status_code)
-                base_url = str(self.base_url.set(path='/repository/files'))
+                base_url = str(furl(url=self._base_url, path='/repository/files'))
                 expected_body = [
                     # This file has no file_path, so a prefix of its digest sets
                     # it apart, and it is supplementary, which puts it with

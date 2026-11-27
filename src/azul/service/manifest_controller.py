@@ -48,6 +48,7 @@ from azul.lib.types import (
     is_of_type,
     json_int,
     json_mapping,
+    json_str,
     not_none,
     optional,
 )
@@ -97,6 +98,10 @@ manifest_state_key = 'manifest'
 
 class ManifestGenerationState(TypedDict, total=False):
     manifest_key: JSON
+    #: The base URL of the request that started the generation. The generation
+    #: uses it for the URLs in the manifest that refer to files, so that these
+    #: use the same domain name as the request.
+    base_url: str
     filters: JSON
     partition: JSON | None
     manifest: JSON | None
@@ -510,7 +515,8 @@ class ManifestController(QueryController):
                     manifest, manifest_key = None, e.manifest_key
                     # Prepare the execution that will generate the manifest
                     token = self._start_execution(filters=filters,
-                                                  manifest_key=manifest_key)
+                                                  manifest_key=manifest_key,
+                                                  base_url=self.app.base_url)
                 else:
                     # A cache hit
                     manifest_key = manifest.manifest_key
@@ -561,8 +567,10 @@ class ManifestController(QueryController):
                     # execution for it.
                     manifest = None
                     filters = Filters.from_json(result['input']['filters'])
+                    base_url = furl(json_str(result['input']['base_url']))
                     token = self._start_execution(filters=filters,
                                                   manifest_key=manifest_key,
+                                                  base_url=base_url,
                                                   previous_token=token)
                 else:
                     assert manifest_key == manifest.manifest_key
@@ -672,6 +680,7 @@ class ManifestController(QueryController):
     def _start_execution(self,
                          filters: Filters,
                          manifest_key: ManifestKey,
+                         base_url: furl,
                          previous_token: Token | None = None,
                          ) -> Token:
         partition = ManifestPartition.first()
@@ -703,6 +712,7 @@ class ManifestController(QueryController):
             state: ManifestGenerationState = {
                 'filters': filters.to_json(),
                 'manifest_key': manifest_key.to_json(),
+                'base_url': str(base_url),
                 'partition': partition.to_json(),
                 'iteration': iteration
             }
@@ -732,10 +742,12 @@ class ManifestController(QueryController):
         partition = ManifestPartition.from_json(not_none(state['partition']))
         manifest_key = ManifestKey.from_json(state['manifest_key'])
         filters = Filters.from_json(state['filters'])
+        base_url = furl(state['base_url'])
         self._integration_test_sabotage(filters, manifest_key, state)
         result = self._service.get_manifest(format=manifest_key.format,
                                             catalog=manifest_key.catalog,
                                             filters=filters,
+                                            base_url=base_url,
                                             partition=partition,
                                             manifest_key=manifest_key)
         if isinstance(result, ManifestPartition):

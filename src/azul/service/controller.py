@@ -9,6 +9,9 @@ from chalice.app import (
     NotFoundError,
     UnauthorizedError,
 )
+from furl import (
+    furl,
+)
 
 from azul import (
     CatalogName,
@@ -85,10 +88,16 @@ class ServiceController(SourceController):
                   catalog: CatalogName,
                   file_uuid: str,
                   fetch: bool = True,
+                  base_url: furl | None = None,
                   **params: str
                   ) -> mutable_furl:
+        """
+        See :class:`azul.service.FileUrlFunc`.
+        """
         path = self._file_path(fetch=fetch, file_uuid=file_uuid)
-        url = self.app.base_url.add(path=path)
+        if base_url is None:
+            base_url = self.app.base_url
+        url = mutable_furl(base_url).add(path=path)
         return url.set(args=dict(catalog=catalog, **params))
 
     def _file_path(self, *, fetch: bool, file_uuid: str) -> tuple[str, ...]:

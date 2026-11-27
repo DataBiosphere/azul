@@ -346,6 +346,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                 def input_for(iteration: int) -> ManifestGenerationState:
                     return dict(filters=filters.to_json(),
                                 manifest_key=manifest_key.to_json(),
+                                base_url=str(self.base_url),
                                 partition=partitions[0].to_json(),
                                 iteration=iteration)
 
@@ -378,6 +379,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                         format=format,
                         catalog=self.catalog,
                         filters=filters,
+                        base_url=self.base_url,
                         partition=partitions[partition],
                         manifest_key=manifest_key
                     )
@@ -662,6 +664,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
                               source_ids={self.source.ref.id})
             return dict(filters=filters.to_json(),
                         manifest_key=manifest_key.to_json(),
+                        base_url=str(self.base_url),
                         partition=partition.to_json(),
                         iteration=iteration)
 
@@ -746,6 +749,7 @@ class TestManifestController(DCP1TestCase, LocalAppTestCase):
         def input_for(iteration: int) -> ManifestGenerationState:
             return dict(filters=filters.to_json(),
                         manifest_key=manifest_key.to_json(),
+                        base_url=str(self.base_url),
                         partition=ManifestPartition.first().to_json(),
                         iteration=iteration)
 

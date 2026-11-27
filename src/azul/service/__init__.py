@@ -2,6 +2,10 @@ from typing import (
     Protocol,
 )
 
+from furl import (
+    furl,
+)
+
 from azul import (
     CatalogName,
 )
@@ -23,6 +27,7 @@ class FileUrlFunc(Protocol):
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
+                 base_url: furl | None = None,
                  **params: str
                  ) -> mutable_furl:
         """
@@ -35,6 +40,9 @@ class FileUrlFunc(Protocol):
 
         :param fetch: True if the URL should point at the fetch variant of the
                       file endpoint, which is better suited for XHR
+
+        :param base_url: the base URL of the returned URL. If None, the base
+                         URL of the app is used
 
         :param params: additional query parameters to append to the URL
         """
