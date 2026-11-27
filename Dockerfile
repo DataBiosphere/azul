@@ -29,7 +29,7 @@ RUN set -o pipefail \
 # packages below from it. That is necessary when a build fails because a version
 # in the cached index is no longer available from the repository.
 #
-ARG azul_image_version=3
+ARG azul_image_version=4
 RUN apt-get update
 
 RUN apt-get -y install curl gnupg unzip
