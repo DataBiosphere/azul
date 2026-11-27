@@ -13,7 +13,9 @@ from azul.service.source_service import (
 
 emit_tf(
     {
-        "resource": [
+        # In blue-green mode, the alias has no caches
+        #
+        "resource": [] if config.deployment.is_alias else [
             {
                 "aws_dynamodb_table": {
                     "sources_cache_by_auth": {

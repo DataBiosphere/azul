@@ -9,6 +9,9 @@ from azul.deployment import (
 from azul.infra.terraform import (
     emit_tf,
 )
+from azul.lib.functions import (
+    iif,
+)
 from azul.service.user_service import (
     UserService,
 )
@@ -25,6 +28,19 @@ def _table_exists(table_name: str) -> bool:
     else:
         return True
 
+
+# In blue-green mode, the `base` component of the alias owns the user state,
+# that of each instance everything else. In stand-alone mode, the `base`
+# component owns both.
+#
+owns_user_state = not config.deployment.is_instance
+owns_instance_state = not config.deployment.is_alias
+
+kms_keys = [
+    key
+    for key in config.kms_keys
+    if (owns_user_state if key.user_state else owns_instance_state)
+]
 
 emit_tf({
     'resource': [
@@ -63,6 +79,7 @@ emit_tf({
                     ]
                 }
                 for service_account in config.ServiceAccount
+                if owns_instance_state
             },
             **(
                 {
@@ -94,10 +111,10 @@ emit_tf({
                         },
                     }
                 }
-                if config.is_tdr_enabled() else
+                if config.is_tdr_enabled() and owns_instance_state else
                 {}
             ),
-            'null_resource': {
+            'null_resource': iif(owns_instance_state, {
                 'hmac_secret': {
                     'provisioner': [
                         {
@@ -122,22 +139,22 @@ emit_tf({
                         }
                     ]
                 }
-            },
+            }),
             'aws_kms_key': {
                 key.name: {
                     'key_usage': key.usage,
                     'customer_master_key_spec': key.spec,
                 }
-                for key in config.kms_keys
+                for key in kms_keys
             },
             'aws_kms_alias': {
                 key.name: {
                     'name': key.alias,
                     'target_key_id': '${aws_kms_key.%s.key_id}' % key.name
                 }
-                for key in config.kms_keys
+                for key in kms_keys
             },
-            'aws_dynamodb_table': {
+            'aws_dynamodb_table': iif(owns_user_state, {
                 'users': {
                     'name': config.dynamo_user_table_name,
                     'billing_mode': 'PAY_PER_REQUEST',
@@ -168,7 +185,7 @@ emit_tf({
                         'enabled': True
                     }
                 }
-            }
+            })
         },
     ],
     # The user tables moved here from the main component. Adopt the existing
@@ -186,6 +203,6 @@ emit_tf({
             ('users', config.dynamo_user_table_name),
             ('access_tokens', config.dynamo_access_token_table_name)
         ]
-        if _table_exists(table_name)
+        if owns_user_state and _table_exists(table_name)
     ]
 })

@@ -16,7 +16,9 @@ logs = {
 
 domain = config.opensearch_domain
 
-emit_tf(None if config.share_opensearch_domain else {
+# In blue-green mode, the alias has none of these resources
+#
+emit_tf(None if config.share_opensearch_domain or config.deployment.is_alias else {
     'resource': [
         *(
             {

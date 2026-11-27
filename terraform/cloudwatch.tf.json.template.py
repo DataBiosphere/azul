@@ -23,7 +23,9 @@ def dashboard_body(name: str) -> str:
     return body
 
 
-emit_tf({
+# In blue-green mode, the alias has none of these resources
+#
+emit_tf(None if config.deployment.is_alias else {
     'data': [
         {
             'external': {

@@ -18,7 +18,9 @@ from azul.service.manifest_controller import (
 
 service = load_app_module('service')
 
-emit_tf({
+# In blue-green mode, the alias has none of these resources
+#
+emit_tf(None if config.deployment.is_alias else {
     "resource": {
         "aws_iam_role": {
             "states": {

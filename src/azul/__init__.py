@@ -1038,7 +1038,10 @@ class Config:
 
     @property
     def private_api(self) -> bool:
-        return self._boolean(self.environ['AZUL_PRIVATE_API'])
+        private_api = self._boolean(self.environ['AZUL_PRIVATE_API'])
+        assert not (private_api and self.deployment.blue_green_mode), R(
+            'Blue-green mode requires public APIs')
+        return private_api
 
     @frozen(kw_only=False, slots=False)
     class Deployment:
@@ -1259,6 +1262,17 @@ class Config:
             False
             """
             return self.blue_green_mode and self._numeric_suffix is None
+
+        @property
+        def is_instance(self) -> bool:
+            """
+            ``True`` if this deployment is an instance of a deployment in
+            blue-green mode, ``False`` otherwise.
+
+            >>> config.Deployment('anvilprod').is_instance
+            False
+            """
+            return self.alias is not None
 
         def render(self) -> JSON:
             """

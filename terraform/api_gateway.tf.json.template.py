@@ -255,16 +255,119 @@ def add_waf_blocked_alarm(resources: JSON) -> JSON:
         }
 
 
-emit_tf({
+def domain_resources(app: Application) -> JSON:
+    """
+    The resources for the custom domain names of the given app: the API
+    Gateway custom domain names, their certificates and the DNS records.
+    """
+    return {
+        'aws_api_gateway_domain_name': {
+            f'{app.name}_{i}': {
+                'domain_name': '${aws_acm_certificate.%s_%i.domain_name}' % (app.name, i),
+                'certificate_arn': '${aws_acm_certificate_validation.%s_%i.certificate_arn}' % (app.name, i),
+                'security_policy': 'TLS_1_2'
+            } for i, domain in enumerate(app.domains)
+        },
+        'aws_acm_certificate': {
+            f'{app.name}_{i}': {
+                'domain_name': domain,
+                'validation_method': 'DNS',
+                'provider': 'aws.us-east-1',
+                # I tried using SANs for the alias domains (like the DRS
+                # domain) but Terraform kept swapping the zones, I think
+                # because the order of elements in
+                # `aws_acm_certificate.domain_validation_options` is not
+                # deterministic. The alternative is to use separate certs,
+                # one for each domain, the main one as well as for each
+                # alias.
+                #
+                # Update 03/07/2022: My guess about the non-determinism was
+                # correct. That bug was 'fixed' in Terraform by making the
+                # domain_validation_options a set so that elements can't be
+                # accessed via numeric index. The Terraform documentation
+                # recommends looping over the elements in that set. That's
+                # what we do for GitLab. To do the same here would require
+                # bigger refactoring that I don't think is worth it. The
+                # current solution works, too.
+                'subject_alternative_names': [],
+                'lifecycle': {
+                    'create_before_destroy': True
+                }
+            } for i, domain in enumerate(app.domains)
+        },
+        'aws_acm_certificate_validation': {
+            f'{app.name}_{i}': {
+                'certificate_arn': '${aws_acm_certificate.%s_%i.arn}' % (app.name, i),
+                'validation_record_fqdns': [
+                    '${aws_route53_record.%s_domain_validation_%i.fqdn}' % (app.name, i)],
+                'provider': 'aws.us-east-1'
+            } for i, domain in enumerate(app.domains)
+        },
+        'aws_route53_record': {
+            **{
+                f'{app.name}_domain_validation_{i}': {
+                    **{
+                        # We know there is only one. See comment above.
+                        key: '${tolist(aws_acm_certificate.%s_%i.domain_validation_options)'
+                             '.0.resource_record_%s}'
+                             % (app.name, i, key)
+                        for key in ('name', 'type')
+                    },
+                    'zone_id': '${data.aws_route53_zone.%s.id}' % zones_by_domain[domain].slug,
+                    'records': [
+                        # We know there is only one. See comment above.
+                        '${tolist(aws_acm_certificate.%s_%i.domain_validation_options)'
+                        '.0.resource_record_value}'
+                        % (app.name, i)
+                    ],
+                    'ttl': 60
+                } for i, domain in enumerate(app.domains)
+            },
+            **{
+                f'{app.name}_{i}': {
+                    'zone_id': '${data.aws_route53_zone.%s.id}' % zones_by_domain[domain].slug,
+                    'name': '${aws_api_gateway_domain_name.%s_%i.domain_name}' % (app.name, i),
+                    'type': 'A',
+                    **({
+                           'alias': {
+                               'name': '${aws_lb.%s.dns_name}' % app.name,
+                               'zone_id': '${aws_lb.%s.zone_id}' % app.name,
+                               'evaluate_target_health': False
+                           }
+                       }
+                       if config.private_api else
+                       {
+                           'alias': {
+                               'name': '${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}' % (
+                                   app.name, i),
+                               'zone_id': '${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}' % (
+                                   app.name, i),
+                               'evaluate_target_health': True,
+                           }
+                       })
+                } for i, domain in enumerate(app.domains)
+            }
+        }
+    }
+
+
+route53_zones = {
+    zone.slug: {
+        'name': zone.name,
+        'private_zone': False
+    }
+    for zone in set(zones_by_domain.values())
+}
+
+# The config for a stand-alone deployment, or an instance in a blue-green one.
+# We use the lambda assignment here to make the evaluation lazy without adding
+# indentation, which keeps the diff small. If it were eager, chalice.tf_config()
+# would fail for an alias, due to the lack of Chalice-generated TF config.
+
+tf_config = lambda: {  # noqa: E731
     'data': [
         {
-            'aws_route53_zone': {
-                zone.slug: {
-                    'name': zone.name,
-                    'private_zone': False
-                }
-                for zone in set(zones_by_domain.values())
-            },
+            'aws_route53_zone': route53_zones,
             'aws_vpc': {
                 'gitlab': {
                     'filter': {
@@ -859,13 +962,7 @@ emit_tf({
                     }
                     for i, domain in enumerate(app.domains)
                 },
-                'aws_api_gateway_domain_name': {
-                    f'{app.name}_{i}': {
-                        'domain_name': '${aws_acm_certificate.%s_%i.domain_name}' % (app.name, i),
-                        'certificate_arn': '${aws_acm_certificate_validation.%s_%i.certificate_arn}' % (app.name, i),
-                        'security_policy': 'TLS_1_2'
-                    } for i, domain in enumerate(app.domains)
-                },
+                **domain_resources(app),
                 'aws_api_gateway_method_settings': {
                     f'{app.name}_{i}': {
                         'rest_api_id': '${aws_api_gateway_rest_api.%s.id}' % app.name,
@@ -882,86 +979,6 @@ emit_tf({
                             ]
                         }
                     } for i, domain in enumerate(app.domains)
-                },
-                'aws_acm_certificate': {
-                    f'{app.name}_{i}': {
-                        'domain_name': domain,
-                        'validation_method': 'DNS',
-                        'provider': 'aws.us-east-1',
-                        # I tried using SANs for the alias domains (like the DRS
-                        # domain) but Terraform kept swapping the zones, I think
-                        # because the order of elements in
-                        # `aws_acm_certificate.domain_validation_options` is not
-                        # deterministic. The alternative is to use separate certs,
-                        # one for each domain, the main one as well as for each
-                        # alias.
-                        #
-                        # Update 03/07/2022: My guess about the non-determinism was
-                        # correct. That bug was 'fixed' in Terraform by making the
-                        # domain_validation_options a set so that elements can't be
-                        # accessed via numeric index. The Terraform documentation
-                        # recommends looping over the elements in that set. That's
-                        # what we do for GitLab. To do the same here would require
-                        # bigger refactoring that I don't think is worth it. The
-                        # current solution works, too.
-                        'subject_alternative_names': [],
-                        'lifecycle': {
-                            'create_before_destroy': True
-                        }
-                    } for i, domain in enumerate(app.domains)
-                },
-                'aws_acm_certificate_validation': {
-                    f'{app.name}_{i}': {
-                        'certificate_arn': '${aws_acm_certificate.%s_%i.arn}' % (app.name, i),
-                        'validation_record_fqdns': [
-                            '${aws_route53_record.%s_domain_validation_%i.fqdn}' % (app.name, i)],
-                        'provider': 'aws.us-east-1'
-                    } for i, domain in enumerate(app.domains)
-                },
-                'aws_route53_record': {
-                    **{
-                        f'{app.name}_domain_validation_{i}': {
-                            **{
-                                # We know there is only one. See comment above.
-                                key: '${tolist(aws_acm_certificate.%s_%i.domain_validation_options)'
-                                     '.0.resource_record_%s}'
-                                     % (app.name, i, key)
-                                for key in ('name', 'type')
-                            },
-                            'zone_id': '${data.aws_route53_zone.%s.id}' % zones_by_domain[domain].slug,
-                            'records': [
-                                # We know there is only one. See comment above.
-                                '${tolist(aws_acm_certificate.%s_%i.domain_validation_options)'
-                                '.0.resource_record_value}'
-                                % (app.name, i)
-                            ],
-                            'ttl': 60
-                        } for i, domain in enumerate(app.domains)
-                    },
-                    **{
-                        f'{app.name}_{i}': {
-                            'zone_id': '${data.aws_route53_zone.%s.id}' % zones_by_domain[domain].slug,
-                            'name': '${aws_api_gateway_domain_name.%s_%i.domain_name}' % (app.name, i),
-                            'type': 'A',
-                            **({
-                                   'alias': {
-                                       'name': '${aws_lb.%s.dns_name}' % app.name,
-                                       'zone_id': '${aws_lb.%s.zone_id}' % app.name,
-                                       'evaluate_target_health': False
-                                   }
-                               }
-                               if config.private_api else
-                               {
-                                   'alias': {
-                                       'name': '${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}' % (
-                                           app.name, i),
-                                       'zone_id': '${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}' % (
-                                           app.name, i),
-                                       'evaluate_target_health': True,
-                                   }
-                               })
-                        } for i, domain in enumerate(app.domains)
-                    }
                 },
                 'aws_cloudwatch_log_group': {
                     app.name: {
@@ -1183,4 +1200,40 @@ emit_tf({
             } for app in apps
         )
     ]
-})
+}
+
+# The configuration of the alias in blue-green mode. The alias owns only the
+# public custom domain names, but not the base path mappings that connect them
+# to the API of the live instance.
+
+alias_tf_config = lambda: {  # noqa: E731
+    'data': [
+        {
+            'aws_route53_zone': route53_zones
+        }
+    ],
+    'resource': [
+        domain_resources(app)
+        for app in apps
+    ],
+    # A deployment migrated into blue-green mode inherits the base path
+    # mappings from its legacy instance, by which time they point at the
+    # API of an instance. Forget them without destroying them.
+    #
+    'removed': [
+        {
+            'from': f'aws_api_gateway_base_path_mapping.{app.name}_{i}',
+            'lifecycle': {
+                'destroy': False
+            }
+        }
+        for app in apps
+        for i, domain in enumerate(app.domains)
+    ]
+}
+
+emit_tf(
+    alias_tf_config()
+    if config.deployment.is_alias else
+    tf_config()
+)
