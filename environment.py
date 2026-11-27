@@ -938,17 +938,20 @@ def env() -> Mapping[str, str | None]:
         # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║             ║ ║ ║
         # ║            ║ ║ ║ │anvilbox │ ║ ║ ║ │anvildev │ ║ ║             ║ ║ ║
         # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║             ║ ║ ║
-        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║             ║ ║ ┌─────────┐ ║ ║ ║
-        # ║            ║ ║ ║ │hammerbox│ ║ ║ ║             ║ ║ │anvilprod│ ║ ║ ║
-        # ║            ║ ║ ║ └─────────┘ ║ ║ ║             ║ ║ └─────────┘ ║ ║ ║
+        # ║            ║ ║ ║ ┌─────────┐ ║ ║ ║ ┌─────────┐ ║ ║ ┌─────────┐ ║ ║ ║
+        # ║            ║ ║ ║ │hammerbox│ ║ ║ ║ │ tempdev │ ║ ║ │anvilprod│ ║ ║ ║
+        # ║            ║ ║ ║ └─────────┘ ║ ║ ║ └─────────┘ ║ ║ └─────────┘ ║ ║ ║
         # ║            ║ ║ ║             ║ ║ ╚═════════════╝ ╚═════════════╝ ║ ║
         # ║            ║ ║ ╚═════════════╝ ╚═════════════════════════════════╝ ║
         # ╚════════════╝ ╚═════════════════════════════════════════════════════╝
         #
+        # Any branch may be deployed to `tempdev`.
+        #
         'azul_shared_deployments': json.dumps({
-            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox'],
+            'develop': ['dev', 'sandbox', 'anvildev', 'anvilbox', 'tempdev'],
             'prod': ['prod'],
-            'anvilprod': ['anvilprod', 'hammerbox']
+            'anvilprod': ['anvilprod', 'hammerbox'],
+            '': ['tempdev']
         }),
 
         # A dictionary with one entry per browser or portal site that is to be
