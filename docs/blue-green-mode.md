@@ -79,21 +79,37 @@ During the QC period of a blue-green promotion, the two instances run different 
 
 ## State
 
-The state of the instances isn't stored separately, but observed. An instance is live if the base path mappings of the public custom domain names point at its API. Each of the two public custom domain names, one for the service and one for the indexer, has a mapping, and `get-base-path-mapping` reflects a change immediately, even though the change takes up to about 80 seconds to propagate (see *Switching the base path mappings*). An instance that isn't live is standby if its OpenSearch domain exists, and resting otherwise.
+Which instance is live is stored in an SSM parameter of the deployment, `/azul/anvilprod/live`, whose value is the number of the live instance. Only the `go_live` job writes it. The base path mappings of the public custom domain names follow the parameter: they point at the API of the live instance, except while its stage is being replaced (see *Replacing the stage of the live instance*), which is why the mappings alone can't serve as the record. Each of the two public custom domain names, one for the service and one for the indexer, has a mapping, and `get-base-path-mapping` reflects a change immediately, even though the change takes up to about 80 seconds to propagate (see *Switching the base path mappings*).
 
-The two mappings can disagree only if a run of the `go_live` job was interrupted between updating one and the other. Running the job again repairs that (see *The state jobs*). During the migration, the mappings point at the API of the legacy instance, so neither instance is live (see *Migration*).
+The rest of the state isn't stored, but observed. An instance that isn't live is standby if its OpenSearch domain exists, and resting otherwise.
+
+The parameter and the mappings can disagree only if a run of the `go_live` job was interrupted, or if a mapping was changed by other means. Running the job again repairs that (see *The state jobs*). During the migration, the parameter doesn't exist until the first `go_live` job runs, and the mappings point at the API of the legacy instance, so neither instance is live (see *Migration*).
 
 ### Resting and waking
 
 The `rest` job destroys the OpenSearch domain of the instance of the pipeline it runs in, together with its cache-health alarms. It does so with a targeted `terraform destroy` of the same resources that the main-component part of the `_hibernate` convenience function destroys, which is used routinely in tempdev. A targeted destroy also destroys any resources that depend on its targets.
 
-Waking is implicit. Deploying a resting instance recreates whatever the `rest` job destroyed, so pushing to the branch of a resting instance (see *Branches and pipelines*) wakes it. The `deploy` job doesn't look at the state, and the Terraform configuration of an instance doesn't depend on it.
+Waking is implicit. Deploying a resting instance recreates whatever the `rest` job destroyed, so pushing to the branch of a resting instance (see *Branches and pipelines*) wakes it. The `deploy` job doesn't look at the state, and the Terraform configuration of an instance doesn't depend on it. Only the provisioners described in *Replacing the stage of the live instance* consult the state, when they run.
 
 ### Switching the base path mappings
 
 Switching the base path mapping of an edge-optimized custom domain name from one REST API to another in the same account and region causes no downtime, but takes up to about 80 seconds to propagate (see *How we tested the base path mapping switch*). For about 40 seconds after the call, every request still reaches the old API. For the next 30 to 40 seconds, either API may answer, presumably depending on which CloudFront server handles the request. After that, only the new API answers.
 
 The `go_live` job therefore polls the public names until only the new instance answers, with a timeout of a few minutes. For about half a minute after the job ran, consecutive requests from the same client may be served by different instances.
+
+### Replacing the stage of the live instance
+
+A deploy that changes the API definition of an app replaces its API Gateway stage. Chalice replaces the `aws_api_gateway_deployment` whenever the MD5 of the API definition it generates changes. That definition isn't the tracked `openapi.json`, and changes that `openapi.json` doesn't reflect, such as one to the headers of the gateway responses, change it too. The deployment has no `create_before_destroy` (see #4752), and API Gateway doesn't delete a deployment that a stage points at, so the `aws_api_gateway_stage` declares `replace_triggered_by` on the deployment. The stage's base path mappings, method settings and WAF association declare `replace_triggered_by` on the stage, so they are replaced along with it.
+
+API Gateway also doesn't delete a stage that any base path mapping points at. Today, Terraform deletes the mappings before the stage and recreates them afterwards, so the API is unavailable until the recreated mappings have propagated, for about a minute, during which requests get `403` responses. In anvilprod, that happened on 8 occasions in the year up to 2026-11-28 (see *How we tested replacing a stage*). In blue-green mode, the public mappings aren't managed by Terraform, so an in-place deploy that replaces the stage of the live instance would fail, and only after Terraform had already destroyed the stage's canonical mapping and its WAF association.
+
+Two provisioners on the `aws_api_gateway_stage` of each app of every instance therefore move the public mappings out of the way:
+
+- A destroy-time provisioner runs `scripts/manage_blue_green.py detach` immediately before the stage is deleted. If the SSM parameter names the instance, the subcommand deletes the public mappings that point at the stage. A destroy-time provisioner may only refer to the resource itself, which provides the ID of the REST API and the name of the stage.
+
+- A creation-time provisioner runs `scripts/manage_blue_green.py attach` immediately after the stage is created. If the SSM parameter names the instance, the subcommand creates the public mappings that are missing, pointing at the stage.
+
+The public names of the affected app are then unavailable for about as long as they are today, and only during deploys that replace the stage of the live instance. If the apply fails between deleting and creating the stage, the next deploy creates the stage, and the creation-time provisioner restores the mappings. A creation-time provisioner that fails marks the stage as tainted, so that the next apply replaces it again, which is why `attach` must be idempotent. Deploys of a standby or resting instance, and deploys in stand-alone mode, are unaffected.
 
 ### Identifying the instance
 
@@ -108,7 +124,7 @@ The `anvilprod` branch is retired. Instead, each instance has a branch named aft
 git push gitlab.anvilprod anvilprod1
 ```
 
-The history of each branch on GitHub records which commits were deployed to the instance, and when. The tip of a branch is the commit last deployed to the instance, whether the instance is live, standby or resting. Which instance is live is determined by the base path mappings (see *State*).
+The history of each branch on GitHub records which commits were deployed to the instance, and when. The tip of a branch is the commit last deployed to the instance, whether the instance is live, standby or resting. Which instance is live is recorded in an SSM parameter (see *State*).
 
 Merging a promotion into the branch of the resting instance brings that branch up to date, even though it may lag behind by several promotions: the promotion branch is based on `develop`, into which every hotfix is backported before the next promotion. The diff of a blue-green promotion PR is correspondingly larger than that of an in-place one. Both branches only ever move forward, so they are protected against force pushes and deletion, as the `anvilprod` branch is today.
 
@@ -190,19 +206,19 @@ The Data Browser doesn't inherit Azul's default catalog. Its sites are deployed 
 
 The `go_live` and `rest` jobs are manual jobs in the `state` stage of every instance pipeline. Both are placed in the GitLab `resource_group: anvilprod`, which makes GitLab run them one at a time.
 
-A single script, `scripts/manage_blue_green.py`, implements both jobs, with one subcommand per job. The `Makefile` has a target for each subcommand, `make go_live` and `make rest`, and each job runs its target, as the `reindex` job runs `make reindex`. Only the script updates the base path mappings, and with them, which instance is live. Each subcommand checks its precondition before making any change. The operator can also run the targets from a local checkout, for example when GitLab is unavailable.
+A single script, `scripts/manage_blue_green.py`, implements both jobs, with one subcommand per job. The `Makefile` has a target for each subcommand, `make go_live` and `make rest`, and each job runs its target, as the `reindex` job runs `make reindex`. Only the script updates the SSM parameter that says which instance is live, and the public base path mappings. Each subcommand checks its precondition before making any change. The operator can also run the targets from a local checkout, for example when GitLab is unavailable.
 
 The `go_live` subcommand makes the instance of the pipeline it runs in live:
 
 1. Refuse unless the public custom domain names exist, the instance's index is complete, and its canonical names answer `/health/basic`. The public custom domain names exist once the `deploy_alias` job has run. The index is complete when every catalog's indices exist and the indexer queues are empty. The job's `needs: [integration_test]` ensures that the integration test passed.
 
-2. Point each public custom domain name's base path mapping at the instance's API and stage.
+2. Write the number of the instance to the SSM parameter, then point each public custom domain name's base path mapping at the instance's API and stage.
 
 3. Poll `/health/basic` through the public names until every response carries the instance's name in the `X-Azul-Deployment` header, for up to a few minutes (see *Switching the base path mappings* and *Identifying the instance*).
 
 Running the `go_live` job again is harmless, and repairs a run that was interrupted during step 2. The subcommand doesn't require the other instance to be on the same commit, because rolling back makes an instance on the previous commit live.
 
-The `rest` subcommand makes the instance of the pipeline it runs in rest. It refuses if either base path mapping points at the instance's API, and destroys the instance's OpenSearch domain as described in *Resting and waking*. The operator runs the job in the most recent pipeline of the instance, which was built from the commit that last deployed it. The targeted destroy therefore uses the same Terraform configuration and provider versions as the instance's Terraform state. That pipeline may be old, and its job image, tagged with the pipeline's ID, must still be in the GitLab registry. If it isn't, the operator runs `make rest` from a local checkout of that commit instead.
+The `rest` subcommand makes the instance of the pipeline it runs in rest. It refuses if the SSM parameter names the instance, or if either base path mapping points at the instance's API, and destroys the instance's OpenSearch domain as described in *Resting and waking*. The operator runs the job in the most recent pipeline of the instance, which was built from the commit that last deployed it. The targeted destroy therefore uses the same Terraform configuration and provider versions as the instance's Terraform state. That pipeline may be old, and its job image, tagged with the pipeline's ID, must still be in the GitLab registry. If it isn't, the operator runs `make rest` from a local checkout of that commit instead.
 
 
 ## Integration test
@@ -363,7 +379,7 @@ The legacy instance serves users throughout this step.
 
 8. Run the `deploy_browser` job in the `anvilprod1` pipeline.
 
-9. QC period. To roll back, point the base path mappings back at the API of the legacy instance with `update-base-path-mapping`. The legacy instance is unchanged, so it is still up to date.
+9. QC period. To roll back, point the base path mappings back at the API of the legacy instance with `update-base-path-mapping`, and delete the SSM parameter, so that the provisioners of `anvilprod1` don't move the mappings back (see *Replacing the stage of the live instance*). The legacy instance is unchanged, so it is still up to date.
 
 ### 3. Enabling hotfix
 
@@ -395,9 +411,7 @@ Each template targets its instance's branch: `anvilprod1-promotion.md` and `anvi
 
 ## Open questions
 
-1. Replacing the stage of the live instance. Changing the OpenAPI spec of an API, for example its gateway responses, makes Terraform replace the `aws_api_gateway_deployment` and with it the `aws_api_gateway_stage`. Today, the base path mappings, which are managed by Terraform and declare `replace_triggered_by` on the stage, are deleted and recreated along with it, so the API is unavailable until the recreated mappings have propagated. On tempdev, that took about one minute, during which every request got a `403` response. In blue-green mode, the mappings of the public custom domain names aren't managed by Terraform, so nothing deletes and recreates them when an in-place promotion or hotfix replaces the stage of the live instance. It is unknown whether API Gateway then refuses to delete the stage, failing the `deploy` job, or deletes the public mappings along with it, so that the public names stop working until the `go_live` job runs again. Step 11 of the implementation tests this (see *Implementation*).
-
-2. Log forwarding. The indexer of the main deployment of an AWS account forwards the access logs that the account's logs bucket receives to CloudWatch, using Lambda functions that S3 notifies of new objects in that bucket. A bucket has only one notification configuration, so only one deployment per account can do this. `config.enable_log_forwarding` selects the deployment whose name matches `config.main_deployment_stage`, which is derived from the name of the account. In the account of anvilprod, that is `anvilprod`, the alias, which has no Lambda functions, while neither `anvilprod1` nor `anvilprod2` matches, so in blue-green mode, no deployment would forward the logs. One option is to have a fixed instance, say instance 1, forward them. Resting doesn't destroy the Lambda functions of an instance, only its OpenSearch domain, so that instance could forward the logs whether it is live, standby or resting. Moving the forwarding with the `go_live` job instead would require it to change the notification configuration of the bucket.
+1. Log forwarding. The indexer of the main deployment of an AWS account forwards the access logs that the account's logs bucket receives to CloudWatch, using Lambda functions that S3 notifies of new objects in that bucket. A bucket has only one notification configuration, so only one deployment per account can do this. `config.enable_log_forwarding` selects the deployment whose name matches `config.main_deployment_stage`, which is derived from the name of the account. In the account of anvilprod, that is `anvilprod`, the alias, which has no Lambda functions, while neither `anvilprod1` nor `anvilprod2` matches, so in blue-green mode, no deployment would forward the logs. One option is to have a fixed instance, say instance 1, forward them. Resting doesn't destroy the Lambda functions of an instance, only its OpenSearch domain, so that instance could forward the logs whether it is live, standby or resting. Moving the forwarding with the `go_live` job instead would require it to change the notification configuration of the bucket.
 
 
 ## Implementation
@@ -424,17 +438,17 @@ In the short term, tempdev remains in blue-green mode after the rehearsals. The 
 
 6. Alias mode for the main and `base` components, including the `removed` blocks for the base path mappings. On tempdev, render the configuration of the alias with the mode turned on locally and run `terraform plan`, without applying it. The plans must keep the public domain names, the user tables and the APAT key, and destroy everything else. Should they recreate anything, the design must be corrected before any further code is written.
 
-7. `scripts/manage_blue_green.py`, with its `go_live` and `rest` subcommands and the corresponding `make` targets. Their first real test is in step 9.
+7. `scripts/manage_blue_green.py`, with its `go_live` and `rest` subcommands and the corresponding `make` targets, the SSM parameter that says which instance is live, and the `detach` and `attach` subcommands with the provisioners on the stages of instances that run them. The boundary policy of the `gitlab` component must allow the GitLab instance to read and write the parameter. The first real test of the subcommands is in step 9.
 
 8. `blue-green.yml`, with the alias jobs and their short-circuit, the manual `deploy_browser` job, the `state` stage and the `resource_group`, as well as the stub's pattern for the instance branches. The `azul_shared_deployments` override on the runner of tempdev's GitLab instance must be updated manually to include `tempdev1` and `tempdev2`.
 
 ### Rehearsals on tempdev
 
-9. Step 2 of the migration. Apply `tempdev1.base` locally and, if tempdev's catalogs require access to TDR, register its GCP service account. Push `tempdev1` to tempdev's GitLab instance, check that the alias jobs short-circuit, and reindex. Run the `go_live` job, observing the `X-Azul-Deployment` header and the timing of the switch. Roll back to the legacy instance with `update-base-path-mapping`, and run the `go_live` job again.
+9. Step 2 of the migration. Apply `tempdev1.base` locally and, if tempdev's catalogs require access to TDR, register its GCP service account. Push `tempdev1` to tempdev's GitLab instance, check that the alias jobs short-circuit, and reindex. Run the `go_live` job, observing the `X-Azul-Deployment` header and the timing of the switch. Roll back to the legacy instance with `update-base-path-mapping` and by deleting the SSM parameter, and run the `go_live` job again.
 
 10. Step 3 of the migration. Empty the mirror buckets of the legacy instance, commit the change of `azul_blue_green_mode` in `deployments/tempdev/environment.py`, push `tempdev1` and run the `deploy_browser` job. This applies the plans checked in step 6.
 
-11. A blue-green promotion. Push `tempdev2`, reindex, and run the `go_live` and `deploy_browser` jobs. Roll back during the QC period by running the `go_live` job in the latest `tempdev1` pipeline, switch forward again, and run the `rest` job in the latest `tempdev1` pipeline. Wake `tempdev1` with a push, and push once more for an in-place deployment. For that push, use a change to the OpenAPI spec, so that the stage of the live instance is replaced, and observe what happens to the mappings of the public custom domain names (see *Open questions*).
+11. A blue-green promotion. Push `tempdev2`, reindex, and run the `go_live` and `deploy_browser` jobs. Roll back during the QC period by running the `go_live` job in the latest `tempdev1` pipeline, switch forward again, and run the `rest` job in the latest `tempdev1` pipeline. Wake `tempdev1` with a push, and push once more for an in-place deployment. For that push, use a change to the API definition, so that the stage of the live instance is replaced, and check that the provisioners detach and reattach the public mappings, and how long the public names are unavailable (see *Replacing the stage of the live instance*).
 
 ### Merging into `develop`
 
@@ -466,6 +480,18 @@ The switch was tested on 2026-11-25 in tempdev, by switching the mapping of `ser
 Both locations saw nearly the same timing.
 
 The pollers must stay below the WAF's rate limit of 1,000 requests per IP in 5 minutes. A first attempt at 10 requests per second per poller was blocked with `429` responses and yielded no data.
+
+### How we tested replacing a stage
+
+On 2026-11-28, in tempdev, a base path mapping that Terraform doesn't manage, standing in for a public mapping in blue-green mode, was added to `indexer.temp.gi.ucsc.edu` with the base path `experiment`, pointing at the indexer's stage. A targeted `terraform apply -replace=aws_api_gateway_deployment.indexer` then destroyed the stage's canonical mapping, method settings and WAF association, and failed when it tried to delete the stage:
+
+```
+BadRequestException: Deleting stage tempdev failed. Please remove all base path mappings related to the stage in your domains: indexer.temp.gi.ucsc.edu
+```
+
+After the extra mapping was deleted, the same apply succeeded. A poller requesting `/health/basic` every two seconds got mostly `403` responses, interspersed with a few `200` responses, for about a minute, until the recreated canonical mapping had propagated.
+
+How often deploys replace the stages of a stable deployment can be determined from the `DeleteStage` events that CloudTrail records. In the account of anvilprod, the log group of the trail, which retains a year of events, shows that deploys from GitLab replaced the stages of `anvilprod` on 8 occasions between 2025-12-05 and 2026-11-20: 7 times the service's and 4 times the indexer's, both at once on two of those occasions.
 
 ### Which code builds URLs outside of a request
 
