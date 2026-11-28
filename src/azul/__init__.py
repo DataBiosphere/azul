@@ -3,6 +3,7 @@ from collections import (
 )
 from collections.abc import (
     Mapping,
+    MutableMapping,
     Sequence,
     Set,
 )
@@ -84,9 +85,10 @@ class Config:
     See `environment` for documentation of these settings.
     """
 
-    @cached_property
-    def environ(self):
-        return ChainMap(os.environ, self._outsourced_environ)
+    def __init__(self, environ: MutableMapping[str, str] | None = None):
+        if environ is None:
+            environ = ChainMap(os.environ, self._outsourced_environ)
+        self.environ = environ
 
     @property
     def billing(self):
@@ -1254,7 +1256,7 @@ class Config:
     term_re = re.compile(r'[a-z][a-z0-9_]{1,38}[a-z0-9]')
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
-        value = self.environ.get(env_var_name, default='')
+        value = self.environ.get(env_var_name, '')
         if value == '' and optional:
             return value
         else:
@@ -1933,7 +1935,7 @@ class Deployment:
             if directory.is_dir()
         )
 
-    def environment(self) -> Mapping[str, str]:
+    def environment(self) -> dict[str, str]:
         """
         The environment of this deployment, as compiled from the
         `environment.py` files that make up its configuration. Unlike
@@ -1963,9 +1965,7 @@ class Deployment:
         >>> Deployment('anvilprod').config.deployment_stage
         'anvilprod'
         """
-        other = Config()
-        Config.environ.fset(other, self.environment())
-        return other
+        return Config(environ=self.environment())
 
     @cached_property
     def blue_green_mode(self) -> bool:
