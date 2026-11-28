@@ -17,6 +17,7 @@ from unittest import (
 
 from azul import (
     Config,
+    Deployment,
     config,
 )
 from azul.deployment import (
@@ -111,8 +112,8 @@ class TestBlueGreenMode(AzulUnitTestCase):
         and the template of its domain names. Otherwise, a forgotten change to
         one of them would break that instance the next time it becomes live.
         """
-        instances: dict[str, dict[str, Config.Deployment]] = defaultdict(dict)
-        for deployment in config.Deployment.all():
+        instances: dict[str, dict[str, Deployment]] = defaultdict(dict)
+        for deployment in Deployment.all():
             alias = deployment.alias
             if alias is not None:
                 number = deployment.name.removeprefix(alias.name)
@@ -123,11 +124,11 @@ class TestBlueGreenMode(AzulUnitTestCase):
             with self.subTest(alias=alias):
                 self.assertEqual({'1', '2'}, deployments.keys())
                 # Raises if the alias has no directory
-                config.Deployment(alias).directory
+                Deployment(alias).directory
                 env1, env2 = self._env(deployments['1']), self._env(deployments['2'])
                 self.assertEqual(env1, env2)
 
-    def _env(self, deployment: Config.Deployment) -> dict[str, str | None]:
+    def _env(self, deployment: Deployment) -> dict[str, str | None]:
         path = deployment.directory / 'environment.py'
         module_name = 'environment_' + deployment.name
         env = dict(load_module(str(path), module_name).env())

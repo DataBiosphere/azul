@@ -1043,290 +1043,6 @@ class Config:
             'Blue-green mode requires public APIs')
         return private_api
 
-    @frozen(kw_only=False, slots=False)
-    class Deployment:
-        name: str
-
-        test_name: ClassVar[str] = 'dummy'
-
-        @cached_property
-        def is_shared(self) -> bool:
-            """
-            ``True`` if this deployment is a shared deployment, or ``False`` if
-            it is a personal deployment.
-            """
-            return self in set(chain.from_iterable(config._shared_deployments.values()))
-
-        #: The set of branches that are used for development and that are
-        #: usually deployed to personal, lower and main deployments, but never
-        #: stable ones. The set member ``None`` represents a feature branch or
-        #: detached HEAD.
-        #:
-        unstable_branches: ClassVar[frozenset[str | None]] = frozenset({'develop', None})
-
-        @cached_property
-        def is_stable(self) -> bool:
-            """
-            ``True`` if this deployment must be kept functional for public use
-            at all times.
-            """
-            if self.is_sandbox:
-                return False
-            else:
-                branches = set(
-                    branch
-                    for branch, deployments in config._shared_deployments.items()
-                    if self in deployments
-                )
-                return bool(branches) and branches.isdisjoint(self.unstable_branches)
-
-        @property
-        def is_sandbox(self) -> bool:
-            """
-            ``True`` if this deployment is a shared deployment primarily used
-            for testing branches prior to merging.
-            """
-            return 'box' in self.name
-
-        @property
-        def is_personal(self) -> bool:
-            """
-            ``True`` if this deployment is managed by an individual developer.
-            """
-            return not self.is_shared
-
-        @property
-        def is_sandbox_or_personal(self) -> bool:
-            """
-            ``True`` if this deployment is managed by an individual developer or
-            is a shared deployment primarily used for testing branches prior to
-            merging.
-            """
-            return self.is_sandbox or self.is_personal
-
-        @property
-        def is_main(self) -> bool:
-            """
-            ``True`` if this deployment is a main deployment.
-
-            Main deployments are deployed from long-lived (as opposed to
-            feature) branches and serve some public-facing purpose, be that
-            testing (a lower deployment) or production (a stable deployment).
-            """
-            return not self.is_sandbox_or_personal
-
-        @property
-        def is_lower(self) -> bool:
-            """
-            ``True`` if this deployment is an unstable main deployment.
-            """
-            return self.is_main and not self.is_stable
-
-        @cached_property
-        def is_lower_sandbox(self) -> bool:
-            """
-            ``True`` if this deployment is a sandbox for a lower deployment.
-
-            Note: This method currently only works for the current deployment,
-                  i.e., the one created obtained from ``config.deployment``
-            """
-            if self.name != config.deployment_stage:
-                raise NotImplementedError
-            else:
-                return (
-                    self.is_sandbox
-                    and config.Deployment(config.main_deployment_stage).is_lower
-                )
-
-        @property
-        def is_unit_test(self):
-            return self.name == self.test_name
-
-        #: The suffix of the name of the directory of a personal deployment
-        #:
-        local_suffix: ClassVar[str] = '.local'
-
-        @classmethod
-        def all(cls) -> list[Self]:
-            """
-            Every deployment with a directory in the `deployments` directory of
-            the project. The directory of a shared deployment is named after
-            it, that of a personal deployment has an additional `.local`
-            suffix, as in `hannes.local`. The directories of components, such
-            as `anvilprod.base` or `hannes.base.local`, are skipped.
-
-            >>> deployments = config.Deployment.all()
-            >>> {'anvilprod', 'dev', 'prod'} <= {d.name for d in deployments}
-            True
-
-            >>> [d.name for d in deployments if not config._is_valid_qualifier(d.name)]
-            []
-            """
-            path = Path(config.project_root) / 'deployments'
-            deployments = [
-                cls(name)
-                for child in sorted(path.iterdir())
-                if child.is_dir()
-                for name in [child.name.removesuffix(cls.local_suffix)]
-                if config._is_valid_qualifier(name)
-            ]
-            assert len(set(deployments)) == len(deployments), R(
-                'A personal deployment has the name of a shared one', deployments)
-            return deployments
-
-        @property
-        def directory(self) -> Path:
-            """
-            The directory in the `deployments` directory of the project that
-            contains the configuration of this deployment.
-
-            >>> config.Deployment('anvilprod').directory.name
-            'anvilprod'
-            """
-            path = Path(config.project_root) / 'deployments'
-            return one(
-                directory
-                for directory in [path / self.name, path / (self.name + self.local_suffix)]
-                if directory.is_dir()
-            )
-
-        def environment(self) -> Mapping[str, str]:
-            """
-            The environment of this deployment, as compiled from the
-            `environment.py` files that make up its configuration. Unlike
-            ``config.environ``, which is the environment of the current
-            deployment, this works for any deployment that has a directory in
-            the `deployments` directory of the project.
-
-            >>> config.Deployment('anvilprod').environment()['AZUL_DEPLOYMENT_STAGE']
-            'anvilprod'
-            """
-            from azul.modules import (
-                load_script,
-            )
-            script = load_script('export_environment')
-            env, warning = script.load_env(self.directory.name)
-            assert warning is None, R('Unexpected warning', warning)
-            return script.filter_env(script.resolve_env(env))
-
-        @property
-        def config(self) -> Config:
-            """
-            The configuration of this deployment. Unlike the global ``config``,
-            which is that of the current deployment, this works for any
-            deployment that has a directory in the `deployments` directory of
-            the project.
-
-            >>> config.Deployment('anvilprod').config.deployment_stage
-            'anvilprod'
-            """
-            other = Config()
-            Config.environ.fset(other, self.environment())
-            return other
-
-        @cached_property
-        def blue_green_mode(self) -> bool:
-            """
-            ``True`` if this deployment is configured to be in blue-green mode.
-            For the current deployment, the value comes from the environment,
-            for any other deployment, from the `environment.py` files that make
-            up its configuration. The Lambda functions have neither, but get
-            the value of the current deployment through :meth:`render`.
-
-            >>> config.Deployment('anvilprod').blue_green_mode
-            False
-            """
-            if self.name == config.deployment_stage:
-                return config.blue_green_mode
-            else:
-                return self.config.blue_green_mode
-
-        @property
-        def _numeric_suffix(self) -> re.Match[str] | None:
-            return re.fullmatch(r'(.*\D)(\d+)', self.name)
-
-        @property
-        def alias(self) -> Self | None:
-            """
-            The alias that this deployment is an instance of, or ``None`` if
-            this deployment isn't an instance. An instance is a deployment in
-            blue-green mode whose name has a numeric suffix, the number of the
-            instance. Removing the suffix yields the name of the alias. Outside
-            of blue-green mode, a numeric suffix has no meaning.
-
-            >>> config.Deployment('anvilprod').alias is None
-            True
-            """
-            match = self._numeric_suffix
-            if match is not None and self.blue_green_mode:
-                alias, number = match.groups()
-                assert number in ('1', '2'), R(
-                    'The number of an instance must be 1 or 2', self.name)
-                return type(self)(alias)
-            else:
-                return None
-
-        @property
-        def is_alias(self) -> bool:
-            """
-            ``True`` if this deployment is the alias of a deployment in
-            blue-green mode, ``False`` otherwise. The alias is the deployment
-            in blue-green mode whose name has no numeric suffix.
-
-            >>> config.Deployment('anvilprod').is_alias
-            False
-            """
-            return self.blue_green_mode and self._numeric_suffix is None
-
-        @property
-        def is_instance(self) -> bool:
-            """
-            ``True`` if this deployment is an instance of a deployment in
-            blue-green mode, ``False`` otherwise.
-
-            >>> config.Deployment('anvilprod').is_instance
-            False
-            """
-            return self.alias is not None
-
-        def render(self) -> JSON:
-            """
-            >>> original = config.deployment
-            >>> rendered = original.render()
-            >>> reconstituted = config.Deployment.reconstitute(name=original.name,
-            ...                                                rendered=rendered)
-
-            >>> rendered.keys()
-            dict_keys(['blue_green_mode', 'is_lower_sandbox', 'is_shared', 'is_stable'])
-
-            >>> reconstituted.is_shared == original.is_shared
-            True
-            >>> reconstituted.is_stable == original.is_stable
-            True
-            >>> reconstituted.is_lower_sandbox == original.is_lower_sandbox
-            True
-            >>> reconstituted.blue_green_mode == original.blue_green_mode
-            True
-            """
-            cls = type(self)
-            rendered: MutableJSON = {}
-            # Invoke each cached property getter and capture its value
-            for attribute in dir(cls):
-                descriptor = getattr(cls, attribute)
-                if isinstance(descriptor, cached_property):
-                    rendered[attribute] = descriptor.fget(self)
-            return rendered
-
-        @classmethod
-        def reconstitute(cls, *, name: str, rendered: JSON) -> Self:
-            self = cls(name)
-            # Prime all cached properties so that the getter won't be invoked
-            for attribute in dir(cls):
-                descriptor = getattr(cls, attribute)
-                if isinstance(descriptor, cached_property):
-                    descriptor.fset(self, rendered[attribute])
-            return self
-
     @property
     def _deployment_env(self) -> dict[str, str]:
         return {'azul_deployment': json.dumps(self.deployment.render())}
@@ -1336,10 +1052,10 @@ class Config:
         try:
             deployment = self.environ['azul_deployment']
         except KeyError:
-            return self.Deployment(self.deployment_stage)
+            return Deployment(self.deployment_stage)
         else:
-            return self.Deployment.reconstitute(name=self.deployment_stage,
-                                                rendered=json.loads(deployment))
+            return Deployment.reconstitute(name=self.deployment_stage,
+                                           rendered=json.loads(deployment))
 
     @property
     def _shared_deployments(self) -> Mapping[str | None, Sequence[Deployment]]:
@@ -1352,7 +1068,7 @@ class Config:
         assert all(isinstance(v, list) and v for v in deployments.values()), R(
             'Invalid value for azul_shared_deployments')
         return frozendict(
-            (k if k else None, tuple(self.Deployment(n) for n in v))
+            (k if k else None, tuple(Deployment(n) for n in v))
             for k, v in deployments.items()
         )
 
@@ -2068,6 +1784,291 @@ class Config:
 
 
 config = Config()
+
+
+@frozen(kw_only=False, slots=False)
+class Deployment:
+    name: str
+
+    test_name: ClassVar[str] = 'dummy'
+
+    @cached_property
+    def is_shared(self) -> bool:
+        """
+        ``True`` if this deployment is a shared deployment, or ``False`` if
+        it is a personal deployment.
+        """
+        return self in set(chain.from_iterable(config._shared_deployments.values()))
+
+    #: The set of branches that are used for development and that are
+    #: usually deployed to personal, lower and main deployments, but never
+    #: stable ones. The set member ``None`` represents a feature branch or
+    #: detached HEAD.
+    #:
+    unstable_branches: ClassVar[frozenset[str | None]] = frozenset({'develop', None})
+
+    @cached_property
+    def is_stable(self) -> bool:
+        """
+        ``True`` if this deployment must be kept functional for public use
+        at all times.
+        """
+        if self.is_sandbox:
+            return False
+        else:
+            branches = set(
+                branch
+                for branch, deployments in config._shared_deployments.items()
+                if self in deployments
+            )
+            return bool(branches) and branches.isdisjoint(self.unstable_branches)
+
+    @property
+    def is_sandbox(self) -> bool:
+        """
+        ``True`` if this deployment is a shared deployment primarily used
+        for testing branches prior to merging.
+        """
+        return 'box' in self.name
+
+    @property
+    def is_personal(self) -> bool:
+        """
+        ``True`` if this deployment is managed by an individual developer.
+        """
+        return not self.is_shared
+
+    @property
+    def is_sandbox_or_personal(self) -> bool:
+        """
+        ``True`` if this deployment is managed by an individual developer or
+        is a shared deployment primarily used for testing branches prior to
+        merging.
+        """
+        return self.is_sandbox or self.is_personal
+
+    @property
+    def is_main(self) -> bool:
+        """
+        ``True`` if this deployment is a main deployment.
+
+        Main deployments are deployed from long-lived (as opposed to
+        feature) branches and serve some public-facing purpose, be that
+        testing (a lower deployment) or production (a stable deployment).
+        """
+        return not self.is_sandbox_or_personal
+
+    @property
+    def is_lower(self) -> bool:
+        """
+        ``True`` if this deployment is an unstable main deployment.
+        """
+        return self.is_main and not self.is_stable
+
+    @cached_property
+    def is_lower_sandbox(self) -> bool:
+        """
+        ``True`` if this deployment is a sandbox for a lower deployment.
+
+        Note: This method currently only works for the current deployment,
+              i.e., the one created obtained from ``config.deployment``
+        """
+        if self.name != config.deployment_stage:
+            raise NotImplementedError
+        else:
+            return (
+                self.is_sandbox
+                and Deployment(config.main_deployment_stage).is_lower
+            )
+
+    @property
+    def is_unit_test(self):
+        return self.name == self.test_name
+
+    #: The suffix of the name of the directory of a personal deployment
+    #:
+    local_suffix: ClassVar[str] = '.local'
+
+    @classmethod
+    def all(cls) -> list[Self]:
+        """
+        Every deployment with a directory in the `deployments` directory of
+        the project. The directory of a shared deployment is named after
+        it, that of a personal deployment has an additional `.local`
+        suffix, as in `hannes.local`. The directories of components, such
+        as `anvilprod.base` or `hannes.base.local`, are skipped.
+
+        >>> deployments = Deployment.all()
+        >>> {'anvilprod', 'dev', 'prod'} <= {d.name for d in deployments}
+        True
+
+        >>> [d.name for d in deployments if not config._is_valid_qualifier(d.name)]
+        []
+        """
+        path = Path(config.project_root) / 'deployments'
+        deployments = [
+            cls(name)
+            for child in sorted(path.iterdir())
+            if child.is_dir()
+            for name in [child.name.removesuffix(cls.local_suffix)]
+            if config._is_valid_qualifier(name)
+        ]
+        assert len(set(deployments)) == len(deployments), R(
+            'A personal deployment has the name of a shared one', deployments)
+        return deployments
+
+    @property
+    def directory(self) -> Path:
+        """
+        The directory in the `deployments` directory of the project that
+        contains the configuration of this deployment.
+
+        >>> Deployment('anvilprod').directory.name
+        'anvilprod'
+        """
+        path = Path(config.project_root) / 'deployments'
+        return one(
+            directory
+            for directory in [path / self.name, path / (self.name + self.local_suffix)]
+            if directory.is_dir()
+        )
+
+    def environment(self) -> Mapping[str, str]:
+        """
+        The environment of this deployment, as compiled from the
+        `environment.py` files that make up its configuration. Unlike
+        ``config.environ``, which is the environment of the current
+        deployment, this works for any deployment that has a directory in
+        the `deployments` directory of the project.
+
+        >>> Deployment('anvilprod').environment()['AZUL_DEPLOYMENT_STAGE']
+        'anvilprod'
+        """
+        from azul.modules import (
+            load_script,
+        )
+        script = load_script('export_environment')
+        env, warning = script.load_env(self.directory.name)
+        assert warning is None, R('Unexpected warning', warning)
+        return script.filter_env(script.resolve_env(env))
+
+    @property
+    def config(self) -> Config:
+        """
+        The configuration of this deployment. Unlike the global ``config``,
+        which is that of the current deployment, this works for any
+        deployment that has a directory in the `deployments` directory of
+        the project.
+
+        >>> Deployment('anvilprod').config.deployment_stage
+        'anvilprod'
+        """
+        other = Config()
+        Config.environ.fset(other, self.environment())
+        return other
+
+    @cached_property
+    def blue_green_mode(self) -> bool:
+        """
+        ``True`` if this deployment is configured to be in blue-green mode.
+        For the current deployment, the value comes from the environment,
+        for any other deployment, from the `environment.py` files that make
+        up its configuration. The Lambda functions have neither, but get
+        the value of the current deployment through :meth:`render`.
+
+        >>> Deployment('anvilprod').blue_green_mode
+        False
+        """
+        if self.name == config.deployment_stage:
+            return config.blue_green_mode
+        else:
+            return self.config.blue_green_mode
+
+    @property
+    def _numeric_suffix(self) -> re.Match[str] | None:
+        return re.fullmatch(r'(.*\D)(\d+)', self.name)
+
+    @property
+    def alias(self) -> Self | None:
+        """
+        The alias that this deployment is an instance of, or ``None`` if
+        this deployment isn't an instance. An instance is a deployment in
+        blue-green mode whose name has a numeric suffix, the number of the
+        instance. Removing the suffix yields the name of the alias. Outside
+        of blue-green mode, a numeric suffix has no meaning.
+
+        >>> Deployment('anvilprod').alias is None
+        True
+        """
+        match = self._numeric_suffix
+        if match is not None and self.blue_green_mode:
+            alias, number = match.groups()
+            assert number in ('1', '2'), R(
+                'The number of an instance must be 1 or 2', self.name)
+            return type(self)(alias)
+        else:
+            return None
+
+    @property
+    def is_alias(self) -> bool:
+        """
+        ``True`` if this deployment is the alias of a deployment in
+        blue-green mode, ``False`` otherwise. The alias is the deployment
+        in blue-green mode whose name has no numeric suffix.
+
+        >>> Deployment('anvilprod').is_alias
+        False
+        """
+        return self.blue_green_mode and self._numeric_suffix is None
+
+    @property
+    def is_instance(self) -> bool:
+        """
+        ``True`` if this deployment is an instance of a deployment in
+        blue-green mode, ``False`` otherwise.
+
+        >>> Deployment('anvilprod').is_instance
+        False
+        """
+        return self.alias is not None
+
+    def render(self) -> JSON:
+        """
+        >>> original = config.deployment
+        >>> rendered = original.render()
+        >>> reconstituted = Deployment.reconstitute(name=original.name,
+        ...                                                rendered=rendered)
+
+        >>> rendered.keys()
+        dict_keys(['blue_green_mode', 'is_lower_sandbox', 'is_shared', 'is_stable'])
+
+        >>> reconstituted.is_shared == original.is_shared
+        True
+        >>> reconstituted.is_stable == original.is_stable
+        True
+        >>> reconstituted.is_lower_sandbox == original.is_lower_sandbox
+        True
+        >>> reconstituted.blue_green_mode == original.blue_green_mode
+        True
+        """
+        cls = type(self)
+        rendered: MutableJSON = {}
+        # Invoke each cached property getter and capture its value
+        for attribute in dir(cls):
+            descriptor = getattr(cls, attribute)
+            if isinstance(descriptor, cached_property):
+                rendered[attribute] = descriptor.fget(self)
+        return rendered
+
+    @classmethod
+    def reconstitute(cls, *, name: str, rendered: JSON) -> Self:
+        self = cls(name)
+        # Prime all cached properties so that the getter won't be invoked
+        for attribute in dir(cls):
+            descriptor = getattr(cls, attribute)
+            if isinstance(descriptor, cached_property):
+                descriptor.fset(self, rendered[attribute])
+        return self
 
 
 def _check_submodule_conflicts():

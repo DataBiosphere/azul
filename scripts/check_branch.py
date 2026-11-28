@@ -8,6 +8,7 @@ from typing import (
 import git
 
 from azul import (
+    Deployment,
     config,
 )
 from azul.logging import (
@@ -30,8 +31,8 @@ class BranchDeploymentMismatch(Exception):
 
     def __init__(self,
                  branch: str | None,
-                 deployment: config.Deployment,
-                 allowed: Sequence[config.Deployment] | None
+                 deployment: Deployment,
+                 allowed: Sequence[Deployment] | None
                  ) -> None:
         branch = 'Detached head' if branch is None else f'Branch {branch!r}'
         if allowed is None:
@@ -43,7 +44,7 @@ class BranchDeploymentMismatch(Exception):
 
 
 def check_branch(branch: str | None, deployment: str) -> None:
-    deployment = config.Deployment(deployment)
+    deployment = Deployment(deployment)
     if deployment.is_shared:
         deployments = config.shared_deployments_for_branch(branch)
         if deployments is None or deployment not in deployments:
