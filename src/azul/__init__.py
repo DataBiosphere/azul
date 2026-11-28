@@ -757,6 +757,18 @@ class Config:
         alias = self.deployment.alias
         return self.deployment_stage if alias is None else alias.name
 
+    @property
+    def live_instance_parameter(self) -> str:
+        """
+        The name of the SSM parameter that records which instance of the
+        current deployment is live, as the number of that instance. The
+        current deployment must be an instance of a deployment in blue-green
+        mode. See docs/blue-green-mode.md.
+        """
+        assert self.deployment.is_instance, R(
+            'Not an instance in blue-green mode', self.deployment_stage)
+        return f'/azul/{self.alias_stage}/live'
+
     @cached_property
     def main_deployment_stage(self) -> str:
         """

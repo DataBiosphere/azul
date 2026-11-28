@@ -684,6 +684,16 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     },
                     {
                         'actions': [
+                            'ssm:GetParameter',
+                            'ssm:PutParameter',
+                            'ssm:DeleteParameter'
+                        ],
+                        'resources': [
+                            f'arn:aws:ssm:{aws.region_name}:{aws.account}:parameter/azul/*'
+                        ]
+                    },
+                    {
+                        'actions': [
                             'states:*'
                         ],
                         'resources': [

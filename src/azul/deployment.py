@@ -119,6 +119,9 @@ if TYPE_CHECKING:
         Queue,
         SQSServiceResource,
     )
+    from mypy_boto3_ssm import (
+        SSMClient,
+    )
     from mypy_boto3_stepfunctions import (
         SFNClient,
     )
@@ -278,6 +281,10 @@ class AWS:
     @property
     def secretsmanager(self) -> SecretsManagerClient:
         return self.client('secretsmanager')
+
+    @property
+    def ssm(self) -> SSMClient:
+        return self.client('ssm')
 
     @property
     def ec2(self) -> EC2Client:

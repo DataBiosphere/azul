@@ -2,10 +2,14 @@
 Change the state of the currently selected instance of a deployment in
 blue-green mode. See docs/blue-green-mode.md.
 
-The `go_live` subcommand makes the instance live, by pointing the public custom
-domain names of the deployment at the instance's API. The `rest` subcommand
-destroys the instance's OpenSearch domain. Each subcommand checks its
-precondition before making any change.
+The `go_live` subcommand makes the instance live, by recording it as live and
+pointing the public custom domain names of the deployment at the instance's
+API. The `rest` subcommand destroys the instance's OpenSearch domain. Each of
+these subcommands checks its precondition before making any change.
+
+The `detach` and `attach` subcommands are run by Terraform, before and after it
+replaces a stage of the instance's API. If the instance is live, they remove
+the public base path mappings that point at the stage, and recreate them.
 """
 import argparse
 from collections.abc import (
@@ -54,6 +58,9 @@ if TYPE_CHECKING:
     from mypy_boto3_apigateway import (
         APIGatewayClient,
     )
+    from mypy_boto3_ssm import (
+        SSMClient,
+    )
 
 log = logging.getLogger(__name__)
 
@@ -77,15 +84,25 @@ class BlueGreen(HasCachedHttpClient):
             'The selected deployment is not an instance in blue-green mode',
             deployment.name)
         self.stage = config.deployment_stage
+        self.number = int(self.stage.removeprefix(alias.name))
         self.alias_config = alias.config
 
     @property
-    def _client(self) -> APIGatewayClient:
+    def _apigw(self) -> APIGatewayClient:
         return aws.apigateway
+
+    @property
+    def _ssm(self) -> SSMClient:
+        return aws.ssm
 
     def go_live(self, timeout: float):
         api_ids = {app_name: self._rest_api_id(app_name) for app_name in app_names}
         self._check_go_live(api_ids)
+        log.info('Recording %r as the live instance', self.stage)
+        self._ssm.put_parameter(Name=config.live_instance_parameter,
+                                Value=str(self.number),
+                                Type='String',
+                                Overwrite=True)
         for app_name, api_id in api_ids.items():
             for domain in self._public_domains(app_name):
                 self._map(domain, api_id)
@@ -96,8 +113,8 @@ class BlueGreen(HasCachedHttpClient):
         for app_name in app_names:
             for domain in self._public_domains(app_name):
                 try:
-                    self._client.get_domain_name(domainName=domain)
-                except self._client.exceptions.NotFoundException:
+                    self._apigw.get_domain_name(domainName=domain)
+                except self._apigw.exceptions.NotFoundException:
                     problems.append(f'The custom domain name {domain!r} does not exist')
         problems.extend(self._index_problems())
         for app_name in app_names:
@@ -126,13 +143,13 @@ class BlueGreen(HasCachedHttpClient):
             log.info('%r already points at %r', domain, current)
         elif current is None:
             log.info('Creating mapping of %r to %r', domain, (api_id, self.stage))
-            self._client.create_base_path_mapping(domainName=domain,
-                                                  restApiId=api_id,
-                                                  stage=self.stage)
+            self._apigw.create_base_path_mapping(domainName=domain,
+                                                 restApiId=api_id,
+                                                 stage=self.stage)
         else:
             log.info('Changing mapping of %r from %r to %r',
                      domain, current, (api_id, self.stage))
-            self._client.update_base_path_mapping(
+            self._apigw.update_base_path_mapping(
                 domainName=domain,
                 basePath=root_base_path,
                 patchOperations=[
@@ -189,6 +206,53 @@ class BlueGreen(HasCachedHttpClient):
         else:
             return None
 
+    def detach(self, app_name: str, api_id: str, stage: str):
+        """
+        If the instance is live, remove the public base path mappings of the
+        given app that point at the given stage, so that the stage can be
+        deleted.
+        """
+        if self._is_live():
+            for domain in self._public_domains(app_name):
+                mapping = self._mapping(domain)
+                if mapping == (api_id, stage):
+                    log.info('Removing mapping of %r to %r', domain, mapping)
+                    self._apigw.delete_base_path_mapping(domainName=domain,
+                                                         basePath=root_base_path)
+                else:
+                    log.info('Leaving mapping of %r to %r', domain, mapping)
+        else:
+            log.info('Instance %r is not live, leaving the public mappings alone',
+                     self.stage)
+
+    def attach(self, app_name: str, api_id: str, stage: str):
+        """
+        If the instance is live, create the missing public base path mappings
+        of the given app, pointing at the given stage. Existing mappings are
+        left alone.
+        """
+        if self._is_live():
+            for domain in self._public_domains(app_name):
+                mapping = self._mapping(domain)
+                if mapping is None:
+                    log.info('Creating mapping of %r to %r', domain, (api_id, stage))
+                    self._apigw.create_base_path_mapping(domainName=domain,
+                                                         restApiId=api_id,
+                                                         stage=stage)
+                else:
+                    log.info('Leaving mapping of %r to %r', domain, mapping)
+        else:
+            log.info('Instance %r is not live, leaving the public mappings alone',
+                     self.stage)
+
+    def _is_live(self) -> bool:
+        try:
+            parameter = self._ssm.get_parameter(Name=config.live_instance_parameter)
+        except self._ssm.exceptions.ParameterNotFound:
+            return False
+        else:
+            return int(parameter['Parameter']['Value']) == self.number
+
     def rest(self):
         assert not config.share_opensearch_domain, R(
             'The instance does not have an OpenSearch domain of its own')
@@ -210,13 +274,16 @@ class BlueGreen(HasCachedHttpClient):
         )
 
     def _check_rest(self):
+        if self._is_live():
+            raise PreconditionFailed('Refusing to rest the live instance',
+                                     config.live_instance_parameter)
         api_ids = {self._rest_api_id(app_name) for app_name in app_names}
         live_domains = []
         for app_name in app_names:
             for domain in self._public_domains(app_name):
                 try:
                     mapping = self._mapping(domain)
-                except self._client.exceptions.NotFoundException:
+                except self._apigw.exceptions.NotFoundException:
                     mapping = None
                 if mapping is not None and mapping[0] in api_ids:
                     live_domains.append(domain)
@@ -237,7 +304,7 @@ class BlueGreen(HasCachedHttpClient):
 
     def _rest_api_id(self, app_name: str) -> str:
         name = config.qualified_resource_name(app_name)
-        paginator = self._client.get_paginator('get_rest_apis')
+        paginator = self._apigw.get_paginator('get_rest_apis')
         ids = [
             api['id']
             for page in paginator.paginate()
@@ -253,7 +320,7 @@ class BlueGreen(HasCachedHttpClient):
         path mapping of the given custom domain name points at, or `None` if
         there is no such mapping.
         """
-        mappings = self._client.get_base_path_mappings(domainName=domain)
+        mappings = self._apigw.get_base_path_mappings(domainName=domain)
         matches = [
             (mapping['restApiId'], mapping['stage'])
             for mapping in mappings.get('items', [])
@@ -280,12 +347,24 @@ def main(argv: list[str]):
                               'names to lead to the instance')
     subparsers.add_parser('rest',
                           help="Destroy the selected instance's OpenSearch domain")
+    for command, description in [
+        ('detach', 'Remove the public mappings to a stage of the live instance'),
+        ('attach', 'Create the missing public mappings to a stage of the live instance')
+    ]:
+        subparser = subparsers.add_parser(command, help=description)
+        subparser.add_argument('--app', required=True, choices=app_names)
+        subparser.add_argument('--rest-api-id', required=True)
+        subparser.add_argument('--stage', required=True)
     args = parser.parse_args(argv)
     blue_green = BlueGreen()
     if args.command == 'go_live':
         blue_green.go_live(args.timeout)
     elif args.command == 'rest':
         blue_green.rest()
+    elif args.command == 'detach':
+        blue_green.detach(args.app, args.rest_api_id, args.stage)
+    elif args.command == 'attach':
+        blue_green.attach(args.app, args.rest_api_id, args.stage)
     else:
         assert False, args.command
 

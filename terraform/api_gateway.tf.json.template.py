@@ -3,6 +3,7 @@ from dataclasses import (
 )
 import importlib
 import json
+import shlex
 
 from more_itertools import (
     one,
@@ -349,6 +350,42 @@ def domain_resources(app: Application) -> JSON:
             }
         }
     }
+
+
+def stage_provisioners(app: Application) -> JSON:
+    """
+    The provisioners on the stage of the given app that, if the instance is
+    live, move the public base path mappings out of the way while the stage is
+    replaced. API Gateway refuses to delete a stage that a base path mapping
+    points at. See docs/blue-green-mode.md.
+    """
+
+    def command(subcommand: str) -> str:
+        return ' '.join(map(shlex.quote, [
+            'python',
+            f'{config.project_root}/scripts/manage_blue_green.py',
+            subcommand,
+            '--app', app.name,
+            # A destroy-time provisioner may only refer to its own resource
+            '--rest-api-id', '${self.rest_api_id}',
+            '--stage', '${self.stage_name}'
+        ]))
+
+    return iif(config.deployment.is_instance, {
+        'provisioner': [
+            {
+                'local-exec': {
+                    'when': 'destroy',
+                    'command': command('detach')
+                }
+            },
+            {
+                'local-exec': {
+                    'command': command('attach')
+                }
+            }
+        ]
+    })
 
 
 route53_zones = {
@@ -946,7 +983,8 @@ tf_config = lambda: {  # noqa: E731
                             'replace_triggered_by': [
                                 'aws_api_gateway_deployment.%s.id' % app.name
                             ]
-                        }
+                        },
+                        **stage_provisioners(app)
                     }
                 },
                 'aws_api_gateway_base_path_mapping': {
