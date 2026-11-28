@@ -161,6 +161,17 @@ reindex_args = --delete --index --purge
 reindex: check_aws check_python check_branch
 	python scripts/reindex.py ${reindex_args}
 
+.PHONY: go_live
+go_live: check_aws check_python check_branch
+	python scripts/manage_blue_green.py go_live
+
+# Rendering the configuration of the main Terraform component requires the
+# Lambda functions to be packaged
+#
+.PHONY: rest
+rest: check_aws check_python check_branch lambdas
+	python scripts/manage_blue_green.py rest
+
 .PHONY: reindex_no_slots
 reindex_no_slots: check_aws check_python check_branch
 	python scripts/reindex.py ${reindex_args} --no-slots

@@ -1209,6 +1209,21 @@ class Config:
             assert warning is None, R('Unexpected warning', warning)
             return script.filter_env(script.resolve_env(env))
 
+        @property
+        def config(self) -> Config:
+            """
+            The configuration of this deployment. Unlike the global ``config``,
+            which is that of the current deployment, this works for any
+            deployment that has a directory in the `deployments` directory of
+            the project.
+
+            >>> config.Deployment('anvilprod').config.deployment_stage
+            'anvilprod'
+            """
+            other = Config()
+            Config.environ.fset(other, self.environment())
+            return other
+
         @cached_property
         def blue_green_mode(self) -> bool:
             """
@@ -1224,7 +1239,7 @@ class Config:
             if self.name == config.deployment_stage:
                 return config.blue_green_mode
             else:
-                return config._boolean(self.environment()['azul_blue_green_mode'])
+                return self.config.blue_green_mode
 
         @property
         def _numeric_suffix(self) -> re.Match[str] | None:
